@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO messages(group_id, message_id, type, created_at)\n               VALUES ('group-1', 'card-1', 'webxdcApp', 0)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "9b2c09fdedde17a608aac9b80d6fc3eee919224d56a6d3232c44de29d51eb2cb"
+}

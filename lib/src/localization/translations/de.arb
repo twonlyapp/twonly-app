@@ -1013,57 +1013,6 @@
   "fileLimitReachedHint": "Nimm ein kürzeres Video auf und sende es erneut.",
   "fileLimitReachedHintFree": "Nimm ein kürzeres Video auf oder wechsle den Tarif, um größere Dateien zu senden.",
   "fileLimitReachedUpgrade": "Tarif wechseln",
-  "settingsWidgets": "Widgets",
-  "widgetsTitle": "Widgets",
-  "widgetsIntroTitle": "Fotos auf deinem Homebildschirm",
-  "widgetsIntroBody": "Freunde aus den von dir gewählten Kontaktgruppen können ein Foto direkt an ein Widget auf deinem Homebildschirm senden. Fotos verschwinden nach 24 Stunden von selbst.",
-  "widgetsSetupIos": "Halte eine freie Stelle auf dem Homebildschirm gedrückt, tippe auf Bearbeiten, dann auf Widget hinzufügen und wähle twonly. Halte anschließend das neue Widget gedrückt und tippe auf Widget bearbeiten, um die Kontaktgruppen auszuwählen.",
-  "widgetsSetupAndroid": "Halte eine freie Stelle auf dem Homebildschirm gedrückt, tippe auf Widgets und ziehe das twonly-Widget an seinen Platz. Du wirst gefragt, welche Kontaktgruppen daran senden dürfen.",
-  "widgetsNoneTitle": "Noch kein Widget hinzugefügt",
-  "widgetsPlacedTitle": "Auf deinem Homebildschirm",
-  "widgetsAddAnother": "Weiteres Widget hinzufügen",
-  "widgetsNoGroups": "Keine Kontaktgruppe ausgewählt",
-  "widgetsNoGroupsHint": "Niemand kann an dieses Widget senden, solange du keine Kontaktgruppe auswählst.",
-  "widgetsEditGroup": "Kontaktgruppe bearbeiten",
-  "widgetsChangeGroupsIos": "Um die Kontaktgruppen zu ändern, halte das Widget auf dem Homebildschirm gedrückt und tippe auf Widget bearbeiten.",
-  "widgetsChangeGroupsAndroid": "Um die Kontaktgruppen zu ändern, entferne das Widget und füge es erneut hinzu.",
-  "widgetsCurrentImages": "Wird aktuell angezeigt",
-  "widgetsNoImages": "Aktuell keine Fotos",
-  "widgetsNoImagesHint": "Fotos, die dir deine Freunde an dieses Widget senden, erscheinen hier.",
-  "widgetsFrom": "Von {sender}",
-  "@widgetsFrom": {
-    "placeholders": {
-      "sender": {
-        "type": "String"
-      }
-    }
-  },
-  "widgetsExpiresIn": "Noch {duration} sichtbar",
-  "@widgetsExpiresIn": {
-    "placeholders": {
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
-  "widgetsDeleteImage": "Foto löschen",
-  "widgetsDeleteImageConfirm": "Damit wird das Foto von allen Widgets entfernt, die es anzeigen. Das kann nicht rückgängig gemacht werden.",
-  "widgetsDurationHours": "{hours} Std.",
-  "@widgetsDurationHours": {
-    "placeholders": {
-      "hours": {
-        "type": "int"
-      }
-    }
-  },
-  "widgetsDurationMinutes": "{minutes} Min.",
-  "@widgetsDurationMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
   "contactGroupUsedByWidget": "Homebildschirm-Widget",
   "contactGroupUsedByWidgetSubtitle": "{count, plural, =1{Ein Widget auf deinem Homebildschirm zeigt Fotos aus dieser Gruppe.} other{{count} Widgets auf deinem Homebildschirm zeigen Fotos aus dieser Gruppe.}}",
   "@contactGroupUsedByWidgetSubtitle": {
@@ -1081,9 +1030,13 @@
       }
     }
   },
-  "widgetsQueryFailed": "Die Widgets auf deinem Homebildschirm konnten nicht gelesen werden, diese Liste ist möglicherweise veraltet.",
-  "widgetsSizeSmall": "Kleines Widget",
-  "widgetsSizeMedium": "Mittleres Widget",
-  "widgetsSizeLarge": "Großes Widget",
-  "widgetsSizeUnknown": "Widget"
+  "webxdcStoreMenu": "App",
+  "webxdcStoreTitle": "App hinzufügen",
+  "webxdcStoreEmpty": "Es sind noch keine Apps verfügbar.",
+  "webxdcStoreOffline": "Die App-Liste konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
+  "webxdcStoreFailed": "Die App konnte diesem Chat nicht hinzugefügt werden.",
+  "webxdcUnavailable": "Diese App konnte nicht geladen werden.",
+  "webxdcDeleteConfirm": "Alles, was diese App auf diesem Gerät gespeichert hat, wird gelöscht. Andere Mitglieder behalten ihre eigene Kopie.",
+  "webxdcExternalLinkTitle": "twonly verlassen?",
+  "webxdcExternalLinkBody": "Dieser Link öffnet sich außerhalb von twonly in deinem Browser:"
 }

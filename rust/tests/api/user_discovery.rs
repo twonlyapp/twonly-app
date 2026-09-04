@@ -35,7 +35,7 @@ async fn send_trigger(from: &Tester, to: &Tester, label: &str) -> anyhow::Result
     let group_id =
         rust_lib_twonly::database::app::tables::Group::direct_chat_id(from.user_id, to.user_id);
     MessageService::new(&from.context)
-        .insert_and_send_text(group_id, label.to_owned(), None)
+        .insert_and_send_text(group_id, label.to_owned(), None, None)
         .await?;
     Ok(())
 }

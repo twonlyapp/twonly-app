@@ -66,7 +66,12 @@ async fn test_group_membership_error_healing() -> anyhow::Result<()> {
 
     // Tester A sends a text message in the group
     let msg_id = MessageService::new(&tester_a.context)
-        .insert_and_send_text(group_id.clone(), "Message triggering heal".into(), None)
+        .insert_and_send_text(
+            group_id.clone(),
+            "Message triggering heal".into(),
+            None,
+            None,
+        )
         .await?;
 
     // Tester B will report error, Tester A will heal and re-send GroupCreate,
@@ -174,13 +179,14 @@ async fn test_admin_and_non_admin_leave_group() -> anyhow::Result<()> {
         .await?;
 
     // Ask for anything the announcements did not deliver. Forced, so the
-    // per-member request interval cannot skip it.
-    {
-        GroupService::new(&tester_a.context)
-            .fetch_missing_group_public_keys(Some(group_id.clone()), true)
-            .await?;
-        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-    }
+    // per-member request interval cannot skip it. The answer travels back as
+    // its own message, so wait for it rather than for a fixed span of time.
+    GroupService::new(&tester_a.context)
+        .fetch_missing_group_public_keys(Some(group_id.clone()), true)
+        .await?;
+    tester_a
+        .wait_for_group_public_key(&group_id, tester_b.user_id)
+        .await?;
 
     // Promote tester_b to admin so tester_a can leave later with an admin remaining
     GroupService::new(&tester_a.context)

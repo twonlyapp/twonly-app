@@ -13,41 +13,11 @@ class PlacedWidget {
     required this.id,
     required this.platform,
     required this.contactGroupIds,
-    this.family,
   });
 
   final String id;
   final String platform;
   final List<int> contactGroupIds;
-
-  /// The widget's size, as WidgetKit names it (`systemSmall` and so on). Null
-  /// on Android, which does not report one.
-  final String? family;
-
-  /// A widget with no contact group can never show anything: nobody is allowed
-  /// to share with it, so nothing is ever delivered.
-  bool get isConfigured => contactGroupIds.isNotEmpty;
-}
-
-/// An image a widget is currently rotating through.
-class WidgetImage {
-  const WidgetImage({
-    required this.mediaId,
-    required this.path,
-    required this.sender,
-    required this.contactGroupIds,
-    required this.expiresAt,
-  });
-
-  final String mediaId;
-  final String path;
-  final String sender;
-  final List<int> contactGroupIds;
-  final DateTime expiresAt;
-
-  Duration get remaining => expiresAt.difference(DateTime.now());
-  bool get isExpired => remaining.isNegative;
-  File get file => File(path);
 }
 
 /// Keeps native widget placement and Rust's derived sharing permissions in
@@ -131,7 +101,10 @@ class HomeWidgetService {
   /// Drops the cached reconcile so the next read asks the system again.
   static void invalidate() => _cachedReport = null;
 
-  static Future<void> purgeExpiredMedia() async {
+  /// Settles the widget media that arrived while nothing was running: an image
+  /// is deleted by the next one for its contact groups, during the refresh that
+  /// publishes that successor.
+  static Future<void> pruneSupersededMedia() async {
     await RustApi.purgeWidgetMedia();
     await refresh();
   }
@@ -142,12 +115,6 @@ class HomeWidgetService {
   /// that was just created is invisible to it until this runs.
   static Future<void> refreshManifest() async {
     await RustApi.refreshWidgetManifest();
-    await refresh();
-  }
-
-  /// Removes one image from every widget showing it, and from disk.
-  static Future<void> deleteImage(String mediaId) async {
-    await RustApi.deleteWidgetMedia(mediaId: mediaId);
     await refresh();
   }
 
@@ -181,44 +148,28 @@ class HomeWidgetService {
   /// the file whenever a widget is added or removed, so there the file is the
   /// authority.
   ///
-  /// The returned `error` is set when iOS could not be asked; the widgets are
-  /// then whatever the file last recorded, which may name widgets that are
-  /// already gone.
-  static Future<({List<PlacedWidget> widgets, String? error})>
-  placedWidgetsResult() async {
-    if (!Platform.isIOS) {
-      return (widgets: await _widgetsFromFile(), error: null);
-    }
+  /// When iOS cannot be asked, this falls back to whatever the file last
+  /// recorded, which may name widgets that are already gone.
+  static Future<List<PlacedWidget>> placedWidgets() async {
+    if (!Platform.isIOS) return _widgetsFromFile();
     final report = await reconcileReport();
-    if (report == null || report['error'] != null) {
-      return (
-        widgets: await _widgetsFromFile(),
-        error: '${report?['error'] ?? 'unknown'}',
-      );
-    }
+    if (report == null || report['error'] != null) return _widgetsFromFile();
     final reported = ((report['widgets'] as List?) ?? const [])
         .cast<Map<Object?, Object?>>()
         .where((entry) => entry['mine'] == true && entry['live'] == true);
     final seen = <String>{};
-    return (
-      widgets: [
-        for (final entry in reported)
-          if (seen.add('${entry['id']}'))
-            PlacedWidget(
-              id: '${entry['id']}',
-              platform: 'ios',
-              family: entry['family'] as String?,
-              contactGroupIds: ((entry['group_ids'] as List?) ?? const [])
-                  .map((id) => (id as num).toInt())
-                  .toList(),
-            ),
-      ],
-      error: null,
-    );
+    return [
+      for (final entry in reported)
+        if (seen.add('${entry['id']}'))
+          PlacedWidget(
+            id: '${entry['id']}',
+            platform: 'ios',
+            contactGroupIds: ((entry['group_ids'] as List?) ?? const [])
+                .map((id) => (id as num).toInt())
+                .toList(),
+          ),
+    ];
   }
-
-  static Future<List<PlacedWidget>> placedWidgets() async =>
-      (await placedWidgetsResult()).widgets;
 
   static Future<List<PlacedWidget>> _widgetsFromFile() async {
     final file = File('${_root.path}/native-config.json');
@@ -251,45 +202,5 @@ class HomeWidgetService {
     return DateTime.fromMillisecondsSinceEpoch(
       lastSeen.toInt() * 1000,
     ).isAfter(oldestLive);
-  }
-
-  /// Every unexpired image Rust has published to the widgets, newest first.
-  static Future<List<WidgetImage>> images() async {
-    final file = File('${_root.path}/manifest.json');
-    if (!file.existsSync()) return const [];
-    try {
-      final decoded =
-          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-      final images = ((decoded['images'] as List?) ?? const [])
-          .cast<Map<String, dynamic>>();
-      final parsed = [
-        for (final image in images)
-          WidgetImage(
-            mediaId: '${image['mediaId'] ?? image['media_id']}',
-            path: '${image['path']}',
-            sender: '${image['sender']}',
-            contactGroupIds: ((image['group_ids'] as List?) ?? const [])
-                .map((id) => (id as num).toInt())
-                .toList(),
-            expiresAt: DateTime.fromMillisecondsSinceEpoch(
-              ((image['expires_at'] as num?)?.toInt() ?? 0) * 1000,
-            ),
-          ),
-      ]..sort((a, b) => b.expiresAt.compareTo(a.expiresAt));
-      return parsed.where((image) => !image.isExpired).toList();
-    } catch (error) {
-      Log.error('Could not read the widget manifest: $error');
-      return const [];
-    }
-  }
-
-  /// The images a single widget rotates through: only senders whose contact
-  /// groups overlap the ones that widget selected.
-  static Future<List<WidgetImage>> imagesFor(PlacedWidget widget) async {
-    final selected = widget.contactGroupIds.toSet();
-    final all = await images();
-    return all
-        .where((image) => image.contactGroupIds.any(selected.contains))
-        .toList();
   }
 }

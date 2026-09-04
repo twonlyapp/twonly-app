@@ -44,14 +44,17 @@ struct ManifestImage: Decodable {
   let mediaId: String
   let path: String
   let sender: String
+  /// The contact groups this image is the current one for. The app publishes
+  /// one image per group, so a widget shows the newest image whose groups meet
+  /// its own selection and never has a second one to fall back on.
   let groupIds: [Int64]
-  let expiresAt: Int64
+  let receivedAt: Int64
 
   enum CodingKeys: String, CodingKey {
     case path, sender
     case mediaId = "media_id"
     case groupIds = "group_ids"
-    case expiresAt = "expires_at"
+    case receivedAt = "received_at"
   }
 }
 
@@ -112,35 +115,6 @@ enum WidgetStorage {
 
   static func selectionKey(_ ids: [Int64]) -> String {
     ids.sorted().map(String.init).joined(separator: "-")
-  }
-
-  static func index(for ids: [Int64]) -> Int {
-    UserDefaults(suiteName: runtimeAppGroup)?.integer(forKey: "widget-index-\(selectionKey(ids))") ?? 0
-  }
-
-  /// Where the rotation starts, sent back to the front whenever an image has
-  /// arrived since this selection was last drawn.
-  ///
-  /// The manifest is newest first, so an arriving image is prepended and a
-  /// stored index keeps pointing at an older one: a timeline reload alone would
-  /// never show what just came in. Recording which image was newest last time
-  /// is what separates an arrival from every other reason a timeline is rebuilt.
-  static func startIndex(for ids: [Int64], newestMediaId: String?) -> Int {
-    guard let newestMediaId else { return index(for: ids) }
-    let defaults = UserDefaults(suiteName: runtimeAppGroup)
-    let newestKey = "widget-newest-\(selectionKey(ids))"
-    guard defaults?.string(forKey: newestKey) != newestMediaId else {
-      return index(for: ids)
-    }
-    defaults?.set(newestMediaId, forKey: newestKey)
-    defaults?.set(0, forKey: "widget-index-\(selectionKey(ids))")
-    return 0
-  }
-
-  static func advance(_ ids: [Int64]) {
-    let defaults = UserDefaults(suiteName: runtimeAppGroup)
-    let key = "widget-index-\(selectionKey(ids))"
-    defaults?.set((defaults?.integer(forKey: key) ?? 0) + 1, forKey: key)
   }
 
   /// Records this widget's contact groups for Rust to import.

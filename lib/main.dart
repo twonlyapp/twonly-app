@@ -28,6 +28,7 @@ import 'package:twonly/src/services/migrations.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
+import 'package:twonly/src/services/webxdc/webxdc_host.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/startup_guard.dart';
 import 'package:twonly/src/visual/themes/light.dart';
@@ -190,6 +191,9 @@ Future<StartupResult> _startup(SettingsChangeProvider settings) async {
 
     await notificationSetup;
     NativeNotificationService.init();
+    // Claims the channel the native webview talks to. Nothing runs in it until
+    // a user starts an app from a chat.
+    WebxdcHost.initialize();
 
     // The theme was read before the user was known, so re-read it now that it
     // is. Repainting the splash costs nothing; the app UI is built after this.
@@ -289,7 +293,7 @@ Future<void> postStartupTasks() async {
   await twonlyDB.messagesDao.purgeMessageTable();
   unawaited(twonlyDB.receiptsDao.purgeReceivedReceipts());
   unawaited(MediaFileService.purgeTempFolder());
-  unawaited(HomeWidgetService.purgeExpiredMedia());
+  unawaited(HomeWidgetService.pruneSupersededMedia());
   unawaited(HomeWidgetService.syncPermissions());
 
   // 2. Service initializations

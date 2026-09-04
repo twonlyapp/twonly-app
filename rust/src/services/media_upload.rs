@@ -44,8 +44,6 @@ const RETRY_MARK_GRACE_SECONDS: i64 = 20;
 
 static MEDIA_LOCKS: LazyLock<SyncMutex<HashMap<String, Arc<Mutex<()>>>>> =
     LazyLock::new(|| SyncMutex::new(HashMap::new()));
-static PREPROCESSING_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
-static RETRANSMISSION_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
 /// One media file is only ever prepared by one task. Preparation reserves a
 /// slot, encrypts, and writes request files, so a second concurrent run would
@@ -433,7 +431,7 @@ impl MediaUploadService {
     /// Recovers every upload that a terminated process left mid-flight, and
     /// settles the transfers the server has meanwhile accepted or rejected.
     pub async fn finish_started_uploads(&self) -> Result<()> {
-        let _guard = PREPROCESSING_LOCK.lock().await;
+        let _guard = self.ctx.media_preprocessing.lock().await;
         let direct = DirectMediaUploadService::new(&self.ctx);
         if let Err(error) = direct.reconcile().await {
             tracing::warn!(%error, "direct media reconciliation failed");
@@ -514,7 +512,7 @@ impl MediaUploadService {
 
     /// Periodic maintenance over receipts whose media send never completed.
     pub async fn reupload_pending(&self) -> Result<()> {
-        let _guard = RETRANSMISSION_LOCK.lock().await;
+        let _guard = self.ctx.media_retransmission.lock().await;
         let now = chrono::Utc::now().timestamp();
         let database = self.ctx.app_db.read().await.clone();
         let receipts = sqlx::query_as::<_, RetransmissionReceipt>(

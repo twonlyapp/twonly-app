@@ -1,0 +1,110 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT app_id AS \"app_id!: String\", version AS \"version!: i64\",\n                  name AS \"name!: String\",\n                  name_translations AS \"name_translations!: String\",\n                  source_code_url AS \"source_code_url: String\",\n                  description AS \"description!: String\",\n                  icon AS \"icon: Vec<u8>\", bundle_bytes AS \"bundle_bytes!: i64\"\n           FROM webxdc_apps\n           WHERE published = 1\n             AND version = (SELECT MAX(version) FROM webxdc_apps AS newer\n                            WHERE newer.app_id = webxdc_apps.app_id AND newer.published = 1)\n           ORDER BY name ASC",
+  "describe": {
+    "columns": [
+      {
+        "name": "app_id!: String",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "app_id"
+          }
+        }
+      },
+      {
+        "name": "version!: i64",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "name": "name!: String",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "name_translations!: String",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "name_translations"
+          }
+        }
+      },
+      {
+        "name": "source_code_url: String",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "source_code_url"
+          }
+        }
+      },
+      {
+        "name": "description!: String",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "name": "icon: Vec<u8>",
+        "ordinal": 6,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "icon"
+          }
+        }
+      },
+      {
+        "name": "bundle_bytes!: i64",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "bundle_bytes"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "b71a58e0499f8b69debddba47cf1ec86c4b99309441a4506e998beedfcead834"
+}

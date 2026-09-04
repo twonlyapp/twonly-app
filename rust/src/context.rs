@@ -59,6 +59,19 @@ pub struct Context {
     /// bundle on the server (or has just published one). Per context rather
     /// than process-wide so two accounts in one process check independently.
     pub(crate) pqc_bundle_verified: AtomicBool,
+    /// Coalesces overlapping flushes of this account's receipt queue. Per
+    /// context for the same reason: a flush scans one app database, so a claim
+    /// held for one account must not silence another account's flush.
+    pub(crate) queued_receipt_flush:
+        std::sync::Mutex<crate::api::messages::incoming::messages::FlushClaim>,
+    /// Serializes this account's upload preparation, which reserves slots and
+    /// writes request files that a second concurrent pass would duplicate.
+    /// Held across a reconciliation round trip, so one account waiting on the
+    /// network must not stall another's uploads.
+    pub(crate) media_preprocessing: Mutex<()>,
+    /// Serializes this account's media retransmission sweep, for the same
+    /// reason.
+    pub(crate) media_retransmission: Mutex<()>,
 }
 
 impl Context {
@@ -138,6 +151,9 @@ impl Context {
             incoming_generation: AtomicU64::new(0),
             incoming_committed: Notify::new(),
             pqc_bundle_verified: AtomicBool::new(false),
+            queued_receipt_flush: std::sync::Mutex::default(),
+            media_preprocessing: Mutex::new(()),
+            media_retransmission: Mutex::new(()),
         });
         ApiRuntime::initialize(&ctx).await?;
         ApiRuntime::connect(&ctx).await?;
@@ -321,7 +337,10 @@ impl Context {
                         mailbox_drained: Notify::new(),
                         incoming_generation: AtomicU64::new(0),
                         incoming_committed: Notify::new(),
-            pqc_bundle_verified: AtomicBool::new(false),
+                        pqc_bundle_verified: AtomicBool::new(false),
+                        queued_receipt_flush: std::sync::Mutex::default(),
+                        media_preprocessing: Mutex::new(()),
+                        media_retransmission: Mutex::new(()),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");
@@ -364,7 +383,10 @@ impl Context {
                         mailbox_drained: Notify::new(),
                         incoming_generation: AtomicU64::new(0),
                         incoming_committed: Notify::new(),
-            pqc_bundle_verified: AtomicBool::new(false),
+                        pqc_bundle_verified: AtomicBool::new(false),
+                        queued_receipt_flush: std::sync::Mutex::default(),
+                        media_preprocessing: Mutex::new(()),
+                        media_retransmission: Mutex::new(()),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");

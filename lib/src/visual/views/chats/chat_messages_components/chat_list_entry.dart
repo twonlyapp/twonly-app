@@ -21,6 +21,8 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/c
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_media_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_text_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_unknown.entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_webxdc.entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_webxdc_message.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_context_menu.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_reply_drag.dart';
@@ -144,6 +146,16 @@ class _ChatListEntryState extends State<ChatListEntry> {
     BubbleInfo info,
   ) {
     if (widget.message.type == MessageType.text.name) {
+      // Only a message a webxdc app produced -- text handed to a chat, or an
+      // announcement an app made in one -- carries data alongside its text, so
+      // this is enough to route it without decoding anything here.
+      if (widget.message.additionalMessageData != null) {
+        return ChatWebxdcMessageEntry(
+          message: widget.message,
+          borderRadius: borderRadius,
+          info: info,
+        );
+      }
       return ChatTextEntry(
         message: widget.message,
         borderRadius: borderRadius,
@@ -195,6 +207,14 @@ class _ChatListEntryState extends State<ChatListEntry> {
         borderRadius: borderRadius,
         info: info,
         contactsById: widget.useSharedData ? widget.userIdToContact : null,
+      );
+    }
+
+    if (widget.message.type == MessageType.webxdcApp.name) {
+      return ChatWebxdcEntry(
+        message: widget.message,
+        borderRadius: borderRadius,
+        info: info,
       );
     }
 

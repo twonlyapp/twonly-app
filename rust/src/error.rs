@@ -78,6 +78,12 @@ pub enum TwonlyError {
     #[error("encrypted media is {bytes} bytes but the plan allows {limit}")]
     MediaTooLarge { bytes: i64, limit: i64 },
 
+    /// The group server refused a state update because it was written against
+    /// a version it no longer holds. Somebody else changed the group first, so
+    /// the update has to be applied again to the version that won.
+    #[error("group state was updated by somebody else first")]
+    GroupStateConflict,
+
     /// Content that will never be processable: it is malformed, or it uses a
     /// feature this client does not implement. Callers must not retry it —
     /// a reliable-mailbox row carrying such a message is acknowledged so the

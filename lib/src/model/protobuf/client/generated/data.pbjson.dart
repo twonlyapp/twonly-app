@@ -76,12 +76,45 @@ const AdditionalMessageData$json = {
       '10': 'askAboutUserId',
       '17': true
     },
+    {
+      '1': 'webxdc_app',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.WebxdcApp',
+      '9': 3,
+      '10': 'webxdcApp',
+      '17': true
+    },
+    {
+      '1': 'webxdc_update',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.WebxdcUpdate',
+      '9': 4,
+      '10': 'webxdcUpdate',
+      '17': true
+    },
+    {
+      '1': 'webxdc_origin',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.WebxdcOrigin',
+      '9': 5,
+      '10': 'webxdcOrigin',
+      '17': true
+    },
   ],
   '4': [AdditionalMessageData_Type$json],
   '8': [
     {'1': '_link'},
     {'1': '_restored_flame_counter'},
     {'1': '_ask_about_user_id'},
+    {'1': '_webxdc_app'},
+    {'1': '_webxdc_update'},
+    {'1': '_webxdc_origin'},
   ],
 };
 
@@ -93,6 +126,9 @@ const AdditionalMessageData_Type$json = {
     {'1': 'CONTACTS', '2': 1},
     {'1': 'RESTORED_FLAME_COUNTER', '2': 2},
     {'1': 'ASK_ABOUT_USER', '2': 3},
+    {'1': 'WEBXDC_APP', '2': 4},
+    {'1': 'WEBXDC_UPDATE', '2': 5},
+    {'1': 'WEBXDC_SENT', '2': 6},
   ],
 };
 
@@ -102,6 +138,83 @@ final $typed_data.Uint8List additionalMessageDataDescriptor = $convert.base64Dec
     'dlRGF0YS5UeXBlUgR0eXBlEhcKBGxpbmsYAiABKAlIAFIEbGlua4gBARIqCghjb250YWN0cxgD'
     'IAMoCzIOLlNoYXJlZENvbnRhY3RSCGNvbnRhY3RzEjkKFnJlc3RvcmVkX2ZsYW1lX2NvdW50ZX'
     'IYBCABKANIAVIUcmVzdG9yZWRGbGFtZUNvdW50ZXKIAQESLgoRYXNrX2Fib3V0X3VzZXJfaWQY'
-    'BSABKANIAlIOYXNrQWJvdXRVc2VySWSIAQEiTgoEVHlwZRIICgRMSU5LEAASDAoIQ09OVEFDVF'
-    'MQARIaChZSRVNUT1JFRF9GTEFNRV9DT1VOVEVSEAISEgoOQVNLX0FCT1VUX1VTRVIQA0IHCgVf'
-    'bGlua0IZChdfcmVzdG9yZWRfZmxhbWVfY291bnRlckIUChJfYXNrX2Fib3V0X3VzZXJfaWQ=');
+    'BSABKANIAlIOYXNrQWJvdXRVc2VySWSIAQESLgoKd2VieGRjX2FwcBgGIAEoCzIKLldlYnhkY0'
+    'FwcEgDUgl3ZWJ4ZGNBcHCIAQESNwoNd2VieGRjX3VwZGF0ZRgHIAEoCzINLldlYnhkY1VwZGF0'
+    'ZUgEUgx3ZWJ4ZGNVcGRhdGWIAQESNwoNd2VieGRjX29yaWdpbhgIIAEoCzINLldlYnhkY09yaW'
+    'dpbkgFUgx3ZWJ4ZGNPcmlnaW6IAQEiggEKBFR5cGUSCAoETElOSxAAEgwKCENPTlRBQ1RTEAES'
+    'GgoWUkVTVE9SRURfRkxBTUVfQ09VTlRFUhACEhIKDkFTS19BQk9VVF9VU0VSEAMSDgoKV0VCWE'
+    'RDX0FQUBAEEhEKDVdFQlhEQ19VUERBVEUQBRIPCgtXRUJYRENfU0VOVBAGQgcKBV9saW5rQhkK'
+    'F19yZXN0b3JlZF9mbGFtZV9jb3VudGVyQhQKEl9hc2tfYWJvdXRfdXNlcl9pZEINCgtfd2VieG'
+    'RjX2FwcEIQCg5fd2VieGRjX3VwZGF0ZUIQCg5fd2VieGRjX29yaWdpbg==');
+
+@$core.Deprecated('Use webxdcOriginDescriptor instead')
+const WebxdcOrigin$json = {
+  '1': 'WebxdcOrigin',
+  '2': [
+    {'1': 'instance_id', '3': 1, '4': 1, '5': 9, '10': 'instanceId'},
+    {'1': 'app_id', '3': 2, '4': 1, '5': 9, '10': 'appId'},
+    {'1': 'version', '3': 3, '4': 1, '5': 3, '10': 'version'},
+  ],
+};
+
+/// Descriptor for `WebxdcOrigin`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webxdcOriginDescriptor = $convert.base64Decode(
+    'CgxXZWJ4ZGNPcmlnaW4SHwoLaW5zdGFuY2VfaWQYASABKAlSCmluc3RhbmNlSWQSFQoGYXBwX2'
+    'lkGAIgASgJUgVhcHBJZBIYCgd2ZXJzaW9uGAMgASgDUgd2ZXJzaW9u');
+
+@$core.Deprecated('Use webxdcAppDescriptor instead')
+const WebxdcApp$json = {
+  '1': 'WebxdcApp',
+  '2': [
+    {'1': 'app_id', '3': 1, '4': 1, '5': 9, '10': 'appId'},
+    {'1': 'version', '3': 2, '4': 1, '5': 3, '10': 'version'},
+  ],
+};
+
+/// Descriptor for `WebxdcApp`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webxdcAppDescriptor = $convert.base64Decode(
+    'CglXZWJ4ZGNBcHASFQoGYXBwX2lkGAEgASgJUgVhcHBJZBIYCgd2ZXJzaW9uGAIgASgDUgd2ZX'
+    'JzaW9u');
+
+@$core.Deprecated('Use webxdcUpdateDescriptor instead')
+const WebxdcUpdate$json = {
+  '1': 'WebxdcUpdate',
+  '2': [
+    {'1': 'instance_id', '3': 1, '4': 1, '5': 9, '10': 'instanceId'},
+    {'1': 'payload', '3': 2, '4': 1, '5': 9, '10': 'payload'},
+    {'1': 'info', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'info', '17': true},
+    {'1': 'href', '3': 4, '4': 1, '5': 9, '9': 1, '10': 'href', '17': true},
+    {
+      '1': 'summary',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'summary',
+      '17': true
+    },
+    {
+      '1': 'document',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 3,
+      '10': 'document',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_info'},
+    {'1': '_href'},
+    {'1': '_summary'},
+    {'1': '_document'},
+  ],
+};
+
+/// Descriptor for `WebxdcUpdate`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webxdcUpdateDescriptor = $convert.base64Decode(
+    'CgxXZWJ4ZGNVcGRhdGUSHwoLaW5zdGFuY2VfaWQYASABKAlSCmluc3RhbmNlSWQSGAoHcGF5bG'
+    '9hZBgCIAEoCVIHcGF5bG9hZBIXCgRpbmZvGAMgASgJSABSBGluZm+IAQESFwoEaHJlZhgEIAEo'
+    'CUgBUgRocmVmiAEBEh0KB3N1bW1hcnkYBSABKAlIAlIHc3VtbWFyeYgBARIfCghkb2N1bWVudB'
+    'gGIAEoCUgDUghkb2N1bWVudIgBAUIHCgVfaW5mb0IHCgVfaHJlZkIKCghfc3VtbWFyeUILCglf'
+    'ZG9jdW1lbnQ=');

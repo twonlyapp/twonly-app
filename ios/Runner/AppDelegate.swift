@@ -63,6 +63,7 @@ import flutter_sharing_intent
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     RuntimeStorageChannel.register(with: engineBridge.pluginRegistry)
     NativeNotificationChannel.register(with: engineBridge.pluginRegistry)
+    WebxdcHostChannel.register(with: engineBridge.pluginRegistry)
   }
 
   override func userNotificationCenter(

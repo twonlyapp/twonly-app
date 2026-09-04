@@ -386,6 +386,19 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     bool reportOpened = false,
   }) async {
     final newestKnownAt = _animationState.newestKnownAt;
+
+    // Only a message the user just sent pulls the list back down. Deciding
+    // this from the newest known message alone would scroll on every unrelated
+    // update as well: reactions, media state, group actions and every page of
+    // older messages run through here too, and each of them would yank the
+    // reader back to the bottom whenever their own message ends the chat.
+    final lastMessage = newMessages.lastOrNull;
+    final wasSentByMe =
+        _animationState.hasReceivedFirstBatch &&
+        lastMessage != null &&
+        lastMessage.senderId == null &&
+        !_animationState.knownMessageIds.contains(lastMessage.messageId);
+
     for (final msg in newMessages) {
       // Only messages appended after the newest one already loaded are new to
       // the user. Messages fetched by scrolling up are older and must not
@@ -474,11 +487,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
         unawaited(_reportMessagesOpened(contactId, openedMessages[contactId]!));
       }
     }
-
-    final wasSentByMe =
-        _animationState.hasReceivedFirstBatch &&
-        newMessages.isNotEmpty &&
-        newMessages.last.senderId == null;
 
     if (!mounted) return;
     _data.chatItems = chatItems.reversed.toList();

@@ -121,7 +121,12 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
         // The sender_profile_counter is incremented in user.json, so the text message
         // will carry a higher counter, prompting Tester B to request a profile update.
         MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), "Hello with new profile!".into(), None)
+            .insert_and_send_text(
+                group_id.clone(),
+                "Hello with new profile!".into(),
+                None,
+                None,
+            )
             .await?;
 
         // 3. Wait until the Tester B username has the new username in the contact table
@@ -153,7 +158,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
 
         // TesterA -> TesterB: Send a text message
         let message_id = MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), "Initial text".into(), None)
+            .insert_and_send_text(group_id.clone(), "Initial text".into(), None, None)
             .await?;
         tester_b
             .wait_for_text_message(&message_id, tester_a.user_id, "Initial text")
@@ -193,6 +198,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
                 group_id.clone(),
                 "Replying to initial text".into(),
                 Some(message_id.clone()),
+                None,
             )
             .await?;
         tester_a
@@ -344,7 +350,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
 
         // 3. Send a text message in the group
         let group_msg_id = MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), "Hello group!".into(), None)
+            .insert_and_send_text(group_id.clone(), "Hello group!".into(), None, None)
             .await?;
 
         tester_b
@@ -392,22 +398,12 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
 
         // 6. Promote tester_b to admin
         // tester_a needs tester_b's public key to promote them. tester_b
-        // announces it when it learns of the group, so this asserts the
-        // announcement arrived rather than repairing the state by hand.
-        {
-            let db_a = tester_a.context.app_db.read().await.clone();
-            let public_key = sqlx::query_scalar!(
-                "SELECT group_public_key FROM group_members WHERE group_id = ? AND contact_id = ?",
-                group_id,
-                tester_b.user_id
-            )
-            .fetch_one(&db_a.pool)
+        // announces it when it learns of the group, so this waits for the
+        // announcement to land rather than asking for the key or repairing the
+        // state by hand.
+        tester_a
+            .wait_for_group_public_key(&group_id, tester_b.user_id)
             .await?;
-            assert!(
-                public_key.is_some(),
-                "tester_a should have tester_b's group public key without asking for it"
-            );
-        }
 
         group_service_a
             .manage_admin(group_id.clone(), tester_b.user_id, false)

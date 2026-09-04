@@ -2676,91 +2676,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileLimitReachedUpgrade => 'Upgrade plan';
 
   @override
-  String get settingsWidgets => 'Widgets';
-
-  @override
-  String get widgetsTitle => 'Widgets';
-
-  @override
-  String get widgetsIntroTitle => 'Photos on your home screen';
-
-  @override
-  String get widgetsIntroBody =>
-      'Friends in the contact groups you choose can send a photo straight to a widget on your home screen. Photos disappear on their own after 24 hours.';
-
-  @override
-  String get widgetsSetupIos =>
-      'Touch and hold an empty area of the home screen, tap Edit, then Add Widget and pick twonly. Then touch and hold the new widget and tap Edit Widget to choose which contact groups may send to it.';
-
-  @override
-  String get widgetsSetupAndroid =>
-      'Touch and hold an empty area of the home screen, tap Widgets, then drag the twonly widget into place. You will be asked which contact groups may send to it.';
-
-  @override
-  String get widgetsNoneTitle => 'No widget added yet';
-
-  @override
-  String get widgetsPlacedTitle => 'On your home screen';
-
-  @override
-  String get widgetsAddAnother => 'Add another widget';
-
-  @override
-  String get widgetsNoGroups => 'No contact group selected';
-
-  @override
-  String get widgetsNoGroupsHint =>
-      'Nobody can send to this widget until you choose at least one contact group.';
-
-  @override
-  String get widgetsEditGroup => 'Edit contact group';
-
-  @override
-  String get widgetsChangeGroupsIos =>
-      'To change the contact groups, touch and hold the widget on your home screen and tap Edit Widget.';
-
-  @override
-  String get widgetsChangeGroupsAndroid =>
-      'To change the contact groups, remove the widget and add it again.';
-
-  @override
-  String get widgetsCurrentImages => 'Currently showing';
-
-  @override
-  String get widgetsNoImages => 'No photos right now';
-
-  @override
-  String get widgetsNoImagesHint =>
-      'Photos your friends send to this widget will appear here.';
-
-  @override
-  String widgetsFrom(String sender) {
-    return 'From $sender';
-  }
-
-  @override
-  String widgetsExpiresIn(String duration) {
-    return 'Shown for $duration more';
-  }
-
-  @override
-  String get widgetsDeleteImage => 'Delete photo';
-
-  @override
-  String get widgetsDeleteImageConfirm =>
-      'This removes the photo from every widget showing it. It cannot be undone.';
-
-  @override
-  String widgetsDurationHours(int hours) {
-    return '$hours h';
-  }
-
-  @override
-  String widgetsDurationMinutes(int minutes) {
-    return '$minutes min';
-  }
-
-  @override
   String get contactGroupUsedByWidget => 'Home screen widget';
 
   @override
@@ -2788,18 +2703,32 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get widgetsQueryFailed =>
-      'Could not read the widgets on your home screen, so this list may be out of date.';
+  String get webxdcStoreMenu => 'App';
 
   @override
-  String get widgetsSizeSmall => 'Small widget';
+  String get webxdcStoreTitle => 'Add an app';
 
   @override
-  String get widgetsSizeMedium => 'Medium widget';
+  String get webxdcStoreEmpty => 'No apps are available yet.';
 
   @override
-  String get widgetsSizeLarge => 'Large widget';
+  String get webxdcStoreOffline =>
+      'The app list could not be loaded. Check your connection and try again.';
 
   @override
-  String get widgetsSizeUnknown => 'Widget';
+  String get webxdcStoreFailed => 'The app could not be added to this chat.';
+
+  @override
+  String get webxdcUnavailable => 'This app could not be loaded.';
+
+  @override
+  String get webxdcDeleteConfirm =>
+      'Everything this app saved on this device is deleted. Other members keep their own copy.';
+
+  @override
+  String get webxdcExternalLinkTitle => 'Leave twonly?';
+
+  @override
+  String get webxdcExternalLinkBody =>
+      'This link opens outside twonly, in your browser:';
 }

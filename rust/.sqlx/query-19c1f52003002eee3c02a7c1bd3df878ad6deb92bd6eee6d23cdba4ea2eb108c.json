@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT group_id AS \"group_id!: String\", app_id AS \"app_id!: String\",\n                      version AS \"version!: i64\"\n               FROM webxdc_instances WHERE instance_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id!: String",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "app_id!: String",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "app_id"
+          }
+        }
+      },
+      {
+        "name": "version!: i64",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "19c1f52003002eee3c02a7c1bd3df878ad6deb92bd6eee6d23cdba4ea2eb108c"
+}

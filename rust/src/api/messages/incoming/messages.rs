@@ -15,27 +15,31 @@ use crate::utils::new_uuid_v4;
 use prost::Message as ProstMessage;
 use proto::encrypted_content::error_messages::Type;
 use sqlx::{Sqlite, Transaction};
-use std::sync::{Arc, LazyLock, Mutex, PoisonError};
+use std::sync::{Arc, Mutex, PoisonError};
 
 #[cfg(not(debug_assertions))]
 use std::collections::HashMap;
+#[cfg(not(debug_assertions))]
+use std::sync::LazyLock;
 
 #[cfg(not(debug_assertions))]
 static ALREADY_QUEUED_RECEIPTS: LazyLock<Mutex<HashMap<String, std::time::Instant>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
-/// Coalesces overlapping flushes of the receipt queue.
+/// Coalesces overlapping flushes of one account's receipt queue.
 ///
 /// Every committed inbound message asks for a flush, and a flush scans the
 /// whole queue, so one mailbox page would otherwise start as many identical
 /// scans as it carries messages — all of them competing for the single
 /// app-database connection. A request that arrives while a flush runs only
 /// marks it dirty, so the running flush queries once more before it returns.
-static QUEUED_RECEIPT_FLUSH: LazyLock<Mutex<FlushClaim>> =
-    LazyLock::new(|| Mutex::new(FlushClaim::default()));
-
+///
+/// It lives on the [`Context`] rather than in a static because a flush is
+/// bound to the database it scans: a process running two accounts would
+/// otherwise let one account's flush turn the other's into a no-op, and the
+/// dirty flag would buy the wrong queue a second pass.
 #[derive(Default)]
-struct FlushClaim {
+pub(crate) struct FlushClaim {
     running: bool,
     dirty: bool,
 }
@@ -43,24 +47,27 @@ struct FlushClaim {
 /// Held for as long as a flush owns the claim. Dropping it without releasing
 /// it — an error or a panic on the way out — frees the claim for the next
 /// caller instead of blocking every later flush.
-struct FlushGuard {
+struct FlushGuard<'a> {
+    claim: &'a Mutex<FlushClaim>,
     released: bool,
 }
 
-impl FlushGuard {
+impl<'a> FlushGuard<'a> {
     /// Registers a flush for this caller. Returns `None` when one is already
     /// running, in which case it is marked dirty and will query once more.
-    fn claim() -> Option<Self> {
-        let mut claim = QUEUED_RECEIPT_FLUSH
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner);
+    fn claim(state: &'a Mutex<FlushClaim>) -> Option<Self> {
+        let mut claim = state.lock().unwrap_or_else(PoisonError::into_inner);
         if claim.running {
             claim.dirty = true;
             return None;
         }
         claim.running = true;
         claim.dirty = false;
-        Some(Self { released: false })
+        drop(claim);
+        Some(Self {
+            claim: state,
+            released: false,
+        })
     }
 
     /// Ends the flush when nothing asked for another one while it ran,
@@ -68,9 +75,7 @@ impl FlushGuard {
     /// Both happen under one lock so a request cannot be dropped between the
     /// last query and the release.
     fn release_or_take_dirty(&mut self) -> bool {
-        let mut claim = QUEUED_RECEIPT_FLUSH
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner);
+        let mut claim = self.claim.lock().unwrap_or_else(PoisonError::into_inner);
         if claim.dirty {
             claim.dirty = false;
             return true;
@@ -81,12 +86,12 @@ impl FlushGuard {
     }
 }
 
-impl Drop for FlushGuard {
+impl Drop for FlushGuard<'_> {
     fn drop(&mut self) {
         if self.released {
             return;
         }
-        QUEUED_RECEIPT_FLUSH
+        self.claim
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .running = false;
@@ -101,7 +106,8 @@ pub(crate) async fn queue_encrypted_content(
 ) -> Result<String> {
     Contact::ensure_exists(t, target_user_id).await?;
 
-    let wake_receiver = crate::services::notifications::should_wake_receiver(&content);
+    let wake_receiver =
+        crate::services::notifications::should_wake_receiver(t, target_user_id, &content).await?;
 
     let message = proto::Message {
         r#type: proto::message::Type::CiphertextV2 as i32,
@@ -584,10 +590,20 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
     if receipt.contact_will_sends_receipt == 0 {
         Receipt::delete(&mut *t, receipt_id).await?;
     } else {
+        // The wake is spent the moment the server accepts the envelope, so it
+        // is cleared here alongside the acknowledgement that records it.
+        //
+        // This receipt outlives its delivery -- it is kept until the peer's own
+        // receipt comes back -- and every inbound message from that peer marks
+        // it for retry again. Without this, one message would push the peer
+        // once per retransmission: a chat busy enough to keep retrying, a game
+        // exchanging updates for instance, would alert them over and over for a
+        // message they were told about the first time and already have.
         sqlx::query!(
             r#"
             UPDATE receipts SET
                 ack_by_server_at = CAST(strftime('%s', 'now') AS INTEGER),
+                wake_receiver = 0,
                 retry_count = retry_count + 1,
                 last_retry = CAST(strftime('%s', 'now') AS INTEGER),
                 mark_for_retry = NULL
@@ -643,7 +659,7 @@ pub(crate) async fn release_deferred_receipts(
 }
 
 pub async fn retransmit_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
-    let Some(mut guard) = FlushGuard::claim() else {
+    let Some(mut guard) = FlushGuard::claim(&ctx.queued_receipt_flush) else {
         return Ok(());
     };
 
@@ -789,8 +805,9 @@ mod tests {
 
     #[test]
     fn a_second_flush_request_marks_the_running_one_dirty() {
-        let mut guard = FlushGuard::claim().expect("nothing else holds the claim");
-        assert!(FlushGuard::claim().is_none());
+        let state = Mutex::new(FlushClaim::default());
+        let mut guard = FlushGuard::claim(&state).expect("nothing else holds the claim");
+        assert!(FlushGuard::claim(&state).is_none());
 
         // The running flush sees the dirty flag and keeps its claim.
         assert!(guard.release_or_take_dirty());
@@ -799,8 +816,19 @@ mod tests {
 
         // Dropping a guard that never released frees the claim too, so an
         // error on the way out cannot block every later flush.
-        let guard = FlushGuard::claim().expect("the claim was released");
+        let guard = FlushGuard::claim(&state).expect("the claim was released");
         drop(guard);
-        assert!(FlushGuard::claim().is_some());
+        assert!(FlushGuard::claim(&state).is_some());
+    }
+
+    /// Two accounts in one process each flush their own queue. A claim held
+    /// for one must not turn the other's flush into a no-op.
+    #[test]
+    fn each_account_holds_its_own_flush_claim() {
+        let first = Mutex::new(FlushClaim::default());
+        let second = Mutex::new(FlushClaim::default());
+
+        let _held = FlushGuard::claim(&first).expect("nothing else holds the claim");
+        assert!(FlushGuard::claim(&second).is_some());
     }
 }

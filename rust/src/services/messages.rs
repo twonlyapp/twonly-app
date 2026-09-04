@@ -63,6 +63,18 @@ impl MessageService {
         Ok(())
     }
 
+    /// Queues one message to every member from inside the caller's
+    /// transaction.
+    ///
+    /// Everything here runs on `t`. The app database has a single connection,
+    /// and the caller is holding it, so anything that went to the pool instead
+    /// would wait thirty seconds for a connection that cannot be freed until
+    /// this call returns.
+    ///
+    /// That is also why `message_id` has to stay `None` here: a persisted
+    /// message asks user discovery for a version, which needs it initialized,
+    /// and initializing it writes through the pool. Callers with a message id
+    /// go through [`Self::send_to_group`], which sends outside a transaction.
     pub async fn send_to_group_in_transaction(
         &self,
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
@@ -96,6 +108,7 @@ impl MessageService {
             let mut contact_content = proto::EncryptedContent::decode(bytes.as_slice())?;
             decorate_content(
                 &self.ctx,
+                t,
                 contact_id,
                 &mut contact_content,
                 message_id.is_some(),
@@ -116,9 +129,14 @@ impl MessageService {
 
             let mut retry_count = 0_i64;
             let mut last_retry = None;
+            // A resend of a message the server already took has already pushed
+            // this member once. The replacement receipt must not ask for a
+            // second alert about the same message.
+            let mut already_woken = false;
             if let Some(msg_id) = &message_id {
                 let previous = sqlx::query!(
-                    r#"SELECT COUNT(*) AS "count!: i64", MAX(last_retry) AS last_retry
+                    r#"SELECT COUNT(*) AS "count!: i64", MAX(last_retry) AS last_retry,
+                              MAX(ack_by_server_at) AS acknowledged
                        FROM receipts WHERE contact_id = ? AND message_id = ?"#,
                     contact_id,
                     msg_id,
@@ -127,6 +145,7 @@ impl MessageService {
                 .await?;
                 retry_count = previous.count;
                 last_retry = previous.last_retry;
+                already_woken = previous.acknowledged.is_some();
                 sqlx::query!(
                     "DELETE FROM receipts WHERE contact_id = ? AND message_id = ?",
                     contact_id,
@@ -140,11 +159,14 @@ impl MessageService {
 
             sqlx::query!(
                 r#"UPDATE receipts SET message_id = ?, will_be_retried_by_media_upload = ?,
-                   retry_count = ?, last_retry = ? WHERE receipt_id = ?"#,
+                   retry_count = ?, last_retry = ?,
+                   wake_receiver = CASE WHEN ? THEN 0 ELSE wake_receiver END
+                   WHERE receipt_id = ?"#,
                 message_id,
                 false, // only_return_encrypted_data is false for send_to_group
                 retry_count,
                 last_retry,
+                already_woken,
                 receipt_id
             )
             .execute(&mut **t)
@@ -177,11 +199,17 @@ impl MessageService {
     /// the other side before showing up here. So the row the UI renders from is
     /// committed and published on its own, in one transaction, and the send
     /// runs on a separate task.
+    /// Sends a text message.
+    ///
+    /// `additional_message_data` records where the text came from when the
+    /// sender did not type it -- today, the webxdc app that produced it. It is
+    /// stored beside the message so the chat can say so on both devices.
     pub async fn insert_and_send_text(
         &self,
         group_id: String,
         text: String,
         quote_message_id: Option<String>,
+        additional_message_data: Option<Vec<u8>>,
     ) -> Result<String> {
         let database = self.ctx.app_db.read().await.clone();
         let message_id = uuid::Uuid::new_v4().to_string();
@@ -195,12 +223,14 @@ impl MessageService {
         .execute(&mut *t)
         .await?;
         sqlx::query!(
-            r#"INSERT INTO messages(group_id, message_id, type, content, quotes_message_id, created_at)
-               VALUES (?, ?, 'text', ?, ?, ?)"#,
+            r#"INSERT INTO messages(group_id, message_id, type, content, quotes_message_id,
+                                    additional_message_data, created_at)
+               VALUES (?, ?, 'text', ?, ?, ?, ?)"#,
             group_id,
             message_id,
             text,
             quote_message_id,
+            additional_message_data,
             timestamp / 1000,
         )
         .execute(&mut *t)
@@ -215,6 +245,7 @@ impl MessageService {
                 text,
                 timestamp,
                 quote_message_id,
+                additional_message_data,
             }),
             ..Default::default()
         }
@@ -241,26 +272,36 @@ impl MessageService {
         Ok(message_id)
     }
 
+    /// Sends one additional-data message and, unless it is hidden, records it
+    /// in the chat.
+    ///
+    /// `hidden` marks state a feature exchanges rather than something a person
+    /// sent: no row is written, so it cannot show up in a chat or be swept up
+    /// by the deletion timer, and the receiving side neither notifies nor wakes
+    /// for it.
     pub async fn insert_and_send_additional_data(
         &self,
         group_id: String,
         message_type: String,
         additional_data: Vec<u8>,
+        hidden: bool,
     ) -> Result<String> {
         let database = self.ctx.app_db.read().await.clone();
         let message_id = uuid::Uuid::new_v4().to_string();
         let timestamp = chrono::Utc::now().timestamp_millis();
-        sqlx::query!(
-            r#"INSERT INTO messages(group_id, message_id, type, additional_message_data, created_at)
-               VALUES (?, ?, ?, ?, ?)"#,
-            group_id,
-            message_id,
-            message_type,
-            additional_data,
-            timestamp / 1000,
-        )
-        .execute(&database.pool)
-        .await?;
+        if !hidden {
+            sqlx::query!(
+                r#"INSERT INTO messages(group_id, message_id, type, additional_message_data, created_at)
+                   VALUES (?, ?, ?, ?, ?)"#,
+                group_id,
+                message_id,
+                message_type,
+                additional_data,
+                timestamp / 1000,
+            )
+            .execute(&database.pool)
+            .await?;
+        }
         self.send_to_group(
             group_id,
             proto::EncryptedContent {
@@ -269,11 +310,21 @@ impl MessageService {
                     additional_message_data: Some(additional_data),
                     timestamp,
                     r#type: message_type,
+                    hidden,
                 }),
                 ..Default::default()
             }
             .encode_to_vec(),
-            Some(message_id.clone()),
+            // A receipt's `message_id` is a foreign key into `messages`, and a
+            // hidden message has no row there. It is also what ties a receipt
+            // to a chat message so delivery state can be shown and a retry
+            // deduplicated -- neither of which a hidden message has any use
+            // for, so it goes out unattached.
+            if hidden {
+                None
+            } else {
+                Some(message_id.clone())
+            },
             false,
         )
         .await?;
@@ -329,9 +380,12 @@ impl MessageService {
             contacts,
             restored_flame_counter: None,
             ask_about_user_id: None,
+            webxdc_app: None,
+            webxdc_update: None,
+            webxdc_origin: None,
         }
         .encode_to_vec();
-        self.insert_and_send_additional_data(group_id, "contacts".into(), data)
+        self.insert_and_send_additional_data(group_id, "contacts".into(), data, false)
             .await
     }
 
@@ -361,9 +415,12 @@ impl MessageService {
             contacts: Vec::new(),
             restored_flame_counter: None,
             ask_about_user_id: Some(ask_about_user_id),
+            webxdc_app: None,
+            webxdc_update: None,
+            webxdc_origin: None,
         }
         .encode_to_vec();
-        self.insert_and_send_additional_data(group_id, "askAboutUser".into(), data)
+        self.insert_and_send_additional_data(group_id, "askAboutUser".into(), data, false)
             .await
     }
 

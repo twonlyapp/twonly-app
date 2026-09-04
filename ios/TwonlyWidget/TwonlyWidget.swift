@@ -4,22 +4,6 @@ import OSLog
 import SwiftUI
 import WidgetKit
 
-struct AdvanceWidgetIntent: AppIntent {
-  static let title: LocalizedStringResource = "Next image"
-  static let openAppWhenRun = false
-
-  @Parameter(title: "Contact groups") var groupIds: [String]
-
-  init() { groupIds = [] }
-  init(groupIds: [Int64]) { self.groupIds = groupIds.map(String.init) }
-
-  func perform() async throws -> some IntentResult {
-    WidgetStorage.advance(groupIds.compactMap(Int64.init))
-    WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-    return .result()
-  }
-}
-
 /// Why the widget has nothing to show, so the placeholder can say it.
 enum EmptyReason: Equatable {
   case notConfigured
@@ -31,8 +15,8 @@ enum EmptyReason: Equatable {
     case .notConfigured:
       return "Hold to choose contact groups"
     case .noMatchingImages(let total):
-      // The count separates "the app never delivered anything" from "images
-      // arrived but carry other groups than the ones this widget selects".
+      // The count separates "the app never delivered anything" from "an image
+      // is being held for other groups than the ones this widget selects".
       return total == 0 ? "No images yet" : "\(total) shared, none in your groups"
     case .fault(let fault):
       return fault.summary
@@ -43,18 +27,18 @@ enum EmptyReason: Equatable {
 struct TwonlyEntry: TimelineEntry {
   let date: Date
   let image: ManifestImage?
-  let groupIds: [Int64]
   let emptyReason: EmptyReason?
   /// Longest edge this entry will ever be drawn at, in pixels. Decoding to the
   /// size actually shown is what keeps the extension inside its memory budget.
   let maxPixelSize: CGFloat
 }
 
-/// WidgetKit renders every timeline entry up front, so a timeline is a
-/// multiplier on whatever one entry costs. Eight half-hour steps keep the
-/// rotation going for four hours on a fraction of the memory a full day took.
-private let timelineEntryCount = 8
-private let timelineStepMinutes = 30
+/// A widget shows the image that arrived last and nothing else, so its
+/// timeline is a single entry. The app pushes a reload whenever the manifest
+/// changes, which is what actually puts a new image on the home screen; this
+/// interval only keeps the widget rebuilding while nothing arrives, because a
+/// rebuild is the sole evidence that the widget is still placed.
+private let timelineRefreshHours = 4
 
 struct TwonlyProvider: AppIntentTimelineProvider {
   /// The widget is never drawn larger than its container, so this is the most
@@ -68,7 +52,6 @@ struct TwonlyProvider: AppIntentTimelineProvider {
     TwonlyEntry(
       date: .now,
       image: nil,
-      groupIds: [],
       emptyReason: .noMatchingImages(total: 0),
       maxPixelSize: maxPixelSize(in: context)
     )
@@ -79,7 +62,6 @@ struct TwonlyProvider: AppIntentTimelineProvider {
     return entry(
       images: WidgetStorage.images(),
       ids: ids,
-      index: WidgetStorage.index(for: ids),
       date: .now,
       maxPixelSize: maxPixelSize(in: context)
     )
@@ -88,48 +70,24 @@ struct TwonlyProvider: AppIntentTimelineProvider {
   func timeline(for configuration: TwonlyWidgetIntent, in context: Context) async -> Timeline<TwonlyEntry> {
     let ids = (configuration.groups ?? []).compactMap { Int64($0.id) }
     WidgetStorage.persistSelection(ids)
-    // Read once: an extension that re-reads the manifest for every entry spends
-    // its whole budget on JSON.
-    let available = WidgetStorage.images()
-    // The rotation starts at whatever just arrived, so an image shared into
-    // this widget is on the home screen as soon as the timeline is rebuilt
-    // rather than whenever the rotation next comes back around to it.
-    let start = WidgetStorage.startIndex(
-      for: ids,
-      newestMediaId: newestMatching(in: available, ids: ids)?.mediaId
+    let entry = entry(
+      images: WidgetStorage.images(),
+      ids: ids,
+      date: .now,
+      maxPixelSize: maxPixelSize(in: context)
     )
-    let pixels = maxPixelSize(in: context)
-    let entries = (0..<timelineEntryCount).map { offset in
-      entry(
-        images: available,
-        ids: ids,
-        index: start + offset,
-        date: Calendar.current.date(
-          byAdding: .minute, value: offset * timelineStepMinutes, to: .now) ?? .now,
-        maxPixelSize: pixels
-      )
-    }
-    widgetLog.debug(
-      "built \(entries.count, privacy: .public) entries at \(pixels, privacy: .public)px")
-    return Timeline(entries: entries, policy: .atEnd)
+    let next =
+      Calendar.current.date(byAdding: .hour, value: timelineRefreshHours, to: .now) ?? .now
+    widgetLog.debug("built 1 entry at \(entry.maxPixelSize, privacy: .public)px")
+    return Timeline(entries: [entry], policy: .after(next))
   }
 
-  /// The most recent image this selection can show right now. The manifest is
-  /// written newest first, so that is simply the first one that matches.
-  private func newestMatching(
-    in images: Result<[ManifestImage], WidgetStorage.ManifestFault>,
-    ids: [Int64]
-  ) -> ManifestImage? {
-    guard !ids.isEmpty, let available = try? images.get() else { return nil }
-    let selected = Set(ids)
-    let now = Int64(Date().timeIntervalSince1970)
-    return available.first { $0.expiresAt > now && !selected.isDisjoint(with: $0.groupIds) }
-  }
-
+  /// The one image this widget shows: the most recent one published for any of
+  /// its contact groups. The manifest is written newest first, so that is
+  /// simply the first match.
   private func entry(
     images: Result<[ManifestImage], WidgetStorage.ManifestFault>,
     ids: [Int64],
-    index: Int,
     date: Date,
     maxPixelSize: CGFloat
   ) -> TwonlyEntry {
@@ -139,7 +97,7 @@ struct TwonlyProvider: AppIntentTimelineProvider {
       available = value
     case .failure(let fault):
       return TwonlyEntry(
-        date: date, image: nil, groupIds: ids,
+        date: date, image: nil,
         emptyReason: .fault(fault), maxPixelSize: maxPixelSize)
     }
 
@@ -148,36 +106,31 @@ struct TwonlyProvider: AppIntentTimelineProvider {
     guard !ids.isEmpty else {
       widgetLog.notice("no contact group configured; nothing can match")
       return TwonlyEntry(
-        date: date, image: nil, groupIds: ids,
+        date: date, image: nil,
         emptyReason: .notConfigured, maxPixelSize: maxPixelSize)
     }
 
     let selected = Set(ids)
-    let now = Int64(date.timeIntervalSince1970)
-    let unexpired = available.filter { $0.expiresAt > now }
-    let matching = unexpired.filter { !selected.isDisjoint(with: $0.groupIds) }
-    guard !matching.isEmpty else {
-      // The two counts separate "everything aged out" from "the sender is in
-      // groups this widget did not select", which look identical on screen.
+    guard let newest = available.first(where: { !selected.isDisjoint(with: $0.groupIds) }) else {
+      // The offered groups are what separates "nobody has sent anything" from
+      // "the sender is in groups this widget did not select", which look
+      // identical on screen.
       widgetLog.notice(
         """
         no match: selected \(ids, privacy: .public), \
         \(available.count, privacy: .public) images, \
-        \(unexpired.count, privacy: .public) unexpired, \
         offered groups \(Set(available.flatMap(\.groupIds)).sorted(), privacy: .public)
         """)
       return TwonlyEntry(
         date: date,
         image: nil,
-        groupIds: ids,
         emptyReason: .noMatchingImages(total: available.count),
         maxPixelSize: maxPixelSize
       )
     }
     return TwonlyEntry(
       date: date,
-      image: matching[index % matching.count],
-      groupIds: ids,
+      image: newest,
       emptyReason: nil,
       maxPixelSize: maxPixelSize
     )
@@ -224,13 +177,10 @@ struct TwonlyWidgetView: View {
   var body: some View {
     content
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .overlay {
-        Button(intent: AdvanceWidgetIntent(groupIds: entry.groupIds)) {
-          Color.clear
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Show next image")
-      }
+      // Opens the containing app. The scheme is not registered anywhere and
+      // does not need to be: WidgetKit hands the URL to twonly itself, and the
+      // app ignores links it does not recognise.
+      .widgetURL(URL(string: "twonly://widget"))
       .containerBackground(for: .widget) { brandBackground }
   }
 

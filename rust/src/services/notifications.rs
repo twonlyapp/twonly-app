@@ -26,16 +26,76 @@ static EN_TRANSLATIONS: LazyLock<HashMap<String, String>> =
 static DE_TRANSLATIONS: LazyLock<HashMap<String, String>> =
     LazyLock::new(|| parse_arb(DE_ARB, "de"));
 
-pub(crate) fn should_wake_receiver(content: &proto::EncryptedContent) -> bool {
-    content.text_message.is_some()
-        || content.additional_data_message.is_some()
-        || content.group_create.is_some()
+/// The announcement a webxdc update carries, if it has one.
+///
+/// The update itself is hidden -- app state rather than something a person
+/// sent -- but an `info` is written to be read, and becomes a chat row of its
+/// own on arrival. That row is what the receiver is woken and notified for.
+fn webxdc_announcement(message: &encrypted_content::AdditionalDataMessage) -> Option<String> {
+    let data = <proto::AdditionalMessageData as prost::Message>::decode(
+        message.additional_message_data.as_deref()?,
+    )
+    .ok()?;
+    crate::services::webxdc::announcement(&data.webxdc_update?)
+}
+
+/// Who wrote the message with this id, as this device has it.
+///
+/// The two layers say different things and both matter here: the outer `None`
+/// means this device has no such message, while an inner `None` means this
+/// device wrote it, which is how an own message is stored.
+async fn message_sender(
+    transaction: &mut Transaction<'_, Sqlite>,
+    message_id: &str,
+) -> Result<Option<Option<i64>>> {
+    Ok(sqlx::query_scalar!(
+        "SELECT sender_id FROM messages WHERE message_id = ?",
+        message_id
+    )
+    .fetch_optional(&mut **transaction)
+    .await?)
+}
+
+/// Whether this envelope is worth spending the recipient's push budget on.
+///
+/// A wake-up is not free to get wrong. iOS renders the alert the push carried
+/// no matter what the extension finds behind it, so an envelope that wakes a
+/// device without leaving it anything to show reaches the user as a bare "You
+/// got a new message" -- which is why every arm here has to match something
+/// [`record_incoming_event`] will actually record.
+pub(crate) async fn should_wake_receiver(
+    transaction: &mut Transaction<'_, Sqlite>,
+    target_user_id: i64,
+    content: &proto::EncryptedContent,
+) -> Result<bool> {
+    // A reaction concerns the person who wrote the message it lands on and
+    // nobody else: in a group it wakes that one member rather than all of
+    // them, and a reaction to one's own message wakes nobody at all.
+    let reaction_reaches_author = match content.reaction.as_ref().filter(|value| !value.remove) {
+        Some(reaction) => {
+            message_sender(transaction, &reaction.target_message_id)
+                .await?
+                .flatten()
+                == Some(target_user_id)
+        }
+        None => false,
+    };
+
+    Ok(content.text_message.is_some()
         || content
-            .media
+            .additional_data_message
             .as_ref()
-            .and_then(|value| encrypted_content::media::Type::try_from(value.r#type).ok())
-            .is_some_and(|kind| kind != encrypted_content::media::Type::Reupload)
-        || content.reaction.as_ref().is_some_and(|value| !value.remove)
+            .is_some_and(|message| !message.hidden || webxdc_announcement(message).is_some())
+        || content.group_create.is_some()
+        || content.media.as_ref().is_some_and(|value| {
+            // Widget media lands already opened and is deliberately recorded
+            // without a notification, so waking for it buys the recipient an
+            // alert with nothing behind it.
+            value.widget_only != Some(true)
+                && encrypted_content::media::Type::try_from(value.r#type)
+                    .is_ok_and(|kind| kind != encrypted_content::media::Type::Reupload)
+        })
+        || reaction_reaches_author
         || content
             .media_update
             .as_ref()
@@ -57,7 +117,7 @@ pub(crate) fn should_wake_receiver(content: &proto::EncryptedContent) -> bool {
                     encrypted_content::contact_request::Type::Request
                         | encrypted_content::contact_request::Type::Accept
                 )
-            })
+            }))
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -205,18 +265,52 @@ pub(crate) async fn record_incoming_event(
             })
         }
     } else if let Some(message) = content.additional_data_message.as_ref() {
-        Some(NotificationDraft {
+        // A hidden message is state a feature exchanges and leaves no row of
+        // its own, so the only thing in one worth an alert is an app's
+        // announcement -- and only once the row it materialised into exists,
+        // which it does not when the update was dropped for an unknown
+        // instance, a mismatched chat, or an app that is over budget.
+        let announcement = message
+            .hidden
+            .then(|| webxdc_announcement(message))
+            .flatten();
+        let message_id = if message.hidden {
+            crate::services::webxdc::WebxdcService::info_message_id(&message.sender_message_id)
+        } else {
+            message.sender_message_id.clone()
+        };
+        let worth_an_alert = if message.hidden {
+            announcement.is_some() && message_sender(transaction, &message_id).await?.is_some()
+        } else {
+            true
+        };
+        worth_an_alert.then(|| NotificationDraft {
             event_id: receipt_id.to_owned(),
             notification_id: message.sender_message_id.clone(),
             conversation_id,
             sender_id: from_user_id,
-            message_id: Some(message.sender_message_id.clone()),
-            kind: "text",
-            content: None,
+            message_id: Some(message_id),
+            // An app speaks for itself: the alert reads "Alice is on turn"
+            // rather than "sent a message", so a game's traffic stays
+            // distinguishable from the people in the chat talking.
+            kind: if announcement.is_some() {
+                "webxdc"
+            } else {
+                "text"
+            },
+            content: announcement,
             created_at: milliseconds_to_seconds(message.timestamp),
         })
     } else if let Some(reaction) = content.reaction.as_ref().filter(|value| !value.remove) {
-        Some(NotificationDraft {
+        // Only the author of a message hears about a reaction to it. Everybody
+        // else in the group watched it land on somebody else's message and has
+        // nothing to be told, and a reaction the sender put on their own
+        // message concerns nobody here at all.
+        matches!(
+            message_sender(transaction, &reaction.target_message_id).await?,
+            Some(None)
+        )
+        .then(|| NotificationDraft {
             event_id: receipt_id.to_owned(),
             notification_id: receipt_id.to_owned(),
             conversation_id,
@@ -291,7 +385,7 @@ async fn clear_stale_opened(database: &Arc<AppDatabase>) -> Result<()> {
         UPDATE notification_outbox
         SET cleared_at = ?
         WHERE cleared_at IS NULL
-          AND kind IN ('text', 'response', 'image', 'video', 'audio', 'twonly')
+          AND kind IN ('text', 'response', 'image', 'video', 'audio', 'twonly', 'webxdc')
           AND EXISTS (
               SELECT 1
               FROM messages
@@ -606,7 +700,7 @@ pub(crate) async fn clear_opened_messages(
             SET cleared_at = ?
             WHERE message_id = ?
               AND cleared_at IS NULL
-              AND kind IN ('text', 'response', 'image', 'video', 'audio', 'twonly')
+              AND kind IN ('text', 'response', 'image', 'video', 'audio', 'twonly', 'webxdc')
             "#,
         )
         .bind(cleared_at)
@@ -672,6 +766,14 @@ fn localized_body(locale: &str, row: &PendingRow) -> String {
         String::new()
     };
 
+    // An app's announcement is already a whole sentence written for the
+    // reader, so it is shown as it is rather than described.
+    if row.kind == "webxdc" {
+        if let Some(announcement) = row.content.as_deref().filter(|text| !text.is_empty()) {
+            return announcement.to_owned();
+        }
+    }
+
     let key = match row.kind.as_str() {
         "text" => "notificationText",
         "response" => "notificationResponse",
@@ -716,6 +818,45 @@ pub(crate) fn notification_avatar_path(
 mod tests {
     use super::*;
 
+    fn webxdc_update(info: Option<&str>) -> proto::EncryptedContent {
+        let data = proto::AdditionalMessageData {
+            r#type: proto::additional_message_data::Type::WebxdcUpdate as i32,
+            webxdc_update: Some(proto::WebxdcUpdate {
+                instance_id: "instance".into(),
+                payload: "{}".into(),
+                info: info.map(str::to_owned),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        proto::EncryptedContent {
+            additional_data_message: Some(encrypted_content::AdditionalDataMessage {
+                sender_message_id: "message".into(),
+                timestamp: 0,
+                r#type: "webxdcUpdate".into(),
+                additional_message_data: Some(prost::Message::encode_to_vec(&data)),
+                hidden: true,
+            }),
+            ..Default::default()
+        }
+    }
+
+    fn announcement_of(content: &proto::EncryptedContent) -> Option<String> {
+        webxdc_announcement(content.additional_data_message.as_ref().unwrap())
+    }
+
+    #[test]
+    fn an_app_announcement_is_what_a_hidden_update_is_worth_waking_for() {
+        assert_eq!(
+            announcement_of(&webxdc_update(Some("Alice is on turn"))).as_deref(),
+            Some("Alice is on turn")
+        );
+        // A move carries no announcement, and neither does one that is only
+        // whitespace once the chat row's own bounds are applied to it.
+        assert!(announcement_of(&webxdc_update(None)).is_none());
+        assert!(announcement_of(&webxdc_update(Some("  \u{200e} "))).is_none());
+    }
+
     fn pending_row(kind: &str) -> PendingRow {
         PendingRow {
             event_id: "event".into(),
@@ -756,6 +897,21 @@ mod tests {
             fallback_presentation("de-DE").body,
             "Du könntest neue Nachrichten haben."
         );
+    }
+
+    #[test]
+    fn an_app_announcement_is_shown_as_the_app_wrote_it() {
+        let mut announcement = pending_row("webxdc");
+        announcement.content = Some("Alice is on turn".into());
+        // Not "sent a message", and not translated either: the app already
+        // localised the sentence for the reader.
+        assert_eq!(localized_body("en", &announcement), "Alice is on turn");
+        assert_eq!(localized_body("de", &announcement), "Alice is on turn");
+
+        // An app that manages to lose its own text still reads like a message
+        // rather than an empty alert.
+        announcement.content = None;
+        assert_eq!(localized_body("en", &announcement), "sent a message.");
     }
 
     #[test]

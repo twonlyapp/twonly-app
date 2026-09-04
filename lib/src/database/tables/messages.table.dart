@@ -3,7 +3,14 @@ import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 
-enum MessageType { media, text, contacts, restoreFlameCounter, askAboutUser }
+enum MessageType {
+  media,
+  text,
+  contacts,
+  restoreFlameCounter,
+  askAboutUser,
+  webxdcApp,
+}
 
 @DataClassName('Message')
 @TableIndex(

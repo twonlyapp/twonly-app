@@ -133,7 +133,10 @@ class _HomeWidgetDeveloperViewState extends State<HomeWidgetDeveloperView> {
 
     final groups = (decoded['groups'] as List?) ?? [];
     final images = (decoded['images'] as List?) ?? [];
-    lines.add('${groups.length} contact groups, ${images.length} images');
+    lines.add(
+      '${groups.length} contact groups, ${images.length} images '
+      '(at most one per contact group)',
+    );
 
     // The group IDs are the whole matching rule: the widget shows an image only
     // when its sender's groups intersect the groups the widget was configured
@@ -141,14 +144,17 @@ class _HomeWidgetDeveloperViewState extends State<HomeWidgetDeveloperView> {
     for (final group in groups.cast<Map<String, dynamic>>()) {
       lines.add('  group ${group['id']}: ${group['name']}');
     }
-    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     for (final image in images.cast<Map<String, dynamic>>()) {
-      final expiresAt = (image['expires_at'] as num?)?.toInt() ?? 0;
+      final receivedAt = DateTime.fromMillisecondsSinceEpoch(
+        ((image['received_at'] as num?)?.toInt() ?? 0) * 1000,
+      );
       final exists = File('${image['path']}').existsSync();
       lines.add(
         '  ${image['media_id']} from ${image['sender']} '
+        // One image per contact group, so these are the groups it is the
+        // current image for — not the sender's full membership.
         'groups=${image['group_ids']} '
-        '${expiresAt > now ? 'valid' : 'EXPIRED'} '
+        'received ${receivedAt.toLocal()} '
         '${exists ? '' : 'FILE MISSING'}',
       );
     }

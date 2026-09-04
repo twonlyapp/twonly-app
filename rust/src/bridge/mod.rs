@@ -9,6 +9,7 @@ pub mod callbacks;
 pub mod groups;
 pub mod logging;
 pub mod user_config;
+pub mod webxdc;
 pub mod wrapper;
 
 use crate::context::Context;

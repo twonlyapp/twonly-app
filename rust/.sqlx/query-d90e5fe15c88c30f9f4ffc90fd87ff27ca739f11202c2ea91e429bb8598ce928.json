@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE webxdc_instances\n               SET summary = COALESCE(?, summary),\n                   document = COALESCE(?, document),\n                   last_update_at = ?\n               WHERE instance_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "d90e5fe15c88c30f9f4ffc90fd87ff27ca739f11202c2ea91e429bb8598ce928"
+}

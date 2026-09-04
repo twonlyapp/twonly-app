@@ -145,6 +145,11 @@ fn client() -> Result<reqwest::Client> {
 async fn success(response: reqwest::Response) -> Result<()> {
     if response.status().is_success() {
         Ok(())
+    } else if response.status() == reqwest::StatusCode::CONFLICT {
+        // The one status a caller can act on: the state moved while the
+        // request was being prepared, and re-applying the change to the new
+        // version is all that is needed.
+        Err(TwonlyError::GroupStateConflict)
     } else {
         Err(TwonlyError::Generic(format!(
             "group server returned {}",

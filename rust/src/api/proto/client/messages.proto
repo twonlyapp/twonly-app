@@ -66,10 +66,13 @@ message EncryptedContent {
   }
 
   message TextMessage {
-    string          sender_message_id = 1;
-    string          text              = 2;
-    int64           timestamp         = 3;
-    optional string quote_message_id  = 4;
+    string          sender_message_id       = 1;
+    string          text                    = 2;
+    int64           timestamp               = 3;
+    optional string quote_message_id        = 4;
+    // Carries where the text came from when it was not typed by the sender --
+    // today, the webxdc app that produced it.
+    optional bytes  additional_message_data = 5;
   }
 
   message AdditionalDataMessage {
@@ -77,6 +80,14 @@ message EncryptedContent {
     int64          timestamp               = 2;
     string         type                    = 3;
     optional bytes additional_message_data = 4;
+    // State a feature exchanges rather than something a person sent. A hidden
+    // message leaves no row in `messages`, so it never appears in a chat, and
+    // it neither raises a notification nor wakes the receiver.
+    //
+    // The one exception is a webxdc update carrying an `info`: the state stays
+    // hidden, but the announcement in it is written to be read and becomes a
+    // chat row of its own on arrival, which is worth waking for.
+    bool           hidden                  = 5;
   }
 
   message Reaction {

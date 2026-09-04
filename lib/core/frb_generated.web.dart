@@ -13,6 +13,7 @@ import 'bridge/callbacks.dart';
 import 'bridge/groups.dart';
 import 'bridge/logging.dart';
 import 'bridge/user_config.dart';
+import 'bridge/webxdc.dart';
 import 'bridge/wrapper.dart';
 import 'bridge/wrapper/app_database.dart';
 import 'bridge/wrapper/backup.dart';
@@ -128,6 +129,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   UserConfig dco_decode_box_autoadd_user_config(dynamic raw);
 
   @protected
+  WebxdcInstanceInfo dco_decode_box_autoadd_webxdc_instance_info(dynamic raw);
+
+  @protected
   double dco_decode_f_64(dynamic raw);
 
   @protected
@@ -237,6 +241,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SqlValue> dco_decode_list_sql_value(dynamic raw);
 
   @protected
+  List<WebxdcStoreApp> dco_decode_list_webxdc_store_app(dynamic raw);
+
+  @protected
+  List<WebxdcUpdateEntry> dco_decode_list_webxdc_update_entry(dynamic raw);
+
+  @protected
   LogLevel dco_decode_log_level(dynamic raw);
 
   @protected
@@ -282,6 +292,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   UserConfig? dco_decode_opt_box_autoadd_user_config(dynamic raw);
+
+  @protected
+  WebxdcInstanceInfo? dco_decode_opt_box_autoadd_webxdc_instance_info(
+    dynamic raw,
+  );
 
   @protected
   List<String>? dco_decode_opt_list_String(dynamic raw);
@@ -351,6 +366,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TwonlySafeBackup dco_decode_twonly_safe_backup(dynamic raw);
 
   @protected
+  int dco_decode_u_16(dynamic raw);
+
+  @protected
   int dco_decode_u_32(dynamic raw);
 
   @protected
@@ -373,6 +391,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
+
+  @protected
+  WebxdcInstanceInfo dco_decode_webxdc_instance_info(dynamic raw);
+
+  @protected
+  WebxdcResponse dco_decode_webxdc_response(dynamic raw);
+
+  @protected
+  WebxdcStoreApp dco_decode_webxdc_store_app(dynamic raw);
+
+  @protected
+  WebxdcUpdateEntry dco_decode_webxdc_update_entry(dynamic raw);
 
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
@@ -476,6 +506,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   UserConfig sse_decode_box_autoadd_user_config(SseDeserializer deserializer);
+
+  @protected
+  WebxdcInstanceInfo sse_decode_box_autoadd_webxdc_instance_info(
+    SseDeserializer deserializer,
+  );
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
@@ -609,6 +644,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SqlValue> sse_decode_list_sql_value(SseDeserializer deserializer);
 
   @protected
+  List<WebxdcStoreApp> sse_decode_list_webxdc_store_app(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<WebxdcUpdateEntry> sse_decode_list_webxdc_update_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   LogLevel sse_decode_log_level(SseDeserializer deserializer);
 
   @protected
@@ -660,6 +705,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   UserConfig? sse_decode_opt_box_autoadd_user_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  WebxdcInstanceInfo? sse_decode_opt_box_autoadd_webxdc_instance_info(
     SseDeserializer deserializer,
   );
 
@@ -741,6 +791,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TwonlySafeBackup sse_decode_twonly_safe_backup(SseDeserializer deserializer);
 
   @protected
+  int sse_decode_u_16(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_u_32(SseDeserializer deserializer);
 
   @protected
@@ -763,6 +816,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
+
+  @protected
+  WebxdcInstanceInfo sse_decode_webxdc_instance_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  WebxdcResponse sse_decode_webxdc_response(SseDeserializer deserializer);
+
+  @protected
+  WebxdcStoreApp sse_decode_webxdc_store_app(SseDeserializer deserializer);
+
+  @protected
+  WebxdcUpdateEntry sse_decode_webxdc_update_entry(
+    SseDeserializer deserializer,
+  );
 
   @protected
   void sse_encode_AnyhowException(
@@ -902,6 +971,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_user_config(
     UserConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_webxdc_instance_info(
+    WebxdcInstanceInfo self,
     SseSerializer serializer,
   );
 
@@ -1071,6 +1146,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_sql_value(List<SqlValue> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_webxdc_store_app(
+    List<WebxdcStoreApp> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_webxdc_update_entry(
+    List<WebxdcUpdateEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_log_level(LogLevel self, SseSerializer serializer);
 
   @protected
@@ -1136,6 +1223,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_user_config(
     UserConfig? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_webxdc_instance_info(
+    WebxdcInstanceInfo? self,
     SseSerializer serializer,
   );
 
@@ -1239,6 +1332,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_u_16(int self, SseSerializer serializer);
+
+  @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
 
   @protected
@@ -1261,6 +1357,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_webxdc_instance_info(
+    WebxdcInstanceInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_webxdc_response(
+    WebxdcResponse self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_webxdc_store_app(
+    WebxdcStoreApp self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_webxdc_update_entry(
+    WebxdcUpdateEntry self,
+    SseSerializer serializer,
+  );
 }
 
 // Section: wire_class

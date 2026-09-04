@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT COUNT(*) AS \"count!: i64\", MAX(last_retry) AS last_retry\n                       FROM receipts WHERE contact_id = ? AND message_id = ?",
+  "query": "SELECT COUNT(*) AS \"count!: i64\",\n                      COALESCE(SUM(LENGTH(payload)), 0) AS \"bytes!: i64\"\n               FROM webxdc_updates WHERE instance_id = ?",
   "describe": {
     "columns": [
       {
@@ -10,19 +10,19 @@
         "origin": "Expression"
       },
       {
-        "name": "last_retry",
+        "name": "bytes!: i64",
         "ordinal": 1,
         "type_info": "Integer",
         "origin": "Expression"
       }
     ],
     "parameters": {
-      "Right": 2
+      "Right": 1
     },
     "nullable": [
       false,
-      true
+      false
     ]
   },
-  "hash": "cf821c9b1530db447a1ba030c3be50c5eeeb78cb28fe74481d6493a6a0af4161"
+  "hash": "1690c503c4d633e891b40671af249ef313f0d4c8e3dbddf38e6d67868be1f5a9"
 }

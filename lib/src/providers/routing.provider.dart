@@ -47,7 +47,6 @@ import 'package:twonly/src/visual/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/visual/views/settings/settings_main.view.dart';
 import 'package:twonly/src/visual/views/settings/share_with_friends.view.dart';
 import 'package:twonly/src/visual/views/settings/subscription/subscription.view.dart';
-import 'package:twonly/src/visual/views/settings/widgets/widgets.view.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -228,10 +227,6 @@ final routerProvider = GoRouter(
         GoRoute(
           path: 'notification',
           builder: (context, state) => const NotificationView(),
-        ),
-        GoRoute(
-          path: 'widgets',
-          builder: (context, state) => const WidgetsSettingsView(),
         ),
         GoRoute(
           path: 'storage_data',

@@ -2701,91 +2701,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fileLimitReachedUpgrade => 'Tarif wechseln';
 
   @override
-  String get settingsWidgets => 'Widgets';
-
-  @override
-  String get widgetsTitle => 'Widgets';
-
-  @override
-  String get widgetsIntroTitle => 'Fotos auf deinem Homebildschirm';
-
-  @override
-  String get widgetsIntroBody =>
-      'Freunde aus den von dir gewählten Kontaktgruppen können ein Foto direkt an ein Widget auf deinem Homebildschirm senden. Fotos verschwinden nach 24 Stunden von selbst.';
-
-  @override
-  String get widgetsSetupIos =>
-      'Halte eine freie Stelle auf dem Homebildschirm gedrückt, tippe auf Bearbeiten, dann auf Widget hinzufügen und wähle twonly. Halte anschließend das neue Widget gedrückt und tippe auf Widget bearbeiten, um die Kontaktgruppen auszuwählen.';
-
-  @override
-  String get widgetsSetupAndroid =>
-      'Halte eine freie Stelle auf dem Homebildschirm gedrückt, tippe auf Widgets und ziehe das twonly-Widget an seinen Platz. Du wirst gefragt, welche Kontaktgruppen daran senden dürfen.';
-
-  @override
-  String get widgetsNoneTitle => 'Noch kein Widget hinzugefügt';
-
-  @override
-  String get widgetsPlacedTitle => 'Auf deinem Homebildschirm';
-
-  @override
-  String get widgetsAddAnother => 'Weiteres Widget hinzufügen';
-
-  @override
-  String get widgetsNoGroups => 'Keine Kontaktgruppe ausgewählt';
-
-  @override
-  String get widgetsNoGroupsHint =>
-      'Niemand kann an dieses Widget senden, solange du keine Kontaktgruppe auswählst.';
-
-  @override
-  String get widgetsEditGroup => 'Kontaktgruppe bearbeiten';
-
-  @override
-  String get widgetsChangeGroupsIos =>
-      'Um die Kontaktgruppen zu ändern, halte das Widget auf dem Homebildschirm gedrückt und tippe auf Widget bearbeiten.';
-
-  @override
-  String get widgetsChangeGroupsAndroid =>
-      'Um die Kontaktgruppen zu ändern, entferne das Widget und füge es erneut hinzu.';
-
-  @override
-  String get widgetsCurrentImages => 'Wird aktuell angezeigt';
-
-  @override
-  String get widgetsNoImages => 'Aktuell keine Fotos';
-
-  @override
-  String get widgetsNoImagesHint =>
-      'Fotos, die dir deine Freunde an dieses Widget senden, erscheinen hier.';
-
-  @override
-  String widgetsFrom(String sender) {
-    return 'Von $sender';
-  }
-
-  @override
-  String widgetsExpiresIn(String duration) {
-    return 'Noch $duration sichtbar';
-  }
-
-  @override
-  String get widgetsDeleteImage => 'Foto löschen';
-
-  @override
-  String get widgetsDeleteImageConfirm =>
-      'Damit wird das Foto von allen Widgets entfernt, die es anzeigen. Das kann nicht rückgängig gemacht werden.';
-
-  @override
-  String widgetsDurationHours(int hours) {
-    return '$hours Std.';
-  }
-
-  @override
-  String widgetsDurationMinutes(int minutes) {
-    return '$minutes Min.';
-  }
-
-  @override
   String get contactGroupUsedByWidget => 'Homebildschirm-Widget';
 
   @override
@@ -2815,18 +2730,33 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get widgetsQueryFailed =>
-      'Die Widgets auf deinem Homebildschirm konnten nicht gelesen werden, diese Liste ist möglicherweise veraltet.';
+  String get webxdcStoreMenu => 'App';
 
   @override
-  String get widgetsSizeSmall => 'Kleines Widget';
+  String get webxdcStoreTitle => 'App hinzufügen';
 
   @override
-  String get widgetsSizeMedium => 'Mittleres Widget';
+  String get webxdcStoreEmpty => 'Es sind noch keine Apps verfügbar.';
 
   @override
-  String get widgetsSizeLarge => 'Großes Widget';
+  String get webxdcStoreOffline =>
+      'Die App-Liste konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.';
 
   @override
-  String get widgetsSizeUnknown => 'Widget';
+  String get webxdcStoreFailed =>
+      'Die App konnte diesem Chat nicht hinzugefügt werden.';
+
+  @override
+  String get webxdcUnavailable => 'Diese App konnte nicht geladen werden.';
+
+  @override
+  String get webxdcDeleteConfirm =>
+      'Alles, was diese App auf diesem Gerät gespeichert hat, wird gelöscht. Andere Mitglieder behalten ihre eigene Kopie.';
+
+  @override
+  String get webxdcExternalLinkTitle => 'twonly verlassen?';
+
+  @override
+  String get webxdcExternalLinkBody =>
+      'Dieser Link öffnet sich außerhalb von twonly in deinem Browser:';
 }

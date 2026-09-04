@@ -85,12 +85,7 @@ class TwonlyWidgetConfigureActivity : AppCompatActivity() {
             TwonlyWidgetProvider.preferences(this)
                 .edit().putStringSet(TwonlyWidgetProvider.groupsKey(widgetId), selected).apply()
             persistNativeConfiguration(this)
-            TwonlyWidgetProvider.update(
-                this,
-                AppWidgetManager.getInstance(this),
-                widgetId,
-                advance = false,
-            )
+            TwonlyWidgetProvider.update(this, AppWidgetManager.getInstance(this), widgetId)
             setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
             finish()
         }

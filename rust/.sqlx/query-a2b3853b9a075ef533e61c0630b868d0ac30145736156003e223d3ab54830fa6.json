@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM webxdc_apps\n               WHERE NOT EXISTS (SELECT 1 FROM webxdc_instances\n                                 WHERE webxdc_instances.app_id = webxdc_apps.app_id\n                                   AND webxdc_instances.version = webxdc_apps.version)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "a2b3853b9a075ef533e61c0630b868d0ac30145736156003e223d3ab54830fa6"
+}

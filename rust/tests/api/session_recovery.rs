@@ -36,7 +36,7 @@ async fn test_signal_session_auto_recovery_on_missing_session() -> anyhow::Resul
 
     // Initial message
     let msg1_id = MessageService::new(&tester_a.context)
-        .insert_and_send_text(group_id.clone(), "Initial message".into(), None)
+        .insert_and_send_text(group_id.clone(), "Initial message".into(), None, None)
         .await?;
     tester_b
         .wait_for_text_message(&msg1_id, tester_a.user_id, "Initial message")
@@ -57,7 +57,7 @@ async fn test_signal_session_auto_recovery_on_missing_session() -> anyhow::Resul
     // `encrypt_v2_with_session_recovery` should catch the missing session error,
     // fetch Tester B's prekey bundle from the server, rebuild the session, and deliver.
     let msg2_id = MessageService::new(&tester_a.context)
-        .insert_and_send_text(group_id.clone(), "Recovered message".into(), None)
+        .insert_and_send_text(group_id.clone(), "Recovered message".into(), None, None)
         .await?;
 
     tester_b

@@ -18,6 +18,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import io.flutter.plugin.common.MethodChannel
 import eu.twonly.notifications.NotificationTapChannel
+import eu.twonly.webxdc.WebxdcChannel
 import eu.twonly.widget.WidgetRuntimeChannel
 
 class MainActivity : FlutterFragmentActivity() {
@@ -46,6 +47,14 @@ class MainActivity : FlutterFragmentActivity() {
         super.onCreate(savedInstanceState)
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        // A running webxdc app is the only thing that opens a picker from here.
+        if (eu.twonly.webxdc.WebxdcView.handleActivityResult(requestCode, resultCode, data)) {
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -72,6 +81,7 @@ class MainActivity : FlutterFragmentActivity() {
 
         NotificationTapChannel.configure(flutterEngine, applicationContext)
         WidgetRuntimeChannel.configure(flutterEngine, applicationContext)
+        WebxdcChannel.configure(flutterEngine, this)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
@@ -107,6 +117,7 @@ class MainActivity : FlutterFragmentActivity() {
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         NotificationTapChannel.detach()
         WidgetRuntimeChannel.detach()
+        WebxdcChannel.detach()
         super.cleanUpFlutterEngine(flutterEngine)
     }
 }

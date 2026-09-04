@@ -111,11 +111,6 @@ class SettingsMainView extends StatelessWidget {
                 onTap: () => context.push(Routes.settingsNotification),
               ),
               BetterListTile(
-                icon: Icons.widgets_rounded,
-                text: context.lang.settingsWidgets,
-                onTap: () => context.push(Routes.settingsWidgets),
-              ),
-              BetterListTile(
                 icon: FontAwesomeIcons.chartPie,
                 iconSize: 15,
                 text: context.lang.settingsStorageData,

@@ -81,6 +81,14 @@ BubbleInfo getBubbleInfo(
   return info;
 }
 
+/// The languages the reader prefers, most preferred first, for the parts of a
+/// message that arrive translated -- a webxdc app's name, say. What the reader
+/// asked for is decided from the resolved locale and never sent anywhere: every
+/// translation is already on the device.
+List<String> readerLanguages(BuildContext context) => [
+  Localizations.localeOf(context).toLanguageTag(),
+];
+
 /// Laying text out is expensive and `getBubbleInfo` runs for every visible
 /// bubble on every rebuild, while the same message content is measured over and
 /// over. Keep the last few hundred results around, in insertion order, so the

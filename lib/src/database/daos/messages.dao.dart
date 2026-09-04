@@ -140,7 +140,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                 // so ensuring that this message is not shown in the messages anymore
                 (messages.openedAt.isBiggerThanValue(deletionTime) |
                     messages.openedAt.isNull() |
-                    messages.mediaStored.equals(true)) &
+                    messages.mediaStored.equals(true) |
+                    messages.type.equals(MessageType.webxdcApp.name)) &
                 (mediaFiles.downloadState
                         .equals(DownloadState.reuploadRequested.name)
                         .not() |
@@ -208,7 +209,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             messages.groupId.equals(groupId) &
                 (messages.openedAt.isBiggerThanValue(deletionTime) |
                     messages.openedAt.isNull() |
-                    messages.mediaStored.equals(true)) &
+                    messages.mediaStored.equals(true) |
+                    messages.type.equals(MessageType.webxdcApp.name)) &
                 (messages.isDeletedFromSender.equals(true) |
                     (messages.type.equals(MessageType.text.name).not() &
                         messages.type.equals(MessageType.media.name).not()) |
@@ -256,7 +258,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                         ))) &
                 (messages.openedAt.isBiggerThanValue(deletionTime) |
                     messages.openedAt.isNull() |
-                    messages.mediaStored.equals(true)) &
+                    messages.mediaStored.equals(true) |
+                    messages.type.equals(MessageType.webxdcApp.name)) &
                 (messages.isDeletedFromSender.equals(true) |
                     (messages.type.equals(MessageType.text.name).not() &
                         messages.type.equals(MessageType.media.name).not()) |
@@ -310,6 +313,12 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           await (delete(messages)..where(
                 (m) =>
                     m.groupId.isIn(groupIds) &
+                    // An app card owns a webxdc instance, and the instance owns
+                    // its update log by foreign key. Sweeping the card away on
+                    // the chat's timer would take an app's whole state with it
+                    // without ever clearing the storage its origin holds, so
+                    // apps leave only when somebody deletes them.
+                    m.type.equals(MessageType.webxdcApp.name).not() &
                     ((m.mediaStored.equals(true) &
                             m.isDeletedFromSender.equals(true)) |
                         m.mediaStored.equals(false)) &

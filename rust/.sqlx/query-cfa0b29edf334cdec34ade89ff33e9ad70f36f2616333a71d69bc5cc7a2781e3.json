@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM webxdc_instances WHERE instance_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "cfa0b29edf334cdec34ade89ff33e9ad70f36f2616333a71d69bc5cc7a2781e3"
+}

@@ -16,3 +16,4 @@ pub mod mediafiles;
 pub mod messages;
 pub mod notifications;
 pub mod outbox_dispatch;
+pub mod webxdc;

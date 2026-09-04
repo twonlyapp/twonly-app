@@ -13,6 +13,7 @@ import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     as pb;
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
@@ -185,6 +186,14 @@ class MessageContextMenu extends StatelessWidget {
               group,
               galleryItems,
             );
+            if (action == null) return;
+            if (message.type == MessageType.webxdcApp.name) {
+              // Removing the rows is only half of it. An app is free to keep
+              // its whole state in localStorage or IndexedDB, which no database
+              // delete reaches, so the instance goes first and takes its origin
+              // with it.
+              await WebxdcService.deleteInstance(message.messageId);
+            }
             if (action == 'delete_for_all') {
               await twonlyDB.messagesDao.handleMessageDeletion(
                 null,
@@ -285,6 +294,18 @@ Future<String?> showDeleteMessageOptions(
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 24),
+            // Deleting an app is not the same as deleting a message: the whole
+            // update log and everything the app saved on this device go with
+            // it, so the sheet says so rather than letting the usual wording
+            // stand in for it.
+            if (message.type == MessageType.webxdcApp.name) ...[
+              Text(
+                context.lang.webxdcDeleteConfirm,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: context.color.onSurfaceVariant),
+              ),
+              const SizedBox(height: 24),
+            ],
             if (isForAll) ...[
               Center(
                 child: MyButton(

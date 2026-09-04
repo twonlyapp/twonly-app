@@ -24,6 +24,12 @@ class AdditionalMessageData_Type extends $pb.ProtobufEnum {
           2, _omitEnumNames ? '' : 'RESTORED_FLAME_COUNTER');
   static const AdditionalMessageData_Type ASK_ABOUT_USER =
       AdditionalMessageData_Type._(3, _omitEnumNames ? '' : 'ASK_ABOUT_USER');
+  static const AdditionalMessageData_Type WEBXDC_APP =
+      AdditionalMessageData_Type._(4, _omitEnumNames ? '' : 'WEBXDC_APP');
+  static const AdditionalMessageData_Type WEBXDC_UPDATE =
+      AdditionalMessageData_Type._(5, _omitEnumNames ? '' : 'WEBXDC_UPDATE');
+  static const AdditionalMessageData_Type WEBXDC_SENT =
+      AdditionalMessageData_Type._(6, _omitEnumNames ? '' : 'WEBXDC_SENT');
 
   static const $core.List<AdditionalMessageData_Type> values =
       <AdditionalMessageData_Type>[
@@ -31,10 +37,13 @@ class AdditionalMessageData_Type extends $pb.ProtobufEnum {
     CONTACTS,
     RESTORED_FLAME_COUNTER,
     ASK_ABOUT_USER,
+    WEBXDC_APP,
+    WEBXDC_UPDATE,
+    WEBXDC_SENT,
   ];
 
   static final $core.List<AdditionalMessageData_Type?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 3);
+      $pb.ProtobufEnum.$_initByValueList(values, 6);
   static AdditionalMessageData_Type? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

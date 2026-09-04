@@ -1021,7 +1021,10 @@ impl DirectMediaUploadService {
                 dispatches.push(AttachmentDispatch {
                     recipient_user_id: recipient.contact_id,
                     encrypted_body,
-                    push_data: Some(vec![1]),
+                    // Widget media arrives already opened and raises no
+                    // notification, so a push for it only buys the recipient
+                    // an alert with nothing behind it.
+                    push_data: (message.is_widget_media == 0).then(|| vec![1]),
                     download_token,
                 });
             }

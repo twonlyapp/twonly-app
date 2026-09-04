@@ -111,3 +111,30 @@ message GroupState {
   bytes encrypted_group_state = 2;
   repeated AppendGroupState appended_group_states = 3;
 }
+
+// One published webxdc app, as the store advertises it. `bundle_sha256` is the
+// hash of the .xdc the blob endpoint serves; the client verifies it before the
+// zip is opened, and pins it per instance until the app is next started.
+//
+// An app that is unpublished simply stops appearing here. Clients keep the
+// bundles they already downloaded, so an absence is not a signal to stop.
+message WebxdcCatalogEntry {
+  string          app_id          = 1;
+  int64           version         = 2;
+  string          name            = 3;
+  optional string source_code_url = 4;
+  string          bundle_sha256   = 5;
+  int64           bundle_bytes    = 6;
+  bytes           icon            = 8;
+  // One short line per language, keyed by language tag (`en`, `de`, `pt-br`).
+  // Every client gets every translation and picks its own, so asking for the
+  // catalog says nothing about what language a user reads.
+  map<string, string> description = 9;
+  // The name in every language the bundle carries it in, keyed the same way.
+  // `name` is what a client shows when none of them is a language it reads.
+  map<string, string> name_translations = 10;
+}
+
+message WebxdcCatalog {
+  repeated WebxdcCatalogEntry entries = 1;
+}

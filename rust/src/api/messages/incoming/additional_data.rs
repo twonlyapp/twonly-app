@@ -11,6 +11,7 @@ use crate::database::app::tables::Message;
 use crate::database::app::tables::NewKeyVerification;
 use crate::database::app::tables::{MessageType, NewMessage};
 use crate::error::Result;
+use crate::services::webxdc::WebxdcService;
 use crate::utils::milliseconds_to_seconds;
 use prost::Message as ProstMessage;
 use sqlx::{Sqlite, Transaction};
@@ -25,12 +26,44 @@ pub(crate) async fn handle_additional_data_message(
     Message::check_message_owner(tr, &message.sender_message_id, from_user_id).await?;
     let timestamp = milliseconds_to_seconds(message.timestamp);
 
-    if let Some(data) = message.additional_message_data.as_deref() {
-        // Additional metadata is optional. Keep accepting the containing
-        // message if it is malformed or contact verification cannot complete.
-        if let Err(error) = verify_shared_contacts(ctx, tr, from_user_id, data).await {
+    // Additional metadata is optional. Keep accepting the containing message if
+    // it is malformed or a handler cannot complete.
+    let data = match message.additional_message_data.as_deref() {
+        Some(bytes) => match proto::AdditionalMessageData::decode(bytes) {
+            Ok(data) => Some(data),
+            Err(error) => {
+                tracing::warn!("failed to decode additional message data: {error}");
+                None
+            }
+        },
+        None => None,
+    };
+
+    if let Some(data) = data.as_ref() {
+        if let Some(update) = data.webxdc_update.as_ref() {
+            // App state belongs in the instance's own log, which is ordered,
+            // gap free, and outside the reach of the chat's deletion timer.
+            WebxdcService::handle_incoming_update(
+                tr,
+                &message.sender_message_id,
+                group_id,
+                from_user_id,
+                update,
+                timestamp,
+            )
+            .await?;
+        } else if let Err(error) = verify_shared_contacts(ctx, tr, from_user_id, data).await {
             tracing::warn!("failed to handle additional message data: {error}");
         }
+    }
+
+    // A hidden message carries state a feature exchanges rather than something
+    // a person sent, so it leaves no trace in the chat: no row means it cannot
+    // be rendered, quoted, deleted, or swept up by the deletion timer, and the
+    // chat's last exchange is left alone so a running app cannot keep a streak
+    // alive on its own.
+    if message.hidden {
+        return Ok(());
     }
 
     NewMessage::builder()
@@ -45,6 +78,12 @@ pub(crate) async fn handle_additional_data_message(
         .insert(tr)
         .await?;
 
+    if let Some(app) = data.as_ref().and_then(|data| data.webxdc_app.as_ref()) {
+        // Recorded only once the card exists: the instance is keyed by that
+        // message and cascades from it.
+        WebxdcService::handle_incoming_app(tr, &message.sender_message_id, group_id, app).await?;
+    }
+
     Group::increase_last_message_exchange(tr, group_id, timestamp).await?;
 
     Ok(())
@@ -54,17 +93,15 @@ async fn verify_shared_contacts(
     ctx: &Context,
     tr: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
-    bytes: &[u8],
+    data: &proto::AdditionalMessageData,
 ) -> Result<()> {
-    let data = proto::AdditionalMessageData::decode(bytes)?;
-
     if data.r#type != proto::additional_message_data::Type::Contacts as i32 {
         return Ok(());
     }
 
     let signal_database = ctx.rust_db.read().await.clone();
 
-    for contact in data.contacts {
+    for contact in &data.contacts {
         if contact.public_identity_key.is_empty() {
             tracing::info!("shared contact carries no public key, skipping verification");
             continue;

@@ -30,6 +30,7 @@ pub(crate) async fn handle_text_message(
         .sender_id(from_user_id)
         .content(&message.text)
         .maybe_quotes_message_id(message.quote_message_id.as_deref())
+        .maybe_additional_message_data(message.additional_message_data.as_deref())
         .ack_by_server(current_time().timestamp())
         .build()
         .insert(t)

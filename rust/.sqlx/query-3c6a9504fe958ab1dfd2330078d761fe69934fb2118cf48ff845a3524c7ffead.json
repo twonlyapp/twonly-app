@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE webxdc_apps SET published = 0",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "3c6a9504fe958ab1dfd2330078d761fe69934fb2118cf48ff845a3524c7ffead"
+}

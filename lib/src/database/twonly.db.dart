@@ -20,6 +20,7 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/tables/reactions.table.dart';
 import 'package:twonly/src/database/tables/receipts.table.dart';
 import 'package:twonly/src/database/tables/user_discovery.table.dart';
+import 'package:twonly/src/database/tables/webxdc.table.dart';
 import 'package:twonly/src/database/twonly.db.steps.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -48,6 +49,9 @@ part 'twonly.db.g.dart';
     UserDiscoveryShares,
     ContactGroups,
     ContactGroupMembers,
+    WebxdcApps,
+    WebxdcInstances,
+    WebxdcUpdates,
   ],
   daos: [
     MessagesDao,

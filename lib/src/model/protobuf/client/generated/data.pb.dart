@@ -106,6 +106,9 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     $core.Iterable<SharedContact>? contacts,
     $fixnum.Int64? restoredFlameCounter,
     $fixnum.Int64? askAboutUserId,
+    WebxdcApp? webxdcApp,
+    WebxdcUpdate? webxdcUpdate,
+    WebxdcOrigin? webxdcOrigin,
   }) {
     final result = create();
     if (type != null) result.type = type;
@@ -114,6 +117,9 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     if (restoredFlameCounter != null)
       result.restoredFlameCounter = restoredFlameCounter;
     if (askAboutUserId != null) result.askAboutUserId = askAboutUserId;
+    if (webxdcApp != null) result.webxdcApp = webxdcApp;
+    if (webxdcUpdate != null) result.webxdcUpdate = webxdcUpdate;
+    if (webxdcOrigin != null) result.webxdcOrigin = webxdcOrigin;
     return result;
   }
 
@@ -136,6 +142,12 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
         subBuilder: SharedContact.create)
     ..aInt64(4, _omitFieldNames ? '' : 'restoredFlameCounter')
     ..aInt64(5, _omitFieldNames ? '' : 'askAboutUserId')
+    ..aOM<WebxdcApp>(6, _omitFieldNames ? '' : 'webxdcApp',
+        subBuilder: WebxdcApp.create)
+    ..aOM<WebxdcUpdate>(7, _omitFieldNames ? '' : 'webxdcUpdate',
+        subBuilder: WebxdcUpdate.create)
+    ..aOM<WebxdcOrigin>(8, _omitFieldNames ? '' : 'webxdcOrigin',
+        subBuilder: WebxdcOrigin.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -196,6 +208,305 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
   $core.bool hasAskAboutUserId() => $_has(4);
   @$pb.TagNumber(5)
   void clearAskAboutUserId() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  WebxdcApp get webxdcApp => $_getN(5);
+  @$pb.TagNumber(6)
+  set webxdcApp(WebxdcApp value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasWebxdcApp() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearWebxdcApp() => $_clearField(6);
+  @$pb.TagNumber(6)
+  WebxdcApp ensureWebxdcApp() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  WebxdcUpdate get webxdcUpdate => $_getN(6);
+  @$pb.TagNumber(7)
+  set webxdcUpdate(WebxdcUpdate value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasWebxdcUpdate() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearWebxdcUpdate() => $_clearField(7);
+  @$pb.TagNumber(7)
+  WebxdcUpdate ensureWebxdcUpdate() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  WebxdcOrigin get webxdcOrigin => $_getN(7);
+  @$pb.TagNumber(8)
+  set webxdcOrigin(WebxdcOrigin value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasWebxdcOrigin() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearWebxdcOrigin() => $_clearField(8);
+  @$pb.TagNumber(8)
+  WebxdcOrigin ensureWebxdcOrigin() => $_ensure(7);
+}
+
+/// Attached to a message a webxdc app asked the user to send, so the chat can
+/// say which app it came from.
+///
+/// `instance_id` is the app card in the chat the app runs in, which is not
+/// necessarily the chat this message was sent to: the user picks the recipient.
+/// `app_id` and `version` are carried as well so the receiver can name and
+/// picture the app even when it has no instance of its own.
+class WebxdcOrigin extends $pb.GeneratedMessage {
+  factory WebxdcOrigin({
+    $core.String? instanceId,
+    $core.String? appId,
+    $fixnum.Int64? version,
+  }) {
+    final result = create();
+    if (instanceId != null) result.instanceId = instanceId;
+    if (appId != null) result.appId = appId;
+    if (version != null) result.version = version;
+    return result;
+  }
+
+  WebxdcOrigin._();
+
+  factory WebxdcOrigin.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebxdcOrigin.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebxdcOrigin',
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'instanceId')
+    ..aOS(2, _omitFieldNames ? '' : 'appId')
+    ..aInt64(3, _omitFieldNames ? '' : 'version')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebxdcOrigin clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebxdcOrigin copyWith(void Function(WebxdcOrigin) updates) =>
+      super.copyWith((message) => updates(message as WebxdcOrigin))
+          as WebxdcOrigin;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebxdcOrigin create() => WebxdcOrigin._();
+  @$core.override
+  WebxdcOrigin createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebxdcOrigin getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebxdcOrigin>(create);
+  static WebxdcOrigin? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get instanceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set instanceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasInstanceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearInstanceId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get appId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set appId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAppId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAppId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get version => $_getI64(2);
+  @$pb.TagNumber(3)
+  set version($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasVersion() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVersion() => $_clearField(3);
+}
+
+/// The app itself is never sent. Peers resolve the id and version against the
+/// twonly store and download the bundle from the API server, so a sender can
+/// only point at code that has already been published.
+class WebxdcApp extends $pb.GeneratedMessage {
+  factory WebxdcApp({
+    $core.String? appId,
+    $fixnum.Int64? version,
+  }) {
+    final result = create();
+    if (appId != null) result.appId = appId;
+    if (version != null) result.version = version;
+    return result;
+  }
+
+  WebxdcApp._();
+
+  factory WebxdcApp.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebxdcApp.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebxdcApp',
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'appId')
+    ..aInt64(2, _omitFieldNames ? '' : 'version')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebxdcApp clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebxdcApp copyWith(void Function(WebxdcApp) updates) =>
+      super.copyWith((message) => updates(message as WebxdcApp)) as WebxdcApp;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebxdcApp create() => WebxdcApp._();
+  @$core.override
+  WebxdcApp createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebxdcApp getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<WebxdcApp>(create);
+  static WebxdcApp? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get appId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set appId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAppId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAppId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get version => $_getI64(1);
+  @$pb.TagNumber(2)
+  set version($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasVersion() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearVersion() => $_clearField(2);
+}
+
+class WebxdcUpdate extends $pb.GeneratedMessage {
+  factory WebxdcUpdate({
+    $core.String? instanceId,
+    $core.String? payload,
+    $core.String? info,
+    $core.String? href,
+    $core.String? summary,
+    $core.String? document,
+  }) {
+    final result = create();
+    if (instanceId != null) result.instanceId = instanceId;
+    if (payload != null) result.payload = payload;
+    if (info != null) result.info = info;
+    if (href != null) result.href = href;
+    if (summary != null) result.summary = summary;
+    if (document != null) result.document = document;
+    return result;
+  }
+
+  WebxdcUpdate._();
+
+  factory WebxdcUpdate.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebxdcUpdate.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebxdcUpdate',
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'instanceId')
+    ..aOS(2, _omitFieldNames ? '' : 'payload')
+    ..aOS(3, _omitFieldNames ? '' : 'info')
+    ..aOS(4, _omitFieldNames ? '' : 'href')
+    ..aOS(5, _omitFieldNames ? '' : 'summary')
+    ..aOS(6, _omitFieldNames ? '' : 'document')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebxdcUpdate clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebxdcUpdate copyWith(void Function(WebxdcUpdate) updates) =>
+      super.copyWith((message) => updates(message as WebxdcUpdate))
+          as WebxdcUpdate;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebxdcUpdate create() => WebxdcUpdate._();
+  @$core.override
+  WebxdcUpdate createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebxdcUpdate getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebxdcUpdate>(create);
+  static WebxdcUpdate? _defaultInstance;
+
+  /// The message id of the app card this update belongs to.
+  @$pb.TagNumber(1)
+  $core.String get instanceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set instanceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasInstanceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearInstanceId() => $_clearField(1);
+
+  /// JSON, as the app produced it. Never parsed by twonly.
+  @$pb.TagNumber(2)
+  $core.String get payload => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set payload($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPayload() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPayload() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get info => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set info($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasInfo() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearInfo() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get href => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set href($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasHref() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearHref() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get summary => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set summary($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSummary() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSummary() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get document => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set document($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasDocument() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearDocument() => $_clearField(6);
 }
 
 const $core.bool _omitFieldNames =

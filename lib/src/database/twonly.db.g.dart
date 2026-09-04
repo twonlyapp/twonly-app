@@ -12536,6 +12536,1849 @@ class ContactGroupMembersCompanion extends UpdateCompanion<ContactGroupMember> {
   }
 }
 
+class $WebxdcAppsTable extends WebxdcApps
+    with TableInfo<$WebxdcAppsTable, WebxdcApp> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WebxdcAppsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _appIdMeta = const VerificationMeta('appId');
+  @override
+  late final GeneratedColumn<String> appId = GeneratedColumn<String>(
+    'app_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameTranslationsMeta = const VerificationMeta(
+    'nameTranslations',
+  );
+  @override
+  late final GeneratedColumn<String> nameTranslations = GeneratedColumn<String>(
+    'name_translations',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _sourceCodeUrlMeta = const VerificationMeta(
+    'sourceCodeUrl',
+  );
+  @override
+  late final GeneratedColumn<String> sourceCodeUrl = GeneratedColumn<String>(
+    'source_code_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<Uint8List> icon = GeneratedColumn<Uint8List>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _bundleSha256Meta = const VerificationMeta(
+    'bundleSha256',
+  );
+  @override
+  late final GeneratedColumn<String> bundleSha256 = GeneratedColumn<String>(
+    'bundle_sha256',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bundleBytesMeta = const VerificationMeta(
+    'bundleBytes',
+  );
+  @override
+  late final GeneratedColumn<int> bundleBytes = GeneratedColumn<int>(
+    'bundle_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _publishedMeta = const VerificationMeta(
+    'published',
+  );
+  @override
+  late final GeneratedColumn<bool> published = GeneratedColumn<bool>(
+    'published',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("published" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _cachedAtMeta = const VerificationMeta(
+    'cachedAt',
+  );
+  @override
+  late final GeneratedColumn<int> cachedAt = GeneratedColumn<int>(
+    'cached_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    appId,
+    version,
+    name,
+    nameTranslations,
+    description,
+    sourceCodeUrl,
+    icon,
+    bundleSha256,
+    bundleBytes,
+    published,
+    cachedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'webxdc_apps';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WebxdcApp> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('app_id')) {
+      context.handle(
+        _appIdMeta,
+        appId.isAcceptableOrUnknown(data['app_id']!, _appIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_appIdMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_versionMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_translations')) {
+      context.handle(
+        _nameTranslationsMeta,
+        nameTranslations.isAcceptableOrUnknown(
+          data['name_translations']!,
+          _nameTranslationsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source_code_url')) {
+      context.handle(
+        _sourceCodeUrlMeta,
+        sourceCodeUrl.isAcceptableOrUnknown(
+          data['source_code_url']!,
+          _sourceCodeUrlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    }
+    if (data.containsKey('bundle_sha256')) {
+      context.handle(
+        _bundleSha256Meta,
+        bundleSha256.isAcceptableOrUnknown(
+          data['bundle_sha256']!,
+          _bundleSha256Meta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_bundleSha256Meta);
+    }
+    if (data.containsKey('bundle_bytes')) {
+      context.handle(
+        _bundleBytesMeta,
+        bundleBytes.isAcceptableOrUnknown(
+          data['bundle_bytes']!,
+          _bundleBytesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_bundleBytesMeta);
+    }
+    if (data.containsKey('published')) {
+      context.handle(
+        _publishedMeta,
+        published.isAcceptableOrUnknown(data['published']!, _publishedMeta),
+      );
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(
+        _cachedAtMeta,
+        cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cachedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {appId, version};
+  @override
+  WebxdcApp map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WebxdcApp(
+      appId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}app_id'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      nameTranslations: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_translations'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      sourceCodeUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_code_url'],
+      ),
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}icon'],
+      ),
+      bundleSha256: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bundle_sha256'],
+      )!,
+      bundleBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}bundle_bytes'],
+      )!,
+      published: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}published'],
+      )!,
+      cachedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cached_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WebxdcAppsTable createAlias(String alias) {
+    return $WebxdcAppsTable(attachedDatabase, alias);
+  }
+}
+
+class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
+  final String appId;
+  final int version;
+
+  /// What the app is called where no translation fits. Every row has one,
+  /// which is what the store orders by.
+  final String name;
+
+  /// The name per language, as a JSON object keyed by language tag, in the same
+  /// shape as [description]. The chat card picks from it; the store list is
+  /// built in Rust, which picks there.
+  final String nameTranslations;
+
+  /// One short line per language, as a JSON object keyed by language tag. Rust
+  /// picks the one to show; nothing in Dart reads inside it.
+  final String description;
+  final String? sourceCodeUrl;
+  final Uint8List? icon;
+  final String bundleSha256;
+  final int bundleBytes;
+  final bool published;
+  final int cachedAt;
+  const WebxdcApp({
+    required this.appId,
+    required this.version,
+    required this.name,
+    required this.nameTranslations,
+    required this.description,
+    this.sourceCodeUrl,
+    this.icon,
+    required this.bundleSha256,
+    required this.bundleBytes,
+    required this.published,
+    required this.cachedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['app_id'] = Variable<String>(appId);
+    map['version'] = Variable<int>(version);
+    map['name'] = Variable<String>(name);
+    map['name_translations'] = Variable<String>(nameTranslations);
+    map['description'] = Variable<String>(description);
+    if (!nullToAbsent || sourceCodeUrl != null) {
+      map['source_code_url'] = Variable<String>(sourceCodeUrl);
+    }
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<Uint8List>(icon);
+    }
+    map['bundle_sha256'] = Variable<String>(bundleSha256);
+    map['bundle_bytes'] = Variable<int>(bundleBytes);
+    map['published'] = Variable<bool>(published);
+    map['cached_at'] = Variable<int>(cachedAt);
+    return map;
+  }
+
+  WebxdcAppsCompanion toCompanion(bool nullToAbsent) {
+    return WebxdcAppsCompanion(
+      appId: Value(appId),
+      version: Value(version),
+      name: Value(name),
+      nameTranslations: Value(nameTranslations),
+      description: Value(description),
+      sourceCodeUrl: sourceCodeUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceCodeUrl),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
+      bundleSha256: Value(bundleSha256),
+      bundleBytes: Value(bundleBytes),
+      published: Value(published),
+      cachedAt: Value(cachedAt),
+    );
+  }
+
+  factory WebxdcApp.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WebxdcApp(
+      appId: serializer.fromJson<String>(json['appId']),
+      version: serializer.fromJson<int>(json['version']),
+      name: serializer.fromJson<String>(json['name']),
+      nameTranslations: serializer.fromJson<String>(json['nameTranslations']),
+      description: serializer.fromJson<String>(json['description']),
+      sourceCodeUrl: serializer.fromJson<String?>(json['sourceCodeUrl']),
+      icon: serializer.fromJson<Uint8List?>(json['icon']),
+      bundleSha256: serializer.fromJson<String>(json['bundleSha256']),
+      bundleBytes: serializer.fromJson<int>(json['bundleBytes']),
+      published: serializer.fromJson<bool>(json['published']),
+      cachedAt: serializer.fromJson<int>(json['cachedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'appId': serializer.toJson<String>(appId),
+      'version': serializer.toJson<int>(version),
+      'name': serializer.toJson<String>(name),
+      'nameTranslations': serializer.toJson<String>(nameTranslations),
+      'description': serializer.toJson<String>(description),
+      'sourceCodeUrl': serializer.toJson<String?>(sourceCodeUrl),
+      'icon': serializer.toJson<Uint8List?>(icon),
+      'bundleSha256': serializer.toJson<String>(bundleSha256),
+      'bundleBytes': serializer.toJson<int>(bundleBytes),
+      'published': serializer.toJson<bool>(published),
+      'cachedAt': serializer.toJson<int>(cachedAt),
+    };
+  }
+
+  WebxdcApp copyWith({
+    String? appId,
+    int? version,
+    String? name,
+    String? nameTranslations,
+    String? description,
+    Value<String?> sourceCodeUrl = const Value.absent(),
+    Value<Uint8List?> icon = const Value.absent(),
+    String? bundleSha256,
+    int? bundleBytes,
+    bool? published,
+    int? cachedAt,
+  }) => WebxdcApp(
+    appId: appId ?? this.appId,
+    version: version ?? this.version,
+    name: name ?? this.name,
+    nameTranslations: nameTranslations ?? this.nameTranslations,
+    description: description ?? this.description,
+    sourceCodeUrl: sourceCodeUrl.present
+        ? sourceCodeUrl.value
+        : this.sourceCodeUrl,
+    icon: icon.present ? icon.value : this.icon,
+    bundleSha256: bundleSha256 ?? this.bundleSha256,
+    bundleBytes: bundleBytes ?? this.bundleBytes,
+    published: published ?? this.published,
+    cachedAt: cachedAt ?? this.cachedAt,
+  );
+  WebxdcApp copyWithCompanion(WebxdcAppsCompanion data) {
+    return WebxdcApp(
+      appId: data.appId.present ? data.appId.value : this.appId,
+      version: data.version.present ? data.version.value : this.version,
+      name: data.name.present ? data.name.value : this.name,
+      nameTranslations: data.nameTranslations.present
+          ? data.nameTranslations.value
+          : this.nameTranslations,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      sourceCodeUrl: data.sourceCodeUrl.present
+          ? data.sourceCodeUrl.value
+          : this.sourceCodeUrl,
+      icon: data.icon.present ? data.icon.value : this.icon,
+      bundleSha256: data.bundleSha256.present
+          ? data.bundleSha256.value
+          : this.bundleSha256,
+      bundleBytes: data.bundleBytes.present
+          ? data.bundleBytes.value
+          : this.bundleBytes,
+      published: data.published.present ? data.published.value : this.published,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebxdcApp(')
+          ..write('appId: $appId, ')
+          ..write('version: $version, ')
+          ..write('name: $name, ')
+          ..write('nameTranslations: $nameTranslations, ')
+          ..write('description: $description, ')
+          ..write('sourceCodeUrl: $sourceCodeUrl, ')
+          ..write('icon: $icon, ')
+          ..write('bundleSha256: $bundleSha256, ')
+          ..write('bundleBytes: $bundleBytes, ')
+          ..write('published: $published, ')
+          ..write('cachedAt: $cachedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    appId,
+    version,
+    name,
+    nameTranslations,
+    description,
+    sourceCodeUrl,
+    $driftBlobEquality.hash(icon),
+    bundleSha256,
+    bundleBytes,
+    published,
+    cachedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WebxdcApp &&
+          other.appId == this.appId &&
+          other.version == this.version &&
+          other.name == this.name &&
+          other.nameTranslations == this.nameTranslations &&
+          other.description == this.description &&
+          other.sourceCodeUrl == this.sourceCodeUrl &&
+          $driftBlobEquality.equals(other.icon, this.icon) &&
+          other.bundleSha256 == this.bundleSha256 &&
+          other.bundleBytes == this.bundleBytes &&
+          other.published == this.published &&
+          other.cachedAt == this.cachedAt);
+}
+
+class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
+  final Value<String> appId;
+  final Value<int> version;
+  final Value<String> name;
+  final Value<String> nameTranslations;
+  final Value<String> description;
+  final Value<String?> sourceCodeUrl;
+  final Value<Uint8List?> icon;
+  final Value<String> bundleSha256;
+  final Value<int> bundleBytes;
+  final Value<bool> published;
+  final Value<int> cachedAt;
+  final Value<int> rowid;
+  const WebxdcAppsCompanion({
+    this.appId = const Value.absent(),
+    this.version = const Value.absent(),
+    this.name = const Value.absent(),
+    this.nameTranslations = const Value.absent(),
+    this.description = const Value.absent(),
+    this.sourceCodeUrl = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.bundleSha256 = const Value.absent(),
+    this.bundleBytes = const Value.absent(),
+    this.published = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WebxdcAppsCompanion.insert({
+    required String appId,
+    required int version,
+    required String name,
+    this.nameTranslations = const Value.absent(),
+    this.description = const Value.absent(),
+    this.sourceCodeUrl = const Value.absent(),
+    this.icon = const Value.absent(),
+    required String bundleSha256,
+    required int bundleBytes,
+    this.published = const Value.absent(),
+    required int cachedAt,
+    this.rowid = const Value.absent(),
+  }) : appId = Value(appId),
+       version = Value(version),
+       name = Value(name),
+       bundleSha256 = Value(bundleSha256),
+       bundleBytes = Value(bundleBytes),
+       cachedAt = Value(cachedAt);
+  static Insertable<WebxdcApp> custom({
+    Expression<String>? appId,
+    Expression<int>? version,
+    Expression<String>? name,
+    Expression<String>? nameTranslations,
+    Expression<String>? description,
+    Expression<String>? sourceCodeUrl,
+    Expression<Uint8List>? icon,
+    Expression<String>? bundleSha256,
+    Expression<int>? bundleBytes,
+    Expression<bool>? published,
+    Expression<int>? cachedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (appId != null) 'app_id': appId,
+      if (version != null) 'version': version,
+      if (name != null) 'name': name,
+      if (nameTranslations != null) 'name_translations': nameTranslations,
+      if (description != null) 'description': description,
+      if (sourceCodeUrl != null) 'source_code_url': sourceCodeUrl,
+      if (icon != null) 'icon': icon,
+      if (bundleSha256 != null) 'bundle_sha256': bundleSha256,
+      if (bundleBytes != null) 'bundle_bytes': bundleBytes,
+      if (published != null) 'published': published,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WebxdcAppsCompanion copyWith({
+    Value<String>? appId,
+    Value<int>? version,
+    Value<String>? name,
+    Value<String>? nameTranslations,
+    Value<String>? description,
+    Value<String?>? sourceCodeUrl,
+    Value<Uint8List?>? icon,
+    Value<String>? bundleSha256,
+    Value<int>? bundleBytes,
+    Value<bool>? published,
+    Value<int>? cachedAt,
+    Value<int>? rowid,
+  }) {
+    return WebxdcAppsCompanion(
+      appId: appId ?? this.appId,
+      version: version ?? this.version,
+      name: name ?? this.name,
+      nameTranslations: nameTranslations ?? this.nameTranslations,
+      description: description ?? this.description,
+      sourceCodeUrl: sourceCodeUrl ?? this.sourceCodeUrl,
+      icon: icon ?? this.icon,
+      bundleSha256: bundleSha256 ?? this.bundleSha256,
+      bundleBytes: bundleBytes ?? this.bundleBytes,
+      published: published ?? this.published,
+      cachedAt: cachedAt ?? this.cachedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (appId.present) {
+      map['app_id'] = Variable<String>(appId.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (nameTranslations.present) {
+      map['name_translations'] = Variable<String>(nameTranslations.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (sourceCodeUrl.present) {
+      map['source_code_url'] = Variable<String>(sourceCodeUrl.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<Uint8List>(icon.value);
+    }
+    if (bundleSha256.present) {
+      map['bundle_sha256'] = Variable<String>(bundleSha256.value);
+    }
+    if (bundleBytes.present) {
+      map['bundle_bytes'] = Variable<int>(bundleBytes.value);
+    }
+    if (published.present) {
+      map['published'] = Variable<bool>(published.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<int>(cachedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebxdcAppsCompanion(')
+          ..write('appId: $appId, ')
+          ..write('version: $version, ')
+          ..write('name: $name, ')
+          ..write('nameTranslations: $nameTranslations, ')
+          ..write('description: $description, ')
+          ..write('sourceCodeUrl: $sourceCodeUrl, ')
+          ..write('icon: $icon, ')
+          ..write('bundleSha256: $bundleSha256, ')
+          ..write('bundleBytes: $bundleBytes, ')
+          ..write('published: $published, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WebxdcInstancesTable extends WebxdcInstances
+    with TableInfo<$WebxdcInstancesTable, WebxdcInstance> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WebxdcInstancesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _instanceIdMeta = const VerificationMeta(
+    'instanceId',
+  );
+  @override
+  late final GeneratedColumn<String> instanceId = GeneratedColumn<String>(
+    'instance_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES messages (message_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES "groups" (group_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _appIdMeta = const VerificationMeta('appId');
+  @override
+  late final GeneratedColumn<String> appId = GeneratedColumn<String>(
+    'app_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bundleSha256Meta = const VerificationMeta(
+    'bundleSha256',
+  );
+  @override
+  late final GeneratedColumn<String> bundleSha256 = GeneratedColumn<String>(
+    'bundle_sha256',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _originTokenMeta = const VerificationMeta(
+    'originToken',
+  );
+  @override
+  late final GeneratedColumn<String> originToken = GeneratedColumn<String>(
+    'origin_token',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _summaryMeta = const VerificationMeta(
+    'summary',
+  );
+  @override
+  late final GeneratedColumn<String> summary = GeneratedColumn<String>(
+    'summary',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _documentMeta = const VerificationMeta(
+    'document',
+  );
+  @override
+  late final GeneratedColumn<String> document = GeneratedColumn<String>(
+    'document',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastUpdateAtMeta = const VerificationMeta(
+    'lastUpdateAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastUpdateAt = GeneratedColumn<int>(
+    'last_update_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    instanceId,
+    groupId,
+    appId,
+    version,
+    bundleSha256,
+    originToken,
+    summary,
+    document,
+    createdAt,
+    lastUpdateAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'webxdc_instances';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WebxdcInstance> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('instance_id')) {
+      context.handle(
+        _instanceIdMeta,
+        instanceId.isAcceptableOrUnknown(data['instance_id']!, _instanceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_instanceIdMeta);
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('app_id')) {
+      context.handle(
+        _appIdMeta,
+        appId.isAcceptableOrUnknown(data['app_id']!, _appIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_appIdMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_versionMeta);
+    }
+    if (data.containsKey('bundle_sha256')) {
+      context.handle(
+        _bundleSha256Meta,
+        bundleSha256.isAcceptableOrUnknown(
+          data['bundle_sha256']!,
+          _bundleSha256Meta,
+        ),
+      );
+    }
+    if (data.containsKey('origin_token')) {
+      context.handle(
+        _originTokenMeta,
+        originToken.isAcceptableOrUnknown(
+          data['origin_token']!,
+          _originTokenMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_originTokenMeta);
+    }
+    if (data.containsKey('summary')) {
+      context.handle(
+        _summaryMeta,
+        summary.isAcceptableOrUnknown(data['summary']!, _summaryMeta),
+      );
+    }
+    if (data.containsKey('document')) {
+      context.handle(
+        _documentMeta,
+        document.isAcceptableOrUnknown(data['document']!, _documentMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('last_update_at')) {
+      context.handle(
+        _lastUpdateAtMeta,
+        lastUpdateAt.isAcceptableOrUnknown(
+          data['last_update_at']!,
+          _lastUpdateAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastUpdateAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {instanceId};
+  @override
+  WebxdcInstance map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WebxdcInstance(
+      instanceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}instance_id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      appId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}app_id'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      bundleSha256: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bundle_sha256'],
+      ),
+      originToken: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}origin_token'],
+      )!,
+      summary: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}summary'],
+      ),
+      document: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      lastUpdateAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_update_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WebxdcInstancesTable createAlias(String alias) {
+    return $WebxdcInstancesTable(attachedDatabase, alias);
+  }
+}
+
+class WebxdcInstance extends DataClass implements Insertable<WebxdcInstance> {
+  final String instanceId;
+  final String groupId;
+  final String appId;
+  final int version;
+  final String? bundleSha256;
+  final String originToken;
+  final String? summary;
+  final String? document;
+  final int createdAt;
+  final int lastUpdateAt;
+  const WebxdcInstance({
+    required this.instanceId,
+    required this.groupId,
+    required this.appId,
+    required this.version,
+    this.bundleSha256,
+    required this.originToken,
+    this.summary,
+    this.document,
+    required this.createdAt,
+    required this.lastUpdateAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['instance_id'] = Variable<String>(instanceId);
+    map['group_id'] = Variable<String>(groupId);
+    map['app_id'] = Variable<String>(appId);
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || bundleSha256 != null) {
+      map['bundle_sha256'] = Variable<String>(bundleSha256);
+    }
+    map['origin_token'] = Variable<String>(originToken);
+    if (!nullToAbsent || summary != null) {
+      map['summary'] = Variable<String>(summary);
+    }
+    if (!nullToAbsent || document != null) {
+      map['document'] = Variable<String>(document);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['last_update_at'] = Variable<int>(lastUpdateAt);
+    return map;
+  }
+
+  WebxdcInstancesCompanion toCompanion(bool nullToAbsent) {
+    return WebxdcInstancesCompanion(
+      instanceId: Value(instanceId),
+      groupId: Value(groupId),
+      appId: Value(appId),
+      version: Value(version),
+      bundleSha256: bundleSha256 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bundleSha256),
+      originToken: Value(originToken),
+      summary: summary == null && nullToAbsent
+          ? const Value.absent()
+          : Value(summary),
+      document: document == null && nullToAbsent
+          ? const Value.absent()
+          : Value(document),
+      createdAt: Value(createdAt),
+      lastUpdateAt: Value(lastUpdateAt),
+    );
+  }
+
+  factory WebxdcInstance.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WebxdcInstance(
+      instanceId: serializer.fromJson<String>(json['instanceId']),
+      groupId: serializer.fromJson<String>(json['groupId']),
+      appId: serializer.fromJson<String>(json['appId']),
+      version: serializer.fromJson<int>(json['version']),
+      bundleSha256: serializer.fromJson<String?>(json['bundleSha256']),
+      originToken: serializer.fromJson<String>(json['originToken']),
+      summary: serializer.fromJson<String?>(json['summary']),
+      document: serializer.fromJson<String?>(json['document']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      lastUpdateAt: serializer.fromJson<int>(json['lastUpdateAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'instanceId': serializer.toJson<String>(instanceId),
+      'groupId': serializer.toJson<String>(groupId),
+      'appId': serializer.toJson<String>(appId),
+      'version': serializer.toJson<int>(version),
+      'bundleSha256': serializer.toJson<String?>(bundleSha256),
+      'originToken': serializer.toJson<String>(originToken),
+      'summary': serializer.toJson<String?>(summary),
+      'document': serializer.toJson<String?>(document),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'lastUpdateAt': serializer.toJson<int>(lastUpdateAt),
+    };
+  }
+
+  WebxdcInstance copyWith({
+    String? instanceId,
+    String? groupId,
+    String? appId,
+    int? version,
+    Value<String?> bundleSha256 = const Value.absent(),
+    String? originToken,
+    Value<String?> summary = const Value.absent(),
+    Value<String?> document = const Value.absent(),
+    int? createdAt,
+    int? lastUpdateAt,
+  }) => WebxdcInstance(
+    instanceId: instanceId ?? this.instanceId,
+    groupId: groupId ?? this.groupId,
+    appId: appId ?? this.appId,
+    version: version ?? this.version,
+    bundleSha256: bundleSha256.present ? bundleSha256.value : this.bundleSha256,
+    originToken: originToken ?? this.originToken,
+    summary: summary.present ? summary.value : this.summary,
+    document: document.present ? document.value : this.document,
+    createdAt: createdAt ?? this.createdAt,
+    lastUpdateAt: lastUpdateAt ?? this.lastUpdateAt,
+  );
+  WebxdcInstance copyWithCompanion(WebxdcInstancesCompanion data) {
+    return WebxdcInstance(
+      instanceId: data.instanceId.present
+          ? data.instanceId.value
+          : this.instanceId,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      appId: data.appId.present ? data.appId.value : this.appId,
+      version: data.version.present ? data.version.value : this.version,
+      bundleSha256: data.bundleSha256.present
+          ? data.bundleSha256.value
+          : this.bundleSha256,
+      originToken: data.originToken.present
+          ? data.originToken.value
+          : this.originToken,
+      summary: data.summary.present ? data.summary.value : this.summary,
+      document: data.document.present ? data.document.value : this.document,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      lastUpdateAt: data.lastUpdateAt.present
+          ? data.lastUpdateAt.value
+          : this.lastUpdateAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebxdcInstance(')
+          ..write('instanceId: $instanceId, ')
+          ..write('groupId: $groupId, ')
+          ..write('appId: $appId, ')
+          ..write('version: $version, ')
+          ..write('bundleSha256: $bundleSha256, ')
+          ..write('originToken: $originToken, ')
+          ..write('summary: $summary, ')
+          ..write('document: $document, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUpdateAt: $lastUpdateAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    instanceId,
+    groupId,
+    appId,
+    version,
+    bundleSha256,
+    originToken,
+    summary,
+    document,
+    createdAt,
+    lastUpdateAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WebxdcInstance &&
+          other.instanceId == this.instanceId &&
+          other.groupId == this.groupId &&
+          other.appId == this.appId &&
+          other.version == this.version &&
+          other.bundleSha256 == this.bundleSha256 &&
+          other.originToken == this.originToken &&
+          other.summary == this.summary &&
+          other.document == this.document &&
+          other.createdAt == this.createdAt &&
+          other.lastUpdateAt == this.lastUpdateAt);
+}
+
+class WebxdcInstancesCompanion extends UpdateCompanion<WebxdcInstance> {
+  final Value<String> instanceId;
+  final Value<String> groupId;
+  final Value<String> appId;
+  final Value<int> version;
+  final Value<String?> bundleSha256;
+  final Value<String> originToken;
+  final Value<String?> summary;
+  final Value<String?> document;
+  final Value<int> createdAt;
+  final Value<int> lastUpdateAt;
+  final Value<int> rowid;
+  const WebxdcInstancesCompanion({
+    this.instanceId = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.appId = const Value.absent(),
+    this.version = const Value.absent(),
+    this.bundleSha256 = const Value.absent(),
+    this.originToken = const Value.absent(),
+    this.summary = const Value.absent(),
+    this.document = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.lastUpdateAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WebxdcInstancesCompanion.insert({
+    required String instanceId,
+    required String groupId,
+    required String appId,
+    required int version,
+    this.bundleSha256 = const Value.absent(),
+    required String originToken,
+    this.summary = const Value.absent(),
+    this.document = const Value.absent(),
+    required int createdAt,
+    required int lastUpdateAt,
+    this.rowid = const Value.absent(),
+  }) : instanceId = Value(instanceId),
+       groupId = Value(groupId),
+       appId = Value(appId),
+       version = Value(version),
+       originToken = Value(originToken),
+       createdAt = Value(createdAt),
+       lastUpdateAt = Value(lastUpdateAt);
+  static Insertable<WebxdcInstance> custom({
+    Expression<String>? instanceId,
+    Expression<String>? groupId,
+    Expression<String>? appId,
+    Expression<int>? version,
+    Expression<String>? bundleSha256,
+    Expression<String>? originToken,
+    Expression<String>? summary,
+    Expression<String>? document,
+    Expression<int>? createdAt,
+    Expression<int>? lastUpdateAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (instanceId != null) 'instance_id': instanceId,
+      if (groupId != null) 'group_id': groupId,
+      if (appId != null) 'app_id': appId,
+      if (version != null) 'version': version,
+      if (bundleSha256 != null) 'bundle_sha256': bundleSha256,
+      if (originToken != null) 'origin_token': originToken,
+      if (summary != null) 'summary': summary,
+      if (document != null) 'document': document,
+      if (createdAt != null) 'created_at': createdAt,
+      if (lastUpdateAt != null) 'last_update_at': lastUpdateAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WebxdcInstancesCompanion copyWith({
+    Value<String>? instanceId,
+    Value<String>? groupId,
+    Value<String>? appId,
+    Value<int>? version,
+    Value<String?>? bundleSha256,
+    Value<String>? originToken,
+    Value<String?>? summary,
+    Value<String?>? document,
+    Value<int>? createdAt,
+    Value<int>? lastUpdateAt,
+    Value<int>? rowid,
+  }) {
+    return WebxdcInstancesCompanion(
+      instanceId: instanceId ?? this.instanceId,
+      groupId: groupId ?? this.groupId,
+      appId: appId ?? this.appId,
+      version: version ?? this.version,
+      bundleSha256: bundleSha256 ?? this.bundleSha256,
+      originToken: originToken ?? this.originToken,
+      summary: summary ?? this.summary,
+      document: document ?? this.document,
+      createdAt: createdAt ?? this.createdAt,
+      lastUpdateAt: lastUpdateAt ?? this.lastUpdateAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (instanceId.present) {
+      map['instance_id'] = Variable<String>(instanceId.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (appId.present) {
+      map['app_id'] = Variable<String>(appId.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (bundleSha256.present) {
+      map['bundle_sha256'] = Variable<String>(bundleSha256.value);
+    }
+    if (originToken.present) {
+      map['origin_token'] = Variable<String>(originToken.value);
+    }
+    if (summary.present) {
+      map['summary'] = Variable<String>(summary.value);
+    }
+    if (document.present) {
+      map['document'] = Variable<String>(document.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (lastUpdateAt.present) {
+      map['last_update_at'] = Variable<int>(lastUpdateAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebxdcInstancesCompanion(')
+          ..write('instanceId: $instanceId, ')
+          ..write('groupId: $groupId, ')
+          ..write('appId: $appId, ')
+          ..write('version: $version, ')
+          ..write('bundleSha256: $bundleSha256, ')
+          ..write('originToken: $originToken, ')
+          ..write('summary: $summary, ')
+          ..write('document: $document, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUpdateAt: $lastUpdateAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WebxdcUpdatesTable extends WebxdcUpdates
+    with TableInfo<$WebxdcUpdatesTable, WebxdcUpdate> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WebxdcUpdatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _instanceIdMeta = const VerificationMeta(
+    'instanceId',
+  );
+  @override
+  late final GeneratedColumn<String> instanceId = GeneratedColumn<String>(
+    'instance_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES webxdc_instances (instance_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _serialMeta = const VerificationMeta('serial');
+  @override
+  late final GeneratedColumn<int> serial = GeneratedColumn<int>(
+    'serial',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _messageIdMeta = const VerificationMeta(
+    'messageId',
+  );
+  @override
+  late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
+    'message_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _senderIdMeta = const VerificationMeta(
+    'senderId',
+  );
+  @override
+  late final GeneratedColumn<int> senderId = GeneratedColumn<int>(
+    'sender_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _infoMeta = const VerificationMeta('info');
+  @override
+  late final GeneratedColumn<String> info = GeneratedColumn<String>(
+    'info',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _hrefMeta = const VerificationMeta('href');
+  @override
+  late final GeneratedColumn<String> href = GeneratedColumn<String>(
+    'href',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _receivedAtMeta = const VerificationMeta(
+    'receivedAt',
+  );
+  @override
+  late final GeneratedColumn<int> receivedAt = GeneratedColumn<int>(
+    'received_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    instanceId,
+    serial,
+    messageId,
+    senderId,
+    payload,
+    info,
+    href,
+    receivedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'webxdc_updates';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WebxdcUpdate> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('instance_id')) {
+      context.handle(
+        _instanceIdMeta,
+        instanceId.isAcceptableOrUnknown(data['instance_id']!, _instanceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_instanceIdMeta);
+    }
+    if (data.containsKey('serial')) {
+      context.handle(
+        _serialMeta,
+        serial.isAcceptableOrUnknown(data['serial']!, _serialMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_serialMeta);
+    }
+    if (data.containsKey('message_id')) {
+      context.handle(
+        _messageIdMeta,
+        messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_messageIdMeta);
+    }
+    if (data.containsKey('sender_id')) {
+      context.handle(
+        _senderIdMeta,
+        senderId.isAcceptableOrUnknown(data['sender_id']!, _senderIdMeta),
+      );
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('info')) {
+      context.handle(
+        _infoMeta,
+        info.isAcceptableOrUnknown(data['info']!, _infoMeta),
+      );
+    }
+    if (data.containsKey('href')) {
+      context.handle(
+        _hrefMeta,
+        href.isAcceptableOrUnknown(data['href']!, _hrefMeta),
+      );
+    }
+    if (data.containsKey('received_at')) {
+      context.handle(
+        _receivedAtMeta,
+        receivedAt.isAcceptableOrUnknown(data['received_at']!, _receivedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_receivedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {instanceId, serial};
+  @override
+  WebxdcUpdate map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WebxdcUpdate(
+      instanceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}instance_id'],
+      )!,
+      serial: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}serial'],
+      )!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      )!,
+      senderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sender_id'],
+      ),
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      info: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}info'],
+      ),
+      href: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}href'],
+      ),
+      receivedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}received_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WebxdcUpdatesTable createAlias(String alias) {
+    return $WebxdcUpdatesTable(attachedDatabase, alias);
+  }
+}
+
+class WebxdcUpdate extends DataClass implements Insertable<WebxdcUpdate> {
+  final String instanceId;
+  final int serial;
+  final String messageId;
+  final int? senderId;
+  final String payload;
+  final String? info;
+  final String? href;
+  final int receivedAt;
+  const WebxdcUpdate({
+    required this.instanceId,
+    required this.serial,
+    required this.messageId,
+    this.senderId,
+    required this.payload,
+    this.info,
+    this.href,
+    required this.receivedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['instance_id'] = Variable<String>(instanceId);
+    map['serial'] = Variable<int>(serial);
+    map['message_id'] = Variable<String>(messageId);
+    if (!nullToAbsent || senderId != null) {
+      map['sender_id'] = Variable<int>(senderId);
+    }
+    map['payload'] = Variable<String>(payload);
+    if (!nullToAbsent || info != null) {
+      map['info'] = Variable<String>(info);
+    }
+    if (!nullToAbsent || href != null) {
+      map['href'] = Variable<String>(href);
+    }
+    map['received_at'] = Variable<int>(receivedAt);
+    return map;
+  }
+
+  WebxdcUpdatesCompanion toCompanion(bool nullToAbsent) {
+    return WebxdcUpdatesCompanion(
+      instanceId: Value(instanceId),
+      serial: Value(serial),
+      messageId: Value(messageId),
+      senderId: senderId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(senderId),
+      payload: Value(payload),
+      info: info == null && nullToAbsent ? const Value.absent() : Value(info),
+      href: href == null && nullToAbsent ? const Value.absent() : Value(href),
+      receivedAt: Value(receivedAt),
+    );
+  }
+
+  factory WebxdcUpdate.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WebxdcUpdate(
+      instanceId: serializer.fromJson<String>(json['instanceId']),
+      serial: serializer.fromJson<int>(json['serial']),
+      messageId: serializer.fromJson<String>(json['messageId']),
+      senderId: serializer.fromJson<int?>(json['senderId']),
+      payload: serializer.fromJson<String>(json['payload']),
+      info: serializer.fromJson<String?>(json['info']),
+      href: serializer.fromJson<String?>(json['href']),
+      receivedAt: serializer.fromJson<int>(json['receivedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'instanceId': serializer.toJson<String>(instanceId),
+      'serial': serializer.toJson<int>(serial),
+      'messageId': serializer.toJson<String>(messageId),
+      'senderId': serializer.toJson<int?>(senderId),
+      'payload': serializer.toJson<String>(payload),
+      'info': serializer.toJson<String?>(info),
+      'href': serializer.toJson<String?>(href),
+      'receivedAt': serializer.toJson<int>(receivedAt),
+    };
+  }
+
+  WebxdcUpdate copyWith({
+    String? instanceId,
+    int? serial,
+    String? messageId,
+    Value<int?> senderId = const Value.absent(),
+    String? payload,
+    Value<String?> info = const Value.absent(),
+    Value<String?> href = const Value.absent(),
+    int? receivedAt,
+  }) => WebxdcUpdate(
+    instanceId: instanceId ?? this.instanceId,
+    serial: serial ?? this.serial,
+    messageId: messageId ?? this.messageId,
+    senderId: senderId.present ? senderId.value : this.senderId,
+    payload: payload ?? this.payload,
+    info: info.present ? info.value : this.info,
+    href: href.present ? href.value : this.href,
+    receivedAt: receivedAt ?? this.receivedAt,
+  );
+  WebxdcUpdate copyWithCompanion(WebxdcUpdatesCompanion data) {
+    return WebxdcUpdate(
+      instanceId: data.instanceId.present
+          ? data.instanceId.value
+          : this.instanceId,
+      serial: data.serial.present ? data.serial.value : this.serial,
+      messageId: data.messageId.present ? data.messageId.value : this.messageId,
+      senderId: data.senderId.present ? data.senderId.value : this.senderId,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      info: data.info.present ? data.info.value : this.info,
+      href: data.href.present ? data.href.value : this.href,
+      receivedAt: data.receivedAt.present
+          ? data.receivedAt.value
+          : this.receivedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebxdcUpdate(')
+          ..write('instanceId: $instanceId, ')
+          ..write('serial: $serial, ')
+          ..write('messageId: $messageId, ')
+          ..write('senderId: $senderId, ')
+          ..write('payload: $payload, ')
+          ..write('info: $info, ')
+          ..write('href: $href, ')
+          ..write('receivedAt: $receivedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    instanceId,
+    serial,
+    messageId,
+    senderId,
+    payload,
+    info,
+    href,
+    receivedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WebxdcUpdate &&
+          other.instanceId == this.instanceId &&
+          other.serial == this.serial &&
+          other.messageId == this.messageId &&
+          other.senderId == this.senderId &&
+          other.payload == this.payload &&
+          other.info == this.info &&
+          other.href == this.href &&
+          other.receivedAt == this.receivedAt);
+}
+
+class WebxdcUpdatesCompanion extends UpdateCompanion<WebxdcUpdate> {
+  final Value<String> instanceId;
+  final Value<int> serial;
+  final Value<String> messageId;
+  final Value<int?> senderId;
+  final Value<String> payload;
+  final Value<String?> info;
+  final Value<String?> href;
+  final Value<int> receivedAt;
+  final Value<int> rowid;
+  const WebxdcUpdatesCompanion({
+    this.instanceId = const Value.absent(),
+    this.serial = const Value.absent(),
+    this.messageId = const Value.absent(),
+    this.senderId = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.info = const Value.absent(),
+    this.href = const Value.absent(),
+    this.receivedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WebxdcUpdatesCompanion.insert({
+    required String instanceId,
+    required int serial,
+    required String messageId,
+    this.senderId = const Value.absent(),
+    required String payload,
+    this.info = const Value.absent(),
+    this.href = const Value.absent(),
+    required int receivedAt,
+    this.rowid = const Value.absent(),
+  }) : instanceId = Value(instanceId),
+       serial = Value(serial),
+       messageId = Value(messageId),
+       payload = Value(payload),
+       receivedAt = Value(receivedAt);
+  static Insertable<WebxdcUpdate> custom({
+    Expression<String>? instanceId,
+    Expression<int>? serial,
+    Expression<String>? messageId,
+    Expression<int>? senderId,
+    Expression<String>? payload,
+    Expression<String>? info,
+    Expression<String>? href,
+    Expression<int>? receivedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (instanceId != null) 'instance_id': instanceId,
+      if (serial != null) 'serial': serial,
+      if (messageId != null) 'message_id': messageId,
+      if (senderId != null) 'sender_id': senderId,
+      if (payload != null) 'payload': payload,
+      if (info != null) 'info': info,
+      if (href != null) 'href': href,
+      if (receivedAt != null) 'received_at': receivedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WebxdcUpdatesCompanion copyWith({
+    Value<String>? instanceId,
+    Value<int>? serial,
+    Value<String>? messageId,
+    Value<int?>? senderId,
+    Value<String>? payload,
+    Value<String?>? info,
+    Value<String?>? href,
+    Value<int>? receivedAt,
+    Value<int>? rowid,
+  }) {
+    return WebxdcUpdatesCompanion(
+      instanceId: instanceId ?? this.instanceId,
+      serial: serial ?? this.serial,
+      messageId: messageId ?? this.messageId,
+      senderId: senderId ?? this.senderId,
+      payload: payload ?? this.payload,
+      info: info ?? this.info,
+      href: href ?? this.href,
+      receivedAt: receivedAt ?? this.receivedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (instanceId.present) {
+      map['instance_id'] = Variable<String>(instanceId.value);
+    }
+    if (serial.present) {
+      map['serial'] = Variable<int>(serial.value);
+    }
+    if (messageId.present) {
+      map['message_id'] = Variable<String>(messageId.value);
+    }
+    if (senderId.present) {
+      map['sender_id'] = Variable<int>(senderId.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (info.present) {
+      map['info'] = Variable<String>(info.value);
+    }
+    if (href.present) {
+      map['href'] = Variable<String>(href.value);
+    }
+    if (receivedAt.present) {
+      map['received_at'] = Variable<int>(receivedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebxdcUpdatesCompanion(')
+          ..write('instanceId: $instanceId, ')
+          ..write('serial: $serial, ')
+          ..write('messageId: $messageId, ')
+          ..write('senderId: $senderId, ')
+          ..write('payload: $payload, ')
+          ..write('info: $info, ')
+          ..write('href: $href, ')
+          ..write('receivedAt: $receivedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$TwonlyDB extends GeneratedDatabase {
   _$TwonlyDB(QueryExecutor e) : super(e);
   $TwonlyDBManager get managers => $TwonlyDBManager(this);
@@ -12572,6 +14415,11 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final $ContactGroupsTable contactGroups = $ContactGroupsTable(this);
   late final $ContactGroupMembersTable contactGroupMembers =
       $ContactGroupMembersTable(this);
+  late final $WebxdcAppsTable webxdcApps = $WebxdcAppsTable(this);
+  late final $WebxdcInstancesTable webxdcInstances = $WebxdcInstancesTable(
+    this,
+  );
+  late final $WebxdcUpdatesTable webxdcUpdates = $WebxdcUpdatesTable(this);
   late final Index idxMessagesGroupIdCreatedAt = Index(
     'idx_messages_group_id_created_at',
     'CREATE INDEX idx_messages_group_id_created_at ON messages (group_id, created_at)',
@@ -12620,6 +14468,9 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     userDiscoveryShares,
     contactGroups,
     contactGroupMembers,
+    webxdcApps,
+    webxdcInstances,
+    webxdcUpdates,
     idxMessagesGroupIdCreatedAt,
     idxReceiptsMessageId,
   ];
@@ -12786,6 +14637,27 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('contact_group_members', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'messages',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('webxdc_instances', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'groups',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('webxdc_instances', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'webxdc_instances',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('webxdc_updates', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -14827,6 +16699,26 @@ final class $$GroupsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$WebxdcInstancesTable, List<WebxdcInstance>>
+  _webxdcInstancesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.webxdcInstances,
+    aliasName: 'groups__group_id__webxdc_instances__group_id',
+  );
+
+  $$WebxdcInstancesTableProcessedTableManager get webxdcInstancesRefs {
+    final manager =
+        $$WebxdcInstancesTableTableManager($_db, $_db.webxdcInstances).filter(
+          (f) => f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _webxdcInstancesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
@@ -15053,6 +16945,31 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
           }) => $$ContactGroupMembersTableFilterComposer(
             $db: $db,
             $table: $db.contactGroupMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> webxdcInstancesRefs(
+    Expression<bool> Function($$WebxdcInstancesTableFilterComposer f) f,
+  ) {
+    final $$WebxdcInstancesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.webxdcInstances,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WebxdcInstancesTableFilterComposer(
+            $db: $db,
+            $table: $db.webxdcInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -15421,6 +17338,31 @@ class $$GroupsTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> webxdcInstancesRefs<T extends Object>(
+    Expression<T> Function($$WebxdcInstancesTableAnnotationComposer a) f,
+  ) {
+    final $$WebxdcInstancesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.webxdcInstances,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WebxdcInstancesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.webxdcInstances,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$GroupsTableTableManager
@@ -15441,6 +17383,7 @@ class $$GroupsTableTableManager
             bool groupMembersRefs,
             bool groupHistoriesRefs,
             bool contactGroupMembersRefs,
+            bool webxdcInstancesRefs,
           })
         > {
   $$GroupsTableTableManager(_$TwonlyDB db, $GroupsTable table)
@@ -15582,6 +17525,7 @@ class $$GroupsTableTableManager
                 groupMembersRefs = false,
                 groupHistoriesRefs = false,
                 contactGroupMembersRefs = false,
+                webxdcInstancesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -15590,6 +17534,7 @@ class $$GroupsTableTableManager
                     if (groupMembersRefs) db.groupMembers,
                     if (groupHistoriesRefs) db.groupHistories,
                     if (contactGroupMembersRefs) db.contactGroupMembers,
+                    if (webxdcInstancesRefs) db.webxdcInstances,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -15674,6 +17619,27 @@ class $$GroupsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (webxdcInstancesRefs)
+                        await $_getPrefetchedData<
+                          Group,
+                          $GroupsTable,
+                          WebxdcInstance
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GroupsTableReferences
+                              ._webxdcInstancesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GroupsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).webxdcInstancesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.groupId == item.groupId,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -15699,6 +17665,7 @@ typedef $$GroupsTableProcessedTableManager =
         bool groupMembersRefs,
         bool groupHistoriesRefs,
         bool contactGroupMembersRefs,
+        bool webxdcInstancesRefs,
       })
     >;
 typedef $$MediaFilesTableCreateCompanionBuilder =
@@ -16653,6 +18620,28 @@ final class $$MessagesTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$WebxdcInstancesTable, List<WebxdcInstance>>
+  _webxdcInstancesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.webxdcInstances,
+    aliasName: 'messages__message_id__webxdc_instances__instance_id',
+  );
+
+  $$WebxdcInstancesTableProcessedTableManager get webxdcInstancesRefs {
+    final manager =
+        $$WebxdcInstancesTableTableManager($_db, $_db.webxdcInstances).filter(
+          (f) => f.instanceId.messageId.sqlEquals(
+            $_itemColumn<String>('message_id')!,
+          ),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _webxdcInstancesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$MessagesTableFilterComposer
@@ -16904,6 +18893,31 @@ class $$MessagesTableFilterComposer
           }) => $$MessageActionsTableFilterComposer(
             $db: $db,
             $table: $db.messageActions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> webxdcInstancesRefs(
+    Expression<bool> Function($$WebxdcInstancesTableFilterComposer f) f,
+  ) {
+    final $$WebxdcInstancesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.webxdcInstances,
+      getReferencedColumn: (t) => t.instanceId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WebxdcInstancesTableFilterComposer(
+            $db: $db,
+            $table: $db.webxdcInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -17318,6 +19332,31 @@ class $$MessagesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> webxdcInstancesRefs<T extends Object>(
+    Expression<T> Function($$WebxdcInstancesTableAnnotationComposer a) f,
+  ) {
+    final $$WebxdcInstancesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.webxdcInstances,
+      getReferencedColumn: (t) => t.instanceId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WebxdcInstancesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.webxdcInstances,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$MessagesTableTableManager
@@ -17341,6 +19380,7 @@ class $$MessagesTableTableManager
             bool reactionsRefs,
             bool receiptsRefs,
             bool messageActionsRefs,
+            bool webxdcInstancesRefs,
           })
         > {
   $$MessagesTableTableManager(_$TwonlyDB db, $MessagesTable table)
@@ -17459,6 +19499,7 @@ class $$MessagesTableTableManager
                 reactionsRefs = false,
                 receiptsRefs = false,
                 messageActionsRefs = false,
+                webxdcInstancesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -17467,6 +19508,7 @@ class $$MessagesTableTableManager
                     if (reactionsRefs) db.reactions,
                     if (receiptsRefs) db.receipts,
                     if (messageActionsRefs) db.messageActions,
+                    if (webxdcInstancesRefs) db.webxdcInstances,
                   ],
                   addJoins:
                       <
@@ -17612,6 +19654,27 @@ class $$MessagesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (webxdcInstancesRefs)
+                        await $_getPrefetchedData<
+                          Message,
+                          $MessagesTable,
+                          WebxdcInstance
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MessagesTableReferences
+                              ._webxdcInstancesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MessagesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).webxdcInstancesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.instanceId == item.messageId,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -17640,6 +19703,7 @@ typedef $$MessagesTableProcessedTableManager =
         bool reactionsRefs,
         bool receiptsRefs,
         bool messageActionsRefs,
+        bool webxdcInstancesRefs,
       })
     >;
 typedef $$MessageHistoriesTableCreateCompanionBuilder =
@@ -23726,6 +25790,1082 @@ typedef $$ContactGroupMembersTableProcessedTableManager =
       ContactGroupMember,
       PrefetchHooks Function({bool contactGroupId, bool userId, bool groupId})
     >;
+typedef $$WebxdcAppsTableCreateCompanionBuilder =
+    WebxdcAppsCompanion Function({
+      required String appId,
+      required int version,
+      required String name,
+      Value<String> nameTranslations,
+      Value<String> description,
+      Value<String?> sourceCodeUrl,
+      Value<Uint8List?> icon,
+      required String bundleSha256,
+      required int bundleBytes,
+      Value<bool> published,
+      required int cachedAt,
+      Value<int> rowid,
+    });
+typedef $$WebxdcAppsTableUpdateCompanionBuilder =
+    WebxdcAppsCompanion Function({
+      Value<String> appId,
+      Value<int> version,
+      Value<String> name,
+      Value<String> nameTranslations,
+      Value<String> description,
+      Value<String?> sourceCodeUrl,
+      Value<Uint8List?> icon,
+      Value<String> bundleSha256,
+      Value<int> bundleBytes,
+      Value<bool> published,
+      Value<int> cachedAt,
+      Value<int> rowid,
+    });
+
+class $$WebxdcAppsTableFilterComposer
+    extends Composer<_$TwonlyDB, $WebxdcAppsTable> {
+  $$WebxdcAppsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get appId => $composableBuilder(
+    column: $table.appId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameTranslations => $composableBuilder(
+    column: $table.nameTranslations,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceCodeUrl => $composableBuilder(
+    column: $table.sourceCodeUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get bundleBytes => $composableBuilder(
+    column: $table.bundleBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get published => $composableBuilder(
+    column: $table.published,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WebxdcAppsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $WebxdcAppsTable> {
+  $$WebxdcAppsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get appId => $composableBuilder(
+    column: $table.appId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nameTranslations => $composableBuilder(
+    column: $table.nameTranslations,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceCodeUrl => $composableBuilder(
+    column: $table.sourceCodeUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get bundleBytes => $composableBuilder(
+    column: $table.bundleBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get published => $composableBuilder(
+    column: $table.published,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WebxdcAppsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $WebxdcAppsTable> {
+  $$WebxdcAppsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get appId =>
+      $composableBuilder(column: $table.appId, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameTranslations => $composableBuilder(
+    column: $table.nameTranslations,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceCodeUrl => $composableBuilder(
+    column: $table.sourceCodeUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<Uint8List> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
+  GeneratedColumn<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get bundleBytes => $composableBuilder(
+    column: $table.bundleBytes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get published =>
+      $composableBuilder(column: $table.published, builder: (column) => column);
+
+  GeneratedColumn<int> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+}
+
+class $$WebxdcAppsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $WebxdcAppsTable,
+          WebxdcApp,
+          $$WebxdcAppsTableFilterComposer,
+          $$WebxdcAppsTableOrderingComposer,
+          $$WebxdcAppsTableAnnotationComposer,
+          $$WebxdcAppsTableCreateCompanionBuilder,
+          $$WebxdcAppsTableUpdateCompanionBuilder,
+          (WebxdcApp, BaseReferences<_$TwonlyDB, $WebxdcAppsTable, WebxdcApp>),
+          WebxdcApp,
+          PrefetchHooks Function()
+        > {
+  $$WebxdcAppsTableTableManager(_$TwonlyDB db, $WebxdcAppsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WebxdcAppsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WebxdcAppsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WebxdcAppsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> appId = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> nameTranslations = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String?> sourceCodeUrl = const Value.absent(),
+                Value<Uint8List?> icon = const Value.absent(),
+                Value<String> bundleSha256 = const Value.absent(),
+                Value<int> bundleBytes = const Value.absent(),
+                Value<bool> published = const Value.absent(),
+                Value<int> cachedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WebxdcAppsCompanion(
+                appId: appId,
+                version: version,
+                name: name,
+                nameTranslations: nameTranslations,
+                description: description,
+                sourceCodeUrl: sourceCodeUrl,
+                icon: icon,
+                bundleSha256: bundleSha256,
+                bundleBytes: bundleBytes,
+                published: published,
+                cachedAt: cachedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String appId,
+                required int version,
+                required String name,
+                Value<String> nameTranslations = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String?> sourceCodeUrl = const Value.absent(),
+                Value<Uint8List?> icon = const Value.absent(),
+                required String bundleSha256,
+                required int bundleBytes,
+                Value<bool> published = const Value.absent(),
+                required int cachedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => WebxdcAppsCompanion.insert(
+                appId: appId,
+                version: version,
+                name: name,
+                nameTranslations: nameTranslations,
+                description: description,
+                sourceCodeUrl: sourceCodeUrl,
+                icon: icon,
+                bundleSha256: bundleSha256,
+                bundleBytes: bundleBytes,
+                published: published,
+                cachedAt: cachedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WebxdcAppsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $WebxdcAppsTable,
+      WebxdcApp,
+      $$WebxdcAppsTableFilterComposer,
+      $$WebxdcAppsTableOrderingComposer,
+      $$WebxdcAppsTableAnnotationComposer,
+      $$WebxdcAppsTableCreateCompanionBuilder,
+      $$WebxdcAppsTableUpdateCompanionBuilder,
+      (WebxdcApp, BaseReferences<_$TwonlyDB, $WebxdcAppsTable, WebxdcApp>),
+      WebxdcApp,
+      PrefetchHooks Function()
+    >;
+typedef $$WebxdcInstancesTableCreateCompanionBuilder =
+    WebxdcInstancesCompanion Function({
+      required String instanceId,
+      required String groupId,
+      required String appId,
+      required int version,
+      Value<String?> bundleSha256,
+      required String originToken,
+      Value<String?> summary,
+      Value<String?> document,
+      required int createdAt,
+      required int lastUpdateAt,
+      Value<int> rowid,
+    });
+typedef $$WebxdcInstancesTableUpdateCompanionBuilder =
+    WebxdcInstancesCompanion Function({
+      Value<String> instanceId,
+      Value<String> groupId,
+      Value<String> appId,
+      Value<int> version,
+      Value<String?> bundleSha256,
+      Value<String> originToken,
+      Value<String?> summary,
+      Value<String?> document,
+      Value<int> createdAt,
+      Value<int> lastUpdateAt,
+      Value<int> rowid,
+    });
+
+final class $$WebxdcInstancesTableReferences
+    extends BaseReferences<_$TwonlyDB, $WebxdcInstancesTable, WebxdcInstance> {
+  $$WebxdcInstancesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $MessagesTable _instanceIdTable(_$TwonlyDB db) => db.messages
+      .createAlias('webxdc_instances__instance_id__messages__message_id');
+
+  $$MessagesTableProcessedTableManager get instanceId {
+    final $_column = $_itemColumn<String>('instance_id')!;
+
+    final manager = $$MessagesTableTableManager(
+      $_db,
+      $_db.messages,
+    ).filter((f) => f.messageId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_instanceIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) =>
+      db.groups.createAlias('webxdc_instances__group_id__groups__group_id');
+
+  $$GroupsTableProcessedTableManager get groupId {
+    final $_column = $_itemColumn<String>('group_id')!;
+
+    final manager = $$GroupsTableTableManager(
+      $_db,
+      $_db.groups,
+    ).filter((f) => f.groupId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$WebxdcInstancesTableFilterComposer
+    extends Composer<_$TwonlyDB, $WebxdcInstancesTable> {
+  $$WebxdcInstancesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get appId => $composableBuilder(
+    column: $table.appId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originToken => $composableBuilder(
+    column: $table.originToken,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get summary => $composableBuilder(
+    column: $table.summary,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get document => $composableBuilder(
+    column: $table.document,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastUpdateAt => $composableBuilder(
+    column: $table.lastUpdateAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$MessagesTableFilterComposer get instanceId {
+    final $$MessagesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableFilterComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GroupsTableFilterComposer get groupId {
+    final $$GroupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WebxdcInstancesTableOrderingComposer
+    extends Composer<_$TwonlyDB, $WebxdcInstancesTable> {
+  $$WebxdcInstancesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get appId => $composableBuilder(
+    column: $table.appId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originToken => $composableBuilder(
+    column: $table.originToken,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get summary => $composableBuilder(
+    column: $table.summary,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get document => $composableBuilder(
+    column: $table.document,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastUpdateAt => $composableBuilder(
+    column: $table.lastUpdateAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$MessagesTableOrderingComposer get instanceId {
+    final $$MessagesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableOrderingComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GroupsTableOrderingComposer get groupId {
+    final $$GroupsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WebxdcInstancesTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $WebxdcInstancesTable> {
+  $$WebxdcInstancesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get appId =>
+      $composableBuilder(column: $table.appId, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originToken => $composableBuilder(
+    column: $table.originToken,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get summary =>
+      $composableBuilder(column: $table.summary, builder: (column) => column);
+
+  GeneratedColumn<String> get document =>
+      $composableBuilder(column: $table.document, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get lastUpdateAt => $composableBuilder(
+    column: $table.lastUpdateAt,
+    builder: (column) => column,
+  );
+
+  $$MessagesTableAnnotationComposer get instanceId {
+    final $$MessagesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GroupsTableAnnotationComposer get groupId {
+    final $$GroupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WebxdcInstancesTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $WebxdcInstancesTable,
+          WebxdcInstance,
+          $$WebxdcInstancesTableFilterComposer,
+          $$WebxdcInstancesTableOrderingComposer,
+          $$WebxdcInstancesTableAnnotationComposer,
+          $$WebxdcInstancesTableCreateCompanionBuilder,
+          $$WebxdcInstancesTableUpdateCompanionBuilder,
+          (WebxdcInstance, $$WebxdcInstancesTableReferences),
+          WebxdcInstance,
+          PrefetchHooks Function({bool instanceId, bool groupId})
+        > {
+  $$WebxdcInstancesTableTableManager(_$TwonlyDB db, $WebxdcInstancesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WebxdcInstancesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WebxdcInstancesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WebxdcInstancesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> instanceId = const Value.absent(),
+                Value<String> groupId = const Value.absent(),
+                Value<String> appId = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> bundleSha256 = const Value.absent(),
+                Value<String> originToken = const Value.absent(),
+                Value<String?> summary = const Value.absent(),
+                Value<String?> document = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> lastUpdateAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WebxdcInstancesCompanion(
+                instanceId: instanceId,
+                groupId: groupId,
+                appId: appId,
+                version: version,
+                bundleSha256: bundleSha256,
+                originToken: originToken,
+                summary: summary,
+                document: document,
+                createdAt: createdAt,
+                lastUpdateAt: lastUpdateAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String instanceId,
+                required String groupId,
+                required String appId,
+                required int version,
+                Value<String?> bundleSha256 = const Value.absent(),
+                required String originToken,
+                Value<String?> summary = const Value.absent(),
+                Value<String?> document = const Value.absent(),
+                required int createdAt,
+                required int lastUpdateAt,
+                Value<int> rowid = const Value.absent(),
+              }) => WebxdcInstancesCompanion.insert(
+                instanceId: instanceId,
+                groupId: groupId,
+                appId: appId,
+                version: version,
+                bundleSha256: bundleSha256,
+                originToken: originToken,
+                summary: summary,
+                document: document,
+                createdAt: createdAt,
+                lastUpdateAt: lastUpdateAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$WebxdcInstancesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({instanceId = false, groupId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (instanceId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.instanceId,
+                                referencedTable:
+                                    $$WebxdcInstancesTableReferences
+                                        ._instanceIdTable(db),
+                                referencedColumn:
+                                    $$WebxdcInstancesTableReferences
+                                        ._instanceIdTable(db)
+                                        .messageId,
+                              )
+                              as T;
+                    }
+                    if (groupId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.groupId,
+                                referencedTable:
+                                    $$WebxdcInstancesTableReferences
+                                        ._groupIdTable(db),
+                                referencedColumn:
+                                    $$WebxdcInstancesTableReferences
+                                        ._groupIdTable(db)
+                                        .groupId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$WebxdcInstancesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $WebxdcInstancesTable,
+      WebxdcInstance,
+      $$WebxdcInstancesTableFilterComposer,
+      $$WebxdcInstancesTableOrderingComposer,
+      $$WebxdcInstancesTableAnnotationComposer,
+      $$WebxdcInstancesTableCreateCompanionBuilder,
+      $$WebxdcInstancesTableUpdateCompanionBuilder,
+      (WebxdcInstance, $$WebxdcInstancesTableReferences),
+      WebxdcInstance,
+      PrefetchHooks Function({bool instanceId, bool groupId})
+    >;
+typedef $$WebxdcUpdatesTableCreateCompanionBuilder =
+    WebxdcUpdatesCompanion Function({
+      required String instanceId,
+      required int serial,
+      required String messageId,
+      Value<int?> senderId,
+      required String payload,
+      Value<String?> info,
+      Value<String?> href,
+      required int receivedAt,
+      Value<int> rowid,
+    });
+typedef $$WebxdcUpdatesTableUpdateCompanionBuilder =
+    WebxdcUpdatesCompanion Function({
+      Value<String> instanceId,
+      Value<int> serial,
+      Value<String> messageId,
+      Value<int?> senderId,
+      Value<String> payload,
+      Value<String?> info,
+      Value<String?> href,
+      Value<int> receivedAt,
+      Value<int> rowid,
+    });
+
+class $$WebxdcUpdatesTableFilterComposer
+    extends Composer<_$TwonlyDB, $WebxdcUpdatesTable> {
+  $$WebxdcUpdatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get serial => $composableBuilder(
+    column: $table.serial,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get messageId => $composableBuilder(
+    column: $table.messageId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get senderId => $composableBuilder(
+    column: $table.senderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get info => $composableBuilder(
+    column: $table.info,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get href => $composableBuilder(
+    column: $table.href,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WebxdcUpdatesTableOrderingComposer
+    extends Composer<_$TwonlyDB, $WebxdcUpdatesTable> {
+  $$WebxdcUpdatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get serial => $composableBuilder(
+    column: $table.serial,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get messageId => $composableBuilder(
+    column: $table.messageId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get senderId => $composableBuilder(
+    column: $table.senderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get info => $composableBuilder(
+    column: $table.info,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get href => $composableBuilder(
+    column: $table.href,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WebxdcUpdatesTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $WebxdcUpdatesTable> {
+  $$WebxdcUpdatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get serial =>
+      $composableBuilder(column: $table.serial, builder: (column) => column);
+
+  GeneratedColumn<String> get messageId =>
+      $composableBuilder(column: $table.messageId, builder: (column) => column);
+
+  GeneratedColumn<int> get senderId =>
+      $composableBuilder(column: $table.senderId, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<String> get info =>
+      $composableBuilder(column: $table.info, builder: (column) => column);
+
+  GeneratedColumn<String> get href =>
+      $composableBuilder(column: $table.href, builder: (column) => column);
+
+  GeneratedColumn<int> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$WebxdcUpdatesTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $WebxdcUpdatesTable,
+          WebxdcUpdate,
+          $$WebxdcUpdatesTableFilterComposer,
+          $$WebxdcUpdatesTableOrderingComposer,
+          $$WebxdcUpdatesTableAnnotationComposer,
+          $$WebxdcUpdatesTableCreateCompanionBuilder,
+          $$WebxdcUpdatesTableUpdateCompanionBuilder,
+          (
+            WebxdcUpdate,
+            BaseReferences<_$TwonlyDB, $WebxdcUpdatesTable, WebxdcUpdate>,
+          ),
+          WebxdcUpdate,
+          PrefetchHooks Function()
+        > {
+  $$WebxdcUpdatesTableTableManager(_$TwonlyDB db, $WebxdcUpdatesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WebxdcUpdatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WebxdcUpdatesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WebxdcUpdatesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> instanceId = const Value.absent(),
+                Value<int> serial = const Value.absent(),
+                Value<String> messageId = const Value.absent(),
+                Value<int?> senderId = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<String?> info = const Value.absent(),
+                Value<String?> href = const Value.absent(),
+                Value<int> receivedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WebxdcUpdatesCompanion(
+                instanceId: instanceId,
+                serial: serial,
+                messageId: messageId,
+                senderId: senderId,
+                payload: payload,
+                info: info,
+                href: href,
+                receivedAt: receivedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String instanceId,
+                required int serial,
+                required String messageId,
+                Value<int?> senderId = const Value.absent(),
+                required String payload,
+                Value<String?> info = const Value.absent(),
+                Value<String?> href = const Value.absent(),
+                required int receivedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => WebxdcUpdatesCompanion.insert(
+                instanceId: instanceId,
+                serial: serial,
+                messageId: messageId,
+                senderId: senderId,
+                payload: payload,
+                info: info,
+                href: href,
+                receivedAt: receivedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WebxdcUpdatesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $WebxdcUpdatesTable,
+      WebxdcUpdate,
+      $$WebxdcUpdatesTableFilterComposer,
+      $$WebxdcUpdatesTableOrderingComposer,
+      $$WebxdcUpdatesTableAnnotationComposer,
+      $$WebxdcUpdatesTableCreateCompanionBuilder,
+      $$WebxdcUpdatesTableUpdateCompanionBuilder,
+      (
+        WebxdcUpdate,
+        BaseReferences<_$TwonlyDB, $WebxdcUpdatesTable, WebxdcUpdate>,
+      ),
+      WebxdcUpdate,
+      PrefetchHooks Function()
+    >;
 
 class $TwonlyDBManager {
   final _$TwonlyDB _db;
@@ -23786,4 +26926,10 @@ class $TwonlyDBManager {
       $$ContactGroupsTableTableManager(_db, _db.contactGroups);
   $$ContactGroupMembersTableTableManager get contactGroupMembers =>
       $$ContactGroupMembersTableTableManager(_db, _db.contactGroupMembers);
+  $$WebxdcAppsTableTableManager get webxdcApps =>
+      $$WebxdcAppsTableTableManager(_db, _db.webxdcApps);
+  $$WebxdcInstancesTableTableManager get webxdcInstances =>
+      $$WebxdcInstancesTableTableManager(_db, _db.webxdcInstances);
+  $$WebxdcUpdatesTableTableManager get webxdcUpdates =>
+      $$WebxdcUpdatesTableTableManager(_db, _db.webxdcUpdates);
 }

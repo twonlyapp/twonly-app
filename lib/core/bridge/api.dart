@@ -475,10 +475,12 @@ class RustApi {
     required String groupId,
     required String messageType,
     required List<int> additionalData,
+    required bool hidden,
   }) => RustLib.instance.api.crateBridgeApiRustApiInsertAndSendAdditionalData(
     groupId: groupId,
     messageType: messageType,
     additionalData: additionalData,
+    hidden: hidden,
   );
 
   static Future<String> insertAndSendAskAboutUser({
@@ -501,10 +503,12 @@ class RustApi {
     required String groupId,
     required String text,
     String? quoteMessageId,
+    Uint8List? additionalMessageData,
   }) => RustLib.instance.api.crateBridgeApiRustApiInsertAndSendText(
     groupId: groupId,
     text: text,
     quoteMessageId: quoteMessageId,
+    additionalMessageData: additionalMessageData,
   );
 
   static Future<void> ipaPurchase({

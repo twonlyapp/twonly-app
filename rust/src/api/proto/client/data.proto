@@ -12,6 +12,9 @@ message AdditionalMessageData {
         CONTACTS = 1;
         RESTORED_FLAME_COUNTER = 2;
         ASK_ABOUT_USER = 3;
+        WEBXDC_APP = 4;
+        WEBXDC_UPDATE = 5;
+        WEBXDC_SENT = 6;
     }
     Type type = 1;
 
@@ -19,4 +22,39 @@ message AdditionalMessageData {
     repeated SharedContact contacts = 3;
     optional int64 restored_flame_counter = 4;
     optional int64 ask_about_user_id = 5;
+    optional WebxdcApp webxdc_app = 6;
+    optional WebxdcUpdate webxdc_update = 7;
+    optional WebxdcOrigin webxdc_origin = 8;
+}
+
+// Attached to a message a webxdc app asked the user to send, so the chat can
+// say which app it came from.
+//
+// `instance_id` is the app card in the chat the app runs in, which is not
+// necessarily the chat this message was sent to: the user picks the recipient.
+// `app_id` and `version` are carried as well so the receiver can name and
+// picture the app even when it has no instance of its own.
+message WebxdcOrigin {
+    string instance_id = 1;
+    string app_id      = 2;
+    int64  version     = 3;
+}
+
+// The app itself is never sent. Peers resolve the id and version against the
+// twonly store and download the bundle from the API server, so a sender can
+// only point at code that has already been published.
+message WebxdcApp {
+    string app_id  = 1;
+    int64  version = 2;
+}
+
+message WebxdcUpdate {
+    // The message id of the app card this update belongs to.
+    string          instance_id = 1;
+    // JSON, as the app produced it. Never parsed by twonly.
+    string          payload     = 2;
+    optional string info        = 3;
+    optional string href        = 4;
+    optional string summary     = 5;
+    optional string document    = 6;
 }

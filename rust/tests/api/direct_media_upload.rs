@@ -1,4 +1,5 @@
 use super::{init_tracing, Tester};
+use anyhow::Context as _;
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::services::direct_media_upload::DirectMediaUploadService;
 use rust_lib_twonly::services::media_upload::MediaUploadService;
@@ -21,16 +22,20 @@ async fn test_direct_media_upload_reconciliation() -> anyhow::Result<()> {
     let tester = create_authenticated_tester().await?;
     let service = DirectMediaUploadService::new(&tester.context);
 
-    let issued = service.preload_slots().await?;
-    assert!(issued > 0, "the server must issue direct-media slots");
+    // The client fills its slot cache on its own the moment it authenticates,
+    // and the server issues no more than one account's worth, so this call is
+    // just as likely to be answered with nothing left to hand out. What has to
+    // hold is that the account ends up holding slots to send against.
+    service.preload_slots().await?;
 
     let (attachment_id, capability) = {
         let database = tester.context.app_db.read().await.clone();
         sqlx::query_as::<_, (String, Vec<u8>)>(
             "SELECT attachment_id, capability FROM direct_media_upload_slots WHERE state = 'cached' LIMIT 1",
         )
-        .fetch_one(&database.pool)
+        .fetch_optional(&database.pool)
         .await?
+        .context("the server must issue direct-media slots")?
     };
 
     // Stand in for a media send whose native transfer was handed off but never

@@ -341,6 +341,36 @@ impl Tester {
         ))
     }
 
+    /// Waits until a member's group public key has landed here.
+    ///
+    /// The key travels on its own message -- announced when the member learns
+    /// of the group, or answered on request -- so it arrives after the group
+    /// itself and cannot be assumed present the moment the group is.
+    pub async fn wait_for_group_public_key(
+        &self,
+        group_id: &str,
+        contact_id: i64,
+    ) -> anyhow::Result<()> {
+        for _ in 0..100 {
+            let database = self.context.app_db.read().await.clone();
+            let key = sqlx::query_scalar!(
+                "SELECT group_public_key FROM group_members WHERE group_id = ? AND contact_id = ?",
+                group_id,
+                contact_id,
+            )
+            .fetch_optional(&database.pool)
+            .await?
+            .flatten();
+            if key.is_some() {
+                return Ok(());
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+        Err(anyhow::anyhow!(
+            "group public key of {contact_id} in group {group_id} did not arrive"
+        ))
+    }
+
     pub async fn wait_for_group_member_removed(
         &self,
         group_id: &str,
@@ -603,6 +633,19 @@ impl Tester {
         Ok(sqlx::query_scalar!(
             "SELECT COUNT(*) FROM notification_outbox WHERE event_id = ?",
             event_id
+        )
+        .fetch_one(&database.pool)
+        .await?)
+    }
+
+    /// Whether any receipt still open for `message_id` would ask the server to
+    /// push the recipient again. A receipt outlives its delivery, so this is
+    /// what proves a retransmission cannot re-alert somebody.
+    pub async fn receipts_still_waking(&self, message_id: &str) -> anyhow::Result<i64> {
+        let database = self.context.app_db.read().await.clone();
+        Ok(sqlx::query_scalar!(
+            "SELECT COUNT(*) FROM receipts WHERE message_id = ? AND wake_receiver = 1",
+            message_id
         )
         .fetch_one(&database.pool)
         .await?)
@@ -1049,15 +1092,22 @@ impl Tester {
         }
     }
 
+    /// Waits for the API connection to reach `required`.
+    ///
+    /// The budget is generous because this is the one wait that includes a
+    /// live handshake: a full suite run opens dozens of websockets against the
+    /// same development server at once, and a connect that queues behind them
+    /// is slow rather than broken. Reaching the state ends the loop, so the
+    /// budget costs nothing when the server is idle.
     pub(crate) async fn wait_until(&self, required: ApiConnectionState) -> anyhow::Result<()> {
         let mut state = ApiRuntime::connection_state(&self.context).await?;
 
-        for _ in 0..1_000 {
+        for _ in 0..1_200 {
             state = ApiRuntime::connection_state(&self.context).await?;
             if state == required {
                 break;
             }
-            sleep(Duration::from_millis(10)).await;
+            sleep(Duration::from_millis(25)).await;
         }
 
         assert_eq!(

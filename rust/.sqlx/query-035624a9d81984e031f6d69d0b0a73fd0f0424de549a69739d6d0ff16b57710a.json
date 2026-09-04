@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT bundle_sha256 AS \"bundle_sha256!: String\"\n               FROM webxdc_apps WHERE app_id = ? AND version = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "bundle_sha256!: String",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "bundle_sha256"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "035624a9d81984e031f6d69d0b0a73fd0f0424de549a69739d6d0ff16b57710a"
+}

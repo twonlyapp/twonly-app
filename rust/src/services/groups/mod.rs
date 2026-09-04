@@ -68,6 +68,28 @@ fn group_state_lock(group_id: &str) -> Arc<tokio::sync::Mutex<()>> {
     locks.entry(group_id.to_owned()).or_default().clone()
 }
 
+/// How many versions a group-state update chases before it gives up.
+const STATE_UPDATE_ATTEMPTS: usize = 3;
+
+/// The admin rights a state update grants or revokes alongside the new state.
+#[derive(Default)]
+struct AdminKeys {
+    add: Option<Vec<u8>>,
+    remove: Option<Vec<u8>>,
+}
+
+/// A folded-down group state that still has to reach the group server.
+///
+/// Every admin that reads a member's leave-append removes them from its own
+/// copy of the state; whoever pushes first wins, and the losers' rejections
+/// are of no consequence. It is carried out of the inbound transaction because
+/// pushing it is a network round trip and the app database has one connection.
+struct PendingCompaction {
+    group: GroupRecord,
+    version_id: u64,
+    state: EncryptedGroupState,
+}
+
 /// When each member was last asked to resend its group public key.
 ///
 /// Process-local on purpose: the point is to keep one session from re-asking a
@@ -310,10 +332,29 @@ impl GroupService {
 
         let database = self.ctx.app_db.read().await.clone();
         let mut t = database.pool.begin().await?;
-        let updated = self
+        let (updated, compaction) = self
             .apply_fetched_group_state(&mut t, &group_id, server)
             .await?;
         t.commit().await?;
+
+        if let Some(compaction) = compaction {
+            // Every admin that reads the same leave-append folds it away, and
+            // the group server takes whichever gets there first. A rejection
+            // means another admin already did the work, so the state this
+            // refresh applied stands either way and the next refresh reads the
+            // folded version.
+            if let Err(error) = GroupApi::update_remote(
+                &compaction.group,
+                compaction.version_id,
+                &compaction.state,
+                None,
+                None,
+            )
+            .await
+            {
+                tracing::warn!(group_id, %error, "group-state compaction was not accepted");
+            }
+        }
 
         // `apply_state` may have queued public-key requests. Nothing else
         // flushes them here -- this is not an inbound-message path -- and they
@@ -328,15 +369,16 @@ impl GroupService {
         Ok(updated)
     }
 
-    /// Applies a group state that has already been fetched. Database work only,
-    /// apart from the admin-side `update_remote` repair below, which the
-    /// caller's group lock keeps free of races.
+    /// Applies a group state that has already been fetched. Database work
+    /// only: the admin-side compaction of leave-appends is handed back to the
+    /// caller instead of sent from here, because it is a network round trip
+    /// and this runs while the caller holds the app database's one connection.
     async fn apply_fetched_group_state(
         &self,
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
         group_id: &str,
         server: Option<crate::api::proto::http_requests::GroupState>,
-    ) -> Result<bool> {
+    ) -> Result<(bool, Option<PendingCompaction>)> {
         let group = GroupRecord::load_in_transaction(t, group_id).await?;
         let Some(server) = server else {
             UpdateGroup::builder()
@@ -345,7 +387,7 @@ impl GroupService {
                 .build()
                 .execute(t)
                 .await?;
-            return Ok(false);
+            return Ok((false, None));
         };
         let state_key = group.state_key()?;
         let raw = crypto::decrypt(state_key, &server.encrypted_group_state)?;
@@ -412,19 +454,64 @@ impl GroupService {
             group_state.admin_ids.retain(|id| *id != leaving_id);
             appended_changes = true;
         }
-        if appended_changes & group_state.admin_ids.contains(&local_user_id) {
-            GroupApi::update_remote(&group, server.version_id, &group_state, None, None).await?;
-        }
+        let compaction =
+            (appended_changes & group_state.admin_ids.contains(&local_user_id)).then(|| {
+                PendingCompaction {
+                    group: group.clone(),
+                    version_id: server.version_id,
+                    state: group_state.clone(),
+                }
+            });
         self.apply_state(t, group_id, server.version_id as i64, &group_state)
             .await?;
-        Ok(true)
+        Ok((true, compaction))
+    }
+
+    /// Reads the group state, applies `change`, and writes it back, re-reading
+    /// and re-applying while the group server rejects the write as stale.
+    ///
+    /// The server accepts an update only against the version it currently
+    /// holds, so two admins acting at once -- or one racing the compaction a
+    /// member's leave-append triggers -- leave the loser holding a state the
+    /// server has already moved past. The loser's intent is still valid; only
+    /// the version it was expressed against is not. That is why `change` is a
+    /// function of the state rather than a finished state: it can simply be
+    /// applied again to the version that won.
+    ///
+    /// `change` returning `None` means there is nothing left to write.
+    async fn update_state_with_retry(
+        &self,
+        group: &GroupRecord,
+        mut change: impl FnMut(&mut EncryptedGroupState) -> Result<Option<AdminKeys>>,
+    ) -> Result<()> {
+        let mut attempt = 1;
+        loop {
+            let (version, mut state) = GroupApi::load_state(group).await?;
+            let Some(keys) = change(&mut state)? else {
+                return Ok(());
+            };
+            match GroupApi::update_remote(group, version, &state, keys.add, keys.remove).await {
+                Ok(()) => return Ok(()),
+                Err(TwonlyError::GroupStateConflict) if attempt < STATE_UPDATE_ATTEMPTS => {
+                    attempt += 1;
+                    tracing::info!(
+                        group_id = group.group_id,
+                        attempt,
+                        "group state moved on while updating it, applying the change again"
+                    );
+                }
+                Err(error) => return Err(error),
+            }
+        }
     }
 
     pub async fn update_group_name(&self, group_id: String, name: String) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
-        let (v, mut s) = GroupApi::load_state(&g).await?;
-        s.group_name = name.clone();
-        GroupApi::update_remote(&g, v, &s, None, None).await?;
+        self.update_state_with_retry(&g, |state| {
+            state.group_name = name.clone();
+            Ok(Some(AdminKeys::default()))
+        })
+        .await?;
         self.announce(
             &group_id,
             "updatedGroupName",
@@ -449,9 +536,11 @@ impl GroupService {
 
     pub async fn update_chat_deletion_time(&self, group_id: String, ms: i64) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
-        let (v, mut s) = GroupApi::load_state(&g).await?;
-        s.delete_messages_after_milliseconds = Some(ms);
-        GroupApi::update_remote(&g, v, &s, None, None).await?;
+        self.update_state_with_retry(&g, |state| {
+            state.delete_messages_after_milliseconds = Some(ms);
+            Ok(Some(AdminKeys::default()))
+        })
+        .await?;
         self.announce(&group_id, "changeDisplayMaxTime", None, None, Some(ms))
             .await?;
         let mut tr = db.pool.begin().await?;
@@ -501,29 +590,27 @@ impl GroupService {
         remove: bool,
     ) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
-        let (v, mut s) = GroupApi::load_state(&g).await?;
 
         let public_key = self
             .member_public_key(&db, &g, &group_id, contact_id)
             .await?;
 
-        if remove {
-            s.admin_ids.retain(|x| *x != contact_id)
-        } else if !s.admin_ids.contains(&contact_id) {
-            s.admin_ids.push(contact_id)
-        };
         let kind = if remove {
             "demoteToMember"
         } else {
             "promoteToAdmin"
         };
-        GroupApi::update_remote(
-            &g,
-            v,
-            &s,
-            (!remove).then_some(public_key.clone()),
-            remove.then_some(public_key),
-        )
+        self.update_state_with_retry(&g, |state| {
+            if remove {
+                state.admin_ids.retain(|x| *x != contact_id)
+            } else if !state.admin_ids.contains(&contact_id) {
+                state.admin_ids.push(contact_id)
+            };
+            Ok(Some(AdminKeys {
+                add: (!remove).then(|| public_key.clone()),
+                remove: remove.then(|| public_key.clone()),
+            }))
+        })
         .await?;
         self.announce(&group_id, kind, Some(contact_id), None, None)
             .await?;
@@ -535,13 +622,15 @@ impl GroupService {
 
     pub async fn add_members(&self, group_id: String, ids: Vec<i64>) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
-        let (v, mut s) = GroupApi::load_state(&g).await?;
-        for id in &ids {
-            if !s.member_ids.contains(id) {
-                s.member_ids.push(*id)
+        self.update_state_with_retry(&g, |state| {
+            for id in &ids {
+                if !state.member_ids.contains(id) {
+                    state.member_ids.push(*id)
+                }
             }
-        }
-        GroupApi::update_remote(&g, v, &s, None, None).await?;
+            Ok(Some(AdminKeys::default()))
+        })
+        .await?;
         let identity = g.identity()?;
         for id in ids {
             self.announce(&group_id, "addMember", Some(id), None, None)
@@ -578,22 +667,35 @@ impl GroupService {
     /// unremovable.
     pub async fn remove_member(&self, group_id: String, contact_id: i64) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
-        let (v, mut s) = GroupApi::load_state(&g).await?;
-        if !s.member_ids.contains(&contact_id) {
-            return Ok(true);
-        }
-        s.member_ids.retain(|x| *x != contact_id);
-        let was_admin = s.admin_ids.contains(&contact_id);
-        s.admin_ids.retain(|x| *x != contact_id);
-        let revoked_key = if was_admin {
-            Some(
-                self.member_public_key(&db, &g, &group_id, contact_id)
-                    .await?,
-            )
-        } else {
-            None
-        };
-        GroupApi::update_remote(&g, v, &s, None, revoked_key).await?;
+        // Looked up before the state is read so the change below stays a plain
+        // function of it. A member who is not an admin never has this key
+        // consulted, which is what keeps one that never arrived from making
+        // them unremovable.
+        let public_key = self
+            .member_public_key(&db, &g, &group_id, contact_id)
+            .await
+            .ok();
+        self.update_state_with_retry(&g, |state| {
+            if !state.member_ids.contains(&contact_id) {
+                return Ok(None);
+            }
+            state.member_ids.retain(|x| *x != contact_id);
+            let was_admin = state.admin_ids.contains(&contact_id);
+            state.admin_ids.retain(|x| *x != contact_id);
+            if !was_admin {
+                return Ok(Some(AdminKeys::default()));
+            }
+            let revoked = public_key.clone().ok_or_else(|| {
+                TwonlyError::Generic(format!(
+                    "group public key for contact {contact_id} not found"
+                ))
+            })?;
+            Ok(Some(AdminKeys {
+                add: None,
+                remove: Some(revoked),
+            }))
+        })
+        .await?;
         self.announce(&group_id, "removedMember", Some(contact_id), None, None)
             .await?;
         let mut tr = db.pool.begin().await?;

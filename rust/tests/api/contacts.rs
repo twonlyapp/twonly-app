@@ -49,7 +49,12 @@ async fn test_contact_cross_request_auto_accept() -> anyhow::Result<()> {
     // Verify direct chat group exists on both
     let group_id = Group::direct_chat_id(tester_a.user_id, tester_b.user_id);
     let msg_id = MessageService::new(&tester_a.context)
-        .insert_and_send_text(group_id.clone(), "Hello after cross-request!".into(), None)
+        .insert_and_send_text(
+            group_id.clone(),
+            "Hello after cross-request!".into(),
+            None,
+            None,
+        )
         .await?;
     tester_b
         .wait_for_text_message(&msg_id, tester_a.user_id, "Hello after cross-request!")
@@ -204,7 +209,7 @@ async fn test_accept_lands_for_contacts_met_in_a_group() -> anyhow::Result<()> {
     // instead of bouncing back as a fresh contact request.
     let direct_chat_id = Group::direct_chat_id(tester_a.user_id, tester_b.user_id);
     let msg_id = MessageService::new(&tester_b.context)
-        .insert_and_send_text(direct_chat_id, "Hello from the group".into(), None)
+        .insert_and_send_text(direct_chat_id, "Hello from the group".into(), None, None)
         .await?;
     tester_a
         .wait_for_text_message(&msg_id, tester_b.user_id, "Hello from the group")

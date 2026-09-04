@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/webxdc_store.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/shared/select_contacts.view.dart';
 
 class ShareAdditionalView extends StatefulWidget {
@@ -62,6 +63,16 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
     }
   }
 
+  Future<void> openAppStore() async {
+    Navigator.pop(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => WebxdcStoreView(group: widget.group),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -95,33 +106,52 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
             Expanded(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 32,
                 children: [
-                  GestureDetector(
+                  _entry(
+                    icon: FontAwesomeIcons.circleUser,
+                    label: context.lang.shareContactsMenu,
                     onTap: openShareContactView,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: context.color.surfaceContainer,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const FaIcon(FontAwesomeIcons.circleUser),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          context.lang.shareContactsMenu,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
+                  ),
+                  _entry(
+                    icon: Icons.apps_rounded,
+                    label: context.lang.webxdcStoreMenu,
+                    onTap: openAppStore,
                   ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// [icon] is an `IconData` or `FaIconData`, matching the rest of the app's
+  /// icon handling.
+  Widget _entry({
+    required dynamic icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: context.color.surfaceContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: icon is IconData
+                ? Icon(icon)
+                : FaIcon(icon as FaIconData?),
+          ),
+          const SizedBox(height: 8),
+          Text(label, textAlign: TextAlign.center),
+        ],
       ),
     );
   }

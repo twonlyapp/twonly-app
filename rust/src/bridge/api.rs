@@ -916,10 +916,11 @@ impl RustApi {
         group_id: String,
         text: String,
         quote_message_id: Option<String>,
+        additional_message_data: Option<Vec<u8>>,
     ) -> Result<String> {
         let ctx = Context::get_static()?;
         crate::services::messages::MessageService::new(ctx)
-            .insert_and_send_text(group_id, text, quote_message_id)
+            .insert_and_send_text(group_id, text, quote_message_id, additional_message_data)
             .await
     }
 
@@ -927,10 +928,11 @@ impl RustApi {
         group_id: String,
         message_type: String,
         additional_data: Vec<u8>,
+        hidden: bool,
     ) -> Result<String> {
         let ctx = Context::get_static()?;
         crate::services::messages::MessageService::new(ctx)
-            .insert_and_send_additional_data(group_id, message_type, additional_data)
+            .insert_and_send_additional_data(group_id, message_type, additional_data, hidden)
             .await
     }
 
