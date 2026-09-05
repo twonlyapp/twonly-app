@@ -478,20 +478,21 @@ impl GroupService {
     /// function of the state rather than a finished state: it can simply be
     /// applied again to the version that won.
     ///
-    /// `change` returning `None` means there is nothing left to write.
+    /// `change` returning `None` means there is nothing left to write, which
+    /// this reports back as `false`.
     async fn update_state_with_retry(
         &self,
         group: &GroupRecord,
         mut change: impl FnMut(&mut EncryptedGroupState) -> Result<Option<AdminKeys>>,
-    ) -> Result<()> {
+    ) -> Result<bool> {
         let mut attempt = 1;
         loop {
             let (version, mut state) = GroupApi::load_state(group).await?;
             let Some(keys) = change(&mut state)? else {
-                return Ok(());
+                return Ok(false);
             };
             match GroupApi::update_remote(group, version, &state, keys.add, keys.remove).await {
-                Ok(()) => return Ok(()),
+                Ok(()) => return Ok(true),
                 Err(TwonlyError::GroupStateConflict) if attempt < STATE_UPDATE_ATTEMPTS => {
                     attempt += 1;
                     tracing::info!(
@@ -675,27 +676,32 @@ impl GroupService {
             .member_public_key(&db, &g, &group_id, contact_id)
             .await
             .ok();
-        self.update_state_with_retry(&g, |state| {
-            if !state.member_ids.contains(&contact_id) {
-                return Ok(None);
-            }
-            state.member_ids.retain(|x| *x != contact_id);
-            let was_admin = state.admin_ids.contains(&contact_id);
-            state.admin_ids.retain(|x| *x != contact_id);
-            if !was_admin {
-                return Ok(Some(AdminKeys::default()));
-            }
-            let revoked = public_key.clone().ok_or_else(|| {
-                TwonlyError::Generic(format!(
-                    "group public key for contact {contact_id} not found"
-                ))
-            })?;
-            Ok(Some(AdminKeys {
-                add: None,
-                remove: Some(revoked),
-            }))
-        })
-        .await?;
+        let removed = self
+            .update_state_with_retry(&g, |state| {
+                if !state.member_ids.contains(&contact_id) {
+                    return Ok(None);
+                }
+                state.member_ids.retain(|x| *x != contact_id);
+                let was_admin = state.admin_ids.contains(&contact_id);
+                state.admin_ids.retain(|x| *x != contact_id);
+                if !was_admin {
+                    return Ok(Some(AdminKeys::default()));
+                }
+                let revoked = public_key.clone().ok_or_else(|| {
+                    TwonlyError::Generic(format!(
+                        "group public key for contact {contact_id} not found"
+                    ))
+                })?;
+                Ok(Some(AdminKeys {
+                    add: None,
+                    remove: Some(revoked),
+                }))
+            })
+            .await?;
+        if !removed {
+            // Somebody else already took them out of the group.
+            return Ok(true);
+        }
         self.announce(&group_id, "removedMember", Some(contact_id), None, None)
             .await?;
         let mut tr = db.pool.begin().await?;
@@ -715,37 +721,60 @@ impl GroupService {
     pub async fn leave_group(&self, group_id: String) -> Result<bool> {
         let (db, group) = self.load_group(&group_id).await?;
         let user_id = self.ctx.user_id().await?;
-        let (_, group_state) = GroupApi::load_state(&group).await?;
-        if group_state.admin_ids.contains(&user_id) {
-            return self.remove_member(group_id, user_id).await;
-        }
-
         let identity = group.identity()?;
         let public_key = identity.identity_key().serialize().to_vec();
-        let append = EncryptedAppendedGroupState {
-            r#type: encrypted_appended_group_state::Type::LeftGroup as i32,
-        };
-        let append_tbs = append_group_state::AppendTbs {
-            encrypted_group_state_append: crypto::encrypt(
-                group.state_key()?,
-                &append.encode_to_vec(),
-            )?,
-            public_key: public_key.clone(),
-            group_id: group_id.clone(),
-            nonce: GroupApi::get_challenge(&public_key).await?,
-        };
-        let mut rng = rand::rngs::StdRng::from_os_rng();
-        let signature = identity
-            .private_key()
-            .calculate_signature(&append_tbs.encode_to_vec(), &mut rng)
-            .map_err(|error| TwonlyError::Signal(error.to_string()))?
-            .into_vec();
-        GroupApi::append(AppendGroupState {
-            signature,
-            append_tbs: Some(append_tbs),
-            version_id: group.state_version_id as u64 + 1,
-        })
-        .await?;
+
+        // The append is addressed to the version the server holds right now,
+        // not to the local mirror of it: an admin promoting somebody, or
+        // anyone else's leave, moves the group on without this member having
+        // refreshed, and the server rejects an append that does not follow its
+        // current version. Reading it here is also what decides which of the
+        // two ways out of a group applies.
+        let mut attempt = 1;
+        loop {
+            let (version, group_state) = GroupApi::load_state(&group).await?;
+            if group_state.admin_ids.contains(&user_id) {
+                return self.remove_member(group_id, user_id).await;
+            }
+
+            let append = EncryptedAppendedGroupState {
+                r#type: encrypted_appended_group_state::Type::LeftGroup as i32,
+            };
+            let append_tbs = append_group_state::AppendTbs {
+                encrypted_group_state_append: crypto::encrypt(
+                    group.state_key()?,
+                    &append.encode_to_vec(),
+                )?,
+                public_key: public_key.clone(),
+                group_id: group_id.clone(),
+                nonce: GroupApi::get_challenge(&public_key).await?,
+            };
+            let mut rng = rand::rngs::StdRng::from_os_rng();
+            let signature = identity
+                .private_key()
+                .calculate_signature(&append_tbs.encode_to_vec(), &mut rng)
+                .map_err(|error| TwonlyError::Signal(error.to_string()))?
+                .into_vec();
+            match GroupApi::append(AppendGroupState {
+                signature,
+                append_tbs: Some(append_tbs),
+                version_id: version + 1,
+            })
+            .await
+            {
+                Ok(()) => break,
+                Err(TwonlyError::GroupStateConflict) if attempt < STATE_UPDATE_ATTEMPTS => {
+                    attempt += 1;
+                    tracing::info!(
+                        group_id,
+                        attempt,
+                        "group state moved on while leaving it, appending to the new version"
+                    );
+                }
+                Err(error) => return Err(error),
+            }
+        }
+
         self.announce(&group_id, "leftGroup", None, None, None)
             .await?;
         let mut tr = db.pool.begin().await?;

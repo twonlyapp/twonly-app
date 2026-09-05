@@ -384,10 +384,9 @@ class PasswordlessRecoveryService {
         alreadyReceivedMessageIds: alreadyReceivedIds,
       );
     } catch (error) {
-      Log.error(
-        'Failed to load passwordless recovery messages',
-        error: error,
-      );
+      // This runs on a 10s poll, so a socket that is still connecting or
+      // briefly offline is expected. The next tick retries.
+      Log.warn('Failed to load passwordless recovery messages', error);
       return false;
     }
 

@@ -338,12 +338,15 @@ class BackupService {
           await RustBackupArchive.restoreBackupArchive(
             filePath: archiveFile.path,
           );
+          Log.info('Restored the backup archive.');
           await UserService.update((u) {
             u.deviceId += 1;
           });
+          Log.info('Bumped the device id after the recovery.');
           await KeyValueStore.delete(
             KeyValueKeys.backupRecoveryState,
           );
+          Log.info('Recovery finished, restarting the app.');
         } catch (e) {
           Log.error(e);
           return RecoveryError.unkownError;
@@ -411,8 +414,10 @@ class BackupService {
 
     // Import KeyManager keys into secure storage & in-memory key manager
     await RustKeyManager.importSerialized(serializedBytes: keyManagerBytes);
+    Log.info('Imported the recovered key manager.');
 
     await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
+    Log.info('Stored the recovery state, entering the archive stage.');
     return _nextBackupStage(onProgress: onProgress);
   }
 

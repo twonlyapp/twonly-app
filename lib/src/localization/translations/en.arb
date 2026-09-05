@@ -880,6 +880,8 @@
   "passwordlessRecoveryNoShareStored": "No recovery share stored for this contact.",
   "passwordlessRecoveryEmailSent": "Recovery email sent!",
   "passwordlessRecoveryShareSent": "Recovery share sent!",
+  "passwordlessRecoveryAuthReason": "Authenticate to send your recovery share",
+  "passwordlessRecoveryAuthFailed": "Authentication failed, the recovery share was not sent.",
   "passwordlessRecoveryNetworkError": "Network error, please ensure you have internet",
   "passwordlessRecoveryInvalidEmail": "The email address is invalid.",
   "passwordlessRecoveryResendEmail": "Resend recovery email",

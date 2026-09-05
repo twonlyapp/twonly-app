@@ -78,6 +78,19 @@ class _HelpAFriendPasswordlessRecoveryViewState
   }
 
   Future<void> _submitShare(Contact contact) async {
+    final verified = await authenticateUser(
+      context.lang.passwordlessRecoveryAuthReason,
+      force: false,
+    );
+    if (!mounted) return;
+    if (!verified) {
+      showSnackbar(
+        context,
+        context.lang.passwordlessRecoveryAuthFailed,
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     final res = await PasswordlessRecoveryService.submitRecoveryShare(
       widget.notificationId,

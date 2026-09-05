@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/log.dart';
 
 /// Deletes local databases and files.
 ///
@@ -13,8 +14,16 @@ import 'package:twonly/src/database/twonly.db.dart';
 Future<bool> deleteLocalUserData({bool removeCredentials = false}) async {
   if (removeCredentials) {
     await RustKeyManager.removeLocalCredentials();
+    Log.info('Removed the local credentials.');
   }
-  await twonlyDB.close();
+  // The database files are deleted a few lines down either way, so a drift
+  // isolate that no longer answers must not block the whole recovery.
+  try {
+    await twonlyDB.close().timeout(const Duration(seconds: 5));
+    Log.info('Closed the app database.');
+  } catch (e) {
+    Log.warn('Could not close the app database, deleting it anyway', e);
+  }
   // Wait for the background drift isolate to potentially shut down
   await Future.delayed(const Duration(milliseconds: 200));
 
@@ -29,5 +38,6 @@ Future<bool> deleteLocalUserData({bool removeCredentials = false}) async {
   locator
     ..unregister<TwonlyDB>()
     ..registerLazySingleton<TwonlyDB>(TwonlyDB.new);
+  Log.info('Deleted the local user data.');
   return true;
 }

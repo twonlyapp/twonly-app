@@ -2344,6 +2344,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordlessRecoveryShareSent => 'Recovery share sent!';
 
   @override
+  String get passwordlessRecoveryAuthReason =>
+      'Authenticate to send your recovery share';
+
+  @override
+  String get passwordlessRecoveryAuthFailed =>
+      'Authentication failed, the recovery share was not sent.';
+
+  @override
   String get passwordlessRecoveryNetworkError =>
       'Network error, please ensure you have internet';
 

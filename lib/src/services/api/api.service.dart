@@ -53,6 +53,14 @@ class ApiService {
 
   // Function is called after the user is authenticated at the server
   Future<void> onAuthenticated() async {
+    // A passwordless recovery restores the identity into the key manager
+    // before a user config exists, so the socket can authenticate while
+    // `currentUser` is still unset. Everything below reads that config.
+    if (!userService.isUserCreated) {
+      Log.info('Skipping onAuthenticated: the user config is not loaded yet');
+      return;
+    }
+
     await FcmNotificationService.initFCMAfterAuthenticated();
 
     if (!AppState.isAppInBackground) {

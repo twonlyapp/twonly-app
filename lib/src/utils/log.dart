@@ -29,7 +29,7 @@ class Log {
             record.level >= Level.WARNING) {
           // ignore: avoid_print
           print(
-            '${record.level.name} [f] [twonly] ${record.loggerName} > ${record.message}',
+            '${record.level.name} [f] [twonly] ${record.loggerName} > ${_formatRecord(record)}',
           );
         }
       }
@@ -71,7 +71,7 @@ class Log {
           _ => rust_logging.LogLevel.finest,
         },
         source: record.loggerName,
-        message: record.message,
+        message: _formatRecord(record),
         // Background work runs natively now; anything logged from Dart is by
         // definition the foreground runtime.
         inBackground: false,
@@ -84,6 +84,20 @@ class Log {
       }
       return false;
     }
+  }
+
+  /// Folds the optional [LogRecord.error] and [LogRecord.stackTrace] into the
+  /// rendered line. Without this, callers passing an error see only their own
+  /// message and never the cause.
+  static String _formatRecord(LogRecord record) {
+    final buffer = StringBuffer(record.message);
+    if (record.error != null) {
+      buffer.write(': ${filterLogMessage('${record.error}')}');
+    }
+    if (record.stackTrace != null) {
+      buffer.write('\n${record.stackTrace}');
+    }
+    return buffer.toString();
   }
 
   static String filterLogMessage(String msg) {

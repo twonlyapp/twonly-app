@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/services/intent/links.intent.dart';
 import 'package:twonly/src/utils/log.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -9,15 +10,6 @@ final _urlRegExp = RegExp(
   r'''(?:(?:https?://|www\.)(?:[^\s()<>]+|\([^\s()<>]+\))+(?:\([^\s()<>]+\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))|(?:(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})''',
   caseSensitive: false,
 );
-
-Future<void> _openUrl(String url) async {
-  final lUrl = Uri.parse(url.startsWith('http') ? url : 'http://$url');
-  try {
-    await launchUrl(lUrl, mode: LaunchMode.externalApplication);
-  } catch (e) {
-    Log.error('Could not launch $e');
-  }
-}
 
 class BetterText extends StatefulWidget {
   const BetterText({required this.text, required this.textColor, super.key});
@@ -62,6 +54,19 @@ class _BetterTextState extends State<BetterText> {
       recognizer.dispose();
     }
     _recognizers.clear();
+  }
+
+  /// twonly's own links (profile, QR and passwordless recovery links) are
+  /// handled in the app instead of being handed to the browser, which would
+  /// only land on a page that cannot do anything with the fragment.
+  Future<void> _openUrl(String url) async {
+    final lUrl = Uri.parse(url.startsWith('http') ? url : 'http://$url');
+    if (mounted && await handleIntentUrl(context, lUrl)) return;
+    try {
+      await launchUrl(lUrl, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      Log.error('Could not launch $e');
+    }
   }
 
   void _buildSpans() {

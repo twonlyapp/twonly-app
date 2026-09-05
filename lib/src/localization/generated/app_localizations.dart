@@ -4088,6 +4088,18 @@ abstract class AppLocalizations {
   /// **'Recovery share sent!'**
   String get passwordlessRecoveryShareSent;
 
+  /// No description provided for @passwordlessRecoveryAuthReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to send your recovery share'**
+  String get passwordlessRecoveryAuthReason;
+
+  /// No description provided for @passwordlessRecoveryAuthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed, the recovery share was not sent.'**
+  String get passwordlessRecoveryAuthFailed;
+
   /// No description provided for @passwordlessRecoveryNetworkError.
   ///
   /// In en, this message translates to:

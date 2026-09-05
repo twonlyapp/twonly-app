@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:twonly/src/services/backup.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/onboarding/components/link_logo_animation.dart';
@@ -67,12 +68,20 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
       _error = null;
     });
 
-    final error = await widget.runRecovery((progress) {
-      final index = widget.steps.indexOf(progress);
-      if (mounted && index >= 0) {
-        setState(() => _currentIndex = index);
-      }
-    });
+    RecoveryError? error;
+    try {
+      error = await widget.runRecovery((progress) {
+        final index = widget.steps.indexOf(progress);
+        if (mounted && index >= 0) {
+          setState(() => _currentIndex = index);
+        }
+      });
+    } catch (e, stackTrace) {
+      // Without this the step keeps spinning forever and the user is stuck on
+      // a screen they cannot leave, with no way to retry.
+      Log.error('Recovery failed', error: e, stackTrace: stackTrace);
+      error = RecoveryError.unkownError;
+    }
     if (!mounted) return;
 
     if (error != null) {
@@ -82,11 +91,22 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
 
     setState(() => _isFinishing = true);
 
-    await Restart.restartApp(
-      notificationTitle: context.lang.recoverSuccessTitle,
-      notificationBody: context.lang.recoverSuccessBody,
-      forceKill: true,
-    );
+    try {
+      await Restart.restartApp(
+        notificationTitle: context.lang.recoverSuccessTitle,
+        notificationBody: context.lang.recoverSuccessBody,
+        forceKill: true,
+      );
+    } catch (e, stackTrace) {
+      // The data is restored at this point, only the restart failed. Show the
+      // failure so the user knows to reopen the app themselves.
+      Log.error(
+        'Restart after recovery failed',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (mounted) setState(() => _error = RecoveryError.unkownError);
+    }
   }
 
   _StepStatus _statusFor(int index) {

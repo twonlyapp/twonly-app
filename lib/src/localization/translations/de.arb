@@ -870,6 +870,8 @@
   "passwordlessRecoveryNoShareStored": "Kein Wiederherstellungs-Teil für diesen Kontakt gespeichert.",
   "passwordlessRecoveryEmailSent": "Wiederherstellungs-E-Mail gesendet!",
   "passwordlessRecoveryShareSent": "Wiederherstellungs-Teil gesendet!",
+  "passwordlessRecoveryAuthReason": "Authentifiziere dich, um deinen Wiederherstellungs-Teil zu senden",
+  "passwordlessRecoveryAuthFailed": "Authentifizierung fehlgeschlagen, der Wiederherstellungs-Teil wurde nicht gesendet.",
   "passwordlessRecoveryNetworkError": "Netzwerkfehler, bitte stelle sicher, dass du Internet hast",
   "passwordlessRecoveryInvalidEmail": "Die E-Mail-Adresse ist ungültig.",
   "passwordlessRecoveryResendEmail": "E-Mail erneut senden",

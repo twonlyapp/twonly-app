@@ -20,6 +20,19 @@ use zeroize::Zeroize;
 use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
+/// How long a database pool gets to hand its connections back before the
+/// restore stops waiting for it.
+const POOL_CLOSE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+
+async fn close_pool_or_log(pool: &sqlx::SqlitePool, name: &str) {
+    if tokio::time::timeout(POOL_CLOSE_TIMEOUT, pool.close())
+        .await
+        .is_err()
+    {
+        tracing::warn!("{name} pool did not close within the timeout, replacing it anyway");
+    }
+}
+
 pub(crate) struct BackupArchive {}
 
 const BACKUP_MANIFEST_FILE: &str = "backup-manifest.json";
@@ -261,10 +274,16 @@ impl BackupArchive {
         // app_db.sqlite is owned by a replaceable Rust handle. Close it before
         // replacing the file so subsequent DAO calls cannot continue using an
         // unlinked pre-restore database.
+        // `Pool::close` waits for every checked out connection to come back. A
+        // caller that still holds one would hang the restore here forever,
+        // while this task keeps the KeyManager locked and every later recovery
+        // attempt blocks on it too. The files are replaced right below and the
+        // handles are swapped out, so a pool that refuses to drain is not worth
+        // waiting for.
         let current_app_database = ctx.app_db.read().await.clone();
-        current_app_database.pool.close().await;
+        close_pool_or_log(&current_app_database.pool, "app_db").await;
         let current_rust_database = ctx.rust_db.read().await.clone();
-        current_rust_database.pool.close().await;
+        close_pool_or_log(&current_rust_database.pool, "rust_db").await;
 
         for (file_name, target_dir, is_db, _) in Self::get_backup_files(ctx, &key_manager)? {
             let src = restore_temp_dir.join(file_name);

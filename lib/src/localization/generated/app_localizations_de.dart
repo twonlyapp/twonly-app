@@ -2365,6 +2365,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wiederherstellungs-Teil gesendet!';
 
   @override
+  String get passwordlessRecoveryAuthReason =>
+      'Authentifiziere dich, um deinen Wiederherstellungs-Teil zu senden';
+
+  @override
+  String get passwordlessRecoveryAuthFailed =>
+      'Authentifizierung fehlgeschlagen, der Wiederherstellungs-Teil wurde nicht gesendet.';
+
+  @override
   String get passwordlessRecoveryNetworkError =>
       'Netzwerkfehler, bitte stelle sicher, dass du Internet hast';
 

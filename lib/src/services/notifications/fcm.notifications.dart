@@ -30,6 +30,10 @@ class FcmNotificationService {
   }
 
   static Future<void> initFCMAfterAuthenticated({bool force = false}) async {
+    // Reading `currentUser` before a config is loaded throws a
+    // LateInitializationError, which an authenticated socket can trigger
+    // during a recovery.
+    if (!userService.isUserCreated) return;
     final fcmToken = userService.currentUser.fcmToken;
     if (userService.currentUser.updateFcmToken || force) {
       if (fcmToken == null) {
