@@ -93,13 +93,36 @@ impl MessageService {
             sqlx::query!("UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER) WHERE group_id = ?", group_id)
                 .execute(&mut **t).await?;
         }
-        let members = sqlx::query_scalar!(
-            r#"SELECT contact_id FROM group_members
-               WHERE group_id = ? AND (member_state IS NULL OR member_state != 'leftGroup')"#,
+        // Members are filtered here rather than in SQL so an excluded one can be
+        // named. A member the sender believes has left is absent from every
+        // group message, and silently: a membership row the group has moved
+        // past -- a restored backup holding a stale state, say -- looks exactly
+        // like a delivery that failed, from either end.
+        let rows = sqlx::query!(
+            r#"SELECT contact_id, member_state FROM group_members WHERE group_id = ?"#,
             group_id,
         )
         .fetch_all(&mut **t)
         .await?;
+
+        let mut members = Vec::with_capacity(rows.len());
+        for row in rows {
+            if row.member_state.as_deref() == Some("leftGroup") {
+                tracing::info!(
+                    group_id,
+                    contact_id = row.contact_id,
+                    "not sending to a group member recorded as having left"
+                );
+                continue;
+            }
+            members.push(row.contact_id);
+        }
+
+        tracing::info!(
+            group_id,
+            members = members.len(),
+            "sending a group message to its members"
+        );
 
         let bytes = content.encode_to_vec();
         let mut receipt_ids = Vec::new();
@@ -123,6 +146,12 @@ impl MessageService {
                 .fetch_one(&mut **t)
                 .await?;
                 if count > 10 {
+                    tracing::info!(
+                        group_id,
+                        contact_id,
+                        open_receipts = count,
+                        "not sending to a group member with too many open receipts"
+                    );
                     continue;
                 }
             }

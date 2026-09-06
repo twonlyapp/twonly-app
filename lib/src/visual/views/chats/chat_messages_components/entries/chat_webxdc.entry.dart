@@ -7,7 +7,6 @@ import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc_host.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
-import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/webxdc_app_icon.comp.dart';
 import 'package:twonly/src/visual/views/webxdc/webxdc_app.view.dart';
 

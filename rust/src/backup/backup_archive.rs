@@ -324,6 +324,24 @@ impl BackupArchive {
         ctx.replace_rust_database(rust_database, &key_manager)
             .await?;
 
+        // The restored `user.json` says prekeys were published recently, but
+        // the ones the server hands out may have been uploaded after this
+        // archive was written, and their private halves are not in it. Sessions
+        // peers build from those bundles could never be opened. Clearing the
+        // marks makes the next `on_connected` publish a signed prekey and a
+        // fresh batch of PQC prekeys that this database actually holds.
+        //
+        // Sessions restored alongside them are left as they are: they are only
+        // broken for peers who ratcheted past this archive, and the first
+        // message that fails to decrypt resets that peer's session on its own.
+        // See `signal::reset`.
+        if let Err(error) = crate::user_config::UserConfig::update(ctx, |config| {
+            config.signal_last_signed_pre_key_updated = None;
+            config.signal_last_pqc_pre_keys_uploaded = None;
+        }) {
+            tracing::warn!("could not schedule a prekey republish after the restore: {error}");
+        }
+
         std::fs::remove_dir_all(&restore_temp_dir)?;
 
         Ok(())

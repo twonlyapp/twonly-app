@@ -10,8 +10,8 @@ use chrono::{Duration, Utc};
 use libsignal_protocol::{
     message_encrypt, process_prekey_bundle, CiphertextMessageType, DeviceId, GenericSignedPreKey,
     IdentityKey, IdentityKeyPair, IdentityKeyStore, KyberPreKeyId, KyberPreKeyStore, PreKeyBundle,
-    PreKeyId, PreKeySignalMessage, PreKeyStore, ProtocolAddress, PublicKey, SignalMessage,
-    SignedPreKeyId, SignedPreKeyStore, Timestamp,
+    PreKeyId, PreKeySignalMessage, PreKeyStore, ProtocolAddress, PublicKey, SessionStore,
+    SignalMessage, SignedPreKeyId, SignedPreKeyStore, Timestamp,
 };
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -491,6 +491,71 @@ impl RustSignalEngine {
         Ok(())
     }
 
+    /// Retires the session with a peer so a fresh one can replace it.
+    ///
+    /// The current state is archived rather than dropped: libsignal keeps
+    /// trying archived states on decrypt, so messages the peer sent on chains
+    /// we can still follow keep arriving while the broken chain stops being
+    /// the one new traffic is measured against. With no current state left,
+    /// encrypting for the peer reports the session as missing, which
+    /// `encrypt_v2_with_session_recovery` already repairs from a fresh prekey
+    /// bundle, and an inbound prekey message installs a new session directly.
+    ///
+    /// `hard` deletes the record instead, dropping the archived states too.
+    /// Only a user-initiated reset should ask for that: it makes every message
+    /// still in flight from the peer undecryptable.
+    ///
+    /// Returns whether a session existed.
+    pub async fn reset_session(&self, name: &str, device_id: u32, hard: bool) -> Result<bool> {
+        let mut store_guard = self.store.lock().await;
+        let store = &mut *store_guard;
+
+        let d_id = DeviceId::try_from(device_id)
+            .map_err(|_| TwonlyError::Generic(format!("Invalid device id: {}", device_id)))?;
+        let address = ProtocolAddress::new(name.to_owned(), d_id);
+
+        if hard {
+            let device_id_value: u32 = device_id;
+            let deleted = sqlx::query!(
+                r#"DELETE FROM signal_sessions WHERE name = ? AND device_id = ?"#,
+                name,
+                device_id_value,
+            )
+            .execute(&store.pool)
+            .await?
+            .rows_affected();
+            tracing::warn!(name, device_id, "deleted the signal session");
+            return Ok(deleted != 0);
+        }
+
+        let Some(mut record) = store
+            .session_store
+            .load_session(&address)
+            .assert_send()
+            .await
+            .map_err(|e| TwonlyError::Signal(e.to_string()))?
+        else {
+            return Ok(false);
+        };
+
+        // Idempotent: a record whose current state was already archived is left
+        // alone by libsignal, and the archived list is capped, so repeated
+        // resets for the same peer cannot grow the record without bound.
+        record
+            .archive_current_state()
+            .map_err(|e| TwonlyError::Signal(e.to_string()))?;
+
+        store
+            .session_store
+            .store_session(&address, &record)
+            .assert_send()
+            .await
+            .map_err(|e| TwonlyError::Signal(e.to_string()))?;
+
+        tracing::warn!(name, device_id, "archived the signal session for a reset");
+        Ok(true)
+    }
+
     pub async fn encrypt_message(
         &self,
         name: String,
@@ -574,7 +639,10 @@ impl RustSignalEngine {
                 )
                 .assert_send()
                 .await
-                .map_err(|e| TwonlyError::Signal(e.to_string()))?
+                // Classified rather than stringified: the caller has to tell a
+                // session that can never open this message from a duplicate or
+                // an identity change. See `TwonlyError::SignalSessionUnusable`.
+                .map_err(TwonlyError::from)?
             }
             CiphertextMessageType::PreKey => {
                 let message = PreKeySignalMessage::try_from(ciphertext)
@@ -592,7 +660,7 @@ impl RustSignalEngine {
                 )
                 .assert_send()
                 .await
-                .map_err(|e| TwonlyError::Signal(e.to_string()))?
+                .map_err(TwonlyError::from)?
             }
             _ => {
                 return Err(TwonlyError::Signal("Invalid message type".to_string()));
@@ -697,6 +765,145 @@ mod tests {
             .unwrap();
 
         assert_eq!(plaintext.to_vec(), decrypted);
+    }
+
+    /// Encrypts on one engine and decrypts on the other.
+    async fn ping(from: &RustSignalEngine, to: &RustSignalEngine, text: &str) -> Result<Vec<u8>> {
+        let ciphertext = from
+            .encrypt_message(to.local_name.clone(), 1, text.as_bytes().to_vec())
+            .await?;
+        to.decrypt_message(from.local_name.clone(), 1, ciphertext)
+            .await
+    }
+
+    /// Overwrites a peer's session record, the way restoring a backup puts an
+    /// older signal database back in place.
+    async fn restore_session(engine: &RustSignalEngine, name: &str, record: &[u8]) {
+        let store = engine.store.lock().await;
+        sqlx::query!(
+            "UPDATE signal_sessions SET record_bytes = ? WHERE name = ? AND device_id = 1",
+            record,
+            name,
+        )
+        .execute(&store.pool)
+        .await
+        .unwrap();
+    }
+
+    async fn session_record(engine: &RustSignalEngine, name: &str) -> Vec<u8> {
+        let store = engine.store.lock().await;
+        sqlx::query_scalar!(
+            "SELECT record_bytes FROM signal_sessions WHERE name = ? AND device_id = 1",
+            name,
+        )
+        .fetch_one(&store.pool)
+        .await
+        .unwrap()
+    }
+
+    /// A restored backup rewinds one side's ratchet behind the other's. The
+    /// session cannot be decrypted with again, the failure is reported as such,
+    /// and a reset plus a fresh prekey bundle brings the pair back.
+    #[tokio::test]
+    async fn a_restored_session_is_reported_unusable_and_recovers_after_a_reset() {
+        let (alice, _alice_dir) = create_test_engine("alice").await;
+        let (bob, _bob_dir) = create_test_engine("bob").await;
+
+        alice
+            .process_prekey_bundle("bob".to_string(), 1, bob.generate_bundle().await.unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(ping(&alice, &bob, "one").await.unwrap(), b"one");
+        assert_eq!(ping(&bob, &alice, "two").await.unwrap(), b"two");
+
+        // The state a backup taken at this point would carry.
+        let backup = session_record(&bob, "alice").await;
+
+        // Both sides keep ratcheting, so the archive falls behind a ratchet
+        // step whose private key it never held.
+        for _ in 0..3 {
+            ping(&alice, &bob, "before").await.unwrap();
+            ping(&bob, &alice, "before").await.unwrap();
+        }
+
+        restore_session(&bob, "alice", &backup).await;
+
+        let ciphertext = alice
+            .encrypt_message("bob".to_string(), 1, b"after the restore".to_vec())
+            .await
+            .unwrap();
+        let error = bob
+            .decrypt_message("alice".to_string(), 1, ciphertext.clone())
+            .await
+            .expect_err("a rewound session cannot open a message from the peer's current chain");
+        assert!(
+            matches!(error, TwonlyError::SignalSessionUnusable(_)),
+            "a diverged ratchet has to be classified as unusable, got: {error:?}"
+        );
+
+        // Retrying the very same ciphertext is what the old error path did, and
+        // it fails the same way -- which is why a reset is the only repair.
+        assert!(bob
+            .decrypt_message("alice".to_string(), 1, ciphertext)
+            .await
+            .is_err());
+
+        // Bob retires his half and asks Alice for a new session; Alice retires
+        // hers and builds one from Bob's current bundle.
+        assert!(bob.reset_session("alice", 1, false).await.unwrap());
+        assert!(alice.reset_session("bob", 1, false).await.unwrap());
+        alice
+            .process_prekey_bundle("bob".to_string(), 1, bob.generate_bundle().await.unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(ping(&alice, &bob, "after").await.unwrap(), b"after");
+        assert_eq!(ping(&bob, &alice, "back").await.unwrap(), b"back");
+    }
+
+    /// Archiving keeps the states a peer may still be sending on, so messages
+    /// that crossed the reset in flight are not lost with it.
+    #[tokio::test]
+    async fn a_reset_still_decrypts_messages_sent_before_it() {
+        let (alice, _alice_dir) = create_test_engine("alice").await;
+        let (bob, _bob_dir) = create_test_engine("bob").await;
+
+        alice
+            .process_prekey_bundle("bob".to_string(), 1, bob.generate_bundle().await.unwrap())
+            .await
+            .unwrap();
+
+        // Bob only has a record once he has received from Alice.
+        assert_eq!(ping(&alice, &bob, "hello").await.unwrap(), b"hello");
+
+        let in_flight = alice
+            .encrypt_message("bob".to_string(), 1, b"sent before the reset".to_vec())
+            .await
+            .unwrap();
+
+        assert!(bob.reset_session("alice", 1, false).await.unwrap());
+
+        assert_eq!(
+            bob.decrypt_message("alice".to_string(), 1, in_flight)
+                .await
+                .unwrap(),
+            b"sent before the reset"
+        );
+
+        // A hard reset is the user-initiated one and does drop them.
+        let in_flight = alice
+            .encrypt_message("bob".to_string(), 1, b"dropped".to_vec())
+            .await
+            .unwrap();
+        assert!(bob.reset_session("alice", 1, true).await.unwrap());
+        assert!(bob
+            .decrypt_message("alice".to_string(), 1, in_flight)
+            .await
+            .is_err());
+
+        // Resetting a peer we have no session with is not an error.
+        assert!(!bob.reset_session("carol", 1, false).await.unwrap());
     }
 
     #[tokio::test]

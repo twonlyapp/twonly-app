@@ -84,6 +84,12 @@ impl ContactService {
         let user = match Server::get_user_by_id(&self.ctx, user_id).await? {
             ServerResult::Ok(user) => user,
             ServerResult::ErrorCode(code) => {
+                // Typed, because the send path drops a message only for an
+                // account the server positively denies. Anything else is a
+                // reason to try again later.
+                if code == crate::api::proto::error::ErrorCode::UserIdNotFound as i32 {
+                    return Err(TwonlyError::PeerAccountDeleted(user_id));
+                }
                 return Err(TwonlyError::Generic(format!(
                     "Could not load prekey bundle for user {user_id}: server error {code}"
                 )));

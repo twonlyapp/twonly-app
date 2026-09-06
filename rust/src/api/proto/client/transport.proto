@@ -25,6 +25,12 @@ message PlaintextContent {
     enum Type {
       UNKNOWN        = 0;
       PREKEY_UNKNOWN = 1;
+      // The receiver's session could not open the message and will never be
+      // able to, so it retired the session. Resending the same ciphertext is
+      // pointless: the sender has to build a new session from a fresh prekey
+      // bundle first. Older clients ignore the type and only retry, which is
+      // the previous behaviour.
+      SESSION_RESET_REQUIRED = 2;
     }
     Type type = 1;
   }

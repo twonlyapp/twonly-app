@@ -115,6 +115,13 @@ pub enum TwonlyError {
     #[error("peer {0} has published no prekey bundle")]
     PeerHasNoPrekeyBundle(i64),
 
+    /// The server does not know this account. Distinct from every other reason
+    /// a lookup can fail, because it is the only one that justifies dropping a
+    /// message instead of retrying it: a network error must never be mistaken
+    /// for a peer who no longer exists.
+    #[error("the server does not know peer {0}")]
+    PeerAccountDeleted(i64),
+
     #[error("{0}")]
     IoError(#[from] std::io::Error),
 
@@ -153,6 +160,20 @@ pub enum TwonlyError {
 
     #[error("Signal protocol error: {0}")]
     Signal(String),
+
+    /// The Signal session for a peer can no longer decrypt what they send:
+    /// the ratchet states have diverged past repair, the session record is
+    /// structurally invalid, or it is gone entirely. Retrying the same
+    /// ciphertext against it never succeeds, so callers reset the session and
+    /// ask the peer to open a fresh one. See `signal::reset`.
+    #[error("Signal session is unusable: {0}")]
+    SignalSessionUnusable(String),
+
+    /// The peer sent a message this session already ratcheted past. The
+    /// session is healthy; the message is simply a duplicate and must not
+    /// trigger a reset.
+    #[error("duplicated Signal message: {0}")]
+    SignalDuplicateMessage(String),
 }
 
 impl From<String> for TwonlyError {
@@ -169,6 +190,32 @@ impl From<aes_gcm::Error> for TwonlyError {
 
 impl From<libsignal_protocol::SignalProtocolError> for TwonlyError {
     fn from(error: libsignal_protocol::SignalProtocolError) -> Self {
-        TwonlyError::Signal(error.to_string())
+        use libsignal_protocol::SignalProtocolError as Error;
+
+        let message = error.to_string();
+        match error {
+            // libsignal collapses every failed candidate session into a single
+            // `InvalidMessage`; the per-session causes ("post-quantum ratchet
+            // error: epoch not in valid range", "message keys not found", ...)
+            // only reach its log. Whatever the cause, no session in the record
+            // could open the message, which is exactly the reset condition.
+            Error::InvalidMessage(..)
+            | Error::SessionNotFound(..)
+            | Error::InvalidSessionStructure(..)
+            | Error::InvalidRegistrationId(..)
+            // A restored backup can lack the private prekey for a bundle the
+            // server still hands out, so inbound sessions built from it can
+            // never be opened either.
+            | Error::InvalidPreKeyId
+            | Error::InvalidSignedPreKeyId
+            | Error::InvalidKyberPreKeyId => TwonlyError::SignalSessionUnusable(message),
+
+            Error::DuplicatedMessage(..) => TwonlyError::SignalDuplicateMessage(message),
+
+            // An identity change is not a broken session: resetting would
+            // silently trust a new key. It stays a plain Signal error so the
+            // key-verification flow keeps owning it.
+            _ => TwonlyError::Signal(message),
+        }
     }
 }

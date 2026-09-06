@@ -521,13 +521,49 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         return Ok(());
     };
 
-    // The server has no account for this contact any more, so preparing the
-    // payload would only fetch a prekey bundle that answers `UserIdNotFound`
-    // on every retry. Drop the receipt instead of queueing it forever.
-    if row.account_deleted != 0 {
-        Receipt::delete(&app_db.pool, receipt_id).await?;
-        return Ok(());
-    }
+    // `account_deleted` is a latch: one `UserIdNotFound` on any contact-scoped
+    // request sets it, and this check runs before anything that could clear it,
+    // so a peer who has since re-registered would stay unreachable forever --
+    // every message dropped here, unsent, unacknowledged and unlogged. Ask the
+    // server once more before believing it, and drop only what the server
+    // positively denies.
+    let row = if row.account_deleted != 0 {
+        match ContactService::new(ctx)
+            .establish_signal_session(row.contact_id, None)
+            .await
+        {
+            Err(TwonlyError::PeerAccountDeleted(contact_id)) => {
+                tracing::warn!(
+                    receipt_id,
+                    contact_id,
+                    "dropping a message for an account the server does not know"
+                );
+                Receipt::delete(&app_db.pool, receipt_id).await?;
+                return Ok(());
+            }
+            // The account exists; it has just published no bundle. An existing
+            // session may still encrypt for it, and if not, preparing the
+            // payload parks the receipt for the right reason.
+            Ok(()) | Err(TwonlyError::PeerHasNoPrekeyBundle(_)) => {
+                tracing::info!(
+                    contact_id = row.contact_id,
+                    "contact is registered after all; clearing the deleted-account mark"
+                );
+            }
+            // Anything else -- a network failure above all -- must not be read
+            // as a deleted account. Leave the receipt queued for a later sweep.
+            Err(error) => return Err(error),
+        }
+
+        // `establish_signal_session` cleared the mark and may have changed
+        // `signal_version`, so the payload is prepared from the current row.
+        match load_queued_receipt_row(&app_db.pool, receipt_id).await? {
+            Some(row) => row,
+            None => return Ok(()),
+        }
+    } else {
+        row
+    };
 
     let receipt = match prepare_queued_receipt_from_row(ctx, receipt_id, row).await {
         Ok(receipt) => receipt,
@@ -770,33 +806,57 @@ pub(crate) async fn handle_sender_delivery_receipt(
     Ok(())
 }
 
+/// Requeues the receipt a peer could not process, under a new ID.
+///
+/// Returns whether the peer also retired their Signal session, in which case
+/// the caller has to rebuild one before the requeued receipt can go out. The
+/// receipt is parked here so the flush that follows the caller's commit cannot
+/// send it through the session the peer just threw away.
 pub async fn handle_plaintext_content(
     _ctx: &Context,
     transaction: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     receipt_id: &str,
     plaintext: proto::PlaintextContent,
-) -> Result<Option<String>> {
-    if plaintext.decryption_error_message.is_some() || plaintext.retry_control_error.is_some() {
-        let new_receipt_id = uuid::Uuid::new_v4().to_string();
-        sqlx::query!(
-            r#"
-            UPDATE receipts
-            SET receipt_id = ?,
-                mark_for_retry = CAST(strftime('%s', 'now') AS INTEGER),
-                retry_count = retry_count + 1,
-                ack_by_server_at = NULL
-            WHERE receipt_id = ? AND contact_id = ?
-            "#,
-            new_receipt_id,
-            receipt_id,
-            from_user_id,
-        )
-        .execute(&mut **transaction)
-        .await?;
-        return Ok(Some(new_receipt_id));
+) -> Result<bool> {
+    if plaintext.decryption_error_message.is_none() && plaintext.retry_control_error.is_none() {
+        return Ok(false);
     }
-    Ok(None)
+
+    // An unknown type comes from a client newer than this one. Treating it as
+    // a plain retry request is what every release before session resets did,
+    // so it stays the fallback rather than an error.
+    let rebuild_session = plaintext.decryption_error_message.is_some_and(|error| {
+        proto::plaintext_content::decryption_error_message::Type::try_from(error.r#type)
+            == Ok(proto::plaintext_content::decryption_error_message::Type::SessionResetRequired)
+    });
+
+    let new_receipt_id = uuid::Uuid::new_v4().to_string();
+    sqlx::query!(
+        r#"
+        UPDATE receipts
+        SET receipt_id = ?,
+            mark_for_retry = CAST(strftime('%s', 'now') AS INTEGER),
+            retry_count = retry_count + 1,
+            ack_by_server_at = NULL,
+            -- A rebuild needs a server round-trip, so it cannot run inside this
+            -- transaction. `release_deferred_receipts` frees the receipt once
+            -- the new session stands.
+            deferred_until_session = CASE
+                WHEN ? THEN CAST(strftime('%s', 'now') AS INTEGER)
+                ELSE deferred_until_session
+            END
+        WHERE receipt_id = ? AND contact_id = ?
+        "#,
+        new_receipt_id,
+        rebuild_session,
+        receipt_id,
+        from_user_id,
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(rebuild_session)
 }
 
 #[cfg(test)]

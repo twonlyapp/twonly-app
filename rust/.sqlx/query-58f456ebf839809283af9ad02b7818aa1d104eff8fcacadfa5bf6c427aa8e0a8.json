@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM signal_sessions WHERE name = ? AND device_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "58f456ebf839809283af9ad02b7818aa1d104eff8fcacadfa5bf6c427aa8e0a8"
+}

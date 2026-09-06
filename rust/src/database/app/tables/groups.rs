@@ -262,6 +262,33 @@ impl Group {
         Ok(is_direct)
     }
 
+    /// Whether this member is recorded as having left the group.
+    ///
+    /// [`Self::is_member`] deliberately ignores `member_state` so a member who
+    /// left can still be seen to have written; the outgoing fan-out does not.
+    /// This is the seam between the two, for callers that need to know the
+    /// directions disagree.
+    pub async fn has_member_left(
+        tr: &mut Transaction<'_, Sqlite>,
+        group_id: &str,
+        contact_id: i64,
+    ) -> Result<bool> {
+        Ok(sqlx::query_scalar!(
+            r#"
+            SELECT EXISTS(
+                SELECT 1
+                FROM group_members
+                WHERE group_id = ? AND contact_id = ? AND member_state = 'leftGroup'
+            )
+            "#,
+            group_id,
+            contact_id,
+        )
+        .fetch_one(&mut **tr)
+        .await?
+            != 0)
+    }
+
     pub async fn is_member(
         tr: &mut Transaction<'_, Sqlite>,
         group_id: &str,

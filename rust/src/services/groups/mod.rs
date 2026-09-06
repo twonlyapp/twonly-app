@@ -98,6 +98,35 @@ struct PendingCompaction {
 static PUBLIC_KEY_REQUESTS: LazyLock<Mutex<HashMap<(String, i64), Instant>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
+/// When each group was last refreshed because a member it excludes wrote to it.
+///
+/// Process-local for the same reason as [`PUBLIC_KEY_REQUESTS`]: it exists to
+/// keep a busy group from refetching its state on every inbound message while
+/// the server still reports the member as gone, not to remember across
+/// restarts.
+static STALE_MEMBERSHIP_REFRESHES: LazyLock<Mutex<HashMap<String, Instant>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+/// Shortest gap between two refreshes prompted by the same group.
+const STALE_MEMBERSHIP_REFRESH_INTERVAL: Duration = Duration::from_secs(300);
+
+/// Records a refresh and reports whether it should be fetched at all.
+fn claim_stale_membership_refresh(group_id: &str) -> bool {
+    let mut refreshes = match STALE_MEMBERSHIP_REFRESHES.lock() {
+        Ok(refreshes) => refreshes,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    let now = Instant::now();
+    if refreshes
+        .get(group_id)
+        .is_some_and(|at| now.duration_since(*at) < STALE_MEMBERSHIP_REFRESH_INTERVAL)
+    {
+        return false;
+    }
+    refreshes.insert(group_id.to_owned(), now);
+    true
+}
+
 /// Records a request and reports whether it should be sent at all.
 fn claim_public_key_request(group_id: &str, contact_id: i64, force: bool) -> bool {
     let mut requests = match PUBLIC_KEY_REQUESTS.lock() {
@@ -858,6 +887,32 @@ impl GroupService {
     /// lock, invert the lock order this module depends on. Running it detached
     /// lets the caller commit first; every call site treats the refresh as best
     /// effort already.
+    /// Reconciles a group whose local membership contradicts what the group
+    /// itself is doing.
+    ///
+    /// A member recorded as having left is excluded from every outgoing group
+    /// message, while `Group::is_member` accepts what they send: they can talk
+    /// to us and we can never talk to them, and nothing says so at either end.
+    /// A message from such a member is proof the local row is stale -- a
+    /// restored backup predating their join, or a membership update lost while
+    /// their session was broken. The group server holds the authority, so the
+    /// state is refetched rather than the message being taken as permission to
+    /// rejoin them; if the server agrees they are gone, nothing changes and the
+    /// interval keeps a busy group from asking again.
+    pub fn spawn_stale_membership_refresh(ctx: &Arc<Context>, group_id: String, contact_id: i64) {
+        if !claim_stale_membership_refresh(&group_id) {
+            return;
+        }
+
+        tracing::info!(
+            group_id,
+            contact_id,
+            "a group member recorded as having left is still writing to the group; \
+             refreshing the group state"
+        );
+        Self::spawn_state_refresh(ctx, Some(group_id));
+    }
+
     pub fn spawn_state_refresh(ctx: &Arc<Context>, group_id: Option<String>) {
         let ctx = ctx.clone();
         tokio::spawn(async move {

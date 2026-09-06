@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE signal_sessions SET record_bytes = ? WHERE name = ? AND device_id = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "e79f0f07d9c5ab9080f6c14afeea737a2562b8d174d04998ac729157df8230d8"
+}

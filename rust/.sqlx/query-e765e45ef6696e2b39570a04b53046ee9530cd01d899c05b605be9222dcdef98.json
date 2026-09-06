@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE receipts\n        SET receipt_id = ?,\n            mark_for_retry = CAST(strftime('%s', 'now') AS INTEGER),\n            retry_count = retry_count + 1,\n            ack_by_server_at = NULL,\n            -- A rebuild needs a server round-trip, so it cannot run inside this\n            -- transaction. `release_deferred_receipts` frees the receipt once\n            -- the new session stands.\n            deferred_until_session = CASE\n                WHEN ? THEN CAST(strftime('%s', 'now') AS INTEGER)\n                ELSE deferred_until_session\n            END\n        WHERE receipt_id = ? AND contact_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "e765e45ef6696e2b39570a04b53046ee9530cd01d899c05b605be9222dcdef98"
+}
