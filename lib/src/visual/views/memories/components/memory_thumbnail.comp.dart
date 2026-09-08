@@ -42,6 +42,11 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
   ImageInfo? _imageInfo;
   int _retries = 0;
   bool _hasStoredFile = false;
+
+  /// A tile asks for a missing thumbnail once. Retrying whenever the attempt
+  /// finishes would spin forever for media whose thumbnail cannot be produced,
+  /// and every one of those turns is a database round trip on the UI isolate.
+  bool _recoveryRequested = false;
   late final ImageStreamListener _listener;
 
   @override
@@ -69,14 +74,18 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
     _resolveImage();
   }
 
+  /// Whether a file is there and has content, in a single stat call. This runs
+  /// synchronously for every tile the grid builds, so the probe stays cheap.
+  static bool _isReadable(File file) {
+    final stat = file.statSync();
+    return stat.type != FileSystemEntityType.notFound && stat.size > 0;
+  }
+
   void _resolveImage() {
     if (_retries > 3) return;
     final media = widget.galleryItem.mediaService;
-    final hasThumbnail =
-        media.thumbnailPath.existsSync() &&
-        media.thumbnailPath.lengthSync() > 0;
-    final hasStored =
-        media.storedPath.existsSync() && media.storedPath.lengthSync() > 0;
+    final hasThumbnail = _isReadable(media.thumbnailPath);
+    final hasStored = _isReadable(media.storedPath);
     _hasStoredFile = hasStored;
     final isImageOrGif =
         media.mediaFile.type == MediaType.image ||
@@ -92,37 +101,41 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
       _selectedImageFile = media.storedPath;
     }
 
-    if (!hasThumbnail) {
-      if (hasStored) {
-        unawaited(
-          media.createThumbnail().then((_) {
-            if (mounted) {
-              _resolveImage();
-            }
-          }),
-        );
-      } else {
-        unawaited(
-          MemoriesCloudService.downloadFromCloud(media, isThumbnail: true).then(
-            (success) {
-              if (mounted && success) {
-                _resolveImage();
-              }
-            },
-          ),
-        );
-      }
+    if (!hasThumbnail && !_recoveryRequested) {
+      _recoveryRequested = true;
+      // Either source may come back without having written anything, so the
+      // result is judged by the file itself and the tile falls back to the
+      // blurhash rather than asking again.
+      final recovery = hasStored
+          ? media.createThumbnail()
+          : MemoriesCloudService.downloadFromCloud(media, isThumbnail: true);
+      unawaited(
+        recovery.then((_) {
+          if (mounted && _isReadable(media.thumbnailPath)) {
+            _resolveImage();
+          }
+        }),
+      );
     }
 
     if (_imageProvider != null) {
-      _imageStream?.removeListener(_listener);
-      _imageStream = null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final config = createLocalImageConfiguration(context);
-        _imageStream = _imageProvider?.resolve(config);
-        _imageStream!.addListener(_listener);
+        final provider = _imageProvider;
+        if (provider == null) return;
+        final stream = provider.resolve(createLocalImageConfiguration(context));
+        // Swapping only on a different key keeps the listener count at one:
+        // dropping the old stream before the new one is resolved would leave
+        // the listener attached to a completer nothing removes it from, and a
+        // completer with listeners keeps its decoded image alive.
+        if (stream.key == _imageStream?.key) return;
+        _imageStream?.removeListener(_listener);
+        _imageStream = stream;
+        stream.addListener(_listener);
       });
+      // A post-frame callback only runs once a frame is coming, and a preview
+      // that arrived late resolves while the app is sitting idle.
+      WidgetsBinding.instance.ensureVisualUpdate();
     }
   }
 
@@ -136,6 +149,7 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
       _imageProvider = null;
       _imageInfo = null;
       _retries = 0;
+      _recoveryRequested = false;
       _selectedImageFile = null;
       _resolveImage();
     }
@@ -205,6 +219,9 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                           } catch (_) {}
                           if (_retries < 3) {
                             _retries++;
+                            // The broken file is gone, so fetching it again is
+                            // a new attempt rather than the one already made.
+                            _recoveryRequested = false;
                             _resolveImage();
                           }
                         });

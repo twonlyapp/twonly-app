@@ -30,7 +30,7 @@ use sqlx::FromRow;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, LazyLock, Mutex as SyncMutex};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, Semaphore};
 
 /// A media file with no source bytes and no referencing message is only deleted
 /// once it is old enough that no in-flight editor can still be holding it.
@@ -44,6 +44,13 @@ const RETRY_MARK_GRACE_SECONDS: i64 = 20;
 
 static MEDIA_LOCKS: LazyLock<SyncMutex<HashMap<String, Arc<Mutex<()>>>>> =
     LazyLock::new(|| SyncMutex::new(HashMap::new()));
+
+/// Backfilling a missing preview decodes a full-resolution photo, so only one
+/// runs at a time: a gallery screen asking for every tile it shows would
+/// otherwise decode that many photos in parallel. Re-checking the file after
+/// the wait also keeps two tiles from writing the same thumbnail. The send path
+/// does not take this permit — a capture must not queue behind a backfill.
+static THUMBNAIL_BACKFILL: Semaphore = Semaphore::const_new(1);
 
 /// One media file is only ever prepared by one task. Preparation reserves a
 /// slot, encrypts, and writes request files, so a second concurrent run would
@@ -719,6 +726,19 @@ impl MediaUploadService {
         let files = MediaFileService::new(&self.ctx);
         match kind {
             "thumbnail" => {
+                // The caller asks for a thumbnail, not just for the flag to be
+                // refreshed: a UI that only ever recorded "still missing" would
+                // ask again on every rebuild and never get a preview.
+                if !files.thumbnail_path(media_id).exists() {
+                    let permit = THUMBNAIL_BACKFILL.acquire().await;
+                    if !files.thumbnail_path(media_id).exists() {
+                        let Some(media) = self.load(media_id).await? else {
+                            return Ok(());
+                        };
+                        self.create_thumbnail(&media).await?;
+                    }
+                    drop(permit);
+                }
                 self.update_media(
                     "UPDATE media_files SET has_thumbnail = ? WHERE media_id = ?",
                     i64::from(files.thumbnail_path(media_id).exists()),
@@ -1428,6 +1448,47 @@ mod tests {
         assert_eq!(parse_reupload_requested_by(Some("[3,7]")), vec![3, 7]);
         assert_eq!(parse_reupload_requested_by(Some("5")), vec![5]);
         assert!(parse_reupload_requested_by(Some("nonsense")).is_empty());
+    }
+
+    /// The gallery asks for a preview through this call and shows a blurhash
+    /// until the file appears. When it only recorded that the file was still
+    /// missing, every tile without a preview asked again forever.
+    #[tokio::test]
+    async fn a_missing_thumbnail_is_rendered_rather_than_only_recorded() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let data_dir = temp.path().join("data");
+        std::fs::create_dir_all(data_dir.join("keyvalue"))?;
+        std::fs::write(
+            data_dir.join("keyvalue/user.json"),
+            serde_json::to_vec(&UserConfig::default())?,
+        )?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), data_dir).await?;
+
+        let media_id = "media-thumbnail";
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO media_files(media_id, type, stored) VALUES (?, 'image', 1)")
+            .bind(media_id)
+            .execute(&database.pool)
+            .await?;
+        drop(database);
+
+        let files = MediaFileService::new(&ctx);
+        let stored = files.stored_path(media_id, "image");
+        MediaFileService::ensure_parent(&stored)?;
+        image::DynamicImage::ImageRgb8(image::RgbImage::new(900, 1600)).save(&stored)?;
+
+        let service = MediaUploadService::new(&ctx);
+        service.media_step_finished(media_id, "thumbnail").await?;
+
+        assert!(files.thumbnail_path(media_id).exists());
+        let database = ctx.app_db.read().await.clone();
+        let has_thumbnail: i64 =
+            sqlx::query_scalar("SELECT has_thumbnail FROM media_files WHERE media_id = ?")
+                .bind(media_id)
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(has_thumbnail, 1);
+        Ok(())
     }
 
     #[test]

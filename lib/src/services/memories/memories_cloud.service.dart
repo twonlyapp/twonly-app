@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
@@ -56,8 +57,52 @@ class ProgressMultipartRequest extends http.MultipartRequest {
   }
 }
 
+/// ChaCha20 for the cloud copies, kept off the platform main thread.
+///
+/// The plugin's Android side runs the cipher inline in `onMethodCall`, which
+/// Flutter dispatches on the main thread, for every payload from 2 KB up to
+/// 20 MB — every thumbnail and every photo. One multi-megabyte media file holds
+/// that thread long enough for Android to offer to close the app, and the
+/// gallery starts one of these per tile it builds. This runs anything above
+/// 10 KB in a background isolate instead, with no upper bound: past the
+/// default one a video would fall back to the calling isolate and freeze the
+/// UI instead of the platform thread.
+Chacha20 _mediaCipher() => BackgroundChacha.poly1305Aead(
+  channelPolicy: const CryptographyChannelPolicy(
+    minLength: 10 * 1000,
+    maxLength: null,
+  ),
+);
+
 class MemoriesCloudService {
   static final Map<String, Mutex> _fileMutexes = {};
+
+  /// Cloud transfers allowed to run at once. Every gallery tile without a local
+  /// file asks for one as it scrolls into view and nothing cancels the request
+  /// when it scrolls back out, so without a ceiling a fast scroll leaves
+  /// hundreds of downloads in flight, each holding its whole payload in memory.
+  static const _maxConcurrentTransfers = 3;
+  static var _activeTransfers = 0;
+  static final Queue<Completer<void>> _waitingTransfers = Queue();
+
+  static Future<T> _transferSlot<T>(Future<T> Function() transfer) async {
+    if (_activeTransfers >= _maxConcurrentTransfers) {
+      final waiting = Completer<void>();
+      _waitingTransfers.add(waiting);
+      await waiting.future;
+    } else {
+      _activeTransfers++;
+    }
+    try {
+      return await transfer();
+    } finally {
+      if (_waitingTransfers.isEmpty) {
+        _activeTransfers--;
+      } else {
+        _waitingTransfers.removeFirst().complete();
+      }
+    }
+  }
 
   Timer? _timer;
   bool _isProcessing = false;
@@ -169,29 +214,31 @@ class MemoriesCloudService {
         return true;
       }
 
-      String? downloadUrl;
-      try {
-        downloadUrl = await RustApi.getMemoriesUrl(
-          mediaId: mediaId,
-          thumbnail: isThumbnail,
-        );
-      } catch (_) {}
-      if (downloadUrl == null || downloadUrl.isEmpty) return false;
-
-      try {
-        final response = await http.get(Uri.parse(downloadUrl));
-
-        if (response.statusCode == 200) {
-          return await _decryptFile(response.bodyBytes, targetPath);
-        } else {
-          Log.warn(
-            'Failed to download ${isThumbnail ? 'thumbnail' : 'full media'} statuscode ${response.statusCode}',
+      return _transferSlot(() async {
+        String? downloadUrl;
+        try {
+          downloadUrl = await RustApi.getMemoriesUrl(
+            mediaId: mediaId,
+            thumbnail: isThumbnail,
           );
+        } catch (_) {}
+        if (downloadUrl == null || downloadUrl.isEmpty) return false;
+
+        try {
+          final response = await http.get(Uri.parse(downloadUrl));
+
+          if (response.statusCode == 200) {
+            return await _decryptFile(response.bodyBytes, targetPath);
+          } else {
+            Log.warn(
+              'Failed to download ${isThumbnail ? 'thumbnail' : 'full media'} statuscode ${response.statusCode}',
+            );
+          }
+        } catch (e) {
+          Log.warn(e);
         }
-      } catch (e) {
-        Log.warn(e);
-      }
-      return false;
+        return false;
+      });
     });
   }
 
@@ -350,7 +397,7 @@ class MemoriesCloudService {
     String prefix,
   ) async {
     final dataToEncrypt = await inputFile.readAsBytes();
-    final chacha20 = FlutterChacha20.poly1305Aead();
+    final chacha20 = _mediaCipher();
     final nonce = chacha20.newNonce();
 
     final secretBox = await chacha20.encrypt(
@@ -407,7 +454,7 @@ class MemoriesCloudService {
       );
 
       // 7. Decrypt the data using the newly retrieved media key
-      final chacha20 = FlutterChacha20.poly1305Aead();
+      final chacha20 = _mediaCipher();
       final decryptedBytes = await chacha20.decrypt(
         secretBox,
         secretKey: SecretKey(mediaKey),

@@ -68,6 +68,11 @@ class MemoriesService {
 
   static MemoriesState? _cachedState;
 
+  /// Media this run has already asked Rust to render a preview for. Every write
+  /// Rust makes re-fires the stream below, so without this the remaining items
+  /// would be requested again on every emission.
+  static final Set<String> _thumbnailRequests = {};
+
   final _stateController = StreamController<MemoriesState>.broadcast();
   Stream<MemoriesState> get watchState => _stateController.stream;
 
@@ -83,6 +88,16 @@ class MemoriesService {
   MemoriesState get currentState => _currentState;
 
   StreamSubscription<List<MediaFile>>? _dbSubscription;
+
+  /// One recompute walks the whole library: every message that references it,
+  /// every contact, a sort, and a cache write. Every write Rust makes to
+  /// `media_files` invalidates the query behind it, so a backfill touching a
+  /// few hundred rows would pay for all of that a few hundred times over on the
+  /// UI isolate.
+  static const _minRecomputeGap = Duration(milliseconds: 250);
+  Timer? _recomputeThrottle;
+  DateTime? _lastRecomputeAt;
+  List<MediaFile>? _pendingMediaFiles;
 
   /// Instantly pre-warms the gallery state from disk cache during app loading
   static Future<void> prewarmCache() async {
@@ -208,7 +223,7 @@ class MemoriesService {
       await _dbSubscription?.cancel();
       _dbSubscription = twonlyDB.mediaFilesDao
           .watchAllStoredMediaFiles()
-          .listen(_processMediaFilesStream);
+          .listen(_onMediaFilesChanged);
 
       final pendingFiles = await twonlyDB.mediaFilesDao
           .getAllMediaFilesPendingMigration();
@@ -317,6 +332,28 @@ class MemoriesService {
     }
   }
 
+  /// Collapses a burst of row changes into one recompute, always running the
+  /// most recent batch so nothing is dropped.
+  void _onMediaFilesChanged(List<MediaFile> mediaFiles) {
+    _pendingMediaFiles = mediaFiles;
+    if (_recomputeThrottle?.isActive ?? false) return;
+
+    final since = _lastRecomputeAt == null
+        ? null
+        : clock.now().difference(_lastRecomputeAt!);
+    final wait = since == null || since >= _minRecomputeGap
+        ? Duration.zero
+        : _minRecomputeGap - since;
+
+    _recomputeThrottle = Timer(wait, () {
+      final pending = _pendingMediaFiles;
+      _pendingMediaFiles = null;
+      if (pending == null) return;
+      _lastRecomputeAt = clock.now();
+      unawaited(_processMediaFilesStream(pending));
+    });
+  }
+
   Future<void> _processMediaFilesStream(List<MediaFile> mediaFiles) async {
     try {
       final mediaIds = mediaFiles.map((m) => m.mediaId).toList();
@@ -344,8 +381,10 @@ class MemoriesService {
       ).copyWith(totalFilesToMigrate: _currentState.totalFilesToMigrate);
 
       for (final item in newState.galleryItems) {
-        if (!item.mediaService.mediaFile.hasThumbnail &&
-            item.mediaService.mediaFile.type != MediaType.audio) {
+        final mediaFile = item.mediaService.mediaFile;
+        if (!mediaFile.hasThumbnail &&
+            mediaFile.type != MediaType.audio &&
+            _thumbnailRequests.add(mediaFile.mediaId)) {
           unawaited(item.mediaService.createThumbnail());
         }
       }
@@ -385,6 +424,7 @@ class MemoriesService {
   }
 
   void dispose() {
+    _recomputeThrottle?.cancel();
     _dbSubscription?.cancel();
     _stateController.close();
   }
