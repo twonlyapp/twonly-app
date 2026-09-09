@@ -31,12 +31,30 @@ static DE_TRANSLATIONS: LazyLock<HashMap<String, String>> =
 /// The update itself is hidden -- app state rather than something a person
 /// sent -- but an `info` is written to be read, and becomes a chat row of its
 /// own on arrival. That row is what the receiver is woken and notified for.
-fn webxdc_announcement(message: &encrypted_content::AdditionalDataMessage) -> Option<String> {
+fn webxdc_announcement(
+    message: &encrypted_content::AdditionalDataMessage,
+    user_id: i64,
+) -> Option<String> {
     let data = <proto::AdditionalMessageData as prost::Message>::decode(
         message.additional_message_data.as_deref()?,
     )
     .ok()?;
-    crate::services::webxdc::announcement(&data.webxdc_update?)
+    let update = data.webxdc_update?;
+    // Keep chat announcements shared, but only wake recipients selected by the app.
+    let announcement = crate::services::webxdc::announcement(&update)?;
+    match update.notify.as_deref() {
+        None => Some(announcement),
+        Some(raw) => {
+            let recipients: std::collections::BTreeMap<String, String> =
+                serde_json::from_str(raw).ok()?;
+            let address =
+                crate::services::webxdc::WebxdcService::address_for(&update.instance_id, user_id);
+            let text = recipients.get(&address)?;
+            let mut notification = update;
+            notification.info = Some(text.clone());
+            crate::services::webxdc::announcement(&notification)
+        }
+    }
 }
 
 /// Who wrote the message with this id, as this device has it.
@@ -85,7 +103,9 @@ pub(crate) async fn should_wake_receiver(
         || content
             .additional_data_message
             .as_ref()
-            .is_some_and(|message| !message.hidden || webxdc_announcement(message).is_some())
+            .is_some_and(|message| {
+                !message.hidden || webxdc_announcement(message, target_user_id).is_some()
+            })
         || content.group_create.is_some()
         || content.media.as_ref().is_some_and(|value| {
             // Widget media lands already opened and is deliberately recorded
@@ -199,6 +219,7 @@ impl NotificationDraft {
 /// transaction that commits that message. Transport retries are deduplicated
 /// by the receipt-derived event ID.
 pub(crate) async fn record_incoming_event(
+    ctx: &Context,
     transaction: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     receipt_id: &str,
@@ -270,9 +291,10 @@ pub(crate) async fn record_incoming_event(
         // announcement -- and only once the row it materialised into exists,
         // which it does not when the update was dropped for an unknown
         // instance, a mismatched chat, or an app that is over budget.
+        let self_id = UserConfig::load_required_from(ctx)?.user_id;
         let announcement = message
             .hidden
-            .then(|| webxdc_announcement(message))
+            .then(|| webxdc_announcement(message, self_id))
             .flatten();
         let message_id = if message.hidden {
             crate::services::webxdc::WebxdcService::info_message_id(&message.sender_message_id)
@@ -842,7 +864,7 @@ mod tests {
     }
 
     fn announcement_of(content: &proto::EncryptedContent) -> Option<String> {
-        webxdc_announcement(content.additional_data_message.as_ref().unwrap())
+        webxdc_announcement(content.additional_data_message.as_ref().unwrap(), 42)
     }
 
     #[test]
@@ -855,6 +877,62 @@ mod tests {
         // whitespace once the chat row's own bounds are applied to it.
         assert!(announcement_of(&webxdc_update(None)).is_none());
         assert!(announcement_of(&webxdc_update(Some("  \u{200e} "))).is_none());
+    }
+
+    fn targeted_update(notify: &str) -> proto::EncryptedContent {
+        let mut content = webxdc_update(Some("Dinner added"));
+        let message = content.additional_data_message.as_mut().unwrap();
+        let mut data = <proto::AdditionalMessageData as prost::Message>::decode(
+            message.additional_message_data.as_deref().unwrap(),
+        )
+        .unwrap();
+        data.webxdc_update.as_mut().unwrap().notify = Some(notify.to_owned());
+        message.additional_message_data = Some(prost::Message::encode_to_vec(&data));
+        content
+    }
+
+    #[tokio::test]
+    async fn expense_notifications_only_wake_and_record_affected_members() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"ben","displayName":"Ben"}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'anna')")
+            .execute(&mut *tx)
+            .await?;
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('g', 'Trip')")
+            .execute(&mut *tx)
+            .await?;
+        sqlx::query("INSERT INTO messages(message_id, group_id, sender_id, type, content) VALUES ('message-info', 'g', 7, 'text', 'Dinner added')").execute(&mut *tx).await?;
+        let address = crate::services::webxdc::WebxdcService::address_for("instance", 42);
+        let raw = serde_json::json!({address: "You share dinner: €20"}).to_string();
+        let content = targeted_update(&raw);
+        assert!(should_wake_receiver(&mut tx, 42, &content).await?);
+        assert!(!should_wake_receiver(&mut tx, 43, &content).await?);
+        record_incoming_event(&ctx, &mut tx, 7, "included", &content).await?;
+        record_incoming_event(&ctx, &mut tx, 7, "included", &content).await?;
+        for raw in ["{}", "null", "not JSON", r#"{"someone-else":"Dinner"}"#] {
+            let content = targeted_update(raw);
+            assert!(!should_wake_receiver(&mut tx, 42, &content).await?);
+            record_incoming_event(&ctx, &mut tx, 7, "excluded", &content).await?;
+        }
+        let rows: Vec<(String, String)> =
+            sqlx::query_as("SELECT event_id, content FROM notification_outbox")
+                .fetch_all(&mut *tx)
+                .await?;
+        assert_eq!(
+            rows,
+            vec![("included".into(), "You share dinner: €20".into())]
+        );
+        // Older apps omit notify and retain their existing announcements.
+        assert!(should_wake_receiver(&mut tx, 43, &webxdc_update(Some("Your turn"))).await?);
+        Ok(())
     }
 
     fn pending_row(kind: &str) -> PendingRow {

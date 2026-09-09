@@ -680,6 +680,7 @@ pub(crate) async fn handle_encrypted(
     let notification_content = content.clone();
     handle_encrypted_inner(ctx, t, from_user_id, receipt_id, content).await?;
     crate::services::notifications::record_incoming_event(
+        ctx,
         t,
         from_user_id,
         receipt_id,

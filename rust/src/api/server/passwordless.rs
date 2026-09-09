@@ -126,9 +126,9 @@ impl Server {
             ResponseOk::PasswordlessNotificationMessages(msgs) => Some(msgs),
             // The server answers with `None` whenever the poll finds no unseen
             // message, which is the normal outcome once every share arrived.
-            ResponseOk::None(_) => Some(
-                proto::server_to_client::response::PasswordlessNotificationMessages::default(),
-            ),
+            ResponseOk::None(_) => {
+                Some(proto::server_to_client::response::PasswordlessNotificationMessages::default())
+            }
             _ => None,
         })
     }

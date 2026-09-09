@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER), deleted_content = 0 WHERE group_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "cdd3c7feb92de75c85642d5f99d0ac3f8bb715da50ba1fd25484041cd50a2818"
+}

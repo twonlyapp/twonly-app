@@ -376,7 +376,7 @@ class _PlanCardState extends State<PlanCard> {
           context.lang.proFeature2,
           context.lang.proFeature3,
           context.lang.proFeature4,
-          // context.lang.proFeature4,
+          context.lang.subscriptionAllApps,
         ];
       case 'Family':
         features = [
@@ -384,6 +384,7 @@ class _PlanCardState extends State<PlanCard> {
           context.lang.familyFeature2,
           context.lang.familyFeature3,
           context.lang.familyFeature4,
+          context.lang.subscriptionAllApps,
         ];
       default:
     }

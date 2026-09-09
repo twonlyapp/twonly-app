@@ -92,6 +92,11 @@ pub(crate) async fn handle_group_create(
     .await?;
 
     GroupService::spawn_state_refresh_and_announce(ctx, group_id.to_owned());
+    crate::services::webxdc::WebxdcService::spawn_sync_request(
+        ctx,
+        group_id.to_owned(),
+        from_user_id,
+    );
 
     Ok(())
 }

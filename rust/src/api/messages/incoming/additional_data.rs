@@ -17,7 +17,7 @@ use prost::Message as ProstMessage;
 use sqlx::{Sqlite, Transaction};
 
 pub(crate) async fn handle_additional_data_message(
-    ctx: &Context,
+    ctx: &std::sync::Arc<Context>,
     tr: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     group_id: &str,
@@ -40,7 +40,20 @@ pub(crate) async fn handle_additional_data_message(
     };
 
     if let Some(data) = data.as_ref() {
-        if let Some(update) = data.webxdc_update.as_ref() {
+        if data.webxdc_sync_request.is_some() {
+            let ctx = ctx.clone();
+            let group_id = group_id.to_owned();
+            tokio::spawn(async move {
+                if let Err(error) = WebxdcService::new(&ctx)
+                    .send_one_time_apps_to_contact(&group_id, from_user_id)
+                    .await
+                {
+                    tracing::warn!(%error, "could not answer one-time app sync request");
+                }
+            });
+        } else if let Some(sync) = data.webxdc_sync.as_ref() {
+            WebxdcService::handle_sync_chunk(tr, group_id, from_user_id, sync).await?;
+        } else if let Some(update) = data.webxdc_update.as_ref() {
             // App state belongs in the instance's own log, which is ordered,
             // gap free, and outside the reach of the chat's deletion timer.
             WebxdcService::handle_incoming_update(

@@ -12,11 +12,25 @@ Future<void> refreshCatalog() =>
 
 /// What the in-app store offers, newest version of each app only.
 ///
-/// `languages` is what the UI prefers, most preferred first. Descriptions are
-/// cached in every language the catalog carries and picked here, so which
-/// language a user reads is never sent anywhere.
-Future<List<WebxdcStoreApp>> catalog({required List<String> languages}) =>
-    RustLib.instance.api.crateBridgeWebxdcCatalog(languages: languages);
+/// `languages` is what the UI prefers, most preferred first. Names and
+/// descriptions are cached in every language the catalog carries and picked
+/// here, so which language a user reads is never sent anywhere.
+Future<List<WebxdcStoreApp>> catalog({
+  required String groupId,
+  required List<String> languages,
+}) => RustLib.instance.api.crateBridgeWebxdcCatalog(
+  groupId: groupId,
+  languages: languages,
+);
+
+/// One-time apps already placed into a chat, for the profile shortcut.
+Future<List<WebxdcOneTimeInstance>> oneTimeInstances({
+  required String groupId,
+  required List<String> languages,
+}) => RustLib.instance.api.crateBridgeWebxdcOneTimeInstances(
+  groupId: groupId,
+  languages: languages,
+);
 
 /// Places an app into a chat and returns the id of the message that carries it.
 Future<String> createInstance({
@@ -32,11 +46,16 @@ Future<String> createInstance({
 Future<WebxdcInstanceInfo?> instance({required String instanceId}) =>
     RustLib.instance.api.crateBridgeWebxdcInstance(instanceId: instanceId);
 
-/// Downloads and verifies the bundle if it is not already on disk, and returns
-/// where it landed. Called when the user starts an app, never on message
+/// Opens cached code, adopting an update only if already downloaded.
+/// Downloads and verifies the pinned bundle only when it is missing. Called when the user starts an app, never on message
 /// arrival: a message must not be able to make a device fetch anything.
 Future<String> prepareBundle({required String instanceId}) =>
     RustLib.instance.api.crateBridgeWebxdcPrepareBundle(instanceId: instanceId);
+
+/// Background update check after a webxdc app closes. Downloads only; the
+/// running version changes on a later prepare_bundle call, never mid-session.
+Future<void> cacheUpdate({required String instanceId}) =>
+    RustLib.instance.api.crateBridgeWebxdcCacheUpdate(instanceId: instanceId);
 
 /// Answers one request the webview made for a file inside the bundle.
 ///
@@ -65,6 +84,7 @@ Future<void> sendUpdate({
   String? href,
   String? summary,
   String? document,
+  String? notify,
 }) => RustLib.instance.api.crateBridgeWebxdcSendUpdate(
   instanceId: instanceId,
   payload: payload,
@@ -72,6 +92,7 @@ Future<void> sendUpdate({
   href: href,
   summary: summary,
   document: document,
+  notify: notify,
 );
 
 /// The address the running app sees for a participant. Stable inside one
@@ -92,6 +113,10 @@ Future<String?> deleteInstance({required String instanceId}) => RustLib
     .instance
     .api
     .crateBridgeWebxdcDeleteInstance(instanceId: instanceId);
+
+/// Current members of the instance's chat; no account identifiers leave Rust.
+Future<String> members({required String instanceId}) =>
+    RustLib.instance.api.crateBridgeWebxdcMembers(instanceId: instanceId);
 
 class WebxdcInstanceInfo {
   final String instanceId;
@@ -136,6 +161,41 @@ class WebxdcInstanceInfo {
           appId == other.appId &&
           version == other.version &&
           originToken == other.originToken &&
+          summary == other.summary &&
+          document == other.document;
+}
+
+class WebxdcOneTimeInstance {
+  final String instanceId;
+  final String name;
+  final Uint8List? icon;
+  final String? summary;
+  final String? document;
+
+  const WebxdcOneTimeInstance({
+    required this.instanceId,
+    required this.name,
+    this.icon,
+    this.summary,
+    this.document,
+  });
+
+  @override
+  int get hashCode =>
+      instanceId.hashCode ^
+      name.hashCode ^
+      icon.hashCode ^
+      summary.hashCode ^
+      document.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is WebxdcOneTimeInstance &&
+          runtimeType == other.runtimeType &&
+          instanceId == other.instanceId &&
+          name == other.name &&
+          icon == other.icon &&
           summary == other.summary &&
           document == other.document;
 }
@@ -187,6 +247,11 @@ class WebxdcStoreApp {
   final String? sourceCodeUrl;
   final Uint8List? icon;
   final PlatformInt64 bundleBytes;
+  final bool proOnly;
+  final bool oneTime;
+
+  /// The existing instance in this chat when a one-time app was already placed.
+  final String? instanceId;
 
   const WebxdcStoreApp({
     required this.appId,
@@ -196,6 +261,9 @@ class WebxdcStoreApp {
     this.sourceCodeUrl,
     this.icon,
     required this.bundleBytes,
+    required this.proOnly,
+    required this.oneTime,
+    this.instanceId,
   });
 
   @override
@@ -206,7 +274,10 @@ class WebxdcStoreApp {
       description.hashCode ^
       sourceCodeUrl.hashCode ^
       icon.hashCode ^
-      bundleBytes.hashCode;
+      bundleBytes.hashCode ^
+      proOnly.hashCode ^
+      oneTime.hashCode ^
+      instanceId.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -219,7 +290,10 @@ class WebxdcStoreApp {
           description == other.description &&
           sourceCodeUrl == other.sourceCodeUrl &&
           icon == other.icon &&
-          bundleBytes == other.bundleBytes;
+          bundleBytes == other.bundleBytes &&
+          proOnly == other.proOnly &&
+          oneTime == other.oneTime &&
+          instanceId == other.instanceId;
 }
 
 class WebxdcUpdateEntry {

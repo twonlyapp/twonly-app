@@ -39,7 +39,7 @@ impl MessageService {
             || content.media.is_some()
             || content.text_message.is_some()
         {
-            sqlx::query!("UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER) WHERE group_id = ?", group_id)
+            sqlx::query!("UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER), deleted_content = 0 WHERE group_id = ?", group_id)
                 .execute(&database.pool).await?;
         }
         let members = sqlx::query_scalar!(
@@ -412,6 +412,8 @@ impl MessageService {
             webxdc_app: None,
             webxdc_update: None,
             webxdc_origin: None,
+            webxdc_sync: None,
+            webxdc_sync_request: None,
         }
         .encode_to_vec();
         self.insert_and_send_additional_data(group_id, "contacts".into(), data, false)
@@ -447,6 +449,8 @@ impl MessageService {
             webxdc_app: None,
             webxdc_update: None,
             webxdc_origin: None,
+            webxdc_sync: None,
+            webxdc_sync_request: None,
         }
         .encode_to_vec();
         self.insert_and_send_additional_data(group_id, "askAboutUser".into(), data, false)

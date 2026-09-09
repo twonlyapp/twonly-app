@@ -15,6 +15,8 @@ message AdditionalMessageData {
         WEBXDC_APP = 4;
         WEBXDC_UPDATE = 5;
         WEBXDC_SENT = 6;
+        WEBXDC_SYNC = 7;
+        WEBXDC_SYNC_REQUEST = 8;
     }
     Type type = 1;
 
@@ -25,6 +27,45 @@ message AdditionalMessageData {
     optional WebxdcApp webxdc_app = 6;
     optional WebxdcUpdate webxdc_update = 7;
     optional WebxdcOrigin webxdc_origin = 8;
+    optional WebxdcSyncChunk webxdc_sync = 9;
+    optional WebxdcSyncRequest webxdc_sync_request = 10;
+}
+
+// A peer-to-peer transfer of existing one-time app state. The encoded payload
+// is split into bounded hidden messages and installed only after every chunk
+// arrived and the digest matches.
+message WebxdcSyncChunk {
+    string transfer_id = 1;
+    uint32 chunk_index = 2;
+    uint32 chunk_count = 3;
+    bytes payload_sha256 = 4;
+    bytes payload = 5;
+}
+
+message WebxdcSyncRequest {}
+
+message WebxdcSyncPayload {
+    repeated WebxdcSyncInstance instances = 1;
+}
+
+message WebxdcSyncInstance {
+    string instance_id = 1;
+    string app_id = 2;
+    int64 version = 3;
+    optional string summary = 4;
+    optional string document = 5;
+    int64 created_at = 6;
+    int64 last_update_at = 7;
+    repeated WebxdcSyncUpdate updates = 8;
+}
+
+message WebxdcSyncUpdate {
+    string message_id = 1;
+    optional int64 sender_id = 2;
+    string payload = 3;
+    optional string info = 4;
+    optional string href = 5;
+    int64 received_at = 6;
 }
 
 // Attached to a message a webxdc app asked the user to send, so the chat can
@@ -57,4 +98,7 @@ message WebxdcUpdate {
     optional string href        = 4;
     optional string summary     = 5;
     optional string document    = 6;
+    // JSON map of app-scoped member addresses to notification text.
+    // Absent preserves legacy broadcast; an empty map notifies nobody.
+    optional string notify      = 7;
 }

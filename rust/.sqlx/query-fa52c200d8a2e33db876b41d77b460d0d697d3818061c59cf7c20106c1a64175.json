@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO webxdc_apps\n                       (app_id, version, name, name_translations, source_code_url,\n                        description, icon, bundle_sha256, bundle_bytes, published,\n                        cached_at, pro_only, sort_order, one_time)\n                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)\n                   ON CONFLICT(app_id, version) DO UPDATE SET\n                       name = excluded.name,\n                       name_translations = excluded.name_translations,\n                       source_code_url = excluded.source_code_url,\n                       description = excluded.description,\n                       icon = excluded.icon,\n                       bundle_sha256 = excluded.bundle_sha256,\n                       bundle_bytes = excluded.bundle_bytes,\n                       published = 1,\n                       pro_only = excluded.pro_only,\n                       sort_order = excluded.sort_order,\n                       one_time = excluded.one_time,\n                       cached_at = excluded.cached_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 13
+    },
+    "nullable": []
+  },
+  "hash": "fa52c200d8a2e33db876b41d77b460d0d697d3818061c59cf7c20106c1a64175"
+}

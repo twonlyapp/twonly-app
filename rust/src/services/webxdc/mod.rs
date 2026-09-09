@@ -13,12 +13,13 @@
 pub mod bundle;
 pub mod store;
 
+use crate::api::messages::outgoing::send_c2c_message_to_contact;
 use crate::api::proto::client as proto;
 use crate::context::Context;
 use crate::database::app::tables::{MessageType, NewMessage};
 use crate::error::{Result, TwonlyError};
 use hmac::{Hmac, Mac};
-use sha2::Sha256;
+use sha2::{Digest, Sha256};
 use sqlx::{Sqlite, Transaction};
 use std::sync::Arc;
 
@@ -34,6 +35,41 @@ const MAX_UPDATES_PER_INSTANCE: i64 = 100_000;
 const MAX_PAYLOAD_BYTES_PER_INSTANCE: i64 = 32 * 1024 * 1024;
 /// Sending burst allowance, counted over the trailing minute.
 const MAX_UPDATES_PER_MINUTE: i64 = 12;
+const SYNC_CHUNK_BYTES: usize = 48 * 1024;
+const MAX_SYNC_CHUNKS: u32 = 700;
+
+#[derive(sqlx::FromRow)]
+struct SyncInstanceRow {
+    instance_id: String,
+    app_id: String,
+    version: i64,
+    summary: Option<String>,
+    document: Option<String>,
+    created_at: i64,
+    last_update_at: i64,
+}
+
+#[derive(sqlx::FromRow)]
+struct SyncUpdateRow {
+    message_id: String,
+    sender_id: Option<i64>,
+    payload: String,
+    info: Option<String>,
+    href: Option<String>,
+    received_at: i64,
+}
+
+#[derive(sqlx::FromRow)]
+struct PendingUpdateRow {
+    message_id: String,
+    sender_id: i64,
+    payload: String,
+    info: Option<String>,
+    href: Option<String>,
+    summary: Option<String>,
+    document: Option<String>,
+    received_at: i64,
+}
 
 /// Text an app can put in front of the user, outside its own sandbox. Bounded
 /// so a chat row or a notification cannot be filled with app-controlled text.
@@ -74,6 +110,340 @@ impl WebxdcService {
         store::WebxdcStore::new(&self.ctx)
     }
 
+    /// Requests existing one-time app state after joining a group. Spawned so
+    /// the group-create transaction can commit before the sender needs the app
+    /// database connection.
+    pub(crate) fn spawn_sync_request(ctx: &Arc<Context>, group_id: String, contact_id: i64) {
+        let ctx = ctx.clone();
+        tokio::spawn(async move {
+            let data = proto::AdditionalMessageData {
+                r#type: proto::additional_message_data::Type::WebxdcSyncRequest as i32,
+                webxdc_sync_request: Some(proto::WebxdcSyncRequest {}),
+                ..Default::default()
+            };
+            let content = proto::EncryptedContent {
+                group_id: Some(group_id),
+                additional_data_message: Some(proto::encrypted_content::AdditionalDataMessage {
+                    sender_message_id: uuid::Uuid::new_v4().to_string(),
+                    timestamp: chrono::Utc::now().timestamp_millis(),
+                    r#type: "webxdcSyncRequest".into(),
+                    additional_message_data: Some(prost::Message::encode_to_vec(&data)),
+                    hidden: true,
+                }),
+                ..Default::default()
+            };
+            if let Err(error) = send_c2c_message_to_contact()
+                .ctx(&ctx)
+                .contact_id(contact_id)
+                .encrypted_content(prost::Message::encode_to_vec(&content))
+                .call()
+                .await
+            {
+                tracing::warn!(%error, "could not request one-time app state");
+            }
+        });
+    }
+
+    /// Sends every one-time app and its authoritative update log to one new
+    /// member. Transfers are hidden, encrypted contact-to-contact messages.
+    pub async fn send_one_time_apps_to_contact(
+        &self,
+        group_id: &str,
+        contact_id: i64,
+    ) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let local_user_id = self.ctx.user_id().await?;
+        let instances = sqlx::query_as::<_, SyncInstanceRow>(
+            r#"SELECT instance.instance_id, instance.app_id, instance.version,
+                      instance.summary, instance.document, instance.created_at,
+                      instance.last_update_at
+               FROM webxdc_instances AS instance
+               JOIN webxdc_apps AS app
+                 ON app.app_id = instance.app_id AND app.version = instance.version
+               WHERE instance.group_id = ? AND app.one_time = 1
+               ORDER BY instance.created_at, instance.instance_id"#,
+        )
+        .bind(group_id)
+        .fetch_all(&database.pool)
+        .await?;
+
+        for instance in instances {
+            let updates = sqlx::query_as::<_, SyncUpdateRow>(
+                r#"SELECT message_id, sender_id, payload, info, href, received_at
+                   FROM webxdc_updates WHERE instance_id = ? ORDER BY serial"#,
+            )
+            .bind(&instance.instance_id)
+            .fetch_all(&database.pool)
+            .await?;
+            let payload = proto::WebxdcSyncPayload {
+                instances: vec![proto::WebxdcSyncInstance {
+                    instance_id: instance.instance_id,
+                    app_id: instance.app_id,
+                    version: instance.version,
+                    summary: instance.summary,
+                    document: instance.document,
+                    created_at: instance.created_at,
+                    last_update_at: instance.last_update_at,
+                    updates: updates
+                        .into_iter()
+                        .map(|update| proto::WebxdcSyncUpdate {
+                            message_id: update.message_id,
+                            sender_id: update.sender_id.or(Some(local_user_id)),
+                            payload: update.payload,
+                            info: update.info,
+                            href: update.href,
+                            received_at: update.received_at,
+                        })
+                        .collect(),
+                }],
+            };
+            let encoded = prost::Message::encode_to_vec(&payload);
+            let chunk_count = encoded.len().div_ceil(SYNC_CHUNK_BYTES) as u32;
+            if chunk_count == 0 || chunk_count > MAX_SYNC_CHUNKS {
+                tracing::warn!(
+                    instance_id = payload.instances[0].instance_id,
+                    "one-time app is too large to sync"
+                );
+                continue;
+            }
+            let transfer_id = uuid::Uuid::new_v4().to_string();
+            let digest = Sha256::digest(&encoded).to_vec();
+            for (chunk_index, bytes) in encoded.chunks(SYNC_CHUNK_BYTES).enumerate() {
+                let data = proto::AdditionalMessageData {
+                    r#type: proto::additional_message_data::Type::WebxdcSync as i32,
+                    webxdc_sync: Some(proto::WebxdcSyncChunk {
+                        transfer_id: transfer_id.clone(),
+                        chunk_index: chunk_index as u32,
+                        chunk_count,
+                        payload_sha256: digest.clone(),
+                        payload: bytes.to_vec(),
+                    }),
+                    ..Default::default()
+                };
+                let content = proto::EncryptedContent {
+                    group_id: Some(group_id.to_owned()),
+                    additional_data_message: Some(
+                        proto::encrypted_content::AdditionalDataMessage {
+                            sender_message_id: uuid::Uuid::new_v4().to_string(),
+                            timestamp: chrono::Utc::now().timestamp_millis(),
+                            r#type: "webxdcSync".into(),
+                            additional_message_data: Some(prost::Message::encode_to_vec(&data)),
+                            hidden: true,
+                        },
+                    ),
+                    ..Default::default()
+                };
+                send_c2c_message_to_contact()
+                    .ctx(&self.ctx)
+                    .contact_id(contact_id)
+                    .encrypted_content(prost::Message::encode_to_vec(&content))
+                    .call()
+                    .await?;
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn handle_sync_chunk(
+        transaction: &mut Transaction<'_, Sqlite>,
+        group_id: &str,
+        sender_id: i64,
+        chunk: &proto::WebxdcSyncChunk,
+    ) -> Result<()> {
+        if chunk.transfer_id.is_empty()
+            || chunk.chunk_count == 0
+            || chunk.chunk_count > MAX_SYNC_CHUNKS
+            || chunk.chunk_index >= chunk.chunk_count
+            || chunk.payload.len() > SYNC_CHUNK_BYTES
+            || chunk.payload_sha256.len() != 32
+        {
+            return Err(TwonlyError::Generic("invalid webxdc sync chunk".into()));
+        }
+        let sender_is_member: bool = sqlx::query_scalar(
+            "SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = ? AND contact_id = ? AND (member_state IS NULL OR member_state != 'leftGroup'))",
+        )
+        .bind(group_id)
+        .bind(sender_id)
+        .fetch_one(&mut **transaction)
+        .await?;
+        if !sender_is_member {
+            return Err(TwonlyError::Generic(
+                "webxdc sync sender is not a group member".into(),
+            ));
+        }
+
+        sqlx::query(
+            r#"INSERT INTO webxdc_sync_chunks
+                   (transfer_id, group_id, sender_id, chunk_index, chunk_count,
+                    payload_sha256, payload)
+               VALUES (?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT(transfer_id, sender_id, chunk_index) DO NOTHING"#,
+        )
+        .bind(&chunk.transfer_id)
+        .bind(group_id)
+        .bind(sender_id)
+        .bind(chunk.chunk_index as i64)
+        .bind(chunk.chunk_count as i64)
+        .bind(&chunk.payload_sha256)
+        .bind(&chunk.payload)
+        .execute(&mut **transaction)
+        .await?;
+        sqlx::query(
+            "DELETE FROM webxdc_sync_chunks WHERE created_at < strftime('%s','now') - 86400",
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        let rows: Vec<(i64, i64, Vec<u8>, Vec<u8>)> = sqlx::query_as(
+            r#"SELECT chunk_index, chunk_count, payload_sha256, payload
+               FROM webxdc_sync_chunks
+               WHERE transfer_id = ? AND sender_id = ?
+               ORDER BY chunk_index"#,
+        )
+        .bind(&chunk.transfer_id)
+        .bind(sender_id)
+        .fetch_all(&mut **transaction)
+        .await?;
+        if rows.len() != chunk.chunk_count as usize {
+            return Ok(());
+        }
+        if rows.iter().enumerate().any(|(index, row)| {
+            row.0 != index as i64
+                || row.1 != chunk.chunk_count as i64
+                || row.2 != chunk.payload_sha256
+        }) {
+            return Err(TwonlyError::Generic(
+                "inconsistent webxdc sync chunks".into(),
+            ));
+        }
+        let encoded: Vec<u8> = rows.into_iter().flat_map(|row| row.3).collect();
+        if Sha256::digest(&encoded).as_slice() != chunk.payload_sha256.as_slice() {
+            return Err(TwonlyError::Generic("webxdc sync digest mismatch".into()));
+        }
+        let payload = <proto::WebxdcSyncPayload as prost::Message>::decode(encoded.as_slice())?;
+        Self::install_sync_payload(transaction, group_id, sender_id, payload).await?;
+        sqlx::query("DELETE FROM webxdc_sync_chunks WHERE transfer_id = ? AND sender_id = ?")
+            .bind(&chunk.transfer_id)
+            .bind(sender_id)
+            .execute(&mut **transaction)
+            .await?;
+        Ok(())
+    }
+
+    async fn install_sync_payload(
+        transaction: &mut Transaction<'_, Sqlite>,
+        group_id: &str,
+        sender_id: i64,
+        payload: proto::WebxdcSyncPayload,
+    ) -> Result<()> {
+        if payload.instances.len() > 1 {
+            return Err(TwonlyError::Generic("invalid webxdc sync payload".into()));
+        }
+        for instance in payload.instances {
+            if instance.instance_id.is_empty()
+                || instance.app_id.is_empty()
+                || instance.updates.len() as i64 > MAX_UPDATES_PER_INSTANCE
+                || instance
+                    .updates
+                    .iter()
+                    .map(|update| update.payload.len() as i64)
+                    .sum::<i64>()
+                    > MAX_PAYLOAD_BYTES_PER_INSTANCE
+            {
+                return Err(TwonlyError::Generic("invalid webxdc sync payload".into()));
+            }
+            let exists: bool = sqlx::query_scalar(
+                "SELECT EXISTS(SELECT 1 FROM webxdc_instances WHERE instance_id = ?)",
+            )
+            .bind(&instance.instance_id)
+            .fetch_one(&mut **transaction)
+            .await?;
+            if exists {
+                Self::apply_pending_updates(
+                    transaction,
+                    &instance.instance_id,
+                    &instance.app_id,
+                    instance.version,
+                    group_id,
+                )
+                .await?;
+                continue;
+            }
+            let app_data = proto::AdditionalMessageData {
+                r#type: proto::additional_message_data::Type::WebxdcApp as i32,
+                webxdc_app: Some(proto::WebxdcApp {
+                    app_id: instance.app_id.clone(),
+                    version: instance.version,
+                }),
+                ..Default::default()
+            };
+            sqlx::query(
+                r#"INSERT INTO messages
+                       (group_id, message_id, sender_id, type,
+                        additional_message_data, created_at, ack_by_server)
+                   VALUES (?, ?, ?, 'webxdcApp', ?, ?, strftime('%s','now'))
+                   ON CONFLICT(message_id) DO NOTHING"#,
+            )
+            .bind(group_id)
+            .bind(&instance.instance_id)
+            .bind(sender_id)
+            .bind(prost::Message::encode_to_vec(&app_data))
+            .bind(instance.created_at)
+            .execute(&mut **transaction)
+            .await?;
+            Self::insert_instance(
+                transaction,
+                &instance.instance_id,
+                group_id,
+                &instance.app_id,
+                instance.version,
+            )
+            .await?;
+            sqlx::query("UPDATE webxdc_instances SET created_at = ? WHERE instance_id = ?")
+                .bind(instance.created_at)
+                .bind(&instance.instance_id)
+                .execute(&mut **transaction)
+                .await?;
+            for update in instance.updates {
+                if update.message_id.is_empty() || update.payload.len() > SEND_UPDATE_MAX_SIZE {
+                    return Err(TwonlyError::Generic("invalid webxdc sync update".into()));
+                }
+                let info = sanitize(update.info.as_deref(), MAX_INFO_CHARS);
+                let href = update.href.as_deref().and_then(sanitize_href);
+                Self::append_update(
+                    transaction,
+                    &instance.instance_id,
+                    &update.message_id,
+                    update.sender_id,
+                    &update.payload,
+                    info.as_deref(),
+                    href.as_deref(),
+                    update.received_at,
+                )
+                .await?;
+            }
+            let summary = sanitize(instance.summary.as_deref(), MAX_SUMMARY_CHARS);
+            let document = sanitize(instance.document.as_deref(), MAX_DOCUMENT_CHARS);
+            Self::apply_instance_labels(
+                transaction,
+                &instance.instance_id,
+                summary.as_deref(),
+                document.as_deref(),
+                instance.last_update_at,
+            )
+            .await?;
+            Self::apply_pending_updates(
+                transaction,
+                &instance.instance_id,
+                &instance.app_id,
+                instance.version,
+                group_id,
+            )
+            .await?;
+        }
+        Ok(())
+    }
+
     /// Places an app into a chat and tells the other members which app and
     /// which version, so every participant runs the same code.
     pub async fn create_instance(
@@ -86,6 +456,16 @@ impl WebxdcService {
         // does not offer should fail here rather than on every recipient's
         // device.
         self.store().resolve_bundle_sha256(&app_id, version).await?;
+
+        if self
+            .existing_instance_if_limited(&group_id, &app_id, version)
+            .await?
+            .is_some()
+        {
+            return Err(TwonlyError::Generic(
+                "this app has already been added to the chat".into(),
+            ));
+        }
 
         let data = proto::AdditionalMessageData {
             r#type: proto::additional_message_data::Type::WebxdcApp as i32,
@@ -113,6 +493,32 @@ impl WebxdcService {
         Ok(message_id)
     }
 
+    async fn existing_instance_if_limited(
+        &self,
+        group_id: &str,
+        app_id: &str,
+        version: i64,
+    ) -> Result<Option<String>> {
+        let database = self.ctx.app_db.read().await.clone();
+        let one_time: bool = sqlx::query_scalar(
+            "SELECT one_time FROM webxdc_apps WHERE app_id = ? AND version = ? AND published = 1",
+        )
+        .bind(app_id)
+        .bind(version)
+        .fetch_one(&database.pool)
+        .await?;
+        if !one_time {
+            return Ok(None);
+        }
+        Ok(sqlx::query_scalar(
+            "SELECT instance_id FROM webxdc_instances WHERE group_id = ? AND app_id = ? LIMIT 1",
+        )
+        .bind(group_id)
+        .bind(app_id)
+        .fetch_optional(&database.pool)
+        .await?)
+    }
+
     /// Records the instance a peer placed into a chat. Nothing is downloaded
     /// here: a message must not be able to make a device fetch a bundle, only
     /// the user tapping Start may.
@@ -122,7 +528,9 @@ impl WebxdcService {
         group_id: &str,
         app: &proto::WebxdcApp,
     ) -> Result<()> {
-        Self::insert_instance(transaction, message_id, group_id, &app.app_id, app.version).await
+        Self::insert_instance(transaction, message_id, group_id, &app.app_id, app.version).await?;
+        Self::apply_pending_updates(transaction, message_id, &app.app_id, app.version, group_id)
+            .await
     }
 
     async fn insert_instance(
@@ -165,6 +573,10 @@ impl WebxdcService {
         update: &proto::WebxdcUpdate,
         received_at: i64,
     ) -> Result<()> {
+        if update.instance_id.is_empty() || update.payload.len() > SEND_UPDATE_MAX_SIZE {
+            tracing::warn!("invalid webxdc update, dropping");
+            return Ok(());
+        }
         let instance = sqlx::query!(
             r#"SELECT group_id AS "group_id!: String", app_id AS "app_id!: String",
                       version AS "version!: i64"
@@ -175,18 +587,51 @@ impl WebxdcService {
         .await?;
 
         let Some(instance) = instance else {
-            // The card may still be on its way, or may already have been
-            // deleted. Dropping the update is the only safe answer: a log entry
-            // with no instance cannot be replayed in order.
-            tracing::info!("webxdc update for an unknown instance, dropping");
+            // A newly joined member can receive a live update before the app
+            // snapshot. Keep it until the instance arrives; deletion removes
+            // these rows with the group.
+            sqlx::query(
+                "DELETE FROM webxdc_pending_updates WHERE received_at < strftime('%s','now') - 604800",
+            )
+            .execute(&mut **transaction)
+            .await?;
+            let pending: (i64, i64) = sqlx::query_as(
+                r#"SELECT COUNT(*), COALESCE(SUM(LENGTH(payload)), 0)
+                   FROM webxdc_pending_updates WHERE instance_id = ? AND group_id = ?"#,
+            )
+            .bind(&update.instance_id)
+            .bind(group_id)
+            .fetch_one(&mut **transaction)
+            .await?;
+            if pending.0 >= MAX_UPDATES_PER_INSTANCE
+                || pending.1 + update.payload.len() as i64 > MAX_PAYLOAD_BYTES_PER_INSTANCE
+            {
+                tracing::warn!("pending webxdc instance is over budget, dropping update");
+                return Ok(());
+            }
+            sqlx::query(
+                r#"INSERT INTO webxdc_pending_updates
+                       (message_id, instance_id, group_id, sender_id, payload,
+                        info, href, summary, document, received_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(message_id) DO NOTHING"#,
+            )
+            .bind(message_id)
+            .bind(&update.instance_id)
+            .bind(group_id)
+            .bind(sender_id)
+            .bind(&update.payload)
+            .bind(&update.info)
+            .bind(&update.href)
+            .bind(&update.summary)
+            .bind(&update.document)
+            .bind(received_at)
+            .execute(&mut **transaction)
+            .await?;
             return Ok(());
         };
         if instance.group_id != group_id {
             tracing::warn!("webxdc update arrived in the wrong chat, dropping");
-            return Ok(());
-        }
-        if update.payload.len() > SEND_UPDATE_MAX_SIZE {
-            tracing::warn!("webxdc update exceeds the payload limit, dropping");
             return Ok(());
         }
         if !Self::within_instance_budget(transaction, &update.instance_id).await? {
@@ -234,6 +679,79 @@ impl WebxdcService {
             .await?;
         }
 
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    async fn apply_pending_updates(
+        transaction: &mut Transaction<'_, Sqlite>,
+        instance_id: &str,
+        app_id: &str,
+        version: i64,
+        group_id: &str,
+    ) -> Result<()> {
+        let rows = sqlx::query_as::<_, PendingUpdateRow>(
+            r#"SELECT message_id, sender_id, payload, info, href, summary, document, received_at
+               FROM webxdc_pending_updates
+               WHERE instance_id = ? AND group_id = ?
+               ORDER BY received_at, message_id"#,
+        )
+        .bind(instance_id)
+        .bind(group_id)
+        .fetch_all(&mut **transaction)
+        .await?;
+
+        for row in rows {
+            if row.message_id.is_empty() || row.payload.len() > SEND_UPDATE_MAX_SIZE {
+                continue;
+            }
+            if !Self::within_instance_budget(transaction, instance_id).await? {
+                tracing::warn!("webxdc instance is over budget, dropping pending updates");
+                break;
+            }
+            let info = sanitize(row.info.as_deref(), MAX_INFO_CHARS);
+            let href = row.href.as_deref().and_then(sanitize_href);
+            let summary = sanitize(row.summary.as_deref(), MAX_SUMMARY_CHARS);
+            let document = sanitize(row.document.as_deref(), MAX_DOCUMENT_CHARS);
+            Self::append_update(
+                transaction,
+                instance_id,
+                &row.message_id,
+                Some(row.sender_id),
+                &row.payload,
+                info.as_deref(),
+                href.as_deref(),
+                row.received_at,
+            )
+            .await?;
+            Self::apply_instance_labels(
+                transaction,
+                instance_id,
+                summary.as_deref(),
+                document.as_deref(),
+                row.received_at,
+            )
+            .await?;
+            if let Some(info) = info.as_deref() {
+                Self::insert_info_message(
+                    transaction,
+                    instance_id,
+                    app_id,
+                    version,
+                    group_id,
+                    &row.message_id,
+                    Some(row.sender_id),
+                    info,
+                    row.received_at,
+                )
+                .await?;
+            }
+        }
+        sqlx::query("DELETE FROM webxdc_pending_updates WHERE instance_id = ? AND group_id = ?")
+            .bind(instance_id)
+            .bind(group_id)
+            .execute(&mut **transaction)
+            .await?;
         Ok(())
     }
 
@@ -388,6 +906,7 @@ impl WebxdcService {
         href: Option<String>,
         summary: Option<String>,
         document: Option<String>,
+        notify: Option<String>,
     ) -> Result<()> {
         if payload.len() > SEND_UPDATE_MAX_SIZE {
             return Err(TwonlyError::Generic(format!(
@@ -417,6 +936,38 @@ impl WebxdcService {
             ));
         }
 
+        let notify = if let Some(raw) = notify {
+            if raw.len() > SEND_UPDATE_MAX_SIZE {
+                return Err(TwonlyError::Generic(
+                    "notification list is too large".into(),
+                ));
+            }
+            let entries: std::collections::BTreeMap<String, String> = serde_json::from_str(&raw)
+                .map_err(|_| {
+                    TwonlyError::Generic("notify must map member addresses to text".into())
+                })?;
+            let members = self.members(&instance_id).await?;
+            let members: serde_json::Value = serde_json::from_str(&members)?;
+            let mut cleaned = std::collections::BTreeMap::new();
+            for (address, text) in entries {
+                if !members["members"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|m| m["id"] == address)
+                {
+                    return Err(TwonlyError::Generic(
+                        "unknown notification recipient".into(),
+                    ));
+                }
+                if let Some(text) = sanitize(Some(&text), MAX_INFO_CHARS) {
+                    cleaned.insert(address, text);
+                }
+            }
+            Some(serde_json::to_string(&cleaned)?)
+        } else {
+            None
+        };
         let info = sanitize(info.as_deref(), MAX_INFO_CHARS);
         let href = href.as_deref().and_then(sanitize_href);
         let summary = sanitize(summary.as_deref(), MAX_SUMMARY_CHARS);
@@ -431,6 +982,7 @@ impl WebxdcService {
                 href: href.clone(),
                 summary: summary.clone(),
                 document: document.clone(),
+                notify,
             }),
             ..Default::default()
         };
@@ -540,30 +1092,34 @@ impl WebxdcService {
             .collect())
     }
 
-    /// Starts an app: checks the store for a newer version, and makes the
-    /// bundle the instance ends up on available on disk.
-    ///
-    /// Called when the user starts the app, never on message arrival, and never
-    /// again while the app runs. This is the one moment an update may land: the
-    /// code behind a game changes between two of its runs, never between two of
-    /// its own updates.
+    /// Starts with local code. Only a missing bundle needs the network.
+    /// Updates downloaded after a previous close are adopted here, before any
+    /// files are served; an in-flight background download never changes a run.
     pub async fn prepare_bundle(&self, instance_id: &str) -> Result<std::path::PathBuf> {
         let instance = self
             .instance(instance_id)
             .await?
             .ok_or_else(|| TwonlyError::Generic("unknown webxdc instance".into()))?;
-
-        // A refresh that fails means this device is offline or the server is
-        // down. Neither is a reason to refuse to start an app whose bundle is
-        // already here, so the failure is logged and the instance keeps the
-        // version it has.
-        if let Err(error) = self.store().refresh_catalog().await {
-            tracing::info!("checking for a webxdc update failed: {error}");
-        }
-        if let Some(path) = self.apply_update(&instance, instance_id).await? {
+        if let Some(path) = self.apply_cached_update(&instance, instance_id).await? {
             return Ok(path);
         }
         self.pinned_bundle(instance_id).await
+    }
+
+    /// Checks and downloads after the app closes, without moving its pin.
+    /// The user may already have reopened it when the network finishes.
+    pub async fn cache_update(&self, instance_id: &str) -> Result<()> {
+        let Some(instance) = self.instance(instance_id).await? else {
+            return Ok(());
+        };
+        let store = self.store();
+        store.refresh_catalog().await?;
+        if let Some((version, sha256)) = store.newest_published(&instance.app_id).await? {
+            if version > instance.version {
+                store.ensure_bundle(&sha256).await?;
+            }
+        }
+        Ok(())
     }
 
     /// The bundle an instance is pinned to, on disk and verified.
@@ -592,14 +1148,9 @@ impl WebxdcService {
         store.ensure_bundle(&sha256).await
     }
 
-    /// Moves an instance to a newer published version, if there is one.
-    ///
-    /// Returns the bundle it moved to, or `None` when the instance is to stay
-    /// where it is -- because nothing newer is published, or because the newer
-    /// bundle could not be fetched. The pin is written only after the download
-    /// verified: an instance must never end up pointing at code this device
-    /// does not have, when it does have the code it was running before.
-    async fn apply_update(
+    /// Adopts a newer version only if its complete, verified download is on disk.
+    /// Never fetch here: cached apps must open even while the server is down.
+    async fn apply_cached_update(
         &self,
         instance: &WebxdcInstance,
         instance_id: &str,
@@ -608,32 +1159,20 @@ impl WebxdcService {
         let Some((version, sha256)) = store.newest_published(&instance.app_id).await? else {
             return Ok(None);
         };
-        if version <= instance.version {
+        let path = store.bundle_path(&sha256);
+        if version <= instance.version || !path.is_file() {
             return Ok(None);
         }
-
-        match store.ensure_bundle(&sha256).await {
-            Ok(path) => {
-                Self::pin(&self.ctx, instance_id, version, &sha256).await?;
-                tracing::info!(
-                    "webxdc {} moved from version {} to {version}",
-                    instance.app_id,
-                    instance.version,
-                );
-                if let Some(previous) = &instance.bundle_sha256 {
-                    self.discard_unused_bundle(previous).await;
-                }
-                Ok(Some(path))
-            }
-            // Nothing has been written yet, so the caller starts the version
-            // the instance already had.
-            Err(error) if instance.bundle_sha256.is_some() => {
-                tracing::warn!("fetching the webxdc update failed: {error}");
-                Ok(None)
-            }
-            // Nothing to fall back to: this instance has never run here.
-            Err(error) => Err(error),
+        Self::pin(&self.ctx, instance_id, version, &sha256).await?;
+        tracing::info!(
+            "webxdc {} moved from version {} to {version}",
+            instance.app_id,
+            instance.version
+        );
+        if let Some(previous) = &instance.bundle_sha256 {
+            self.discard_unused_bundle(previous).await;
         }
+        Ok(Some(path))
     }
 
     /// Deletes a bundle nothing points at any more, after an update moved the
@@ -671,6 +1210,34 @@ impl WebxdcService {
         .execute(&database.pool)
         .await?;
         Ok(())
+    }
+
+    /// Current chat members, using the same instance-scoped IDs as selfAddr.
+    pub async fn members(&self, instance_id: &str) -> Result<String> {
+        let instance = self
+            .instance(instance_id)
+            .await?
+            .ok_or_else(|| TwonlyError::Generic("unknown webxdc instance".into()))?;
+        let user = crate::user_config::UserConfig::load_required_from(&self.ctx)?;
+        let database = self.ctx.app_db.read().await.clone();
+        let rows: Vec<(i64, String)> = sqlx::query_as(
+            "SELECT c.user_id, COALESCE(NULLIF(c.display_name, ''), c.username)
+             FROM group_members m JOIN contacts c ON c.user_id = m.contact_id
+             WHERE m.group_id = ? AND (m.member_state IS NULL OR m.member_state != 'leftGroup')
+             ORDER BY c.user_id",
+        )
+        .bind(&instance.group_id)
+        .fetch_all(&database.pool)
+        .await?;
+        let self_id = Self::address_for(instance_id, user.user_id);
+        let mut members =
+            vec![serde_json::json!({"id": self_id, "displayName": user.display_name})];
+        for (id, name) in rows {
+            if id != user.user_id {
+                members.push(serde_json::json!({"id": Self::address_for(instance_id, id), "displayName": name}));
+            }
+        }
+        Ok(serde_json::json!({"selfId": self_id, "members": members}).to_string())
     }
 
     /// The values `webxdc.js` is served with, as a JSON object.
@@ -790,6 +1357,225 @@ fn sanitize_href(href: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::{proto, sanitize, sanitize_href, Context, Result, WebxdcService};
+    use sha2::{Digest, Sha256};
+
+    #[tokio::test]
+    async fn sync_chunks_install_one_time_app_only_when_complete() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'sender')",
+            "INSERT INTO groups(group_id, group_name) VALUES ('g', 'Chat')",
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('g', 7)",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+        let payload = proto::WebxdcSyncPayload {
+            instances: vec![proto::WebxdcSyncInstance {
+                instance_id: "card".into(),
+                app_id: "expenses".into(),
+                version: 1,
+                summary: Some("Trip".into()),
+                document: Some("3 expenses".into()),
+                created_at: 100,
+                last_update_at: 200,
+                updates: vec![proto::WebxdcSyncUpdate {
+                    message_id: "update".into(),
+                    sender_id: Some(7),
+                    payload: r#"{"expense":1}"#.into(),
+                    info: Some("Dinner".into()),
+                    href: None,
+                    received_at: 150,
+                }],
+            }],
+        };
+        let encoded = prost::Message::encode_to_vec(&payload);
+        let split = encoded.len() / 2;
+        let digest = Sha256::digest(&encoded).to_vec();
+        let chunks = [
+            proto::WebxdcSyncChunk {
+                transfer_id: "transfer".into(),
+                chunk_index: 0,
+                chunk_count: 2,
+                payload_sha256: digest.clone(),
+                payload: encoded[..split].to_vec(),
+            },
+            proto::WebxdcSyncChunk {
+                transfer_id: "transfer".into(),
+                chunk_index: 1,
+                chunk_count: 2,
+                payload_sha256: digest,
+                payload: encoded[split..].to_vec(),
+            },
+        ];
+        let mut transaction = database.pool.begin().await?;
+        WebxdcService::handle_incoming_update(
+            &mut transaction,
+            "live-update",
+            "g",
+            7,
+            &proto::WebxdcUpdate {
+                instance_id: "card".into(),
+                payload: r#"{"expense":2}"#.into(),
+                info: Some("Taxi".into()),
+                href: None,
+                summary: Some("Trip updated".into()),
+                document: Some("2 expenses".into()),
+                notify: None,
+            },
+            250,
+        )
+        .await?;
+        WebxdcService::handle_sync_chunk(&mut transaction, "g", 7, &chunks[1]).await?;
+        let before: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM webxdc_instances WHERE instance_id = 'card'")
+                .fetch_one(&mut *transaction)
+                .await?;
+        assert_eq!(before, 0);
+        WebxdcService::handle_sync_chunk(&mut transaction, "g", 7, &chunks[0]).await?;
+        transaction.commit().await?;
+
+        let instance = WebxdcService::new(&ctx).instance("card").await?.unwrap();
+        assert_eq!(instance.app_id, "expenses");
+        assert_eq!(instance.summary.as_deref(), Some("Trip updated"));
+        assert_eq!(instance.document.as_deref(), Some("2 expenses"));
+        let updates = WebxdcService::new(&ctx).updates_after("card", 0).await?;
+        assert_eq!(updates.len(), 2);
+        assert_eq!(updates[0].payload, r#"{"expense":1}"#);
+        assert_eq!(updates[1].payload, r#"{"expense":2}"#);
+        let pending: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM webxdc_pending_updates")
+            .fetch_one(&database.pool)
+            .await?;
+        assert_eq!(pending, 0);
+        let announcements: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE message_id = 'live-update-info'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(announcements, 1);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn one_time_app_refuses_another_instance_in_the_same_chat() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO groups(group_id, group_name) VALUES ('g', 'Chat'), ('other', 'Other')",
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('card', 'g', 'webxdcApp')",
+            "INSERT INTO webxdc_apps(app_id, version, name, bundle_sha256, bundle_bytes, cached_at, published, one_time) VALUES ('expenses', 1, 'Expenses', 'hash', 10, 0, 1, 1)",
+            "INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token) VALUES ('card', 'g', 'expenses', 1, 'origin')",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+        let service = WebxdcService::new(&ctx);
+        assert_eq!(
+            service
+                .existing_instance_if_limited("g", "expenses", 1)
+                .await?
+                .as_deref(),
+            Some("card")
+        );
+        assert_eq!(
+            service
+                .existing_instance_if_limited("other", "expenses", 1)
+                .await?,
+            None
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn cached_launch_never_waits_for_updates_and_pins_only_between_runs() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO groups(group_id, group_name) VALUES ('g', 'Chat')",
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('card', 'g', 'webxdcApp')",
+            "INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token, bundle_sha256) VALUES ('card', 'g', 'expenses', 1, 'origin', 'old-hash')",
+            "INSERT INTO webxdc_apps(app_id, version, name, bundle_sha256, bundle_bytes, cached_at, published) VALUES ('expenses', 2, 'Expenses', 'new-hash', 10, 0, 1)",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+        let service = WebxdcService::new(&ctx);
+        let old = service.store().bundle_path("old-hash");
+        let new = service.store().bundle_path("new-hash");
+        std::fs::create_dir_all(old.parent().unwrap())?;
+        std::fs::write(&old, b"previously downloaded code")?;
+        // A newer catalog row and an unfinished download cannot block launch.
+        std::fs::write(new.with_extension("partial"), b"unfinished")?;
+        let path = tokio::time::timeout(
+            std::time::Duration::from_millis(500),
+            service.prepare_bundle("card"),
+        )
+        .await
+        .expect("cached launch attempted a network request")?;
+        assert_eq!(path, old);
+        assert_eq!(service.instance("card").await?.unwrap().version, 1);
+
+        // Simulate a background download finishing after the user reopened.
+        std::fs::write(&new, b"new downloaded code")?;
+        assert_eq!(service.pinned_bundle("card").await?, old);
+        assert_eq!(service.instance("card").await?.unwrap().version, 1);
+        // Only the next launch adopts the already downloaded update.
+        assert_eq!(service.prepare_bundle("card").await?, new);
+        assert_eq!(service.instance("card").await?.unwrap().version, 2);
+        assert!(!old.exists());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn member_api_is_scoped_and_excludes_departed_members() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"anna","displayName":"Anna"}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username, display_name) VALUES (7, 'ben', 'Ben'), (8, 'clara', 'Clara'), (9, 'dan', 'Dan')",
+            "INSERT INTO groups(group_id, group_name) VALUES ('g', 'Trip'), ('other', 'Other')",
+            "INSERT INTO group_members(group_id, contact_id, member_state) VALUES ('g', 7, NULL), ('g', 8, 'leftGroup'), ('other', 9, NULL)",
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('card', 'g', 'webxdcApp')",
+            "INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token) VALUES ('card', 'g', 'expenses', 1, 'origin')",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+        let service = WebxdcService::new(&ctx);
+        let members: serde_json::Value = serde_json::from_str(&service.members("card").await?)?;
+        assert_eq!(members["selfId"], WebxdcService::address_for("card", 42));
+        assert_eq!(members["members"].as_array().unwrap().len(), 2);
+        assert_eq!(members["members"][1]["displayName"], "Ben");
+        assert_eq!(
+            members["members"][1]["id"],
+            WebxdcService::address_for("card", 7)
+        );
+        assert!(service.members("missing").await.is_err());
+        assert!(service
+            .send_update(
+                "card".into(),
+                "{}".into(),
+                Some("Dinner".into()),
+                None,
+                None,
+                None,
+                Some(r#"{"unrelated-member":"Dinner"}"#.into())
+            )
+            .await
+            .is_err());
+        Ok(())
+    }
 
     /// The announcement lands in the chat as an ordinary message, and lands
     /// there once however often the update it came with is delivered.

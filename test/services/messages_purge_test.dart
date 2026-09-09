@@ -125,4 +125,32 @@ void main() {
       expect(remainingIds.contains('msg_d_sender_deleted_expired'), isFalse);
     },
   );
+
+  test('deleting a chat retains only one-time app state', () async {
+    await twonlyDB.groupsDao.createNewGroup(
+      GroupsCompanion.insert(groupId: 'chat', groupName: 'Trip'),
+    );
+    for (final statement in [
+      "INSERT INTO messages(message_id, group_id, type) VALUES ('text', 'chat', 'text')",
+      "INSERT INTO messages(message_id, group_id, type) VALUES ('expenses-card', 'chat', 'webxdcApp')",
+      "INSERT INTO messages(message_id, group_id, type) VALUES ('game-card', 'chat', 'webxdcApp')",
+      "INSERT INTO webxdc_apps(app_id, version, name, bundle_sha256, bundle_bytes, cached_at, one_time) VALUES ('expenses', 1, 'Expenses', 'expense-hash', 1, 0, 1)",
+      "INSERT INTO webxdc_apps(app_id, version, name, bundle_sha256, bundle_bytes, cached_at, one_time) VALUES ('game', 1, 'Game', 'game-hash', 1, 0, 0)",
+      "INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token, created_at, last_update_at) VALUES ('expenses-card', 'chat', 'expenses', 1, 'expenses-origin', 0, 0)",
+      "INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token, created_at, last_update_at) VALUES ('game-card', 'chat', 'game', 1, 'game-origin', 0, 0)",
+      "INSERT INTO webxdc_updates(instance_id, serial, message_id, payload, received_at) VALUES ('expenses-card', 1, 'expense-update', '{}', 0)",
+    ]) {
+      await twonlyDB.customStatement(statement);
+    }
+
+    await twonlyDB.messagesDao.deleteMessagesByGroupId('chat');
+
+    final messages = await twonlyDB.select(twonlyDB.messages).get();
+    expect(messages.map((message) => message.messageId), ['expenses-card']);
+    final instances = await twonlyDB.select(twonlyDB.webxdcInstances).get();
+    expect(instances.map((instance) => instance.instanceId), ['expenses-card']);
+    final updates = await twonlyDB.select(twonlyDB.webxdcUpdates).get();
+    expect(updates, hasLength(1));
+    expect((await twonlyDB.groupsDao.getGroup('chat'))?.deletedContent, isTrue);
+  });
 }

@@ -1,4 +1,5 @@
 {
+  "subscriptionAllApps": "Zugriff auf alle Apps",
   "@@locale": "de",
   "registerSlogan": "Privat in Kontakt bleiben.",
   "onboardingWelcomeTitle": "Willkommen bei twonly!",
@@ -1037,6 +1038,10 @@
   "webxdcStoreEmpty": "Es sind noch keine Apps verfügbar.",
   "webxdcStoreOffline": "Die App-Liste konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
   "webxdcStoreFailed": "Die App konnte diesem Chat nicht hinzugefügt werden.",
+  "webxdcStoreAlreadyAdded": "Bereits zu diesem Chat hinzugefügt",
+  "webxdcChatAppsMenu": "Chat-Apps",
+  "webxdcChatAppsTitle": "Chat-Apps",
+  "webxdcChatAppsEmpty": "Diesem Chat wurden noch keine einmaligen Apps hinzugefügt.",
   "webxdcUnavailable": "Diese App konnte nicht geladen werden.",
   "webxdcDeleteConfirm": "Alles, was diese App auf diesem Gerät gespeichert hat, wird gelöscht. Andere Mitglieder behalten ihre eigene Kopie.",
   "webxdcExternalLinkTitle": "twonly verlassen?",

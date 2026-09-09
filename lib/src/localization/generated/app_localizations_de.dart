@@ -9,6 +9,9 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get subscriptionAllApps => 'Zugriff auf alle Apps';
+
+  @override
   String get registerSlogan => 'Privat in Kontakt bleiben.';
 
   @override
@@ -2753,6 +2756,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get webxdcStoreFailed =>
       'Die App konnte diesem Chat nicht hinzugefügt werden.';
+
+  @override
+  String get webxdcStoreAlreadyAdded => 'Bereits zu diesem Chat hinzugefügt';
+
+  @override
+  String get webxdcChatAppsMenu => 'Chat-Apps';
+
+  @override
+  String get webxdcChatAppsTitle => 'Chat-Apps';
+
+  @override
+  String get webxdcChatAppsEmpty =>
+      'Diesem Chat wurden noch keine einmaligen Apps hinzugefügt.';
 
   @override
   String get webxdcUnavailable => 'Diese App konnte nicht geladen werden.';

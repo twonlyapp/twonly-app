@@ -24,6 +24,7 @@ import 'package:twonly/src/visual/views/contact/contact_components/user_discover
 import 'package:twonly/src/visual/views/contact/contact_components/verification_expansion_tile.comp.dart';
 import 'package:twonly/src/visual/views/contact/select_contact_groups.view.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
+import 'package:twonly/src/visual/views/webxdc/webxdc_chat_apps.view.dart';
 
 class ContactView extends StatefulWidget {
   const ContactView(this.userId, {super.key});
@@ -231,6 +232,18 @@ class _ContactViewState extends State<ContactView> {
             groupId: getUUIDforDirectChat(
               widget.userId,
               userService.currentUser.userId,
+            ),
+          ),
+          BetterListTile(
+            icon: FontAwesomeIcons.layerGroup,
+            text: context.lang.webxdcChatAppsMenu,
+            onTap: () => context.navPush(
+              WebxdcChatAppsView(
+                groupId: getUUIDforDirectChat(
+                  widget.userId,
+                  userService.currentUser.userId,
+                ),
+              ),
             ),
           ),
           ContactGroupsSubtitleBuilder(

@@ -239,6 +239,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SqlValue> dco_decode_list_sql_value(dynamic raw);
 
   @protected
+  List<WebxdcOneTimeInstance> dco_decode_list_webxdc_one_time_instance(
+    dynamic raw,
+  );
+
+  @protected
   List<WebxdcStoreApp> dco_decode_list_webxdc_store_app(dynamic raw);
 
   @protected
@@ -392,6 +397,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   WebxdcInstanceInfo dco_decode_webxdc_instance_info(dynamic raw);
+
+  @protected
+  WebxdcOneTimeInstance dco_decode_webxdc_one_time_instance(dynamic raw);
 
   @protected
   WebxdcResponse dco_decode_webxdc_response(dynamic raw);
@@ -642,6 +650,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SqlValue> sse_decode_list_sql_value(SseDeserializer deserializer);
 
   @protected
+  List<WebxdcOneTimeInstance> sse_decode_list_webxdc_one_time_instance(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<WebxdcStoreApp> sse_decode_list_webxdc_store_app(
     SseDeserializer deserializer,
   );
@@ -817,6 +830,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   WebxdcInstanceInfo sse_decode_webxdc_instance_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  WebxdcOneTimeInstance sse_decode_webxdc_one_time_instance(
     SseDeserializer deserializer,
   );
 
@@ -1144,6 +1162,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_sql_value(List<SqlValue> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_webxdc_one_time_instance(
+    List<WebxdcOneTimeInstance> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_webxdc_store_app(
     List<WebxdcStoreApp> self,
     SseSerializer serializer,
@@ -1359,6 +1383,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_webxdc_instance_info(
     WebxdcInstanceInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_webxdc_one_time_instance(
+    WebxdcOneTimeInstance self,
     SseSerializer serializer,
   );
 

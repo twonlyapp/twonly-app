@@ -133,8 +133,13 @@ message WebxdcCatalogEntry {
   // The name in every language the bundle carries it in, keyed the same way.
   // `name` is what a client shows when none of them is a language it reads.
   map<string, string> name_translations = 10;
+  bool pro_only = 11;
+  // Only one instance of this app may be placed into a chat.
+  bool one_time = 12;
 }
 
 message WebxdcCatalog {
+  // Admin-defined app order, with versions of each app grouped newest first.
+  // Clients retain this order when caching and displaying the drawer.
   repeated WebxdcCatalogEntry entries = 1;
 }

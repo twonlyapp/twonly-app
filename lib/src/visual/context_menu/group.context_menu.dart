@@ -45,11 +45,10 @@ class GroupContextMenu extends StatelessWidget {
           ),
         ContextMenuItem(
           title: context.lang.contextMenuOpenChat,
-          onTap: () =>
-              navigator.context.push(
-                Routes.chatsMessages(group.groupId),
-                extra: group,
-              ),
+          onTap: () => navigator.context.push(
+            Routes.chatsMessages(group.groupId),
+            extra: group,
+          ),
           icon: FontAwesomeIcons.comments,
         ),
         if (!group.archived)
@@ -76,17 +75,6 @@ class GroupContextMenu extends StatelessWidget {
             );
             if (ok) {
               await twonlyDB.messagesDao.deleteMessagesByGroupId(group.groupId);
-              if (group.isDirectChat) {
-                await twonlyDB.groupsDao.deleteGroup(group.groupId);
-              } else {
-                await twonlyDB.groupsDao.deleteGroup(group.groupId);
-                // await twonlyDB.groupsDao.updateGroup(
-                //   group.groupId,
-                //   const GroupsCompanion(
-                //     deletedContent: Value(true),
-                //   ),
-                // );
-              }
             }
           },
         ),

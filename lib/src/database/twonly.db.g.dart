@@ -12663,6 +12663,48 @@ class $WebxdcAppsTable extends WebxdcApps
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _proOnlyMeta = const VerificationMeta(
+    'proOnly',
+  );
+  @override
+  late final GeneratedColumn<bool> proOnly = GeneratedColumn<bool>(
+    'pro_only',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("pro_only" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _oneTimeMeta = const VerificationMeta(
+    'oneTime',
+  );
+  @override
+  late final GeneratedColumn<bool> oneTime = GeneratedColumn<bool>(
+    'one_time',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("one_time" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     appId,
@@ -12676,6 +12718,9 @@ class $WebxdcAppsTable extends WebxdcApps
     bundleBytes,
     published,
     cachedAt,
+    proOnly,
+    sortOrder,
+    oneTime,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -12782,6 +12827,24 @@ class $WebxdcAppsTable extends WebxdcApps
     } else if (isInserting) {
       context.missing(_cachedAtMeta);
     }
+    if (data.containsKey('pro_only')) {
+      context.handle(
+        _proOnlyMeta,
+        proOnly.isAcceptableOrUnknown(data['pro_only']!, _proOnlyMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('one_time')) {
+      context.handle(
+        _oneTimeMeta,
+        oneTime.isAcceptableOrUnknown(data['one_time']!, _oneTimeMeta),
+      );
+    }
     return context;
   }
 
@@ -12835,6 +12898,18 @@ class $WebxdcAppsTable extends WebxdcApps
         DriftSqlType.int,
         data['${effectivePrefix}cached_at'],
       )!,
+      proOnly: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pro_only'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      oneTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}one_time'],
+      )!,
     );
   }
 
@@ -12866,6 +12941,9 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
   final int bundleBytes;
   final bool published;
   final int cachedAt;
+  final bool proOnly;
+  final int sortOrder;
+  final bool oneTime;
   const WebxdcApp({
     required this.appId,
     required this.version,
@@ -12878,6 +12956,9 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
     required this.bundleBytes,
     required this.published,
     required this.cachedAt,
+    required this.proOnly,
+    required this.sortOrder,
+    required this.oneTime,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -12897,6 +12978,9 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
     map['bundle_bytes'] = Variable<int>(bundleBytes);
     map['published'] = Variable<bool>(published);
     map['cached_at'] = Variable<int>(cachedAt);
+    map['pro_only'] = Variable<bool>(proOnly);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['one_time'] = Variable<bool>(oneTime);
     return map;
   }
 
@@ -12915,6 +12999,9 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
       bundleBytes: Value(bundleBytes),
       published: Value(published),
       cachedAt: Value(cachedAt),
+      proOnly: Value(proOnly),
+      sortOrder: Value(sortOrder),
+      oneTime: Value(oneTime),
     );
   }
 
@@ -12935,6 +13022,9 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
       bundleBytes: serializer.fromJson<int>(json['bundleBytes']),
       published: serializer.fromJson<bool>(json['published']),
       cachedAt: serializer.fromJson<int>(json['cachedAt']),
+      proOnly: serializer.fromJson<bool>(json['proOnly']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      oneTime: serializer.fromJson<bool>(json['oneTime']),
     );
   }
   @override
@@ -12952,6 +13042,9 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
       'bundleBytes': serializer.toJson<int>(bundleBytes),
       'published': serializer.toJson<bool>(published),
       'cachedAt': serializer.toJson<int>(cachedAt),
+      'proOnly': serializer.toJson<bool>(proOnly),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'oneTime': serializer.toJson<bool>(oneTime),
     };
   }
 
@@ -12967,6 +13060,9 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
     int? bundleBytes,
     bool? published,
     int? cachedAt,
+    bool? proOnly,
+    int? sortOrder,
+    bool? oneTime,
   }) => WebxdcApp(
     appId: appId ?? this.appId,
     version: version ?? this.version,
@@ -12981,6 +13077,9 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
     bundleBytes: bundleBytes ?? this.bundleBytes,
     published: published ?? this.published,
     cachedAt: cachedAt ?? this.cachedAt,
+    proOnly: proOnly ?? this.proOnly,
+    sortOrder: sortOrder ?? this.sortOrder,
+    oneTime: oneTime ?? this.oneTime,
   );
   WebxdcApp copyWithCompanion(WebxdcAppsCompanion data) {
     return WebxdcApp(
@@ -13005,6 +13104,9 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
           : this.bundleBytes,
       published: data.published.present ? data.published.value : this.published,
       cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+      proOnly: data.proOnly.present ? data.proOnly.value : this.proOnly,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      oneTime: data.oneTime.present ? data.oneTime.value : this.oneTime,
     );
   }
 
@@ -13021,7 +13123,10 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
           ..write('bundleSha256: $bundleSha256, ')
           ..write('bundleBytes: $bundleBytes, ')
           ..write('published: $published, ')
-          ..write('cachedAt: $cachedAt')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('proOnly: $proOnly, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('oneTime: $oneTime')
           ..write(')'))
         .toString();
   }
@@ -13039,6 +13144,9 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
     bundleBytes,
     published,
     cachedAt,
+    proOnly,
+    sortOrder,
+    oneTime,
   );
   @override
   bool operator ==(Object other) =>
@@ -13054,7 +13162,10 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
           other.bundleSha256 == this.bundleSha256 &&
           other.bundleBytes == this.bundleBytes &&
           other.published == this.published &&
-          other.cachedAt == this.cachedAt);
+          other.cachedAt == this.cachedAt &&
+          other.proOnly == this.proOnly &&
+          other.sortOrder == this.sortOrder &&
+          other.oneTime == this.oneTime);
 }
 
 class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
@@ -13069,6 +13180,9 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
   final Value<int> bundleBytes;
   final Value<bool> published;
   final Value<int> cachedAt;
+  final Value<bool> proOnly;
+  final Value<int> sortOrder;
+  final Value<bool> oneTime;
   final Value<int> rowid;
   const WebxdcAppsCompanion({
     this.appId = const Value.absent(),
@@ -13082,6 +13196,9 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
     this.bundleBytes = const Value.absent(),
     this.published = const Value.absent(),
     this.cachedAt = const Value.absent(),
+    this.proOnly = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.oneTime = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   WebxdcAppsCompanion.insert({
@@ -13096,6 +13213,9 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
     required int bundleBytes,
     this.published = const Value.absent(),
     required int cachedAt,
+    this.proOnly = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.oneTime = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : appId = Value(appId),
        version = Value(version),
@@ -13115,6 +13235,9 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
     Expression<int>? bundleBytes,
     Expression<bool>? published,
     Expression<int>? cachedAt,
+    Expression<bool>? proOnly,
+    Expression<int>? sortOrder,
+    Expression<bool>? oneTime,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -13129,6 +13252,9 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
       if (bundleBytes != null) 'bundle_bytes': bundleBytes,
       if (published != null) 'published': published,
       if (cachedAt != null) 'cached_at': cachedAt,
+      if (proOnly != null) 'pro_only': proOnly,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (oneTime != null) 'one_time': oneTime,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -13145,6 +13271,9 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
     Value<int>? bundleBytes,
     Value<bool>? published,
     Value<int>? cachedAt,
+    Value<bool>? proOnly,
+    Value<int>? sortOrder,
+    Value<bool>? oneTime,
     Value<int>? rowid,
   }) {
     return WebxdcAppsCompanion(
@@ -13159,6 +13288,9 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
       bundleBytes: bundleBytes ?? this.bundleBytes,
       published: published ?? this.published,
       cachedAt: cachedAt ?? this.cachedAt,
+      proOnly: proOnly ?? this.proOnly,
+      sortOrder: sortOrder ?? this.sortOrder,
+      oneTime: oneTime ?? this.oneTime,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -13199,6 +13331,15 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
     if (cachedAt.present) {
       map['cached_at'] = Variable<int>(cachedAt.value);
     }
+    if (proOnly.present) {
+      map['pro_only'] = Variable<bool>(proOnly.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (oneTime.present) {
+      map['one_time'] = Variable<bool>(oneTime.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -13219,6 +13360,9 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
           ..write('bundleBytes: $bundleBytes, ')
           ..write('published: $published, ')
           ..write('cachedAt: $cachedAt, ')
+          ..write('proOnly: $proOnly, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('oneTime: $oneTime, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -25803,6 +25947,9 @@ typedef $$WebxdcAppsTableCreateCompanionBuilder =
       required int bundleBytes,
       Value<bool> published,
       required int cachedAt,
+      Value<bool> proOnly,
+      Value<int> sortOrder,
+      Value<bool> oneTime,
       Value<int> rowid,
     });
 typedef $$WebxdcAppsTableUpdateCompanionBuilder =
@@ -25818,6 +25965,9 @@ typedef $$WebxdcAppsTableUpdateCompanionBuilder =
       Value<int> bundleBytes,
       Value<bool> published,
       Value<int> cachedAt,
+      Value<bool> proOnly,
+      Value<int> sortOrder,
+      Value<bool> oneTime,
       Value<int> rowid,
     });
 
@@ -25882,6 +26032,21 @@ class $$WebxdcAppsTableFilterComposer
 
   ColumnFilters<int> get cachedAt => $composableBuilder(
     column: $table.cachedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get proOnly => $composableBuilder(
+    column: $table.proOnly,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get oneTime => $composableBuilder(
+    column: $table.oneTime,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -25949,6 +26114,21 @@ class $$WebxdcAppsTableOrderingComposer
     column: $table.cachedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get proOnly => $composableBuilder(
+    column: $table.proOnly,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get oneTime => $composableBuilder(
+    column: $table.oneTime,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$WebxdcAppsTableAnnotationComposer
@@ -26002,6 +26182,15 @@ class $$WebxdcAppsTableAnnotationComposer
 
   GeneratedColumn<int> get cachedAt =>
       $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get proOnly =>
+      $composableBuilder(column: $table.proOnly, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<bool> get oneTime =>
+      $composableBuilder(column: $table.oneTime, builder: (column) => column);
 }
 
 class $$WebxdcAppsTableTableManager
@@ -26043,6 +26232,9 @@ class $$WebxdcAppsTableTableManager
                 Value<int> bundleBytes = const Value.absent(),
                 Value<bool> published = const Value.absent(),
                 Value<int> cachedAt = const Value.absent(),
+                Value<bool> proOnly = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> oneTime = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WebxdcAppsCompanion(
                 appId: appId,
@@ -26056,6 +26248,9 @@ class $$WebxdcAppsTableTableManager
                 bundleBytes: bundleBytes,
                 published: published,
                 cachedAt: cachedAt,
+                proOnly: proOnly,
+                sortOrder: sortOrder,
+                oneTime: oneTime,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -26071,6 +26266,9 @@ class $$WebxdcAppsTableTableManager
                 required int bundleBytes,
                 Value<bool> published = const Value.absent(),
                 required int cachedAt,
+                Value<bool> proOnly = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> oneTime = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WebxdcAppsCompanion.insert(
                 appId: appId,
@@ -26084,6 +26282,9 @@ class $$WebxdcAppsTableTableManager
                 bundleBytes: bundleBytes,
                 published: published,
                 cachedAt: cachedAt,
+                proOnly: proOnly,
+                sortOrder: sortOrder,
+                oneTime: oneTime,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

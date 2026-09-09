@@ -330,7 +330,8 @@ impl Group {
         sqlx::query!(
             r#"
             UPDATE groups
-            SET last_message_exchange = MAX(last_message_exchange, ?)
+            SET last_message_exchange = MAX(last_message_exchange, ?),
+                deleted_content = 0
             WHERE group_id = ?
             "#,
             timestamp,

@@ -31,6 +31,9 @@ class WebxdcApps extends Table {
   IntColumn get bundleBytes => integer()();
   BoolColumn get published => boolean().withDefault(const Constant(true))();
   IntColumn get cachedAt => integer()();
+  BoolColumn get proOnly => boolean().withDefault(const Constant(false))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  BoolColumn get oneTime => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {appId, version};

@@ -23,6 +23,7 @@ import 'package:twonly/src/visual/views/contact/select_contact_groups.view.dart'
 import 'package:twonly/src/visual/views/groups/group_create_select_members.view.dart';
 import 'package:twonly/src/visual/views/groups/group_member.context.dart';
 import 'package:twonly/src/visual/views/settings/profile/profile.view.dart';
+import 'package:twonly/src/visual/views/webxdc/webxdc_chat_apps.view.dart';
 
 class GroupView extends StatefulWidget {
   const GroupView(this.groupId, {super.key});
@@ -212,6 +213,13 @@ class _GroupViewState extends State<GroupView> {
           SelectChatDeletionTimeListTitle(
             groupId: widget.groupId,
             disabled: !_group!.isGroupAdmin,
+          ),
+          BetterListTile(
+            icon: FontAwesomeIcons.layerGroup,
+            text: context.lang.webxdcChatAppsMenu,
+            onTap: () => context.navPush(
+              WebxdcChatAppsView(groupId: widget.groupId),
+            ),
           ),
           ContactGroupsSubtitleBuilder(
             groupId: widget.groupId,

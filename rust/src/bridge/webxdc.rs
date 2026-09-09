@@ -23,6 +23,18 @@ pub struct WebxdcStoreApp {
     pub source_code_url: Option<String>,
     pub icon: Option<Vec<u8>>,
     pub bundle_bytes: i64,
+    pub pro_only: bool,
+    pub one_time: bool,
+    /// The existing instance in this chat when a one-time app was already placed.
+    pub instance_id: Option<String>,
+}
+
+pub struct WebxdcOneTimeInstance {
+    pub instance_id: String,
+    pub name: String,
+    pub icon: Option<Vec<u8>>,
+    pub summary: Option<String>,
+    pub document: Option<String>,
 }
 
 pub struct WebxdcInstanceInfo {
@@ -66,12 +78,18 @@ pub async fn refresh_catalog() -> Result<()> {
 /// `languages` is what the UI prefers, most preferred first. Names and
 /// descriptions are cached in every language the catalog carries and picked
 /// here, so which language a user reads is never sent anywhere.
-pub async fn catalog(languages: Vec<String>) -> Result<Vec<WebxdcStoreApp>> {
+pub async fn catalog(group_id: String, languages: Vec<String>) -> Result<Vec<WebxdcStoreApp>> {
     let ctx = crate::context::Context::get_static()?;
     let database = ctx.app_db.read().await.clone();
     let rows = sqlx::query!(
         r#"SELECT app_id AS "app_id!: String", version AS "version!: i64",
                   name AS "name!: String",
+                  pro_only AS "pro_only!: bool",
+                  one_time AS "one_time!: bool",
+                  (SELECT instance_id FROM webxdc_instances
+                   WHERE webxdc_instances.group_id = ?
+                     AND webxdc_instances.app_id = webxdc_apps.app_id
+                   ORDER BY created_at ASC LIMIT 1) AS "instance_id: String",
                   name_translations AS "name_translations!: String",
                   source_code_url AS "source_code_url: String",
                   description AS "description!: String",
@@ -80,11 +98,12 @@ pub async fn catalog(languages: Vec<String>) -> Result<Vec<WebxdcStoreApp>> {
            WHERE published = 1
              AND version = (SELECT MAX(version) FROM webxdc_apps AS newer
                             WHERE newer.app_id = webxdc_apps.app_id AND newer.published = 1)
-           ORDER BY name ASC"#
+           ORDER BY sort_order ASC, name ASC, app_id ASC"#,
+        group_id,
     )
     .fetch_all(&database.pool)
     .await?;
-    let mut apps: Vec<WebxdcStoreApp> = rows
+    let apps: Vec<WebxdcStoreApp> = rows
         .into_iter()
         .map(|row| WebxdcStoreApp {
             app_id: row.app_id,
@@ -103,12 +122,52 @@ pub async fn catalog(languages: Vec<String>) -> Result<Vec<WebxdcStoreApp>> {
             source_code_url: row.source_code_url,
             icon: row.icon,
             bundle_bytes: row.bundle_bytes,
+            pro_only: row.pro_only,
+            one_time: row.one_time,
+            instance_id: row.instance_id,
         })
         .collect();
-    // The query orders by the untranslated name, which is not the order the
-    // list is read in once the names are the reader's.
-    apps.sort_by_key(|app| app.name.to_lowercase());
+    // Keep the server order even when names are localized for the reader.
     Ok(apps)
+}
+
+/// One-time apps already placed into a chat, for the profile shortcut.
+pub async fn one_time_instances(
+    group_id: String,
+    languages: Vec<String>,
+) -> Result<Vec<WebxdcOneTimeInstance>> {
+    let ctx = crate::context::Context::get_static()?;
+    let database = ctx.app_db.read().await.clone();
+    let rows = sqlx::query!(
+        r#"SELECT instance.instance_id AS "instance_id!: String",
+                  app.name AS "name!: String",
+                  app.name_translations AS "name_translations!: String",
+                  app.icon AS "icon: Vec<u8>",
+                  instance.summary AS "summary: String",
+                  instance.document AS "document: String"
+           FROM webxdc_instances AS instance
+           JOIN webxdc_apps AS app
+             ON app.app_id = instance.app_id AND app.version = instance.version
+           WHERE instance.group_id = ? AND app.one_time = 1
+           ORDER BY instance.last_update_at DESC, instance.created_at DESC"#,
+        group_id,
+    )
+    .fetch_all(&database.pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|row| WebxdcOneTimeInstance {
+            instance_id: row.instance_id,
+            name: crate::services::webxdc::store::pick_localized(
+                &row.name_translations,
+                &languages,
+            )
+            .unwrap_or(row.name),
+            icon: row.icon,
+            summary: row.summary,
+            document: row.document,
+        })
+        .collect())
 }
 
 /// Places an app into a chat and returns the id of the message that carries it.
@@ -135,13 +194,20 @@ pub async fn instance(instance_id: String) -> Result<Option<WebxdcInstanceInfo>>
         }))
 }
 
-/// Downloads and verifies the bundle if it is not already on disk, and returns
-/// where it landed. Called when the user starts an app, never on message
+/// Opens cached code, adopting an update only if already downloaded.
+/// Downloads and verifies the pinned bundle only when it is missing. Called when the user starts an app, never on message
 /// arrival: a message must not be able to make a device fetch anything.
 pub async fn prepare_bundle(instance_id: String) -> Result<String> {
     let ctx = crate::context::Context::get_static()?;
     let path = WebxdcService::new(ctx).prepare_bundle(&instance_id).await?;
     Ok(path.display().to_string())
+}
+
+/// Background update check after a webxdc app closes. Downloads only; the
+/// running version changes on a later prepare_bundle call, never mid-session.
+pub async fn cache_update(instance_id: String) -> Result<()> {
+    let ctx = crate::context::Context::get_static()?;
+    WebxdcService::new(ctx).cache_update(&instance_id).await
 }
 
 /// Answers one request the webview made for a file inside the bundle.
@@ -153,7 +219,7 @@ pub async fn serve(instance_id: String, request_path: String) -> Result<WebxdcRe
     let service = WebxdcService::new(ctx);
     // The bundle the instance is pinned to, not whatever the store offers now:
     // every file of one run comes out of the same `.xdc`, and the store was
-    // already consulted when the app started.
+    // never changed by a background update check.
     let path = service.pinned_bundle(&instance_id).await?;
     let init = service.init_script_values(&instance_id).await?;
     let response = bundle::serve(&path, &request_path, &init);
@@ -190,10 +256,11 @@ pub async fn send_update(
     href: Option<String>,
     summary: Option<String>,
     document: Option<String>,
+    notify: Option<String>,
 ) -> Result<()> {
     let ctx = crate::context::Context::get_static()?;
     WebxdcService::new(ctx)
-        .send_update(instance_id, payload, info, href, summary, document)
+        .send_update(instance_id, payload, info, href, summary, document, notify)
         .await
 }
 
@@ -210,4 +277,10 @@ pub fn address_for(instance_id: String, user_id: i64) -> String {
 pub async fn delete_instance(instance_id: String) -> Result<Option<String>> {
     let ctx = crate::context::Context::get_static()?;
     WebxdcService::new(ctx).delete_instance(&instance_id).await
+}
+
+/// Current members of the instance's chat; no account identifiers leave Rust.
+pub async fn members(instance_id: String) -> Result<String> {
+    let ctx = crate::context::Context::get_static()?;
+    WebxdcService::new(ctx).members(&instance_id).await
 }

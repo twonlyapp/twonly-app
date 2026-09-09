@@ -90,8 +90,7 @@ class WebxdcHost {
   /// Gets an app ready to run: makes sure the bundle is on disk and verified,
   /// and returns what the view needs to show it.
   ///
-  /// Rust checks the store for a newer version as part of this, so an app
-  /// updates here and nowhere else. Returns a failure instead when the bundle
+  /// Cached apps open without a network update check. Returns a failure when the bundle
   /// cannot be had at all -- a first start with no network, or an app that was
   /// taken out of the store before this device ever downloaded it.
   /// `languages` is what the reader prefers, most preferred first: the title
@@ -104,8 +103,7 @@ class WebxdcHost {
     if (instance == null) {
       return const WebxdcLaunch.failed('unavailable');
     }
-    // The only place a bundle is ever fetched. A message arriving in a chat
-    // never reaches this.
+    // A first launch may need a download. Existing bundles are read locally.
     final bundlePath = await WebxdcService.prepareBundle(instanceId);
     if (bundlePath == null) {
       return const WebxdcLaunch.failed('unavailable');
@@ -148,6 +146,8 @@ class WebxdcHost {
     _updateSubscription = null;
     _openInstanceId = null;
     _closeView = null;
+    // Closing never waits for the server; downloaded code is used next time.
+    unawaited(WebxdcService.cacheUpdate(instanceId));
   }
 
   static Future<void> _clearOrigin(String origin) async {
@@ -222,6 +222,10 @@ class WebxdcHost {
     final params = (message['params'] as Map<String, dynamic>?) ?? {};
     try {
       switch (message['method']) {
+        case 'getMembers':
+          final members = await rust_webxdc.members(instanceId: instanceId);
+          return jsonEncode({'id': id, 'result': jsonDecode(members)});
+
         case 'sendUpdate':
           // `payload` is re-encoded rather than passed through, so what is
           // stored and sent is JSON this side produced.
@@ -232,6 +236,9 @@ class WebxdcHost {
             href: params['href'] as String?,
             summary: params['summary'] as String?,
             document: params['document'] as String?,
+            notify: params['notify'] == null
+                ? null
+                : jsonEncode(params['notify']),
           );
           return jsonEncode({'id': id, 'result': null});
 

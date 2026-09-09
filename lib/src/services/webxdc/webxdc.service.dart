@@ -46,12 +46,28 @@ class WebxdcService {
   /// cached with all its translations, so choosing one costs nothing and is
   /// never sent anywhere.
   static Future<List<rust_webxdc.WebxdcStoreApp>> catalog(
+    String groupId,
     List<String> languages,
   ) async {
     try {
-      return await rust_webxdc.catalog(languages: languages);
+      return await rust_webxdc.catalog(groupId: groupId, languages: languages);
     } catch (error) {
       Log.warn('reading the webxdc catalog failed: $error');
+      return [];
+    }
+  }
+
+  static Future<List<rust_webxdc.WebxdcOneTimeInstance>> oneTimeInstances(
+    String groupId,
+    List<String> languages,
+  ) async {
+    try {
+      return await rust_webxdc.oneTimeInstances(
+        groupId: groupId,
+        languages: languages,
+      );
+    } catch (error) {
+      Log.warn('reading one-time webxdc apps for $groupId failed: $error');
       return [];
     }
   }
@@ -77,16 +93,28 @@ class WebxdcService {
 
   /// Gets the bundle an instance runs onto disk, verified.
   ///
-  /// Rust checks the store for a newer version first and moves the instance to
-  /// it if there is one, so an app updates between two runs and never during
-  /// one. Called when the user starts an app and never on message arrival: a
-  /// message must not be able to make a device fetch anything.
+  /// Opens cached code without a network update check. Only a bundle that
+  /// has not been downloaded yet needs the server.
   static Future<String?> prepareBundle(String instanceId) async {
     try {
       return await rust_webxdc.prepareBundle(instanceId: instanceId);
     } catch (error) {
       Log.warn('preparing the bundle for $instanceId failed: $error');
       return null;
+    }
+  }
+
+  static final Set<String> _updatingInstances = {};
+
+  /// Best effort after closing. A failed check leaves the existing code usable.
+  static Future<void> cacheUpdate(String instanceId) async {
+    if (!_updatingInstances.add(instanceId)) return;
+    try {
+      await rust_webxdc.cacheUpdate(instanceId: instanceId);
+    } catch (error) {
+      Log.warn('checking for a webxdc update after closing failed: $error');
+    } finally {
+      _updatingInstances.remove(instanceId);
     }
   }
 
@@ -126,6 +154,7 @@ class WebxdcService {
     String? href,
     String? summary,
     String? document,
+    String? notify,
   }) => rust_webxdc.sendUpdate(
     instanceId: instanceId,
     payload: payload,
@@ -133,6 +162,7 @@ class WebxdcService {
     href: href,
     summary: summary,
     document: document,
+    notify: notify,
   );
 
   /// Removes an instance, its whole update log, and the web storage its origin

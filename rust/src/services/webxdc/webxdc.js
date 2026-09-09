@@ -97,6 +97,10 @@
     sendUpdateInterval: init.sendUpdateInterval,
     sendUpdateMaxSize: init.sendUpdateMaxSize,
 
+    getMembers: function () {
+      return call('getMembers');
+    },
+
     sendUpdate: function (update, descr) {
       return call('sendUpdate', {
         payload: update.payload === undefined ? null : update.payload,

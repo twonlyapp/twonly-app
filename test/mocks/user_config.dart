@@ -44,6 +44,7 @@ UserConfig testUserConfig({
   currentSignedPreKeyIndexStart: 100000,
   hideChangeLog: true,
   hideMemoriesBackupPromo: false,
+  hideWidgetShareExplainer: false,
   updateFcmToken: true,
   canUseLoginTokenForAuth: true,
   isBackupEnabled: false,

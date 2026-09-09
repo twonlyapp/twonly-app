@@ -641,8 +641,34 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
   }
 
-  Future<void> deleteMessagesByGroupId(String groupId) {
-    return (delete(messages)..where((t) => t.groupId.equals(groupId))).go();
+  Future<void> deleteMessagesByGroupId(String groupId) async {
+    await transaction(() async {
+      // A one-time app is the chat's durable shared object. Keep its card (and
+      // therefore its instance and update log) while removing the visible chat
+      // history and every ordinary app.
+      await customStatement(
+        '''
+           DELETE FROM messages
+           WHERE group_id = ?
+             AND NOT EXISTS (
+               SELECT 1
+               FROM webxdc_instances AS instance
+               LEFT JOIN webxdc_apps AS app
+                 ON app.app_id = instance.app_id
+                AND app.version = instance.version
+               WHERE instance.instance_id = messages.message_id
+                 AND (app.one_time = 1 OR app.app_id IS NULL)
+             )''',
+        [groupId],
+      );
+      await customStatement(
+        '''
+           UPDATE groups
+           SET deleted_content = 1, archived = 0, pinned = 0, draft_message = NULL
+           WHERE group_id = ?''',
+        [groupId],
+      );
+    });
   }
 
   SingleOrNullSelectable<Message> getMessageById(String messageId) {

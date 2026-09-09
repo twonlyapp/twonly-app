@@ -2,11 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:twonly/core/bridge/webxdc.dart' as rust_webxdc;
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/providers/purchases.provider.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/pro_badge.element.dart';
 
 /// The in-app store.
 ///
@@ -44,11 +50,13 @@ class _WebxdcStoreViewState extends State<WebxdcStoreView> {
     // The cached listing is shown first so the sheet is never empty while the
     // refresh is in flight.
     final languages = [language];
-    final cached = await WebxdcService.catalog(languages);
+    final cached = await WebxdcService.catalog(widget.group.groupId, languages);
     if (mounted) setState(() => _apps = cached);
 
     final refreshed = await WebxdcService.refreshCatalog();
-    final apps = refreshed ? await WebxdcService.catalog(languages) : cached;
+    final apps = refreshed
+        ? await WebxdcService.catalog(widget.group.groupId, languages)
+        : cached;
     if (!mounted) return;
     setState(() {
       _apps = apps;
@@ -57,6 +65,10 @@ class _WebxdcStoreViewState extends State<WebxdcStoreView> {
   }
 
   Future<void> _place(rust_webxdc.WebxdcStoreApp app) async {
+    if (app.proOnly && !isPayingUser(context.read<PurchasesProvider>().plan)) {
+      await context.push(Routes.settingsSubscription);
+      return;
+    }
     setState(() => _placing = app.appId);
     final instanceId = await WebxdcService.createInstance(
       widget.group.groupId,
@@ -140,44 +152,70 @@ class _WebxdcStoreViewState extends State<WebxdcStoreView> {
       );
     }
 
-    return ListView.builder(
-      controller: controller,
-      itemCount: apps.length,
-      itemBuilder: (context, index) {
-        final app = apps[index];
-        final icon = app.icon;
-        // What the app says about itself, in the reader's language, as the
-        // store published it. Plain text, bounded and stripped of control
-        // characters before it was ever accepted for publishing.
-        final subtitle = userService.currentUser.isDeveloper
-            ? ['v${app.version}', ?app.description].join(' · ')
-            : app.description;
+    final available = apps
+        .where((app) => !app.oneTime || app.instanceId == null)
+        .toList();
+    final alreadyAdded = apps
+        .where((app) => app.oneTime && app.instanceId != null)
+        .toList();
 
-        return ListTile(
-          leading: SizedBox(
-            width: 40,
-            height: 40,
-            child: icon == null
-                ? const FaIcon(FontAwesomeIcons.puzzlePiece)
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.memory(icon, fit: BoxFit.cover),
-                  ),
+    return ListView(
+      controller: controller,
+      children: [
+        ...available.map(_appTile),
+        if (alreadyAdded.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+            child: Text(
+              context.lang.webxdcStoreAlreadyAdded,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: context.color.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-          title: Text(app.name),
-          subtitle: subtitle == null
-              ? null
-              : Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-          trailing: _placing == app.appId
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : null,
-          onTap: _placing == null ? () => _place(app) : null,
-        );
-      },
+          ...alreadyAdded.map(
+            (app) =>
+                Opacity(opacity: 0.45, child: _appTile(app, disabled: true)),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _appTile(
+    rust_webxdc.WebxdcStoreApp app, {
+    bool disabled = false,
+  }) {
+    final icon = app.icon;
+    final subtitle = userService.currentUser.isDeveloper
+        ? ['v${app.version}', ?app.description].join(' · ')
+        : app.description;
+    return ListTile(
+      leading: SizedBox(
+        width: 40,
+        height: 40,
+        child: icon == null
+            ? const FaIcon(FontAwesomeIcons.puzzlePiece)
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(icon, fit: BoxFit.cover),
+              ),
+      ),
+      title: Text(app.name),
+      subtitle: subtitle == null
+          ? null
+          : Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+      trailing: _placing == app.appId
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : app.proOnly
+          ? const ProBadge()
+          : null,
+      onTap: !disabled && _placing == null ? () => _place(app) : null,
     );
   }
 }

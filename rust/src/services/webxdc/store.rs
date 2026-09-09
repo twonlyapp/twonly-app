@@ -134,7 +134,8 @@ impl WebxdcStore {
             .execute(&mut *transaction)
             .await?;
         let now = chrono::Utc::now().timestamp();
-        for entry in &catalog.entries {
+        for (position, entry) in catalog.entries.iter().enumerate() {
+            let sort_order = position as i64;
             if !Self::entry_is_sane(entry) {
                 tracing::warn!(app_id = entry.app_id, "skipping unusable catalog entry");
                 continue;
@@ -151,8 +152,8 @@ impl WebxdcStore {
                 r#"INSERT INTO webxdc_apps
                        (app_id, version, name, name_translations, source_code_url,
                         description, icon, bundle_sha256, bundle_bytes, published,
-                        cached_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+                        cached_at, pro_only, sort_order, one_time)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)
                    ON CONFLICT(app_id, version) DO UPDATE SET
                        name = excluded.name,
                        name_translations = excluded.name_translations,
@@ -162,6 +163,9 @@ impl WebxdcStore {
                        bundle_sha256 = excluded.bundle_sha256,
                        bundle_bytes = excluded.bundle_bytes,
                        published = 1,
+                       pro_only = excluded.pro_only,
+                       sort_order = excluded.sort_order,
+                       one_time = excluded.one_time,
                        cached_at = excluded.cached_at"#,
                 entry.app_id,
                 entry.version,
@@ -173,6 +177,9 @@ impl WebxdcStore {
                 entry.bundle_sha256,
                 entry.bundle_bytes,
                 now,
+                entry.pro_only,
+                sort_order,
+                entry.one_time,
             )
             .execute(&mut *transaction)
             .await?;

@@ -15,6 +15,7 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/elements/pro_badge.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/settings/backup/backup_utils.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/recovery_card.comp.dart';
@@ -206,39 +207,12 @@ class _BackupViewState extends State<BackupView> {
                                     : '-')),
                   ),
                   trailing: isFreePlan
-                      ? Row(
+                      ? const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.amber.shade700,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Row(
-                                children: [
-                                  const FaIcon(
-                                    FontAwesomeIcons.star,
-                                    size: 10,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    context.lang.backupCloudProBadge,
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Switch(
+                            ProBadge(),
+                            SizedBox(width: 8),
+                            Switch(
                               value: false,
                               onChanged: null,
                             ),

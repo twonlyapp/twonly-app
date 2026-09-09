@@ -98,6 +98,12 @@ abstract class AppLocalizations {
     Locale('en'),
   ];
 
+  /// No description provided for @subscriptionAllApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Access to all apps'**
+  String get subscriptionAllApps;
+
   /// No description provided for @registerSlogan.
   ///
   /// In en, this message translates to:
@@ -4735,6 +4741,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The app could not be added to this chat.'**
   String get webxdcStoreFailed;
+
+  /// No description provided for @webxdcStoreAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Already added to this chat'**
+  String get webxdcStoreAlreadyAdded;
+
+  /// No description provided for @webxdcChatAppsMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat apps'**
+  String get webxdcChatAppsMenu;
+
+  /// No description provided for @webxdcChatAppsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat apps'**
+  String get webxdcChatAppsTitle;
+
+  /// No description provided for @webxdcChatAppsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No one-time apps have been added to this chat yet.'**
+  String get webxdcChatAppsEmpty;
 
   /// No description provided for @webxdcUnavailable.
   ///
