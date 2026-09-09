@@ -277,17 +277,20 @@ impl ApiClient {
             if let Some(contact_id) = contact_id {
                 let context = self.context.upgrade().ok_or(TwonlyError::Initialization)?;
                 let database = context.app_db.read().await.clone();
-                let mut transaction = database.pool.begin().await?;
+                // Only the mark, never the queue. `account_deleted` is a latch
+                // any contact-scoped request can set, and this one may have
+                // been about something else entirely -- or the peer may since
+                // have re-registered. `send_queued_receipt` asks the server
+                // again before it believes the latch, and drops only what the
+                // server positively denies, so emptying the outbox here threw
+                // away the very messages that path exists to save: unsent,
+                // unacknowledged and unlogged.
                 sqlx::query!(
                     "UPDATE contacts SET account_deleted = 1 WHERE user_id = ?",
                     contact_id
                 )
-                .execute(&mut *transaction)
+                .execute(&database.pool)
                 .await?;
-                sqlx::query!("DELETE FROM receipts WHERE contact_id = ?", contact_id)
-                    .execute(&mut *transaction)
-                    .await?;
-                transaction.commit().await?;
             }
         }
         Ok(())

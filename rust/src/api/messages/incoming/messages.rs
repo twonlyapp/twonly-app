@@ -26,6 +26,39 @@ use std::sync::LazyLock;
 static ALREADY_QUEUED_RECEIPTS: LazyLock<Mutex<HashMap<String, std::time::Instant>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
+/// How long a receipt the server has already taken is kept out of the queue.
+#[cfg(not(debug_assertions))]
+const RESEND_SUPPRESSION: std::time::Duration = std::time::Duration::from_secs(120);
+
+/// Whether the server accepted this receipt inside the suppression window.
+///
+/// Every inbound message marks a peer's whole outbox for retry, so a chat busy
+/// enough to keep flushing would otherwise re-send the same envelope on every
+/// message that arrives.
+#[cfg(not(debug_assertions))]
+fn recently_sent(receipt_id: &str) -> bool {
+    let mut sent = ALREADY_QUEUED_RECEIPTS
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner);
+    sent.retain(|_, time| time.elapsed() < RESEND_SUPPRESSION);
+    sent.contains_key(receipt_id)
+}
+
+/// Starts the suppression window, once the server has actually taken the
+/// envelope.
+///
+/// Recorded on success rather than on the attempt: a send that fails has not
+/// reached anyone, and locking it out for two minutes turned a transient
+/// failure -- one dropped socket, one timed-out request -- into an outbox that
+/// stayed stuck long after the connection came back.
+#[cfg(not(debug_assertions))]
+fn note_sent(receipt_id: &str) {
+    ALREADY_QUEUED_RECEIPTS
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .insert(receipt_id.to_owned(), std::time::Instant::now());
+}
+
 /// Coalesces overlapping flushes of one account's receipt queue.
 ///
 /// Every committed inbound message asks for a flush, and a flush scans the
@@ -502,18 +535,11 @@ pub(crate) async fn prepare_queued_receipt(
 
 pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) -> Result<()> {
     #[cfg(not(debug_assertions))]
-    {
-        let mut locks = ALREADY_QUEUED_RECEIPTS.lock().unwrap();
-        if let Some(time) = locks.get(receipt_id) {
-            if time.elapsed() < std::time::Duration::from_secs(120) {
-                tracing::info!(
-                    "Blocking queued receipt, as it was already sent within the last 120 seconds"
-                );
-                return Ok(());
-            }
-        }
-        locks.insert(receipt_id.to_owned(), std::time::Instant::now());
-        locks.retain(|_, time| time.elapsed() < std::time::Duration::from_secs(120));
+    if recently_sent(receipt_id) {
+        tracing::info!(
+            "Blocking queued receipt, as it was already sent within the last 120 seconds"
+        );
+        return Ok(());
     }
 
     let app_db = ctx.app_db.read().await.clone();
@@ -598,6 +624,9 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
             )));
         }
     }
+
+    #[cfg(not(debug_assertions))]
+    note_sent(receipt_id);
 
     let mut t = app_db.pool.begin().await?;
     if let Some(message_id) = receipt.message_id {

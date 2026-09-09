@@ -160,6 +160,27 @@ impl ApiClient {
                 if let Err(error) = crate::api::Server::request_pending_messages(&context).await {
                     tracing::warn!("mailbox catch-up request failed: {error}");
                 }
+
+                // The outbox needs the same safety net as the mailbox. Every
+                // other flush is tied to an event -- authenticating, a message
+                // arriving, a background job -- so on a connection that stays
+                // up while nothing comes in, a send that failed once had
+                // nothing left to retry it. A one-way conversation is exactly
+                // the case with no inbound message to trigger the sweep.
+                //
+                // Not in a notification worker: its whole budget belongs to the
+                // alert, and it must not spend the one app-database connection
+                // on the outbox while a drain is waiting for it.
+                if !context.is_notification_runtime() {
+                    if let Err(error) =
+                        crate::api::messages::incoming::messages::retransmit_queued_receipts(
+                            &context,
+                        )
+                        .await
+                    {
+                        tracing::warn!("outbox catch-up flush failed: {error}");
+                    }
+                }
             }
         });
     }
