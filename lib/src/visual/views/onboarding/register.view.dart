@@ -56,7 +56,7 @@ class _RegisterViewState extends State<RegisterView> {
     _registrationDisabled = widget.proofOfWork.$2;
   }
 
-  Future<void> createNewUser() async {
+  Future<void> createNewUser({bool retryInvalidProofOfWork = true}) async {
     if (!_isValidUserName) {
       setState(() {
         _usernameErrorText = context.lang.registerUsernameLimits;
@@ -86,7 +86,7 @@ class _RegisterViewState extends State<RegisterView> {
             _registrationDisabled = registrationDisabled;
             _isTryingToRegister = false;
           });
-          if (mounted) {
+          if (mounted && !registrationDisabled) {
             showNetworkIssue(context);
           }
           return;
@@ -136,6 +136,13 @@ class _RegisterViewState extends State<RegisterView> {
         }
         if (res.error == ErrorCode.InvalidProofOfWork) {
           await deleteLocalUserData();
+          if (retryInvalidProofOfWork) {
+            Log.warn(
+              'Proof of work was invalid. Requesting a new challenge and '
+              'retrying registration.',
+            );
+            return await createNewUser(retryInvalidProofOfWork: false);
+          }
           setState(() {
             _showProofOfWorkError = true;
             _isTryingToRegister = false;
