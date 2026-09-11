@@ -54,7 +54,11 @@ fn is_dead_transport(error: &SendError) -> bool {
 }
 
 impl ApiClient {
-    pub(crate) async fn handle_incoming(self: &Arc<Self>, bytes: &[u8]) {
+    pub(crate) async fn handle_incoming(
+        self: &Arc<Self>,
+        connection: &Arc<stream_tungstenite::WebSocketClient>,
+        bytes: &[u8],
+    ) {
         let Ok(message) = server_to_client::ServerToClient::decode(bytes) else {
             return;
         };
@@ -68,6 +72,12 @@ impl ApiClient {
                     }
                 } else {
                     let client = self.clone();
+                    // A response belongs to the WebSocket which delivered the
+                    // request. Sequence IDs are scoped to a server session and
+                    // restart when a replacement connection is authenticated,
+                    // so forwarding this response through `client.send()`
+                    // could satisfy an unrelated request on the new session.
+                    let response_connection = connection.clone();
                     let Some(ctx) = self.context.upgrade() else {
                         tracing::warn!("context was dropped before handling a server message");
                         return;
@@ -85,10 +95,28 @@ impl ApiClient {
                                         },
                                     )),
                                 };
-                                if let Err(error) =
-                                    client.send(acknowledgement.encode_to_vec()).await
-                                {
-                                    tracing::warn!("failed to acknowledge server message: {error}");
+                                if !client.is_current_connection(&response_connection).await {
+                                    tracing::debug!(
+                                        sequence = v0.seq,
+                                        "discarding response for a replaced WebSocket session"
+                                    );
+                                    return;
+                                }
+
+                                let message = stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(
+                                    acknowledgement.encode_to_vec().into(),
+                                );
+                                if let Err(error) = response_connection.send_async(message).await {
+                                    if is_dead_transport(&error) {
+                                        client.schedule_reconnect(
+                                            &response_connection,
+                                            "server acknowledgement send failed",
+                                        );
+                                    }
+                                    tracing::warn!(
+                                        sequence = v0.seq,
+                                        "failed to acknowledge server message: {error}"
+                                    );
                                 }
                             }
                             Err(error) => {

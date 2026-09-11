@@ -293,7 +293,7 @@ impl ApiClient {
     /// A replaced socket can emit its final disconnect/shutdown events after
     /// the new socket has started. Those events must not overwrite the new
     /// connection's state or schedule another reconnect.
-    async fn is_current_connection(&self, connection: &Arc<WebSocketClient>) -> bool {
+    pub(super) async fn is_current_connection(&self, connection: &Arc<WebSocketClient>) -> bool {
         self.ws_client
             .lock()
             .await
@@ -421,7 +421,7 @@ impl ApiClient {
                                 }
                                 // Tungstenite message
                                 if let stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(bytes) = &*msg {
-                                    self_clone.handle_incoming(bytes).await;
+                                    self_clone.handle_incoming(&connection, bytes).await;
                                 }
                             }
                             Err(_) => break,
