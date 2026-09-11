@@ -321,6 +321,26 @@ impl BackupArchive {
         )
         .await?;
         rust_database.run_migrations().await?;
+
+        // A backup is a snapshot of a Double Ratchet at an earlier point in
+        // time. Once either peer has advanced past that snapshot, restoring
+        // its session record cannot make it current again and can make both
+        // sides keep encrypting against incompatible states. Start with no
+        // peer sessions instead. The regular V2 send path establishes them
+        // lazily from a current prekey bundle, while an old inbound ciphertext
+        // is answered by the existing SESSION_RESET_REQUIRED recovery flow.
+        //
+        // Reset throttles describe the discarded sessions, so retaining them
+        // could suppress the first legitimate repair after recovery.
+        let mut signal_transaction = rust_database.pool.begin().await?;
+        sqlx::query!("DELETE FROM signal_sessions")
+            .execute(&mut *signal_transaction)
+            .await?;
+        sqlx::query!("DELETE FROM signal_session_resets")
+            .execute(&mut *signal_transaction)
+            .await?;
+        signal_transaction.commit().await?;
+
         ctx.replace_rust_database(rust_database, &key_manager)
             .await?;
 
@@ -331,10 +351,10 @@ impl BackupArchive {
         // marks makes the next `on_connected` publish a signed prekey and a
         // fresh batch of PQC prekeys that this database actually holds.
         //
-        // Sessions restored alongside them are left as they are: they are only
-        // broken for peers who ratcheted past this archive, and the first
-        // message that fails to decrypt resets that peer's session on its own.
-        // See `signal::reset`.
+        // Peer sessions were discarded above. They are rebuilt lazily from
+        // current bundles, avoiding use of ratchet state rewound by the
+        // archive. See `signal::reset` for recovery of messages already in
+        // flight when the backup was restored.
         if let Err(error) = crate::user_config::UserConfig::update(ctx, |config| {
             config.signal_last_signed_pre_key_updated = None;
             config.signal_last_pqc_pre_keys_uploaded = None;
@@ -457,6 +477,37 @@ mod tests {
             .await
             .unwrap();
         }
+        {
+            let rust_db = ctx.rust_db.read().await.clone();
+            sqlx::query!(
+                r#"
+                INSERT INTO signal_identities(name, identity_key, timestamp)
+                VALUES('restored-peer', x'040506', 1)
+                "#
+            )
+            .execute(&rust_db.pool)
+            .await
+            .unwrap();
+            sqlx::query!(
+                r#"
+                INSERT INTO signal_sessions(name, device_id, record_bytes)
+                VALUES('restored-peer', 1, x'010203')
+                "#
+            )
+            .execute(&rust_db.pool)
+            .await
+            .unwrap();
+            sqlx::query!(
+                r#"
+                INSERT INTO signal_session_resets(
+                    name, device_id, last_reset_at, window_started_at, resets_in_window
+                ) VALUES('restored-peer', 1, 1, 1, 1)
+                "#
+            )
+            .execute(&rust_db.pool)
+            .await
+            .unwrap();
+        }
 
         // 2. Create backup
         let backup_path = BackupArchive::create_backup(&ctx).await.unwrap();
@@ -510,6 +561,37 @@ mod tests {
             .await
             .unwrap();
             assert_eq!(username, "original contact");
+
+            let rust_db = ctx.rust_db.read().await.clone();
+            let session_count =
+                sqlx::query_scalar!(r#"SELECT COUNT(*) AS "count!: i64" FROM signal_sessions"#)
+                    .fetch_one(&rust_db.pool)
+                    .await
+                    .unwrap();
+            assert_eq!(session_count, 0, "restored peer sessions must be discarded");
+
+            let reset_count = sqlx::query_scalar!(
+                r#"SELECT COUNT(*) AS "count!: i64" FROM signal_session_resets"#
+            )
+            .fetch_one(&rust_db.pool)
+            .await
+            .unwrap();
+            assert_eq!(
+                reset_count, 0,
+                "reset throttles for discarded sessions must be cleared"
+            );
+
+            let identity_key = sqlx::query_scalar!(
+                "SELECT identity_key FROM signal_identities WHERE name = 'restored-peer'"
+            )
+            .fetch_one(&rust_db.pool)
+            .await
+            .unwrap();
+            assert_eq!(
+                identity_key,
+                vec![4, 5, 6],
+                "a contact's trusted identity key must survive archive recovery"
+            );
         }
     }
 

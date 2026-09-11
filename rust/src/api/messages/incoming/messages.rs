@@ -782,7 +782,7 @@ pub(crate) async fn queue_decryption_error(
     .encode_to_vec();
     NewReceipt::new(receipt_id, from_user_id, &response)
         .contact_will_send_receipt(false)
-        .insert_or_replace(tr)
+        .insert_if_absent(tr)
         .await?;
     Ok(())
 }
@@ -919,5 +919,57 @@ mod tests {
 
         let _held = FlushGuard::claim(&first).expect("nothing else holds the claim");
         assert!(FlushGuard::claim(&second).is_some());
+    }
+
+    #[tokio::test]
+    async fn a_duplicate_decryption_failure_cannot_downgrade_a_queued_session_reset() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("app.sqlite");
+        let database = crate::database::app::AppDatabase::new(path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        database.run_migrations().await.unwrap();
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice')")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+
+        let mut transaction = database.pool.begin().await.unwrap();
+        queue_decryption_error(
+            &mut transaction,
+            7,
+            "failed-receipt",
+            proto::plaintext_content::decryption_error_message::Type::SessionResetRequired as i32,
+        )
+        .await
+        .unwrap();
+        // A redelivery reaches the reset limiter while the first response is
+        // still queued and falls back to Unknown. It must leave the stronger
+        // response untouched.
+        queue_decryption_error(
+            &mut transaction,
+            7,
+            "failed-receipt",
+            proto::plaintext_content::decryption_error_message::Type::Unknown as i32,
+        )
+        .await
+        .unwrap();
+        transaction.commit().await.unwrap();
+
+        let bytes = sqlx::query_scalar::<_, Vec<u8>>(
+            "SELECT message FROM receipts WHERE receipt_id = 'failed-receipt'",
+        )
+        .fetch_one(&database.pool)
+        .await
+        .unwrap();
+        let message = proto::Message::decode(bytes.as_slice()).unwrap();
+        let error = message
+            .plaintext_content
+            .and_then(|content| content.decryption_error_message)
+            .expect("the queued response is a decryption error");
+        assert_eq!(
+            error.r#type,
+            proto::plaintext_content::decryption_error_message::Type::SessionResetRequired as i32
+        );
     }
 }

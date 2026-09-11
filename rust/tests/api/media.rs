@@ -78,7 +78,11 @@ async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
         .join("mediafiles/tmp")
         .join(format!("{local_media_id}.webp"));
     std::fs::create_dir_all(plaintext_path.parent().expect("tmp directory"))?;
-    std::fs::write(&plaintext_path, b"plaintext media bytes")?;
+    let source = image::RgbImage::from_pixel(8, 6, image::Rgb([12, 34, 56]));
+    let plaintext = webp::Encoder::from_rgb(source.as_raw(), source.width(), source.height())
+        .encode_simple(false, 80.0)
+        .map_err(|error| anyhow::anyhow!("could not encode media fixture: {error:?}"))?;
+    std::fs::write(&plaintext_path, plaintext.as_ref())?;
 
     let media_content = proto::EncryptedContent {
         group_id: Some(group_id.clone()),

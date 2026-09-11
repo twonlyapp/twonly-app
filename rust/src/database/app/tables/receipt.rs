@@ -248,11 +248,15 @@ impl<'a> NewReceipt<'a> {
         Ok(())
     }
 
-    pub async fn insert_or_replace(&self, transaction: &mut Transaction<'_, Sqlite>) -> Result<()> {
+    /// Queues a response only while no response for this inbound receipt is in
+    /// flight. A redelivery can race the sender task, but it must not replace
+    /// the response that task is about to send.
+    pub async fn insert_if_absent(&self, transaction: &mut Transaction<'_, Sqlite>) -> Result<()> {
         sqlx::query!(
             r#"
-            INSERT OR REPLACE INTO receipts(receipt_id, contact_id, message, contact_will_sends_receipt, wake_receiver)
+            INSERT INTO receipts(receipt_id, contact_id, message, contact_will_sends_receipt, wake_receiver)
             VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(receipt_id) DO NOTHING
             "#,
             self.receipt_id,
             self.contact_id,

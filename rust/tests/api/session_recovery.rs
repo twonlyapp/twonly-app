@@ -71,6 +71,70 @@ async fn test_signal_session_auto_recovery_on_missing_session() -> anyhow::Resul
     Ok(())
 }
 
+/// Archive recovery deliberately discards the receiver's restored sessions.
+/// A sender may still have its pre-recovery half and send one stale ciphertext;
+/// the receiver must request a reset and receive the re-encrypted message over
+/// the fresh prekey session without user intervention.
+#[tokio::test]
+async fn test_signal_session_recovers_after_receiver_sessions_are_purged() -> anyhow::Result<()> {
+    init_tracing();
+    let tester_a = create_authenticated_tester().await?;
+    let tester_b = create_authenticated_tester().await?;
+
+    ContactService::new(&tester_a.context)
+        .request_by_username(tester_b.username.clone(), true)
+        .await?;
+    tester_b
+        .wait_for_contact_state(tester_a.user_id, false, true)
+        .await?;
+    ContactService::new(&tester_b.context)
+        .accept_request(tester_a.user_id, true)
+        .await?;
+    tester_a
+        .wait_for_contact_state(tester_b.user_id, true, false)
+        .await?;
+
+    let group_id = Group::direct_chat_id(tester_a.user_id, tester_b.user_id);
+    let initial_id = MessageService::new(&tester_a.context)
+        .insert_and_send_text(group_id.clone(), "Before session purge".into(), None, None)
+        .await?;
+    tester_b
+        .wait_for_text_message(&initial_id, tester_a.user_id, "Before session purge")
+        .await?;
+
+    // This is the Signal-state result of restoring an archive: B retains its
+    // identity and prekeys, but no peer session survives.
+    let rust_db_b = tester_b.context.rust_db.read().await.clone();
+    sqlx::query!("DELETE FROM signal_sessions")
+        .execute(&rust_db_b.pool)
+        .await?;
+    sqlx::query!("DELETE FROM signal_session_resets")
+        .execute(&rust_db_b.pool)
+        .await?;
+
+    // A still encrypts with the old half. B reports that it cannot use that
+    // session, A rebuilds from B's current bundle, and the queued plaintext is
+    // re-encrypted and delivered over a PreKey message.
+    let recovered_id = MessageService::new(&tester_a.context)
+        .insert_and_send_text(group_id.clone(), "After session purge".into(), None, None)
+        .await?;
+    tester_b
+        .wait_for_text_message(&recovered_id, tester_a.user_id, "After session purge")
+        .await?;
+
+    // The newly established session works in the restored user's direction as
+    // well, proving that the repair converged rather than only delivering the
+    // retried message.
+    let reply_id = MessageService::new(&tester_b.context)
+        .insert_and_send_text(group_id, "Reply after session purge".into(), None, None)
+        .await?;
+    tester_a
+        .wait_for_text_message(&reply_id, tester_b.user_id, "Reply after session purge")
+        .await?;
+
+    Ok(())
+}
+
 /// A restored backup rewinds one side's ratchet behind the peer's, so nothing
 /// the peer sends afterwards decrypts and resending it never helps. The
 /// receiver has to retire its session, the sender has to build a new one from
