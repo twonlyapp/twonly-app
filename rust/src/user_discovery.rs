@@ -18,6 +18,7 @@ use tokio::sync::{Mutex, RwLock};
 use crate::database::signal::Database;
 use crate::keys::KeyManager;
 use crate::error::{Result, TwonlyError};
+use crate::user_config::MIN_USER_DISCOVERY_THRESHOLD;
 use crate::user_discovery::user_discovery_message::{UserDiscoveryAnnouncement, UserDiscoveryPromotion};
 use crate::user_discovery::user_discovery_message::user_discovery_promotion::AnnouncementShareDecrypted;
 use crate::user_discovery::user_discovery_message::user_discovery_promotion::announcement_share_decrypted::SignedData;
@@ -25,6 +26,10 @@ use crate::user_discovery::user_discovery_message::user_discovery_promotion::ann
 /// Type of the user id, this must be consistent with the user id defined in
 /// the types.proto
 pub type UserID = i64;
+
+fn is_supported_threshold(threshold: u32) -> bool {
+    (u32::from(MIN_USER_DISCOVERY_THRESHOLD)..=u32::from(u8::MAX)).contains(&threshold)
+}
 
 include!(concat!(env!("OUT_DIR"), "/user_discovery.rs"));
 
@@ -263,6 +268,11 @@ impl UserDiscovery {
         share_promotion: bool,
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<()> {
+        if threshold < MIN_USER_DISCOVERY_THRESHOLD {
+            return Err(TwonlyError::UserDiscoveryStore(format!(
+                "user discovery threshold must be at least {MIN_USER_DISCOVERY_THRESHOLD}"
+            )));
+        }
         tracing::info!("Protocols: initialize_or_update started, getting config from store");
         let config = match self.read_config() {
             Ok(config) => {
@@ -683,6 +693,16 @@ impl UserDiscovery {
     ) -> Result<()> {
         tracing::info!("Got a user discovery announcement from {contact_id}.");
 
+        if !is_supported_threshold(uda.threshold) {
+            tracing::warn!(
+                "Ignoring user-discovery announcement with unsupported threshold {} (expected {}..={}).",
+                uda.threshold,
+                MIN_USER_DISCOVERY_THRESHOLD,
+                u8::MAX
+            );
+            return Ok(());
+        }
+
         if uda.threshold as usize != uda.verification_shares.len() + 1 {
             tracing::warn!(
                 "UDA contains to few shares to verify: {} != {} + 1.",
@@ -834,6 +854,16 @@ impl UserDiscovery {
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<()> {
         tracing::debug!("Received a new UDP with public_id = {}.", &udp.public_id);
+
+        if !is_supported_threshold(udp.threshold) {
+            tracing::warn!(
+                "Ignoring user-discovery promotion with unsupported threshold {} (expected {}..={}).",
+                udp.threshold,
+                MIN_USER_DISCOVERY_THRESHOLD,
+                u8::MAX
+            );
+            return Ok(());
+        }
 
         if udp.announcement_share.is_empty() {
             tracing::info!("Got empty announcement share. Ignoring it..");
@@ -1101,7 +1131,7 @@ impl UserDiscovery {
 impl Default for UserDiscoveryConfig {
     fn default() -> Self {
         Self {
-            threshold: 2,
+            threshold: MIN_USER_DISCOVERY_THRESHOLD,
             total_number_of_shares: 255,
             announcement_version: 0,
             promotion_version: 0,
@@ -1110,5 +1140,22 @@ impl Default for UserDiscoveryConfig {
             share_promotion: true,
             user_id: 0,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{is_supported_threshold, MIN_USER_DISCOVERY_THRESHOLD};
+
+    #[test]
+    fn only_accepts_supported_discovery_thresholds() {
+        assert!(!is_supported_threshold(u32::from(
+            MIN_USER_DISCOVERY_THRESHOLD - 1
+        )));
+        assert!(is_supported_threshold(u32::from(
+            MIN_USER_DISCOVERY_THRESHOLD
+        )));
+        assert!(is_supported_threshold(u32::from(u8::MAX)));
+        assert!(!is_supported_threshold(u32::from(u8::MAX) + 1));
     }
 }

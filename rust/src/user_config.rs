@@ -12,6 +12,8 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::sync::{OnceLock, RwLock};
 
+pub(crate) const MIN_USER_DISCOVERY_THRESHOLD: u8 = 3;
+
 mod defaults {
     pub fn true_value() -> bool {
         true
@@ -30,7 +32,7 @@ mod defaults {
     }
 
     pub fn user_discovery_threshold() -> u8 {
-        3
+        super::MIN_USER_DISCOVERY_THRESHOLD
     }
 
     pub fn passwordless_threshold() -> i64 {
@@ -355,6 +357,12 @@ pub struct UserConfig {
 }
 
 impl UserConfig {
+    fn normalize(&mut self) {
+        self.user_discovery_threshold = self
+            .user_discovery_threshold
+            .max(MIN_USER_DISCOVERY_THRESHOLD);
+    }
+
     fn path(context: &Context) -> PathBuf {
         PathBuf::from(&context.config.data_dir)
             .join("keyvalue")
@@ -378,12 +386,14 @@ impl UserConfig {
             return Ok(None);
         }
         let file = File::open(&path)?;
-        serde_json::from_reader(file).map(Some).map_err(|error| {
+        let mut config: Self = serde_json::from_reader(file).map_err(|error| {
             TwonlyError::Generic(format!(
                 "invalid user configuration {}: {error}",
                 path.display()
             ))
-        })
+        })?;
+        config.normalize();
+        Ok(Some(config))
     }
 
     /// Validates and atomically persists the complete user configuration.
@@ -405,6 +415,7 @@ impl UserConfig {
         let mut config = Self::load_from_unlocked(context)?
             .ok_or_else(|| twonly_error!("user configuration is unavailable"))?;
         mutate(&mut config);
+        config.normalize();
         Self::save_unlocked(context, &config)?;
         Ok(config)
     }
@@ -433,13 +444,16 @@ impl UserConfig {
     }
 
     fn save_json_unlocked(context: &Context, json: &str) -> Result<String> {
-        let config: Self = serde_json::from_str(json).map_err(|error| {
+        let mut config: Self = serde_json::from_str(json).map_err(|error| {
             TwonlyError::Generic(format!("invalid user configuration update: {error}"))
         })?;
+        config.normalize();
         Self::save_unlocked(context, &config)
     }
 
     fn save_unlocked(context: &Context, config: &Self) -> Result<String> {
+        let mut config = config.clone();
+        config.normalize();
         let normalized = serde_json::to_string(&config)?;
         let path = Self::path(context);
         let parent = path
@@ -457,7 +471,7 @@ impl UserConfig {
 
 #[cfg(test)]
 mod tests {
-    use super::{merge_changed_fields, UserConfig};
+    use super::{merge_changed_fields, UserConfig, MIN_USER_DISCOVERY_THRESHOLD};
 
     #[test]
     fn parses_only_rust_fields_and_applies_defaults() {
@@ -474,10 +488,34 @@ mod tests {
         assert_eq!(config.user_id, 42);
         assert_eq!(config.username, "alice");
         assert_eq!(config.required_send_images, 4);
+        assert_eq!(
+            config.user_discovery_threshold,
+            MIN_USER_DISCOVERY_THRESHOLD
+        );
 
         assert!(config.can_use_login_token_for_auth);
         assert!(!config.is_user_discovery_enabled);
         assert_eq!(config.last_server_message_at, None);
+    }
+
+    #[test]
+    fn normalizes_legacy_user_discovery_threshold() {
+        let mut config: UserConfig = serde_json::from_str(
+            r#"{
+                "userId": 42,
+                "username": "alice",
+                "displayName": "Alice",
+                "userDiscoveryThreshold": 2
+            }"#,
+        )
+        .unwrap();
+
+        config.normalize();
+
+        assert_eq!(
+            config.user_discovery_threshold,
+            MIN_USER_DISCOVERY_THRESHOLD
+        );
     }
 
     #[test]

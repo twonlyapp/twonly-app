@@ -10,6 +10,15 @@ part 'user_discovery.dao.g.dart';
 typedef AnnouncedUsersWithRelations =
     Map<UserDiscoveryAnnouncedUser, List<(Contact, DateTime?)>>;
 
+const _minimumUserDiscoveryThreshold = 3;
+
+int _currentUserDiscoveryThreshold() {
+  final configured = userService.currentUser.userDiscoveryThreshold;
+  return configured < _minimumUserDiscoveryThreshold
+      ? _minimumUserDiscoveryThreshold
+      : configured;
+}
+
 @DriftAccessor(
   tables: [
     UserDiscoveryAnnouncedUsers,
@@ -53,21 +62,29 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
         .map((row) => row.readTable(userDiscoveryAnnouncedUsers))
         .toList();
   }
-Stream<AnnouncedUsersWithRelations> watchAllAnnouncedUsersWithRelations() {
-    final query = select(userDiscoveryAnnouncedUsers).join([
-      innerJoin(
-        userDiscoveryUserRelations,
-        userDiscoveryUserRelations.announcedUserId.equalsExp(
-          userDiscoveryAnnouncedUsers.announcedUserId,
-        ),
-      ),
-      innerJoin(
-        contacts,
-        contacts.userId.equalsExp(
-          userDiscoveryUserRelations.fromContactId,
-        ),
-      ),
-    ])..where(userDiscoveryAnnouncedUsers.username.isNotNull());
+
+  Stream<AnnouncedUsersWithRelations> watchAllAnnouncedUsersWithRelations() {
+    final query =
+        select(userDiscoveryAnnouncedUsers).join([
+          innerJoin(
+            userDiscoveryUserRelations,
+            userDiscoveryUserRelations.announcedUserId.equalsExp(
+              userDiscoveryAnnouncedUsers.announcedUserId,
+            ),
+          ),
+          innerJoin(
+            contacts,
+            contacts.userId.equalsExp(
+              userDiscoveryUserRelations.fromContactId,
+            ),
+          ),
+        ])..where(
+          userDiscoveryAnnouncedUsers.username.isNotNull() &
+              contacts.accepted.equals(true) &
+              contacts.blocked.equals(false) &
+              contacts.deletedByUser.equals(false) &
+              contacts.accountDeleted.equals(false),
+        );
 
     return query.watch().map((rows) {
       // ignore: omit_local_variable_types
@@ -88,6 +105,9 @@ Stream<AnnouncedUsersWithRelations> watchAllAnnouncedUsersWithRelations() {
         }
         results[user]!.add(relationData);
       }
+
+      final threshold = _currentUserDiscoveryThreshold();
+      results.removeWhere((user, relations) => relations.length < threshold);
 
       Log.info('results = ${results.length}');
 
@@ -120,6 +140,10 @@ Stream<AnnouncedUsersWithRelations> watchAllAnnouncedUsersWithRelations() {
         ])..where(
           userDiscoveryAnnouncedUsers.username.isNotNull() &
               userDiscoveryAnnouncedUsers.isHidden.equals(false) &
+              contacts.accepted.equals(true) &
+              contacts.blocked.equals(false) &
+              contacts.deletedByUser.equals(false) &
+              contacts.accountDeleted.equals(false) &
               (announcedContact.userId.isNull() |
                   announcedContact.deletedByUser.equals(true)),
         );
@@ -144,7 +168,7 @@ Stream<AnnouncedUsersWithRelations> watchAllAnnouncedUsersWithRelations() {
         results[user]!.add(relationData);
       }
 
-      final threshold = userService.currentUser.userDiscoveryThreshold;
+      final threshold = _currentUserDiscoveryThreshold();
       results.removeWhere((user, relations) => relations.length < threshold);
 
       return results;
@@ -161,6 +185,12 @@ Stream<AnnouncedUsersWithRelations> watchAllAnnouncedUsersWithRelations() {
               userDiscoveryAnnouncedUsers.announcedUserId,
             ),
           ),
+          innerJoin(
+            contacts,
+            contacts.userId.equalsExp(
+              userDiscoveryUserRelations.fromContactId,
+            ),
+          ),
           leftOuterJoin(
             announcedContact,
             announcedContact.userId.equalsExp(
@@ -172,6 +202,10 @@ Stream<AnnouncedUsersWithRelations> watchAllAnnouncedUsersWithRelations() {
           userDiscoveryAnnouncedUsers.username.isNotNull() &
               userDiscoveryAnnouncedUsers.wasShownToTheUser.equals(false) &
               userDiscoveryAnnouncedUsers.isHidden.equals(false) &
+              contacts.accepted.equals(true) &
+              contacts.blocked.equals(false) &
+              contacts.deletedByUser.equals(false) &
+              contacts.accountDeleted.equals(false) &
               (announcedContact.userId.isNull() |
                   announcedContact.deletedByUser.equals(true)),
         );
@@ -186,7 +220,7 @@ Stream<AnnouncedUsersWithRelations> watchAllAnnouncedUsersWithRelations() {
             (relationCounts[announcedUserId] ?? 0) + 1;
       }
 
-      final threshold = userService.currentUser.userDiscoveryThreshold;
+      final threshold = _currentUserDiscoveryThreshold();
       return relationCounts.values.where((count) => count >= threshold).length;
     });
   }
