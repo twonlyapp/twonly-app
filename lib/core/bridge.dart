@@ -18,6 +18,31 @@ Future<void> initializeTwonlyFlutter({required InitConfig config}) =>
 Future<void> initializeTwonlyStandalone({required InitConfig config}) =>
     RustLib.instance.api.crateBridgeInitializeTwonlyStandalone(config: config);
 
+class FlameState {
+  final PlatformInt64 counter;
+  final bool isExpiring;
+  final bool isBestFriend;
+
+  const FlameState({
+    required this.counter,
+    required this.isExpiring,
+    required this.isBestFriend,
+  });
+
+  @override
+  int get hashCode =>
+      counter.hashCode ^ isExpiring.hashCode ^ isBestFriend.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FlameState &&
+          runtimeType == other.runtimeType &&
+          counter == other.counter &&
+          isExpiring == other.isExpiring &&
+          isBestFriend == other.isBestFriend;
+}
+
 class InitConfig {
   final String databaseDir;
   final String dataDir;

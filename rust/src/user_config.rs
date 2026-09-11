@@ -256,6 +256,9 @@ pub struct UserConfig {
     #[serde(default = "defaults::true_value")]
     #[frb(non_final)]
     pub show_restore_flame: bool,
+    /// Unused: the best friend is derived from `total_media_counter` whenever
+    /// it is needed (`Group::best_friend_group_id`). Kept so configurations
+    /// written by older versions still deserialize.
     #[frb(non_final)]
     pub my_best_friend_group_id: Option<String>,
     #[serde(default, with = "optional_datetime")]

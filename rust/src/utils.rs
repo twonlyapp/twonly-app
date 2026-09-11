@@ -7,6 +7,8 @@ use chrono::{DateTime, Local, TimeZone};
 use std::sync::Arc;
 use tokio::sync::{RwLock, RwLockReadGuard};
 
+use crate::error::{Result, TwonlyError};
+
 pub(crate) fn milliseconds_to_seconds(timestamp: i64) -> i64 {
     timestamp.div_euclid(1_000)
 }
@@ -20,6 +22,22 @@ pub(crate) fn is_today(timestamp: i64) -> bool {
         .timestamp_opt(timestamp, 0)
         .single()
         .is_some_and(|date| date.date_naive() == current_time().date_naive())
+}
+
+/// Midnight of the current day in the user's timezone. Flame counters roll over
+/// at the local day boundary, so every comparison against "today" has to start
+/// here instead of at a UTC boundary.
+pub(crate) fn start_of_local_day() -> Result<i64> {
+    Ok(Local
+        .from_local_datetime(
+            &current_time()
+                .date_naive()
+                .and_hms_opt(0, 0, 0)
+                .ok_or_else(|| TwonlyError::Generic("invalid local date".into()))?,
+        )
+        .earliest()
+        .ok_or_else(|| TwonlyError::Generic("local day has no midnight".into()))?
+        .timestamp())
 }
 
 pub(crate) fn new_uuid_v4() -> String {

@@ -3,8 +3,27 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
+import '../bridge.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+
+/// The flame counter for one chat, derived against today rather than read from
+/// the stored column. See `Group::flame_states`.
+Future<FlameState> flameState({required String groupId}) =>
+    RustLib.instance.api.crateBridgeGroupsFlameState(groupId: groupId);
+
+/// The same derivation for several chats at once. Sorting a contact list by
+/// streak needs every value up front, because a comparator cannot await.
+Future<Map<String, FlameState>> flameStates({required List<String> groupIds}) =>
+    RustLib.instance.api.crateBridgeGroupsFlameStates(groupIds: groupIds);
+
+/// Whether to offer the user a restore for this chat.
+Future<bool> canRestoreFlames({required String groupId}) =>
+    RustLib.instance.api.crateBridgeGroupsCanRestoreFlames(groupId: groupId);
+
+/// Restores the lost streak, posts the chat entry, and syncs the peer.
+Future<bool> restoreFlames({required String groupId}) =>
+    RustLib.instance.api.crateBridgeGroupsRestoreFlames(groupId: groupId);
 
 Future<bool> createNewGroup({
   required String groupName,

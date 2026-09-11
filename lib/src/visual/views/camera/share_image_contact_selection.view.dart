@@ -3,12 +3,12 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -56,6 +56,7 @@ class _ShareImageView extends State<ShareImageView> {
   final TextEditingController searchUserName = TextEditingController();
   late StreamSubscription<List<Group>> allGroupSub;
   String lastQuery = '';
+  int _updateGroupsGeneration = 0;
 
   @override
   void initState() {
@@ -99,13 +100,20 @@ class _ShareImageView extends State<ShareImageView> {
   }
 
   Future<void> updateGroups(List<Group> groups) async {
+    final generation = ++_updateGroupsGeneration;
+    // The counters come from Rust in one batch: a sort comparator cannot await,
+    // so every value has to be in hand before sorting starts.
+    final states = await rust_groups.flameStates(
+      groupIds: groups.map((g) => g.groupId).toList(),
+    );
+    if (!mounted || generation != _updateGroupsGeneration) return;
+
+    int flameOf(Group group) => states[group.groupId]?.counter ?? 0;
+
     // Sort contacts by flameCounter and then by totalMediaCounter
     groups.sort((a, b) {
       // First, compare by flameCounter
-
-      final flameComparison = getFlameCounterFromGroup(
-        b,
-      ).counter.compareTo(getFlameCounterFromGroup(a).counter);
+      final flameComparison = flameOf(b).compareTo(flameOf(a));
       if (flameComparison != 0) {
         return flameComparison; // Sort by flameCounter in descending order
       }
@@ -122,9 +130,7 @@ class _ShareImageView extends State<ShareImageView> {
 
     for (final group in groups) {
       if (group.pinned) continue;
-      if (!group.archived &&
-          getFlameCounterFromGroup(group).counter > 0 &&
-          bestFriends.length < 6) {
+      if (!group.archived && flameOf(group) > 0 && bestFriends.length < 6) {
         bestFriends.add(group);
       } else {
         otherUsers.add(group);

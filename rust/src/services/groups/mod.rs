@@ -13,7 +13,7 @@ use crate::api::messages::incoming::messages::{
 use crate::api::messages::outgoing::send_c2c_message_to_contact;
 use crate::api::proto::client::encrypted_content::GroupJoin;
 use crate::api::proto::client::{
-    encrypted_appended_group_state, encrypted_content, EncryptedAppendedGroupState,
+    self as proto, encrypted_appended_group_state, encrypted_content, EncryptedAppendedGroupState,
     EncryptedContent, EncryptedGroupState,
 };
 use crate::api::proto::http_requests::{append_group_state, AppendGroupState, NewGroupState};
@@ -26,7 +26,7 @@ use crate::database::app::tables::{
 };
 use crate::error::{Result, TwonlyError};
 use crate::services::messages::MessageService;
-use crate::utils::{current_time, new_uuid_v4};
+use crate::utils::{current_time, new_uuid_v4, start_of_local_day};
 use model::GroupRecord;
 use prost::Message;
 use rand::{RngCore, SeedableRng};
@@ -150,35 +150,46 @@ impl GroupService {
     pub async fn on_connected(&self) -> Result<()> {
         self.fetch_group_states_for_unjoined_groups().await?;
         self.fetch_missing_group_public_keys(None, false).await?;
-        self.sync_flame_counters().await
+        self.sync_flame_counters(None).await
     }
 
-    async fn sync_flame_counters(&self) -> Result<()> {
+    /// Tells each peer where their shared streak stands. Normally at most once
+    /// per day per chat; `force_for_group` overrides that guard and asks the
+    /// peer to take our value, which is how a restore reaches the other side.
+    pub(crate) async fn sync_flame_counters(&self, force_for_group: Option<&str>) -> Result<()> {
         let db = self.ctx.app_db.read().await.clone();
         let groups = Group::flame_sync_candidates(&db.pool).await?;
-
-        let Some(best_friend) = groups.iter().max_by_key(|group| group.total_media_counter) else {
+        if groups.is_empty() {
             return Ok(());
-        };
+        }
 
-        let best_friend_id = best_friend.group_id.clone();
+        let best_friend_id = Group::best_friend_group_id(&db.pool).await?;
+        let states = Group::flame_states(&db.pool, None).await?;
         let now = current_time().timestamp();
-        let start_today = now - now.rem_euclid(86_400);
+        let start_today = start_of_local_day()?;
 
         for group in groups {
             let Some(changed) = group.last_flame_counter_change else {
                 continue;
             };
+            let forced = force_for_group == Some(group.group_id.as_str());
 
-            if changed < start_today
-                || group
+            if changed < start_today {
+                continue;
+            }
+            if !forced
+                && group
                     .last_flame_sync
                     .is_some_and(|sync| sync >= start_today)
             {
                 continue;
             }
 
-            if group.flame_counter <= 2 && group.group_id != best_friend_id {
+            let is_best_friend = best_friend_id.as_deref() == Some(group.group_id.as_str());
+            // The stored column can still hold a streak that today's derivation
+            // has already let expire, so send what the user actually sees.
+            let counter = states.get(&group.group_id).map_or(0, |state| state.counter);
+            if counter <= 2 && !is_best_friend {
                 continue;
             }
 
@@ -187,10 +198,10 @@ impl GroupService {
                     group.group_id.clone(),
                     EncryptedContent {
                         flame_sync: Some(encrypted_content::FlameSync {
-                            flame_counter: group.flame_counter,
+                            flame_counter: counter,
                             last_flame_counter_change: changed * 1000,
-                            best_friend: group.group_id == best_friend_id,
-                            force_update: false,
+                            best_friend: is_best_friend,
+                            force_update: forced,
                         }),
                         ..Default::default()
                     }
@@ -203,6 +214,45 @@ impl GroupService {
             Group::set_last_flame_sync(&db.pool, &group.group_id, now).await?;
         }
         Ok(())
+    }
+
+    /// Puts a lost streak back, tells the chat it happened, and pushes the
+    /// restored value to the peer so both sides agree again.
+    pub(crate) async fn restore_flames(&self, group_id: String) -> Result<bool> {
+        let database = self.ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+        let restored = Group::restore_flames(&mut transaction, &group_id).await?;
+        transaction.commit().await?;
+
+        let Some(restored) = restored else {
+            return Ok(false);
+        };
+
+        let data = proto::AdditionalMessageData {
+            r#type: proto::additional_message_data::Type::RestoredFlameCounter as i32,
+            link: None,
+            contacts: Vec::new(),
+            restored_flame_counter: Some(restored),
+            ask_about_user_id: None,
+            webxdc_app: None,
+            webxdc_update: None,
+            webxdc_origin: None,
+            webxdc_sync: None,
+            webxdc_sync_request: None,
+        }
+        .encode_to_vec();
+
+        MessageService::new(&self.ctx)
+            .insert_and_send_additional_data(
+                group_id.clone(),
+                "restoreFlameCounter".into(),
+                data,
+                false,
+            )
+            .await?;
+
+        self.sync_flame_counters(Some(&group_id)).await?;
+        Ok(true)
     }
 
     pub fn new(ctx: &Arc<Context>) -> Self {

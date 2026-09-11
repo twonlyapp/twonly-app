@@ -1,10 +1,11 @@
 import 'package:clock/clock.dart' show clock;
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
+import 'package:twonly/core/bridge.dart' show FlameState;
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 part 'groups.dao.g.dart';
@@ -236,7 +237,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     )..where((t) => t.groupId.equals(groupId))).getSingleOrNull();
   }
 
-  Stream<({int counter, bool isExpiring})> watchFlameCounter(String groupId) {
+  /// Drift watches the row only to learn *when* to ask again: the counter
+  /// itself is derived in Rust, because it depends on the current day as much
+  /// as on the stored columns.
+  Stream<FlameState> watchFlameCounter(String groupId) {
     return (select(groups)..where(
           (u) =>
               u.groupId.equals(groupId) &
@@ -244,7 +248,16 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
               u.lastMessageSend.isNotNull(),
         ))
         .watchSingleOrNull()
-        .map(getFlameCounterFromGroup);
+        .asyncMap((group) {
+          if (group == null) {
+            return const FlameState(
+              counter: 0,
+              isExpiring: false,
+              isBestFriend: false,
+            );
+          }
+          return rust_groups.flameState(groupId: groupId);
+        });
   }
 
   Future<List<Group>> getAllDirectChats() {

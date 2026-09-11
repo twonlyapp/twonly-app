@@ -1,18 +1,12 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Value;
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
-    as pb;
-import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -34,6 +28,7 @@ class RestoreFlameComp extends StatefulWidget {
 
 class _RestoreFlameCompState extends State<RestoreFlameComp> {
   Group? _group;
+  bool _canRestore = false;
   late String _groupId;
   late StreamSubscription<Group?> _groupSub;
 
@@ -45,8 +40,15 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
       userService.currentUser.userId,
     );
     final stream = twonlyDB.groupsDao.watchGroup(_groupId);
-    _groupSub = stream.listen((update) {
-      if (mounted) setState(() => _group = update);
+    _groupSub = stream.listen((update) async {
+      // Whether a restore is still on offer depends on today as much as on the
+      // row, so Rust decides it; the row change is only the cue to ask again.
+      final canRestore = await rust_groups.canRestoreFlames(groupId: _groupId);
+      if (!mounted) return;
+      setState(() {
+        _group = update;
+        _canRestore = canRestore;
+      });
     });
   }
 
@@ -69,42 +71,11 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
       'Restoring flames from ${_group!.flameCounter} to ${_group!.maxFlameCounter}',
     );
 
-    await restoreFlames(_groupId);
-
-    final addData = AdditionalMessageData(
-      type: AdditionalMessageData_Type.RESTORED_FLAME_COUNTER,
-      restoredFlameCounter: Int64(_group!.maxFlameCounter),
-    );
-
-    final message = await twonlyDB.messagesDao.insertMessage(
-      MessagesCompanion(
-        groupId: Value(_groupId),
-        type: Value(MessageType.restoreFlameCounter.name),
-        additionalMessageData: Value(addData.writeToBuffer()),
-      ),
-    );
-
-    if (message == null) {
-      Log.error('Could not insert message into database');
-      return;
+    // Rust owns the whole restore: the counter, the chat entry, and the forced
+    // flame sync that brings the peer back in line.
+    if (!await rust_groups.restoreFlames(groupId: _groupId)) {
+      Log.error('Could not restore the flame counter');
     }
-
-    final encryptedContent = pb.EncryptedContent(
-      additionalDataMessage: pb.EncryptedContent_AdditionalDataMessage(
-        senderMessageId: message.messageId,
-        additionalMessageData: addData.writeToBuffer(),
-        timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
-        type: MessageType.restoreFlameCounter.name,
-      ),
-    );
-
-    await syncFlameCounters(forceForGroup: _groupId);
-    await RustApi.sendEncryptedContentToGroup(
-      groupId: _groupId,
-      content: encryptedContent.writeToBuffer(),
-      messageId: message.messageId,
-      onlySendIfNoReceiptsAreOpen: false,
-    );
   }
 
   @override
@@ -112,7 +83,7 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
     if (!userService.currentUser.showRestoreFlame) {
       return const SizedBox.shrink();
     }
-    if (_group == null || !isItPossibleToRestoreFlames(_group!)) {
+    if (_group == null || !_canRestore) {
       return Container();
     }
     if (widget.flameOnRightSide) {

@@ -60,6 +60,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Map<String, String> dco_decode_Map_String_String_None(dynamic raw);
 
   @protected
+  Map<String, FlameState> dco_decode_Map_String_flame_state_None(dynamic raw);
+
+  @protected
   Map<String, List<String>> dco_decode_Map_String_list_String_None(dynamic raw);
 
   @protected
@@ -133,6 +136,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FlameState dco_decode_flame_state(dynamic raw);
 
   @protected
   FlutterUserDiscovery dco_decode_flutter_user_discovery(dynamic raw);
@@ -225,6 +231,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<(String, FlameState)> dco_decode_list_record_string_flame_state(
+    dynamic raw,
+  );
 
   @protected
   List<(String, List<String>)> dco_decode_list_record_string_list_string(
@@ -321,6 +332,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   (Uint8List, PlatformInt64) dco_decode_record_list_prim_u_8_strict_i_64(
     dynamic raw,
   );
+
+  @protected
+  (String, FlameState) dco_decode_record_string_flame_state(dynamic raw);
 
   @protected
   (String, List<String>) dco_decode_record_string_list_string(dynamic raw);
@@ -427,6 +441,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  Map<String, FlameState> sse_decode_Map_String_flame_state_None(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   Map<String, List<String>> sse_decode_Map_String_list_String_None(
     SseDeserializer deserializer,
   );
@@ -522,6 +541,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FlameState sse_decode_flame_state(SseDeserializer deserializer);
 
   @protected
   FlutterUserDiscovery sse_decode_flutter_user_discovery(
@@ -636,6 +658,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  List<(String, FlameState)> sse_decode_list_record_string_flame_state(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<(String, List<String>)> sse_decode_list_record_string_list_string(
     SseDeserializer deserializer,
   );
@@ -742,6 +769,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   (Uint8List, PlatformInt64) sse_decode_record_list_prim_u_8_strict_i_64(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  (String, FlameState) sse_decode_record_string_flame_state(
     SseDeserializer deserializer,
   );
 
@@ -882,6 +914,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_Map_String_flame_state_None(
+    Map<String, FlameState> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_Map_String_list_String_None(
     Map<String, List<String>> self,
     SseSerializer serializer,
@@ -1000,6 +1038,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_flame_state(FlameState self, SseSerializer serializer);
 
   @protected
   void sse_encode_flutter_user_discovery(
@@ -1146,6 +1187,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_record_string_flame_state(
+    List<(String, FlameState)> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_record_string_list_string(
     List<(String, List<String>)> self,
     SseSerializer serializer,
@@ -1280,6 +1327,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_record_list_prim_u_8_strict_i_64(
     (Uint8List, PlatformInt64) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_record_string_flame_state(
+    (String, FlameState) self,
     SseSerializer serializer,
   );
 

@@ -16,6 +16,7 @@ use crate::context::Context;
 use crate::error::Result;
 use flutter_rust_bridge::frb;
 
+pub use crate::database::app::tables::FlameState;
 pub use crate::user_discovery::AnnouncedUser;
 pub use crate::user_discovery::OtherPromotion;
 
@@ -39,6 +40,13 @@ pub struct _AnnouncedUser {
     pub user_id: i64,
     pub public_key: Vec<u8>,
     pub public_id: i64,
+}
+
+#[frb(mirror(FlameState))]
+pub struct _FlameState {
+    pub counter: i64,
+    pub is_expiring: bool,
+    pub is_best_friend: bool,
 }
 
 pub(super) fn get_twonly_flutter() -> Result<&'static Context> {

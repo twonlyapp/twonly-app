@@ -14,8 +14,8 @@ pub mod receipt;
 pub use contact::{Contact, UpdateContact};
 pub use group_history::{GroupHistoryType, InsertGroupHistories};
 pub use groups::{
-    DeleteGroupMembers, GetGroupPublicKey, GetMissingGroupPublicKeys, GetUnjoinedGroups, Group,
-    InsertGroup, InsertGroupHistory, InsertGroupMember, UpdateGroup, UpdateGroupMemberState,
+    DeleteGroupMembers, FlameState, GetGroupPublicKey, GetMissingGroupPublicKeys, GetUnjoinedGroups,
+    Group, InsertGroup, InsertGroupHistory, InsertGroupMember, UpdateGroup, UpdateGroupMemberState,
 };
 pub use key_verification::{KeyVerification, KeyVerificationType, NewKeyVerification};
 pub use mediafiles::MediaFile;

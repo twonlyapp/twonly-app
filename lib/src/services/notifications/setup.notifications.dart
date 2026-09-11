@@ -1,5 +1,3 @@
-// ignore_for_file: unreachable_from_main
-
 import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 

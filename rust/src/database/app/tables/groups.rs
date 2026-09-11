@@ -3,11 +3,12 @@
  *
  */
 
-use chrono::{Local, TimeZone};
 use sqlx::{Sqlite, Transaction};
+use std::collections::{HashMap, HashSet};
 
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
+use crate::utils::{current_time, start_of_local_day};
 
 use super::Contact;
 
@@ -19,12 +20,148 @@ impl Group {
     pub async fn flame_sync_candidates(pool: &sqlx::Pool<Sqlite>) -> Result<Vec<FlameSyncGroup>> {
         Ok(sqlx::query_as!(
             FlameSyncGroup,
-            r#"SELECT group_id, total_media_counter, last_flame_counter_change,
-                      last_flame_sync, flame_counter
+            r#"SELECT group_id, total_media_counter, last_flame_counter_change, last_flame_sync
                FROM groups WHERE last_flame_counter_change IS NOT NULL"#
         )
         .fetch_all(pool)
         .await?)
+    }
+
+    /// The chat the user exchanges the most media with. Derived rather than
+    /// stored: it is a pure function of `total_media_counter`, and persisting it
+    /// in the user configuration would leave Flutter's in-memory copy stale,
+    /// because nothing tells Dart when Rust rewrites that file.
+    pub async fn best_friend_group_id(pool: &sqlx::Pool<Sqlite>) -> Result<Option<String>> {
+        Ok(sqlx::query_scalar!(
+            "SELECT group_id FROM groups ORDER BY total_media_counter DESC LIMIT 1"
+        )
+        .fetch_optional(pool)
+        .await?)
+    }
+
+    /// The flame counter as it is shown, which is not what the column holds: a
+    /// streak survives in the database until the next media exchange rewrites
+    /// it, so whether it still counts has to be decided against today.
+    ///
+    /// Passing `None` derives the state of every group; the best friend is
+    /// resolved once either way.
+    pub async fn flame_states(
+        pool: &sqlx::Pool<Sqlite>,
+        group_ids: Option<Vec<String>>,
+    ) -> Result<HashMap<String, FlameState>> {
+        let rows = sqlx::query_as!(
+            FlameRow,
+            r#"SELECT group_id, flame_counter, also_best_friend,
+                      last_message_send, last_message_received, last_flame_counter_change
+               FROM groups"#
+        )
+        .fetch_all(pool)
+        .await?;
+
+        let best_friend = Self::best_friend_group_id(pool).await?;
+        let start_of_today = start_of_local_day()?;
+
+        let wanted = group_ids.map(|ids| ids.into_iter().collect::<HashSet<_>>());
+        Ok(rows
+            .into_iter()
+            .filter(|row| {
+                wanted
+                    .as_ref()
+                    .is_none_or(|ids| ids.contains(&row.group_id))
+            })
+            .map(|row| {
+                let is_best_friend = row.also_best_friend != 0
+                    && best_friend.as_deref() == Some(row.group_id.as_str());
+                let state = row.derive(start_of_today, is_best_friend);
+                (row.group_id, state)
+            })
+            .collect())
+    }
+
+    pub async fn flame_state(pool: &sqlx::Pool<Sqlite>, group_id: &str) -> Result<FlameState> {
+        Ok(Self::flame_states(pool, Some(vec![group_id.to_string()]))
+            .await?
+            .remove(group_id)
+            .unwrap_or_default())
+    }
+
+    /// Whether the "restore flames" offer makes sense: a streak worth restoring
+    /// was lost recently enough that the user still remembers having it.
+    pub async fn can_restore_flames(pool: &sqlx::Pool<Sqlite>, group_id: &str) -> Result<bool> {
+        let Some(group) = sqlx::query!(
+            "SELECT max_flame_counter, max_flame_counter_from FROM groups WHERE group_id = ?",
+            group_id,
+        )
+        .fetch_optional(pool)
+        .await?
+        else {
+            return Ok(false);
+        };
+
+        let counter = Self::flame_state(pool, group_id).await?.counter;
+        Ok(can_restore(
+            group.max_flame_counter,
+            group.max_flame_counter_from,
+            counter,
+            current_time().timestamp(),
+        ))
+    }
+
+    /// Puts the lost streak back and marks today as exchanged in both
+    /// directions, so the restored counter survives the next derivation.
+    /// Returns the restored value, or `None` when there was nothing to restore.
+    pub async fn restore_flames(
+        tr: &mut Transaction<'_, Sqlite>,
+        group_id: &str,
+    ) -> Result<Option<i64>> {
+        let Some(group) = sqlx::query!(
+            r#"SELECT flame_counter, max_flame_counter, max_flame_counter_from,
+                      last_message_send, last_message_received, last_flame_counter_change
+               FROM groups WHERE group_id = ?"#,
+            group_id,
+        )
+        .fetch_optional(&mut **tr)
+        .await?
+        else {
+            return Ok(None);
+        };
+
+        let now = current_time().timestamp();
+        let state = FlameRow {
+            group_id: group_id.to_string(),
+            flame_counter: group.flame_counter,
+            also_best_friend: 0,
+            last_message_send: group.last_message_send,
+            last_message_received: group.last_message_received,
+            last_flame_counter_change: group.last_flame_counter_change,
+        }
+        .derive(start_of_local_day()?, false);
+        if !can_restore(
+            group.max_flame_counter,
+            group.max_flame_counter_from,
+            state.counter,
+            now,
+        ) {
+            return Ok(None);
+        }
+
+        sqlx::query!(
+            r#"UPDATE groups SET
+                   flame_counter = ?,
+                   last_flame_counter_change = ?,
+                   last_message_send = ?,
+                   last_message_received = ?
+               WHERE group_id = ?"#,
+            group.max_flame_counter,
+            now,
+            now,
+            now,
+            group_id,
+        )
+        .execute(&mut **tr)
+        .await?;
+
+        Ok(Some(group.max_flame_counter))
     }
 
     pub async fn set_last_flame_sync(
@@ -89,16 +226,8 @@ impl Group {
             .await?;
         }
 
-        let now = Local::now();
-        let start_of_today = Local
-            .from_local_datetime(
-                &now.date_naive()
-                    .and_hms_opt(0, 0, 0)
-                    .ok_or_else(|| TwonlyError::Generic("invalid local date".into()))?,
-            )
-            .earliest()
-            .ok_or_else(|| TwonlyError::Generic("local day has no midnight".into()))?
-            .timestamp();
+        let now = current_time();
+        let start_of_today = start_of_local_day()?;
         let two_days_ago = start_of_today - 2 * 24 * 60 * 60;
 
         let mut flame_counter = group.flame_counter;
@@ -349,7 +478,55 @@ pub struct FlameSyncGroup {
     pub total_media_counter: i64,
     pub last_flame_counter_change: Option<i64>,
     pub last_flame_sync: Option<i64>,
-    pub flame_counter: i64,
+}
+
+/// The flame counter as the UI shows it. Everything here is derived from the
+/// group row against the current local day, never read straight out of a column.
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FlameState {
+    pub counter: i64,
+    /// No exchange yet today, so the streak ends at midnight.
+    pub is_expiring: bool,
+    /// Mutual: our most-exchanged chat, and they said the same about us.
+    pub is_best_friend: bool,
+}
+
+struct FlameRow {
+    group_id: String,
+    flame_counter: i64,
+    also_best_friend: i64,
+    last_message_send: Option<i64>,
+    last_message_received: Option<i64>,
+    last_flame_counter_change: Option<i64>,
+}
+
+impl FlameRow {
+    fn derive(&self, start_of_today: i64, is_best_friend: bool) -> FlameState {
+        let expired = FlameState {
+            is_best_friend,
+            ..FlameState::default()
+        };
+        let (Some(sent), Some(received), Some(changed)) = (
+            self.last_message_send,
+            self.last_message_received,
+            self.last_flame_counter_change,
+        ) else {
+            return expired;
+        };
+
+        let two_days_ago = start_of_today - 2 * 24 * 60 * 60;
+        let one_day_ago = start_of_today - 24 * 60 * 60;
+
+        if sent > two_days_ago && received > two_days_ago || changed > one_day_ago {
+            FlameState {
+                counter: self.flame_counter,
+                is_expiring: sent < one_day_ago || received < one_day_ago,
+                is_best_friend,
+            }
+        } else {
+            expired
+        }
+    }
 }
 
 #[derive(bon::Builder)]
@@ -708,10 +885,230 @@ fn current_unix_timestamp() -> Result<i64> {
     Ok(crate::utils::current_time().timestamp())
 }
 
+/// A streak is worth offering back while it was big enough to miss and recent
+/// enough to still be remembered. Pure so the boundaries stay testable without
+/// a controllable clock.
+fn can_restore(
+    max_flame_counter: i64,
+    max_flame_counter_from: Option<i64>,
+    counter: i64,
+    now: i64,
+) -> bool {
+    let seven_days_ago = now - 7 * 24 * 60 * 60;
+    max_flame_counter > 2
+        && counter < max_flame_counter
+        && max_flame_counter_from.is_some_and(|from| from > seven_days_ago)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::database::app::AppDatabase;
+    use chrono::{Local, TimeZone};
+
+    const DAY: i64 = 24 * 60 * 60;
+
+    /// Local midnight of the given date, which is what the derivation compares
+    /// against. Mirrors the `DateTime(2026, 2, 2)` literals the Dart tests used.
+    fn local_midnight(year: i32, month: u32, day: u32) -> i64 {
+        Local
+            .with_ymd_and_hms(year, month, day, 0, 0, 0)
+            .earliest()
+            .unwrap()
+            .timestamp()
+    }
+
+    fn row(counter: i64, sent: i64, received: i64, changed: i64) -> FlameRow {
+        FlameRow {
+            group_id: "group".into(),
+            flame_counter: counter,
+            also_best_friend: 0,
+            last_message_send: Some(sent),
+            last_message_received: Some(received),
+            last_flame_counter_change: Some(changed),
+        }
+    }
+
+    #[test]
+    fn a_streak_without_any_exchange_is_zero() {
+        let empty = FlameRow {
+            group_id: "group".into(),
+            flame_counter: 7,
+            also_best_friend: 0,
+            last_message_send: None,
+            last_message_received: None,
+            last_flame_counter_change: None,
+        };
+        assert_eq!(empty.derive(local_midnight(2026, 2, 3), false).counter, 0);
+    }
+
+    /// The day-by-day walk the Dart `normal flame expiring` test performed: one
+    /// exchange on Feb 2 stays visible through Feb 4 and is gone on Feb 5.
+    #[test]
+    fn a_streak_survives_two_days_then_expires() {
+        let sent = local_midnight(2026, 2, 2) + 15 * 3600;
+        let received = local_midnight(2026, 2, 2) + 10 * 3600;
+        let row = row(1, sent, received, sent);
+
+        assert_eq!(row.derive(local_midnight(2026, 2, 2), false).counter, 1);
+        assert_eq!(row.derive(local_midnight(2026, 2, 3), false).counter, 1);
+        assert_eq!(row.derive(local_midnight(2026, 2, 4), false).counter, 1);
+        assert_eq!(row.derive(local_midnight(2026, 2, 5), false).counter, 0);
+        assert_eq!(row.derive(local_midnight(2026, 3, 1), false).counter, 0);
+    }
+
+    /// The `isExpiring` half of the same Dart test: an exchange from two days
+    /// back still counts, but warns that it ends at midnight.
+    #[test]
+    fn a_streak_warns_on_the_day_before_it_lapses() {
+        let exchange = local_midnight(2026, 2, 7) + 11 * 3600;
+        let row = row(3, exchange, exchange - 3600, exchange);
+
+        let same_day = row.derive(local_midnight(2026, 2, 7), false);
+        assert_eq!((same_day.counter, same_day.is_expiring), (3, false));
+
+        let next_day = row.derive(local_midnight(2026, 2, 8), false);
+        assert_eq!((next_day.counter, next_day.is_expiring), (3, false));
+
+        let last_day = row.derive(local_midnight(2026, 2, 9), false);
+        assert_eq!((last_day.counter, last_day.is_expiring), (3, true));
+
+        let lapsed = row.derive(local_midnight(2026, 2, 10), false);
+        assert_eq!((lapsed.counter, lapsed.is_expiring), (0, false));
+    }
+
+    /// The Dart `isRestore Possible` test walked March 24 to 27 against a max
+    /// set on March 20; the offer stops exactly seven days after that.
+    #[test]
+    fn restoring_is_offered_for_seven_days() {
+        let max_from = local_midnight(2026, 3, 20) + 3 * 3600;
+
+        for days in 4..=6 {
+            assert!(
+                can_restore(20, Some(max_from), 0, max_from + days * DAY),
+                "expected the offer {days} days after the streak was lost"
+            );
+        }
+        assert!(!can_restore(20, Some(max_from), 0, max_from + 7 * DAY + 1));
+    }
+
+    #[test]
+    fn restoring_is_not_offered_without_a_streak_worth_restoring() {
+        let now = local_midnight(2026, 3, 24);
+        // Too short to miss.
+        assert!(!can_restore(2, Some(now - DAY), 0, now));
+        // Nothing was lost.
+        assert!(!can_restore(20, Some(now - DAY), 20, now));
+        // Never reached a maximum.
+        assert!(!can_restore(20, None, 0, now));
+    }
+
+    #[tokio::test]
+    async fn restoring_brings_the_streak_back_to_its_maximum() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("app.sqlite");
+        let database = AppDatabase::new(path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        database.run_migrations().await.unwrap();
+
+        let lapsed = current_time().timestamp() - 4 * DAY;
+        sqlx::query(
+            r#"INSERT INTO groups(group_id, group_name, flame_counter, max_flame_counter,
+                                  max_flame_counter_from, last_message_send,
+                                  last_message_received, last_flame_counter_change)
+               VALUES ('group', 'Group', 0, 5, ?, ?, ?, ?)"#,
+        )
+        .bind(lapsed)
+        .bind(lapsed)
+        .bind(lapsed)
+        .bind(lapsed)
+        .execute(&database.pool)
+        .await
+        .unwrap();
+
+        assert_eq!(
+            Group::flame_state(&database.pool, "group")
+                .await
+                .unwrap()
+                .counter,
+            0
+        );
+        assert!(Group::can_restore_flames(&database.pool, "group")
+            .await
+            .unwrap());
+
+        let mut transaction = database.pool.begin().await.unwrap();
+        let restored = Group::restore_flames(&mut transaction, "group")
+            .await
+            .unwrap();
+        transaction.commit().await.unwrap();
+        assert_eq!(restored, Some(5));
+
+        let state = Group::flame_state(&database.pool, "group").await.unwrap();
+        assert_eq!((state.counter, state.is_expiring), (5, false));
+        // Nothing is left to restore once it is back.
+        assert!(!Group::can_restore_flames(&database.pool, "group")
+            .await
+            .unwrap());
+
+        // The write path enforces the same rule, so a rapid second tap cannot
+        // create another restoration message after the first one succeeded.
+        let mut transaction = database.pool.begin().await.unwrap();
+        let restored_again = Group::restore_flames(&mut transaction, "group")
+            .await
+            .unwrap();
+        transaction.commit().await.unwrap();
+        assert_eq!(restored_again, None);
+    }
+
+    /// The heart emoji needs both halves: our most-exchanged chat, and their
+    /// `also_best_friend` flag saying they picked us too.
+    #[tokio::test]
+    async fn the_best_friend_is_the_most_exchanged_chat_and_has_to_be_mutual() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("app.sqlite");
+        let database = AppDatabase::new(path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        database.run_migrations().await.unwrap();
+
+        let now = current_time().timestamp();
+        for (group_id, media, mutual) in [("top", 50, 1), ("second", 10, 1), ("onesided", 5, 0)] {
+            sqlx::query(
+                r#"INSERT INTO groups(group_id, group_name, total_media_counter, also_best_friend,
+                                      flame_counter, last_message_send, last_message_received,
+                                      last_flame_counter_change)
+                   VALUES (?, 'Group', ?, ?, 9, ?, ?, ?)"#,
+            )
+            .bind(group_id)
+            .bind(media)
+            .bind(mutual)
+            .bind(now)
+            .bind(now)
+            .bind(now)
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        }
+
+        assert_eq!(
+            Group::best_friend_group_id(&database.pool).await.unwrap(),
+            Some("top".to_string())
+        );
+
+        let states = Group::flame_states(&database.pool, None).await.unwrap();
+        assert!(states["top"].is_best_friend);
+        assert!(!states["second"].is_best_friend);
+        assert!(!states["onesided"].is_best_friend);
+
+        // A requested subset still resolves the best friend across all groups.
+        let subset = Group::flame_states(&database.pool, Some(vec!["top".into()]))
+            .await
+            .unwrap();
+        assert_eq!(subset.len(), 1);
+        assert!(subset["top"].is_best_friend);
+    }
 
     #[tokio::test]
     async fn media_exchange_updates_contact_and_flame_counters_atomically() {
