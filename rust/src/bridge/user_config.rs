@@ -51,12 +51,17 @@ impl UserConfigApi {
 
     pub async fn update(base: UserConfig, config: UserConfig) -> Result<UserConfig> {
         let ctx = Context::get_static()?;
+        let location_was_disabled =
+            base.store_location_in_memories && !config.store_location_in_memories;
         let normalized = UserConfig::update_json(
             ctx,
             &serde_json::to_string(&base)?,
             &serde_json::to_string(&config)?,
         )?;
         let config: UserConfig = serde_json::from_str(&normalized)?;
+        if location_was_disabled {
+            crate::services::location_metadata::disable_pending(ctx).await?;
+        }
         if let Ok(callbacks) = crate::bridge::callbacks::get_callbacks() {
             (callbacks.api.user_config_changed)(config.clone()).await;
         }

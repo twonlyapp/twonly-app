@@ -91,6 +91,14 @@ class MediaFiles extends Table {
 
   IntColumn get sizeInBytes => integer().nullable()();
 
+  RealColumn get locationLatitude => real().nullable()();
+  RealColumn get locationLongitude => real().nullable()();
+  RealColumn get locationAccuracy => real().nullable()();
+  TextColumn get locationStatus => text().nullable()();
+  IntColumn get locationDeadlineAt => integer().nullable()();
+  BoolColumn get galleryExportPending =>
+      boolean().withDefault(const Constant(false))();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get createdAtMonth => text().nullable()();
 

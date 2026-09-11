@@ -31,6 +31,7 @@
 		D3A100032F70000100D1A002 /* NativeImageCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A100042F70000100D1A002 /* NativeImageCodec.swift */; };
 		D3A100052F70000100D1A003 /* NativeVideoCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A100062F70000100D1A003 /* NativeVideoCodec.swift */; };
 		D3A100072F70000100D1A004 /* NativeGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A100082F70000100D1A004 /* NativeGallery.swift */; };
+		D3A100092F70000100D1A005 /* NativeLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A1000A2F70000100D1A005 /* NativeLocation.swift */; };
 		D3A1000B2F70000100D1A0FE /* WebxdcHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A1000C2F70000100D1A0FE /* WebxdcHost.swift */; };
 		F3C66D726A2EB28484DF0B10 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FBC6F5B58E1C6646F5D447 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
@@ -135,6 +136,7 @@
 		D3A100042F70000100D1A002 /* NativeImageCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeImageCodec.swift; sourceTree = "<group>"; };
 		D3A100062F70000100D1A003 /* NativeVideoCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeVideoCodec.swift; sourceTree = "<group>"; };
 		D3A100082F70000100D1A004 /* NativeGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGallery.swift; sourceTree = "<group>"; };
+		D3A1000A2F70000100D1A005 /* NativeLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeLocation.swift; sourceTree = "<group>"; };
 		D3A1000C2F70000100D1A0FE /* WebxdcHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebxdcHost.swift; sourceTree = "<group>"; };
 		DC1EE71614E1B4F84D6FDC2D /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E190E82D9973B318A389650B /* Pods_ShareExtension.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ShareExtension.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -305,6 +307,7 @@
 				D3A100042F70000100D1A002 /* NativeImageCodec.swift */,
 				D3A100062F70000100D1A003 /* NativeVideoCodec.swift */,
 				D3A100082F70000100D1A004 /* NativeGallery.swift */,
+				D3A1000A2F70000100D1A005 /* NativeLocation.swift */,
 				D3A1000C2F70000100D1A0FE /* WebxdcHost.swift */,
 				D24E27CC2F38ABC10055D9D1 /* RunnerRelease.entitlements */,
 				D25D4D802EFF437F0029F805 /* RunnerDebug.entitlements */,
@@ -739,6 +742,7 @@
 				D3A100032F70000100D1A002 /* NativeImageCodec.swift in Sources */,
 				D3A100052F70000100D1A003 /* NativeVideoCodec.swift in Sources */,
 				D3A100072F70000100D1A004 /* NativeGallery.swift in Sources */,
+				D3A100092F70000100D1A005 /* NativeLocation.swift in Sources */,
 				D3A1000B2F70000100D1A0FE /* WebxdcHost.swift in Sources */,
 				D4A100022F81000100A10002 /* TwonlyWidgetShared.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,

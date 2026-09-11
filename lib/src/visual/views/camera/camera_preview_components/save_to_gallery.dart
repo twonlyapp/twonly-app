@@ -52,12 +52,18 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
                     MediaFilesCompanion(
                       type: Value(widget.mediaService.mediaFile.type),
                       createdAt: Value(clock.now()),
-                      stored: const Value(true),
+                      // Rust publishes the Memory as stored only after the
+                      // plaintext and its thumbnail have been written.
+                      stored: const Value(false),
                     ),
                   );
 
               if (newMediaFile != null) {
                 final newService = MediaFileService(newMediaFile);
+
+                await RustApi.initializeMemoryLocation(
+                  mediaId: newMediaFile.mediaId,
+                );
 
                 if (widget.mediaService.tempPath.existsSync()) {
                   widget.mediaService.tempPath.copySync(

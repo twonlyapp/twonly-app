@@ -3536,6 +3536,75 @@ class $MediaFilesTable extends MediaFiles
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _locationLatitudeMeta = const VerificationMeta(
+    'locationLatitude',
+  );
+  @override
+  late final GeneratedColumn<double> locationLatitude = GeneratedColumn<double>(
+    'location_latitude',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _locationLongitudeMeta = const VerificationMeta(
+    'locationLongitude',
+  );
+  @override
+  late final GeneratedColumn<double> locationLongitude =
+      GeneratedColumn<double>(
+        'location_longitude',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _locationAccuracyMeta = const VerificationMeta(
+    'locationAccuracy',
+  );
+  @override
+  late final GeneratedColumn<double> locationAccuracy = GeneratedColumn<double>(
+    'location_accuracy',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _locationStatusMeta = const VerificationMeta(
+    'locationStatus',
+  );
+  @override
+  late final GeneratedColumn<String> locationStatus = GeneratedColumn<String>(
+    'location_status',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _locationDeadlineAtMeta =
+      const VerificationMeta('locationDeadlineAt');
+  @override
+  late final GeneratedColumn<int> locationDeadlineAt = GeneratedColumn<int>(
+    'location_deadline_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _galleryExportPendingMeta =
+      const VerificationMeta('galleryExportPending');
+  @override
+  late final GeneratedColumn<bool> galleryExportPending = GeneratedColumn<bool>(
+    'gallery_export_pending',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("gallery_export_pending" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3586,6 +3655,12 @@ class $MediaFilesTable extends MediaFiles
     storedFileHash,
     hasThumbnail,
     sizeInBytes,
+    locationLatitude,
+    locationLongitude,
+    locationAccuracy,
+    locationStatus,
+    locationDeadlineAt,
+    galleryExportPending,
     createdAt,
     createdAtMonth,
   ];
@@ -3768,6 +3843,60 @@ class $MediaFilesTable extends MediaFiles
         ),
       );
     }
+    if (data.containsKey('location_latitude')) {
+      context.handle(
+        _locationLatitudeMeta,
+        locationLatitude.isAcceptableOrUnknown(
+          data['location_latitude']!,
+          _locationLatitudeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('location_longitude')) {
+      context.handle(
+        _locationLongitudeMeta,
+        locationLongitude.isAcceptableOrUnknown(
+          data['location_longitude']!,
+          _locationLongitudeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('location_accuracy')) {
+      context.handle(
+        _locationAccuracyMeta,
+        locationAccuracy.isAcceptableOrUnknown(
+          data['location_accuracy']!,
+          _locationAccuracyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('location_status')) {
+      context.handle(
+        _locationStatusMeta,
+        locationStatus.isAcceptableOrUnknown(
+          data['location_status']!,
+          _locationStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('location_deadline_at')) {
+      context.handle(
+        _locationDeadlineAtMeta,
+        locationDeadlineAt.isAcceptableOrUnknown(
+          data['location_deadline_at']!,
+          _locationDeadlineAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('gallery_export_pending')) {
+      context.handle(
+        _galleryExportPendingMeta,
+        galleryExportPending.isAcceptableOrUnknown(
+          data['gallery_export_pending']!,
+          _galleryExportPendingMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -3903,6 +4032,30 @@ class $MediaFilesTable extends MediaFiles
         DriftSqlType.int,
         data['${effectivePrefix}size_in_bytes'],
       ),
+      locationLatitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}location_latitude'],
+      ),
+      locationLongitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}location_longitude'],
+      ),
+      locationAccuracy: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}location_accuracy'],
+      ),
+      locationStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}location_status'],
+      ),
+      locationDeadlineAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}location_deadline_at'],
+      ),
+      galleryExportPending: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}gallery_export_pending'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3972,6 +4125,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final Uint8List? storedFileHash;
   final bool hasThumbnail;
   final int? sizeInBytes;
+  final double? locationLatitude;
+  final double? locationLongitude;
+  final double? locationAccuracy;
+  final String? locationStatus;
+  final int? locationDeadlineAt;
+  final bool galleryExportPending;
   final DateTime createdAt;
   final String? createdAtMonth;
   const MediaFile({
@@ -4000,6 +4159,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     this.storedFileHash,
     required this.hasThumbnail,
     this.sizeInBytes,
+    this.locationLatitude,
+    this.locationLongitude,
+    this.locationAccuracy,
+    this.locationStatus,
+    this.locationDeadlineAt,
+    required this.galleryExportPending,
     required this.createdAt,
     this.createdAtMonth,
   });
@@ -4079,6 +4244,22 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     if (!nullToAbsent || sizeInBytes != null) {
       map['size_in_bytes'] = Variable<int>(sizeInBytes);
     }
+    if (!nullToAbsent || locationLatitude != null) {
+      map['location_latitude'] = Variable<double>(locationLatitude);
+    }
+    if (!nullToAbsent || locationLongitude != null) {
+      map['location_longitude'] = Variable<double>(locationLongitude);
+    }
+    if (!nullToAbsent || locationAccuracy != null) {
+      map['location_accuracy'] = Variable<double>(locationAccuracy);
+    }
+    if (!nullToAbsent || locationStatus != null) {
+      map['location_status'] = Variable<String>(locationStatus);
+    }
+    if (!nullToAbsent || locationDeadlineAt != null) {
+      map['location_deadline_at'] = Variable<int>(locationDeadlineAt);
+    }
+    map['gallery_export_pending'] = Variable<bool>(galleryExportPending);
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || createdAtMonth != null) {
       map['created_at_month'] = Variable<String>(createdAtMonth);
@@ -4144,6 +4325,22 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       sizeInBytes: sizeInBytes == null && nullToAbsent
           ? const Value.absent()
           : Value(sizeInBytes),
+      locationLatitude: locationLatitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationLatitude),
+      locationLongitude: locationLongitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationLongitude),
+      locationAccuracy: locationAccuracy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationAccuracy),
+      locationStatus: locationStatus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationStatus),
+      locationDeadlineAt: locationDeadlineAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationDeadlineAt),
+      galleryExportPending: Value(galleryExportPending),
       createdAt: Value(createdAt),
       createdAtMonth: createdAtMonth == null && nullToAbsent
           ? const Value.absent()
@@ -4198,6 +4395,16 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       storedFileHash: serializer.fromJson<Uint8List?>(json['storedFileHash']),
       hasThumbnail: serializer.fromJson<bool>(json['hasThumbnail']),
       sizeInBytes: serializer.fromJson<int?>(json['sizeInBytes']),
+      locationLatitude: serializer.fromJson<double?>(json['locationLatitude']),
+      locationLongitude: serializer.fromJson<double?>(
+        json['locationLongitude'],
+      ),
+      locationAccuracy: serializer.fromJson<double?>(json['locationAccuracy']),
+      locationStatus: serializer.fromJson<String?>(json['locationStatus']),
+      locationDeadlineAt: serializer.fromJson<int?>(json['locationDeadlineAt']),
+      galleryExportPending: serializer.fromJson<bool>(
+        json['galleryExportPending'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       createdAtMonth: serializer.fromJson<String?>(json['createdAtMonth']),
     );
@@ -4241,6 +4448,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'storedFileHash': serializer.toJson<Uint8List?>(storedFileHash),
       'hasThumbnail': serializer.toJson<bool>(hasThumbnail),
       'sizeInBytes': serializer.toJson<int?>(sizeInBytes),
+      'locationLatitude': serializer.toJson<double?>(locationLatitude),
+      'locationLongitude': serializer.toJson<double?>(locationLongitude),
+      'locationAccuracy': serializer.toJson<double?>(locationAccuracy),
+      'locationStatus': serializer.toJson<String?>(locationStatus),
+      'locationDeadlineAt': serializer.toJson<int?>(locationDeadlineAt),
+      'galleryExportPending': serializer.toJson<bool>(galleryExportPending),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'createdAtMonth': serializer.toJson<String?>(createdAtMonth),
     };
@@ -4272,6 +4485,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     Value<Uint8List?> storedFileHash = const Value.absent(),
     bool? hasThumbnail,
     Value<int?> sizeInBytes = const Value.absent(),
+    Value<double?> locationLatitude = const Value.absent(),
+    Value<double?> locationLongitude = const Value.absent(),
+    Value<double?> locationAccuracy = const Value.absent(),
+    Value<String?> locationStatus = const Value.absent(),
+    Value<int?> locationDeadlineAt = const Value.absent(),
+    bool? galleryExportPending,
     DateTime? createdAt,
     Value<String?> createdAtMonth = const Value.absent(),
   }) => MediaFile(
@@ -4319,6 +4538,22 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         : this.storedFileHash,
     hasThumbnail: hasThumbnail ?? this.hasThumbnail,
     sizeInBytes: sizeInBytes.present ? sizeInBytes.value : this.sizeInBytes,
+    locationLatitude: locationLatitude.present
+        ? locationLatitude.value
+        : this.locationLatitude,
+    locationLongitude: locationLongitude.present
+        ? locationLongitude.value
+        : this.locationLongitude,
+    locationAccuracy: locationAccuracy.present
+        ? locationAccuracy.value
+        : this.locationAccuracy,
+    locationStatus: locationStatus.present
+        ? locationStatus.value
+        : this.locationStatus,
+    locationDeadlineAt: locationDeadlineAt.present
+        ? locationDeadlineAt.value
+        : this.locationDeadlineAt,
+    galleryExportPending: galleryExportPending ?? this.galleryExportPending,
     createdAt: createdAt ?? this.createdAt,
     createdAtMonth: createdAtMonth.present
         ? createdAtMonth.value
@@ -4391,6 +4626,24 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       sizeInBytes: data.sizeInBytes.present
           ? data.sizeInBytes.value
           : this.sizeInBytes,
+      locationLatitude: data.locationLatitude.present
+          ? data.locationLatitude.value
+          : this.locationLatitude,
+      locationLongitude: data.locationLongitude.present
+          ? data.locationLongitude.value
+          : this.locationLongitude,
+      locationAccuracy: data.locationAccuracy.present
+          ? data.locationAccuracy.value
+          : this.locationAccuracy,
+      locationStatus: data.locationStatus.present
+          ? data.locationStatus.value
+          : this.locationStatus,
+      locationDeadlineAt: data.locationDeadlineAt.present
+          ? data.locationDeadlineAt.value
+          : this.locationDeadlineAt,
+      galleryExportPending: data.galleryExportPending.present
+          ? data.galleryExportPending.value
+          : this.galleryExportPending,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       createdAtMonth: data.createdAtMonth.present
           ? data.createdAtMonth.value
@@ -4426,6 +4679,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('storedFileHash: $storedFileHash, ')
           ..write('hasThumbnail: $hasThumbnail, ')
           ..write('sizeInBytes: $sizeInBytes, ')
+          ..write('locationLatitude: $locationLatitude, ')
+          ..write('locationLongitude: $locationLongitude, ')
+          ..write('locationAccuracy: $locationAccuracy, ')
+          ..write('locationStatus: $locationStatus, ')
+          ..write('locationDeadlineAt: $locationDeadlineAt, ')
+          ..write('galleryExportPending: $galleryExportPending, ')
           ..write('createdAt: $createdAt, ')
           ..write('createdAtMonth: $createdAtMonth')
           ..write(')'))
@@ -4459,6 +4718,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     $driftBlobEquality.hash(storedFileHash),
     hasThumbnail,
     sizeInBytes,
+    locationLatitude,
+    locationLongitude,
+    locationAccuracy,
+    locationStatus,
+    locationDeadlineAt,
+    galleryExportPending,
     createdAt,
     createdAtMonth,
   ]);
@@ -4497,6 +4762,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ) &&
           other.hasThumbnail == this.hasThumbnail &&
           other.sizeInBytes == this.sizeInBytes &&
+          other.locationLatitude == this.locationLatitude &&
+          other.locationLongitude == this.locationLongitude &&
+          other.locationAccuracy == this.locationAccuracy &&
+          other.locationStatus == this.locationStatus &&
+          other.locationDeadlineAt == this.locationDeadlineAt &&
+          other.galleryExportPending == this.galleryExportPending &&
           other.createdAt == this.createdAt &&
           other.createdAtMonth == this.createdAtMonth);
 }
@@ -4527,6 +4798,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<Uint8List?> storedFileHash;
   final Value<bool> hasThumbnail;
   final Value<int?> sizeInBytes;
+  final Value<double?> locationLatitude;
+  final Value<double?> locationLongitude;
+  final Value<double?> locationAccuracy;
+  final Value<String?> locationStatus;
+  final Value<int?> locationDeadlineAt;
+  final Value<bool> galleryExportPending;
   final Value<DateTime> createdAt;
   final Value<String?> createdAtMonth;
   final Value<int> rowid;
@@ -4556,6 +4833,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.storedFileHash = const Value.absent(),
     this.hasThumbnail = const Value.absent(),
     this.sizeInBytes = const Value.absent(),
+    this.locationLatitude = const Value.absent(),
+    this.locationLongitude = const Value.absent(),
+    this.locationAccuracy = const Value.absent(),
+    this.locationStatus = const Value.absent(),
+    this.locationDeadlineAt = const Value.absent(),
+    this.galleryExportPending = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.createdAtMonth = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -4586,6 +4869,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.storedFileHash = const Value.absent(),
     this.hasThumbnail = const Value.absent(),
     this.sizeInBytes = const Value.absent(),
+    this.locationLatitude = const Value.absent(),
+    this.locationLongitude = const Value.absent(),
+    this.locationAccuracy = const Value.absent(),
+    this.locationStatus = const Value.absent(),
+    this.locationDeadlineAt = const Value.absent(),
+    this.galleryExportPending = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.createdAtMonth = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -4617,6 +4906,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<Uint8List>? storedFileHash,
     Expression<bool>? hasThumbnail,
     Expression<int>? sizeInBytes,
+    Expression<double>? locationLatitude,
+    Expression<double>? locationLongitude,
+    Expression<double>? locationAccuracy,
+    Expression<String>? locationStatus,
+    Expression<int>? locationDeadlineAt,
+    Expression<bool>? galleryExportPending,
     Expression<DateTime>? createdAt,
     Expression<String>? createdAtMonth,
     Expression<int>? rowid,
@@ -4651,6 +4946,14 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       if (storedFileHash != null) 'stored_file_hash': storedFileHash,
       if (hasThumbnail != null) 'has_thumbnail': hasThumbnail,
       if (sizeInBytes != null) 'size_in_bytes': sizeInBytes,
+      if (locationLatitude != null) 'location_latitude': locationLatitude,
+      if (locationLongitude != null) 'location_longitude': locationLongitude,
+      if (locationAccuracy != null) 'location_accuracy': locationAccuracy,
+      if (locationStatus != null) 'location_status': locationStatus,
+      if (locationDeadlineAt != null)
+        'location_deadline_at': locationDeadlineAt,
+      if (galleryExportPending != null)
+        'gallery_export_pending': galleryExportPending,
       if (createdAt != null) 'created_at': createdAt,
       if (createdAtMonth != null) 'created_at_month': createdAtMonth,
       if (rowid != null) 'rowid': rowid,
@@ -4683,6 +4986,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Value<Uint8List?>? storedFileHash,
     Value<bool>? hasThumbnail,
     Value<int?>? sizeInBytes,
+    Value<double?>? locationLatitude,
+    Value<double?>? locationLongitude,
+    Value<double?>? locationAccuracy,
+    Value<String?>? locationStatus,
+    Value<int?>? locationDeadlineAt,
+    Value<bool>? galleryExportPending,
     Value<DateTime>? createdAt,
     Value<String?>? createdAtMonth,
     Value<int>? rowid,
@@ -4716,6 +5025,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       storedFileHash: storedFileHash ?? this.storedFileHash,
       hasThumbnail: hasThumbnail ?? this.hasThumbnail,
       sizeInBytes: sizeInBytes ?? this.sizeInBytes,
+      locationLatitude: locationLatitude ?? this.locationLatitude,
+      locationLongitude: locationLongitude ?? this.locationLongitude,
+      locationAccuracy: locationAccuracy ?? this.locationAccuracy,
+      locationStatus: locationStatus ?? this.locationStatus,
+      locationDeadlineAt: locationDeadlineAt ?? this.locationDeadlineAt,
+      galleryExportPending: galleryExportPending ?? this.galleryExportPending,
       createdAt: createdAt ?? this.createdAt,
       createdAtMonth: createdAtMonth ?? this.createdAtMonth,
       rowid: rowid ?? this.rowid,
@@ -4818,6 +5133,26 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     if (sizeInBytes.present) {
       map['size_in_bytes'] = Variable<int>(sizeInBytes.value);
     }
+    if (locationLatitude.present) {
+      map['location_latitude'] = Variable<double>(locationLatitude.value);
+    }
+    if (locationLongitude.present) {
+      map['location_longitude'] = Variable<double>(locationLongitude.value);
+    }
+    if (locationAccuracy.present) {
+      map['location_accuracy'] = Variable<double>(locationAccuracy.value);
+    }
+    if (locationStatus.present) {
+      map['location_status'] = Variable<String>(locationStatus.value);
+    }
+    if (locationDeadlineAt.present) {
+      map['location_deadline_at'] = Variable<int>(locationDeadlineAt.value);
+    }
+    if (galleryExportPending.present) {
+      map['gallery_export_pending'] = Variable<bool>(
+        galleryExportPending.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -4858,6 +5193,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('storedFileHash: $storedFileHash, ')
           ..write('hasThumbnail: $hasThumbnail, ')
           ..write('sizeInBytes: $sizeInBytes, ')
+          ..write('locationLatitude: $locationLatitude, ')
+          ..write('locationLongitude: $locationLongitude, ')
+          ..write('locationAccuracy: $locationAccuracy, ')
+          ..write('locationStatus: $locationStatus, ')
+          ..write('locationDeadlineAt: $locationDeadlineAt, ')
+          ..write('galleryExportPending: $galleryExportPending, ')
           ..write('createdAt: $createdAt, ')
           ..write('createdAtMonth: $createdAtMonth, ')
           ..write('rowid: $rowid')
@@ -17839,6 +18180,12 @@ typedef $$MediaFilesTableCreateCompanionBuilder =
       Value<Uint8List?> storedFileHash,
       Value<bool> hasThumbnail,
       Value<int?> sizeInBytes,
+      Value<double?> locationLatitude,
+      Value<double?> locationLongitude,
+      Value<double?> locationAccuracy,
+      Value<String?> locationStatus,
+      Value<int?> locationDeadlineAt,
+      Value<bool> galleryExportPending,
       Value<DateTime> createdAt,
       Value<String?> createdAtMonth,
       Value<int> rowid,
@@ -17870,6 +18217,12 @@ typedef $$MediaFilesTableUpdateCompanionBuilder =
       Value<Uint8List?> storedFileHash,
       Value<bool> hasThumbnail,
       Value<int?> sizeInBytes,
+      Value<double?> locationLatitude,
+      Value<double?> locationLongitude,
+      Value<double?> locationAccuracy,
+      Value<String?> locationStatus,
+      Value<int?> locationDeadlineAt,
+      Value<bool> galleryExportPending,
       Value<DateTime> createdAt,
       Value<String?> createdAtMonth,
       Value<int> rowid,
@@ -18034,6 +18387,36 @@ class $$MediaFilesTableFilterComposer
 
   ColumnFilters<int> get sizeInBytes => $composableBuilder(
     column: $table.sizeInBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get locationLatitude => $composableBuilder(
+    column: $table.locationLatitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get locationLongitude => $composableBuilder(
+    column: $table.locationLongitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get locationAccuracy => $composableBuilder(
+    column: $table.locationAccuracy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get locationStatus => $composableBuilder(
+    column: $table.locationStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get locationDeadlineAt => $composableBuilder(
+    column: $table.locationDeadlineAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get galleryExportPending => $composableBuilder(
+    column: $table.galleryExportPending,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -18207,6 +18590,36 @@ class $$MediaFilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get locationLatitude => $composableBuilder(
+    column: $table.locationLatitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get locationLongitude => $composableBuilder(
+    column: $table.locationLongitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get locationAccuracy => $composableBuilder(
+    column: $table.locationAccuracy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get locationStatus => $composableBuilder(
+    column: $table.locationStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get locationDeadlineAt => $composableBuilder(
+    column: $table.locationDeadlineAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get galleryExportPending => $composableBuilder(
+    column: $table.galleryExportPending,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -18346,6 +18759,36 @@ class $$MediaFilesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<double> get locationLatitude => $composableBuilder(
+    column: $table.locationLatitude,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get locationLongitude => $composableBuilder(
+    column: $table.locationLongitude,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get locationAccuracy => $composableBuilder(
+    column: $table.locationAccuracy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get locationStatus => $composableBuilder(
+    column: $table.locationStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get locationDeadlineAt => $composableBuilder(
+    column: $table.locationDeadlineAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get galleryExportPending => $composableBuilder(
+    column: $table.galleryExportPending,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -18433,6 +18876,12 @@ class $$MediaFilesTableTableManager
                 Value<Uint8List?> storedFileHash = const Value.absent(),
                 Value<bool> hasThumbnail = const Value.absent(),
                 Value<int?> sizeInBytes = const Value.absent(),
+                Value<double?> locationLatitude = const Value.absent(),
+                Value<double?> locationLongitude = const Value.absent(),
+                Value<double?> locationAccuracy = const Value.absent(),
+                Value<String?> locationStatus = const Value.absent(),
+                Value<int?> locationDeadlineAt = const Value.absent(),
+                Value<bool> galleryExportPending = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<String?> createdAtMonth = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -18462,6 +18911,12 @@ class $$MediaFilesTableTableManager
                 storedFileHash: storedFileHash,
                 hasThumbnail: hasThumbnail,
                 sizeInBytes: sizeInBytes,
+                locationLatitude: locationLatitude,
+                locationLongitude: locationLongitude,
+                locationAccuracy: locationAccuracy,
+                locationStatus: locationStatus,
+                locationDeadlineAt: locationDeadlineAt,
+                galleryExportPending: galleryExportPending,
                 createdAt: createdAt,
                 createdAtMonth: createdAtMonth,
                 rowid: rowid,
@@ -18493,6 +18948,12 @@ class $$MediaFilesTableTableManager
                 Value<Uint8List?> storedFileHash = const Value.absent(),
                 Value<bool> hasThumbnail = const Value.absent(),
                 Value<int?> sizeInBytes = const Value.absent(),
+                Value<double?> locationLatitude = const Value.absent(),
+                Value<double?> locationLongitude = const Value.absent(),
+                Value<double?> locationAccuracy = const Value.absent(),
+                Value<String?> locationStatus = const Value.absent(),
+                Value<int?> locationDeadlineAt = const Value.absent(),
+                Value<bool> galleryExportPending = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<String?> createdAtMonth = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -18522,6 +18983,12 @@ class $$MediaFilesTableTableManager
                 storedFileHash: storedFileHash,
                 hasThumbnail: hasThumbnail,
                 sizeInBytes: sizeInBytes,
+                locationLatitude: locationLatitude,
+                locationLongitude: locationLongitude,
+                locationAccuracy: locationAccuracy,
+                locationStatus: locationStatus,
+                locationDeadlineAt: locationDeadlineAt,
+                galleryExportPending: galleryExportPending,
                 createdAt: createdAt,
                 createdAtMonth: createdAtMonth,
                 rowid: rowid,

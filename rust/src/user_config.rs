@@ -242,6 +242,11 @@ pub struct UserConfig {
     #[serde(default = "defaults::true_value")]
     #[frb(non_final)]
     pub store_media_files_in_gallery: bool,
+    /// Adds the capture location to locally stored Memories and gallery
+    /// exports. Disabled by default and never added to outgoing media.
+    #[serde(default)]
+    #[frb(non_final)]
+    pub store_location_in_memories: bool,
     #[serde(default)]
     #[frb(non_final)]
     pub auto_store_all_send_unlimited_media_files: bool,

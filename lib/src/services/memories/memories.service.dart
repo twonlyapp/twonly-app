@@ -384,6 +384,7 @@ class MemoriesService {
         final mediaFile = item.mediaService.mediaFile;
         if (!mediaFile.hasThumbnail &&
             mediaFile.type != MediaType.audio &&
+            item.mediaService.storedPath.existsSync() &&
             _thumbnailRequests.add(mediaFile.mediaId)) {
           unawaited(item.mediaService.createThumbnail());
         }

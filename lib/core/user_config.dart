@@ -131,6 +131,10 @@ class UserConfig {
   List<String>? preSelectedEmojies;
   Map<String, List<String>>? autoDownloadOptions;
   bool storeMediaFilesInGallery;
+
+  /// Adds the capture location to locally stored Memories and gallery
+  /// exports. Disabled by default and never added to outgoing media.
+  bool storeLocationInMemories;
   bool autoStoreAllSendUnlimitedMediaFiles;
   bool typingIndicators;
   bool showRestoreFlame;
@@ -202,6 +206,7 @@ class UserConfig {
     this.preSelectedEmojies,
     this.autoDownloadOptions,
     required this.storeMediaFilesInGallery,
+    required this.storeLocationInMemories,
     required this.autoStoreAllSendUnlimitedMediaFiles,
     required this.typingIndicators,
     required this.showRestoreFlame,
@@ -267,6 +272,7 @@ class UserConfig {
       preSelectedEmojies.hashCode ^
       autoDownloadOptions.hashCode ^
       storeMediaFilesInGallery.hashCode ^
+      storeLocationInMemories.hashCode ^
       autoStoreAllSendUnlimitedMediaFiles.hashCode ^
       typingIndicators.hashCode ^
       showRestoreFlame.hashCode ^
@@ -336,6 +342,7 @@ class UserConfig {
           preSelectedEmojies == other.preSelectedEmojies &&
           autoDownloadOptions == other.autoDownloadOptions &&
           storeMediaFilesInGallery == other.storeMediaFilesInGallery &&
+          storeLocationInMemories == other.storeLocationInMemories &&
           autoStoreAllSendUnlimitedMediaFiles ==
               other.autoStoreAllSendUnlimitedMediaFiles &&
           typingIndicators == other.typingIndicators &&

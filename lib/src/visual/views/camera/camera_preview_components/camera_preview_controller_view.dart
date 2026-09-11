@@ -169,6 +169,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     initVolumeControl();
     initAsync();
     _checkAndInitCamera();
+    _prewarmMemoryLocation();
   }
 
   @override
@@ -178,10 +179,22 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       if (widget.isVisible) {
         initVolumeControl();
         _checkAndInitCamera();
+        _prewarmMemoryLocation();
       } else {
         _deInitVolumeControl();
       }
     }
+  }
+
+  void _prewarmMemoryLocation() {
+    // QR scanning deliberately does not touch location. A normal camera view
+    // has controllers and can create a Memory, so start looking as soon as it
+    // becomes visible instead of waiting for the shutter.
+    if (!widget.isVisible || widget.hideControllers) return;
+    unawaitedRustCall(
+      RustApi.prewarmMemoryLocation(),
+      'prewarmMemoryLocation',
+    );
   }
 
   void _checkAndInitCamera() {

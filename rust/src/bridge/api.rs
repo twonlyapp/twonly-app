@@ -209,6 +209,20 @@ impl RustApi {
             .await
     }
 
+    /// Starts the optional location window for a Memory row created by the
+    /// local save button rather than the outgoing-media initializer.
+    pub async fn initialize_memory_location(media_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::location_metadata::initialize_for_media(ctx, &media_id).await
+    }
+
+    /// Begins the optional precise-location lookup when the capture camera is
+    /// opened, so a later photo usually has a fix immediately available.
+    pub async fn prewarm_memory_location() -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::location_metadata::prewarm(ctx)
+    }
+
     /// Creates one outgoing message per selected group and starts the upload.
     pub async fn send_media_to_groups(
         media_id: String,

@@ -44,6 +44,7 @@ pub(crate) mod android {
     const MEDIA_CODEC_CLASS: &str = "eu/twonly/media/NativeImageCodec";
     const VIDEO_CODEC_CLASS: &str = "eu/twonly/media/NativeVideoCodec";
     const GALLERY_CLASS: &str = "eu/twonly/media/NativeGallery";
+    const LOCATION_CLASS: &str = "eu/twonly/location/NativeLocation";
 
     static JAVA_VM: OnceLock<JavaVM> = OnceLock::new();
     static TRANSFER: OnceLock<GlobalRef> = OnceLock::new();
@@ -51,6 +52,7 @@ pub(crate) mod android {
     static MEDIA_CODEC: OnceLock<GlobalRef> = OnceLock::new();
     static VIDEO_CODEC: OnceLock<GlobalRef> = OnceLock::new();
     static GALLERY: OnceLock<GlobalRef> = OnceLock::new();
+    static LOCATION: OnceLock<GlobalRef> = OnceLock::new();
     /// `JNI_OnLoad` runs before Rust logging exists, so failures there are
     /// recorded rather than logged, and reported by the first call that needs
     /// the class.
@@ -71,6 +73,7 @@ pub(crate) mod android {
                     (MEDIA_CODEC_CLASS, &MEDIA_CODEC),
                     (VIDEO_CODEC_CLASS, &VIDEO_CODEC),
                     (GALLERY_CLASS, &GALLERY),
+                    (LOCATION_CLASS, &LOCATION),
                 ] {
                     match env
                         .find_class(name)
@@ -121,6 +124,10 @@ pub(crate) mod android {
 
     pub(crate) fn gallery_class() -> Result<&'static GlobalRef> {
         cached_class(&GALLERY, GALLERY_CLASS)
+    }
+
+    pub(crate) fn location_class() -> Result<&'static GlobalRef> {
+        cached_class(&LOCATION, LOCATION_CLASS)
     }
 
     pub(crate) fn jni_env() -> Result<AttachGuard<'static>> {

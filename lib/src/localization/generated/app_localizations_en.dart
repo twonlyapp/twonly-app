@@ -229,7 +229,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsProfile => 'Profile';
 
   @override
-  String get settingsStorageData => 'Data and storage';
+  String get settingsStorageData => 'Memories & Storage';
+
+  @override
+  String get memoryLocationTitle => 'Store location in Memories';
+
+  @override
+  String get memoryLocationSubtitle =>
+      'Location for Memories and gallery exports. Never sent to contacts.';
+
+  @override
+  String get memoryLocationPermissionDenied =>
+      'Precise location access was not granted. The setting remains disabled.';
 
   @override
   String get settingsStorageDataStoreInGTitle => 'Store in Gallery';

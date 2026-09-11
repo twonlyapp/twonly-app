@@ -231,7 +231,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsProfile => 'Profil';
 
   @override
-  String get settingsStorageData => 'Daten und Speicher';
+  String get settingsStorageData => 'Memories & Speicher';
+
+  @override
+  String get memoryLocationTitle => 'Standort in Memories speichern';
+
+  @override
+  String get memoryLocationSubtitle =>
+      'Standort für Memories und Galerie-Exporte. Wird nicht an Kontakte gesendet.';
+
+  @override
+  String get memoryLocationPermissionDenied =>
+      'Der genaue Standortzugriff wurde nicht erlaubt. Die Einstellung bleibt deaktiviert.';
 
   @override
   String get settingsStorageDataStoreInGTitle => 'In der Galerie speichern';

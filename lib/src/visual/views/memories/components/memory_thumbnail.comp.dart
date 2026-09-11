@@ -142,8 +142,13 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
   @override
   void didUpdateWidget(covariant MemoriesThumbnailComp oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.galleryItem.mediaService.mediaFile.mediaId !=
-        widget.galleryItem.mediaService.mediaFile.mediaId) {
+    final oldMedia = oldWidget.galleryItem.mediaService.mediaFile;
+    final media = widget.galleryItem.mediaService.mediaFile;
+    final changedMedia = oldMedia.mediaId != media.mediaId;
+    final sourceBecameAvailable =
+        !oldMedia.stored && media.stored ||
+        !oldMedia.hasThumbnail && media.hasThumbnail;
+    if (changedMedia || sourceBecameAvailable) {
       _imageStream?.removeListener(_listener);
       _imageStream = null;
       _imageProvider = null;

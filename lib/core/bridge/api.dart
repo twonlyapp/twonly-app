@@ -471,6 +471,13 @@ class RustApi {
     isDraftMedia: isDraftMedia,
   );
 
+  /// Starts the optional location window for a Memory row created by the
+  /// local save button rather than the outgoing-media initializer.
+  static Future<void> initializeMemoryLocation({required String mediaId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiInitializeMemoryLocation(
+        mediaId: mediaId,
+      );
+
   static Future<String> insertAndSendAdditionalData({
     required String groupId,
     required String messageType,
@@ -567,6 +574,11 @@ class RustApi {
       .instance
       .api
       .crateBridgeApiRustApiPrerenderMedia(mediaId: mediaId);
+
+  /// Begins the optional precise-location lookup when the capture camera is
+  /// opened, so a later photo usually has a fix immediately available.
+  static Future<void> prewarmMemoryLocation() =>
+      RustLib.instance.api.crateBridgeApiRustApiPrewarmMemoryLocation();
 
   /// Deletes temporary media whose messages are finished with it.
   static Future<void> purgeMediaTempFolder() =>

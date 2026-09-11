@@ -521,8 +521,26 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStorageData.
   ///
   /// In en, this message translates to:
-  /// **'Data and storage'**
+  /// **'Memories & Storage'**
   String get settingsStorageData;
+
+  /// No description provided for @memoryLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store location in Memories'**
+  String get memoryLocationTitle;
+
+  /// No description provided for @memoryLocationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location for Memories and gallery exports. Never sent to contacts.'**
+  String get memoryLocationSubtitle;
+
+  /// No description provided for @memoryLocationPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Precise location access was not granted. The setting remains disabled.'**
+  String get memoryLocationPermissionDenied;
 
   /// No description provided for @settingsStorageDataStoreInGTitle.
   ///

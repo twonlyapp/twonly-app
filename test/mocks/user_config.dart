@@ -27,6 +27,7 @@ UserConfig testUserConfig({
   showShowImagePreviewWhenSending: false,
   startWithCameraOpen: true,
   storeMediaFilesInGallery: true,
+  storeLocationInMemories: false,
   autoStoreAllSendUnlimitedMediaFiles: false,
   typingIndicators: true,
   showRestoreFlame: true,

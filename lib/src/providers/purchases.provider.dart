@@ -108,11 +108,14 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
           isPayingUser(
             planFromString(userService.currentUser.subscriptionPlan),
           )) {
-        globalForceIpaCheck = Timer(const Duration(seconds: 5), () async {
+        globalForceIpaCheck = Timer(const Duration(seconds: 5), () {
           Log.info(
             'Force Ipa check was not stopped. Requesting forced check...',
           );
-          await RustApi.forceIpaCheck();
+          unawaitedRustCall(
+            RustApi.forceIpaCheck(),
+            'Forced IAP check',
+          );
         });
       }
 

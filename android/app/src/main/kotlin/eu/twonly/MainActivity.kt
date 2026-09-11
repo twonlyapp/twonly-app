@@ -20,12 +20,16 @@ import io.flutter.plugin.common.MethodChannel
 import eu.twonly.notifications.NotificationTapChannel
 import eu.twonly.webxdc.WebxdcChannel
 import eu.twonly.widget.WidgetRuntimeChannel
+import android.Manifest
+import android.content.pm.PackageManager
 
 class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "eu.twonly/photo_picker"
     private var pendingResult: MethodChannel.Result? = null
+    private var pendingLocationPermissionResult: MethodChannel.Result? = null
     
     private lateinit var pickMultipleMedia: ActivityResultLauncher<PickVisualMediaRequest>
+    private lateinit var requestLocationPermissions: ActivityResultLauncher<Array<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -42,6 +46,14 @@ class MainActivity : FlutterFragmentActivity() {
                 pendingResult?.success(emptyList<String>())
             }
             pendingResult = null
+        }
+        requestLocationPermissions = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions(),
+        ) {
+            pendingLocationPermissionResult?.success(
+                checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED,
+            )
+            pendingLocationPermissionResult = null
         }
         
         super.onCreate(savedInstanceState)
@@ -110,6 +122,28 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                 }
                 else -> result.notImplemented()
+            }
+        }
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "eu.twonly/location_metadata",
+        ).setMethodCallHandler { call, result ->
+            if (call.method != "requestPrecisePermission") {
+                result.notImplemented()
+                return@setMethodCallHandler
+            }
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                result.success(true)
+            } else if (pendingLocationPermissionResult != null) {
+                result.error("request_in_progress", "A location permission request is already open.", null)
+            } else {
+                pendingLocationPermissionResult = result
+                requestLocationPermissions.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                    ),
+                )
             }
         }
     }

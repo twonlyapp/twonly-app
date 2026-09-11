@@ -78,6 +78,16 @@ struct MediaRow {
     created_at: i64,
 }
 
+#[derive(FromRow)]
+struct GalleryLocationRow {
+    location_status: Option<String>,
+    location_deadline_at: Option<i64>,
+    location_latitude: Option<f64>,
+    location_longitude: Option<f64>,
+    location_accuracy: Option<f64>,
+    gallery_export_pending: i64,
+}
+
 /// Why a media send stopped at `fileLimitReached`, for the chat entry to show.
 pub struct MediaSizeReport {
     /// The encoded media as it sits on disk, while it is still there.
@@ -147,6 +157,7 @@ impl MediaUploadService {
         .execute(&mut *transaction)
         .await?;
         transaction.commit().await?;
+        crate::services::location_metadata::initialize_for_media(&self.ctx, &media_id).await?;
         Ok(media_id)
     }
 
@@ -400,6 +411,14 @@ impl MediaUploadService {
             self.store(media_id).await?;
         }
 
+        // The stored copy is device-local and may later gain EXIF metadata.
+        // The upload copy is a separate file and is always scrubbed before
+        // encryption, including when it originated from an imported Memory.
+        if media.media_type == "image" {
+            let path = temp_path.clone();
+            blocking(move || media_exif::remove_exif_from_file(&path)).await?;
+        }
+
         match DirectMediaUploadService::new(&self.ctx)
             .prepare_and_schedule(media_id)
             .await
@@ -439,6 +458,7 @@ impl MediaUploadService {
     /// settles the transfers the server has meanwhile accepted or rejected.
     pub async fn finish_started_uploads(&self) -> Result<()> {
         let _guard = self.ctx.media_preprocessing.lock().await;
+        crate::services::location_metadata::resume(&self.ctx).await?;
         let direct = DirectMediaUploadService::new(&self.ctx);
         if let Err(error) = direct.reconcile().await {
             tracing::warn!(%error, "direct media reconciliation failed");
@@ -647,13 +667,6 @@ impl MediaUploadService {
         let Some(media) = self.load(media_id).await? else {
             return Ok(());
         };
-        let database = self.ctx.app_db.read().await.clone();
-        sqlx::query("UPDATE media_files SET stored = 1 WHERE media_id = ?")
-            .bind(media_id)
-            .execute(&database.pool)
-            .await?;
-        drop(database);
-
         let files = MediaFileService::new(&self.ctx);
         let temp_path = files.temp_path(media_id, &media.media_type);
         let stored_path = files.stored_path(media_id, &media.media_type);
@@ -676,14 +689,13 @@ impl MediaUploadService {
         self.create_thumbnail(&media).await?;
         // Trust the filesystem rather than what the encoder reported: a
         // thumbnail that was not written must not be advertised to the UI.
-        if files.thumbnail_path(media_id).exists() {
-            self.update_media(
-                "UPDATE media_files SET has_thumbnail = ? WHERE media_id = ?",
-                1_i64,
-                media_id,
-            )
-            .await?;
-        }
+        let has_thumbnail = i64::from(files.thumbnail_path(media_id).exists());
+        self.update_media(
+            "UPDATE media_files SET stored = 1, has_thumbnail = ? WHERE media_id = ?",
+            has_thumbnail,
+            media_id,
+        )
+        .await?;
         self.refresh_stored_metadata(media_id, &stored_path).await
     }
 
@@ -1265,7 +1277,7 @@ impl MediaUploadService {
         Ok(())
     }
 
-    /// Renders the preview shown in chat lists and the gallery.    /// Renders the preview shown in chat lists and the gallery.
+    /// Renders the preview shown in chat lists and the gallery.
     async fn create_thumbnail(&self, media: &MediaRow) -> Result<()> {
         let files = MediaFileService::new(&self.ctx);
         let stored = files.stored_path(&media.media_id, &media.media_type);
@@ -1295,9 +1307,83 @@ impl MediaUploadService {
         Ok(())
     }
 
-    /// Exports a stored media file to the user's photo library, stamping the
-    /// capture time into the file so it survives being copied elsewhere.
+    /// Exports a stored media file, or durably queues it while its optional
+    /// location is still being resolved.
     pub async fn save_to_gallery(&self, media_id: &str) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let location = sqlx::query_as::<_, GalleryLocationRow>(
+            r#"SELECT location_status, location_deadline_at, location_latitude,
+                      location_longitude, location_accuracy, gallery_export_pending
+               FROM media_files WHERE media_id = ?"#,
+        )
+        .bind(media_id)
+        .fetch_optional(&database.pool)
+        .await?;
+        let Some(location) = location else {
+            return Ok(());
+        };
+        if location.location_status.as_deref() == Some("pending")
+            && location.location_deadline_at.unwrap_or_default() > chrono::Utc::now().timestamp()
+        {
+            sqlx::query("UPDATE media_files SET gallery_export_pending = 1 WHERE media_id = ?")
+                .bind(media_id)
+                .execute(&database.pool)
+                .await?;
+            drop(database);
+            if let Some(deadline) = location.location_deadline_at {
+                crate::services::location_metadata::schedule(
+                    &self.ctx,
+                    media_id.to_owned(),
+                    deadline,
+                );
+            }
+            return Ok(());
+        }
+        if location.location_status.as_deref() == Some("pending") {
+            sqlx::query("UPDATE media_files SET location_status = 'timedOut' WHERE media_id = ?")
+                .bind(media_id)
+                .execute(&database.pool)
+                .await?;
+        }
+        drop(database);
+        self.export_to_gallery_now(media_id, location).await
+    }
+
+    pub(crate) async fn finish_pending_gallery_export(&self, media_id: &str) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let location = sqlx::query_as::<_, GalleryLocationRow>(
+            r#"SELECT location_status, location_deadline_at, location_latitude,
+                      location_longitude, location_accuracy, gallery_export_pending
+               FROM media_files WHERE media_id = ?"#,
+        )
+        .bind(media_id)
+        .fetch_optional(&database.pool)
+        .await?;
+        let Some(location) = location else {
+            return Ok(());
+        };
+        if location.gallery_export_pending == 0
+            || location.location_status.as_deref() == Some("pending")
+        {
+            return Ok(());
+        }
+        // This flag represents waiting for location, not a general gallery
+        // retry queue. Clear it before handing the export to the platform.
+        sqlx::query("UPDATE media_files SET gallery_export_pending = 0 WHERE media_id = ?")
+            .bind(media_id)
+            .execute(&database.pool)
+            .await?;
+        drop(database);
+        self.export_to_gallery_now(media_id, location).await
+    }
+
+    /// Stamps capture time and the locally stored location into a temporary
+    /// export. The Memory itself remains untouched.
+    async fn export_to_gallery_now(
+        &self,
+        media_id: &str,
+        location: GalleryLocationRow,
+    ) -> Result<()> {
         let Some(media) = self.load(media_id).await? else {
             return Ok(());
         };
@@ -1319,6 +1405,9 @@ impl MediaUploadService {
             } else {
                 let metadata = media_exif::ExifMetadata {
                     created_at: chrono::DateTime::from_timestamp_millis(created_at_millis),
+                    latitude: location.location_latitude,
+                    longitude: location.location_longitude,
+                    accuracy: location.location_accuracy,
                 };
                 let bytes = std::fs::read(&stored)?;
                 match media_exif::with_exif(&bytes, &metadata) {
@@ -1488,6 +1577,46 @@ mod tests {
                 .fetch_one(&database.pool)
                 .await?;
         assert_eq!(has_thumbnail, 1);
+        Ok(())
+    }
+
+    /// A freshly saved Memory used to become visible to Flutter before its
+    /// source file existed. The one-shot repair added for the Memories viewer
+    /// then consumed its attempt too early and left the row without a preview.
+    #[tokio::test]
+    async fn storing_a_memory_publishes_it_with_its_thumbnail() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let data_dir = temp.path().join("data");
+        std::fs::create_dir_all(data_dir.join("keyvalue"))?;
+        std::fs::write(
+            data_dir.join("keyvalue/user.json"),
+            serde_json::to_vec(&UserConfig::default())?,
+        )?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), data_dir).await?;
+
+        let media_id = "new-memory";
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO media_files(media_id, type, stored) VALUES (?, 'image', 0)")
+            .bind(media_id)
+            .execute(&database.pool)
+            .await?;
+        drop(database);
+
+        let files = MediaFileService::new(&ctx);
+        let source = files.temp_path(media_id, "image");
+        MediaFileService::ensure_parent(&source)?;
+        image::DynamicImage::ImageRgb8(image::RgbImage::new(900, 1600)).save(&source)?;
+
+        MediaUploadService::new(&ctx).store(media_id).await?;
+
+        assert!(files.thumbnail_path(media_id).exists());
+        let database = ctx.app_db.read().await.clone();
+        let state: (i64, i64) =
+            sqlx::query_as("SELECT stored, has_thumbnail FROM media_files WHERE media_id = ?")
+                .bind(media_id)
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(state, (1, 1));
         Ok(())
     }
 
