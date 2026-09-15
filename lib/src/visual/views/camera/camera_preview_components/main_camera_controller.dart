@@ -22,6 +22,7 @@ import 'package:twonly/src/utils/qr.utils.dart';
 import 'package:twonly/src/visual/components/add_contact_dialog.comp.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/components/verification_failure_dialog.comp.dart';
 import 'package:twonly/src/visual/components/verification_success_dialog.comp.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
@@ -521,112 +522,126 @@ class MainCameraController {
   Future<void> _processBarcode(InputImage inputImage) async {
     if (_isBusy) return;
     _isBusy = true;
-    final barcodes = await _barcodeScanner.processImage(inputImage);
-    final controller = cameraController;
-    if (inputImage.metadata?.size != null &&
-        inputImage.metadata?.rotation != null &&
-        controller != null) {
-      final painter = BarcodeDetectorPainter(
-        barcodes,
-        inputImage.metadata!.size,
-        inputImage.metadata!.rotation,
-        controller.description.lensDirection,
-      );
-      qrCodePain = CustomPaint(painter: painter);
+    try {
+      final barcodes = await _barcodeScanner.processImage(inputImage);
+      final controller = cameraController;
+      if (inputImage.metadata?.size != null &&
+          inputImage.metadata?.rotation != null &&
+          controller != null) {
+        final painter = BarcodeDetectorPainter(
+          barcodes,
+          inputImage.metadata!.size,
+          inputImage.metadata!.rotation,
+          controller.description.lensDirection,
+        );
+        qrCodePain = CustomPaint(painter: painter);
 
-      if (barcodes.isEmpty && timeSharedLinkWasSetWithQr != null) {
-        if (timeSharedLinkWasSetWithQr!.isAfter(
-          DateTime.now().subtract(const Duration(seconds: 2)),
-        )) {
-          setSharedLinkForPreview(null);
-        }
-      }
-
-      for (final barcode in barcodes) {
-        if (barcode.displayValue == null) continue;
-        final link = barcode.displayValue!;
-
-        if (link.startsWith(PasswordlessRecoveryService.linkPrefix)) {
-          await PasswordlessRecoveryService.handleRecoveryLink(link);
-          continue;
+        if (barcodes.isEmpty && timeSharedLinkWasSetWithQr != null) {
+          if (timeSharedLinkWasSetWithQr!.isAfter(
+            DateTime.now().subtract(const Duration(seconds: 2)),
+          )) {
+            setSharedLinkForPreview(null);
+          }
         }
 
-        if (link.startsWith(QrCodeUtils.linkPrefix)) {
-          if (_handledProfileLinks.contains(link)) continue;
-          _handledProfileLinks.add(link);
+        for (final barcode in barcodes) {
+          if (barcode.displayValue == null) continue;
+          final link = barcode.displayValue!;
 
-          final res = await QrCodeUtils.handleQrCodeLink(link);
-          if (res == null) continue;
-          final (profile, contact, verificationOk) = res;
-
-          if (contact?.blocked ?? false) {
-            await twonlyDB.contactsDao.updateContact(
-              contact!.userId,
-              const ContactsCompanion(blocked: Value(false)),
-            );
+          if (link.startsWith(PasswordlessRecoveryService.linkPrefix)) {
+            await PasswordlessRecoveryService.handleRecoveryLink(link);
+            continue;
           }
 
-          if (contact == null || contact.deletedByUser) {
-            final context = cameraPreviewKey.currentContext;
-            if (context != null && context.mounted) {
-              unawaited(HapticFeedback.heavyImpact());
-              final shouldRequest = await AddContactDialog.show(
-                context,
-                profile.username,
+          if (link.startsWith(QrCodeUtils.linkPrefix)) {
+            if (_handledProfileLinks.contains(link)) continue;
+            _handledProfileLinks.add(link);
+
+            final result = await QrCodeUtils.handleQrCodeLink(link);
+            final profile = result.profile;
+            final contact = result.contact;
+
+            if (contact?.blocked ?? false) {
+              await twonlyDB.contactsDao.updateContact(
+                contact!.userId,
+                const ContactsCompanion(blocked: Value(false)),
               );
-              if (shouldRequest == true && context.mounted) {
-                final success = await addNewContactFromPublicProfile(profile);
-                if (context.mounted) {
-                  if (success) {
-                    showSnackbar(
-                      context,
-                      context.lang.requestedUserToastText(profile.username),
-                      level: SnackbarLevel.success,
-                    );
-                  } else {
-                    await showAlertDialog(
-                      context,
-                      context.lang.addFriendTitle,
-                      context.lang.additionalUserAddError(profile.username),
-                      customCancel: '',
-                    );
+            }
+
+            if (result.status == QrCodeLinkStatus.newContact) {
+              final context = cameraPreviewKey.currentContext;
+              if (profile != null && context != null && context.mounted) {
+                unawaited(HapticFeedback.heavyImpact());
+                final shouldRequest = await AddContactDialog.show(
+                  context,
+                  profile.username,
+                );
+                if (shouldRequest == true && context.mounted) {
+                  final success = await addNewContactFromPublicProfile(profile);
+                  if (context.mounted) {
+                    if (success) {
+                      showSnackbar(
+                        context,
+                        context.lang.requestedUserToastText(profile.username),
+                        level: SnackbarLevel.success,
+                      );
+                    } else {
+                      await showAlertDialog(
+                        context,
+                        context.lang.addFriendTitle,
+                        context.lang.additionalUserAddError(profile.username),
+                        customCancel: '',
+                      );
+                    }
                   }
                 }
+              }
+              continue;
+            }
+
+            if (result.status != QrCodeLinkStatus.verified) {
+              final context = cameraPreviewKey.currentContext;
+              if (context != null && context.mounted) {
+                unawaited(HapticFeedback.heavyImpact());
+                await showQrCodeVerificationFailure(context, result);
+              }
+              continue;
+            }
+
+            if (contact != null && contactsVerified[contact.userId] == null) {
+              contactsVerified[contact.userId] = ScannedVerifiedContact(
+                contact: contact,
+                verificationOk: true,
+              );
+
+              unawaited(HapticFeedback.heavyImpact());
+              final context = cameraPreviewKey.currentContext;
+              if (context != null && context.mounted) {
+                await VerificationSuccessDialog.show(context, contact);
+                onVerificationSuccessDismissed?.call(contact);
               }
             }
             continue;
           }
 
-          if (contactsVerified[contact.userId] == null) {
-            contactsVerified[contact.userId] = ScannedVerifiedContact(
-              contact: contact,
-              verificationOk: verificationOk,
-            );
-
-            unawaited(HapticFeedback.heavyImpact());
-            final context = cameraPreviewKey.currentContext;
-            if (verificationOk && context != null && context.mounted) {
-              await VerificationSuccessDialog.show(context, contact);
-              onVerificationSuccessDismissed?.call(contact);
+          if (link.startsWith('http://') || link.startsWith('https://')) {
+            scannedUrl = link;
+            if (sharedLinkForPreview == null) {
+              timeSharedLinkWasSetWithQr = clock.now();
+              setSharedLinkForPreview(
+                Uri.parse(scannedUrl!),
+                generatePreview: false,
+              );
             }
-          }
-          continue;
-        }
-
-        if (link.startsWith('http://') || link.startsWith('https://')) {
-          scannedUrl = link;
-          if (sharedLinkForPreview == null) {
-            timeSharedLinkWasSetWithQr = clock.now();
-            setSharedLinkForPreview(
-              Uri.parse(scannedUrl!),
-              generatePreview: false,
-            );
           }
         }
       }
+    } catch (e, stackTrace) {
+      Log.error('QR-code processing failed: $e\n$stackTrace');
+    } finally {
+      _isBusy = false;
+      setState?.call();
     }
-    _isBusy = false;
-    setState?.call();
   }
 
   Future<void> _processFaces(InputImage inputImage) async {

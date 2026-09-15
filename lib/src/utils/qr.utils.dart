@@ -14,6 +14,28 @@ import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
+enum QrCodeLinkStatus {
+  invalid,
+  ownProfile,
+  newContact,
+  verified,
+  keyMismatch,
+  missingSession,
+  error,
+}
+
+class QrCodeLinkResult {
+  const QrCodeLinkResult({
+    required this.status,
+    this.profile,
+    this.contact,
+  });
+
+  final QrCodeLinkStatus status;
+  final PublicProfile? profile;
+  final Contact? contact;
+}
+
 class QrCodeUtils {
   static String linkPrefix = 'https://me.twonly.eu/qr/#';
 
@@ -45,8 +67,7 @@ class QrCodeUtils {
     return link;
   }
 
-  // returns: profile, NEW_USER=true/VERIFIED_USER=false, VERIFICATION_OK
-  static Future<(PublicProfile, Contact?, bool)?> handleQrCodeLink(
+  static Future<QrCodeLinkResult> handleQrCodeLink(
     String link,
   ) async {
     late PublicProfile profile;
@@ -54,35 +75,53 @@ class QrCodeUtils {
     try {
       final bytes = base64Url.decode(link.replaceFirst(linkPrefix, ''));
       final envelope = QREnvelope.fromBuffer(bytes);
-      if (envelope.type != QREnvelope_Type.PUBLIC_PROFILE) return null;
+      if (envelope.type != QREnvelope_Type.PUBLIC_PROFILE) {
+        return const QrCodeLinkResult(status: QrCodeLinkStatus.invalid);
+      }
       profile = PublicProfile.fromBuffer(envelope.data);
     } catch (e) {
       Log.error(e);
-      return null;
+      return const QrCodeLinkResult(status: QrCodeLinkStatus.invalid);
     }
 
-    final contact = await twonlyDB.contactsDao.getContactById(
-      profile.userId.toInt(),
-    );
+    try {
+      final contact = await twonlyDB.contactsDao.getContactById(
+        profile.userId.toInt(),
+      );
 
-    if (contact == null) {
-      if (profile.username == userService.currentUser.username) {
-        return null;
+      if (profile.userId.toInt() == userService.currentUser.userId) {
+        return QrCodeLinkResult(
+          status: QrCodeLinkStatus.ownProfile,
+          profile: profile,
+        );
       }
-      // NEW_USER
-      return (profile, null, false);
-    }
 
-    final storedPublicKey = await RustSignal.getContactPublicKey(
-      contactId: contact.userId,
-    );
-    if (storedPublicKey == null) return null;
+      if (contact == null) {
+        return QrCodeLinkResult(
+          status: QrCodeLinkStatus.newContact,
+          profile: profile,
+        );
+      }
 
-    final verificationOk = profile.publicIdentityKey.equals(
-      storedPublicKey.toList(),
-    );
+      final storedPublicKey = await RustSignal.getContactPublicKey(
+        contactId: contact.userId,
+      );
+      if (storedPublicKey == null) {
+        return QrCodeLinkResult(
+          status: QrCodeLinkStatus.missingSession,
+          profile: profile,
+          contact: contact,
+        );
+      }
 
-    if (verificationOk) {
+      if (!profile.publicIdentityKey.equals(storedPublicKey.toList())) {
+        return QrCodeLinkResult(
+          status: QrCodeLinkStatus.keyMismatch,
+          profile: profile,
+          contact: contact,
+        );
+      }
+
       var useSecretVerificationToken = profile.hasSecretVerificationToken();
       if (profile.hasTimestamp()) {
         // Only notify the scanned user if the QR code was generated within the last 10 minutes.
@@ -107,9 +146,18 @@ class QrCodeUtils {
         contact.userId,
         VerificationType.qrScanned,
       );
+      return QrCodeLinkResult(
+        status: QrCodeLinkStatus.verified,
+        profile: profile,
+        contact: contact,
+      );
+    } catch (e) {
+      Log.error('Failed to verify QR-code profile: $e');
+      return QrCodeLinkResult(
+        status: QrCodeLinkStatus.error,
+        profile: profile,
+      );
     }
-
-    return (profile, contact, verificationOk);
   }
 }
 

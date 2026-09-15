@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -2068471902;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1675944024;
 
 // Section: executor
 
@@ -5735,6 +5735,46 @@ fn wire__crate__bridge__wrapper__signal__rust_signal_get_contact_public_key_impl
         },
     )
 }
+fn wire__crate__bridge__wrapper__signal__rust_signal_get_safety_number_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_signal_get_safety_number",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contact_id = <i64>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::wrapper::signal::RustSignal::get_safety_number(
+                                api_contact_id,
+                            )
+                            .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__bridge__wrapper__signal__rust_signal_get_user_public_key_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -5807,6 +5847,46 @@ fn wire__crate__bridge__wrapper__signal__rust_signal_process_prekey_bundle_impl(
                                 api_name,
                                 api_device_id,
                                 api_bundle,
+                            )
+                            .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__wrapper__signal__rust_signal_reset_contact_session_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_signal_reset_contact_session",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contact_id = <i64>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::wrapper::signal::RustSignal::reset_contact_session(
+                                api_contact_id,
                             )
                             .await?;
                         Ok(output_ok)
@@ -7982,20 +8062,22 @@ fn pde_ffi_dispatcher_primary_impl(
 156 => wire__crate__bridge__wrapper__signal__rust_signal_generate_bundle_impl(port, ptr, rust_vec_len, data_len),
 157 => wire__crate__bridge__wrapper__signal__rust_signal_generate_pqc_prekeys_impl(port, ptr, rust_vec_len, data_len),
 158 => wire__crate__bridge__wrapper__signal__rust_signal_get_contact_public_key_impl(port, ptr, rust_vec_len, data_len),
-159 => wire__crate__bridge__wrapper__signal__rust_signal_get_user_public_key_impl(port, ptr, rust_vec_len, data_len),
-160 => wire__crate__bridge__wrapper__signal__rust_signal_process_prekey_bundle_impl(port, ptr, rust_vec_len, data_len),
-161 => wire__crate__bridge__wrapper__rust_utils_generate_shares_impl(port, ptr, rust_vec_len, data_len),
-162 => wire__crate__bridge__wrapper__rust_utils_recover_secret_impl(port, ptr, rust_vec_len, data_len),
-163 => wire__crate__bridge__webxdc__send_update_impl(port, ptr, rust_vec_len, data_len),
-164 => wire__crate__bridge__webxdc__serve_impl(port, ptr, rust_vec_len, data_len),
-165 => wire__crate__bridge__groups__update_chat_deletion_time_impl(port, ptr, rust_vec_len, data_len),
-166 => wire__crate__bridge__groups__update_group_name_impl(port, ptr, rust_vec_len, data_len),
-167 => wire__crate__bridge__webxdc__updates_after_impl(port, ptr, rust_vec_len, data_len),
-169 => wire__crate__bridge__user_config__user_config_api_create_impl(port, ptr, rust_vec_len, data_len),
-170 => wire__crate__bridge__user_config__user_config_api_import_json_impl(port, ptr, rust_vec_len, data_len),
-171 => wire__crate__bridge__user_config__user_config_api_load_impl(port, ptr, rust_vec_len, data_len),
-172 => wire__crate__bridge__user_config__user_config_api_save_impl(port, ptr, rust_vec_len, data_len),
-173 => wire__crate__bridge__user_config__user_config_api_update_impl(port, ptr, rust_vec_len, data_len),
+159 => wire__crate__bridge__wrapper__signal__rust_signal_get_safety_number_impl(port, ptr, rust_vec_len, data_len),
+160 => wire__crate__bridge__wrapper__signal__rust_signal_get_user_public_key_impl(port, ptr, rust_vec_len, data_len),
+161 => wire__crate__bridge__wrapper__signal__rust_signal_process_prekey_bundle_impl(port, ptr, rust_vec_len, data_len),
+162 => wire__crate__bridge__wrapper__signal__rust_signal_reset_contact_session_impl(port, ptr, rust_vec_len, data_len),
+163 => wire__crate__bridge__wrapper__rust_utils_generate_shares_impl(port, ptr, rust_vec_len, data_len),
+164 => wire__crate__bridge__wrapper__rust_utils_recover_secret_impl(port, ptr, rust_vec_len, data_len),
+165 => wire__crate__bridge__webxdc__send_update_impl(port, ptr, rust_vec_len, data_len),
+166 => wire__crate__bridge__webxdc__serve_impl(port, ptr, rust_vec_len, data_len),
+167 => wire__crate__bridge__groups__update_chat_deletion_time_impl(port, ptr, rust_vec_len, data_len),
+168 => wire__crate__bridge__groups__update_group_name_impl(port, ptr, rust_vec_len, data_len),
+169 => wire__crate__bridge__webxdc__updates_after_impl(port, ptr, rust_vec_len, data_len),
+171 => wire__crate__bridge__user_config__user_config_api_create_impl(port, ptr, rust_vec_len, data_len),
+172 => wire__crate__bridge__user_config__user_config_api_import_json_impl(port, ptr, rust_vec_len, data_len),
+173 => wire__crate__bridge__user_config__user_config_api_load_impl(port, ptr, rust_vec_len, data_len),
+174 => wire__crate__bridge__user_config__user_config_api_save_impl(port, ptr, rust_vec_len, data_len),
+175 => wire__crate__bridge__user_config__user_config_api_update_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
@@ -8013,12 +8095,12 @@ fn pde_ffi_dispatcher_sync_impl(
         51 => {
             wire__crate__bridge__api__rust_api_decode_avatar_svg_impl(ptr, rust_vec_len, data_len)
         }
-        168 => wire__crate__bridge__user_config__user_config_api_clone_impl(
+        170 => wire__crate__bridge__user_config__user_config_api_clone_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        174 => wire__crate__bridge__logging__write_log_impl(ptr, rust_vec_len, data_len),
+        176 => wire__crate__bridge__logging__write_log_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }

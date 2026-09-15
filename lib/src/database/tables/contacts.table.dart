@@ -65,6 +65,7 @@ enum VerificationType {
   migratedFromOldVersion,
   qrScanned,
   link,
+  manual,
   secretQrToken,
   contactSharedByVerified,
 }

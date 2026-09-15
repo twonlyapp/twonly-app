@@ -170,11 +170,32 @@
     }
   },
   "verificationTypeLink": "Verified via link.",
+  "verificationTypeManual": "Safety number compared manually.",
   "verificationTypeMigratedFromOldVersion": "Migrated from old version.",
   "contactViewMessage": "Message",
   "contactNickname": "Nickname",
   "contactNicknameNew": "New nickname",
   "contactBlock": "Block",
+  "contactTroubleshoot": "Troubleshoot connection",
+  "contactResetSessionTitle": "Reset connection with {username}?",
+  "@contactResetSessionTitle": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "contactResetSessionBody": "twonly will remove the current encrypted connection and establish a new one. Messages currently in transit may be lost.",
+  "contactResetSessionConfirm": "Reset connection",
+  "contactResetSessionSuccess": "The encrypted connection with {username} was re-established.",
+  "@contactResetSessionSuccess": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "contactResetSessionFailed": "The connection could not be reset. Check your internet connection and try again.",
   "contactBlockTitle": "Block {username}",
   "@contactBlockTitle": {
     "placeholders": {
@@ -497,6 +518,13 @@
   "gotLinkFromFriend": "Yes, I got the link from my friend!",
   "couldNotVerifyUsername": "Could not verify {username}",
   "linkPubkeyDoesNotMatch": "The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!",
+  "verificationMissingSession": "There is no secure session stored for this contact yet. Exchange a message first, then ask the person to share a new verification link.",
+  "verificationLinkInvalidTitle": "Invalid verification link",
+  "verificationLinkInvalid": "The verification link is incomplete or invalid. Ask the person to share it again from their twonly profile.",
+  "verificationLinkErrorTitle": "Verification unavailable",
+  "verificationLinkError": "twonly could not check this verification link. Please try again.",
+  "verificationOwnProfileTitle": "This is your profile",
+  "verificationOwnProfile": "You scanned your own verification code.",
   "startWithCameraOpen": "Start with camera open",
   "showImagePreviewWhenSending": "Display image preview when selecting recipients",
   "verifiedPublicKey": "The identity of {username} has been successfully verified.",
@@ -528,6 +556,36 @@
   "verificationBadgeGreenDesc": "A contact you have *personally verified* using the QR code.",
   "verificationBadgeYellowDesc": "A contact who has been verified by at least one of *your contacts*.",
   "verificationBadgeRedDesc": "A contact whose identity has *not* yet been verified.",
+  "manualVerificationOpen": "Safety numbers",
+  "manualVerificationTitle": "Compare safety number",
+  "manualVerificationMarkVerified": "Mark as verified",
+  "manualVerificationDescription": "Compare this safety number with {username}. If both devices show the same number, your end-to-end encryption is verified.",
+  "@manualVerificationDescription": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "manualVerificationMissingKeyTitle": "No safety number available",
+  "manualVerificationMissingKeyDescription": "There is no Signal session with {username} yet. Exchange a message first, then try again.",
+  "@manualVerificationMissingKeyDescription": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "manualVerificationLoadFailed": "The safety number could not be loaded.",
+  "manualVerificationRetry": "Try again",
+  "manualVerificationSuccess": "You compared the safety number with {username} and confirmed their identity.",
+  "@manualVerificationSuccess": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
   "scanNow": "Scan now",
   "qrScannerVerifyHint": "To verify, the other person must open their QR code (Chat Lists > QR code button at the bottom right)",
   "qrScannerVerifyUserHint": "To verify, {username} must open their QR code (Chat Lists > QR code button at the bottom right)",

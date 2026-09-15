@@ -192,16 +192,18 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       HomeViewState.streamSharedLink.add(uri);
     }
 
-    // Subscribe to all events (initial link and further)
-    _deepLinkSub = AppLinks().uriLinkStream.listen((uri) async {
+    Future<void> handleIncomingUrl(Uri uri) async {
       if (!mounted) return;
-      Log.info('Got link via app links: ${uri.scheme}');
+      Log.info('Handling incoming link: ${uri.scheme}://${uri.host}');
       if (!await handleIntentUrl(context, uri)) {
         if (uri.scheme.startsWith('http')) {
           handleShareLink(uri);
         }
       }
-    });
+    }
+
+    // Subscribe to all events (initial link and further)
+    _deepLinkSub = AppLinks().uriLinkStream.listen(handleIncomingUrl);
 
     void handleShareMedia(String path, MediaType type) {
       HomeViewState.pendingSharedMedia = (path, type);
@@ -212,7 +214,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
     _intentStreamSub = initIntentStreams(
       context,
-      handleShareLink,
+      handleIncomingUrl,
       handleShareMedia,
     );
   }

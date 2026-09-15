@@ -138,6 +138,10 @@ class UserConfig {
   bool autoStoreAllSendUnlimitedMediaFiles;
   bool typingIndicators;
   bool showRestoreFlame;
+
+  /// Unused: the best friend is derived from `total_media_counter` whenever
+  /// it is needed (`Group::best_friend_group_id`). Kept so configurations
+  /// written by older versions still deserialize.
   String? myBestFriendGroupId;
   DateTime? signalLastSignedPreKeyUpdated;
   DateTime? signalLastPqcPreKeysUploaded;

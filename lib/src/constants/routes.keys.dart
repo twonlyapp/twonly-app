@@ -47,6 +47,8 @@ class Routes {
   static const String settingsHelpFaq = '/settings/help/faq';
   static const String settingsHelpFaqVerifyBadge =
       '/settings/help/faq/verifybadge';
+  static const String settingsHelpFaqManualVerification =
+      '/settings/help/faq/verifybadge/manual';
   static const String settingsHelpContactUs = '/settings/help/contact_us';
   static const String settingsHelpNews = '/settings/help/news';
   static const String settingsHelpDiagnostics = '/settings/help/diagnostics';

@@ -174,11 +174,32 @@
     }
   },
   "verificationTypeLink": "Per Link verifiziert.",
+  "verificationTypeManual": "Sicherheitsnummer manuell verglichen.",
   "verificationTypeMigratedFromOldVersion": "Von alter Version migriert",
   "contactViewMessage": "Nachricht",
   "contactNickname": "Spitzname",
   "contactNicknameNew": "Neuer Spitzname",
   "contactBlock": "Blockieren",
+  "contactTroubleshoot": "Verbindungsprobleme beheben",
+  "contactResetSessionTitle": "Verbindung zu {username} zurücksetzen?",
+  "@contactResetSessionTitle": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "contactResetSessionBody": "twonly löscht die aktuelle verschlüsselte Verbindung und baut sie anschließend neu auf. Nachrichten, die gerade übertragen werden, können dabei verloren gehen.",
+  "contactResetSessionConfirm": "Verbindung zurücksetzen",
+  "contactResetSessionSuccess": "Die verschlüsselte Verbindung zu {username} wurde neu aufgebaut.",
+  "@contactResetSessionSuccess": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "contactResetSessionFailed": "Die Verbindung konnte nicht zurückgesetzt werden. Prüfe deine Internetverbindung und versuche es erneut.",
   "contactRemove": "Kontakt löschen",
   "contactRemoveTitle": "{username} löschen?",
   "contactRemoveBody": "Den Kontakt dauerhaft entfernen. Wenn der Kontakt versucht, dir eine neue Nachricht zu senden, musst du den Kontakt erst wieder akzeptieren.",
@@ -487,6 +508,13 @@
   "gotLinkFromFriend": "Ja, der Link kommt direkt von der Person.",
   "couldNotVerifyUsername": "{username} konnte nicht verifiziert werden",
   "linkPubkeyDoesNotMatch": "Der öffentliche Schlüssel im Link stimmt nicht mit dem für diesen Kontakt gespeicherten öffentlichen Schlüssel überein. Triff die Person persönlich und scanne den QR-Code direkt!",
+  "verificationMissingSession": "Für diesen Kontakt ist noch keine sichere Sitzung gespeichert. Tauscht zuerst eine Nachricht aus und lass dir danach einen neuen Verifizierungslink senden.",
+  "verificationLinkInvalidTitle": "Ungültiger Verifizierungslink",
+  "verificationLinkInvalid": "Der Verifizierungslink ist unvollständig oder ungültig. Bitte die Person, ihn erneut aus ihrem twonly-Profil zu teilen.",
+  "verificationLinkErrorTitle": "Verifizierung nicht möglich",
+  "verificationLinkError": "twonly konnte diesen Verifizierungslink nicht prüfen. Versuche es bitte erneut.",
+  "verificationOwnProfileTitle": "Das ist dein Profil",
+  "verificationOwnProfile": "Du hast deinen eigenen Verifizierungscode gescannt.",
   "startWithCameraOpen": "Mit geöffneter Kamera starten",
   "showImagePreviewWhenSending": "Bildvorschau bei der Auswahl von Empfängern anzeigen",
   "verifiedPublicKey": "Die Identität von {username} wurde erfolgreich überprüft.",
@@ -518,6 +546,36 @@
   "verificationBadgeGreenDesc": "Ein Kontakt, den du über den QR-code *persönlich verifiziert* hast.",
   "verificationBadgeYellowDesc": "Ein Kontakt, der von mind. einem *deiner Kontakte verifiziert* wurde.",
   "verificationBadgeRedDesc": "Ein Kontakt, dessen Identität noch *nicht überprüft* wurde.",
+  "manualVerificationOpen": "Sicherheitsnummern",
+  "manualVerificationTitle": "Sicherheitsnummer vergleichen",
+  "manualVerificationMarkVerified": "Als verifiziert markieren",
+  "manualVerificationDescription": "Vergleiche diese Sicherheitsnummer mit {username}. Wenn auf beiden Geräten dieselbe Nummer angezeigt wird, ist eure Ende-zu-Ende-Verschlüsselung verifiziert.",
+  "@manualVerificationDescription": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "manualVerificationMissingKeyTitle": "Keine Sicherheitsnummer verfügbar",
+  "manualVerificationMissingKeyDescription": "Mit {username} besteht noch keine Signal-Sitzung. Tauscht zuerst eine Nachricht aus und versucht es danach erneut.",
+  "@manualVerificationMissingKeyDescription": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "manualVerificationLoadFailed": "Die Sicherheitsnummer konnte nicht geladen werden.",
+  "manualVerificationRetry": "Erneut versuchen",
+  "manualVerificationSuccess": "Du hast die Sicherheitsnummer mit {username} verglichen und die Identität bestätigt.",
+  "@manualVerificationSuccess": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
   "scanNow": "Jetzt scannen",
   "qrScannerVerifyHint": "Zum Verifizieren muss die andere Person ihren QR-Code öffnen (Chat-Liste > QR-Code-Button unten rechts)",
   "qrScannerVerifyUserHint": "Zum Verifizieren muss {username} seinen QR-Code öffnen (Chat-Liste > QR-Code-Button unten rechts)",

@@ -8,10 +8,10 @@ use crate::error::{Result, TwonlyError};
 use crate::user_config::UserConfig;
 use chrono::{Duration, Utc};
 use libsignal_protocol::{
-    message_encrypt, process_prekey_bundle, CiphertextMessageType, DeviceId, GenericSignedPreKey,
-    IdentityKey, IdentityKeyPair, IdentityKeyStore, KyberPreKeyId, KyberPreKeyStore, PreKeyBundle,
-    PreKeyId, PreKeySignalMessage, PreKeyStore, ProtocolAddress, PublicKey, SessionStore,
-    SignalMessage, SignedPreKeyId, SignedPreKeyStore, Timestamp,
+    message_encrypt, process_prekey_bundle, CiphertextMessageType, DeviceId, Fingerprint,
+    GenericSignedPreKey, IdentityKey, IdentityKeyPair, IdentityKeyStore, KyberPreKeyId,
+    KyberPreKeyStore, PreKeyBundle, PreKeyId, PreKeySignalMessage, PreKeyStore, ProtocolAddress,
+    PublicKey, SessionStore, SignalMessage, SignedPreKeyId, SignedPreKeyStore, Timestamp,
 };
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -48,6 +48,29 @@ pub struct FrbPqcPreKey {
     pub kyber_pre_key_id: u32,
     pub kyber_pre_key: Vec<u8>,
     pub kyber_pre_key_signature: Vec<u8>,
+}
+
+fn create_safety_number(
+    local_id: &str,
+    local_key_bytes: &[u8],
+    remote_id: &str,
+    remote_key_bytes: &[u8],
+) -> Result<String> {
+    let local_key = IdentityKey::decode(local_key_bytes)
+        .map_err(|error| TwonlyError::Signal(error.to_string()))?;
+    let remote_key = IdentityKey::decode(remote_key_bytes)
+        .map_err(|error| TwonlyError::Signal(error.to_string()))?;
+
+    Fingerprint::new(
+        2,
+        5_200,
+        local_id.as_bytes(),
+        &local_key,
+        remote_id.as_bytes(),
+        &remote_key,
+    )
+    .and_then(|fingerprint| fingerprint.display_string())
+    .map_err(|error| TwonlyError::Signal(error.to_string()))
 }
 
 impl RustSignalEngine {
@@ -163,6 +186,26 @@ impl RustSignalEngine {
         .fetch_optional(&store.pool)
         .await?;
         Ok(identity)
+    }
+
+    pub async fn get_safety_number(&self, contact_id: i64) -> Result<Option<String>> {
+        let Some(contact_key_bytes) = self
+            .get_contact_identity_key(&contact_id.to_string())
+            .await?
+        else {
+            return Ok(None);
+        };
+
+        // Signal's standard 60-digit numeric fingerprint. Both participants
+        // derive the same display string because libsignal sorts the two
+        // independently generated fingerprint halves before displaying them.
+        create_safety_number(
+            &self.local_name,
+            &self.get_identity_key().await?,
+            &contact_id.to_string(),
+            &contact_key_bytes,
+        )
+        .map(Some)
     }
 
     #[cfg(test)]
@@ -677,6 +720,29 @@ mod tests {
     use libsignal_protocol::IdentityKeyPair;
     use rand::rngs::StdRng;
     use tempfile::tempdir;
+
+    #[test]
+    fn safety_number_matches_signal_format_and_is_symmetric() {
+        let alice_key =
+            hex::decode("0506863bc66d02b40d27b8d49ca7c09e9239236f9d7d25d6fcca5ce13c7064d868")
+                .unwrap();
+        let bob_key =
+            hex::decode("05f781b6fb32fed9ba1cf2de978d4d5da28dc34046ae814402b5c0dbd96fda907b")
+                .unwrap();
+
+        let alice =
+            create_safety_number("+14152222222", &alice_key, "+14153333333", &bob_key).unwrap();
+        let bob =
+            create_safety_number("+14153333333", &bob_key, "+14152222222", &alice_key).unwrap();
+
+        assert_eq!(alice, bob);
+        assert_eq!(
+            alice,
+            "300354477692869396892869876765458257569162576843440918079131"
+        );
+        assert_eq!(alice.len(), 60);
+        assert!(alice.bytes().all(|byte| byte.is_ascii_digit()));
+    }
 
     async fn create_test_engine(name: &str) -> (RustSignalEngine, tempfile::TempDir) {
         let dir = tempdir().unwrap();

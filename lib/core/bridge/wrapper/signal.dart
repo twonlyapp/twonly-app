@@ -43,6 +43,11 @@ class RustSignal {
         contactId: contactId,
       );
 
+  static Future<String?> getSafetyNumber({required PlatformInt64 contactId}) =>
+      RustLib.instance.api.crateBridgeWrapperSignalRustSignalGetSafetyNumber(
+        contactId: contactId,
+      );
+
   static Future<Uint8List> getUserPublicKey() =>
       RustLib.instance.api.crateBridgeWrapperSignalRustSignalGetUserPublicKey();
 
@@ -56,6 +61,14 @@ class RustSignal {
         deviceId: deviceId,
         bundle: bundle,
       );
+
+  /// Removes the current session with a contact and immediately establishes
+  /// a fresh one while requiring the contact's stored identity key to match.
+  static Future<void> resetContactSession({required PlatformInt64 contactId}) =>
+      RustLib.instance.api
+          .crateBridgeWrapperSignalRustSignalResetContactSession(
+            contactId: contactId,
+          );
 
   @override
   int get hashCode => 0;

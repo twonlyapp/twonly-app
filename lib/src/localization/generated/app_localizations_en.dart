@@ -479,6 +479,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verificationTypeLink => 'Verified via link.';
 
   @override
+  String get verificationTypeManual => 'Safety number compared manually.';
+
+  @override
   String get verificationTypeMigratedFromOldVersion =>
       'Migrated from old version.';
 
@@ -493,6 +496,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactBlock => 'Block';
+
+  @override
+  String get contactTroubleshoot => 'Troubleshoot connection';
+
+  @override
+  String contactResetSessionTitle(String username) {
+    return 'Reset connection with $username?';
+  }
+
+  @override
+  String get contactResetSessionBody =>
+      'twonly will remove the current encrypted connection and establish a new one. Messages currently in transit may be lost.';
+
+  @override
+  String get contactResetSessionConfirm => 'Reset connection';
+
+  @override
+  String contactResetSessionSuccess(String username) {
+    return 'The encrypted connection with $username was re-established.';
+  }
+
+  @override
+  String get contactResetSessionFailed =>
+      'The connection could not be reset. Check your internet connection and try again.';
 
   @override
   String contactBlockTitle(Object username) {
@@ -1493,6 +1520,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!';
 
   @override
+  String get verificationMissingSession =>
+      'There is no secure session stored for this contact yet. Exchange a message first, then ask the person to share a new verification link.';
+
+  @override
+  String get verificationLinkInvalidTitle => 'Invalid verification link';
+
+  @override
+  String get verificationLinkInvalid =>
+      'The verification link is incomplete or invalid. Ask the person to share it again from their twonly profile.';
+
+  @override
+  String get verificationLinkErrorTitle => 'Verification unavailable';
+
+  @override
+  String get verificationLinkError =>
+      'twonly could not check this verification link. Please try again.';
+
+  @override
+  String get verificationOwnProfileTitle => 'This is your profile';
+
+  @override
+  String get verificationOwnProfile =>
+      'You scanned your own verification code.';
+
+  @override
   String get startWithCameraOpen => 'Start with camera open';
 
   @override
@@ -1611,6 +1663,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get verificationBadgeRedDesc =>
       'A contact whose identity has *not* yet been verified.';
+
+  @override
+  String get manualVerificationOpen => 'Safety numbers';
+
+  @override
+  String get manualVerificationTitle => 'Compare safety number';
+
+  @override
+  String get manualVerificationMarkVerified => 'Mark as verified';
+
+  @override
+  String manualVerificationDescription(String username) {
+    return 'Compare this safety number with $username. If both devices show the same number, your end-to-end encryption is verified.';
+  }
+
+  @override
+  String get manualVerificationMissingKeyTitle => 'No safety number available';
+
+  @override
+  String manualVerificationMissingKeyDescription(String username) {
+    return 'There is no Signal session with $username yet. Exchange a message first, then try again.';
+  }
+
+  @override
+  String get manualVerificationLoadFailed =>
+      'The safety number could not be loaded.';
+
+  @override
+  String get manualVerificationRetry => 'Try again';
+
+  @override
+  String manualVerificationSuccess(String username) {
+    return 'You compared the safety number with $username and confirmed their identity.';
+  }
 
   @override
   String get scanNow => 'Scan now';

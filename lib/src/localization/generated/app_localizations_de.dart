@@ -482,6 +482,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get verificationTypeLink => 'Per Link verifiziert.';
 
   @override
+  String get verificationTypeManual => 'Sicherheitsnummer manuell verglichen.';
+
+  @override
   String get verificationTypeMigratedFromOldVersion =>
       'Von alter Version migriert';
 
@@ -496,6 +499,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contactBlock => 'Blockieren';
+
+  @override
+  String get contactTroubleshoot => 'Verbindungsprobleme beheben';
+
+  @override
+  String contactResetSessionTitle(String username) {
+    return 'Verbindung zu $username zurücksetzen?';
+  }
+
+  @override
+  String get contactResetSessionBody =>
+      'twonly löscht die aktuelle verschlüsselte Verbindung und baut sie anschließend neu auf. Nachrichten, die gerade übertragen werden, können dabei verloren gehen.';
+
+  @override
+  String get contactResetSessionConfirm => 'Verbindung zurücksetzen';
+
+  @override
+  String contactResetSessionSuccess(String username) {
+    return 'Die verschlüsselte Verbindung zu $username wurde neu aufgebaut.';
+  }
+
+  @override
+  String get contactResetSessionFailed =>
+      'Die Verbindung konnte nicht zurückgesetzt werden. Prüfe deine Internetverbindung und versuche es erneut.';
 
   @override
   String contactBlockTitle(Object username) {
@@ -1505,6 +1532,31 @@ class AppLocalizationsDe extends AppLocalizations {
       'Der öffentliche Schlüssel im Link stimmt nicht mit dem für diesen Kontakt gespeicherten öffentlichen Schlüssel überein. Triff die Person persönlich und scanne den QR-Code direkt!';
 
   @override
+  String get verificationMissingSession =>
+      'Für diesen Kontakt ist noch keine sichere Sitzung gespeichert. Tauscht zuerst eine Nachricht aus und lass dir danach einen neuen Verifizierungslink senden.';
+
+  @override
+  String get verificationLinkInvalidTitle => 'Ungültiger Verifizierungslink';
+
+  @override
+  String get verificationLinkInvalid =>
+      'Der Verifizierungslink ist unvollständig oder ungültig. Bitte die Person, ihn erneut aus ihrem twonly-Profil zu teilen.';
+
+  @override
+  String get verificationLinkErrorTitle => 'Verifizierung nicht möglich';
+
+  @override
+  String get verificationLinkError =>
+      'twonly konnte diesen Verifizierungslink nicht prüfen. Versuche es bitte erneut.';
+
+  @override
+  String get verificationOwnProfileTitle => 'Das ist dein Profil';
+
+  @override
+  String get verificationOwnProfile =>
+      'Du hast deinen eigenen Verifizierungscode gescannt.';
+
+  @override
   String get startWithCameraOpen => 'Mit geöffneter Kamera starten';
 
   @override
@@ -1625,6 +1677,41 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get verificationBadgeRedDesc =>
       'Ein Kontakt, dessen Identität noch *nicht überprüft* wurde.';
+
+  @override
+  String get manualVerificationOpen => 'Sicherheitsnummern';
+
+  @override
+  String get manualVerificationTitle => 'Sicherheitsnummer vergleichen';
+
+  @override
+  String get manualVerificationMarkVerified => 'Als verifiziert markieren';
+
+  @override
+  String manualVerificationDescription(String username) {
+    return 'Vergleiche diese Sicherheitsnummer mit $username. Wenn auf beiden Geräten dieselbe Nummer angezeigt wird, ist eure Ende-zu-Ende-Verschlüsselung verifiziert.';
+  }
+
+  @override
+  String get manualVerificationMissingKeyTitle =>
+      'Keine Sicherheitsnummer verfügbar';
+
+  @override
+  String manualVerificationMissingKeyDescription(String username) {
+    return 'Mit $username besteht noch keine Signal-Sitzung. Tauscht zuerst eine Nachricht aus und versucht es danach erneut.';
+  }
+
+  @override
+  String get manualVerificationLoadFailed =>
+      'Die Sicherheitsnummer konnte nicht geladen werden.';
+
+  @override
+  String get manualVerificationRetry => 'Erneut versuchen';
+
+  @override
+  String manualVerificationSuccess(String username) {
+    return 'Du hast die Sicherheitsnummer mit $username verglichen und die Identität bestätigt.';
+  }
 
   @override
   String get scanNow => 'Jetzt scannen';

@@ -160,6 +160,16 @@ void main() {
       expect(await twonlyDB.keyVerificationDao.isContactVerified(10), true);
     });
 
+    test('isContactVerified returns true for manual comparison', () async {
+      await insertContact(10);
+      await addDirectVerification(10, VerificationType.manual);
+
+      final verifications = await twonlyDB.keyVerificationDao
+          .getContactVerification(10);
+      expect(verifications.single.type, VerificationType.manual);
+      expect(await twonlyDB.keyVerificationDao.isContactVerified(10), true);
+    });
+
     test(
       'isContactVerified returns false when no verification exists',
       () async {

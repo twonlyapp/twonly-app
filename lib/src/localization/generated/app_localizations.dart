@@ -968,6 +968,12 @@ abstract class AppLocalizations {
   /// **'Verified via link.'**
   String get verificationTypeLink;
 
+  /// No description provided for @verificationTypeManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety number compared manually.'**
+  String get verificationTypeManual;
+
   /// No description provided for @verificationTypeMigratedFromOldVersion.
   ///
   /// In en, this message translates to:
@@ -997,6 +1003,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Block'**
   String get contactBlock;
+
+  /// No description provided for @contactTroubleshoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Troubleshoot connection'**
+  String get contactTroubleshoot;
+
+  /// No description provided for @contactResetSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset connection with {username}?'**
+  String contactResetSessionTitle(String username);
+
+  /// No description provided for @contactResetSessionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly will remove the current encrypted connection and establish a new one. Messages currently in transit may be lost.'**
+  String get contactResetSessionBody;
+
+  /// No description provided for @contactResetSessionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset connection'**
+  String get contactResetSessionConfirm;
+
+  /// No description provided for @contactResetSessionSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The encrypted connection with {username} was re-established.'**
+  String contactResetSessionSuccess(String username);
+
+  /// No description provided for @contactResetSessionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection could not be reset. Check your internet connection and try again.'**
+  String get contactResetSessionFailed;
 
   /// No description provided for @contactBlockTitle.
   ///
@@ -2684,6 +2726,48 @@ abstract class AppLocalizations {
   /// **'The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!'**
   String get linkPubkeyDoesNotMatch;
 
+  /// No description provided for @verificationMissingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no secure session stored for this contact yet. Exchange a message first, then ask the person to share a new verification link.'**
+  String get verificationMissingSession;
+
+  /// No description provided for @verificationLinkInvalidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid verification link'**
+  String get verificationLinkInvalidTitle;
+
+  /// No description provided for @verificationLinkInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The verification link is incomplete or invalid. Ask the person to share it again from their twonly profile.'**
+  String get verificationLinkInvalid;
+
+  /// No description provided for @verificationLinkErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification unavailable'**
+  String get verificationLinkErrorTitle;
+
+  /// No description provided for @verificationLinkError.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly could not check this verification link. Please try again.'**
+  String get verificationLinkError;
+
+  /// No description provided for @verificationOwnProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your profile'**
+  String get verificationOwnProfileTitle;
+
+  /// No description provided for @verificationOwnProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'You scanned your own verification code.'**
+  String get verificationOwnProfile;
+
   /// No description provided for @startWithCameraOpen.
   ///
   /// In en, this message translates to:
@@ -2869,6 +2953,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A contact whose identity has *not* yet been verified.'**
   String get verificationBadgeRedDesc;
+
+  /// No description provided for @manualVerificationOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety numbers'**
+  String get manualVerificationOpen;
+
+  /// No description provided for @manualVerificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare safety number'**
+  String get manualVerificationTitle;
+
+  /// No description provided for @manualVerificationMarkVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as verified'**
+  String get manualVerificationMarkVerified;
+
+  /// No description provided for @manualVerificationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare this safety number with {username}. If both devices show the same number, your end-to-end encryption is verified.'**
+  String manualVerificationDescription(String username);
+
+  /// No description provided for @manualVerificationMissingKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No safety number available'**
+  String get manualVerificationMissingKeyTitle;
+
+  /// No description provided for @manualVerificationMissingKeyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no Signal session with {username} yet. Exchange a message first, then try again.'**
+  String manualVerificationMissingKeyDescription(String username);
+
+  /// No description provided for @manualVerificationLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The safety number could not be loaded.'**
+  String get manualVerificationLoadFailed;
+
+  /// No description provided for @manualVerificationRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get manualVerificationRetry;
+
+  /// No description provided for @manualVerificationSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'You compared the safety number with {username} and confirmed their identity.'**
+  String manualVerificationSuccess(String username);
 
   /// No description provided for @scanNow.
   ///

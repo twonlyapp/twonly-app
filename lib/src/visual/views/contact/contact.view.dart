@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
@@ -38,6 +39,7 @@ class ContactView extends StatefulWidget {
 class _ContactViewState extends State<ContactView> {
   Contact? _contact;
   List<GroupMember> _memberOfGroups = [];
+  bool _isResettingSignalSession = false;
 
   late StreamSubscription<Contact?> _streamContact;
   late StreamSubscription<List<GroupMember>> _streamMemberOfGroups;
@@ -136,6 +138,34 @@ class _ContactViewState extends State<ContactView> {
     } else {
       showNetworkIssue(context);
     }
+  }
+
+  Future<void> handleResetSignalSession(Contact contact) async {
+    if (_isResettingSignalSession) return;
+
+    final displayName = getContactDisplayName(contact);
+    final confirmed = await showAlertDialog(
+      context,
+      context.lang.contactResetSessionTitle(displayName),
+      context.lang.contactResetSessionBody,
+      customOk: context.lang.contactResetSessionConfirm,
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() => _isResettingSignalSession = true);
+    final result = await rustApiResult(
+      RustSignal.resetContactSession(contactId: contact.userId),
+    );
+    if (!mounted) return;
+
+    setState(() => _isResettingSignalSession = false);
+    showSnackbar(
+      context,
+      result.isSuccess
+          ? context.lang.contactResetSessionSuccess(displayName)
+          : context.lang.contactResetSessionFailed,
+      level: result.isSuccess ? SnackbarLevel.success : SnackbarLevel.error,
+    );
   }
 
   @override
@@ -284,6 +314,19 @@ class _ContactViewState extends State<ContactView> {
             icon: FontAwesomeIcons.ban,
             text: context.lang.contactBlock,
             onTap: () => handleUserBlockRequest(contact),
+          ),
+          BetterListTile(
+            icon: FontAwesomeIcons.screwdriverWrench,
+            text: context.lang.contactTroubleshoot,
+            trailing: _isResettingSignalSession
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : null,
+            onTap: _isResettingSignalSession
+                ? null
+                : () => handleResetSignalSession(contact),
           ),
           BetterListTile(
             icon: FontAwesomeIcons.userMinus,

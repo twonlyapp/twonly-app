@@ -4,8 +4,11 @@
  */
 
 use crate::bridge::get_twonly_flutter;
+use crate::context::Context;
 use crate::error::{Result, TwonlyError};
+use crate::services::contacts::ContactService;
 use crate::signal::engine::{FrbPqcPreKey, FrbPreKeyBundle};
+use crate::signal::reset::SessionResetLimiter;
 
 pub struct RustSignal {}
 
@@ -58,5 +61,35 @@ impl RustSignal {
         engine
             .get_contact_identity_key(&contact_id.to_string())
             .await
+    }
+
+    pub async fn get_safety_number(contact_id: i64) -> Result<Option<String>> {
+        let guard = get_twonly_flutter()?.signal_engine.lock().await;
+        let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
+        engine.get_safety_number(contact_id).await
+    }
+
+    /// Removes the current session with a contact and immediately establishes
+    /// a fresh one while requiring the contact's stored identity key to match.
+    pub async fn reset_contact_session(contact_id: i64) -> Result<()> {
+        let ctx = Context::get_static()?;
+        let expected_public_key = {
+            let guard = ctx.signal_engine.lock().await;
+            let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
+            let public_key = engine
+                .get_contact_identity_key(&contact_id.to_string())
+                .await?;
+            engine
+                .reset_session(&contact_id.to_string(), 1, true)
+                .await?;
+            public_key
+        };
+
+        ContactService::new(ctx)
+            .establish_signal_session(contact_id, expected_public_key)
+            .await?;
+
+        let database = ctx.rust_db.read().await.clone();
+        SessionResetLimiter::clear(&database.pool, &contact_id.to_string(), 1).await
     }
 }
