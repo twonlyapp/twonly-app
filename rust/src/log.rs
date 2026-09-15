@@ -5,6 +5,7 @@
 
 use crate::bridge::logging::LogLevel;
 use crate::error::{Result, TwonlyError};
+use std::borrow::Cow;
 use std::fmt;
 use std::fs::{File, OpenOptions};
 use std::io::{Seek, Write as IoWrite};
@@ -27,6 +28,9 @@ use tracing_subscriber::{
 static TRACING_INIT: OnceLock<()> = OnceLock::new();
 static APP_LOG: OnceLock<AppLog> = OnceLock::new();
 static RUST_LOG_IN_BACKGROUND: AtomicBool = AtomicBool::new(false);
+
+const LOG_SIZE_CLEANUP_THRESHOLD_BYTES: usize = 5 * 1024 * 1024;
+const LOG_SIZE_CLEANUP_TARGET_BYTES: usize = 4 * 1024 * 1024;
 
 struct AppLog {
     path: PathBuf,
@@ -499,19 +503,56 @@ pub(crate) fn clean_log_file() -> Result<()> {
             .is_some_and(|timestamp| timestamp > cutoff)
     });
 
-    let replacement = match keep_from {
-        Some(0) => return Ok(()),
+    let mut replacement = match keep_from {
+        Some(0) => Cow::Borrowed(contents.as_str()),
         Some(index) => {
             let mut retained = contents.lines().skip(index).collect::<Vec<_>>().join("\n");
             if !retained.is_empty() {
                 retained.push('\n');
             }
-            retained
+            Cow::Owned(retained)
         }
-        None => String::new(),
+        None => Cow::Owned(String::new()),
     };
-    log.replace(&replacement)?;
+
+    if replacement.len() > LOG_SIZE_CLEANUP_THRESHOLD_BYTES {
+        replacement = Cow::Owned(retain_latest_log_bytes(
+            replacement.as_ref(),
+            LOG_SIZE_CLEANUP_TARGET_BYTES,
+        ));
+    }
+
+    if let Cow::Owned(replacement) = replacement {
+        log.replace(&replacement)?;
+    }
     Ok(())
+}
+
+/// Keeps approximately `target_bytes` from the end while avoiding a partial
+/// first log entry. The result can be slightly smaller by up to one log line.
+fn retain_latest_log_bytes(contents: &str, target_bytes: usize) -> String {
+    if contents.len() <= target_bytes {
+        return contents.to_owned();
+    }
+
+    let estimated_start = contents.len() - target_bytes;
+    let bytes = contents.as_bytes();
+    let start = if estimated_start == 0 || bytes[estimated_start - 1] == b'\n' {
+        estimated_start
+    } else if let Some(offset) = bytes[estimated_start..]
+        .iter()
+        .position(|byte| *byte == b'\n')
+    {
+        estimated_start + offset + 1
+    } else {
+        let mut boundary = estimated_start;
+        while boundary < contents.len() && !contents.is_char_boundary(boundary) {
+            boundary += 1;
+        }
+        boundary
+    };
+
+    contents[start..].to_owned()
 }
 
 pub(crate) fn clear_log_file() -> Result<bool> {
@@ -527,7 +568,10 @@ pub(crate) fn clear_log_file() -> Result<bool> {
 
 #[cfg(test)]
 mod tests {
-    use super::AppLog;
+    use super::{
+        retain_latest_log_bytes, AppLog, LOG_SIZE_CLEANUP_TARGET_BYTES,
+        LOG_SIZE_CLEANUP_THRESHOLD_BYTES,
+    };
 
     #[test]
     fn app_log_serializes_reads_and_truncation() {
@@ -542,5 +586,26 @@ mod tests {
         log.replace("retained\n").unwrap();
         log.append(b"new\n").unwrap();
         assert_eq!(std::fs::read_to_string(path).unwrap(), "retained\nnew\n");
+    }
+
+    #[test]
+    fn size_cleanup_keeps_the_latest_complete_log_lines() {
+        let contents = "oldest\nmiddle\nnewest\n";
+
+        assert_eq!(retain_latest_log_bytes(contents, 14), "middle\nnewest\n");
+        assert_eq!(retain_latest_log_bytes(contents, 12), "newest\n");
+    }
+
+    #[test]
+    fn size_cleanup_reduces_a_five_mib_log_to_about_four_mib() {
+        let line = format!("{}\n", "x".repeat(127));
+        let contents = line.repeat(LOG_SIZE_CLEANUP_THRESHOLD_BYTES / line.len() + 1);
+        assert!(contents.len() > LOG_SIZE_CLEANUP_THRESHOLD_BYTES);
+
+        let retained = retain_latest_log_bytes(&contents, LOG_SIZE_CLEANUP_TARGET_BYTES);
+
+        assert!(retained.len() <= LOG_SIZE_CLEANUP_TARGET_BYTES);
+        assert!(retained.len() > LOG_SIZE_CLEANUP_TARGET_BYTES - line.len());
+        assert!(retained.ends_with('\n'));
     }
 }
