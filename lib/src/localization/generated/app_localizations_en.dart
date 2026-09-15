@@ -2582,6 +2582,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStorageLocalOnly => 'Local only';
 
   @override
+  String get settingsStorageByChat => 'Storage by chat';
+
+  @override
+  String get settingsStorageTemporaryMediaDescription =>
+      'Temporary media files are sent media files that have not been stored. They remain on your device until the receiver has received and opened them.';
+
+  @override
+  String get settingsStorageNoChats => 'No chats found.';
+
+  @override
+  String settingsStorageStoredMediaCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stored files',
+      one: '1 stored file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsStorageTemporaryMediaCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count temporary files',
+      one: '1 temporary file',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsStorageDisableBackupTitle => 'Disable Backup?';
 
   @override

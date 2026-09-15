@@ -989,6 +989,25 @@
   "settingsStorageCloudOnly": "Nur Cloud",
   "settingsStorageLocalAndCloud": "Lokal & Cloud",
   "settingsStorageLocalOnly": "Nur lokal",
+  "settingsStorageByChat": "Speicherplatz pro Chat",
+  "settingsStorageTemporaryMediaDescription": "Temporäre Mediendateien sind gesendete Medien, die nicht gespeichert wurden. Sie bleiben auf deinem Gerät, bis der Empfänger sie erhalten und geöffnet hat.",
+  "settingsStorageNoChats": "Keine Chats gefunden.",
+  "settingsStorageStoredMediaCount": "{count, plural, =1 {1 gespeicherte Datei} other {{count} gespeicherte Dateien}}",
+  "@settingsStorageStoredMediaCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "settingsStorageTemporaryMediaCount": "{count, plural, =1 {1 temporäre Datei} other {{count} temporäre Dateien}}",
+  "@settingsStorageTemporaryMediaCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "settingsStorageDisableBackupTitle": "Backup deaktivieren?",
   "settingsStorageDisableBackupBody": "Dadurch werden alle gesicherten Erinnerungen aus der Cloud gelöscht. Es gibt {count, plural, =1 {*1 Bild*, das} other {*{count} Bilder*, die}} nur in der Cloud und nicht lokal gespeichert sind. Diese gehen *dauerhaft verloren*. Fortfahren?",
   "@settingsStorageDisableBackupBody": {

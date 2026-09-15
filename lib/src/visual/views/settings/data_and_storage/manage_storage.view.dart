@@ -8,6 +8,7 @@ import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/views/settings/data_and_storage/chat_storage_overview.view.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage/storage_contents.view.dart';
 
 class ManageStorageView extends StatefulWidget {
@@ -177,6 +178,16 @@ class _ManageStorageViewState extends State<ManageStorageView> {
               variant: MyButtonVariant.primaryMiddle,
               onPressed: () => context.navPush(const StorageContentsView()),
               child: Text(context.lang.settingsStorageContents),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            child: MyButton(
+              variant: MyButtonVariant.secondaryMiddle,
+              onPressed: () => context.navPush(
+                const ChatStorageOverviewView(),
+              ),
+              child: Text(context.lang.settingsStorageByChat),
             ),
           ),
         ],

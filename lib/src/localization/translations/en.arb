@@ -999,6 +999,25 @@
   "settingsStorageCloudOnly": "Cloud only",
   "settingsStorageLocalAndCloud": "Local and cloud",
   "settingsStorageLocalOnly": "Local only",
+  "settingsStorageByChat": "Storage by chat",
+  "settingsStorageTemporaryMediaDescription": "Temporary media files are sent media files that have not been stored. They remain on your device until the receiver has received and opened them.",
+  "settingsStorageNoChats": "No chats found.",
+  "settingsStorageStoredMediaCount": "{count, plural, =1 {1 stored file} other {{count} stored files}}",
+  "@settingsStorageStoredMediaCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "settingsStorageTemporaryMediaCount": "{count, plural, =1 {1 temporary file} other {{count} temporary files}}",
+  "@settingsStorageTemporaryMediaCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "settingsStorageDisableBackupTitle": "Disable Backup?",
   "settingsStorageDisableBackupBody": "This will delete all backed up memories from the cloud. There {count, plural, =1 {is *1 image*} other {are *{count} images*}} only stored in the cloud that will be *permanently lost*. Are you sure you want to proceed?",
   "@settingsStorageDisableBackupBody": {

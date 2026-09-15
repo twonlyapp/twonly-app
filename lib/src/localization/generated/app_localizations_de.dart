@@ -2605,6 +2605,38 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStorageLocalOnly => 'Nur lokal';
 
   @override
+  String get settingsStorageByChat => 'Speicherplatz pro Chat';
+
+  @override
+  String get settingsStorageTemporaryMediaDescription =>
+      'Temporäre Mediendateien sind gesendete Medien, die nicht gespeichert wurden. Sie bleiben auf deinem Gerät, bis der Empfänger sie erhalten und geöffnet hat.';
+
+  @override
+  String get settingsStorageNoChats => 'Keine Chats gefunden.';
+
+  @override
+  String settingsStorageStoredMediaCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gespeicherte Dateien',
+      one: '1 gespeicherte Datei',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsStorageTemporaryMediaCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count temporäre Dateien',
+      one: '1 temporäre Datei',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsStorageDisableBackupTitle => 'Backup deaktivieren?';
 
   @override

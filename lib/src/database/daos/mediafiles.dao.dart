@@ -10,6 +10,16 @@ import 'package:twonly/src/utils/log.dart';
 
 part 'mediafiles.dao.g.dart';
 
+class ChatMediaFiles {
+  const ChatMediaFiles({
+    required this.group,
+    required this.mediaFiles,
+  });
+
+  final Group group;
+  final List<MediaFile> mediaFiles;
+}
+
 @DriftAccessor(tables: [MediaFiles, Messages])
 class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     with _$MediaFilesDaoMixin {
@@ -163,6 +173,45 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
           ),
         ])..where(db.messages.groupId.equals(groupId));
     return query.map((row) => row.readTable(mediaFiles)).watch();
+  }
+
+  /// Watches all chats and their distinct referenced media records.
+  Stream<List<ChatMediaFiles>> watchMediaFilesByChat() {
+    final query = select(db.groups).join([
+      leftOuterJoin(
+        db.messages,
+        db.messages.groupId.equalsExp(db.groups.groupId),
+        useColumns: false,
+      ),
+      leftOuterJoin(
+        mediaFiles,
+        mediaFiles.mediaId.equalsExp(db.messages.mediaId),
+      ),
+    ]);
+
+    return query.watch().map((rows) {
+      final groupsById = <String, Group>{};
+      final mediaByGroupId = <String, Map<String, MediaFile>>{};
+
+      for (final row in rows) {
+        final group = row.readTable(db.groups);
+        groupsById[group.groupId] = group;
+        final mediaFile = row.readTableOrNull(mediaFiles);
+        if (mediaFile != null) {
+          (mediaByGroupId[group.groupId] ??= {})[mediaFile.mediaId] = mediaFile;
+        }
+      }
+
+      return groupsById.entries
+          .map(
+            (entry) => ChatMediaFiles(
+              group: entry.value,
+              mediaFiles:
+                  mediaByGroupId[entry.key]?.values.toList() ?? const [],
+            ),
+          )
+          .toList();
+    });
   }
 
   Stream<List<MediaFile>> watchChatListMediaFiles() {

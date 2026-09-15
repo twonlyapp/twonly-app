@@ -4496,6 +4496,36 @@ abstract class AppLocalizations {
   /// **'Local only'**
   String get settingsStorageLocalOnly;
 
+  /// No description provided for @settingsStorageByChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage by chat'**
+  String get settingsStorageByChat;
+
+  /// No description provided for @settingsStorageTemporaryMediaDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary media files are sent media files that have not been stored. They remain on your device until the receiver has received and opened them.'**
+  String get settingsStorageTemporaryMediaDescription;
+
+  /// No description provided for @settingsStorageNoChats.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats found.'**
+  String get settingsStorageNoChats;
+
+  /// No description provided for @settingsStorageStoredMediaCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 stored file} other {{count} stored files}}'**
+  String settingsStorageStoredMediaCount(num count);
+
+  /// No description provided for @settingsStorageTemporaryMediaCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 temporary file} other {{count} temporary files}}'**
+  String settingsStorageTemporaryMediaCount(num count);
+
   /// No description provided for @settingsStorageDisableBackupTitle.
   ///
   /// In en, this message translates to:
