@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
@@ -36,7 +37,11 @@ Future<void> _resetStuckOutgoingSignalSessions() async {
       );
 
   for (final contactId in contactIds) {
-    if (!shouldAttemptResync(contactId)) continue;
+    final contact = await twonlyDB.contactsDao.getContactById(contactId);
+    if (contact == null ||
+        !shouldAttemptResync(contactId, contact.signalVersion)) {
+      continue;
+    }
 
     Log.warn(
       'Detected an out-of-sync outgoing Signal session with $contactId: '
@@ -53,7 +58,7 @@ Future<void> _resetStuckOutgoingSignalSessions() async {
     }
 
     if (!reset) {
-      recordResyncAttempt(contactId, success: false);
+      recordResyncAttempt(contactId, contact.signalVersion, success: false);
       continue;
     }
 
@@ -64,11 +69,35 @@ Future<void> _resetStuckOutgoingSignalSessions() async {
   }
 }
 
+/// Whether a message that the server already accepted may be sent again.
+///
+/// Every valid message from a contact marks everything they have not
+/// confirmed for retry. When their confirmation got lost, they stay silent
+/// until their duplicate cooldown ends, ten days on 0.5.2, so sending again on
+/// every message from them only floods their device. After the first retry the
+/// pause doubles with every attempt, from one hour up to a day, but never
+/// drops below [minimumPause].
+bool isRetransmissionDue(
+  Receipt receipt, {
+  Duration minimumPause = Duration.zero,
+}) {
+  final lastRetry = receipt.lastRetry;
+  if (receipt.retryCount <= 1 || lastRetry == null) return true;
+  var pause = Duration(hours: min(1 << min(receipt.retryCount - 2, 5), 24));
+  if (pause < minimumPause) pause = minimumPause;
+  return !clock.now().isBefore(lastRetry.add(pause));
+}
+
 Future<void> retransmitAllMessages() async {
   return lockRetransmission.protect(() async {
     await _resetStuckOutgoingSignalSessions();
 
-    final receipts = await twonlyDB.receiptsDao.getReceiptsForRetransmission();
+    final receipts = (await twonlyDB.receiptsDao.getReceiptsForRetransmission())
+        .where(
+          (receipt) =>
+              receipt.ackByServerAt == null || isRetransmissionDue(receipt),
+        )
+        .toList();
 
     if (receipts.isEmpty) return;
 
@@ -101,6 +130,13 @@ Future<void> retransmitAllMessages() async {
     }
   });
 }
+
+Future<SignalEncryptResult?> _encryptFor(
+  Contact contact,
+  Uint8List plaintext,
+) => contact.signalVersion == SignalVersion.v2
+    ? signalEncryptMessageV2(contact.userId, plaintext)
+    : signalEncryptMessage(contact.userId, plaintext);
 
 final Map<String, Mutex> _tryToSendLocks = {};
 
@@ -162,6 +198,11 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
       await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
       return null;
     }
+    if (contact.signalVersion == SignalVersion.v1) {
+      // Pending receipts make this an active session too, including messages
+      // created before active-session migration was introduced.
+      scheduleSignalSessionUpgrade(contact.userId);
+    }
 
     if (!onlyReturnEncryptedData &&
         receipt.ackByServerAt != null &&
@@ -201,23 +242,41 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
 
     if (message.type == pb.Message_Type.CIPHERTEXT ||
         message.type == pb.Message_Type.CIPHERTEXT_V2) {
-      final useV2 = contact.signalVersion == SignalVersion.v2;
-      final encryptResult = useV2
-          ? await signalEncryptMessageV2(
-              receipt.contactId,
-              Uint8List.fromList(message.encryptedContent),
-            )
-          : await signalEncryptMessage(
-              receipt.contactId,
-              Uint8List.fromList(message.encryptedContent),
-            );
+      final plaintext = Uint8List.fromList(message.encryptedContent);
+      var target = contact;
+      var encryptResult = await _encryptFor(target, plaintext);
+
+      if (encryptResult == null &&
+          shouldAttemptResync(receipt.contactId, target.signalVersion)) {
+        // Usually there is no session to encrypt with, e.g. for a contact
+        // marked V2 that the Rust store holds no session for. Building one
+        // from the contact's current bundle can also move them to V2.
+        final resynced = await handleSessionResync(receipt.contactId);
+        if (resynced) {
+          target =
+              await twonlyDB.contactsDao.getContactById(receipt.contactId) ??
+              target;
+          encryptResult = await _encryptFor(target, plaintext);
+        }
+        recordResyncAttempt(
+          receipt.contactId,
+          target.signalVersion,
+          success: false,
+        );
+      }
 
       if (encryptResult == null) {
         Log.error(
           '[${receipt.receiptId}] Could not encrypt the message '
-          '(${useV2 ? 'V2' : 'V1'}) for user ${receipt.contactId}. '
-          'Aborting and trying again.',
+          '(${target.signalVersion == SignalVersion.v2 ? 'V2' : 'V1'}) '
+          'for user ${receipt.contactId}.',
         );
+        if (!onlyReturnEncryptedData) {
+          // The receipt stays, so the next retransmission tries again.
+          return null;
+        }
+        // The media upload goes out without this contact. Its receipt would
+        // otherwise be marked as uploaded together with the others.
         if (receipt.messageId != null) {
           await twonlyDB.messagesDao.handleMessageAckByServer(
             receipt.contactId,

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.4
+
+- Fix: Recover broken sessions more reliably
+
 ## 0.5.3
 
 - Hotfix: Fixed stuck Signal sessions

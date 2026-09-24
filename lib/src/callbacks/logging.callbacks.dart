@@ -13,9 +13,9 @@ class LoggingCallbacks {
         dartLogSink.stream.listen(
           (log) {
             if (log.contains('INFO ')) {
-              Log.info(log.split('INFO ')[1]);
+              Log.rust(log.split('INFO ')[1]);
             } else if (log.contains('DEBUG ')) {
-              Log.info(log.split('DEBUG ')[1]);
+              Log.rust(log.split('DEBUG ')[1]);
             } else if (kDebugMode && !Platform.environment.containsKey('FLUTTER_TEST')) {
               // ignore: avoid_print
               print(log);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:drift/drift.dart' as drift;
@@ -14,7 +15,24 @@ import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 
-final Mutex _upgradeSignalSessionsLock = Mutex();
+class _SignalUpgradeState {
+  final lock = Mutex();
+  final activeV1Contacts = <int>{};
+  Timer? idleTimer;
+}
+
+/// Production isolates have one database, while integration tests host
+/// multiple clients in zones in the same isolate. Keeping the queue per
+/// database prevents one client's activity from being migrated in another
+/// client's Signal store.
+final Map<TwonlyDB, _SignalUpgradeState> _signalUpgradeStates = {};
+
+_SignalUpgradeState get _signalUpgradeState => _signalUpgradeStates.putIfAbsent(
+  twonlyDB,
+  _SignalUpgradeState.new,
+);
+
+const _signalUpgradeIdleDelay = Duration(milliseconds: 500);
 
 Future<bool> processSignalUserData(Response_UserData userData) async {
   return lockingSignalProtocol.protect(() async {
@@ -22,38 +40,78 @@ Future<bool> processSignalUserData(Response_UserData userData) async {
   });
 }
 
-/// Upgrades every known v1 contact that currently publishes a PQXDH bundle.
+/// Adds a V1 session to the active migration set without starting migration.
+/// Incoming batches use this so migration cannot begin midway through a slow
+/// decryption pass.
+void queueSignalSessionUpgrade(int contactId) {
+  final state = _signalUpgradeState;
+  state.activeV1Contacts.add(contactId);
+}
+
+/// Starts or resets the idle window for queued active V1 sessions.
+void scheduleActiveSignalSessionUpgrades() {
+  final state = _signalUpgradeState;
+  state.idleTimer?.cancel();
+  state.idleTimer = Timer(_signalUpgradeIdleDelay, () {
+    state.idleTimer = null;
+    unawaited(upgradeActiveSignalSessionsToV2());
+  });
+}
+
+/// Marks an outgoing V1 session as active and schedules its migration.
+void scheduleSignalSessionUpgrade(int contactId) {
+  queueSignalSessionUpgrade(contactId);
+  scheduleActiveSignalSessionUpgrades();
+}
+
+/// Runs pending active-session upgrades immediately after the mailbox drains.
+void flushActiveSignalSessionUpgrades() {
+  final state = _signalUpgradeState;
+  state.idleTimer?.cancel();
+  state.idleTimer = null;
+  unawaited(upgradeActiveSignalSessionsToV2());
+}
+
+/// Upgrades active V1 contacts that currently publish a PQXDH bundle.
 ///
 /// The legacy session is deliberately retained: messages that were already in
 /// flight before the upgrade can still be decrypted, while newly queued
 /// messages use the contact's updated v2 session.
-Future<void> upgradeSignalSessionsToV2() async {
-  if (_upgradeSignalSessionsLock.isLocked) return;
-
+Future<void> upgradeActiveSignalSessionsToV2() async {
+  final state = _signalUpgradeState;
   try {
-    await _upgradeSignalSessionsLock.protect(() async {
-      final contacts = await twonlyDB.contactsDao.getAllContacts();
-      final legacyContacts = contacts.where(
-        (contact) =>
-            contact.signalVersion == SignalVersion.v1 &&
-            !contact.accountDeleted,
-      );
+    await state.lock.protect(() async {
+      // Activity may arrive during an upgrade. Drain until every contact
+      // queued by that activity has been considered.
+      while (state.activeV1Contacts.isNotEmpty) {
+        final contactIds = Set<int>.of(state.activeV1Contacts);
+        state.activeV1Contacts.removeAll(contactIds);
 
-      for (final contact in legacyContacts) {
-        try {
-          final userData = await apiService.getUserById(contact.userId);
-          if (userData == null || !userData.hasPqcBundle()) continue;
+        for (final contactId in contactIds) {
+          try {
+            final contact = await twonlyDB.contactsDao.getContactById(
+              contactId,
+            );
+            if (contact == null ||
+                contact.signalVersion != SignalVersion.v1 ||
+                contact.accountDeleted) {
+              continue;
+            }
 
-          if (await processSignalUserData(userData)) {
-            Log.info('Upgraded Signal session with ${contact.userId} to v2.');
+            final userData = await apiService.getUserById(contactId);
+            if (userData == null || !userData.hasPqcBundle()) continue;
+
+            if (await processSignalUserData(userData)) {
+              Log.info('Upgraded active Signal session with $contactId to v2.');
+            }
+          } catch (error) {
+            // Further traffic queues the contact again, so temporary failures
+            // cannot leave an active session on V1 indefinitely.
+            Log.warn(
+              'Could not upgrade active Signal session with $contactId: '
+              '$error',
+            );
           }
-        } catch (error) {
-          // Migration is best-effort. A contact that is temporarily
-          // unavailable remains on v1 and is retried after a later message
-          // queue drain.
-          Log.warn(
-            'Could not upgrade Signal session with ${contact.userId}: $error',
-          );
         }
       }
     });
@@ -76,7 +134,13 @@ Future<bool> resetSignalSession(int contactId) async {
       await signalStore?.deleteAllSessions(contactId.toString());
     }
     final reset = await _processSignalUserData(userData);
-    if (reset) recordResyncAttempt(contactId, success: true);
+    if (reset) {
+      recordResyncAttempt(
+        contactId,
+        userData.hasPqcBundle() ? SignalVersion.v2 : SignalVersion.v1,
+        success: true,
+      );
+    }
     return reset;
   });
 }

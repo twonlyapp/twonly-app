@@ -70,6 +70,12 @@ pub enum TwonlyError {
 
     #[error("Signal protocol error: {0}")]
     Signal(String),
+
+    /// libsignal refused a message whose counter was already used, so the
+    /// message was decrypted before and the session is intact. Dart matches
+    /// this text to tell it apart from a broken session.
+    #[error("Duplicated Signal message: {0}")]
+    DuplicatedSignalMessage(String),
 }
 
 impl From<String> for TwonlyError {

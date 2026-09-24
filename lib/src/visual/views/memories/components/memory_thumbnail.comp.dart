@@ -94,7 +94,9 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
       if (hasStored) {
         unawaited(
           media.createThumbnail().then((_) {
-            if (mounted) {
+            // Only a written thumbnail is worth resolving again. A video whose
+            // thumbnail cannot be created would otherwise retry forever.
+            if (mounted && media.thumbnailPath.existsSync()) {
               _resolveImage();
             }
           }),
