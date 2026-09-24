@@ -1,29 +1,39 @@
 import 'dart:math';
 import 'package:mutex/mutex.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 
 /// Unified lock for all Signal protocol operations (encryption, decryption, session management).
 final lockingSignalProtocol = Mutex();
 
-/// Tracking users who have already been resynced in the current session.
-final Map<int, ({int failureCount, DateTime lastAttempt})> _resyncAttempts = {};
+/// Tracks recovery attempts independently for the legacy and PQ sessions of a
+/// contact. A stale V1 message must not prevent V2 recovery (or vice versa).
+final Map<(int, SignalVersion), ({int failureCount, DateTime lastAttempt})>
+_resyncAttempts = {};
 
 const int maxResyncAttempts = 3;
 
-bool shouldAttemptResync(int userId) {
-  final attempt = _resyncAttempts[userId];
+bool shouldAttemptResync(int userId, SignalVersion signalVersion) {
+  final attempt = _resyncAttempts[(userId, signalVersion)];
   if (attempt == null) return true;
   if (attempt.failureCount >= maxResyncAttempts) return false;
 
-  final cooldown = Duration(minutes: 5 * pow(5, attempt.failureCount - 1).toInt());
+  final cooldown = Duration(
+    minutes: 5 * pow(5, attempt.failureCount - 1).toInt(),
+  );
   return DateTime.now().difference(attempt.lastAttempt) > cooldown;
 }
 
-void recordResyncAttempt(int userId, {required bool success}) {
+void recordResyncAttempt(
+  int userId,
+  SignalVersion signalVersion, {
+  required bool success,
+}) {
+  final key = (userId, signalVersion);
   if (success) {
-    _resyncAttempts.remove(userId);
+    _resyncAttempts.remove(key);
   } else {
-    final current = _resyncAttempts[userId];
-    _resyncAttempts[userId] = (
+    final current = _resyncAttempts[key];
+    _resyncAttempts[key] = (
       failureCount: (current?.failureCount ?? 0) + 1,
       lastAttempt: DateTime.now(),
     );

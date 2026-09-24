@@ -52,16 +52,14 @@ Future<void> reuploadMediaFiles() async {
       final contacts = <int, Contact>{};
 
       for (final receipt in receipts) {
-        if (receipt.retryCount > 1 && receipt.lastRetry != null) {
-          final twentyFourHoursAgo = DateTime.now().subtract(
-            const Duration(hours: 6),
+        if (!isRetransmissionDue(
+          receipt,
+          minimumPause: const Duration(hours: 6),
+        )) {
+          Log.info(
+            'Ignoring ${receipt.receiptId} as its next retry is not due yet',
           );
-          if (receipt.lastRetry!.isAfter(twentyFourHoursAgo)) {
-            Log.info(
-              'Ignoring ${receipt.receiptId} as it was retried in the last 6h',
-            );
-            continue;
-          }
+          continue;
         }
 
         var messageId = receipt.messageId;

@@ -249,6 +249,14 @@ class ApiService {
   bool get isConnected => _channel != null && _channel!.closeCode == null;
 
   Future<void> _onDone() async {
+    final channel = _channel;
+    if (channel != null) {
+      // Not closed by us. The server's close code tells why it dropped the
+      // connection, e.g. 1013 (outbound queue full) or 4003 (ack timeouts).
+      Log.info(
+        'websocket closed with code ${channel.closeCode}: ${channel.closeReason}',
+      );
+    }
     _reconnectionDelay = 3;
     await onClosed();
   }

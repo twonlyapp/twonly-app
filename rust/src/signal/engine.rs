@@ -3,7 +3,7 @@ use libsignal_protocol::{
     message_encrypt, process_prekey_bundle, CiphertextMessageType, DeviceId, GenericSignedPreKey,
     IdentityKey, IdentityKeyPair, IdentityKeyStore, KyberPreKeyId, KyberPreKeyStore, PreKeyBundle,
     PreKeyId, PreKeySignalMessage, PreKeyStore, ProtocolAddress, PublicKey, SessionStore,
-    SignalMessage, SignedPreKeyId, SignedPreKeyStore, Timestamp,
+    SignalMessage, SignalProtocolError, SignedPreKeyId, SignedPreKeyStore, Timestamp,
 };
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -549,7 +549,7 @@ impl RustSignalEngine {
                 )
                 .assert_send()
                 .await
-                .map_err(|e| TwonlyError::Signal(e.to_string()))?
+                .map_err(decrypt_error)?
             }
             CiphertextMessageType::PreKey => {
                 let message = PreKeySignalMessage::try_from(ciphertext)
@@ -567,7 +567,7 @@ impl RustSignalEngine {
                 )
                 .assert_send()
                 .await
-                .map_err(|e| TwonlyError::Signal(e.to_string()))?
+                .map_err(decrypt_error)?
             }
             _ => {
                 return Err(TwonlyError::Signal("Invalid message type".to_string()));
@@ -575,6 +575,15 @@ impl RustSignalEngine {
         };
 
         Ok(plaintext.to_vec())
+    }
+}
+
+fn decrypt_error(error: SignalProtocolError) -> TwonlyError {
+    match error {
+        SignalProtocolError::DuplicatedMessage(..) => {
+            TwonlyError::DuplicatedSignalMessage(error.to_string())
+        }
+        error => TwonlyError::Signal(error.to_string()),
     }
 }
 
@@ -705,5 +714,72 @@ mod tests {
             .encrypt_message("bob".to_string(), 1, b"rebuilt".to_vec())
             .await
             .is_ok());
+    }
+
+    #[tokio::test]
+    async fn decrypting_a_message_twice_reports_a_duplicate() {
+        let (alice_engine, _alice_dir) = create_test_engine("alice").await;
+        let (bob_engine, _bob_dir) = create_test_engine("bob").await;
+
+        alice_engine
+            .process_prekey_bundle(
+                "bob".to_string(),
+                1,
+                bob_engine.generate_bundle().await.unwrap(),
+            )
+            .await
+            .unwrap();
+
+        let prekey_message = alice_engine
+            .encrypt_message("bob".to_string(), 1, b"first".to_vec())
+            .await
+            .unwrap();
+        assert_eq!(
+            prekey_message.last(),
+            Some(&(CiphertextMessageType::PreKey as u8))
+        );
+        bob_engine
+            .decrypt_message("alice".to_string(), 1, prekey_message.clone())
+            .await
+            .unwrap();
+        let error = bob_engine
+            .decrypt_message("alice".to_string(), 1, prekey_message)
+            .await
+            .unwrap_err();
+        assert!(
+            matches!(error, TwonlyError::DuplicatedSignalMessage(_)),
+            "{error}"
+        );
+
+        // After Bob's reply Alice no longer needs a PreKey message.
+        let reply = bob_engine
+            .encrypt_message("alice".to_string(), 1, b"reply".to_vec())
+            .await
+            .unwrap();
+        alice_engine
+            .decrypt_message("bob".to_string(), 1, reply)
+            .await
+            .unwrap();
+        let whisper_message = alice_engine
+            .encrypt_message("bob".to_string(), 1, b"second".to_vec())
+            .await
+            .unwrap();
+        assert_eq!(
+            whisper_message.last(),
+            Some(&(CiphertextMessageType::Whisper as u8))
+        );
+        bob_engine
+            .decrypt_message("alice".to_string(), 1, whisper_message.clone())
+            .await
+            .unwrap();
+        let error = bob_engine
+            .decrypt_message("alice".to_string(), 1, whisper_message)
+            .await
+            .unwrap_err();
+        assert!(
+            matches!(error, TwonlyError::DuplicatedSignalMessage(_)),
+            "{error}"
+        );
+        assert!(error.to_string().starts_with("Duplicated Signal message"));
     }
 }

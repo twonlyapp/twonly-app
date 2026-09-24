@@ -22,7 +22,7 @@ class Log {
             record.level >= Level.WARNING) {
           // ignore: avoid_print
           print(
-            '${record.level.name} [${AppState.isInBackgroundTask ? 'b' : 'f'}] [twonly] ${record.loggerName} > ${record.message}',
+            '${record.level.name} [${_isolateTag(record)}] [twonly] ${record.loggerName} > ${record.message}',
           );
         }
       }
@@ -77,6 +77,20 @@ class Log {
     final message = filterLogMessage('$messageInput');
     Logger(_getCallerSourceCodeFilename()).fine(message, error, stackTrace);
   }
+
+  /// Logs a line forwarded from Rust.
+  static void rust(String message) {
+    Logger(_rustLoggerName).fine(filterLogMessage(message));
+  }
+}
+
+const _rustLoggerName = 'rust';
+
+/// Rust forwards its logs to whichever isolate registered its log sink last,
+/// so the receiving isolate says nothing about who caused a Rust line.
+String _isolateTag(LogRecord record) {
+  if (record.loggerName == _rustLoggerName) return 'r';
+  return AppState.isInBackgroundTask ? 'b' : 'f';
 }
 
 Future<String> loadLogFile() async {
@@ -115,7 +129,7 @@ Future<void> _writeLogToFile(LogRecord record) async {
   final logFile = File('${AppEnvironment.supportDir}/app.log');
 
   final logMessage =
-      '${clock.now()} ${record.level.name} [${AppState.isInBackgroundTask ? 'b' : 'f'}] [twonly] ${record.loggerName} > ${record.message}\n';
+      '${clock.now()} ${record.level.name} [${_isolateTag(record)}] [twonly] ${record.loggerName} > ${record.message}\n';
 
   return _protectFileAccess(() async {
     if (!logFile.existsSync()) {

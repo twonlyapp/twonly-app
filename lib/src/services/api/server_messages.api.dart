@@ -9,6 +9,7 @@ import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart' hide Message;
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart'
     as client;
@@ -39,23 +40,6 @@ import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
-const _signalUpgradeMailboxIdleDelay = Duration(milliseconds: 500);
-Timer? _signalUpgradeMailboxIdleTimer;
-
-void _scheduleSignalUpgradeAfterMailboxIdle() {
-  _signalUpgradeMailboxIdleTimer?.cancel();
-  _signalUpgradeMailboxIdleTimer = Timer(_signalUpgradeMailboxIdleDelay, () {
-    _signalUpgradeMailboxIdleTimer = null;
-    unawaited(upgradeSignalSessionsToV2());
-  });
-}
-
-void _upgradeSignalSessionsAfterMailboxDrain() {
-  _signalUpgradeMailboxIdleTimer?.cancel();
-  _signalUpgradeMailboxIdleTimer = null;
-  unawaited(upgradeSignalSessionsToV2());
-}
-
 Future<void> handleServerMessage(server.ServerToClient msg) async {
   Log.info('Processing a message from the server.');
   var receivedIncomingMessages = false;
@@ -78,7 +62,7 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
       Log.info(
         'Got ${msg.v0.newMessages.newMessages.length} messages from the server.',
       );
-      final brokenSessionsInCurrentBatch = <int>{};
+      final brokenSessionsInCurrentBatch = <(int, SignalVersion)>{};
       for (final newMessage in msg.v0.newMessages.newMessages) {
         try {
           await handleClient2ClientMessage(
@@ -116,12 +100,12 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
   Log.info('All messages from the server processed.');
 
   if (mailboxDrained) {
-    _upgradeSignalSessionsAfterMailboxDrain();
+    flushActiveSignalSessionUpgrades();
   } else if (receivedIncomingMessages) {
     // Released servers do not send a mailbox-drained marker. They wait for
-    // this ACK before sending the next batch, so a short, resettable idle
-    // window approximates the queue boundary without blocking delivery.
-    _scheduleSignalUpgradeAfterMailboxIdle();
+    // this ACK before sending the next batch, so a resettable idle window
+    // approximates the queue boundary without blocking delivery.
+    scheduleActiveSignalSessionUpgrades();
   }
 }
 
@@ -131,13 +115,17 @@ final Map<String, Mutex> _messageLocks = {};
 
 Future<void> handleClient2ClientMessage(
   NewMessage newMessage, {
-  Set<int>? brokenSessionsInCurrentBatch,
+  BrokenSignalSessions? brokenSessionsInCurrentBatch,
 }) async {
   final body = Uint8List.fromList(newMessage.body);
   final message = Message.fromBuffer(body);
   final receiptId = message.receiptId;
+  // Replies such as delivery receipts and decryption errors reuse the
+  // receipt id of the message they answer, so only the sender and the id
+  // together identify an incoming message.
+  final lockKey = '${newMessage.fromUserId}:$receiptId';
 
-  final mutex = _messageLocks.putIfAbsent(receiptId, Mutex.new);
+  final mutex = _messageLocks.putIfAbsent(lockKey, Mutex.new);
   if (mutex.isLocked) {
     Log.info(
       '[$receiptId] Skipping — already being processed by another handler',
@@ -152,7 +140,7 @@ Future<void> handleClient2ClientMessage(
         brokenSessionsInCurrentBatch: brokenSessionsInCurrentBatch,
       );
     } finally {
-      _messageLocks.remove(receiptId);
+      _messageLocks.remove(lockKey);
     }
   });
 }
@@ -160,12 +148,25 @@ Future<void> handleClient2ClientMessage(
 Future<void> _handleClient2ClientMessage(
   NewMessage newMessage,
   Message message, {
-  Set<int>? brokenSessionsInCurrentBatch,
+  BrokenSignalSessions? brokenSessionsInCurrentBatch,
 }) async {
   final fromUserId = newMessage.fromUserId.toInt();
   final receiptId = message.receiptId;
 
-  if (brokenSessionsInCurrentBatch?.contains(fromUserId) == true) {
+  final signalVersion = switch (message.type) {
+    Message_Type.CIPHERTEXT_V2 => SignalVersion.v2,
+    Message_Type.CIPHERTEXT || Message_Type.PREKEY_BUNDLE => SignalVersion.v1,
+    // Receipts and decryption errors are not encrypted and are never skipped.
+    _ => null,
+  };
+  if (signalVersion == SignalVersion.v1) {
+    // Only sessions participating in current traffic are migration targets.
+    // Each message resets the idle window so a server batch finishes first.
+    queueSignalSessionUpgrade(fromUserId);
+  }
+  if (signalVersion != null &&
+      brokenSessionsInCurrentBatch?.contains((fromUserId, signalVersion)) ==
+          true) {
     // This happens when a session goes out of sync (e.g. wrong message order).
     // We skip the remaining messages in the batch because each failed decryption
     // attempt is extremely slow (~1.2s) and would otherwise freeze the app.
@@ -181,13 +182,20 @@ Future<void> _handleClient2ClientMessage(
   }
 
   if (await twonlyDB.receiptsDao.isDuplicated(receiptId)) {
-    if (message.type == Message_Type.SENDER_DELIVERY_RECEIPT) {
+    if (signalVersion == null) {
+      // Only encrypted messages are confirmed. The others, delivery receipts
+      // and decryption errors, answer one of our messages: the first copy
+      // was handled, and answering a reply starts a loop.
       Log.info(
-        '[$receiptId] Delivery receipt is a duplicate. Skipping receipt response.',
+        '[$receiptId] Unencrypted message is a duplicate. Skipping receipt response.',
       );
       return;
     }
-    const duplicateReceiptCooldown = Duration(days: 10);
+    // A sender only retries a message it never saw confirmed, so our
+    // delivery receipt got lost and has to be sent again. The cooldown only
+    // keeps a batch the server delivers twice from being answered twice.
+    // 0.5.2 waited ten days here while the sender kept retrying.
+    const duplicateReceiptCooldown = Duration(hours: 1);
     final shouldResend = await twonlyDB.receiptsDao.claimDuplicateReceiptResend(
       receiptId,
       duplicateReceiptCooldown,
@@ -222,6 +230,12 @@ Future<void> _handleClient2ClientMessage(
   }
 
   Log.info('[$receiptId] Started processing message');
+
+  // A message we could not process is answered with an error, and the sender
+  // sends it again. Remembering its receipt id would turn the next copy into
+  // a duplicate, which is answered with a delivery receipt for content we
+  // never read, once the error reply got lost.
+  var processed = true;
 
   switch (message.type) {
     case Message_Type.SENDER_DELIVERY_RECEIPT:
@@ -329,6 +343,7 @@ Future<void> _handleClient2ClientMessage(
         }
 
         response ??= Message(type: Message_Type.SENDER_DELIVERY_RECEIPT);
+        processed = response.type != Message_Type.PLAINTEXT_CONTENT;
 
         String? targetReceiptId;
         try {
@@ -359,7 +374,7 @@ Future<void> _handleClient2ClientMessage(
   }
 
   try {
-    await twonlyDB.receiptsDao.gotReceipt(receiptId);
+    if (processed) await twonlyDB.receiptsDao.gotReceipt(receiptId);
     Log.info('[$receiptId] Finished processing');
   } catch (e) {
     Log.warn('[$receiptId] Error marking message as received: $e');
@@ -375,7 +390,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
   Uint8List encryptedContentRaw,
   Message_Type messageType,
   String receiptId, {
-  Set<int>? brokenSessionsInCurrentBatch,
+  BrokenSignalSessions? brokenSessionsInCurrentBatch,
 }) async {
   Log.info('[$receiptId] calling signalDecryptMessage');
   EncryptedContent? encryptedContent;

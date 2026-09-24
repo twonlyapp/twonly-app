@@ -10,6 +10,7 @@ import 'package:twonly/core/bridge.dart' as bridge;
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/core/frb_generated.dart';
+import 'package:twonly/core/signal/engine.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
@@ -19,10 +20,44 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
     as api_pb;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as msg_pb;
+import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
+
+class _MigrationApiService extends ApiService {
+  final Map<int, api_pb.Response_UserData> users = {};
+  final List<int> requestedUserIds = [];
+
+  @override
+  Future<api_pb.Response_UserData?> getUserById(int userId) async {
+    requestedUserIds.add(userId);
+    return users[userId];
+  }
+}
+
+api_pb.Response_UserData _userDataFromBundle(
+  int userId,
+  FrbPreKeyBundle bundle,
+) => api_pb.Response_UserData(
+  userId: Int64(userId),
+  username: utf8.encode('contact_$userId'),
+  registrationId: Int64(bundle.registrationId),
+  publicIdentityKey: bundle.identityKey,
+  pqcBundle: api_pb.Response_PqcBundle(
+    prekey: api_pb.Response_PqcPreKey(
+      eccPreKeyId: bundle.preKeyId != null ? Int64(bundle.preKeyId!) : null,
+      eccPreKey: bundle.preKeyPublic,
+      kyberPreKeyId: Int64(bundle.kyberPreKeyId),
+      kyberPreKey: bundle.kyberPreKeyPublic,
+      kyberPreKeySignature: bundle.kyberPreKeySignature,
+    ),
+    eccSignedPrekeyId: Int64(bundle.signedPreKeyId),
+    eccSignedPrekey: bundle.signedPreKeyPublic,
+    eccSignedPrekeySignature: bundle.signedPreKeySignature,
+  ),
+);
 
 void main() {
   if (!Platform.isMacOS) {
@@ -32,6 +67,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory tempDir;
   late TwonlyDB db;
+  late _MigrationApiService api;
 
   setUpAll(() async {
     Log.init();
@@ -59,10 +95,16 @@ void main() {
     );
 
     db = TwonlyDB(NativeDatabase.memory());
-    locator.registerFactory<TwonlyDB>(() => db);
+    api = _MigrationApiService();
+    locator
+      ..registerFactory<TwonlyDB>(() => db)
+      ..registerSingleton<ApiService>(api);
   });
 
   setUp(() async {
+    api
+      ..users.clear()
+      ..requestedUserIds.clear();
     await createIfNotExistsSignalIdentity();
     await RustKeyManager.setUserId(userId: 1);
   });
@@ -178,5 +220,40 @@ void main() {
     expect(encryptedResult, isNotNull);
     expect(encryptedResult!.type, msg_pb.Message_Type.CIPHERTEXT_V2);
     expect(encryptedResult.ciphertext, isNotEmpty);
+  });
+
+  test('only active V1 sessions are upgraded', () async {
+    const activeContactIds = [701, 702];
+    const inactiveContactId = 703;
+
+    for (final contactId in [...activeContactIds, inactiveContactId]) {
+      await db.contactsDao.insertContact(
+        ContactsCompanion.insert(
+          userId: Value(contactId),
+          username: 'contact_$contactId',
+          accepted: const Value(true),
+          signalVersion: const Value(SignalVersion.v1),
+        ),
+      );
+      api.users[contactId] = _userDataFromBundle(
+        contactId,
+        await RustSignal.generateBundle(),
+      );
+    }
+
+    activeContactIds.forEach(scheduleSignalSessionUpgrade);
+    await upgradeActiveSignalSessionsToV2();
+
+    for (final contactId in activeContactIds) {
+      expect(
+        (await db.contactsDao.getContactById(contactId))!.signalVersion,
+        SignalVersion.v2,
+      );
+    }
+    expect(
+      (await db.contactsDao.getContactById(inactiveContactId))!.signalVersion,
+      SignalVersion.v1,
+    );
+    expect(api.requestedUserIds, unorderedEquals(activeContactIds));
   });
 }
