@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.3
+
+- Hotfix: Fixed stuck Signal sessions
+- Improve: Gracefully upgrade all sessions to PQXDH
+
 ## 0.5.2
 
 - Hotfix: Fixed an infinite loop involving delivery receipts
