@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT group_id, total_media_counter, last_flame_counter_change,\n                      last_flame_sync, flame_counter\n               FROM groups WHERE last_flame_counter_change IS NOT NULL",
+  "query": "SELECT group_id, flame_counter, also_best_friend,\n                      last_message_send, last_message_received, last_flame_counter_change\n               FROM groups",
   "describe": {
     "columns": [
       {
@@ -15,46 +15,57 @@
         }
       },
       {
-        "name": "total_media_counter",
+        "name": "flame_counter",
         "ordinal": 1,
         "type_info": "Integer",
         "origin": {
           "Table": {
             "table": "groups",
-            "name": "total_media_counter"
+            "name": "flame_counter"
           }
         }
       },
       {
-        "name": "last_flame_counter_change",
+        "name": "also_best_friend",
         "ordinal": 2,
         "type_info": "Integer",
         "origin": {
           "Table": {
             "table": "groups",
-            "name": "last_flame_counter_change"
+            "name": "also_best_friend"
           }
         }
       },
       {
-        "name": "last_flame_sync",
+        "name": "last_message_send",
         "ordinal": 3,
         "type_info": "Integer",
         "origin": {
           "Table": {
             "table": "groups",
-            "name": "last_flame_sync"
+            "name": "last_message_send"
           }
         }
       },
       {
-        "name": "flame_counter",
+        "name": "last_message_received",
         "ordinal": 4,
         "type_info": "Integer",
         "origin": {
           "Table": {
             "table": "groups",
-            "name": "flame_counter"
+            "name": "last_message_received"
+          }
+        }
+      },
+      {
+        "name": "last_flame_counter_change",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_flame_counter_change"
           }
         }
       }
@@ -65,10 +76,11 @@
     "nullable": [
       false,
       false,
+      false,
       true,
       true,
-      false
+      true
     ]
   },
-  "hash": "10facb63e1057c6acfe8b60cfe5f6deb3535eed60977d917f57cae97bb220e30"
+  "hash": "df4c2b8e3b106c3f91e4d816627c7985c9f56fa459c16357d727fc292d226529"
 }

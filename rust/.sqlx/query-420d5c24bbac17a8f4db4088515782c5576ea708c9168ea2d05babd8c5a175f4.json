@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO legacy_upgrade_requests(contact_id, requested_at)\n        VALUES (?, ?)\n        ON CONFLICT(contact_id) DO UPDATE SET requested_at = excluded.requested_at\n        WHERE legacy_upgrade_requests.requested_at <= ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "420d5c24bbac17a8f4db4088515782c5576ea708c9168ea2d05babd8c5a175f4"
+}

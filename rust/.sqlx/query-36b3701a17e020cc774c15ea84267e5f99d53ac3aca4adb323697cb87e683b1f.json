@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO receipts(receipt_id, contact_id, message, contact_will_sends_receipt, wake_receiver)\n            VALUES (?, ?, ?, ?, ?)\n            ON CONFLICT(receipt_id) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "36b3701a17e020cc774c15ea84267e5f99d53ac3aca4adb323697cb87e683b1f"
+}

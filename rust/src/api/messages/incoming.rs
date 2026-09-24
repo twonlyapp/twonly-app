@@ -297,8 +297,9 @@ async fn reset_unusable_session(
 }
 
 /// Rebuilds a v2 Signal session for a peer that still speaks the legacy
-/// protocol, so the decryption error queued for the message can be answered
-/// with a session the peer can upgrade to.
+/// protocol, so what we send them next already goes out as v2. The decryption
+/// error answering their legacy message is plaintext and does not use it; see
+/// [`claim_legacy_upgrade_request`] for how the peer itself is moved to v2.
 ///
 /// Runs before the inbound transaction opens: it awaits a server round-trip and
 /// `establish_signal_session` writes through the pool, and the app database
@@ -345,6 +346,43 @@ async fn upgrade_legacy_session_to_v2(
     .await?;
 
     Ok(())
+}
+
+/// How long a legacy peer is given to move to v2 before it is asked again.
+const LEGACY_UPGRADE_REQUEST_INTERVAL_SECS: i64 = 60 * 60;
+
+/// Claims the right to ask a legacy peer to move to v2, at most once per
+/// [`LEGACY_UPGRADE_REQUEST_INTERVAL_SECS`].
+///
+/// Clients before 0.6.0 fetch a fresh prekey bundle only for a
+/// `PREKEY_UNKNOWN` decryption error, and that bundle is what switches the
+/// contact to v2 on their side. They answer every decryption error by resending
+/// the same queued message, still encrypted as v1, so answering each of those
+/// resends would never end and would spend one of our one-time prekeys per
+/// round. Leaving the resends unanswered stops the loop: without a reply the
+/// old client does not send the message again.
+async fn claim_legacy_upgrade_request(
+    t: &mut Transaction<'_, Sqlite>,
+    contact_id: i64,
+) -> Result<bool> {
+    let now = crate::utils::current_time().timestamp();
+    let asked_before = now - LEGACY_UPGRADE_REQUEST_INTERVAL_SECS;
+    let claimed = sqlx::query!(
+        r#"
+        INSERT INTO legacy_upgrade_requests(contact_id, requested_at)
+        VALUES (?, ?)
+        ON CONFLICT(contact_id) DO UPDATE SET requested_at = excluded.requested_at
+        WHERE legacy_upgrade_requests.requested_at <= ?
+        "#,
+        contact_id,
+        now,
+        asked_before,
+    )
+    .execute(&mut **t)
+    .await?
+    .rows_affected()
+        > 0;
+    Ok(claimed)
 }
 
 #[tracing::instrument(
@@ -466,7 +504,22 @@ pub async fn handle_decoded_server_message(
             handle_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
         }
         Type::Ciphertext | Type::PrekeyBundle => {
-            queue_decryption_error(&mut t, from_user_id, &message.receipt_id, 0).await?;
+            if claim_legacy_upgrade_request(&mut t, from_user_id).await? {
+                tracing::info!("Asking the legacy peer to fetch our v2 prekey bundle");
+                queue_decryption_error(
+                    &mut t,
+                    from_user_id,
+                    &message.receipt_id,
+                    DecryptionErrorType::PrekeyUnknown as i32,
+                )
+                .await?;
+            } else {
+                tracing::info!(
+                    "Leaving a legacy message unanswered; the peer was already asked to upgrade"
+                );
+            }
+            // Never acknowledged: the message was not read, so the sender must
+            // not be told it was delivered.
             sends_error_response = true;
         }
         Type::CiphertextV2 => {
@@ -912,5 +965,38 @@ mod tests {
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .contains_key(receipt_id));
+    }
+
+    /// An old client resends the same v1 message for every decryption error,
+    /// so only the first one in an interval may be answered.
+    #[tokio::test]
+    async fn a_legacy_peer_is_asked_to_upgrade_once_per_interval() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("app.sqlite");
+        let database = crate::database::app::AppDatabase::new(path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        database.run_migrations().await.unwrap();
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice')")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+
+        let mut t = database.pool.begin().await.unwrap();
+        assert!(claim_legacy_upgrade_request(&mut t, 7).await.unwrap());
+        assert!(!claim_legacy_upgrade_request(&mut t, 7).await.unwrap());
+        t.commit().await.unwrap();
+
+        // Once the interval has passed without the peer upgrading, it is asked
+        // again, for example because its bundle fetch failed.
+        sqlx::query("UPDATE legacy_upgrade_requests SET requested_at = requested_at - ?")
+            .bind(LEGACY_UPGRADE_REQUEST_INTERVAL_SECS)
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        let mut t = database.pool.begin().await.unwrap();
+        assert!(claim_legacy_upgrade_request(&mut t, 7).await.unwrap());
+        assert!(!claim_legacy_upgrade_request(&mut t, 7).await.unwrap());
+        t.commit().await.unwrap();
     }
 }
