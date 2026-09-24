@@ -299,9 +299,17 @@ class ApiService {
     return result;
   }
 
-  Future<void> sendResponse(ClientToServer response) async {
-    if (_channel != null) {
-      _channel!.sink.add(response.writeToBuffer());
+  Future<bool> sendResponse(ClientToServer response) async {
+    final channel = _channel;
+    if (channel == null || channel.closeCode != null) {
+      return false;
+    }
+    try {
+      channel.sink.add(response.writeToBuffer());
+      return true;
+    } catch (e) {
+      Log.warn('Could not send response to server: $e');
+      return false;
     }
   }
 
