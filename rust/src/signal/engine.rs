@@ -2,8 +2,8 @@ use crate::error::{Result, TwonlyError};
 use libsignal_protocol::{
     message_encrypt, process_prekey_bundle, CiphertextMessageType, DeviceId, GenericSignedPreKey,
     IdentityKey, IdentityKeyPair, IdentityKeyStore, KyberPreKeyId, KyberPreKeyStore, PreKeyBundle,
-    PreKeyId, PreKeySignalMessage, PreKeyStore, ProtocolAddress, PublicKey, SignalMessage,
-    SignedPreKeyId, SignedPreKeyStore, Timestamp,
+    PreKeyId, PreKeySignalMessage, PreKeyStore, ProtocolAddress, PublicKey, SessionStore,
+    SignalMessage, SignedPreKeyId, SignedPreKeyStore, Timestamp,
 };
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -414,6 +414,58 @@ impl RustSignalEngine {
         Ok(())
     }
 
+    /// Retires the session with a peer so a fresh one can replace it.
+    ///
+    /// A hard reset deletes the complete record, including archived states.
+    /// A soft reset archives only the current state so in-flight messages can
+    /// still be decrypted while a replacement session is established.
+    ///
+    /// Returns whether a session existed.
+    pub async fn reset_session(&self, name: &str, device_id: u32, hard: bool) -> Result<bool> {
+        let mut store_guard = self.store.lock().await;
+        let store = &mut *store_guard;
+
+        let d_id = DeviceId::try_from(device_id)
+            .map_err(|_| TwonlyError::Generic(format!("Invalid device id: {}", device_id)))?;
+        let address = ProtocolAddress::new(name.to_owned(), d_id);
+
+        if hard {
+            let deleted =
+                sqlx::query("DELETE FROM signal_sessions WHERE name = ? AND device_id = ?")
+                    .bind(name)
+                    .bind(device_id)
+                    .execute(&store.pool)
+                    .await?
+                    .rows_affected();
+            tracing::warn!(name, device_id, "deleted the signal session");
+            return Ok(deleted != 0);
+        }
+
+        let Some(mut record) = store
+            .session_store
+            .load_session(&address)
+            .assert_send()
+            .await
+            .map_err(|e| TwonlyError::Signal(e.to_string()))?
+        else {
+            return Ok(false);
+        };
+
+        record
+            .archive_current_state()
+            .map_err(|e| TwonlyError::Signal(e.to_string()))?;
+
+        store
+            .session_store
+            .store_session(&address, &record)
+            .assert_send()
+            .await
+            .map_err(|e| TwonlyError::Signal(e.to_string()))?;
+
+        tracing::warn!(name, device_id, "archived the signal session for a reset");
+        Ok(true)
+    }
+
     pub async fn encrypt_message(
         &self,
         name: String,
@@ -617,5 +669,41 @@ mod tests {
             .unwrap();
 
         assert_eq!(plaintext.to_vec(), decrypted);
+    }
+
+    #[tokio::test]
+    async fn hard_reset_deletes_and_allows_rebuilding_a_contact_session() {
+        let (alice_engine, _alice_dir) = create_test_engine("alice").await;
+        let (bob_engine, _bob_dir) = create_test_engine("bob").await;
+
+        alice_engine
+            .process_prekey_bundle(
+                "bob".to_string(),
+                1,
+                bob_engine.generate_bundle().await.unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert!(alice_engine.reset_session("bob", 1, true).await.unwrap());
+        assert!(!alice_engine.reset_session("bob", 1, true).await.unwrap());
+        assert!(alice_engine
+            .encrypt_message("bob".to_string(), 1, b"missing".to_vec())
+            .await
+            .is_err());
+
+        alice_engine
+            .process_prekey_bundle(
+                "bob".to_string(),
+                1,
+                bob_engine.generate_bundle().await.unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert!(alice_engine
+            .encrypt_message("bob".to_string(), 1, b"rebuilt".to_vec())
+            .await
+            .is_ok());
     }
 }

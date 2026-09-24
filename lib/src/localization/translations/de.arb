@@ -94,6 +94,10 @@
   "settingsNotification": "Benachrichtigung",
   "settingsNotifyPermission": "Benachrichtigungsberechtigung",
   "settingsNotifyPermissionDesc": "Systemeinstellungen öffnen, um Push-Benachrichtigungen zu erlauben.",
+  "settingsNotifyTroubleshooting": "Fehlersuche",
+  "settingsNotifyTroubleshootingDesc": "Hier klicken, wenn Probleme beim Empfang von Push-Benachrichtigungen auftreten.",
+  "settingsNotifyTroubleshootingNoProblem": "Kein Problem festgestellt",
+  "settingsNotifyTroubleshootingNoProblemDesc": "Um eine Testbenachrichtigung zu erhalten, klicke auf OK. Falls du die Testbenachrichtigung nicht erhältst, klicke bitte auf den neuen Menüpunkt, der nach dem Klicken auf „OK“ angezeigt wird.",
   "settingsNotifyResetTitle": "Benachrichtigungstoken zurücksetzen",
   "settingsNotifyResetTitleSubtitle": "Setze deine Benachrichtigungstoken zurück, wenn du Probleme beim Empfang von Push-Benachrichtigungen hast.",
   "settingsNotifyResetTitleReset": "Deine Benachrichtigungstoken wurden zurückgesetzt.",
@@ -168,6 +172,26 @@
   "contactNickname": "Spitzname",
   "contactNicknameNew": "Neuer Spitzname",
   "contactBlock": "Blockieren",
+  "contactTroubleshoot": "Verbindungsprobleme beheben",
+  "contactResetSessionTitle": "Verbindung zu {username} zurücksetzen?",
+  "@contactResetSessionTitle": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "contactResetSessionBody": "twonly löscht die aktuelle verschlüsselte Verbindung und baut sie anschließend neu auf. Nachrichten, die gerade übertragen werden, können dabei verloren gehen.",
+  "contactResetSessionConfirm": "Verbindung zurücksetzen",
+  "contactResetSessionSuccess": "Die verschlüsselte Verbindung zu {username} wurde neu aufgebaut.",
+  "@contactResetSessionSuccess": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "contactResetSessionFailed": "Die Verbindung konnte nicht zurückgesetzt werden. Prüfe deine Internetverbindung und versuche es erneut.",
   "contactRemove": "Kontakt löschen",
   "contactRemoveTitle": "{username} löschen?",
   "contactRemoveBody": "Den Kontakt dauerhaft entfernen. Wenn der Kontakt versucht, dir eine neue Nachricht zu senden, musst du den Kontakt erst wieder akzeptieren.",
@@ -205,6 +229,7 @@
   "errorUsernameAlreadyTaken": "Der Benutzername ist bereits vergeben.",
   "errorUsernameNotValid": "Der von dir angegebene Benutzername entspricht nicht den erforderlichen Kriterien. Bitte wähle einen gültigen Benutzernamen.",
   "upgradeToPaidPlanButton": "Auf {planId} upgraden{sufix}",
+  "partOfPaidPlanOf": "Du bist Teil des bezahlten Plans von {username}!",
   "partOfPaidPlanFrom": "Teil des bezahlten Plans von",
   "subscriptionCurrentPlanBadge": "Aktuell",
   "errorNotEnoughCredit": "Du hast nicht genügend twonly-Guthaben.",

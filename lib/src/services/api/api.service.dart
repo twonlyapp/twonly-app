@@ -1016,6 +1016,8 @@ class ApiService {
     Uint8List kyberSignedPreKey,
     Uint8List kyberSignedPreKeySignature,
     List<client.ApplicationData_PqcPreKey> prekeys,
+    Uint8List publicIdentityKey,
+    int registrationId,
   ) async {
     final get = ApplicationData_UploadPqcPreKeys()
       ..eccSignedPrekeyId = Int64(eccSignedPreKeyId)
@@ -1024,7 +1026,9 @@ class ApiService {
       ..kyberSignedPrekeyId = Int64(kyberSignedPreKeyId)
       ..kyberSignedPrekey = kyberSignedPreKey
       ..kyberSignedPrekeySignature = kyberSignedPreKeySignature
-      ..prekeys.addAll(prekeys);
+      ..prekeys.addAll(prekeys)
+      ..publicIdentityKey = publicIdentityKey
+      ..registrationId = Int64(registrationId);
     final appData = ApplicationData()..uploadPqcPrekeys = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);

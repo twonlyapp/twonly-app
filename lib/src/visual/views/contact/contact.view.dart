@@ -10,6 +10,7 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -38,6 +39,7 @@ class ContactView extends StatefulWidget {
 class _ContactViewState extends State<ContactView> {
   Contact? _contact;
   List<GroupMember> _memberOfGroups = [];
+  bool _isResettingSignalSession = false;
 
   late StreamSubscription<Contact?> _streamContact;
   late StreamSubscription<List<GroupMember>> _streamMemberOfGroups;
@@ -134,6 +136,37 @@ class _ContactViewState extends State<ContactView> {
     } else {
       showNetworkIssue(context);
     }
+  }
+
+  Future<void> handleResetSignalSession(Contact contact) async {
+    if (_isResettingSignalSession) return;
+
+    final displayName = getContactDisplayName(contact);
+    final confirmed = await showAlertDialog(
+      context,
+      context.lang.contactResetSessionTitle(displayName),
+      context.lang.contactResetSessionBody,
+      customOk: context.lang.contactResetSessionConfirm,
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() => _isResettingSignalSession = true);
+    var success = false;
+    try {
+      success = await resetSignalSession(contact.userId);
+    } catch (error) {
+      Log.error('Could not reset Signal session: $error');
+    }
+    if (!mounted) return;
+
+    setState(() => _isResettingSignalSession = false);
+    showSnackbar(
+      context,
+      success
+          ? context.lang.contactResetSessionSuccess(displayName)
+          : context.lang.contactResetSessionFailed,
+      level: success ? SnackbarLevel.success : SnackbarLevel.error,
+    );
   }
 
   @override
@@ -267,6 +300,19 @@ class _ContactViewState extends State<ContactView> {
             icon: FontAwesomeIcons.ban,
             text: context.lang.contactBlock,
             onTap: () => handleUserBlockRequest(contact),
+          ),
+          BetterListTile(
+            icon: FontAwesomeIcons.screwdriverWrench,
+            text: context.lang.contactTroubleshoot,
+            trailing: _isResettingSignalSession
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : null,
+            onTap: _isResettingSignalSession
+                ? null
+                : () => handleResetSignalSession(contact),
           ),
           BetterListTile(
             icon: FontAwesomeIcons.userMinus,

@@ -90,6 +90,10 @@
   "settingsNotification": "Notification",
   "settingsNotifyPermission": "Notification permissions",
   "settingsNotifyPermissionDesc": "Open system settings to allow push notifications.",
+  "settingsNotifyTroubleshooting": "Troubleshooting",
+  "settingsNotifyTroubleshootingDesc": "Click here if you have problems receiving push notifications.",
+  "settingsNotifyTroubleshootingNoProblem": "No problem detected",
+  "settingsNotifyTroubleshootingNoProblemDesc": "Press OK to receive a test notification. If you do not receive the test notification, please click on the new menu item that appears after you click “OK”.",
   "settingsNotifyResetTitle": "Reset notification tokens",
   "settingsNotifyResetTitleSubtitle": "Reset your notification tokens if you have problems receiving push notifications.",
   "settingsNotifyResetTitleReset": "Your notification tokens have been reset.",
@@ -164,6 +168,26 @@
   "contactNickname": "Nickname",
   "contactNicknameNew": "New nickname",
   "contactBlock": "Block",
+  "contactTroubleshoot": "Troubleshoot connection",
+  "contactResetSessionTitle": "Reset connection with {username}?",
+  "@contactResetSessionTitle": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "contactResetSessionBody": "twonly will remove the current encrypted connection and establish a new one. Messages currently in transit may be lost.",
+  "contactResetSessionConfirm": "Reset connection",
+  "contactResetSessionSuccess": "The encrypted connection with {username} was re-established.",
+  "@contactResetSessionSuccess": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "contactResetSessionFailed": "The connection could not be reset. Check your internet connection and try again.",
   "contactBlockTitle": "Block {username}",
   "@contactBlockTitle": {
     "placeholders": {
@@ -220,6 +244,7 @@
   "errorPlanNotAllowed": "This feature is not available in your current plan.",
   "errorPlanUpgradeNotYearly": "The plan upgrade must be paid for annually, as the current plan is also billed annually.",
   "upgradeToPaidPlanButton": "Upgrade to {planId}{sufix}",
+  "partOfPaidPlanOf": "You are part of the paid plan of {username}!",
   "partOfPaidPlanFrom": "Part of the paid plan of",
   "subscriptionCurrentPlanBadge": "Current",
   "year": "year",

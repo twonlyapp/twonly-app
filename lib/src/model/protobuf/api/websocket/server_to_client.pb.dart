@@ -96,6 +96,7 @@ enum V0_Kind {
   error,
   newMessages,
   requestNewPqcPreKeys,
+  mailboxDrained,
   notSet
 }
 
@@ -108,6 +109,7 @@ class V0 extends $pb.GeneratedMessage {
     $0.ErrorCode? error,
     NewMessages? newMessages,
     $core.bool? requestNewPqcPreKeys,
+    $core.bool? mailboxDrained,
   }) {
     final result = create();
     if (seq != null) result.seq = seq;
@@ -118,6 +120,7 @@ class V0 extends $pb.GeneratedMessage {
     if (newMessages != null) result.newMessages = newMessages;
     if (requestNewPqcPreKeys != null)
       result.requestNewPqcPreKeys = requestNewPqcPreKeys;
+    if (mailboxDrained != null) result.mailboxDrained = mailboxDrained;
     return result;
   }
 
@@ -137,6 +140,7 @@ class V0 extends $pb.GeneratedMessage {
     6: V0_Kind.error,
     7: V0_Kind.newMessages,
     8: V0_Kind.requestNewPqcPreKeys,
+    11: V0_Kind.mailboxDrained,
     0: V0_Kind.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -144,7 +148,7 @@ class V0 extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 6, 7, 8])
+    ..oo(0, [2, 3, 4, 6, 7, 8, 11])
     ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'seq', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOM<Response>(2, _omitFieldNames ? '' : 'response',
@@ -159,6 +163,8 @@ class V0 extends $pb.GeneratedMessage {
         protoName: 'newMessages', subBuilder: NewMessages.create)
     ..aOB(8, _omitFieldNames ? '' : 'RequestNewPqcPreKeys',
         protoName: 'RequestNewPqcPreKeys')
+    ..aOB(11, _omitFieldNames ? '' : 'mailboxDrained',
+        protoName: 'mailboxDrained')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -185,6 +191,7 @@ class V0 extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
+  @$pb.TagNumber(11)
   V0_Kind whichKind() => _V0_KindByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
@@ -192,6 +199,7 @@ class V0 extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
+  @$pb.TagNumber(11)
   void clearKind() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -262,6 +270,15 @@ class V0 extends $pb.GeneratedMessage {
   $core.bool hasRequestNewPqcPreKeys() => $_has(6);
   @$pb.TagNumber(8)
   void clearRequestNewPqcPreKeys() => $_clearField(8);
+
+  @$pb.TagNumber(11)
+  $core.bool get mailboxDrained => $_getBF(7);
+  @$pb.TagNumber(11)
+  set mailboxDrained($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(11)
+  $core.bool hasMailboxDrained() => $_has(7);
+  @$pb.TagNumber(11)
+  void clearMailboxDrained() => $_clearField(11);
 }
 
 class NewMessage extends $pb.GeneratedMessage {

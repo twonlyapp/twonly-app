@@ -18,6 +18,7 @@ import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
+import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/services/user.service.dart' show UserService;
 import 'package:twonly/src/services/user_discovery.service.dart';
@@ -26,8 +27,47 @@ import 'package:twonly/src/utils/misc.dart';
 
 final lockRetransmission = Mutex();
 
+const int _outOfSyncRetryThreshold = 10;
+
+Future<void> _resetStuckOutgoingSignalSessions() async {
+  final contactIds = await twonlyDB.receiptsDao
+      .getContactsWithStuckSignalMessages(
+        retryThreshold: _outOfSyncRetryThreshold,
+      );
+
+  for (final contactId in contactIds) {
+    if (!shouldAttemptResync(contactId)) continue;
+
+    Log.warn(
+      'Detected an out-of-sync outgoing Signal session with $contactId: '
+      'multiple messages exceeded $_outOfSyncRetryThreshold retries.',
+    );
+
+    var reset = false;
+    try {
+      reset = await resetSignalSession(contactId);
+    } catch (error) {
+      Log.error(
+        'Could not automatically reset session with $contactId: $error',
+      );
+    }
+
+    if (!reset) {
+      recordResyncAttempt(contactId, success: false);
+      continue;
+    }
+
+    // Avoid resetting the same healthy replacement session on the next
+    // retransmission pass. Outstanding messages will now be encrypted again
+    // using the freshly established session.
+    await twonlyDB.receiptsDao.resetMessageRetryCountsForContact(contactId);
+  }
+}
+
 Future<void> retransmitAllMessages() async {
   return lockRetransmission.protect(() async {
+    await _resetStuckOutgoingSignalSessions();
+
     final receipts = await twonlyDB.receiptsDao.getReceiptsForRetransmission();
 
     if (receipts.isEmpty) return;
@@ -159,14 +199,24 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
           .writeToBuffer();
     }
 
-    if (message.type == pb.Message_Type.CIPHERTEXT) {
-      final encryptResult = await signalEncryptMessage(
-        receipt.contactId,
-        Uint8List.fromList(message.encryptedContent),
-      );
+    if (message.type == pb.Message_Type.CIPHERTEXT ||
+        message.type == pb.Message_Type.CIPHERTEXT_V2) {
+      final useV2 = contact.signalVersion == SignalVersion.v2;
+      final encryptResult = useV2
+          ? await signalEncryptMessageV2(
+              receipt.contactId,
+              Uint8List.fromList(message.encryptedContent),
+            )
+          : await signalEncryptMessage(
+              receipt.contactId,
+              Uint8List.fromList(message.encryptedContent),
+            );
+
       if (encryptResult == null) {
         Log.error(
-          '[${receipt.receiptId}] Could not encrypt the message for user ${receipt.contactId}. Aborting and trying again.',
+          '[${receipt.receiptId}] Could not encrypt the message '
+          '(${useV2 ? 'V2' : 'V1'}) for user ${receipt.contactId}. '
+          'Aborting and trying again.',
         );
         if (receipt.messageId != null) {
           await twonlyDB.messagesDao.handleMessageAckByServer(
@@ -178,28 +228,7 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
         await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
         return null;
       }
-      message
-        ..encryptedContent = encryptResult.ciphertext
-        ..type = encryptResult.type;
-    } else if (message.type == pb.Message_Type.CIPHERTEXT_V2) {
-      final encryptResult = await signalEncryptMessageV2(
-        receipt.contactId,
-        Uint8List.fromList(message.encryptedContent),
-      );
-      if (encryptResult == null) {
-        Log.error(
-          '[${receipt.receiptId}] Could not encrypt the message (V2) for user ${receipt.contactId}. Aborting and trying again.',
-        );
-        if (receipt.messageId != null) {
-          await twonlyDB.messagesDao.handleMessageAckByServer(
-            receipt.contactId,
-            receipt.messageId!,
-            clock.now(),
-          );
-        }
-        await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
-        return null;
-      }
+
       message
         ..encryptedContent = encryptResult.ciphertext
         ..type = encryptResult.type;

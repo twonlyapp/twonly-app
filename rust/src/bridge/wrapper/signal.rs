@@ -29,6 +29,17 @@ impl RustSignal {
         engine.process_prekey_bundle(name, device_id, bundle).await
     }
 
+    /// Removes the current v2 session for a contact. The Dart hotfix layer
+    /// immediately establishes its replacement from a freshly fetched bundle.
+    pub async fn reset_contact_session(contact_id: i64) -> Result<()> {
+        let guard = get_twonly_flutter()?.signal_engine.lock().await;
+        let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
+        engine
+            .reset_session(&contact_id.to_string(), 1, true)
+            .await?;
+        Ok(())
+    }
+
     pub async fn encrypt(name: String, device_id: u32, plaintext: Vec<u8>) -> Result<Vec<u8>> {
         let guard = get_twonly_flutter()?.signal_engine.lock().await;
         let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;

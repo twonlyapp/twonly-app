@@ -259,6 +259,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     $core.String? langCode,
     $fixnum.Int64? proofOfWork,
     $core.List<$core.int>? loginToken,
+    Handshake_InitialPqcKeys? initialPqcKeys,
   }) {
     final result = create();
     if (username != null) result.username = username;
@@ -273,6 +274,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     if (langCode != null) result.langCode = langCode;
     if (proofOfWork != null) result.proofOfWork = proofOfWork;
     if (loginToken != null) result.loginToken = loginToken;
+    if (initialPqcKeys != null) result.initialPqcKeys = initialPqcKeys;
     return result;
   }
 
@@ -305,6 +307,8 @@ class Handshake_Register extends $pb.GeneratedMessage {
     ..aInt64(10, _omitFieldNames ? '' : 'proofOfWork')
     ..a<$core.List<$core.int>>(
         11, _omitFieldNames ? '' : 'loginToken', $pb.PbFieldType.OY)
+    ..aOM<Handshake_InitialPqcKeys>(12, _omitFieldNames ? '' : 'initialPqcKeys',
+        subBuilder: Handshake_InitialPqcKeys.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -344,6 +348,8 @@ class Handshake_Register extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearInviteCode() => $_clearField(2);
 
+  /// Deprecated legacy Signal fields. The server ignores these fields; they
+  /// remain allocated only to avoid reusing their wire tags.
   @$pb.TagNumber(3)
   $core.List<$core.int> get publicIdentityKey => $_getN(2);
   @$pb.TagNumber(3)
@@ -425,6 +431,287 @@ class Handshake_Register extends $pb.GeneratedMessage {
   $core.bool hasLoginToken() => $_has(10);
   @$pb.TagNumber(11)
   void clearLoginToken() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  Handshake_InitialPqcKeys get initialPqcKeys => $_getN(11);
+  @$pb.TagNumber(12)
+  set initialPqcKeys(Handshake_InitialPqcKeys value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasInitialPqcKeys() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearInitialPqcKeys() => $_clearField(12);
+  @$pb.TagNumber(12)
+  Handshake_InitialPqcKeys ensureInitialPqcKeys() => $_ensure(11);
+}
+
+class Handshake_InitialPqcKeys_PqcPreKey extends $pb.GeneratedMessage {
+  factory Handshake_InitialPqcKeys_PqcPreKey({
+    $fixnum.Int64? eccPreKeyId,
+    $core.List<$core.int>? eccPreKey,
+    $fixnum.Int64? kyberPreKeyId,
+    $core.List<$core.int>? kyberPreKey,
+    $core.List<$core.int>? kyberPreKeySignature,
+  }) {
+    final result = create();
+    if (eccPreKeyId != null) result.eccPreKeyId = eccPreKeyId;
+    if (eccPreKey != null) result.eccPreKey = eccPreKey;
+    if (kyberPreKeyId != null) result.kyberPreKeyId = kyberPreKeyId;
+    if (kyberPreKey != null) result.kyberPreKey = kyberPreKey;
+    if (kyberPreKeySignature != null)
+      result.kyberPreKeySignature = kyberPreKeySignature;
+    return result;
+  }
+
+  Handshake_InitialPqcKeys_PqcPreKey._();
+
+  factory Handshake_InitialPqcKeys_PqcPreKey.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Handshake_InitialPqcKeys_PqcPreKey.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Handshake.InitialPqcKeys.PqcPreKey',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'eccPreKeyId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'eccPreKey', $pb.PbFieldType.OY)
+    ..aInt64(3, _omitFieldNames ? '' : 'kyberPreKeyId')
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'kyberPreKey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        5, _omitFieldNames ? '' : 'kyberPreKeySignature', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_InitialPqcKeys_PqcPreKey clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_InitialPqcKeys_PqcPreKey copyWith(
+          void Function(Handshake_InitialPqcKeys_PqcPreKey) updates) =>
+      super.copyWith((message) =>
+              updates(message as Handshake_InitialPqcKeys_PqcPreKey))
+          as Handshake_InitialPqcKeys_PqcPreKey;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Handshake_InitialPqcKeys_PqcPreKey create() =>
+      Handshake_InitialPqcKeys_PqcPreKey._();
+  @$core.override
+  Handshake_InitialPqcKeys_PqcPreKey createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Handshake_InitialPqcKeys_PqcPreKey getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Handshake_InitialPqcKeys_PqcPreKey>(
+          create);
+  static Handshake_InitialPqcKeys_PqcPreKey? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get eccPreKeyId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set eccPreKeyId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEccPreKeyId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEccPreKeyId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get eccPreKey => $_getN(1);
+  @$pb.TagNumber(2)
+  set eccPreKey($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEccPreKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEccPreKey() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get kyberPreKeyId => $_getI64(2);
+  @$pb.TagNumber(3)
+  set kyberPreKeyId($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasKyberPreKeyId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearKyberPreKeyId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get kyberPreKey => $_getN(3);
+  @$pb.TagNumber(4)
+  set kyberPreKey($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasKyberPreKey() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearKyberPreKey() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get kyberPreKeySignature => $_getN(4);
+  @$pb.TagNumber(5)
+  set kyberPreKeySignature($core.List<$core.int> value) => $_setBytes(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasKyberPreKeySignature() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearKyberPreKeySignature() => $_clearField(5);
+}
+
+class Handshake_InitialPqcKeys extends $pb.GeneratedMessage {
+  factory Handshake_InitialPqcKeys({
+    $core.List<$core.int>? publicIdentityKey,
+    $fixnum.Int64? registrationId,
+    $fixnum.Int64? eccSignedPrekeyId,
+    $core.List<$core.int>? eccSignedPrekey,
+    $core.List<$core.int>? eccSignedPrekeySignature,
+    $fixnum.Int64? kyberSignedPrekeyId,
+    $core.List<$core.int>? kyberSignedPrekey,
+    $core.List<$core.int>? kyberSignedPrekeySignature,
+    $core.Iterable<Handshake_InitialPqcKeys_PqcPreKey>? prekeys,
+  }) {
+    final result = create();
+    if (publicIdentityKey != null) result.publicIdentityKey = publicIdentityKey;
+    if (registrationId != null) result.registrationId = registrationId;
+    if (eccSignedPrekeyId != null) result.eccSignedPrekeyId = eccSignedPrekeyId;
+    if (eccSignedPrekey != null) result.eccSignedPrekey = eccSignedPrekey;
+    if (eccSignedPrekeySignature != null)
+      result.eccSignedPrekeySignature = eccSignedPrekeySignature;
+    if (kyberSignedPrekeyId != null)
+      result.kyberSignedPrekeyId = kyberSignedPrekeyId;
+    if (kyberSignedPrekey != null) result.kyberSignedPrekey = kyberSignedPrekey;
+    if (kyberSignedPrekeySignature != null)
+      result.kyberSignedPrekeySignature = kyberSignedPrekeySignature;
+    if (prekeys != null) result.prekeys.addAll(prekeys);
+    return result;
+  }
+
+  Handshake_InitialPqcKeys._();
+
+  factory Handshake_InitialPqcKeys.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Handshake_InitialPqcKeys.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Handshake.InitialPqcKeys',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'publicIdentityKey', $pb.PbFieldType.OY)
+    ..aInt64(2, _omitFieldNames ? '' : 'registrationId')
+    ..aInt64(3, _omitFieldNames ? '' : 'eccSignedPrekeyId')
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'eccSignedPrekey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(5,
+        _omitFieldNames ? '' : 'eccSignedPrekeySignature', $pb.PbFieldType.OY)
+    ..aInt64(6, _omitFieldNames ? '' : 'kyberSignedPrekeyId')
+    ..a<$core.List<$core.int>>(
+        7, _omitFieldNames ? '' : 'kyberSignedPrekey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(8,
+        _omitFieldNames ? '' : 'kyberSignedPrekeySignature', $pb.PbFieldType.OY)
+    ..pPM<Handshake_InitialPqcKeys_PqcPreKey>(
+        9, _omitFieldNames ? '' : 'prekeys',
+        subBuilder: Handshake_InitialPqcKeys_PqcPreKey.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_InitialPqcKeys clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_InitialPqcKeys copyWith(
+          void Function(Handshake_InitialPqcKeys) updates) =>
+      super.copyWith((message) => updates(message as Handshake_InitialPqcKeys))
+          as Handshake_InitialPqcKeys;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Handshake_InitialPqcKeys create() => Handshake_InitialPqcKeys._();
+  @$core.override
+  Handshake_InitialPqcKeys createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Handshake_InitialPqcKeys getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Handshake_InitialPqcKeys>(create);
+  static Handshake_InitialPqcKeys? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get publicIdentityKey => $_getN(0);
+  @$pb.TagNumber(1)
+  set publicIdentityKey($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPublicIdentityKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPublicIdentityKey() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get registrationId => $_getI64(1);
+  @$pb.TagNumber(2)
+  set registrationId($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRegistrationId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRegistrationId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get eccSignedPrekeyId => $_getI64(2);
+  @$pb.TagNumber(3)
+  set eccSignedPrekeyId($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasEccSignedPrekeyId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEccSignedPrekeyId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get eccSignedPrekey => $_getN(3);
+  @$pb.TagNumber(4)
+  set eccSignedPrekey($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasEccSignedPrekey() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearEccSignedPrekey() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get eccSignedPrekeySignature => $_getN(4);
+  @$pb.TagNumber(5)
+  set eccSignedPrekeySignature($core.List<$core.int> value) =>
+      $_setBytes(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasEccSignedPrekeySignature() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearEccSignedPrekeySignature() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get kyberSignedPrekeyId => $_getI64(5);
+  @$pb.TagNumber(6)
+  set kyberSignedPrekeyId($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasKyberSignedPrekeyId() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearKyberSignedPrekeyId() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.List<$core.int> get kyberSignedPrekey => $_getN(6);
+  @$pb.TagNumber(7)
+  set kyberSignedPrekey($core.List<$core.int> value) => $_setBytes(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasKyberSignedPrekey() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearKyberSignedPrekey() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.List<$core.int> get kyberSignedPrekeySignature => $_getN(7);
+  @$pb.TagNumber(8)
+  set kyberSignedPrekeySignature($core.List<$core.int> value) =>
+      $_setBytes(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasKyberSignedPrekeySignature() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearKyberSignedPrekeySignature() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $pb.PbList<Handshake_InitialPqcKeys_PqcPreKey> get prekeys => $_getList(8);
 }
 
 class Handshake_GetAuthChallenge extends $pb.GeneratedMessage {
@@ -602,6 +889,7 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
     $core.String? appVersion,
     $fixnum.Int64? deviceId,
     $core.bool? inBackground,
+    $core.bool? supportsMailboxV2,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
@@ -609,6 +897,7 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
     if (appVersion != null) result.appVersion = appVersion;
     if (deviceId != null) result.deviceId = deviceId;
     if (inBackground != null) result.inBackground = inBackground;
+    if (supportsMailboxV2 != null) result.supportsMailboxV2 = supportsMailboxV2;
     return result;
   }
 
@@ -632,6 +921,7 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'appVersion')
     ..aInt64(4, _omitFieldNames ? '' : 'deviceId')
     ..aOB(5, _omitFieldNames ? '' : 'inBackground')
+    ..aOB(6, _omitFieldNames ? '' : 'supportsMailboxV2')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -698,6 +988,17 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
   $core.bool hasInBackground() => $_has(4);
   @$pb.TagNumber(5)
   void clearInBackground() => $_clearField(5);
+
+  /// Set by clients that understand PendingMessagesV2 / RequestPendingMessages.
+  /// Absent or false means the legacy NewMessage(s) mailbox protocol is used.
+  @$pb.TagNumber(6)
+  $core.bool get supportsMailboxV2 => $_getBF(5);
+  @$pb.TagNumber(6)
+  set supportsMailboxV2($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSupportsMailboxV2() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSupportsMailboxV2() => $_clearField(6);
 }
 
 class Handshake_AuthenticateWithLoginToken extends $pb.GeneratedMessage {
@@ -707,6 +1008,7 @@ class Handshake_AuthenticateWithLoginToken extends $pb.GeneratedMessage {
     $core.String? appVersion,
     $fixnum.Int64? deviceId,
     $core.bool? inBackground,
+    $core.bool? supportsMailboxV2,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
@@ -714,6 +1016,7 @@ class Handshake_AuthenticateWithLoginToken extends $pb.GeneratedMessage {
     if (appVersion != null) result.appVersion = appVersion;
     if (deviceId != null) result.deviceId = deviceId;
     if (inBackground != null) result.inBackground = inBackground;
+    if (supportsMailboxV2 != null) result.supportsMailboxV2 = supportsMailboxV2;
     return result;
   }
 
@@ -738,6 +1041,7 @@ class Handshake_AuthenticateWithLoginToken extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'appVersion')
     ..aInt64(4, _omitFieldNames ? '' : 'deviceId')
     ..aOB(5, _omitFieldNames ? '' : 'inBackground')
+    ..aOB(6, _omitFieldNames ? '' : 'supportsMailboxV2')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -807,6 +1111,16 @@ class Handshake_AuthenticateWithLoginToken extends $pb.GeneratedMessage {
   $core.bool hasInBackground() => $_has(4);
   @$pb.TagNumber(5)
   void clearInBackground() => $_clearField(5);
+
+  /// See Authenticate.supports_mailbox_v2.
+  @$pb.TagNumber(6)
+  $core.bool get supportsMailboxV2 => $_getBF(5);
+  @$pb.TagNumber(6)
+  set supportsMailboxV2($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSupportsMailboxV2() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSupportsMailboxV2() => $_clearField(6);
 }
 
 class Handshake_GetServerKeyForPasswordLessRecovery
@@ -1388,11 +1702,13 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
     $fixnum.Int64? userId,
     $core.List<$core.int>? body,
     $core.List<$core.int>? pushData,
+    $core.bool? wakeReceiver,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
     if (body != null) result.body = body;
     if (pushData != null) result.pushData = pushData;
+    if (wakeReceiver != null) result.wakeReceiver = wakeReceiver;
     return result;
   }
 
@@ -1415,6 +1731,7 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
         3, _omitFieldNames ? '' : 'body', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
         4, _omitFieldNames ? '' : 'pushData', $pb.PbFieldType.OY)
+    ..aOB(5, _omitFieldNames ? '' : 'wakeReceiver')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1465,6 +1782,15 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
   $core.bool hasPushData() => $_has(2);
   @$pb.TagNumber(4)
   void clearPushData() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get wakeReceiver => $_getBF(3);
+  @$pb.TagNumber(5)
+  set wakeReceiver($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(5)
+  $core.bool hasWakeReceiver() => $_has(3);
+  @$pb.TagNumber(5)
+  void clearWakeReceiver() => $_clearField(5);
 }
 
 class ApplicationData_GetUserByUsername extends $pb.GeneratedMessage {
@@ -2176,6 +2502,8 @@ class ApplicationData_UploadPqcPreKeys extends $pb.GeneratedMessage {
     $core.List<$core.int>? kyberSignedPrekey,
     $core.List<$core.int>? kyberSignedPrekeySignature,
     $core.Iterable<ApplicationData_PqcPreKey>? prekeys,
+    $core.List<$core.int>? publicIdentityKey,
+    $fixnum.Int64? registrationId,
   }) {
     final result = create();
     if (eccSignedPrekeyId != null) result.eccSignedPrekeyId = eccSignedPrekeyId;
@@ -2188,6 +2516,8 @@ class ApplicationData_UploadPqcPreKeys extends $pb.GeneratedMessage {
     if (kyberSignedPrekeySignature != null)
       result.kyberSignedPrekeySignature = kyberSignedPrekeySignature;
     if (prekeys != null) result.prekeys.addAll(prekeys);
+    if (publicIdentityKey != null) result.publicIdentityKey = publicIdentityKey;
+    if (registrationId != null) result.registrationId = registrationId;
     return result;
   }
 
@@ -2218,6 +2548,9 @@ class ApplicationData_UploadPqcPreKeys extends $pb.GeneratedMessage {
         _omitFieldNames ? '' : 'kyberSignedPrekeySignature', $pb.PbFieldType.OY)
     ..pPM<ApplicationData_PqcPreKey>(7, _omitFieldNames ? '' : 'prekeys',
         subBuilder: ApplicationData_PqcPreKey.create)
+    ..a<$core.List<$core.int>>(
+        8, _omitFieldNames ? '' : 'publicIdentityKey', $pb.PbFieldType.OY)
+    ..aInt64(9, _omitFieldNames ? '' : 'registrationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2301,6 +2634,26 @@ class ApplicationData_UploadPqcPreKeys extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(7)
   $pb.PbList<ApplicationData_PqcPreKey> get prekeys => $_getList(6);
+
+  /// Required when uploading keys for the first time after a keyless
+  /// registration. Optional for later key refreshes.
+  @$pb.TagNumber(8)
+  $core.List<$core.int> get publicIdentityKey => $_getN(7);
+  @$pb.TagNumber(8)
+  set publicIdentityKey($core.List<$core.int> value) => $_setBytes(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasPublicIdentityKey() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearPublicIdentityKey() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $fixnum.Int64 get registrationId => $_getI64(8);
+  @$pb.TagNumber(9)
+  set registrationId($fixnum.Int64 value) => $_setInt64(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasRegistrationId() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearRegistrationId() => $_clearField(9);
 }
 
 class ApplicationData_DownloadDone extends $pb.GeneratedMessage {
@@ -3301,6 +3654,52 @@ class ApplicationData_DisableMemoriesBackup extends $pb.GeneratedMessage {
   static ApplicationData_DisableMemoriesBackup? _defaultInstance;
 }
 
+/// Asks the server to (re)start a mailbox drain for the authenticated user.
+/// The server responds immediately; messages arrive as PendingMessagesV2.
+class ApplicationData_RequestPendingMessages extends $pb.GeneratedMessage {
+  factory ApplicationData_RequestPendingMessages() => create();
+
+  ApplicationData_RequestPendingMessages._();
+
+  factory ApplicationData_RequestPendingMessages.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_RequestPendingMessages.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.RequestPendingMessages',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_RequestPendingMessages clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_RequestPendingMessages copyWith(
+          void Function(ApplicationData_RequestPendingMessages) updates) =>
+      super.copyWith((message) =>
+              updates(message as ApplicationData_RequestPendingMessages))
+          as ApplicationData_RequestPendingMessages;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_RequestPendingMessages create() =>
+      ApplicationData_RequestPendingMessages._();
+  @$core.override
+  ApplicationData_RequestPendingMessages createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_RequestPendingMessages getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ApplicationData_RequestPendingMessages>(create);
+  static ApplicationData_RequestPendingMessages? _defaultInstance;
+}
+
 enum ApplicationData_ApplicationData {
   textMessage,
   getUserByUsername,
@@ -3330,6 +3729,7 @@ enum ApplicationData_ApplicationData {
   deleteMemory,
   disableMemoriesBackup,
   uploadPqcPrekeys,
+  requestPendingMessages,
   notSet
 }
 
@@ -3363,6 +3763,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_DeleteMemory? deleteMemory,
     ApplicationData_DisableMemoriesBackup? disableMemoriesBackup,
     ApplicationData_UploadPqcPreKeys? uploadPqcPrekeys,
+    ApplicationData_RequestPendingMessages? requestPendingMessages,
   }) {
     final result = create();
     if (textMessage != null) result.textMessage = textMessage;
@@ -3404,6 +3805,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (disableMemoriesBackup != null)
       result.disableMemoriesBackup = disableMemoriesBackup;
     if (uploadPqcPrekeys != null) result.uploadPqcPrekeys = uploadPqcPrekeys;
+    if (requestPendingMessages != null)
+      result.requestPendingMessages = requestPendingMessages;
     return result;
   }
 
@@ -3446,6 +3849,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     38: ApplicationData_ApplicationData.deleteMemory,
     39: ApplicationData_ApplicationData.disableMemoriesBackup,
     40: ApplicationData_ApplicationData.uploadPqcPrekeys,
+    43: ApplicationData_ApplicationData.requestPendingMessages,
     0: ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -3481,7 +3885,8 @@ class ApplicationData extends $pb.GeneratedMessage {
       37,
       38,
       39,
-      40
+      40,
+      43
     ])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage',
         protoName: 'textMessage',
@@ -3579,6 +3984,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_UploadPqcPreKeys>(
         40, _omitFieldNames ? '' : 'uploadPqcPrekeys',
         subBuilder: ApplicationData_UploadPqcPreKeys.create)
+    ..aOM<ApplicationData_RequestPendingMessages>(
+        43, _omitFieldNames ? '' : 'requestPendingMessages',
+        subBuilder: ApplicationData_RequestPendingMessages.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3628,6 +4036,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(38)
   @$pb.TagNumber(39)
   @$pb.TagNumber(40)
+  @$pb.TagNumber(43)
   ApplicationData_ApplicationData whichApplicationData() =>
       _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -3658,6 +4067,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(38)
   @$pb.TagNumber(39)
   @$pb.TagNumber(40)
+  @$pb.TagNumber(43)
   void clearApplicationData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -4003,6 +4413,20 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearUploadPqcPrekeys() => $_clearField(40);
   @$pb.TagNumber(40)
   ApplicationData_UploadPqcPreKeys ensureUploadPqcPrekeys() => $_ensure(27);
+
+  @$pb.TagNumber(43)
+  ApplicationData_RequestPendingMessages get requestPendingMessages =>
+      $_getN(28);
+  @$pb.TagNumber(43)
+  set requestPendingMessages(ApplicationData_RequestPendingMessages value) =>
+      $_setField(43, value);
+  @$pb.TagNumber(43)
+  $core.bool hasRequestPendingMessages() => $_has(28);
+  @$pb.TagNumber(43)
+  void clearRequestPendingMessages() => $_clearField(43);
+  @$pb.TagNumber(43)
+  ApplicationData_RequestPendingMessages ensureRequestPendingMessages() =>
+      $_ensure(28);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {
@@ -4173,18 +4597,84 @@ class Response_PqcPrekeys extends $pb.GeneratedMessage {
   $pb.PbList<ApplicationData_PqcPreKey> get prekeys => $_getList(0);
 }
 
-enum Response_Ok_Ok { none, prekeys, prekeysPqc, notSet }
+/// Response to a PendingMessagesV2 batch. Contains only the delivery IDs the
+/// client has durably persisted; the server deletes exactly those rows.
+class Response_AcknowledgedPendingMessages extends $pb.GeneratedMessage {
+  factory Response_AcknowledgedPendingMessages({
+    $core.Iterable<$fixnum.Int64>? deliveryIds,
+  }) {
+    final result = create();
+    if (deliveryIds != null) result.deliveryIds.addAll(deliveryIds);
+    return result;
+  }
+
+  Response_AcknowledgedPendingMessages._();
+
+  factory Response_AcknowledgedPendingMessages.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_AcknowledgedPendingMessages.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.AcknowledgedPendingMessages',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..p<$fixnum.Int64>(
+        1, _omitFieldNames ? '' : 'deliveryIds', $pb.PbFieldType.K6)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_AcknowledgedPendingMessages clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_AcknowledgedPendingMessages copyWith(
+          void Function(Response_AcknowledgedPendingMessages) updates) =>
+      super.copyWith((message) =>
+              updates(message as Response_AcknowledgedPendingMessages))
+          as Response_AcknowledgedPendingMessages;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_AcknowledgedPendingMessages create() =>
+      Response_AcknowledgedPendingMessages._();
+  @$core.override
+  Response_AcknowledgedPendingMessages createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_AcknowledgedPendingMessages getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          Response_AcknowledgedPendingMessages>(create);
+  static Response_AcknowledgedPendingMessages? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$fixnum.Int64> get deliveryIds => $_getList(0);
+}
+
+enum Response_Ok_Ok {
+  none,
+  prekeys,
+  prekeysPqc,
+  acknowledgedPendingMessages,
+  notSet
+}
 
 class Response_Ok extends $pb.GeneratedMessage {
   factory Response_Ok({
     $core.bool? none,
     Response_Prekeys? prekeys,
     Response_PqcPrekeys? prekeysPqc,
+    Response_AcknowledgedPendingMessages? acknowledgedPendingMessages,
   }) {
     final result = create();
     if (none != null) result.none = none;
     if (prekeys != null) result.prekeys = prekeys;
     if (prekeysPqc != null) result.prekeysPqc = prekeysPqc;
+    if (acknowledgedPendingMessages != null)
+      result.acknowledgedPendingMessages = acknowledgedPendingMessages;
     return result;
   }
 
@@ -4201,6 +4691,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     1: Response_Ok_Ok.none,
     2: Response_Ok_Ok.prekeys,
     3: Response_Ok_Ok.prekeysPqc,
+    4: Response_Ok_Ok.acknowledgedPendingMessages,
     0: Response_Ok_Ok.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -4208,12 +4699,15 @@ class Response_Ok extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3])
+    ..oo(0, [1, 2, 3, 4])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..aOM<Response_Prekeys>(2, _omitFieldNames ? '' : 'prekeys',
         subBuilder: Response_Prekeys.create)
     ..aOM<Response_PqcPrekeys>(3, _omitFieldNames ? '' : 'prekeysPqc',
         subBuilder: Response_PqcPrekeys.create)
+    ..aOM<Response_AcknowledgedPendingMessages>(
+        4, _omitFieldNames ? '' : 'acknowledgedPendingMessages',
+        subBuilder: Response_AcknowledgedPendingMessages.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -4238,10 +4732,12 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
   Response_Ok_Ok whichOk() => _Response_Ok_OkByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
   void clearOk() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -4274,6 +4770,20 @@ class Response_Ok extends $pb.GeneratedMessage {
   void clearPrekeysPqc() => $_clearField(3);
   @$pb.TagNumber(3)
   Response_PqcPrekeys ensurePrekeysPqc() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  Response_AcknowledgedPendingMessages get acknowledgedPendingMessages =>
+      $_getN(3);
+  @$pb.TagNumber(4)
+  set acknowledgedPendingMessages(Response_AcknowledgedPendingMessages value) =>
+      $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAcknowledgedPendingMessages() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAcknowledgedPendingMessages() => $_clearField(4);
+  @$pb.TagNumber(4)
+  Response_AcknowledgedPendingMessages ensureAcknowledgedPendingMessages() =>
+      $_ensure(3);
 }
 
 enum Response_Response { ok, error, notSet }

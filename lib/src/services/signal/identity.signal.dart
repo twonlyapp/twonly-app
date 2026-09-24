@@ -60,6 +60,8 @@ class SignalIdentityService {
         bundle.kyberPreKeyPublic,
         bundle.kyberPreKeySignature,
         [],
+        bundle.identityKey,
+        bundle.registrationId,
       );
 
       if (pqcRes.isError) {

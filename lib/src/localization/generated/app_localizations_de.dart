@@ -294,11 +294,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Um eine Testbenachrichtigung zu erhalten, klicke auf OK. Falls du die Testbenachrichtigung nicht erhältst, klicke bitte auf den neuen Menüpunkt, der nach dem Klicken auf „OK“ angezeigt wird.';
 
   @override
-  String get settingsNotifyResetTitle => 'Keine Testbenachrichtigung erhalten?';
+  String get settingsNotifyResetTitle => 'Benachrichtigungstoken zurücksetzen';
 
   @override
   String get settingsNotifyResetTitleSubtitle =>
-      'Falls du keine Testbenachrichtigungen erhalten hast, klicke hier, um deine Benachrichtigungstoken zurückzusetzen.';
+      'Setze deine Benachrichtigungstoken zurück, wenn du Probleme beim Empfang von Push-Benachrichtigungen hast.';
 
   @override
   String get settingsNotifyResetTitleReset =>
@@ -476,6 +476,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactBlock => 'Blockieren';
 
   @override
+  String get contactTroubleshoot => 'Verbindungsprobleme beheben';
+
+  @override
+  String contactResetSessionTitle(String username) {
+    return 'Verbindung zu $username zurücksetzen?';
+  }
+
+  @override
+  String get contactResetSessionBody =>
+      'twonly löscht die aktuelle verschlüsselte Verbindung und baut sie anschließend neu auf. Nachrichten, die gerade übertragen werden, können dabei verloren gehen.';
+
+  @override
+  String get contactResetSessionConfirm => 'Verbindung zurücksetzen';
+
+  @override
+  String contactResetSessionSuccess(String username) {
+    return 'Die verschlüsselte Verbindung zu $username wurde neu aufgebaut.';
+  }
+
+  @override
+  String get contactResetSessionFailed =>
+      'Die Verbindung konnte nicht zurückgesetzt werden. Prüfe deine Internetverbindung und versuche es erneut.';
+
+  @override
   String contactBlockTitle(Object username) {
     return 'Blockiere $username';
   }
@@ -634,6 +658,12 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get partOfPaidPlanFrom => 'Teil des bezahlten Plans von';
+
+  @override
+  String get subscriptionCurrentPlanBadge => 'Aktuell';
+
+  @override
   String get year => 'Jahr';
 
   @override
@@ -646,37 +676,37 @@ class AppLocalizationsDe extends AppLocalizations {
   String get monthly => 'Monatlich';
 
   @override
-  String get proFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
+  String get proFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
 
   @override
-  String get proFeature2 => '✓ 1 zusätzlicher Plus Benutzer';
+  String get proFeature2 => '1 zusätzlicher Plus Benutzer';
 
   @override
-  String get proFeature3 => '✓ 25GB Memories Speicher';
+  String get proFeature3 => '25GB Memories Speicher';
 
   @override
-  String get proFeature4 => '✓ Flammen wiederherstellen';
+  String get proFeature4 => 'Flammen wiederherstellen';
 
   @override
-  String get familyFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
+  String get familyFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
 
   @override
-  String get familyFeature2 => '✓ 4 zusätzliche Plus Benutzer';
+  String get familyFeature2 => '4 zusätzliche Plus Benutzer';
 
   @override
-  String get familyFeature3 => '✓ 50GB Memories Speicher';
+  String get familyFeature3 => '50GB Memories Speicher';
 
   @override
-  String get familyFeature4 => '✓ Flammen wiederherstellen';
+  String get familyFeature4 => 'Flammen wiederherstellen';
 
   @override
-  String get freeFeature1 => '✓ 10 Medien-Datei-Uploads pro Tag';
+  String get freeFeature1 => '10 Medien-Datei-Uploads pro Tag';
 
   @override
-  String get plusFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
+  String get plusFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
 
   @override
-  String get plusFeature2 => '✓ Zusatzfunktionen (coming-soon)';
+  String get plusFeature2 => 'Zusatzfunktionen (coming-soon)';
 
   @override
   String get manageAdditionalUsers => 'Zusätzliche Benutzer verwalten';
@@ -984,6 +1014,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get editHistory => 'Bearbeitungshistorie';
 
   @override
+  String get fileSize => 'Dateigröße';
+
+  @override
   String get archivedChats => 'Archivierte Chats';
 
   @override
@@ -1240,6 +1273,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get notificationCategoryMessageDesc =>
       'Nachrichten von anderen Benutzern.';
+
+  @override
+  String get notificationConnectionFallback =>
+      'Du könntest neue Nachrichten haben.';
 
   @override
   String get groupContextMenuDeleteGroup =>
@@ -2622,4 +2659,28 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get memoriesExportingProgress => 'Erinnerungen werden exportiert...';
+
+  @override
+  String get fileLimitReachedTitle => 'Datei zu groß zum Senden';
+
+  @override
+  String fileLimitReachedDetail(String size, String limit) {
+    return 'Diese Datei ist $size groß, dein Tarif erlaubt aber höchstens $limit pro Sendung.';
+  }
+
+  @override
+  String fileLimitReachedDetailNoSize(String limit) {
+    return 'Dein Tarif erlaubt höchstens $limit pro Sendung.';
+  }
+
+  @override
+  String get fileLimitReachedHint =>
+      'Nimm ein kürzeres Video auf und sende es erneut.';
+
+  @override
+  String get fileLimitReachedHintFree =>
+      'Nimm ein kürzeres Video auf oder wechsle den Tarif, um größere Dateien zu senden.';
+
+  @override
+  String get fileLimitReachedUpgrade => 'Tarif wechseln';
 }
