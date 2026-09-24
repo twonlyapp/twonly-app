@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1109927244;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -2042422055;
 
 // Section: executor
 
@@ -905,6 +905,46 @@ fn wire__crate__bridge__wrapper__signal__rust_signal_process_prekey_bundle_impl(
                                 api_name,
                                 api_device_id,
                                 api_bundle,
+                            )
+                            .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__wrapper__signal__rust_signal_reset_contact_session_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_signal_reset_contact_session",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contact_id = <i64>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::wrapper::signal::RustSignal::reset_contact_session(
+                                api_contact_id,
                             )
                             .await?;
                         Ok(output_ok)
@@ -2201,24 +2241,25 @@ fn pde_ffi_dispatcher_primary_impl(
 34 => wire__crate__bridge__wrapper__signal__rust_signal_generate_bundle_impl(port, ptr, rust_vec_len, data_len),
 35 => wire__crate__bridge__wrapper__signal__rust_signal_generate_pqc_prekeys_impl(port, ptr, rust_vec_len, data_len),
 36 => wire__crate__bridge__wrapper__signal__rust_signal_process_prekey_bundle_impl(port, ptr, rust_vec_len, data_len),
-37 => wire__crate__bridge__wrapper__rust_utils_generate_shares_impl(port, ptr, rust_vec_len, data_len),
-38 => wire__crate__bridge__wrapper__rust_utils_recover_secret_impl(port, ptr, rust_vec_len, data_len),
-39 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_announced_user_by_public_id_impl(port, ptr, rust_vec_len, data_len),
-40 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_config_impl(port, ptr, rust_vec_len, data_len),
-41 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_promotion_impl(port, ptr, rust_vec_len, data_len),
-42 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_version_impl(port, ptr, rust_vec_len, data_len),
-43 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_other_promotions_by_public_id_impl(port, ptr, rust_vec_len, data_len),
-44 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_own_promotions_after_version_impl(port, ptr, rust_vec_len, data_len),
-45 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_share_for_contact_impl(port, ptr, rust_vec_len, data_len),
-46 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_new_user_relation_impl(port, ptr, rust_vec_len, data_len),
-47 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_own_promotion_and_clear_old_version_impl(port, ptr, rust_vec_len, data_len),
-48 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_contact_version_impl(port, ptr, rust_vec_len, data_len),
-49 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_shares_impl(port, ptr, rust_vec_len, data_len),
-50 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_store_other_promotion_impl(port, ptr, rust_vec_len, data_len),
-51 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_update_config_impl(port, ptr, rust_vec_len, data_len),
-52 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_sign_data_impl(port, ptr, rust_vec_len, data_len),
-53 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_signature_impl(port, ptr, rust_vec_len, data_len),
-54 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_stored_pubkey_impl(port, ptr, rust_vec_len, data_len),
+37 => wire__crate__bridge__wrapper__signal__rust_signal_reset_contact_session_impl(port, ptr, rust_vec_len, data_len),
+38 => wire__crate__bridge__wrapper__rust_utils_generate_shares_impl(port, ptr, rust_vec_len, data_len),
+39 => wire__crate__bridge__wrapper__rust_utils_recover_secret_impl(port, ptr, rust_vec_len, data_len),
+40 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_announced_user_by_public_id_impl(port, ptr, rust_vec_len, data_len),
+41 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_config_impl(port, ptr, rust_vec_len, data_len),
+42 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_promotion_impl(port, ptr, rust_vec_len, data_len),
+43 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_version_impl(port, ptr, rust_vec_len, data_len),
+44 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_other_promotions_by_public_id_impl(port, ptr, rust_vec_len, data_len),
+45 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_own_promotions_after_version_impl(port, ptr, rust_vec_len, data_len),
+46 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_share_for_contact_impl(port, ptr, rust_vec_len, data_len),
+47 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_new_user_relation_impl(port, ptr, rust_vec_len, data_len),
+48 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_own_promotion_and_clear_old_version_impl(port, ptr, rust_vec_len, data_len),
+49 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_contact_version_impl(port, ptr, rust_vec_len, data_len),
+50 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_shares_impl(port, ptr, rust_vec_len, data_len),
+51 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_store_other_promotion_impl(port, ptr, rust_vec_len, data_len),
+52 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_update_config_impl(port, ptr, rust_vec_len, data_len),
+53 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_sign_data_impl(port, ptr, rust_vec_len, data_len),
+54 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_signature_impl(port, ptr, rust_vec_len, data_len),
+55 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_stored_pubkey_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }

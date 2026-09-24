@@ -150,6 +150,43 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
         .get();
   }
 
+  /// Finds contacts for which repeated, unacknowledged message delivery is a
+  /// strong indication that only the outgoing Signal ratchet is broken.
+  Future<List<int>> getContactsWithStuckSignalMessages({
+    required int retryThreshold,
+    int minimumMessages = 2,
+  }) async {
+    final messageCount = countAll();
+    final query = selectOnly(receipts)
+      ..addColumns([receipts.contactId, messageCount])
+      ..where(
+        receipts.retryCount.isBiggerThanValue(retryThreshold) &
+            receipts.willBeRetriedByMediaUpload.equals(false),
+      )
+      ..groupBy([receipts.contactId]);
+
+    final rows = await query.get();
+    return rows
+        .where((row) => (row.read(messageCount) ?? 0) >= minimumMessages)
+        .map((row) => row.read(receipts.contactId)!)
+        .toList();
+  }
+
+  /// Starts retry accounting again after establishing a fresh Signal session.
+  Future<void> resetMessageRetryCountsForContact(int contactId) async {
+    await (update(receipts)..where(
+          (receipt) =>
+              receipt.contactId.equals(contactId) &
+              receipt.willBeRetriedByMediaUpload.equals(false),
+        ))
+        .write(
+          const ReceiptsCompanion(
+            retryCount: Value(0),
+            lastRetry: Value(null),
+          ),
+        );
+  }
+
   Future<List<Receipt>> getReceiptsForMediaRetransmissions() async {
     final markedRetriesTime = clock.now().subtract(
       const Duration(

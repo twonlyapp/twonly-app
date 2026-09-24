@@ -96,6 +96,14 @@ const V0$json = {
       '9': 0,
       '10': 'error'
     },
+    {
+      '1': 'mailboxDrained',
+      '3': 11,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'mailboxDrained'
+    },
   ],
   '8': [
     {'1': 'Kind'},
@@ -110,7 +118,8 @@ final $typed_data.Uint8List v0Descriptor = $convert.base64Decode(
     '0uc2VydmVyX3RvX2NsaWVudC5OZXdNZXNzYWdlc0gAUgtuZXdNZXNzYWdlcxIuChFSZXF1ZXN0'
     'TmV3UHJlS2V5cxgEIAEoCEgAUhFSZXF1ZXN0TmV3UHJlS2V5cxI0ChRSZXF1ZXN0TmV3UHFjUH'
     'JlS2V5cxgIIAEoCEgAUhRSZXF1ZXN0TmV3UHFjUHJlS2V5cxIoCgVlcnJvchgGIAEoDjIQLmVy'
-    'cm9yLkVycm9yQ29kZUgAUgVlcnJvckIGCgRLaW5k');
+    'cm9yLkVycm9yQ29kZUgAUgVlcnJvchIoCg5tYWlsYm94RHJhaW5lZBgLIAEoCEgAUg5tYWlsYm'
+    '94RHJhaW5lZEIGCgRLaW5k');
 
 @$core.Deprecated('Use newMessageDescriptor instead')
 const NewMessage$json = {

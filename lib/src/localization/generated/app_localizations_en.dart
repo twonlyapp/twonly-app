@@ -290,11 +290,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Press OK to receive a test notification. If you do not receive the test notification, please click on the new menu item that appears after you click “OK”.';
 
   @override
-  String get settingsNotifyResetTitle => 'Didn\'t receive a test notification?';
+  String get settingsNotifyResetTitle => 'Reset notification tokens';
 
   @override
   String get settingsNotifyResetTitleSubtitle =>
-      'If you haven\'t received any test notifications, click here to reset your notification tokens.';
+      'Reset your notification tokens if you have problems receiving push notifications.';
 
   @override
   String get settingsNotifyResetTitleReset =>
@@ -472,6 +472,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactBlock => 'Block';
 
   @override
+  String get contactTroubleshoot => 'Troubleshoot connection';
+
+  @override
+  String contactResetSessionTitle(String username) {
+    return 'Reset connection with $username?';
+  }
+
+  @override
+  String get contactResetSessionBody =>
+      'twonly will remove the current encrypted connection and establish a new one. Messages currently in transit may be lost.';
+
+  @override
+  String get contactResetSessionConfirm => 'Reset connection';
+
+  @override
+  String contactResetSessionSuccess(String username) {
+    return 'The encrypted connection with $username was re-established.';
+  }
+
+  @override
+  String get contactResetSessionFailed =>
+      'The connection could not be reset. Check your internet connection and try again.';
+
+  @override
   String contactBlockTitle(Object username) {
     return 'Block $username';
   }
@@ -629,6 +653,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get partOfPaidPlanFrom => 'Part of the paid plan of';
+
+  @override
+  String get subscriptionCurrentPlanBadge => 'Current';
+
+  @override
   String get year => 'year';
 
   @override
@@ -641,37 +671,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthly => 'Monthly';
 
   @override
-  String get proFeature1 => '✓ Unlimited media file uploads';
+  String get proFeature1 => 'Unlimited media file uploads';
 
   @override
-  String get proFeature2 => '✓ 1 additional Plus user';
+  String get proFeature2 => '1 additional Plus user';
 
   @override
-  String get proFeature3 => '✓ 25GB Memories storage';
+  String get proFeature3 => '25GB Memories storage';
 
   @override
-  String get proFeature4 => '✓ Restore flames';
+  String get proFeature4 => 'Restore flames';
 
   @override
-  String get familyFeature1 => '✓ Unlimited media file uploads';
+  String get familyFeature1 => 'Unlimited media file uploads';
 
   @override
-  String get familyFeature2 => '✓ 4 additional Plus user';
+  String get familyFeature2 => '4 additional Plus user';
 
   @override
-  String get familyFeature3 => '✓ 50GB Memories storage';
+  String get familyFeature3 => '50GB Memories storage';
 
   @override
-  String get familyFeature4 => '✓ Support twonly';
+  String get familyFeature4 => 'Restore flames';
 
   @override
-  String get freeFeature1 => '✓ 10 Media file uploads per day';
+  String get freeFeature1 => '10 Media file uploads per day';
 
   @override
-  String get plusFeature1 => '✓ Unlimited media file uploads';
+  String get plusFeature1 => 'Unlimited media file uploads';
 
   @override
-  String get plusFeature2 => '✓ Additional features (coming-soon)';
+  String get plusFeature2 => 'Additional features (coming-soon)';
 
   @override
   String get manageAdditionalUsers => 'Manage additional users';
@@ -977,6 +1007,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editHistory => 'Edit history';
 
   @override
+  String get fileSize => 'File size';
+
+  @override
   String get archivedChats => 'Archived chats';
 
   @override
@@ -1232,6 +1265,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationCategoryMessageDesc => 'Messages from other users.';
+
+  @override
+  String get notificationConnectionFallback => 'You may have new messages.';
 
   @override
   String get groupContextMenuDeleteGroup =>
@@ -2597,4 +2633,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get memoriesExportingProgress => 'Exporting memories...';
+
+  @override
+  String get fileLimitReachedTitle => 'File too large to send';
+
+  @override
+  String fileLimitReachedDetail(String size, String limit) {
+    return 'This file is $size, but your plan allows at most $limit per send.';
+  }
+
+  @override
+  String fileLimitReachedDetailNoSize(String limit) {
+    return 'Your plan allows at most $limit per send.';
+  }
+
+  @override
+  String get fileLimitReachedHint =>
+      'Record a shorter video and send it again.';
+
+  @override
+  String get fileLimitReachedHintFree =>
+      'Record a shorter video, or upgrade your plan to send larger files.';
+
+  @override
+  String get fileLimitReachedUpgrade => 'Upgrade plan';
 }

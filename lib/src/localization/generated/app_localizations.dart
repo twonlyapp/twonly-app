@@ -635,13 +635,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotifyResetTitle.
   ///
   /// In en, this message translates to:
-  /// **'Didn\'t receive a test notification?'**
+  /// **'Reset notification tokens'**
   String get settingsNotifyResetTitle;
 
   /// No description provided for @settingsNotifyResetTitleSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'If you haven\'t received any test notifications, click here to reset your notification tokens.'**
+  /// **'Reset your notification tokens if you have problems receiving push notifications.'**
   String get settingsNotifyResetTitleSubtitle;
 
   /// No description provided for @settingsNotifyResetTitleReset.
@@ -956,6 +956,42 @@ abstract class AppLocalizations {
   /// **'Block'**
   String get contactBlock;
 
+  /// No description provided for @contactTroubleshoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Troubleshoot connection'**
+  String get contactTroubleshoot;
+
+  /// No description provided for @contactResetSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset connection with {username}?'**
+  String contactResetSessionTitle(String username);
+
+  /// No description provided for @contactResetSessionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly will remove the current encrypted connection and establish a new one. Messages currently in transit may be lost.'**
+  String get contactResetSessionBody;
+
+  /// No description provided for @contactResetSessionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset connection'**
+  String get contactResetSessionConfirm;
+
+  /// No description provided for @contactResetSessionSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The encrypted connection with {username} was re-established.'**
+  String contactResetSessionSuccess(String username);
+
+  /// No description provided for @contactResetSessionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection could not be reset. Check your internet connection and try again.'**
+  String get contactResetSessionFailed;
+
   /// No description provided for @contactBlockTitle.
   ///
   /// In en, this message translates to:
@@ -1226,6 +1262,18 @@ abstract class AppLocalizations {
   /// **'You are part of the paid plan of {username}!'**
   String partOfPaidPlanOf(Object username);
 
+  /// No description provided for @partOfPaidPlanFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Part of the paid plan of'**
+  String get partOfPaidPlanFrom;
+
+  /// No description provided for @subscriptionCurrentPlanBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get subscriptionCurrentPlanBadge;
+
   /// No description provided for @year.
   ///
   /// In en, this message translates to:
@@ -1253,67 +1301,67 @@ abstract class AppLocalizations {
   /// No description provided for @proFeature1.
   ///
   /// In en, this message translates to:
-  /// **'✓ Unlimited media file uploads'**
+  /// **'Unlimited media file uploads'**
   String get proFeature1;
 
   /// No description provided for @proFeature2.
   ///
   /// In en, this message translates to:
-  /// **'✓ 1 additional Plus user'**
+  /// **'1 additional Plus user'**
   String get proFeature2;
 
   /// No description provided for @proFeature3.
   ///
   /// In en, this message translates to:
-  /// **'✓ 25GB Memories storage'**
+  /// **'25GB Memories storage'**
   String get proFeature3;
 
   /// No description provided for @proFeature4.
   ///
   /// In en, this message translates to:
-  /// **'✓ Restore flames'**
+  /// **'Restore flames'**
   String get proFeature4;
 
   /// No description provided for @familyFeature1.
   ///
   /// In en, this message translates to:
-  /// **'✓ Unlimited media file uploads'**
+  /// **'Unlimited media file uploads'**
   String get familyFeature1;
 
   /// No description provided for @familyFeature2.
   ///
   /// In en, this message translates to:
-  /// **'✓ 4 additional Plus user'**
+  /// **'4 additional Plus user'**
   String get familyFeature2;
 
   /// No description provided for @familyFeature3.
   ///
   /// In en, this message translates to:
-  /// **'✓ 50GB Memories storage'**
+  /// **'50GB Memories storage'**
   String get familyFeature3;
 
   /// No description provided for @familyFeature4.
   ///
   /// In en, this message translates to:
-  /// **'✓ Support twonly'**
+  /// **'Restore flames'**
   String get familyFeature4;
 
   /// No description provided for @freeFeature1.
   ///
   /// In en, this message translates to:
-  /// **'✓ 10 Media file uploads per day'**
+  /// **'10 Media file uploads per day'**
   String get freeFeature1;
 
   /// No description provided for @plusFeature1.
   ///
   /// In en, this message translates to:
-  /// **'✓ Unlimited media file uploads'**
+  /// **'Unlimited media file uploads'**
   String get plusFeature1;
 
   /// No description provided for @plusFeature2.
   ///
   /// In en, this message translates to:
-  /// **'✓ Additional features (coming-soon)'**
+  /// **'Additional features (coming-soon)'**
   String get plusFeature2;
 
   /// No description provided for @manageAdditionalUsers.
@@ -1838,6 +1886,12 @@ abstract class AppLocalizations {
   /// **'Edit history'**
   String get editHistory;
 
+  /// No description provided for @fileSize.
+  ///
+  /// In en, this message translates to:
+  /// **'File size'**
+  String get fileSize;
+
   /// No description provided for @archivedChats.
   ///
   /// In en, this message translates to:
@@ -2227,6 +2281,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages from other users.'**
   String get notificationCategoryMessageDesc;
+
+  /// No description provided for @notificationConnectionFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'You may have new messages.'**
+  String get notificationConnectionFallback;
 
   /// No description provided for @groupContextMenuDeleteGroup.
   ///
@@ -4537,6 +4597,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Exporting memories...'**
   String get memoriesExportingProgress;
+
+  /// No description provided for @fileLimitReachedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'File too large to send'**
+  String get fileLimitReachedTitle;
+
+  /// No description provided for @fileLimitReachedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is {size}, but your plan allows at most {limit} per send.'**
+  String fileLimitReachedDetail(String size, String limit);
+
+  /// No description provided for @fileLimitReachedDetailNoSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan allows at most {limit} per send.'**
+  String fileLimitReachedDetailNoSize(String limit);
+
+  /// No description provided for @fileLimitReachedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a shorter video and send it again.'**
+  String get fileLimitReachedHint;
+
+  /// No description provided for @fileLimitReachedHintFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a shorter video, or upgrade your plan to send larger files.'**
+  String get fileLimitReachedHintFree;
+
+  /// No description provided for @fileLimitReachedUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade plan'**
+  String get fileLimitReachedUpgrade;
 }
 
 class _AppLocalizationsDelegate

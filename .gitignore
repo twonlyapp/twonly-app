@@ -57,3 +57,4 @@ rust/target
 rust_dependencies/target
 fastlane/repo/status/running.json
 .cache/
+APKS/*.apk

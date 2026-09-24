@@ -39,8 +39,27 @@ import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
+const _signalUpgradeMailboxIdleDelay = Duration(milliseconds: 500);
+Timer? _signalUpgradeMailboxIdleTimer;
+
+void _scheduleSignalUpgradeAfterMailboxIdle() {
+  _signalUpgradeMailboxIdleTimer?.cancel();
+  _signalUpgradeMailboxIdleTimer = Timer(_signalUpgradeMailboxIdleDelay, () {
+    _signalUpgradeMailboxIdleTimer = null;
+    unawaited(upgradeSignalSessionsToV2());
+  });
+}
+
+void _upgradeSignalSessionsAfterMailboxDrain() {
+  _signalUpgradeMailboxIdleTimer?.cancel();
+  _signalUpgradeMailboxIdleTimer = null;
+  unawaited(upgradeSignalSessionsToV2());
+}
+
 Future<void> handleServerMessage(server.ServerToClient msg) async {
   Log.info('Processing a message from the server.');
+  var receivedIncomingMessages = false;
+  var mailboxDrained = false;
 
   /// Returns means, that the server can delete the message from the server.
   final ok = client.Response_Ok()..none = true;
@@ -54,6 +73,7 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
     } else if (msg.v0.hasNewMessage()) {
       Log.info('Got 1 message from the server.');
       await handleClient2ClientMessage(msg.v0.newMessage);
+      receivedIncomingMessages = true;
     } else if (msg.v0.hasNewMessages()) {
       Log.info(
         'Got ${msg.v0.newMessages.newMessages.length} messages from the server.',
@@ -69,6 +89,10 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
           Log.error(e);
         }
       }
+      receivedIncomingMessages = true;
+    } else if (msg.v0.hasMailboxDrained()) {
+      Log.info('All pending messages have been downloaded.');
+      mailboxDrained = true;
     } else {
       Log.error('Unknown server message: $msg');
     }
@@ -90,6 +114,15 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
   }
   AppState.gotMessageFromServer = true;
   Log.info('All messages from the server processed.');
+
+  if (mailboxDrained) {
+    _upgradeSignalSessionsAfterMailboxDrain();
+  } else if (receivedIncomingMessages) {
+    // Released servers do not send a mailbox-drained marker. They wait for
+    // this ACK before sending the next batch, so a short, resettable idle
+    // window approximates the queue boundary without blocking delivery.
+    _scheduleSignalUpgradeAfterMailboxIdle();
+  }
 }
 
 DateTime lastPushKeyRequest = clock.now().subtract(const Duration(hours: 1));

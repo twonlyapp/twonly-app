@@ -47,6 +47,14 @@ class RustSignal {
         bundle: bundle,
       );
 
+  /// Removes the current v2 session for a contact. The Dart hotfix layer
+  /// immediately establishes its replacement from a freshly fetched bundle.
+  static Future<void> resetContactSession({required PlatformInt64 contactId}) =>
+      RustLib.instance.api
+          .crateBridgeWrapperSignalRustSignalResetContactSession(
+            contactId: contactId,
+          );
+
   @override
   int get hashCode => 0;
 

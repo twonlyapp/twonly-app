@@ -13,6 +13,65 @@ use zip::{CompressionMethod, ZipArchive, ZipWriter};
 pub(crate) struct BackupArchive {}
 
 impl BackupArchive {
+    async fn reset_restored_signal_sessions(
+        file_name: &str,
+        database_path: &Path,
+        encryption_key: Option<&str>,
+    ) -> Result<()> {
+        let table = match file_name {
+            "twonly.sqlite" => "signal_session_stores",
+            "rust_db.sqlite" => "signal_sessions",
+            _ => return Ok(()),
+        };
+
+        let database =
+            Database::new(&database_path.display().to_string(), encryption_key, false).await?;
+
+        let table_exists: bool = sqlx::query_scalar(
+            "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?)",
+        )
+        .bind(table)
+        .fetch_one(&database.pool)
+        .await?;
+
+        if table_exists {
+            match file_name {
+                "twonly.sqlite" => {
+                    sqlx::query("DELETE FROM signal_session_stores")
+                        .execute(&database.pool)
+                        .await?;
+                }
+                "rust_db.sqlite" => {
+                    sqlx::query("DELETE FROM signal_sessions")
+                        .execute(&database.pool)
+                        .await?;
+                }
+                _ => unreachable!(),
+            }
+        }
+
+        // The hotfix chooses the encryption implementation from this column.
+        // A restored v2 marker without its restored session would make the
+        // first outgoing message fail before the normal migration can rebuild
+        // it. Mark contacts as v1; the post-download migration upgrades every
+        // peer that currently publishes a PQXDH bundle.
+        if file_name == "twonly.sqlite" {
+            let signal_version_exists: bool = sqlx::query_scalar(
+                "SELECT EXISTS(SELECT 1 FROM pragma_table_info('contacts') WHERE name = 'signal_version')",
+            )
+            .fetch_one(&database.pool)
+            .await?;
+            if signal_version_exists {
+                sqlx::query("UPDATE contacts SET signal_version = 'v1'")
+                    .execute(&database.pool)
+                    .await?;
+            }
+        }
+
+        database.pool.close().await;
+        Ok(())
+    }
+
     #[allow(clippy::type_complexity)]
     fn get_backup_files(
         ctx: &Context,
@@ -147,9 +206,19 @@ impl BackupArchive {
             }
         }
 
-        for (file_name, target_dir, is_db, _) in Self::get_backup_files(ctx, &key_manager)? {
+        for (file_name, target_dir, is_db, mut encryption_key) in
+            Self::get_backup_files(ctx, &key_manager)?
+        {
             let src = restore_temp_dir.join(file_name);
             if src.exists() {
+                if is_db {
+                    Self::reset_restored_signal_sessions(
+                        file_name,
+                        &src,
+                        encryption_key.as_deref(),
+                    )
+                    .await?;
+                }
                 std::fs::create_dir_all(&target_dir)?;
                 let dst = target_dir.join(file_name);
                 if is_db {
@@ -161,6 +230,7 @@ impl BackupArchive {
 
                 std::fs::copy(src, dst)?;
             }
+            encryption_key.zeroize();
         }
 
         std::fs::remove_dir_all(&restore_temp_dir)?;
@@ -210,12 +280,57 @@ mod tests {
             ReceivedMessage::insert(&db.pool, 1, b"original message")
                 .await
                 .unwrap();
+            sqlx::query(
+                "INSERT INTO signal_identities(name, identity_key, timestamp) VALUES('restored-peer', x'040506', 1)",
+            )
+            .execute(&db.pool)
+            .await
+            .unwrap();
+            sqlx::query(
+                "INSERT INTO signal_sessions(name, device_id, record_bytes) VALUES('restored-peer', 1, x'010203')",
+            )
+            .execute(&db.pool)
+            .await
+            .unwrap();
 
             // Add a file
             let config_file = PathBuf::from(&config.data_dir).join("user_discovery_config.json");
             std::fs::write(config_file, "original config").unwrap();
             key_manager.main_key.get_login_token()
         };
+
+        // The hotfix still carries the legacy Dart Signal store alongside the
+        // Rust PQXDH store. Both session stores are part of an archive.
+        {
+            let config = ctx.get_config().unwrap();
+            let app_db_path = PathBuf::from(&config.database_dir).join("twonly.sqlite");
+            let app_db = Database::new(&app_db_path.display().to_string(), None, false)
+                .await
+                .unwrap();
+            sqlx::query(
+                "CREATE TABLE contacts(user_id INTEGER PRIMARY KEY, signal_version TEXT NOT NULL)",
+            )
+            .execute(&app_db.pool)
+            .await
+            .unwrap();
+            sqlx::query(
+                "CREATE TABLE signal_session_stores(device_id INTEGER NOT NULL, name TEXT NOT NULL, session_record BLOB NOT NULL, PRIMARY KEY(device_id, name))",
+            )
+            .execute(&app_db.pool)
+            .await
+            .unwrap();
+            sqlx::query("INSERT INTO contacts(user_id, signal_version) VALUES(7, 'v2')")
+                .execute(&app_db.pool)
+                .await
+                .unwrap();
+            sqlx::query(
+                "INSERT INTO signal_session_stores(device_id, name, session_record) VALUES(1, '7', x'070809')",
+            )
+            .execute(&app_db.pool)
+            .await
+            .unwrap();
+            app_db.pool.close().await;
+        }
 
         // 2. Create backup
         let backup_path = BackupArchive::create_backup(&ctx).await.unwrap();
@@ -265,6 +380,44 @@ mod tests {
             assert_eq!(messages.len(), 1);
             assert_eq!(messages[0].sender_id, 1);
             assert_eq!(messages[0].content, b"original message");
+
+            let session_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM signal_sessions")
+                .fetch_one(&db.pool)
+                .await
+                .unwrap();
+            assert_eq!(session_count, 0, "restored PQXDH sessions must be reset");
+
+            let identity_key: Vec<u8> = sqlx::query_scalar(
+                "SELECT identity_key FROM signal_identities WHERE name = 'restored-peer'",
+            )
+            .fetch_one(&db.pool)
+            .await
+            .unwrap();
+            assert_eq!(
+                identity_key,
+                vec![4, 5, 6],
+                "trusted contact identities must survive session reset"
+            );
+
+            let app_db_path = PathBuf::from(&config.database_dir).join("twonly.sqlite");
+            let app_db = Database::new(&app_db_path.display().to_string(), None, false)
+                .await
+                .unwrap();
+            let legacy_session_count: i64 =
+                sqlx::query_scalar("SELECT COUNT(*) FROM signal_session_stores")
+                    .fetch_one(&app_db.pool)
+                    .await
+                    .unwrap();
+            assert_eq!(
+                legacy_session_count, 0,
+                "restored legacy Signal sessions must be reset"
+            );
+            let signal_version: String =
+                sqlx::query_scalar("SELECT signal_version FROM contacts WHERE user_id = 7")
+                    .fetch_one(&app_db.pool)
+                    .await
+                    .unwrap();
+            assert_eq!(signal_version, "v1");
 
             let config_file = PathBuf::from(&config.data_dir).join("user_discovery_config.json");
             let config_content = std::fs::read_to_string(config_file).unwrap();
