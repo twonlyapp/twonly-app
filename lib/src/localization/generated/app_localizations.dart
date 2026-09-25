@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_ar.dart';
 import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
 
@@ -94,6 +95,7 @@ abstract class AppLocalizations {
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
+    Locale('ar'),
     Locale('de'),
     Locale('en'),
   ];
@@ -716,12 +718,6 @@ abstract class AppLocalizations {
   /// **'FAQ'**
   String get settingsHelpFAQ;
 
-  /// No description provided for @feedbackTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Give Feedback to improve twonly.'**
-  String get feedbackTooltip;
-
   /// No description provided for @settingsHelpContactUs.
   ///
   /// In en, this message translates to:
@@ -865,6 +861,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Theme'**
   String get settingsAppearanceTheme;
+
+  /// No description provided for @settingsAppearanceLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsAppearanceLanguage;
 
   /// No description provided for @settingsAccountDeleteAccount.
   ///
@@ -1436,47 +1438,11 @@ abstract class AppLocalizations {
   /// **'Your additional users'**
   String get additionalUsersList;
 
-  /// No description provided for @galleryDelete.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete file'**
-  String get galleryDelete;
-
-  /// No description provided for @galleryExport.
-  ///
-  /// In en, this message translates to:
-  /// **'Export to gallery'**
-  String get galleryExport;
-
   /// No description provided for @galleryExportSuccess.
   ///
   /// In en, this message translates to:
   /// **'Successfully saved in the Gallery.'**
   String get galleryExportSuccess;
-
-  /// No description provided for @gallerySelectAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Select all'**
-  String get gallerySelectAll;
-
-  /// No description provided for @galleryDeselectAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Deselect all'**
-  String get galleryDeselectAll;
-
-  /// No description provided for @galleryFavorite.
-  ///
-  /// In en, this message translates to:
-  /// **'Favorite'**
-  String get galleryFavorite;
-
-  /// No description provided for @galleryUnfavorite.
-  ///
-  /// In en, this message translates to:
-  /// **'Unfavorite'**
-  String get galleryUnfavorite;
 
   /// No description provided for @galleryCancel.
   ///
@@ -1525,12 +1491,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure?'**
   String get deleteImageTitle;
-
-  /// No description provided for @deleteImageBody.
-  ///
-  /// In en, this message translates to:
-  /// **'The image will be irrevocably deleted.'**
-  String get deleteImageBody;
 
   /// No description provided for @deleteMemoriesBody.
   ///
@@ -1598,65 +1558,11 @@ abstract class AppLocalizations {
   /// **'Backup'**
   String get settingsBackup;
 
-  /// No description provided for @backupPending.
-  ///
-  /// In en, this message translates to:
-  /// **'Pending'**
-  String get backupPending;
-
-  /// No description provided for @backupFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed'**
-  String get backupFailed;
-
-  /// No description provided for @backupSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Success'**
-  String get backupSuccess;
-
-  /// No description provided for @backupTwonlySafeDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.'**
-  String get backupTwonlySafeDesc;
-
   /// No description provided for @backupNoPasswordRecovery.
   ///
   /// In en, this message translates to:
   /// **'Due to twonly\'s security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.'**
   String get backupNoPasswordRecovery;
-
-  /// No description provided for @backupIdentityHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Identity'**
-  String get backupIdentityHeader;
-
-  /// No description provided for @backupArchiveHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Contacts & Messages'**
-  String get backupArchiveHeader;
-
-  /// No description provided for @backupLastBackupDate.
-  ///
-  /// In en, this message translates to:
-  /// **'Last backup'**
-  String get backupLastBackupDate;
-
-  /// No description provided for @backupLastBackupSize.
-  ///
-  /// In en, this message translates to:
-  /// **'Backup size'**
-  String get backupLastBackupSize;
-
-  /// No description provided for @backupLastBackupResult.
-  ///
-  /// In en, this message translates to:
-  /// **'Result'**
-  String get backupLastBackupResult;
 
   /// No description provided for @backupInsecurePassword.
   ///
@@ -2317,12 +2223,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages'**
   String get notificationCategoryMessageTitle;
-
-  /// No description provided for @notificationCategoryMessageDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Messages from other users.'**
-  String get notificationCategoryMessageDesc;
 
   /// No description provided for @notificationConnectionFallback.
   ///
@@ -4382,12 +4282,6 @@ abstract class AppLocalizations {
   /// **'Local storage'**
   String get settingsStorageLocal;
 
-  /// No description provided for @settingsStorageNoCloudBackupTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No Cloud Backup'**
-  String get settingsStorageNoCloudBackupTitle;
-
   /// No description provided for @settingsStorageNoCloudBackupCard.
   ///
   /// In en, this message translates to:
@@ -4802,12 +4696,6 @@ abstract class AppLocalizations {
   /// **'Contacts & Messages'**
   String get backupCloudContactsMessages;
 
-  /// No description provided for @backupCloudFreeActive.
-  ///
-  /// In en, this message translates to:
-  /// **'Free Active'**
-  String get backupCloudFreeActive;
-
   /// No description provided for @backupCloudImagesMedia.
   ///
   /// In en, this message translates to:
@@ -4934,17 +4822,11 @@ abstract class AppLocalizations {
   /// **'Already added to this chat'**
   String get webxdcStoreAlreadyAdded;
 
-  /// No description provided for @webxdcChatAppsMenu.
+  /// No description provided for @webxdcChatApps.
   ///
   /// In en, this message translates to:
   /// **'Chat apps'**
-  String get webxdcChatAppsMenu;
-
-  /// No description provided for @webxdcChatAppsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Chat apps'**
-  String get webxdcChatAppsTitle;
+  String get webxdcChatApps;
 
   /// No description provided for @webxdcChatAppsEmpty.
   ///
@@ -4988,7 +4870,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['de', 'en'].contains(locale.languageCode);
+      <String>['ar', 'de', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -4997,6 +4879,8 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'ar':
+      return AppLocalizationsAr();
     case 'de':
       return AppLocalizationsDe();
     case 'en':

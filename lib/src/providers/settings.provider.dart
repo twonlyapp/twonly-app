@@ -5,12 +5,24 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 
+/// Languages the app can be shown in. The first one is used when the device
+/// language is none of them.
+const supportedLocales = [
+  Locale('en'),
+  Locale('de'),
+  Locale('ar'),
+];
+
 class SettingsChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
   late ThemeMode _themeMode;
   late Color _primaryColor;
+  Locale? _locale;
 
   ThemeMode get themeMode => _themeMode;
   Color get primaryColor => _primaryColor;
+
+  /// The language picked in the settings, or null to follow the device.
+  Locale? get locale => _locale;
 
   void loadSettings() {
     if (userService.isUserCreated) {
@@ -23,10 +35,15 @@ class SettingsChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
       _primaryColor = primaryColorValue == null
           ? defaultPrimaryColor
           : Color(primaryColorValue);
+      final language = userService.currentUser.language;
+      _locale = supportedLocales
+          .where((locale) => locale.languageCode == language)
+          .firstOrNull;
       notifyListeners();
     } else {
       _themeMode = ThemeMode.system;
       _primaryColor = defaultPrimaryColor;
+      _locale = null;
     }
   }
 
@@ -57,6 +74,18 @@ class SettingsChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
     await UserService.update(
       (u) => u.primaryColorValue = newColor.toARGB32(),
+    );
+  }
+
+  Future<void> updateLocale(Locale? newLocale) async {
+    if (newLocale == _locale) return;
+
+    _locale = newLocale;
+
+    notifyListeners();
+
+    await UserService.update(
+      (u) => u.language = newLocale?.languageCode,
     );
   }
 }

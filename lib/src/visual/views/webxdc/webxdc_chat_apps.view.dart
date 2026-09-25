@@ -62,7 +62,7 @@ class _WebxdcChatAppsViewState extends State<WebxdcChatAppsView> {
   Widget build(BuildContext context) {
     final apps = _apps;
     return Scaffold(
-      appBar: AppBar(title: Text(context.lang.webxdcChatAppsTitle)),
+      appBar: AppBar(title: Text(context.lang.webxdcChatApps)),
       body: apps == null
           ? const Center(child: CircularProgressIndicator())
           : apps.isEmpty

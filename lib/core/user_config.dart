@@ -121,6 +121,9 @@ class UserConfig {
   String? additionalUserInvites;
   ThemeMode themeMode;
   PlatformInt64? primaryColorValue;
+
+  /// Language code the app is shown in. `None` follows the device.
+  String? language;
   PlatformInt64? defaultShowTime;
   bool requestedAudioPermission;
   bool enableDatabaseLogging;
@@ -200,6 +203,7 @@ class UserConfig {
     this.additionalUserInvites,
     required this.themeMode,
     this.primaryColorValue,
+    this.language,
     this.defaultShowTime,
     required this.requestedAudioPermission,
     required this.enableDatabaseLogging,
@@ -266,6 +270,7 @@ class UserConfig {
       additionalUserInvites.hashCode ^
       themeMode.hashCode ^
       primaryColorValue.hashCode ^
+      language.hashCode ^
       defaultShowTime.hashCode ^
       requestedAudioPermission.hashCode ^
       enableDatabaseLogging.hashCode ^
@@ -334,6 +339,7 @@ class UserConfig {
           additionalUserInvites == other.additionalUserInvites &&
           themeMode == other.themeMode &&
           primaryColorValue == other.primaryColorValue &&
+          language == other.language &&
           defaultShowTime == other.defaultShowTime &&
           requestedAudioPermission == other.requestedAudioPermission &&
           enableDatabaseLogging == other.enableDatabaseLogging &&

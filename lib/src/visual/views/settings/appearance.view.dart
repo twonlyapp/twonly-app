@@ -9,6 +9,14 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/custom_color_picker_dialog.comp.dart';
 import 'package:twonly/src/visual/elements/radio_button.element.dart';
 
+/// Each language is listed in its own name, so it can be found again after
+/// switching to a language the user cannot read.
+const _languageNames = {
+  'en': 'English',
+  'de': 'Deutsch',
+  'ar': 'العربية',
+};
+
 class AppearanceView extends StatefulWidget {
   const AppearanceView({super.key});
 
@@ -69,6 +77,47 @@ class _AppearanceViewState extends State<AppearanceView> {
     if (selectedValue != null && context.mounted) {
       await context.read<SettingsChangeProvider>().updateThemeMode(
         selectedValue,
+      );
+    }
+  }
+
+  Future<void> _showSelectLanguage(BuildContext context) async {
+    final currentLocale = context.read<SettingsChangeProvider>().locale;
+
+    // A record distinguishes picking the system default (null) from dismissing.
+    final selected = await showDialog<({Locale? locale})>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(context.lang.settingsAppearanceLanguage),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioButton<Locale?>(
+                value: null,
+                groupValue: currentLocale,
+                label: context.lang.themeSystemDefault,
+                onChanged: (value) {
+                  Navigator.of(context).pop((locale: value));
+                },
+              ),
+              for (final locale in supportedLocales)
+                RadioButton<Locale?>(
+                  value: locale,
+                  groupValue: currentLocale,
+                  label: _languageName(locale),
+                  onChanged: (value) {
+                    Navigator.of(context).pop((locale: value));
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+    if (selected != null && context.mounted) {
+      await context.read<SettingsChangeProvider>().updateLocale(
+        selected.locale,
       );
     }
   }
@@ -221,9 +270,13 @@ class _AppearanceViewState extends State<AppearanceView> {
     }
   }
 
+  String _languageName(Locale locale) =>
+      _languageNames[locale.languageCode] ?? locale.languageCode;
+
   @override
   Widget build(BuildContext context) {
     final selectedTheme = context.watch<SettingsChangeProvider>().themeMode;
+    final selectedLocale = context.watch<SettingsChangeProvider>().locale;
     final primaryColor = context.watch<SettingsChangeProvider>().primaryColor;
 
     return Scaffold(
@@ -249,6 +302,18 @@ class _AppearanceViewState extends State<AppearanceView> {
                 ),
                 onTap: () async {
                   await _showSelectThemeMode(context);
+                },
+              ),
+              ListTile(
+                title: Text(context.lang.settingsAppearanceLanguage),
+                subtitle: Text(
+                  selectedLocale == null
+                      ? context.lang.themeSystemDefault
+                      : _languageName(selectedLocale),
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                onTap: () async {
+                  await _showSelectLanguage(context);
                 },
               ),
               ListTile(

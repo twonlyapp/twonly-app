@@ -216,7 +216,7 @@ class _GroupViewState extends State<GroupView> {
           ),
           BetterListTile(
             icon: FontAwesomeIcons.layerGroup,
-            text: context.lang.webxdcChatAppsMenu,
+            text: context.lang.webxdcChatApps,
             onTap: () => context.navPush(
               WebxdcChatAppsView(groupId: widget.groupId),
             ),

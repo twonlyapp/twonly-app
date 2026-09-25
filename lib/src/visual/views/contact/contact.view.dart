@@ -266,7 +266,7 @@ class _ContactViewState extends State<ContactView> {
           ),
           BetterListTile(
             icon: FontAwesomeIcons.layerGroup,
-            text: context.lang.webxdcChatAppsMenu,
+            text: context.lang.webxdcChatApps,
             onTap: () => context.navPush(
               WebxdcChatAppsView(
                 groupId: getUUIDforDirectChat(

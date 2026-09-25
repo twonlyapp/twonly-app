@@ -337,9 +337,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHelpFAQ => 'FAQ';
 
   @override
-  String get feedbackTooltip => 'Give Feedback to improve twonly.';
-
-  @override
   String get settingsHelpContactUs => 'Contact us';
 
   @override
@@ -412,6 +409,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAppearanceTheme => 'Theme';
+
+  @override
+  String get settingsAppearanceLanguage => 'Language';
 
   @override
   String get settingsAccountDeleteAccount => 'Delete account';
@@ -740,25 +740,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get additionalUsersList => 'Your additional users';
 
   @override
-  String get galleryDelete => 'Delete file';
-
-  @override
-  String get galleryExport => 'Export to gallery';
-
-  @override
   String get galleryExportSuccess => 'Successfully saved in the Gallery.';
-
-  @override
-  String get gallerySelectAll => 'Select all';
-
-  @override
-  String get galleryDeselectAll => 'Deselect all';
-
-  @override
-  String get galleryFavorite => 'Favorite';
-
-  @override
-  String get galleryUnfavorite => 'Unfavorite';
 
   @override
   String get galleryCancel => 'Cancel';
@@ -792,9 +774,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteImageTitle => 'Are you sure?';
-
-  @override
-  String get deleteImageBody => 'The image will be irrevocably deleted.';
 
   @override
   String deleteMemoriesBody(num count) {
@@ -846,36 +825,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsBackup => 'Backup';
 
   @override
-  String get backupPending => 'Pending';
-
-  @override
-  String get backupFailed => 'Failed';
-
-  @override
-  String get backupSuccess => 'Success';
-
-  @override
-  String get backupTwonlySafeDesc =>
-      'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.';
-
-  @override
   String get backupNoPasswordRecovery =>
       'Due to twonly\'s security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.';
-
-  @override
-  String get backupIdentityHeader => 'Identity';
-
-  @override
-  String get backupArchiveHeader => 'Contacts & Messages';
-
-  @override
-  String get backupLastBackupDate => 'Last backup';
-
-  @override
-  String get backupLastBackupSize => 'Backup size';
-
-  @override
-  String get backupLastBackupResult => 'Result';
 
   @override
   String get backupInsecurePassword => 'Insecure password';
@@ -1283,9 +1234,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationCategoryMessageTitle => 'Messages';
-
-  @override
-  String get notificationCategoryMessageDesc => 'Messages from other users.';
 
   @override
   String get notificationConnectionFallback => 'You may have new messages.';
@@ -2524,9 +2472,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStorageLocal => 'Local storage';
 
   @override
-  String get settingsStorageNoCloudBackupTitle => 'No Cloud Backup';
-
-  @override
   String get settingsStorageNoCloudBackupCard =>
       'Back up your memories to the cloud to free up local space and ensure you never lose your pictures. All end-to-end encrypted.';
 
@@ -2771,9 +2716,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupCloudContactsMessages => 'Contacts & Messages';
 
   @override
-  String get backupCloudFreeActive => 'Free Active';
-
-  @override
   String get backupCloudImagesMedia => 'Images & Media';
 
   @override
@@ -2862,10 +2804,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webxdcStoreAlreadyAdded => 'Already added to this chat';
 
   @override
-  String get webxdcChatAppsMenu => 'Chat apps';
-
-  @override
-  String get webxdcChatAppsTitle => 'Chat apps';
+  String get webxdcChatApps => 'Chat apps';
 
   @override
   String get webxdcChatAppsEmpty =>

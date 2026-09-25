@@ -340,9 +340,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsHelpFAQ => 'FAQ';
 
   @override
-  String get feedbackTooltip => 'Feedback zur Verbesserung von twonly geben.';
-
-  @override
   String get settingsHelpContactUs => 'Kontaktiere uns';
 
   @override
@@ -415,6 +412,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsAppearanceTheme => 'Theme';
+
+  @override
+  String get settingsAppearanceLanguage => 'Sprache';
 
   @override
   String get settingsAccountDeleteAccount => 'Konto löschen';
@@ -744,25 +744,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get additionalUsersList => 'Deine zusätzlichen Benutzer';
 
   @override
-  String get galleryDelete => 'Datei löschen';
-
-  @override
-  String get galleryExport => 'In Galerie exportieren';
-
-  @override
   String get galleryExportSuccess => 'Erfolgreich in der Gallery gespeichert.';
-
-  @override
-  String get gallerySelectAll => 'Alle auswählen';
-
-  @override
-  String get galleryDeselectAll => 'Auswahl aufheben';
-
-  @override
-  String get galleryFavorite => 'Als Favorit markieren';
-
-  @override
-  String get galleryUnfavorite => 'Favorit entfernen';
 
   @override
   String get galleryCancel => 'Abbrechen';
@@ -796,9 +778,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deleteImageTitle => 'Bist du dir sicher?';
-
-  @override
-  String get deleteImageBody => 'Das Bild wird unwiderruflich gelöscht.';
 
   @override
   String deleteMemoriesBody(num count) {
@@ -850,36 +829,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsBackup => 'Backup';
 
   @override
-  String get backupPending => 'Ausstehend';
-
-  @override
-  String get backupFailed => 'Fehlgeschlagen';
-
-  @override
-  String get backupSuccess => 'Erfolgreich';
-
-  @override
-  String get backupTwonlySafeDesc =>
-      'Sichere deine twonly-Identität, da dies die einzige Möglichkeit ist, dein Konto wiederherzustellen, wenn du die App deinstallierst oder dein Handy verlierst.';
-
-  @override
   String get backupNoPasswordRecovery =>
       'Aufgrund des Sicherheitssystems von twonly gibt es (derzeit) keine Funktion zur Wiederherstellung des Passworts. Daher musst du dir dein Passwort merken oder, besser noch, aufschreiben.';
-
-  @override
-  String get backupIdentityHeader => 'Identität';
-
-  @override
-  String get backupArchiveHeader => 'Kontakte & Nachrichten';
-
-  @override
-  String get backupLastBackupDate => 'Letztes Backup';
-
-  @override
-  String get backupLastBackupSize => 'Backup-Größe';
-
-  @override
-  String get backupLastBackupResult => 'Ergebnis';
 
   @override
   String get backupInsecurePassword => 'Unsicheres Passwort';
@@ -1289,10 +1240,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notificationCategoryMessageTitle => 'Nachrichten';
-
-  @override
-  String get notificationCategoryMessageDesc =>
-      'Nachrichten von anderen Benutzern.';
 
   @override
   String get notificationConnectionFallback =>
@@ -2547,9 +2494,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStorageLocal => 'Lokaler Speicherplatz';
 
   @override
-  String get settingsStorageNoCloudBackupTitle => 'Kein Cloud-Backup';
-
-  @override
   String get settingsStorageNoCloudBackupCard =>
       'Sichere deine Erinnerungen in der Cloud, um lokalen Speicherplatz freizugeben und deine Bilder nicht zu verlieren. Alles Ende-zu-Ende verschlüsselt.';
 
@@ -2797,9 +2741,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupCloudContactsMessages => 'Kontakte & Nachrichten';
 
   @override
-  String get backupCloudFreeActive => 'Kostenlos aktiv';
-
-  @override
   String get backupCloudImagesMedia => 'Bilder & Medien';
 
   @override
@@ -2891,10 +2832,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get webxdcStoreAlreadyAdded => 'Bereits zu diesem Chat hinzugefügt';
 
   @override
-  String get webxdcChatAppsMenu => 'Chat-Apps';
-
-  @override
-  String get webxdcChatAppsTitle => 'Chat-Apps';
+  String get webxdcChatApps => 'Chat-Apps';
 
   @override
   String get webxdcChatAppsEmpty =>

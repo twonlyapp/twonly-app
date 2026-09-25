@@ -7663,6 +7663,7 @@ impl SseDecode for crate::user_config::UserConfig {
         let mut var_additionalUserInvites = <Option<String>>::sse_decode(deserializer);
         let mut var_themeMode = <crate::user_config::ThemeMode>::sse_decode(deserializer);
         let mut var_primaryColorValue = <Option<i64>>::sse_decode(deserializer);
+        let mut var_language = <Option<String>>::sse_decode(deserializer);
         let mut var_defaultShowTime = <Option<i64>>::sse_decode(deserializer);
         let mut var_requestedAudioPermission = <bool>::sse_decode(deserializer);
         let mut var_enableDatabaseLogging = <bool>::sse_decode(deserializer);
@@ -7731,6 +7732,7 @@ impl SseDecode for crate::user_config::UserConfig {
             additional_user_invites: var_additionalUserInvites,
             theme_mode: var_themeMode,
             primary_color_value: var_primaryColorValue,
+            language: var_language,
             default_show_time: var_defaultShowTime,
             requested_audio_permission: var_requestedAudioPermission,
             enable_database_logging: var_enableDatabaseLogging,
@@ -8941,6 +8943,7 @@ impl flutter_rust_bridge::IntoDart for crate::user_config::UserConfig {
             self.additional_user_invites.into_into_dart().into_dart(),
             self.theme_mode.into_into_dart().into_dart(),
             self.primary_color_value.into_into_dart().into_dart(),
+            self.language.into_into_dart().into_dart(),
             self.default_show_time.into_into_dart().into_dart(),
             self.requested_audio_permission.into_into_dart().into_dart(),
             self.enable_database_logging.into_into_dart().into_dart(),
@@ -10096,6 +10099,7 @@ impl SseEncode for crate::user_config::UserConfig {
         <Option<String>>::sse_encode(self.additional_user_invites, serializer);
         <crate::user_config::ThemeMode>::sse_encode(self.theme_mode, serializer);
         <Option<i64>>::sse_encode(self.primary_color_value, serializer);
+        <Option<String>>::sse_encode(self.language, serializer);
         <Option<i64>>::sse_encode(self.default_show_time, serializer);
         <bool>::sse_encode(self.requested_audio_permission, serializer);
         <bool>::sse_encode(self.enable_database_logging, serializer);

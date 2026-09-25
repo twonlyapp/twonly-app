@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">صور يرسلها إليك أصدقاؤك</string>
+    <string name="widget_choose_groups">اختر مجموعات جهات الاتصال</string>
+    <string name="widget_choose_groups_description">اختر من يمكنه إرسال الصور إلى هذه الأداة.</string>
+    <string name="widget_open_app_first">افتح twonly مرة واحدة لتحميل مجموعات جهات الاتصال الخاصة بك.</string>
+    <string name="widget_save">إضافة الأداة</string>
+    <string name="widget_image_description">أحدث صورة في أداتك</string>
+</resources>

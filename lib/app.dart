@@ -107,11 +107,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           GlobalCupertinoLocalizations.delegate,
         ];
 
-        const supportedLocales = [
-          Locale('en', ''),
-          Locale('de', ''),
-        ];
-
         final settings = context.watch<SettingsChangeProvider>();
 
         if (widget.storageError) {
@@ -119,6 +114,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             localizationsDelegates: localizationsDelegates,
             debugShowCheckedModeBanner: false,
             supportedLocales: supportedLocales,
+            locale: settings.locale,
             title: 'twonly',
             theme: getLightTheme(settings.primaryColor),
             darkTheme: getDarkTheme(settings.primaryColor),
@@ -132,6 +128,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             localizationsDelegates: localizationsDelegates,
             debugShowCheckedModeBanner: false,
             supportedLocales: supportedLocales,
+            locale: settings.locale,
             title: 'twonly',
             theme: getLightTheme(settings.primaryColor),
             darkTheme: getDarkTheme(settings.primaryColor),
@@ -145,6 +142,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           localizationsDelegates: localizationsDelegates,
           debugShowCheckedModeBanner: false,
           supportedLocales: supportedLocales,
+          locale: settings.locale,
           title: 'twonly',
           theme: getLightTheme(settings.primaryColor),
           darkTheme: getDarkTheme(settings.primaryColor),

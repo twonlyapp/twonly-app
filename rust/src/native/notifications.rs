@@ -107,9 +107,11 @@ pub unsafe extern "C" fn twonly_notification_process(
             widget_refresh: true,
             batch: Some(batch),
             fallback: Some(notifications::fallback_presentation(
-                unsafe { required_string(locale, "locale") }
-                    .as_deref()
-                    .unwrap_or("en"),
+                &notifications::app_locale(
+                    unsafe { required_string(locale, "locale") }
+                        .as_deref()
+                        .unwrap_or("en"),
+                ),
             )),
             error: None,
         }),
@@ -118,9 +120,11 @@ pub unsafe extern "C" fn twonly_notification_process(
             widget_refresh: false,
             batch: None,
             fallback: Some(notifications::fallback_presentation(
-                unsafe { required_string(locale, "locale") }
-                    .as_deref()
-                    .unwrap_or("en"),
+                &notifications::app_locale(
+                    unsafe { required_string(locale, "locale") }
+                        .as_deref()
+                        .unwrap_or("en"),
+                ),
             )),
             error: Some(error),
         }),

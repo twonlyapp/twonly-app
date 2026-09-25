@@ -20,11 +20,14 @@ use std::sync::{Arc, LazyLock};
 const MAX_BATCH_SIZE: i64 = 100;
 const EN_ARB: &str = include_str!("../../../lib/src/localization/translations/en.arb");
 const DE_ARB: &str = include_str!("../../../lib/src/localization/translations/de.arb");
+const AR_ARB: &str = include_str!("../../../lib/src/localization/translations/ar.arb");
 
 static EN_TRANSLATIONS: LazyLock<HashMap<String, String>> =
     LazyLock::new(|| parse_arb(EN_ARB, "en"));
 static DE_TRANSLATIONS: LazyLock<HashMap<String, String>> =
     LazyLock::new(|| parse_arb(DE_ARB, "de"));
+static AR_TRANSLATIONS: LazyLock<HashMap<String, String>> =
+    LazyLock::new(|| parse_arb(AR_ARB, "ar"));
 
 /// The announcement a webxdc update carries, if it has one.
 ///
@@ -529,6 +532,7 @@ pub async fn process_wakeup(
 ) -> Result<NotificationBatch> {
     Context::init_notification(config).await?;
     let ctx = Context::get_static()?.clone();
+    let locale = &app_locale(locale);
 
     // The FCM health check used to be fed by the Dart background isolate, which
     // no longer runs. Record the wake-up here so both platforms report it.
@@ -760,16 +764,26 @@ fn parse_arb(source: &str, locale: &str) -> HashMap<String, String> {
         .collect()
 }
 
+/// The language picked in the app's settings, or the device's locale when the
+/// user left it on the system default or the configuration is not readable.
+pub fn app_locale(device_locale: &str) -> String {
+    Context::get_static()
+        .ok()
+        .and_then(|ctx| UserConfig::load_from(ctx).ok().flatten())
+        .and_then(|user| user.language)
+        .unwrap_or_else(|| device_locale.to_owned())
+}
+
 fn translation(locale: &str, key: &str) -> &'static str {
     let language = locale
         .split(['-', '_'])
         .next()
         .unwrap_or("en")
         .to_ascii_lowercase();
-    let translations = if language == "de" {
-        &*DE_TRANSLATIONS
-    } else {
-        &*EN_TRANSLATIONS
+    let translations = match language.as_str() {
+        "de" => &*DE_TRANSLATIONS,
+        "ar" => &*AR_TRANSLATIONS,
+        _ => &*EN_TRANSLATIONS,
     };
     translations
         .get(key)
@@ -999,6 +1013,7 @@ mod tests {
         group.conversation_name = Some("Friends".into());
         group.is_direct_chat = 0;
         assert_eq!(localized_body("en", &group), "sent a message in Friends.");
+        assert_eq!(localized_body("ar", &group), "رسالة جديدة في Friends.");
 
         let mut reaction = pending_row("reaction");
         reaction.content = Some("🔥".into());

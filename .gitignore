@@ -60,3 +60,4 @@ fastlane/repo/status/running.json
 # Widget Preview related
 .widget_preview/
 ios/build/
+APKS/*.apk

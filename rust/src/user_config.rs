@@ -217,6 +217,10 @@ pub struct UserConfig {
     pub theme_mode: ThemeMode,
     #[frb(non_final)]
     pub primary_color_value: Option<i64>,
+    /// Language code the app is shown in. `None` follows the device.
+    #[serde(default)]
+    #[frb(non_final)]
+    pub language: Option<String>,
     #[frb(non_final)]
     pub default_show_time: Option<i64>,
     #[serde(default)]
