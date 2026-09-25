@@ -136,8 +136,10 @@ class MainCameraController {
         try {
           await cameraControllerTemp?.stopImageStream();
           // ignore: empty_catches
-        } catch (e) {}
-        await cameraControllerTemp?.dispose();
+        } catch (e) {
+        } finally {
+          await cameraControllerTemp?.dispose();
+        }
       },
     );
     initCameraStarted = false;

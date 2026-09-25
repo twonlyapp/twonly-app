@@ -420,8 +420,25 @@ impl ApiClient {
                                     break;
                                 }
                                 // Tungstenite message
-                                if let stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(bytes) = &*msg {
-                                    self_clone.handle_incoming(&connection, bytes).await;
+                                use stream_tungstenite::tokio_tungstenite::tungstenite::Message;
+                                match &*msg {
+                                    Message::Binary(bytes) => {
+                                        self_clone.handle_incoming(&connection, bytes).await;
+                                    }
+                                    // The server's close code tells why it dropped the
+                                    // connection, e.g. 1013 (outbound queue full) or 4003
+                                    // (ack timeouts). The disconnect event does not carry it.
+                                    Message::Close(frame) => match frame {
+                                        Some(frame) => tracing::info!(
+                                            "websocket closed by the server with code {}: {}",
+                                            u16::from(frame.code),
+                                            frame.reason
+                                        ),
+                                        None => tracing::info!(
+                                            "websocket closed by the server without a code"
+                                        ),
+                                    },
+                                    _ => {}
                                 }
                             }
                             Err(_) => break,

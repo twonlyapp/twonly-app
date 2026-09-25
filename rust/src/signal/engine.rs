@@ -972,6 +972,88 @@ mod tests {
         assert!(!bob.reset_session("carol", 1, false).await.unwrap());
     }
 
+    /// The user-initiated reset: the record is gone, nothing encrypts for the
+    /// peer until a fresh bundle builds a new session, and that one works.
+    #[tokio::test]
+    async fn hard_reset_deletes_and_allows_rebuilding_a_contact_session() {
+        let (alice, _alice_dir) = create_test_engine("alice").await;
+        let (bob, _bob_dir) = create_test_engine("bob").await;
+
+        alice
+            .process_prekey_bundle("bob".to_string(), 1, bob.generate_bundle().await.unwrap())
+            .await
+            .unwrap();
+
+        assert!(alice.reset_session("bob", 1, true).await.unwrap());
+        assert!(!alice.reset_session("bob", 1, true).await.unwrap());
+        assert!(alice
+            .encrypt_message("bob".to_string(), 1, b"missing".to_vec())
+            .await
+            .is_err());
+
+        alice
+            .process_prekey_bundle("bob".to_string(), 1, bob.generate_bundle().await.unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(ping(&alice, &bob, "rebuilt").await.unwrap(), b"rebuilt");
+    }
+
+    /// A message decrypted twice is a duplicate, for prekey and whisper
+    /// messages alike, and never reported as an unusable session.
+    #[tokio::test]
+    async fn decrypting_a_message_twice_reports_a_duplicate() {
+        let (alice, _alice_dir) = create_test_engine("alice").await;
+        let (bob, _bob_dir) = create_test_engine("bob").await;
+
+        alice
+            .process_prekey_bundle("bob".to_string(), 1, bob.generate_bundle().await.unwrap())
+            .await
+            .unwrap();
+
+        let prekey_message = alice
+            .encrypt_message("bob".to_string(), 1, b"first".to_vec())
+            .await
+            .unwrap();
+        assert_eq!(
+            prekey_message.last(),
+            Some(&(CiphertextMessageType::PreKey as u8))
+        );
+        bob.decrypt_message("alice".to_string(), 1, prekey_message.clone())
+            .await
+            .unwrap();
+        let error = bob
+            .decrypt_message("alice".to_string(), 1, prekey_message)
+            .await
+            .unwrap_err();
+        assert!(
+            matches!(error, TwonlyError::SignalDuplicateMessage(_)),
+            "{error}"
+        );
+
+        // After Bob's reply Alice no longer needs a PreKey message.
+        ping(&bob, &alice, "reply").await.unwrap();
+        let whisper_message = alice
+            .encrypt_message("bob".to_string(), 1, b"second".to_vec())
+            .await
+            .unwrap();
+        assert_eq!(
+            whisper_message.last(),
+            Some(&(CiphertextMessageType::Whisper as u8))
+        );
+        bob.decrypt_message("alice".to_string(), 1, whisper_message.clone())
+            .await
+            .unwrap();
+        let error = bob
+            .decrypt_message("alice".to_string(), 1, whisper_message)
+            .await
+            .unwrap_err();
+        assert!(
+            matches!(error, TwonlyError::SignalDuplicateMessage(_)),
+            "{error}"
+        );
+    }
+
     #[tokio::test]
     async fn test_twonly_api_100_messages() -> std::result::Result<(), Box<dyn std::error::Error>> {
         use crate::database::signal::Database;
