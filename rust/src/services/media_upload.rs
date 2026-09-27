@@ -17,11 +17,12 @@ use crate::error::{Result, TwonlyError};
 use crate::native::gallery;
 use crate::native::prepare;
 use crate::native::video;
-use crate::services::direct_media_upload::DirectMediaUploadService;
+use crate::services::direct_media_upload::{DirectMediaUploadService, MAX_ATTACHMENT_DISPATCHES};
 use crate::services::media_codec;
 use crate::services::media_exif;
 use crate::services::mediafiles::MediaFileService;
 use crate::services::messages::MessageService;
+use crate::services::stories::{self, StoryAudience};
 use crate::user_config::UserConfig;
 use crate::utils::new_uuid_v7;
 use prost::Message as _;
@@ -161,19 +162,68 @@ impl MediaUploadService {
         Ok(media_id)
     }
 
-    /// Turns an edited media file into one outgoing message per selected group
-    /// and hands the send to the background uploader.
+    /// Turns an edited media file into one outgoing message per selected group,
+    /// plus one hidden story row per contact `story` reaches, and hands the
+    /// send to the background uploader. Everything shares one upload.
     pub async fn insert_into_messages(
         &self,
         media_id: String,
         group_ids: Vec<String>,
         additional_message_data: Option<Vec<u8>>,
         widget_only: bool,
+        story: Option<StoryAudience>,
     ) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
         let now = chrono::Utc::now().timestamp();
 
         let mut transaction = database.pool.begin().await?;
+        let story_recipients = match &story {
+            Some(audience) => {
+                let (media_type, requires_authentication) = sqlx::query_as::<_, (String, i64)>(
+                    "SELECT type, requires_authentication FROM media_files WHERE media_id = ?",
+                )
+                .bind(&media_id)
+                .fetch_optional(&mut *transaction)
+                .await?
+                .ok_or_else(|| TwonlyError::Generic(format!("media {media_id} does not exist")))?;
+                // A story replays for everybody until it expires, which is the
+                // opposite of what a twonly-protected send promises.
+                if widget_only
+                    || requires_authentication != 0
+                    || !matches!(media_type.as_str(), "image" | "video")
+                {
+                    return Err(TwonlyError::Generic(
+                        "stories take an unprotected image or video".into(),
+                    ));
+                }
+                stories::resolve_audience(&mut transaction, audience).await?
+            }
+            None => Vec::new(),
+        };
+        // The server takes a bounded number of recipients per upload. Refusing
+        // here keeps the media from being retried against that limit forever.
+        let mut dispatches = story_recipients.len();
+        for group_id in &group_ids {
+            dispatches += sqlx::query_scalar::<_, i64>(
+                r#"SELECT COUNT(*) FROM group_members gm
+                   JOIN contacts c ON c.user_id = gm.contact_id
+                   WHERE gm.group_id = ? AND c.account_deleted = 0
+                     AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')"#,
+            )
+            .bind(group_id)
+            .fetch_one(&mut *transaction)
+            .await? as usize;
+        }
+        if dispatches == 0 {
+            return Err(TwonlyError::Generic("media send has no recipients".into()));
+        }
+        if dispatches > MAX_ATTACHMENT_DISPATCHES {
+            return Err(TwonlyError::TooManyRecipients {
+                count: dispatches,
+                limit: MAX_ATTACHMENT_DISPATCHES,
+            });
+        }
+
         if widget_only {
             let media = sqlx::query_as::<_, (String, Option<i64>)>(
                 "SELECT type, display_limit_in_milliseconds FROM media_files WHERE media_id = ?",
@@ -253,7 +303,26 @@ impl MediaUploadService {
                 .execute(&mut *transaction)
                 .await?;
                 Group::record_media_exchange(&mut transaction, group_id, false, now).await?;
+                Group::record_text_or_media(&mut transaction, group_id, now).await?;
             }
+        }
+        // A story row neither lifts its chat nor feeds its flames: it is not
+        // part of the conversation until somebody saves it.
+        for contact_id in story_recipients {
+            let group_id = stories::direct_chat(&self.ctx, &mut transaction, contact_id).await?;
+            sqlx::query(
+                r#"INSERT INTO messages
+                   (group_id, message_id, type, media_id, additional_message_data,
+                    is_story, created_at)
+                   VALUES (?, ?, 'media', ?, ?, 1, ?)"#,
+            )
+            .bind(&group_id)
+            .bind(new_uuid_v7())
+            .bind(&media_id)
+            .bind(additional_message_data.as_deref())
+            .bind(now)
+            .execute(&mut *transaction)
+            .await?;
         }
         transaction.commit().await?;
         drop(database);
@@ -398,6 +467,9 @@ impl MediaUploadService {
         // once the upload is scheduled, and the message info still shows it.
         if let Err(error) = self.record_plaintext_size(media_id, &temp_path).await {
             tracing::warn!(media_id, %error, "could not record the media size");
+        }
+        if let Err(error) = self.create_story_thumbnail(media_id).await {
+            tracing::warn!(media_id, %error, "could not create the story thumbnail");
         }
 
         // Auto-storing has to happen before the plaintext is consumed, and only
@@ -612,6 +684,20 @@ impl MediaUploadService {
                 message_id
             }
         };
+
+        // The recipient ignores a story once it expired, so resending one only
+        // costs traffic until the story purge takes the receipt away.
+        let expired_story = sqlx::query_scalar::<_, i64>(
+            "SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ? AND is_story = 1 AND created_at <= ?)",
+        )
+        .bind(&message_id)
+        .bind(now - stories::STORY_LIFETIME_SECONDS)
+        .fetch_one(&database.pool)
+        .await?
+            != 0;
+        if expired_story {
+            return Ok(());
+        }
 
         // Nothing can be delivered to a contact who has not accepted yet.
         if receipt.mark_for_retry_after_accepted.is_some() {
@@ -972,11 +1058,15 @@ impl MediaUploadService {
                      -- still reopen their own copy.
                      AND (m.sender_id IS NULL OR g.is_direct_chat = 0)
                    )
+                   -- A story replays until it expires, and a viewer saving it
+                   -- makes the sender store its own copy from these bytes.
+                   OR (m.is_story = 1 AND m.created_at > ?)
                  )"#,
         )
         .bind(media_id)
         .bind(now - 3 * 60)
         .bind(now - 2 * 24 * 60 * 60)
+        .bind(now - stories::STORY_LIFETIME_SECONDS)
         .fetch_one(&database.pool)
         .await?;
         Ok(keepers == 0)
@@ -1281,28 +1371,48 @@ impl MediaUploadService {
     async fn create_thumbnail(&self, media: &MediaRow) -> Result<()> {
         let files = MediaFileService::new(&self.ctx);
         let stored = files.stored_path(&media.media_id, &media.media_type);
-        let thumbnail = files.thumbnail_path(&media.media_id);
         if media.media_type == "audio" || !stored.exists() {
             return Ok(());
         }
-        let media_id = media.media_id.clone();
-        let is_video = media.media_type == "video";
-        if let Err(error) = blocking(move || {
-            if is_video {
-                // Only the frame grab needs the platform's video decoder; the
-                // scaling and encoding is the same code stills use.
-                let frame = thumbnail.with_extension("frame.png");
-                video::extract_frame(&stored, &frame)?;
-                let result = media_codec::create_image_thumbnail(&frame, &thumbnail);
-                let _ = std::fs::remove_file(&frame);
-                result
-            } else {
-                media_codec::create_image_thumbnail(&stored, &thumbnail)
-            }
-        })
-        .await
-        {
-            tracing::warn!(media_id, %error, "could not create a thumbnail");
+        render_thumbnail(
+            &media.media_id,
+            stored,
+            files.thumbnail_path(&media.media_id),
+            media.media_type == "video",
+        )
+        .await;
+        Ok(())
+    }
+
+    /// Renders the frame a reply to a video story is shown with. Stored media
+    /// gets its thumbnail from the stored file, but a story is replied to long
+    /// before anybody stores it, so this one comes from the plaintext.
+    pub(crate) async fn create_story_thumbnail(&self, media_id: &str) -> Result<()> {
+        let Some(media) = self.load(media_id).await? else {
+            return Ok(());
+        };
+        if media.media_type != "video" {
+            return Ok(());
+        }
+        let database = self.ctx.app_db.read().await.clone();
+        let is_story = sqlx::query_scalar::<_, i64>(
+            "SELECT EXISTS(SELECT 1 FROM messages WHERE media_id = ? AND is_story = 1)",
+        )
+        .bind(media_id)
+        .fetch_one(&database.pool)
+        .await?
+            != 0;
+        let files = MediaFileService::new(&self.ctx);
+        let source = files.temp_path(media_id, &media.media_type);
+        let thumbnail = files.thumbnail_path(media_id);
+        if !is_story || !source.exists() || thumbnail.exists() {
+            return Ok(());
+        }
+        if render_thumbnail(media_id, source, thumbnail, true).await {
+            sqlx::query("UPDATE media_files SET has_thumbnail = 1 WHERE media_id = ?")
+                .bind(media_id)
+                .execute(&database.pool)
+                .await?;
         }
         Ok(())
     }
@@ -1501,6 +1611,34 @@ where
         .map_err(|error| TwonlyError::Generic(error.to_string()))?
 }
 
+/// Writes a webp thumbnail of `source` to `thumbnail`. A failure only costs
+/// the preview, so it is logged and reported rather than returned.
+async fn render_thumbnail(
+    media_id: &str,
+    source: std::path::PathBuf,
+    thumbnail: std::path::PathBuf,
+    is_video: bool,
+) -> bool {
+    let result = blocking(move || {
+        if is_video {
+            // Only the frame grab needs the platform's video decoder; the
+            // scaling and encoding is the same code stills use.
+            let frame = thumbnail.with_extension("frame.png");
+            video::extract_frame(&source, &frame)?;
+            let result = media_codec::create_image_thumbnail(&frame, &thumbnail);
+            let _ = std::fs::remove_file(&frame);
+            result
+        } else {
+            media_codec::create_image_thumbnail(&source, &thumbnail)
+        }
+    })
+    .await;
+    if let Err(error) = &result {
+        tracing::warn!(media_id, %error, "could not create a thumbnail");
+    }
+    result.is_ok()
+}
+
 fn remove_file(path: &Path) {
     match std::fs::remove_file(path) {
         Ok(()) => {}
@@ -1530,6 +1668,42 @@ fn parse_reupload_requested_by(value: Option<&str>) -> Vec<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn refuses_a_story_send_with_no_resolved_recipients() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let data_dir = temp.path().join("data");
+        std::fs::create_dir_all(data_dir.join("keyvalue"))?;
+        std::fs::write(
+            data_dir.join("keyvalue/user.json"),
+            serde_json::to_vec(&UserConfig::default())?,
+        )?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), data_dir).await?;
+        let service = MediaUploadService::new(&ctx);
+        let media_id = service.initialize("image".into(), None, false).await?;
+
+        let error = service
+            .insert_into_messages(
+                media_id,
+                vec![],
+                None,
+                false,
+                Some(StoryAudience {
+                    all: true,
+                    contact_group_ids: vec![],
+                }),
+            )
+            .await
+            .unwrap_err();
+
+        assert!(error.to_string().contains("no recipients"));
+        let database = ctx.app_db.read().await.clone();
+        let messages = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM messages")
+            .fetch_one(&database.pool)
+            .await?;
+        assert_eq!(messages, 0);
+        Ok(())
+    }
 
     #[test]
     fn parses_both_reupload_requested_by_encodings() {

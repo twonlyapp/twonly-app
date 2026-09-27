@@ -448,6 +448,8 @@ impl Tester {
             user_discovery_threshold: 3,
             user_discovery_share_promotion: true,
             typing_indicators: true,
+            // What a real account starts with; `Default` would mute stories.
+            story_notifications: true,
             ..Default::default()
         };
         std::fs::write(
@@ -498,6 +500,22 @@ impl Tester {
         config.username = new_username;
         config.avatar_counter += 1;
 
+        std::fs::write(&path, serde_json::to_string(&config)?)?;
+        Ok(())
+    }
+
+    /// Flips the receiver-side story notification setting, as the settings
+    /// switch does.
+    pub fn set_story_notifications(&self, enabled: bool) -> anyhow::Result<()> {
+        let path = self
+            ._temp_dir
+            .path()
+            .join("data")
+            .join("keyvalue")
+            .join("user.json");
+        let content = std::fs::read_to_string(&path)?;
+        let mut config: rust_lib_twonly::user_config::UserConfig = serde_json::from_str(&content)?;
+        config.story_notifications = enabled;
         std::fs::write(&path, serde_json::to_string(&config)?)?;
         Ok(())
     }

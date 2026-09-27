@@ -1105,5 +1105,49 @@
   "webxdcUnavailable": "Diese App konnte nicht geladen werden.",
   "webxdcDeleteConfirm": "Alles, was diese App auf diesem Gerät gespeichert hat, wird gelöscht. Andere Mitglieder behalten ihre eigene Kopie.",
   "webxdcExternalLinkTitle": "twonly verlassen?",
-  "webxdcExternalLinkBody": "Dieser Link öffnet sich außerhalb von twonly in deinem Browser:"
+  "webxdcExternalLinkBody": "Dieser Link öffnet sich außerhalb von twonly in deinem Browser:",
+  "notificationStory": "hat eine Story gepostet.",
+  "settingsNotifyStories": "Story-Benachrichtigungen",
+  "settingsNotifyStoriesSubtitle": "Werde über die erste Story des Tages von Kontakten benachrichtigt, mit denen du in den letzten zwei Wochen geschrieben hast.",
+  "contactGroupShareStories": "Stories teilen",
+  "contactGroupShareStoriesSubtitle": "Biete diese Gruppe als Publikum an, wenn du eine Story postest.",
+  "contactGroupStoriesFeature": "Stories",
+  "story": "Story",
+  "storyExpired": "Story abgelaufen",
+  "storyMine": "Meine Story",
+  "storyDeleteTitle": "Story löschen?",
+  "storyDeleteBody": "Dadurch wird sie aus deiner Story entfernt.",
+  "storyDelete": "Löschen",
+  "storyDeleteFailed": "Konnte nicht gelöscht werden. Versuche es gleich noch einmal.",
+  "shareImageStory": "Story",
+  "shareImageStoryAudience": "{count, plural, =1{Erreicht 1 Kontakt} other{Erreicht {count} Kontakte}}",
+  "@shareImageStoryAudience": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareImageStoryUnavailable": "Mit twonly geschützte Medien können nicht als Story gepostet werden.",
+  "shareImageStoryAll": "Alle Kontakte",
+  "shareImageStoryNewGroup": "Neue Story-Gruppe",
+  "shareImageStoryFailed": "Die Story konnte nicht gepostet werden. Ein Versand erreicht höchstens {max} Personen.",
+  "@shareImageStoryFailed": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationStoryReply": "hat auf deine Story geantwortet.",
+  "notificationStoryReaction": "hat mit {reaction} auf deine Story reagiert.",
+  "notificationStoredStory": "hat deine Story gespeichert.",
+  "storyViews": "{count, plural, =0{Noch keine Aufrufe} =1{1 Aufruf} other{{count} Aufrufe}}",
+  "@storyViews": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

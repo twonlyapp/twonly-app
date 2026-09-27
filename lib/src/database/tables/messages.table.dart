@@ -50,6 +50,9 @@ class Messages extends Table {
   BoolColumn get isWidgetMedia =>
       boolean().withDefault(const Constant(false))();
 
+  /// A story item: hidden from the chat until saved, gone 24h after sending.
+  BoolColumn get isStory => boolean().withDefault(const Constant(false))();
+
   DateTimeColumn get openedAt => dateTime().nullable()();
   DateTimeColumn get openedByAll => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();

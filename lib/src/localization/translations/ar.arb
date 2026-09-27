@@ -792,5 +792,49 @@
   "webxdcUnavailable": "تعذّر تحميل هذا التطبيق.",
   "webxdcDeleteConfirm": "سيتم حذف كل ما حفظه هذا التطبيق على هذا الجهاز. يحتفظ الأعضاء الآخرون بنسختهم الخاصة.",
   "webxdcExternalLinkTitle": "مغادرة twonly؟",
-  "webxdcExternalLinkBody": "يُفتح هذا الرابط خارج twonly، في متصفحك:"
+  "webxdcExternalLinkBody": "يُفتح هذا الرابط خارج twonly، في متصفحك:",
+  "notificationStory": "قصة جديدة.",
+  "settingsNotifyStories": "إشعارات القصص",
+  "settingsNotifyStoriesSubtitle": "تلقَّ إشعارًا بأول قصة في اليوم من جهات الاتصال التي راسلتها خلال الأسبوعين الماضيين.",
+  "contactGroupShareStories": "مشاركة القصص",
+  "contactGroupShareStoriesSubtitle": "اعرض هذه المجموعة كجمهور عند نشر قصة.",
+  "contactGroupStoriesFeature": "القصص",
+  "story": "قصة",
+  "storyExpired": "انتهت صلاحية القصة",
+  "storyMine": "قصتي",
+  "storyDeleteTitle": "حذف القصة؟",
+  "storyDeleteBody": "سيؤدي هذا إلى إزالتها من قصتك.",
+  "storyDelete": "حذف",
+  "storyDeleteFailed": "تعذّر الحذف. حاول مرة أخرى بعد قليل.",
+  "shareImageStory": "قصة",
+  "shareImageStoryAudience": "{count, plural, =1{تصل إلى جهة اتصال واحدة} other{تصل إلى {count} من جهات الاتصال}}",
+  "@shareImageStoryAudience": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareImageStoryUnavailable": "لا يمكن نشر الوسائط المحمية بـ twonly كقصة.",
+  "shareImageStoryAll": "كل جهات الاتصال",
+  "shareImageStoryNewGroup": "مجموعة قصص جديدة",
+  "shareImageStoryFailed": "تعذّر نشر القصة. يمكن أن يصل الإرسال الواحد إلى {max} شخص كحد أقصى.",
+  "@shareImageStoryFailed": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationStoryReply": "رد على قصتك.",
+  "notificationStoryReaction": "تفاعل {reaction} مع قصتك.",
+  "notificationStoredStory": "تم حفظ قصتك.",
+  "storyViews": "{count, plural, =0{لا مشاهدات بعد} =1{مشاهدة واحدة} other{{count} مشاهدات}}",
+  "@storyViews": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

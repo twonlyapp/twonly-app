@@ -13,6 +13,8 @@ pub(crate) fn content_type_kind(
         "MessageUpdate"
     } else if content.media.is_some() {
         "Media"
+    } else if content.story.is_some() {
+        "Story"
     } else if content.media_update.is_some() {
         "MediaUpdate"
     } else if content.contact_update.is_some() {

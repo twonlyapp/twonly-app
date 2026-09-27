@@ -9,6 +9,12 @@ class Routes {
 
   static String chatsMessages(String groupId) => '/chats/messages/$groupId';
 
+  /// A contact's story. Pass a media id as `extra` to start at that item.
+  static String chatsStory(int contactId) => '/chats/story/$contactId';
+
+  /// The user's own story. Pass a media id as `extra` to start at that item.
+  static const String chatsOwnStory = '/chats/own_story';
+
   static String groupCreateSelectMember(String? groupId) =>
       '/group/create/select_member${groupId == null ? '' : '/$groupId'}';
 

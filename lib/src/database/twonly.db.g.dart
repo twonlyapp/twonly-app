@@ -5378,6 +5378,21 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _isStoryMeta = const VerificationMeta(
+    'isStory',
+  );
+  @override
+  late final GeneratedColumn<bool> isStory = GeneratedColumn<bool>(
+    'is_story',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_story" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _openedAtMeta = const VerificationMeta(
     'openedAt',
   );
@@ -5460,6 +5475,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     quotesMessageId,
     isDeletedFromSender,
     isWidgetMedia,
+    isStory,
     openedAt,
     openedByAll,
     createdAt,
@@ -5584,6 +5600,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         ),
       );
     }
+    if (data.containsKey('is_story')) {
+      context.handle(
+        _isStoryMeta,
+        isStory.isAcceptableOrUnknown(data['is_story']!, _isStoryMeta),
+      );
+    }
     if (data.containsKey('opened_at')) {
       context.handle(
         _openedAtMeta,
@@ -5687,6 +5709,10 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_widget_media'],
       )!,
+      isStory: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_story'],
+      )!,
       openedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}opened_at'],
@@ -5734,6 +5760,9 @@ class Message extends DataClass implements Insertable<Message> {
   final String? quotesMessageId;
   final bool isDeletedFromSender;
   final bool isWidgetMedia;
+
+  /// A story item: hidden from the chat until saved, gone 24h after sending.
+  final bool isStory;
   final DateTime? openedAt;
   final DateTime? openedByAll;
   final DateTime createdAt;
@@ -5754,6 +5783,7 @@ class Message extends DataClass implements Insertable<Message> {
     this.quotesMessageId,
     required this.isDeletedFromSender,
     required this.isWidgetMedia,
+    required this.isStory,
     this.openedAt,
     this.openedByAll,
     required this.createdAt,
@@ -5791,6 +5821,7 @@ class Message extends DataClass implements Insertable<Message> {
     }
     map['is_deleted_from_sender'] = Variable<bool>(isDeletedFromSender);
     map['is_widget_media'] = Variable<bool>(isWidgetMedia);
+    map['is_story'] = Variable<bool>(isStory);
     if (!nullToAbsent || openedAt != null) {
       map['opened_at'] = Variable<DateTime>(openedAt);
     }
@@ -5837,6 +5868,7 @@ class Message extends DataClass implements Insertable<Message> {
           : Value(quotesMessageId),
       isDeletedFromSender: Value(isDeletedFromSender),
       isWidgetMedia: Value(isWidgetMedia),
+      isStory: Value(isStory),
       openedAt: openedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(openedAt),
@@ -5879,6 +5911,7 @@ class Message extends DataClass implements Insertable<Message> {
         json['isDeletedFromSender'],
       ),
       isWidgetMedia: serializer.fromJson<bool>(json['isWidgetMedia']),
+      isStory: serializer.fromJson<bool>(json['isStory']),
       openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
       openedByAll: serializer.fromJson<DateTime?>(json['openedByAll']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -5906,6 +5939,7 @@ class Message extends DataClass implements Insertable<Message> {
       'quotesMessageId': serializer.toJson<String?>(quotesMessageId),
       'isDeletedFromSender': serializer.toJson<bool>(isDeletedFromSender),
       'isWidgetMedia': serializer.toJson<bool>(isWidgetMedia),
+      'isStory': serializer.toJson<bool>(isStory),
       'openedAt': serializer.toJson<DateTime?>(openedAt),
       'openedByAll': serializer.toJson<DateTime?>(openedByAll),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -5929,6 +5963,7 @@ class Message extends DataClass implements Insertable<Message> {
     Value<String?> quotesMessageId = const Value.absent(),
     bool? isDeletedFromSender,
     bool? isWidgetMedia,
+    bool? isStory,
     Value<DateTime?> openedAt = const Value.absent(),
     Value<DateTime?> openedByAll = const Value.absent(),
     DateTime? createdAt,
@@ -5955,6 +5990,7 @@ class Message extends DataClass implements Insertable<Message> {
         : this.quotesMessageId,
     isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
     isWidgetMedia: isWidgetMedia ?? this.isWidgetMedia,
+    isStory: isStory ?? this.isStory,
     openedAt: openedAt.present ? openedAt.value : this.openedAt,
     openedByAll: openedByAll.present ? openedByAll.value : this.openedByAll,
     createdAt: createdAt ?? this.createdAt,
@@ -5991,6 +6027,7 @@ class Message extends DataClass implements Insertable<Message> {
       isWidgetMedia: data.isWidgetMedia.present
           ? data.isWidgetMedia.value
           : this.isWidgetMedia,
+      isStory: data.isStory.present ? data.isStory.value : this.isStory,
       openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
       openedByAll: data.openedByAll.present
           ? data.openedByAll.value
@@ -6022,6 +6059,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
           ..write('isWidgetMedia: $isWidgetMedia, ')
+          ..write('isStory: $isStory, ')
           ..write('openedAt: $openedAt, ')
           ..write('openedByAll: $openedByAll, ')
           ..write('createdAt: $createdAt, ')
@@ -6047,6 +6085,7 @@ class Message extends DataClass implements Insertable<Message> {
     quotesMessageId,
     isDeletedFromSender,
     isWidgetMedia,
+    isStory,
     openedAt,
     openedByAll,
     createdAt,
@@ -6074,6 +6113,7 @@ class Message extends DataClass implements Insertable<Message> {
           other.quotesMessageId == this.quotesMessageId &&
           other.isDeletedFromSender == this.isDeletedFromSender &&
           other.isWidgetMedia == this.isWidgetMedia &&
+          other.isStory == this.isStory &&
           other.openedAt == this.openedAt &&
           other.openedByAll == this.openedByAll &&
           other.createdAt == this.createdAt &&
@@ -6096,6 +6136,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<String?> quotesMessageId;
   final Value<bool> isDeletedFromSender;
   final Value<bool> isWidgetMedia;
+  final Value<bool> isStory;
   final Value<DateTime?> openedAt;
   final Value<DateTime?> openedByAll;
   final Value<DateTime> createdAt;
@@ -6117,6 +6158,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
     this.isWidgetMedia = const Value.absent(),
+    this.isStory = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.openedByAll = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -6139,6 +6181,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
     this.isWidgetMedia = const Value.absent(),
+    this.isStory = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.openedByAll = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -6163,6 +6206,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<String>? quotesMessageId,
     Expression<bool>? isDeletedFromSender,
     Expression<bool>? isWidgetMedia,
+    Expression<bool>? isStory,
     Expression<DateTime>? openedAt,
     Expression<DateTime>? openedByAll,
     Expression<DateTime>? createdAt,
@@ -6187,6 +6231,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (isDeletedFromSender != null)
         'is_deleted_from_sender': isDeletedFromSender,
       if (isWidgetMedia != null) 'is_widget_media': isWidgetMedia,
+      if (isStory != null) 'is_story': isStory,
       if (openedAt != null) 'opened_at': openedAt,
       if (openedByAll != null) 'opened_by_all': openedByAll,
       if (createdAt != null) 'created_at': createdAt,
@@ -6211,6 +6256,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Value<String?>? quotesMessageId,
     Value<bool>? isDeletedFromSender,
     Value<bool>? isWidgetMedia,
+    Value<bool>? isStory,
     Value<DateTime?>? openedAt,
     Value<DateTime?>? openedByAll,
     Value<DateTime>? createdAt,
@@ -6234,6 +6280,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       quotesMessageId: quotesMessageId ?? this.quotesMessageId,
       isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
       isWidgetMedia: isWidgetMedia ?? this.isWidgetMedia,
+      isStory: isStory ?? this.isStory,
       openedAt: openedAt ?? this.openedAt,
       openedByAll: openedByAll ?? this.openedByAll,
       createdAt: createdAt ?? this.createdAt,
@@ -6288,6 +6335,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     if (isWidgetMedia.present) {
       map['is_widget_media'] = Variable<bool>(isWidgetMedia.value);
     }
+    if (isStory.present) {
+      map['is_story'] = Variable<bool>(isStory.value);
+    }
     if (openedAt.present) {
       map['opened_at'] = Variable<DateTime>(openedAt.value);
     }
@@ -6328,6 +6378,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
           ..write('isWidgetMedia: $isWidgetMedia, ')
+          ..write('isStory: $isStory, ')
           ..write('openedAt: $openedAt, ')
           ..write('openedByAll: $openedByAll, ')
           ..write('createdAt: $createdAt, ')
@@ -12081,6 +12132,21 @@ class $ContactGroupsTable extends ContactGroups
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _shareStoriesMeta = const VerificationMeta(
+    'shareStories',
+  );
+  @override
+  late final GeneratedColumn<bool> shareStories = GeneratedColumn<bool>(
+    'share_stories',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("share_stories" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _usageCounterMeta = const VerificationMeta(
     'usageCounter',
   );
@@ -12114,6 +12180,7 @@ class $ContactGroupsTable extends ContactGroups
     backgroundColor,
     showAsShortcut,
     showAsLabel,
+    shareStories,
     usageCounter,
     createdAt,
   ];
@@ -12183,6 +12250,15 @@ class $ContactGroupsTable extends ContactGroups
         ),
       );
     }
+    if (data.containsKey('share_stories')) {
+      context.handle(
+        _shareStoriesMeta,
+        shareStories.isAcceptableOrUnknown(
+          data['share_stories']!,
+          _shareStoriesMeta,
+        ),
+      );
+    }
     if (data.containsKey('usage_counter')) {
       context.handle(
         _usageCounterMeta,
@@ -12235,6 +12311,10 @@ class $ContactGroupsTable extends ContactGroups
         DriftSqlType.bool,
         data['${effectivePrefix}show_as_label'],
       )!,
+      shareStories: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}share_stories'],
+      )!,
       usageCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}usage_counter'],
@@ -12260,6 +12340,7 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
   final int backgroundColor;
   final bool showAsShortcut;
   final bool showAsLabel;
+  final bool shareStories;
   final int usageCounter;
   final DateTime createdAt;
   const ContactGroup({
@@ -12270,6 +12351,7 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
     required this.backgroundColor,
     required this.showAsShortcut,
     required this.showAsLabel,
+    required this.shareStories,
     required this.usageCounter,
     required this.createdAt,
   });
@@ -12285,6 +12367,7 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
     map['background_color'] = Variable<int>(backgroundColor);
     map['show_as_shortcut'] = Variable<bool>(showAsShortcut);
     map['show_as_label'] = Variable<bool>(showAsLabel);
+    map['share_stories'] = Variable<bool>(shareStories);
     map['usage_counter'] = Variable<int>(usageCounter);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -12301,6 +12384,7 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
       backgroundColor: Value(backgroundColor),
       showAsShortcut: Value(showAsShortcut),
       showAsLabel: Value(showAsLabel),
+      shareStories: Value(shareStories),
       usageCounter: Value(usageCounter),
       createdAt: Value(createdAt),
     );
@@ -12319,6 +12403,7 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
       backgroundColor: serializer.fromJson<int>(json['backgroundColor']),
       showAsShortcut: serializer.fromJson<bool>(json['showAsShortcut']),
       showAsLabel: serializer.fromJson<bool>(json['showAsLabel']),
+      shareStories: serializer.fromJson<bool>(json['shareStories']),
       usageCounter: serializer.fromJson<int>(json['usageCounter']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -12334,6 +12419,7 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
       'backgroundColor': serializer.toJson<int>(backgroundColor),
       'showAsShortcut': serializer.toJson<bool>(showAsShortcut),
       'showAsLabel': serializer.toJson<bool>(showAsLabel),
+      'shareStories': serializer.toJson<bool>(shareStories),
       'usageCounter': serializer.toJson<int>(usageCounter),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -12347,6 +12433,7 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
     int? backgroundColor,
     bool? showAsShortcut,
     bool? showAsLabel,
+    bool? shareStories,
     int? usageCounter,
     DateTime? createdAt,
   }) => ContactGroup(
@@ -12357,6 +12444,7 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
     backgroundColor: backgroundColor ?? this.backgroundColor,
     showAsShortcut: showAsShortcut ?? this.showAsShortcut,
     showAsLabel: showAsLabel ?? this.showAsLabel,
+    shareStories: shareStories ?? this.shareStories,
     usageCounter: usageCounter ?? this.usageCounter,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -12375,6 +12463,9 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
       showAsLabel: data.showAsLabel.present
           ? data.showAsLabel.value
           : this.showAsLabel,
+      shareStories: data.shareStories.present
+          ? data.shareStories.value
+          : this.shareStories,
       usageCounter: data.usageCounter.present
           ? data.usageCounter.value
           : this.usageCounter,
@@ -12392,6 +12483,7 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
           ..write('backgroundColor: $backgroundColor, ')
           ..write('showAsShortcut: $showAsShortcut, ')
           ..write('showAsLabel: $showAsLabel, ')
+          ..write('shareStories: $shareStories, ')
           ..write('usageCounter: $usageCounter, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -12407,6 +12499,7 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
     backgroundColor,
     showAsShortcut,
     showAsLabel,
+    shareStories,
     usageCounter,
     createdAt,
   );
@@ -12421,6 +12514,7 @@ class ContactGroup extends DataClass implements Insertable<ContactGroup> {
           other.backgroundColor == this.backgroundColor &&
           other.showAsShortcut == this.showAsShortcut &&
           other.showAsLabel == this.showAsLabel &&
+          other.shareStories == this.shareStories &&
           other.usageCounter == this.usageCounter &&
           other.createdAt == this.createdAt);
 }
@@ -12433,6 +12527,7 @@ class ContactGroupsCompanion extends UpdateCompanion<ContactGroup> {
   final Value<int> backgroundColor;
   final Value<bool> showAsShortcut;
   final Value<bool> showAsLabel;
+  final Value<bool> shareStories;
   final Value<int> usageCounter;
   final Value<DateTime> createdAt;
   const ContactGroupsCompanion({
@@ -12443,6 +12538,7 @@ class ContactGroupsCompanion extends UpdateCompanion<ContactGroup> {
     this.backgroundColor = const Value.absent(),
     this.showAsShortcut = const Value.absent(),
     this.showAsLabel = const Value.absent(),
+    this.shareStories = const Value.absent(),
     this.usageCounter = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
@@ -12454,6 +12550,7 @@ class ContactGroupsCompanion extends UpdateCompanion<ContactGroup> {
     required int backgroundColor,
     this.showAsShortcut = const Value.absent(),
     this.showAsLabel = const Value.absent(),
+    this.shareStories = const Value.absent(),
     this.usageCounter = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : name = Value(name),
@@ -12467,6 +12564,7 @@ class ContactGroupsCompanion extends UpdateCompanion<ContactGroup> {
     Expression<int>? backgroundColor,
     Expression<bool>? showAsShortcut,
     Expression<bool>? showAsLabel,
+    Expression<bool>? shareStories,
     Expression<int>? usageCounter,
     Expression<DateTime>? createdAt,
   }) {
@@ -12478,6 +12576,7 @@ class ContactGroupsCompanion extends UpdateCompanion<ContactGroup> {
       if (backgroundColor != null) 'background_color': backgroundColor,
       if (showAsShortcut != null) 'show_as_shortcut': showAsShortcut,
       if (showAsLabel != null) 'show_as_label': showAsLabel,
+      if (shareStories != null) 'share_stories': shareStories,
       if (usageCounter != null) 'usage_counter': usageCounter,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -12491,6 +12590,7 @@ class ContactGroupsCompanion extends UpdateCompanion<ContactGroup> {
     Value<int>? backgroundColor,
     Value<bool>? showAsShortcut,
     Value<bool>? showAsLabel,
+    Value<bool>? shareStories,
     Value<int>? usageCounter,
     Value<DateTime>? createdAt,
   }) {
@@ -12502,6 +12602,7 @@ class ContactGroupsCompanion extends UpdateCompanion<ContactGroup> {
       backgroundColor: backgroundColor ?? this.backgroundColor,
       showAsShortcut: showAsShortcut ?? this.showAsShortcut,
       showAsLabel: showAsLabel ?? this.showAsLabel,
+      shareStories: shareStories ?? this.shareStories,
       usageCounter: usageCounter ?? this.usageCounter,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -12531,6 +12632,9 @@ class ContactGroupsCompanion extends UpdateCompanion<ContactGroup> {
     if (showAsLabel.present) {
       map['show_as_label'] = Variable<bool>(showAsLabel.value);
     }
+    if (shareStories.present) {
+      map['share_stories'] = Variable<bool>(shareStories.value);
+    }
     if (usageCounter.present) {
       map['usage_counter'] = Variable<int>(usageCounter.value);
     }
@@ -12550,6 +12654,7 @@ class ContactGroupsCompanion extends UpdateCompanion<ContactGroup> {
           ..write('backgroundColor: $backgroundColor, ')
           ..write('showAsShortcut: $showAsShortcut, ')
           ..write('showAsLabel: $showAsLabel, ')
+          ..write('shareStories: $shareStories, ')
           ..write('usageCounter: $usageCounter, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -14928,6 +15033,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final ContactGroupsDao contactGroupsDao = ContactGroupsDao(
     this as TwonlyDB,
   );
+  late final StoriesDao storiesDao = StoriesDao(this as TwonlyDB);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -16713,7 +16819,7 @@ class $$ContactsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ContactsTable, Contact>(table),
                   $$ContactsTableReferences(db, table, e),
                 ),
               )
@@ -18000,8 +18106,10 @@ class $$GroupsTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $$GroupsTableReferences(db, table, e)),
+                (e) => (
+                  e.readTable<$GroupsTable, Group>(table),
+                  $$GroupsTableReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback:
@@ -18996,7 +19104,7 @@ class $$MediaFilesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MediaFilesTable, MediaFile>(table),
                   $$MediaFilesTableReferences(db, table, e),
                 ),
               )
@@ -19066,6 +19174,7 @@ typedef $$MessagesTableCreateCompanionBuilder =
       Value<String?> quotesMessageId,
       Value<bool> isDeletedFromSender,
       Value<bool> isWidgetMedia,
+      Value<bool> isStory,
       Value<DateTime?> openedAt,
       Value<DateTime?> openedByAll,
       Value<DateTime> createdAt,
@@ -19089,6 +19198,7 @@ typedef $$MessagesTableUpdateCompanionBuilder =
       Value<String?> quotesMessageId,
       Value<bool> isDeletedFromSender,
       Value<bool> isWidgetMedia,
+      Value<bool> isStory,
       Value<DateTime?> openedAt,
       Value<DateTime?> openedByAll,
       Value<DateTime> createdAt,
@@ -19311,6 +19421,11 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<bool> get isWidgetMedia => $composableBuilder(
     column: $table.isWidgetMedia,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isStory => $composableBuilder(
+    column: $table.isStory,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -19598,6 +19713,11 @@ class $$MessagesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isStory => $composableBuilder(
+    column: $table.isStory,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get openedAt => $composableBuilder(
     column: $table.openedAt,
     builder: (column) => ColumnOrderings(column),
@@ -19750,6 +19870,9 @@ class $$MessagesTableAnnotationComposer
     column: $table.isWidgetMedia,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get isStory =>
+      $composableBuilder(column: $table.isStory, builder: (column) => column);
 
   GeneratedColumn<DateTime> get openedAt =>
       $composableBuilder(column: $table.openedAt, builder: (column) => column);
@@ -20020,6 +20143,7 @@ class $$MessagesTableTableManager
                 Value<String?> quotesMessageId = const Value.absent(),
                 Value<bool> isDeletedFromSender = const Value.absent(),
                 Value<bool> isWidgetMedia = const Value.absent(),
+                Value<bool> isStory = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
                 Value<DateTime?> openedByAll = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -20041,6 +20165,7 @@ class $$MessagesTableTableManager
                 quotesMessageId: quotesMessageId,
                 isDeletedFromSender: isDeletedFromSender,
                 isWidgetMedia: isWidgetMedia,
+                isStory: isStory,
                 openedAt: openedAt,
                 openedByAll: openedByAll,
                 createdAt: createdAt,
@@ -20064,6 +20189,7 @@ class $$MessagesTableTableManager
                 Value<String?> quotesMessageId = const Value.absent(),
                 Value<bool> isDeletedFromSender = const Value.absent(),
                 Value<bool> isWidgetMedia = const Value.absent(),
+                Value<bool> isStory = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
                 Value<DateTime?> openedByAll = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -20085,6 +20211,7 @@ class $$MessagesTableTableManager
                 quotesMessageId: quotesMessageId,
                 isDeletedFromSender: isDeletedFromSender,
                 isWidgetMedia: isWidgetMedia,
+                isStory: isStory,
                 openedAt: openedAt,
                 openedByAll: openedByAll,
                 createdAt: createdAt,
@@ -20096,7 +20223,7 @@ class $$MessagesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MessagesTable, Message>(table),
                   $$MessagesTableReferences(db, table, e),
                 ),
               )
@@ -20643,7 +20770,7 @@ class $$MessageHistoriesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MessageHistoriesTable, MessageHistory>(table),
                   $$MessageHistoriesTableReferences(db, table, e),
                 ),
               )
@@ -21031,7 +21158,7 @@ class $$ReactionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ReactionsTable, Reaction>(table),
                   $$ReactionsTableReferences(db, table, e),
                 ),
               )
@@ -21503,7 +21630,7 @@ class $$GroupMembersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$GroupMembersTable, GroupMember>(table),
                   $$GroupMembersTableReferences(db, table, e),
                 ),
               )
@@ -22053,7 +22180,7 @@ class $$ReceiptsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ReceiptsTable, Receipt>(table),
                   $$ReceiptsTableReferences(db, table, e),
                 ),
               )
@@ -22251,7 +22378,16 @@ class $$ReceivedReceiptsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$ReceivedReceiptsTable, ReceivedReceipt>(table),
+                  BaseReferences<
+                    _$TwonlyDB,
+                    $ReceivedReceiptsTable,
+                    ReceivedReceipt
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -22587,7 +22723,7 @@ class $$MessageActionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MessageActionsTable, MessageAction>(table),
                   $$MessageActionsTableReferences(db, table, e),
                 ),
               )
@@ -23090,7 +23226,7 @@ class $$GroupHistoriesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$GroupHistoriesTable, GroupHistory>(table),
                   $$GroupHistoriesTableReferences(db, table, e),
                 ),
               )
@@ -23499,7 +23635,7 @@ class $$KeyVerificationsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$KeyVerificationsTable, KeyVerification>(table),
                   $$KeyVerificationsTableReferences(db, table, e),
                 ),
               )
@@ -23721,7 +23857,18 @@ class $$VerificationTokensTableTableManager
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$VerificationTokensTable, VerificationToken>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$TwonlyDB,
+                    $VerificationTokensTable,
+                    VerificationToken
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -24076,7 +24223,10 @@ class $$UserDiscoveryAnnouncedUsersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $UserDiscoveryAnnouncedUsersTable,
+                    UserDiscoveryAnnouncedUser
+                  >(table),
                   $$UserDiscoveryAnnouncedUsersTableReferences(db, table, e),
                 ),
               )
@@ -24463,7 +24613,10 @@ class $$UserDiscoveryUserRelationsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $UserDiscoveryUserRelationsTable,
+                    UserDiscoveryUserRelation
+                  >(table),
                   $$UserDiscoveryUserRelationsTableReferences(db, table, e),
                 ),
               )
@@ -24851,7 +25004,10 @@ class $$UserDiscoveryOtherPromotionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $UserDiscoveryOtherPromotionsTable,
+                    UserDiscoveryOtherPromotion
+                  >(table),
                   $$UserDiscoveryOtherPromotionsTableReferences(db, table, e),
                 ),
               )
@@ -25154,7 +25310,10 @@ class $$UserDiscoveryOwnPromotionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $UserDiscoveryOwnPromotionsTable,
+                    UserDiscoveryOwnPromotion
+                  >(table),
                   $$UserDiscoveryOwnPromotionsTableReferences(db, table, e),
                 ),
               )
@@ -25446,7 +25605,9 @@ class $$UserDiscoverySharesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$UserDiscoverySharesTable, UserDiscoveryShare>(
+                    table,
+                  ),
                   $$UserDiscoverySharesTableReferences(db, table, e),
                 ),
               )
@@ -25521,6 +25682,7 @@ typedef $$ContactGroupsTableCreateCompanionBuilder =
       required int backgroundColor,
       Value<bool> showAsShortcut,
       Value<bool> showAsLabel,
+      Value<bool> shareStories,
       Value<int> usageCounter,
       Value<DateTime> createdAt,
     });
@@ -25533,6 +25695,7 @@ typedef $$ContactGroupsTableUpdateCompanionBuilder =
       Value<int> backgroundColor,
       Value<bool> showAsShortcut,
       Value<bool> showAsLabel,
+      Value<bool> shareStories,
       Value<int> usageCounter,
       Value<DateTime> createdAt,
     });
@@ -25610,6 +25773,11 @@ class $$ContactGroupsTableFilterComposer
 
   ColumnFilters<bool> get showAsLabel => $composableBuilder(
     column: $table.showAsLabel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get shareStories => $composableBuilder(
+    column: $table.shareStories,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -25693,6 +25861,11 @@ class $$ContactGroupsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get shareStories => $composableBuilder(
+    column: $table.shareStories,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get usageCounter => $composableBuilder(
     column: $table.usageCounter,
     builder: (column) => ColumnOrderings(column),
@@ -25737,6 +25910,11 @@ class $$ContactGroupsTableAnnotationComposer
 
   GeneratedColumn<bool> get showAsLabel => $composableBuilder(
     column: $table.showAsLabel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get shareStories => $composableBuilder(
+    column: $table.shareStories,
     builder: (column) => column,
   );
 
@@ -25810,6 +25988,7 @@ class $$ContactGroupsTableTableManager
                 Value<int> backgroundColor = const Value.absent(),
                 Value<bool> showAsShortcut = const Value.absent(),
                 Value<bool> showAsLabel = const Value.absent(),
+                Value<bool> shareStories = const Value.absent(),
                 Value<int> usageCounter = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => ContactGroupsCompanion(
@@ -25820,6 +25999,7 @@ class $$ContactGroupsTableTableManager
                 backgroundColor: backgroundColor,
                 showAsShortcut: showAsShortcut,
                 showAsLabel: showAsLabel,
+                shareStories: shareStories,
                 usageCounter: usageCounter,
                 createdAt: createdAt,
               ),
@@ -25832,6 +26012,7 @@ class $$ContactGroupsTableTableManager
                 required int backgroundColor,
                 Value<bool> showAsShortcut = const Value.absent(),
                 Value<bool> showAsLabel = const Value.absent(),
+                Value<bool> shareStories = const Value.absent(),
                 Value<int> usageCounter = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => ContactGroupsCompanion.insert(
@@ -25842,13 +26023,14 @@ class $$ContactGroupsTableTableManager
                 backgroundColor: backgroundColor,
                 showAsShortcut: showAsShortcut,
                 showAsLabel: showAsLabel,
+                shareStories: shareStories,
                 usageCounter: usageCounter,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ContactGroupsTable, ContactGroup>(table),
                   $$ContactGroupsTableReferences(db, table, e),
                 ),
               )
@@ -26304,7 +26486,9 @@ class $$ContactGroupMembersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ContactGroupMembersTable, ContactGroupMember>(
+                    table,
+                  ),
                   $$ContactGroupMembersTableReferences(db, table, e),
                 ),
               )
@@ -26755,7 +26939,16 @@ class $$WebxdcAppsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$WebxdcAppsTable, WebxdcApp>(table),
+                  BaseReferences<_$TwonlyDB, $WebxdcAppsTable, WebxdcApp>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -27207,7 +27400,7 @@ class $$WebxdcInstancesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$WebxdcInstancesTable, WebxdcInstance>(table),
                   $$WebxdcInstancesTableReferences(db, table, e),
                 ),
               )
@@ -27510,7 +27703,16 @@ class $$WebxdcUpdatesTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$WebxdcUpdatesTable, WebxdcUpdate>(table),
+                  BaseReferences<_$TwonlyDB, $WebxdcUpdatesTable, WebxdcUpdate>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),

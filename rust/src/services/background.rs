@@ -82,6 +82,10 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
             MediaUploadService::new(&ctx).start_upload(media_id).await?;
         }
         Job::Flush => {
+            // First, so nothing below spends effort on an expired story.
+            if let Err(error) = crate::services::stories::purge_expired(&ctx).await {
+                tracing::warn!(%error, "could not purge expired stories");
+            }
             if let Err(error) = MediaUploadService::new(&ctx).finish_started_uploads().await {
                 tracing::warn!(%error, "could not finish started media uploads");
             }

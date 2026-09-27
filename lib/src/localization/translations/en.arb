@@ -1115,5 +1115,49 @@
   "webxdcUnavailable": "This app could not be loaded.",
   "webxdcDeleteConfirm": "Everything this app saved on this device is deleted. Other members keep their own copy.",
   "webxdcExternalLinkTitle": "Leave twonly?",
-  "webxdcExternalLinkBody": "This link opens outside twonly, in your browser:"
+  "webxdcExternalLinkBody": "This link opens outside twonly, in your browser:",
+  "notificationStory": "posted a story.",
+  "settingsNotifyStories": "Story notifications",
+  "settingsNotifyStoriesSubtitle": "Be notified of the first story of the day from contacts you've written with in the last two weeks.",
+  "contactGroupShareStories": "Share stories",
+  "contactGroupShareStoriesSubtitle": "Offer this group as an audience when you post a story.",
+  "contactGroupStoriesFeature": "Stories",
+  "story": "Story",
+  "storyExpired": "Story expired",
+  "storyMine": "My story",
+  "storyDeleteTitle": "Delete story?",
+  "storyDeleteBody": "This removes it from your story.",
+  "storyDelete": "Delete",
+  "storyDeleteFailed": "Could not delete it. Try again in a moment.",
+  "shareImageStory": "Story",
+  "shareImageStoryAudience": "{count, plural, =1{Reaches 1 contact} other{Reaches {count} contacts}}",
+  "@shareImageStoryAudience": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareImageStoryUnavailable": "twonly-protected media can't be posted as a story.",
+  "shareImageStoryAll": "All contacts",
+  "shareImageStoryNewGroup": "New story group",
+  "shareImageStoryFailed": "Could not post the story. One send can reach at most {max} people.",
+  "@shareImageStoryFailed": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationStoryReply": "has replied to your story.",
+  "notificationStoryReaction": "has reacted with {reaction} to your story.",
+  "notificationStoredStory": "has saved your story.",
+  "storyViews": "{count, plural, =0{No views yet} =1{1 view} other{{count} views}}",
+  "@storyViews": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

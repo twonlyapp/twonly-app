@@ -21,8 +21,17 @@ Offset getGlobalOffset(GlobalKey targetKey) {
 Future<void> sendReaction(
   String groupId,
   String messageId,
-  String emoji,
-) async {
+  String emoji, {
+  bool asQuotedText = false,
+}) async {
+  if (asQuotedText) {
+    await RustApi.insertAndSendText(
+      groupId: groupId,
+      text: emoji,
+      quoteMessageId: messageId,
+    );
+    return;
+  }
   await twonlyDB.reactionsDao.updateMyReaction(
     messageId,
     emoji,
@@ -49,6 +58,7 @@ class EmojiReactionWidget extends StatefulWidget {
     required this.show,
     required this.emoji,
     required this.emojiKey,
+    this.asQuotedText = false,
     super.key,
   });
   final String messageId;
@@ -57,6 +67,7 @@ class EmojiReactionWidget extends StatefulWidget {
   final bool show;
   final String emoji;
   final GlobalKey<EmojiFloatWidgetState> emojiKey;
+  final bool asQuotedText;
 
   @override
   State<EmojiReactionWidget> createState() => _EmojiReactionWidgetState();
@@ -70,7 +81,12 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
     return GestureDetector(
       key: _targetKey,
       onTap: () async {
-        await sendReaction(widget.groupId, widget.messageId, widget.emoji);
+        await sendReaction(
+          widget.groupId,
+          widget.messageId,
+          widget.emoji,
+          asQuotedText: widget.asQuotedText,
+        );
         widget.emojiKey.currentState?.spawn(
           getGlobalOffset(_targetKey),
           widget.emoji,

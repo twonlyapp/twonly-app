@@ -440,6 +440,28 @@ impl Group {
         Ok(is_member)
     }
 
+    /// Notes a text or media message in this chat, sent or received. This is
+    /// what "these two still talk" is measured by; see
+    /// `stories::exchanged_recently`.
+    pub async fn record_text_or_media(
+        tr: &mut Transaction<'_, Sqlite>,
+        group_id: &str,
+        timestamp: i64,
+    ) -> Result<()> {
+        let now = current_unix_timestamp()?;
+        let timestamp = timestamp.min(now.saturating_add(MAX_FUTURE_TIMESTAMP_SKEW_SECONDS));
+        sqlx::query!(
+            r#"UPDATE groups
+               SET last_text_or_media_at = MAX(COALESCE(last_text_or_media_at, 0), ?)
+               WHERE group_id = ?"#,
+            timestamp,
+            group_id,
+        )
+        .execute(&mut **tr)
+        .await?;
+        Ok(())
+    }
+
     pub async fn increase_last_message_exchange_to_now(
         tr: &mut Transaction<'_, Sqlite>,
         group_id: &str,

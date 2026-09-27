@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT gm.contact_id\n               FROM contact_group_members cgm\n               JOIN contact_groups cg ON cg.id = cgm.contact_group_id\n               JOIN group_members gm ON gm.group_id = cgm.group_id\n               WHERE cg.id = ? AND cg.share_stories = 1 AND cgm.group_id IS NOT NULL\n                 AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ba5a9b12e344593eda59f627b8b7eb124eaa4aeb981ee3ee37cfa7e2297c1987"
+}

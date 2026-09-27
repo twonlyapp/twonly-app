@@ -9,6 +9,7 @@ use crate::context::Context;
 use crate::database::app::{tables::MediaFile, AppDatabase};
 use crate::error::{Result, TwonlyError};
 use crate::native::transfer;
+use crate::services::stories::{STORY_ANNOUNCE_RECENT_EXCHANGE_SECONDS, STORY_LIFETIME_SECONDS};
 use chacha20poly1305::aead::{AeadInPlace, KeyInit};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
 use prost::Message;
@@ -39,6 +40,8 @@ const REFILL_THRESHOLD_KEY: &str = "direct_media_refill_threshold";
 /// durable jobs.
 const API_NAMESPACE_KEY: &str = "direct_media_api_namespace";
 const WATCH_FIRST_DELAY: Duration = Duration::from_secs(2);
+/// The server accepts at most this many recipients for one uploaded attachment.
+pub(crate) const MAX_ATTACHMENT_DISPATCHES: usize = 300;
 const WATCH_MAX_DELAY: Duration = Duration::from_secs(120);
 
 static WATCHING: AtomicBool = AtomicBool::new(false);
@@ -159,6 +162,7 @@ struct MessageRow {
     quotes_message_id: Option<String>,
     additional_message_data: Option<Vec<u8>>,
     is_widget_media: i64,
+    is_story: i64,
 }
 
 #[derive(FromRow)]
@@ -953,14 +957,22 @@ impl DirectMediaUploadService {
             .execute(&database.pool)
             .await?;
 
+        let now = chrono::Utc::now().timestamp();
         let messages = sqlx::query_as::<_, MessageRow>(
             r#"SELECT group_id, message_id, created_at, quotes_message_id,
-                      additional_message_data, is_widget_media
+                      additional_message_data, is_widget_media, is_story
                FROM messages WHERE media_id = ?"#,
         )
         .bind(media_id)
         .fetch_all(&database.pool)
-        .await?;
+        .await?
+        .into_iter()
+        // An upload that took longer than a story lives would deliver an item
+        // its recipients ignore on arrival.
+        .filter(|message| {
+            message.is_story == 0 || message.created_at + STORY_LIFETIME_SECONDS > now
+        })
+        .collect::<Vec<_>>();
         if messages.is_empty() {
             return Err(TwonlyError::Generic(
                 "media has no recipient messages".into(),
@@ -988,23 +1000,55 @@ impl DirectMediaUploadService {
             for recipient in recipients {
                 let mut download_token = vec![0_u8; 32];
                 rand::rng().fill_bytes(&mut download_token);
-                let content = EncryptedContent {
-                    group_id: Some(message.group_id.clone()),
-                    media: Some(encrypted_content::Media {
-                        sender_message_id: message.message_id.clone(),
-                        r#type: media_type as i32,
-                        display_limit_in_milliseconds: media.display_limit_in_milliseconds,
-                        requires_authentication: media.requires_authentication != 0,
-                        timestamp: message.created_at.saturating_mul(1_000),
-                        quote_message_id: message.quotes_message_id.clone(),
-                        download_token: Some(download_token.clone()),
-                        encryption_key: Some(key.to_vec()),
-                        encryption_mac: Some(tag.to_vec()),
-                        encryption_nonce: Some(nonce.to_vec()),
-                        additional_message_data: message.additional_message_data.clone(),
-                        widget_only: Some(message.is_widget_media != 0),
-                    }),
-                    ..Default::default()
+                let mut wake = message.is_widget_media == 0;
+                let content = if message.is_story != 0 {
+                    wake = story_wakes_recipient(
+                        &database,
+                        &message,
+                        media_id,
+                        recipient.contact_id,
+                        now,
+                    )
+                    .await?;
+                    EncryptedContent {
+                        story: Some(encrypted_content::Story {
+                            media: Some(encrypted_content::Media {
+                                sender_message_id: message.message_id.clone(),
+                                r#type: media_type as i32,
+                                display_limit_in_milliseconds: None,
+                                requires_authentication: false,
+                                timestamp: message.created_at.saturating_mul(1_000),
+                                quote_message_id: None,
+                                download_token: Some(download_token.clone()),
+                                encryption_key: Some(key.to_vec()),
+                                encryption_mac: Some(tag.to_vec()),
+                                encryption_nonce: Some(nonce.to_vec()),
+                                additional_message_data: message.additional_message_data.clone(),
+                                widget_only: None,
+                            }),
+                            notify: wake,
+                        }),
+                        ..Default::default()
+                    }
+                } else {
+                    EncryptedContent {
+                        group_id: Some(message.group_id.clone()),
+                        media: Some(encrypted_content::Media {
+                            sender_message_id: message.message_id.clone(),
+                            r#type: media_type as i32,
+                            display_limit_in_milliseconds: media.display_limit_in_milliseconds,
+                            requires_authentication: media.requires_authentication != 0,
+                            timestamp: message.created_at.saturating_mul(1_000),
+                            quote_message_id: message.quotes_message_id.clone(),
+                            download_token: Some(download_token.clone()),
+                            encryption_key: Some(key.to_vec()),
+                            encryption_mac: Some(tag.to_vec()),
+                            encryption_nonce: Some(nonce.to_vec()),
+                            additional_message_data: message.additional_message_data.clone(),
+                            widget_only: Some(message.is_widget_media != 0),
+                        }),
+                        ..Default::default()
+                    }
                 };
                 let encrypted_body = send_c2c_message_to_contact()
                     .ctx(&self.ctx)
@@ -1023,13 +1067,14 @@ impl DirectMediaUploadService {
                     encrypted_body,
                     // Widget media arrives already opened and raises no
                     // notification, so a push for it only buys the recipient
-                    // an alert with nothing behind it.
-                    push_data: (message.is_widget_media == 0).then(|| vec![1]),
+                    // an alert with nothing behind it. A story wakes only for
+                    // the first item in a day, see `story_wakes_recipient`.
+                    push_data: wake.then(|| vec![1]),
                     download_token,
                 });
             }
         }
-        if dispatches.is_empty() || dispatches.len() > 300 {
+        if dispatches.is_empty() || dispatches.len() > MAX_ATTACHMENT_DISPATCHES {
             return Err(TwonlyError::Generic(format!(
                 "direct-media fan-out has {} dispatches",
                 dispatches.len()
@@ -1044,6 +1089,64 @@ impl DirectMediaUploadService {
             },
         ))
     }
+}
+
+/// Whether a story row's recipient is woken for it. Stories wake only for the
+/// first item in a day, so a burst of them is one alert rather than a stream:
+///
+/// - an older own story row in the same chat that has not expired yet means
+///   this is not the first. Ties on the timestamp are broken by message id, so
+///   two items prepared at once cannot each defer to the other.
+/// - a direct copy of the same media already wakes the recipient.
+/// - a row the server or recipient already acknowledged is being prepared
+///   again for a reupload, and was announced the first time.
+/// - the two have not sent each other a text or media message in two weeks;
+///   the recipient would not announce it then, so waking them is pointless.
+///
+/// The answer also travels inside the story, so the receiver announces
+/// exactly the items it was woken for.
+async fn story_wakes_recipient(
+    database: &AppDatabase,
+    message: &MessageRow,
+    media_id: &str,
+    contact_id: i64,
+    now: i64,
+) -> Result<bool> {
+    let quiet = sqlx::query_scalar::<_, i64>(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM messages older
+               WHERE older.is_story = 1 AND older.sender_id IS NULL
+                 AND older.group_id = ? AND older.media_id IS NOT NULL
+                 AND older.created_at > ?
+                 AND (older.created_at < ?
+                      OR (older.created_at = ? AND older.message_id < ?))
+           ) OR EXISTS(
+               SELECT 1 FROM messages direct
+               JOIN group_members gm ON gm.group_id = direct.group_id
+               WHERE direct.media_id = ? AND direct.is_story = 0 AND gm.contact_id = ?
+           ) OR EXISTS(
+               SELECT 1 FROM message_actions action
+               WHERE action.message_id = ? AND action.contact_id = ?
+                 AND action.type IN ('ackByServerAt', 'ackByUserAt')
+           ) OR NOT EXISTS(
+               SELECT 1 FROM groups chat
+               WHERE chat.group_id = ? AND chat.last_text_or_media_at > ?
+           )"#,
+    )
+    .bind(&message.group_id)
+    .bind(now - STORY_LIFETIME_SECONDS)
+    .bind(message.created_at)
+    .bind(message.created_at)
+    .bind(&message.message_id)
+    .bind(media_id)
+    .bind(contact_id)
+    .bind(&message.message_id)
+    .bind(contact_id)
+    .bind(&message.group_id)
+    .bind(now - STORY_ANNOUNCE_RECENT_EXCHANGE_SECONDS)
+    .fetch_one(&database.pool)
+    .await?;
+    Ok(quiet == 0)
 }
 
 fn media_extension(media_type: &str) -> &'static str {
@@ -1090,6 +1193,141 @@ fn write_multipart_body(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::media_upload::MediaUploadService;
+    use crate::user_config::UserConfig;
+    use libsignal_protocol::IdentityKeyPair;
+    use rand::SeedableRng;
+
+    async fn upload_test_context(root: &Path, user_id: i64) -> anyhow::Result<Arc<Context>> {
+        let data_dir = root.join("data");
+        std::fs::create_dir_all(data_dir.join("keyvalue"))?;
+        let config = UserConfig {
+            user_id,
+            username: format!("user-{user_id}"),
+            display_name: format!("User {user_id}"),
+            is_user_discovery_enabled: false,
+            ..Default::default()
+        };
+        std::fs::write(
+            data_dir.join("keyvalue/user.json"),
+            serde_json::to_vec(&config)?,
+        )?;
+        let context = Context::init_for_testing(root.join("database"), data_dir).await?;
+        let mut csprng = rand::rngs::StdRng::from_os_rng();
+        let identity = IdentityKeyPair::generate(&mut csprng);
+        let registration_id = rand::Rng::random::<u32>(&mut csprng) & 0x7fff_ffff;
+        context
+            .inject_test_signal_identity(identity.serialize().to_vec(), registration_id as i64)
+            .await?;
+        context.inject_test_user_id(user_id).await?;
+        Ok(context)
+    }
+
+    #[tokio::test]
+    async fn story_upload_preparation_encrypts_media_and_dispatch_payload() -> anyhow::Result<()> {
+        let sender_dir = tempfile::tempdir()?;
+        let receiver_dir = tempfile::tempdir()?;
+        let sender = upload_test_context(sender_dir.path(), 42).await?;
+        let receiver = upload_test_context(receiver_dir.path(), 7).await?;
+
+        let receiver_bundle = receiver
+            .signal_engine
+            .lock()
+            .await
+            .as_ref()
+            .unwrap()
+            .generate_bundle()
+            .await?;
+        sender
+            .signal_engine
+            .lock()
+            .await
+            .as_ref()
+            .unwrap()
+            .process_prekey_bundle("7".into(), 1, receiver_bundle)
+            .await?;
+
+        let upload = MediaUploadService::new(&sender);
+        let media_id = upload.initialize("image".into(), None, false).await?;
+        let original = b"story image bytes";
+        let source = crate::services::mediafiles::MediaFileService::new(&sender)
+            .temp_path(&media_id, "image");
+        if let Some(parent) = source.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(&source, original)?;
+
+        let database = sender.app_db.read().await.clone();
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, accepted, signal_version) VALUES(7, 'receiver', 1, 'v2')",
+        )
+        .execute(&database.pool)
+        .await?;
+        // They wrote to each other recently, so the story wakes the receiver.
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, is_direct_chat, last_text_or_media_at) VALUES('direct-7', 'Receiver', 1, CAST(strftime('%s','now') AS INTEGER))",
+        )
+        .execute(&database.pool)
+        .await?;
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES('direct-7', 7)")
+            .execute(&database.pool)
+            .await?;
+        let created_at = chrono::Utc::now().timestamp();
+        sqlx::query(
+            r#"INSERT INTO messages
+               (message_id, group_id, type, media_id, is_story, created_at)
+               VALUES('story-message', 'direct-7', 'media', ?, 1, ?)"#,
+        )
+        .bind(&media_id)
+        .bind(created_at)
+        .execute(&database.pool)
+        .await?;
+        drop(database);
+
+        let (encrypted_path, encrypted_size, manifest) = DirectMediaUploadService::new(&sender)
+            .prepare_media(&media_id)
+            .await?;
+
+        let encrypted_media = std::fs::read(encrypted_path)?;
+        assert_eq!(encrypted_size, original.len() as i64);
+        assert_ne!(encrypted_media, original);
+        assert_eq!(manifest.dispatches.len(), 1);
+        let dispatch = &manifest.dispatches[0];
+        assert_eq!(dispatch.recipient_user_id, 7);
+        assert_eq!(dispatch.push_data.as_deref(), Some([1].as_slice()));
+
+        let envelope =
+            crate::api::proto::client::Message::decode(dispatch.encrypted_body.as_slice())?;
+        assert_eq!(
+            envelope.r#type,
+            crate::api::proto::client::message::Type::CiphertextV2 as i32
+        );
+        let plaintext = receiver
+            .signal_engine
+            .lock()
+            .await
+            .as_ref()
+            .unwrap()
+            .decrypt_message(
+                "42".into(),
+                1,
+                envelope
+                    .encrypted_content
+                    .expect("encrypted story envelope"),
+            )
+            .await?;
+        let content = EncryptedContent::decode(plaintext.as_slice())?;
+        let story = content.story.expect("story payload");
+        assert!(story.notify);
+        let media = story.media.expect("story media payload");
+        assert_eq!(media.sender_message_id, "story-message");
+        assert_eq!(media.timestamp, created_at * 1_000);
+        assert_eq!(media.download_token, Some(dispatch.download_token.clone()));
+        assert_eq!(media.encryption_key.as_deref().map(<[u8]>::len), Some(32));
+        assert_eq!(media.encryption_nonce.as_deref().map(<[u8]>::len), Some(12));
+        assert_eq!(media.encryption_mac.as_deref().map(<[u8]>::len), Some(16));
+        Ok(())
+    }
 
     #[test]
     fn cancelled_watcher_releases_process_claim() {
@@ -1398,5 +1636,103 @@ mod tests {
         // The reserved slot is the one an upload is running against: leaving it
         // out makes the server abandon the transfer as `not_in_client_cache`.
         assert_eq!(known, vec!["slot-cached", "slot-reserved"]);
+    }
+
+    fn story_row(message_id: &str, created_at: i64) -> MessageRow {
+        MessageRow {
+            group_id: "d".into(),
+            message_id: message_id.into(),
+            created_at,
+            quotes_message_id: None,
+            additional_message_data: None,
+            is_widget_media: 0,
+            is_story: 1,
+        }
+    }
+
+    #[tokio::test]
+    async fn only_the_first_story_of_a_day_wakes_its_recipient() {
+        let directory = tempfile::tempdir().unwrap();
+        let database_path = directory.path().join("app.sqlite");
+        let database = AppDatabase::new(database_path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        database.run_migrations().await.unwrap();
+        let now = 1_000_000_000;
+        let expired = now - STORY_LIFETIME_SECONDS - 60;
+        for statement in [
+            "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'anna', 1)".to_owned(),
+            format!("INSERT INTO groups(group_id, group_name, is_direct_chat, last_text_or_media_at) VALUES ('d', 'Anna', 1, {}), ('trip', 'Trip', 0, NULL)", now - 3600),
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('d', 7), ('trip', 7)".to_owned(),
+            "INSERT INTO media_files(media_id, type) VALUES ('old', 'image'), ('first', 'image'), ('second', 'image'), ('twin', 'image')".to_owned(),
+            format!("INSERT INTO messages(message_id, group_id, type, media_id, is_story, created_at) VALUES ('old', 'd', 'media', 'old', 1, {expired})"),
+            format!("INSERT INTO messages(message_id, group_id, type, media_id, is_story, created_at) VALUES ('first', 'd', 'media', 'first', 1, {})", now - 120),
+            format!("INSERT INTO messages(message_id, group_id, type, media_id, is_story, created_at) VALUES ('second', 'd', 'media', 'second', 1, {now})"),
+            format!("INSERT INTO messages(message_id, group_id, type, media_id, is_story, created_at) VALUES ('twin', 'd', 'media', 'twin', 1, {now})"),
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement))
+                .execute(&database.pool)
+                .await
+                .unwrap();
+        }
+        let wakes = |row: MessageRow, media_id: &'static str| {
+            let database = &database;
+            async move {
+                story_wakes_recipient(database, &row, media_id, 7, now)
+                    .await
+                    .unwrap()
+            }
+        };
+
+        // An expired story does not count against the first one of a new day.
+        assert!(wakes(story_row("first", now - 120), "first").await);
+        assert!(!wakes(story_row("second", now), "second").await);
+        // Two items posted in the same second: exactly one of them is first
+        // once the older one is gone.
+        sqlx::query("DELETE FROM messages WHERE message_id = 'first'")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        assert!(wakes(story_row("second", now), "second").await);
+        assert!(!wakes(story_row("twin", now), "twin").await);
+
+        // A direct copy of the same media already wakes the recipient.
+        sqlx::query(
+            "INSERT INTO messages(message_id, group_id, type, media_id) VALUES ('direct', 'trip', 'media', 'second')",
+        )
+        .execute(&database.pool)
+        .await
+        .unwrap();
+        assert!(!wakes(story_row("second", now), "second").await);
+        sqlx::query("DELETE FROM messages WHERE message_id = 'direct'")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+
+        // Preparing an item again after it reached the server does not
+        // announce it a second time.
+        sqlx::query(
+            "INSERT INTO message_actions(message_id, contact_id, type) VALUES ('second', 7, 'ackByServerAt')",
+        )
+        .execute(&database.pool)
+        .await
+        .unwrap();
+        assert!(!wakes(story_row("second", now), "second").await);
+
+        // Two weeks without a text or media message between them: the
+        // recipient would not announce it, so they are not woken for it.
+        sqlx::query("DELETE FROM message_actions")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        assert!(wakes(story_row("second", now), "second").await);
+        sqlx::query(sqlx::AssertSqlSafe(format!(
+            "UPDATE groups SET last_text_or_media_at = {} WHERE group_id = 'd'",
+            now - STORY_ANNOUNCE_RECENT_EXCHANGE_SECONDS - 60
+        )))
+        .execute(&database.pool)
+        .await
+        .unwrap();
+        assert!(!wakes(story_row("second", now), "second").await);
     }
 }

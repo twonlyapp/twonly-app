@@ -171,7 +171,11 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
             db.messages.mediaId.equalsExp(mediaFiles.mediaId),
             useColumns: false,
           ),
-        ])..where(db.messages.groupId.equals(groupId));
+        ])..where(
+          db.messages.groupId.equals(groupId) &
+              (db.messages.isStory.equals(false) |
+                  db.messages.mediaStored.equals(true)),
+        );
     return query.map((row) => row.readTable(mediaFiles)).watch();
   }
 
@@ -226,6 +230,7 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
                ) AS message_rank
         FROM messages
         WHERE messages.media_id IS NOT NULL
+          AND (messages.is_story = 0 OR messages.media_stored = 1)
       )
       SELECT DISTINCT media_files.*
       FROM media_files
@@ -254,6 +259,7 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
           mediaFiles.storedFileHash.equals(hash) &
               db.messages.senderId.equals(senderId) &
               db.messages.isWidgetMedia.equals(false) &
+              db.messages.isStory.equals(false) &
               db.messages.openedAt.isNull(),
         );
 

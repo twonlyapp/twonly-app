@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT message_id, group_id FROM messages\n           WHERE media_id = ? AND is_story = 1 AND sender_id IS NULL AND media_stored = 0",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "group_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "group_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "dc47c3260c79b988e6c74af7bc6e38c197cc6922c101f455ef3d0fd4f644c993"
+}

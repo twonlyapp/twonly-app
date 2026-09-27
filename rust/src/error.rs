@@ -78,6 +78,9 @@ pub enum TwonlyError {
     #[error("encrypted media is {bytes} bytes but the plan allows {limit}")]
     MediaTooLarge { bytes: i64, limit: i64 },
 
+    #[error("a media send reaches {count} recipients but at most {limit} are allowed")]
+    TooManyRecipients { count: usize, limit: usize },
+
     /// The group server refused a state update because it was written against
     /// a version it no longer holds. Somebody else changed the group first, so
     /// the update has to be applied again to the version that won.

@@ -9,6 +9,7 @@ use crate::api::runtime::API_EVENTS;
 use crate::bridge::api::{ApiEvent, ApiEventKind, RustApi};
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
+use crate::services::media_upload::MediaUploadService;
 use chacha20poly1305::aead::{AeadInPlace, KeyInit};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce, Tag};
 use prost::Message as _;
@@ -238,6 +239,12 @@ impl MediaFileService {
                 return Ok(());
             }
         }
+        if let Err(error) = MediaUploadService::new(&self.ctx)
+            .create_story_thumbnail(media_id)
+            .await
+        {
+            tracing::warn!(media_id, %error, "could not create the story thumbnail");
+        }
         let is_widget = sqlx::query_scalar::<_, i64>(
             "SELECT is_widget_media FROM media_files WHERE media_id = ?",
         )
@@ -365,12 +372,13 @@ impl MediaFileService {
         // Widget media is marked opened the moment it arrives, since nobody
         // ever opens it in a chat. Asking only for what has not been opened
         // would therefore never ask for it at all, and the state set below
-        // hides the message for good.
+        // hides the message for good. A story replays after it was opened, so
+        // the same holds for it.
         let targets = sqlx::query_as!(
             ReuploadTarget,
             r#"SELECT message_id, sender_id AS "sender_id!: i64" FROM messages
                WHERE media_id = ? AND sender_id IS NOT NULL
-                 AND (opened_at IS NULL OR is_widget_media = 1)"#,
+                 AND (opened_at IS NULL OR is_widget_media = 1 OR is_story = 1)"#,
             media_id,
         )
         .fetch_all(&database.pool)

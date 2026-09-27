@@ -8,6 +8,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/contact/contact_group_settings.view.dart';
 
 class SelectContactGroupsView extends StatefulWidget {
@@ -193,10 +194,17 @@ class _SelectContactGroupsViewState extends State<SelectContactGroupsView> {
           Expanded(
             child: _contactGroups.isEmpty
                 ? Center(
-                    child: FilledButton.icon(
+                    child: MyButton(
+                      variant: MyButtonVariant.primaryDense,
                       onPressed: _openSettings,
-                      icon: const Icon(Icons.add),
-                      label: Text(context.lang.createContactGroup),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.add),
+                          const SizedBox(width: 8),
+                          Text(context.lang.createContactGroup),
+                        ],
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -209,6 +217,8 @@ class _SelectContactGroupsViewState extends State<SelectContactGroupsView> {
                           context.lang.contactGroupLabelFeature,
                         if (contactGroup.showAsShortcut)
                           context.lang.contactGroupShortcutFeature,
+                        if (contactGroup.shareStories)
+                          context.lang.contactGroupStoriesFeature,
                       ].join(' · ');
                       return ListTile(
                         contentPadding: const EdgeInsets.symmetric(

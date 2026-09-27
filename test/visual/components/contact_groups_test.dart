@@ -14,6 +14,7 @@ void main() {
         backgroundColor: 0x00123456,
         showAsShortcut: true,
         showAsLabel: true,
+        shareStories: false,
         usageCounter: 0,
         createdAt: DateTime(2026),
       );

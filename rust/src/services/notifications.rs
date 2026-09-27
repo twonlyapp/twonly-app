@@ -77,6 +77,63 @@ async fn message_sender(
     .await?)
 }
 
+/// Whether `message_id` is one of this device's own story rows, which is what
+/// a reply, reaction or save aimed at the user's story points at.
+async fn is_own_story(transaction: &mut Transaction<'_, Sqlite>, message_id: &str) -> Result<bool> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM messages
+               WHERE message_id = ? AND sender_id IS NULL AND is_story = 1
+           ) AS "own_story!: bool""#,
+        message_id
+    )
+    .fetch_one(&mut **transaction)
+    .await?)
+}
+
+/// Whether `text` is nothing but emoji. A reaction to a story travels as a
+/// text quoting it, so this is what tells a reaction from a reply.
+fn is_emoji_only(text: &str) -> bool {
+    fn pictographic(c: char) -> bool {
+        matches!(
+            c as u32,
+            0x1F000..=0x1FAFF
+                | 0x2600..=0x27BF
+                | 0x2300..=0x23FF
+                | 0x2B00..=0x2BFF
+                | 0x2190..=0x21FF
+                | 0x25A0..=0x25FF
+                | 0x00A9
+                | 0x00AE
+                | 0x203C
+                | 0x2049
+                | 0x2122
+                | 0x2139
+                | 0x3030
+                | 0x303D
+                | 0x3297
+                | 0x3299
+        )
+    }
+    // Joiners, variation selectors, skin tones, tags and keycap bases only
+    // ever build an emoji out of the pictographs around them.
+    fn component(c: char) -> bool {
+        matches!(
+            c as u32,
+            0x200D | 0xFE0E | 0xFE0F | 0x20E3 | 0x1F3FB..=0x1F3FF | 0xE0020..=0xE007F
+        ) || c.is_ascii_digit()
+            || c == '#'
+            || c == '*'
+    }
+    let text = text.trim();
+    !text.is_empty()
+        && text.chars().count() <= 16
+        // A keycap is a digit or sign wrapped by U+20E3; that mark is what
+        // makes "1\u{fe0f}\u{20e3}" an emoji rather than a number.
+        && text.chars().any(|c| pictographic(c) || c == '\u{20E3}')
+        && text.chars().all(|c| pictographic(c) || component(c))
+}
+
 /// Whether this envelope is worth spending the recipient's push budget on.
 ///
 /// A wake-up is not free to get wrong. iOS renders the alert the push carried
@@ -119,6 +176,9 @@ pub(crate) async fn should_wake_receiver(
                     .is_ok_and(|kind| kind != encrypted_content::media::Type::Reupload)
         })
         || reaction_reaches_author
+        // The sender decided, and wrote into the story, that this is the first
+        // item in a day; `record_incoming_event` announces exactly those.
+        || content.story.as_ref().is_some_and(|story| story.notify)
         || content
             .media_update
             .as_ref()
@@ -250,18 +310,28 @@ pub(crate) async fn record_incoming_event(
     let conversation_id = content.group_id.clone();
     let now = current_time().timestamp();
     let draft = if let Some(message) = content.text_message.as_ref() {
+        // An answer to the user's own story says so: an emoji is a reaction
+        // to it, anything else a reply.
+        let about_story = match message.quote_message_id.as_deref() {
+            Some(quoted) => is_own_story(transaction, quoted).await?,
+            None => false,
+        };
+        let (kind, reaction) = match (about_story, message.quote_message_id.is_some()) {
+            (true, _) if is_emoji_only(&message.text) => {
+                ("story_reaction", Some(message.text.trim().to_owned()))
+            }
+            (true, _) => ("story_reply", None),
+            (false, true) => ("response", None),
+            (false, false) => ("text", None),
+        };
         Some(NotificationDraft {
             event_id: receipt_id.to_owned(),
             notification_id: message.sender_message_id.clone(),
             conversation_id,
             sender_id: from_user_id,
             message_id: Some(message.sender_message_id.clone()),
-            kind: if message.quote_message_id.is_some() {
-                "response"
-            } else {
-                "text"
-            },
-            content: None,
+            kind,
+            content: reaction,
             created_at: milliseconds_to_seconds(message.timestamp),
         })
     } else if let Some(media) = content.media.as_ref() {
@@ -287,6 +357,35 @@ pub(crate) async fn record_incoming_event(
                 content: None,
                 created_at: milliseconds_to_seconds(media.timestamp),
             })
+        }
+    } else if let Some(story) = content.story.as_ref() {
+        // Only the first story in a day woke this device, and the sender says
+        // which one that was. Whether to announce it at all is this device's
+        // call alone: muted, or from someone the user has not written with in
+        // two weeks, it stays quiet. A wake-up it declines is silenced by the
+        // notification extension instead of showing the push's placeholder.
+        let config = UserConfig::load_required_from(ctx)?;
+        // The same chat `handle_story` filed the story under.
+        let chat =
+            crate::database::app::tables::Group::direct_chat_id(ctx.user_id().await?, from_user_id);
+        match story.media.as_ref() {
+            Some(media) if story.notify && config.story_notifications => {
+                let filed = message_sender(transaction, &media.sender_message_id).await?
+                    == Some(Some(from_user_id));
+                let recent =
+                    crate::services::stories::exchanged_recently(transaction, &chat, now).await?;
+                (filed && recent).then(|| NotificationDraft {
+                    event_id: receipt_id.to_owned(),
+                    notification_id: media.sender_message_id.clone(),
+                    conversation_id: Some(chat.clone()),
+                    sender_id: from_user_id,
+                    message_id: Some(media.sender_message_id.clone()),
+                    kind: "story",
+                    content: None,
+                    created_at: milliseconds_to_seconds(media.timestamp).min(now),
+                })
+            }
+            _ => None,
         }
     } else if let Some(message) = content.additional_data_message.as_ref() {
         // A hidden message is state a feature exchanges and leaves no row of
@@ -331,6 +430,11 @@ pub(crate) async fn record_incoming_event(
         // else in the group watched it land on somebody else's message and has
         // nothing to be told, and a reaction the sender put on their own
         // message concerns nobody here at all.
+        let kind = if is_own_story(transaction, &reaction.target_message_id).await? {
+            "story_reaction"
+        } else {
+            "reaction"
+        };
         matches!(
             message_sender(transaction, &reaction.target_message_id).await?,
             Some(None)
@@ -341,13 +445,15 @@ pub(crate) async fn record_incoming_event(
             conversation_id,
             sender_id: from_user_id,
             message_id: Some(reaction.target_message_id.clone()),
-            kind: "reaction",
+            kind,
             content: Some(reaction.emoji.clone()),
             created_at: now,
         })
     } else if let Some(update) = content.media_update.as_ref() {
         let update_type = encrypted_content::media_update::Type::try_from(update.r#type)?;
+        let story = is_own_story(transaction, &update.target_message_id).await?;
         let kind = match update_type {
+            encrypted_content::media_update::Type::Stored if story => Some("stored_story"),
             encrypted_content::media_update::Type::Stored => Some("stored_media"),
             encrypted_content::media_update::Type::Reopened => Some("reopened_media"),
             encrypted_content::media_update::Type::DecryptionError => None,
@@ -410,7 +516,7 @@ async fn clear_stale_opened(database: &Arc<AppDatabase>) -> Result<()> {
         UPDATE notification_outbox
         SET cleared_at = ?
         WHERE cleared_at IS NULL
-          AND kind IN ('text', 'response', 'image', 'video', 'audio', 'twonly', 'webxdc')
+          AND kind IN ('text', 'response', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
           AND EXISTS (
               SELECT 1
               FROM messages
@@ -616,6 +722,12 @@ pub async fn finalize_wakeup(deadline_ms: u64) -> Result<()> {
         Ok(Ok(())) => {}
     }
 
+    match tokio::time::timeout(remaining(), crate::services::stories::purge_expired(&ctx)).await {
+        Ok(Err(error)) => tracing::warn!(%error, "story purge failed during wake-up"),
+        Err(error) => tracing::info!(%error, "story purge window elapsed"),
+        Ok(Ok(())) => {}
+    }
+
     if owns_connection && ctx.is_notification_runtime() {
         // Bounded on its own rather than out of what is left: closing costs a
         // round trip at most, and a server that never answers the handshake
@@ -726,7 +838,7 @@ pub(crate) async fn clear_opened_messages(
             SET cleared_at = ?
             WHERE message_id = ?
               AND cleared_at IS NULL
-              AND kind IN ('text', 'response', 'image', 'video', 'audio', 'twonly', 'webxdc')
+              AND kind IN ('text', 'response', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
             "#,
         )
         .bind(cleared_at)
@@ -821,6 +933,10 @@ fn localized_body(locale: &str, row: &PendingRow) -> String {
         "contact_request" => "notificationContactRequest",
         "accept_request" => "notificationAcceptRequest",
         "stored_media" => "notificationStoredMediaFile",
+        "story" => "notificationStory",
+        "story_reply" => "notificationStoryReply",
+        "story_reaction" => "notificationStoryReaction",
+        "stored_story" => "notificationStoredStory",
         "reopened_media" => "notificationReopenedMedia",
         "reaction" => match (
             row.target_message_type.as_deref(),
@@ -977,6 +1093,108 @@ mod tests {
             "möchte sich mit dir vernetzen."
         );
         assert_eq!(localized_body("fr-FR", &row), "wants to connect with you.");
+    }
+
+    #[test]
+    fn tells_a_reaction_from_a_reply() {
+        for reaction in ["🔥", " ❤️ ", "👍🏽", "👨‍👩‍👧", "1️⃣", "🇩🇪", "😂😂"]
+        {
+            assert!(is_emoji_only(reaction), "{reaction:?} is a reaction");
+        }
+        for reply in ["", "nice", "nice 🔥", "12", "#", "🔥 wow"] {
+            assert!(!is_emoji_only(reply), "{reply:?} is a reply");
+        }
+    }
+
+    #[test]
+    fn words_what_happened_to_a_story() {
+        let mut reaction = pending_row("story_reaction");
+        reaction.content = Some("🔥".into());
+        assert_eq!(
+            localized_body("en", &reaction),
+            "has reacted with 🔥 to your story."
+        );
+        assert_eq!(
+            localized_body("de", &reaction),
+            "hat mit 🔥 auf deine Story reagiert."
+        );
+        assert_eq!(
+            localized_body("en", &pending_row("story_reply")),
+            "has replied to your story."
+        );
+        assert_eq!(
+            localized_body("de", &pending_row("stored_story")),
+            "hat deine Story gespeichert."
+        );
+    }
+
+    #[tokio::test]
+    async fn answers_to_the_own_story_are_announced_as_such() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"ben","displayName":"Ben"}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        for statement in [
+            "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'anna', 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('d', 'Anna', 1)",
+            "INSERT INTO messages(message_id, group_id, type, is_story) VALUES ('mine', 'd', 'media', 1)",
+            "INSERT INTO messages(message_id, group_id, type, content) VALUES ('plain', 'd', 'text', 'hi')",
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement))
+                .execute(&mut *tx)
+                .await?;
+        }
+        let text = |id: &str, text: &str, quote: &str| proto::EncryptedContent {
+            group_id: Some("d".into()),
+            text_message: Some(encrypted_content::TextMessage {
+                sender_message_id: id.into(),
+                text: text.into(),
+                quote_message_id: Some(quote.into()),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        record_incoming_event(&ctx, &mut tx, 7, "r1", &text("t1", "🔥", "mine")).await?;
+        record_incoming_event(&ctx, &mut tx, 7, "r2", &text("t2", "love it", "mine")).await?;
+        record_incoming_event(&ctx, &mut tx, 7, "r3", &text("t3", "🔥", "plain")).await?;
+        let stored = proto::EncryptedContent {
+            media_update: Some(encrypted_content::MediaUpdate {
+                r#type: encrypted_content::media_update::Type::Stored as i32,
+                target_message_id: "mine".into(),
+            }),
+            ..Default::default()
+        };
+        record_incoming_event(&ctx, &mut tx, 7, "r4", &stored).await?;
+
+        let rows: Vec<(String, Option<String>)> =
+            sqlx::query_as("SELECT kind, content FROM notification_outbox ORDER BY event_id")
+                .fetch_all(&mut *tx)
+                .await?;
+        assert_eq!(
+            rows,
+            vec![
+                ("story_reaction".into(), Some("🔥".into())),
+                ("story_reply".into(), None),
+                // An emoji on anything else is an ordinary reply.
+                ("response".into(), None),
+                ("stored_story".into(), None),
+            ]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn announces_a_story_in_every_language() {
+        let row = pending_row("story");
+        assert_eq!(localized_body("en", &row), "posted a story.");
+        assert_eq!(localized_body("de", &row), "hat eine Story gepostet.");
+        assert_eq!(localized_body("ar", &row), "قصة جديدة.");
     }
 
     #[test]

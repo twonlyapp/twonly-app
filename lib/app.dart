@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart' show SharedFile;
 import 'package:provider/provider.dart';
 import 'package:twonly/core/bridge/api.dart' as rust_api;
+import 'package:twonly/core/bridge/stories.dart' as stories;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
@@ -69,6 +70,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       // was suspended, and its Rust change broadcast never reached this
       // process, so the badge has to be re-read on the way back in.
       unawaited(NativeNotificationService.refreshBadgeCount());
+      // A story may have expired while the app was away.
+      unawaitedRustCall(stories.purgeExpiredStories(), 'purgeExpiredStories');
     } else if (state == AppLifecycleState.paused) {
       AppState.isAppInBackground = true;
       unawaited(

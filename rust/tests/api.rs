@@ -14,6 +14,8 @@ mod recovery;
 mod server_api;
 #[path = "api/session_recovery.rs"]
 mod session_recovery;
+#[path = "api/stories.rs"]
+mod stories;
 #[path = "api/tester.rs"]
 mod tester;
 #[path = "api/user_discovery.rs"]

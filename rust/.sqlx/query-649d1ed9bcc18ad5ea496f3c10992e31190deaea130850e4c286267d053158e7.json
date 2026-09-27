@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT message_id, sender_id AS \"sender_id!: i64\" FROM messages\n               WHERE media_id = ? AND sender_id IS NOT NULL\n                 AND (opened_at IS NULL OR is_widget_media = 1)",
+  "query": "SELECT message_id, sender_id AS \"sender_id!: i64\" FROM messages\n               WHERE media_id = ? AND sender_id IS NOT NULL\n                 AND (opened_at IS NULL OR is_widget_media = 1 OR is_story = 1)",
   "describe": {
     "columns": [
       {
@@ -34,5 +34,5 @@
       true
     ]
   },
-  "hash": "f96e23fc46fe9d566e332d17edece9fd3f3d617907841e30bfeaba38eff12a52"
+  "hash": "649d1ed9bcc18ad5ea496f3c10992e31190deaea130850e4c286267d053158e7"
 }

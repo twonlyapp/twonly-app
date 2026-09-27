@@ -22,6 +22,17 @@ class ContactGroupsDao extends DatabaseAccessor<TwonlyDB>
         .watch();
   }
 
+  /// The contact groups a story can be sent to, most used first.
+  Stream<List<ContactGroup>> watchStoryContactGroups() {
+    return (select(contactGroups)
+          ..where((t) => t.shareStories.equals(true))
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.usageCounter),
+            (t) => OrderingTerm.asc(t.name),
+          ]))
+        .watch();
+  }
+
   Stream<List<ContactGroup>> watchVisibleGroupsForUser(int userId) {
     final query =
         select(contactGroupMembers).join([
@@ -132,6 +143,7 @@ class ContactGroupsDao extends DatabaseAccessor<TwonlyDB>
     required int backgroundColor,
     required bool showAsShortcut,
     required bool showAsLabel,
+    required bool shareStories,
     String? emoji,
   }) {
     return into(contactGroups).insert(
@@ -142,6 +154,7 @@ class ContactGroupsDao extends DatabaseAccessor<TwonlyDB>
         backgroundColor: backgroundColor,
         showAsShortcut: Value(showAsShortcut),
         showAsLabel: Value(showAsLabel),
+        shareStories: Value(shareStories),
       ),
     );
   }
@@ -153,6 +166,7 @@ class ContactGroupsDao extends DatabaseAccessor<TwonlyDB>
     required int backgroundColor,
     required bool showAsShortcut,
     required bool showAsLabel,
+    required bool shareStories,
     String? emoji,
   }) {
     return (update(contactGroups)..where((t) => t.id.equals(id)))
@@ -164,6 +178,7 @@ class ContactGroupsDao extends DatabaseAccessor<TwonlyDB>
             backgroundColor: Value(backgroundColor),
             showAsShortcut: Value(showAsShortcut),
             showAsLabel: Value(showAsLabel),
+            shareStories: Value(shareStories),
           ),
         )
         .then((rows) => rows > 0);

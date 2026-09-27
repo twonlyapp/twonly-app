@@ -9,6 +9,7 @@ import 'package:twonly/src/database/daos/mediafiles.dao.dart';
 import 'package:twonly/src/database/daos/messages.dao.dart';
 import 'package:twonly/src/database/daos/reactions.dao.dart';
 import 'package:twonly/src/database/daos/receipts.dao.dart';
+import 'package:twonly/src/database/daos/stories.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/rust_change_notifier.dart';
 import 'package:twonly/src/database/rust_query_executor.dart';
@@ -63,6 +64,7 @@ part 'twonly.db.g.dart';
     UserDiscoveryDao,
     KeyVerificationDao,
     ContactGroupsDao,
+    StoriesDao,
   ],
 )
 class TwonlyDB extends _$TwonlyDB {

@@ -2823,4 +2823,97 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get webxdcExternalLinkBody =>
       'This link opens outside twonly, in your browser:';
+
+  @override
+  String get notificationStory => 'posted a story.';
+
+  @override
+  String get settingsNotifyStories => 'Story notifications';
+
+  @override
+  String get settingsNotifyStoriesSubtitle =>
+      'Be notified of the first story of the day from contacts you\'ve written with in the last two weeks.';
+
+  @override
+  String get contactGroupShareStories => 'Share stories';
+
+  @override
+  String get contactGroupShareStoriesSubtitle =>
+      'Offer this group as an audience when you post a story.';
+
+  @override
+  String get contactGroupStoriesFeature => 'Stories';
+
+  @override
+  String get story => 'Story';
+
+  @override
+  String get storyExpired => 'Story expired';
+
+  @override
+  String get storyMine => 'My story';
+
+  @override
+  String get storyDeleteTitle => 'Delete story?';
+
+  @override
+  String get storyDeleteBody => 'This removes it from your story.';
+
+  @override
+  String get storyDelete => 'Delete';
+
+  @override
+  String get storyDeleteFailed => 'Could not delete it. Try again in a moment.';
+
+  @override
+  String get shareImageStory => 'Story';
+
+  @override
+  String shareImageStoryAudience(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Reaches $count contacts',
+      one: 'Reaches 1 contact',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareImageStoryUnavailable =>
+      'twonly-protected media can\'t be posted as a story.';
+
+  @override
+  String get shareImageStoryAll => 'All contacts';
+
+  @override
+  String get shareImageStoryNewGroup => 'New story group';
+
+  @override
+  String shareImageStoryFailed(int max) {
+    return 'Could not post the story. One send can reach at most $max people.';
+  }
+
+  @override
+  String get notificationStoryReply => 'has replied to your story.';
+
+  @override
+  String notificationStoryReaction(Object reaction) {
+    return 'has reacted with $reaction to your story.';
+  }
+
+  @override
+  String get notificationStoredStory => 'has saved your story.';
+
+  @override
+  String storyViews(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count views',
+      one: '1 view',
+      zero: 'No views yet',
+    );
+    return '$_temp0';
+  }
 }

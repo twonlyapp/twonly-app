@@ -41,6 +41,9 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   double _offsetFromOne = 0;
   bool _isBottomNavVisible = true;
   Timer? _disableCameraTimer;
+
+  /// Whether [_openEditor] has the editor open over this view.
+  bool _editorOpen = false;
   bool _startPreloading = false;
 
   final MainCameraController _mainCameraController = MainCameraController();
@@ -153,14 +156,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         return;
       }
       file.copySync(newMediaService.originalPath.path);
-      if (!mounted) return;
-
-      await context.navPush(
-        ShareImageEditorView(
-          mediaFileService: newMediaService,
-          sharedFromGallery: true,
-        ),
-      );
+      await _openEditor(newMediaService);
     });
 
     if (HomeViewState.pendingSharedLink != null) {
@@ -269,17 +265,29 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
     final draftMedia = await twonlyDB.mediaFilesDao.getDraftMediaFile();
     if (draftMedia != null) {
-      if (!mounted) return;
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ShareImageEditorView(
-            mediaFileService: MediaFileService(draftMedia),
-            sharedFromGallery: true,
-          ),
-        ),
-      );
+      await _openEditor(MediaFileService(draftMedia));
     }
+  }
+
+  /// Opens the editor on media that did not come from the camera, such as a
+  /// restored draft. The camera may already be running, started with the
+  /// app, and would keep running underneath the editor for as long as it is
+  /// open. It is closed, and the camera page counts as hidden until the
+  /// editor is left, so nothing starts it again in the meantime; the camera
+  /// page starts it itself once it shows again.
+  Future<void> _openEditor(MediaFileService mediaFileService) async {
+    if (!mounted) return;
+    _disableCameraTimer?.cancel();
+    setState(() => _editorOpen = true);
+    await _mainCameraController.closeCamera();
+    if (!mounted) return;
+    await context.navPush(
+      ShareImageEditorView(
+        mediaFileService: mediaFileService,
+        sharedFromGallery: true,
+      ),
+    );
+    if (mounted) setState(() => _editorOpen = false);
   }
 
   @override
@@ -453,7 +461,9 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               child: CameraPreviewControllerView(
                 mainController: _mainCameraController,
                 isVisible:
-                    ((1 - (_offsetRatio * 4) % 1) == 1) && _activePageIdx == 1,
+                    ((1 - (_offsetRatio * 4) % 1) == 1) &&
+                    _activePageIdx == 1 &&
+                    !_editorOpen,
               ),
             ),
           ),

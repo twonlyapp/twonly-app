@@ -32,6 +32,7 @@ message EncryptedContent {
   optional KeyVerificationProof          key_verification_proof          = 24;
   optional PasswordLessRecovery          passwordless_recovery           = 26;
   optional PasswordLessRecoveryHeartbeat passwordless_recovery_heartbeat = 27;
+  optional Story                         story                           = 30;
 
   message ErrorMessages {
     enum Type {
@@ -132,6 +133,17 @@ message EncryptedContent {
 
     optional bytes additional_message_data = 11;
     optional bool widget_only = 12;
+  }
+
+  // A story item. It carries no group ID: the receiver files it under its 1:1
+  // chat with the sender, keeps it for 24 hours after `media.timestamp`, and
+  // never shows it in that chat unless it is saved.
+  message Story {
+    Media media  = 1;
+    // Whether the sender woke the receiver for this item, which it does for
+    // the first story in 24 hours only. The receiver announces the story only
+    // when this is set, so a push and its notification never disagree.
+    bool  notify = 2;
   }
 
   message MediaUpdate {

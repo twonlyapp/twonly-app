@@ -259,6 +259,11 @@ pub struct UserConfig {
     #[serde(default = "defaults::true_value")]
     #[frb(non_final)]
     pub typing_indicators: bool,
+    /// Announce a contact's first story in 24 hours. Checked only on this
+    /// device, where the notification is created; senders always wake.
+    #[serde(default = "defaults::true_value")]
+    #[frb(non_final)]
+    pub story_notifications: bool,
     #[serde(default = "defaults::true_value")]
     #[frb(non_final)]
     pub show_restore_flame: bool,

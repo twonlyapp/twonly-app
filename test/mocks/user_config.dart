@@ -30,6 +30,7 @@ UserConfig testUserConfig({
   storeLocationInMemories: false,
   autoStoreAllSendUnlimitedMediaFiles: false,
   typingIndicators: true,
+  storyNotifications: true,
   showRestoreFlame: true,
   allowErrorTrackingViaSentry: false,
   screenLockEnabled: false,

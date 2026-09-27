@@ -6,13 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/recipient_status_row.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/message_history.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
@@ -164,38 +163,11 @@ class _MessageInfoViewState extends State<MessageInfoView> {
       }
 
       columns.add(
-        Padding(
+        RecipientStatusRow(
           key: ValueKey(groupMember.$1.contactId),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: [
-              AvatarIcon(
-                contactId: groupMember.$2.userId,
-                fontSize: 15,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      getContactDisplayName(groupMember.$2),
-                      style: const TextStyle(fontSize: 17),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                children: [
-                  Text(
-                    friendlyDateTime(context, actionAt),
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  Text(actionTypeText),
-                ],
-              ),
-            ],
-          ),
+          contact: groupMember.$2,
+          status: actionTypeText,
+          at: actionAt,
         ),
       );
     }

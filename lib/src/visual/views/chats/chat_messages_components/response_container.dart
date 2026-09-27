@@ -1,6 +1,8 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/daos/stories.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -80,7 +82,9 @@ class ResponseContainer extends StatelessWidget {
                     contact: quotedMessage?.senderId == null
                         ? null
                         : contactsById?[quotedMessage!.senderId],
-                    useSharedData: useSharedData,
+                    // A quote the loaded page does not hold, such as a story
+                    // the chat never lists, is looked up by the preview.
+                    useSharedData: useSharedData && quotedMessage != null,
                     showBorder: false,
                     showLeftBorder: false,
                   ),
@@ -169,6 +173,17 @@ class _ResponsePreviewState extends State<ResponsePreview> {
     if (mounted) setState(() {});
   }
 
+  /// Whether the quoted story can still be shown. Once it expired, or its
+  /// sender took it down, only the fact that it was a story remains.
+  bool get _storyAlive {
+    final message = _message;
+    if (message == null || !message.isStory) return false;
+    if (message.mediaStored) return true;
+    return message.mediaId != null &&
+        _mediaService != null &&
+        clock.now().isBefore(message.createdAt.add(storyLifetime));
+  }
+
   @override
   Widget build(BuildContext context) {
     String? subtitle;
@@ -219,21 +234,28 @@ class _ResponsePreviewState extends State<ResponsePreview> {
         _username = context.lang.you;
       }
 
+      if (_message!.isStory) {
+        subtitle = _storyAlive ? context.lang.story : context.lang.storyExpired;
+      }
+
       color = getMessageColor(_message!.senderId != null);
     }
 
     final hasImage =
         _message != null &&
-        _message!.mediaStored &&
+        (_message!.mediaStored || _storyAlive) &&
         _mediaService != null &&
         _mediaService!.mediaFile.type != MediaType.audio;
 
     Widget? imageWidget;
     if (hasImage) {
       final isVideo = _mediaService!.mediaFile.type == MediaType.video;
+      // A story nobody saved is still in its temporary file.
       final pathToCheck = isVideo
           ? _mediaService!.thumbnailPath
-          : _mediaService!.storedPath;
+          : _message!.mediaStored
+          ? _mediaService!.storedPath
+          : _mediaService!.tempPath;
       imageWidget = Container(
         height: 40,
         width: 40,

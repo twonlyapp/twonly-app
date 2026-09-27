@@ -264,6 +264,7 @@ impl MessageService {
         )
         .execute(&mut *t)
         .await?;
+        Group::record_text_or_media(&mut t, &group_id, timestamp / 1000).await?;
         // The commit hook installed on the connection publishes `groups` and
         // `messages` on its own, so the chat list is already on its way.
         t.commit().await?;

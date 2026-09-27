@@ -26,6 +26,7 @@ Message buildMessage(List<int>? payload) => Message(
   mediaReopened: false,
   isDeletedFromSender: false,
   isWidgetMedia: false,
+  isStory: false,
   createdAt: DateTime.now(),
 );
 

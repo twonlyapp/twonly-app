@@ -7,6 +7,7 @@ import '../api/server/prekeys.dart';
 import '../frb_generated.dart';
 import '../services/media_upload.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'stories.dart';
 
 // These functions are ignored because they are not marked as `pub`: `api_result`, `empty_api_response`, `from_rust_state`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ApiConfig`, `ServerResult`
@@ -739,17 +740,20 @@ class RustApi {
     onlySendIfNoReceiptsAreOpen: onlySendIfNoReceiptsAreOpen,
   );
 
-  /// Creates one outgoing message per selected group and starts the upload.
+  /// Creates one outgoing message per selected group, plus the story rows
+  /// for `story_audience`, and starts the upload they all share.
   static Future<void> sendMediaToGroups({
     required String mediaId,
     required List<String> groupIds,
     Uint8List? additionalMessageData,
     required bool widgetOnly,
+    StoryAudience? storyAudience,
   }) => RustLib.instance.api.crateBridgeApiRustApiSendMediaToGroups(
     mediaId: mediaId,
     groupIds: groupIds,
     additionalMessageData: additionalMessageData,
     widgetOnly: widgetOnly,
+    storyAudience: storyAudience,
   );
 
   static Future<void> sendQueuedMessage({required String receiptId}) => RustLib

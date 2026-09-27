@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM messages\n               WHERE message_id = ? AND sender_id IS NULL AND is_story = 1\n           ) AS \"own_story!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "own_story!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0e41d6bc329927e36f9f47028c8fed85d00a117be9b731f6641f0d0bb6ae210d"
+}

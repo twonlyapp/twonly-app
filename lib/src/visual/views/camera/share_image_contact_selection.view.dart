@@ -4,24 +4,50 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/core/bridge/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/stories.dart' as stories;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_request_badge.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
-import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/headline.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/best_friends_selector.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/contact_group_shortcut_row.comp.dart';
+import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/story_target_selector.comp.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/background.layer.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
+
+bool canSendSharedMedia({
+  required bool mediaReady,
+  required bool sending,
+  required bool hasChatRecipients,
+  required bool storyPossible,
+  required bool hasStoryTarget,
+  required int? storyAudienceSize,
+}) {
+  return mediaReady &&
+      !sending &&
+      (hasChatRecipients ||
+          (storyPossible && hasStoryTarget && (storyAudienceSize ?? 0) > 0));
+}
+
+/// Every chat a send reaches: those picked directly and, with a story, the
+/// 1:1 chat of everybody the story goes to. Someone picked directly who also
+/// gets the story counts once.
+int sharedMediaRecipientCount({
+  required Set<String> selectedGroupIds,
+  required Set<String>? storyAudienceChats,
+}) => {...selectedGroupIds, ...?storyAudienceChats}.length;
 
 class ShareImageView extends StatefulWidget {
   const ShareImageView({
@@ -31,6 +57,7 @@ class ShareImageView extends StatefulWidget {
     required this.mediaFileService,
     required this.additionalData,
     required this.sendToWidget,
+    required this.storyTarget,
     super.key,
   });
   final HashSet<String> selectedGroupIds;
@@ -39,6 +66,7 @@ class ShareImageView extends StatefulWidget {
   final MediaFileService mediaFileService;
   final AdditionalMessageData? additionalData;
   final bool sendToWidget;
+  final StoryTarget storyTarget;
 
   @override
   State<ShareImageView> createState() => _ShareImageView();
@@ -57,6 +85,7 @@ class _ShareImageView extends State<ShareImageView> {
   late StreamSubscription<List<Group>> allGroupSub;
   String lastQuery = '';
   int _updateGroupsGeneration = 0;
+  Set<String>? _storyAudienceChats;
 
   @override
   void initState() {
@@ -96,6 +125,7 @@ class _ShareImageView extends State<ShareImageView> {
   @override
   void dispose() {
     unawaited(allGroupSub.cancel());
+    searchUserName.dispose();
     super.dispose();
   }
 
@@ -172,6 +202,58 @@ class _ShareImageView extends State<ShareImageView> {
     setState(() {});
   }
 
+  /// A story replays for everybody until it expires, so it takes neither a
+  /// twonly-protected send nor anything but an image or video.
+  bool get _storyPossible {
+    final media = widget.mediaFileService.mediaFile;
+    return !media.requiresAuthentication &&
+        (media.type == MediaType.image || media.type == MediaType.video);
+  }
+
+  int get _recipientCount => sharedMediaRecipientCount(
+    selectedGroupIds: widget.selectedGroupIds,
+    storyAudienceChats: _storyPossible && !widget.storyTarget.isEmpty
+        ? _storyAudienceChats
+        : null,
+  );
+
+  Future<void> _send() async {
+    setState(() {
+      sendingImage = true;
+    });
+    final story = _storyPossible ? widget.storyTarget.toAudience() : null;
+    // in case mediaStoreFutureReady is ready, the image is stored in the originalPath
+    final send = RustApi.sendMediaToGroups(
+      mediaId: widget.mediaFileService.mediaFile.mediaId,
+      groupIds: widget.selectedGroupIds.toList(),
+      additionalMessageData: widget.additionalData?.writeToBuffer(),
+      widgetOnly: widget.sendToWidget,
+      storyAudience: story,
+    );
+    if (story == null) {
+      unawaitedRustCall(send, 'sendMediaToGroups');
+    } else {
+      // A story can be refused, most likely for reaching more people than one
+      // send may, and the user has to hear about that before leaving here.
+      try {
+        await send;
+      } catch (e) {
+        Log.error('sendMediaToGroups with a story failed: $e');
+        if (mounted) {
+          setState(() => sendingImage = false);
+          showSnackbar(
+            context,
+            context.lang.shareImageStoryFailed(stories.maxMediaRecipients()),
+          );
+        }
+        return;
+      }
+    }
+    if (mounted) {
+      Navigator.pop(context, true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -195,22 +277,35 @@ class _ShareImageView extends State<ShareImageView> {
                 const EmptyChatListComp()
               else ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: TextField(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: MyInput(
+                    controller: searchUserName,
+                    dense: true,
+                    fontWeight: FontWeight.normal,
+                    hintText: context.lang.shareImageSearchAllContacts,
+                    prefixIcon: const Icon(Icons.search, size: 20),
                     onChanged: _filterUsers,
-                    decoration: getInputDecoration(
-                      context,
-                      context.lang.shareImageSearchAllContacts,
-                    ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                if (!widget.sendToWidget)
+                const SizedBox(height: 12),
+                if (!widget.sendToWidget) ...[
                   ContactGroupShortcutRow(
                     selectedGroupIds: widget.selectedGroupIds,
                     updateSelectedGroupIds: updateSelectedGroupIds,
                   ),
-                if (_pinnedContacts.isNotEmpty) const SizedBox(height: 10),
+                  const SizedBox(height: 10),
+                  StoryTargetSelector(
+                    target: widget.storyTarget,
+                    enabled: _storyPossible,
+                    onChanged: () => setState(() {}),
+                    onAudienceChanged: (chats) {
+                      if (!mounted) return;
+                      setState(() => _storyAudienceChats = chats);
+                    },
+                  ),
+                  // The next section's heading brings its own space.
+                  const SizedBox(height: 4),
+                ],
                 BestFriendsSelector(
                   groups: _pinnedContacts,
                   selectedGroupIds: widget.selectedGroupIds,
@@ -220,7 +315,7 @@ class _ShareImageView extends State<ShareImageView> {
                       !widget.sendToWidget &&
                       !widget.mediaFileService.mediaFile.requiresAuthentication,
                 ),
-                const SizedBox(height: 10),
+                if (_pinnedContacts.isNotEmpty) const SizedBox(height: 10),
                 BestFriendsSelector(
                   groups: _bestFriends,
                   selectedGroupIds: widget.selectedGroupIds,
@@ -230,7 +325,7 @@ class _ShareImageView extends State<ShareImageView> {
                       !widget.sendToWidget &&
                       !widget.mediaFileService.mediaFile.requiresAuthentication,
                 ),
-                const SizedBox(height: 10),
+                if (_bestFriends.isNotEmpty) const SizedBox(height: 10),
                 if (_otherUsers.isNotEmpty)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -319,32 +414,17 @@ class _ShareImageView extends State<ShareImageView> {
                     MyButton(
                       variant: MyButtonVariant.primaryMiddle,
                       onPressed:
-                          !mediaStoreFutureReady ||
-                              widget.selectedGroupIds.isEmpty ||
-                              sendingImage
-                          ? null
-                          : () async {
-                              setState(() {
-                                sendingImage = true;
-                              });
-
-                              // in case mediaStoreFutureReady is ready, the image is stored in the originalPath
-                              unawaitedRustCall(
-                                RustApi.sendMediaToGroups(
-                                  mediaId:
-                                      widget.mediaFileService.mediaFile.mediaId,
-                                  groupIds: widget.selectedGroupIds.toList(),
-                                  additionalMessageData: widget.additionalData
-                                      ?.writeToBuffer(),
-                                  widgetOnly: widget.sendToWidget,
-                                ),
-                                'sendMediaToGroups',
-                              );
-
-                              if (context.mounted) {
-                                Navigator.pop(context, true);
-                              }
-                            },
+                          canSendSharedMedia(
+                            mediaReady: mediaStoreFutureReady,
+                            sending: sendingImage,
+                            hasChatRecipients:
+                                widget.selectedGroupIds.isNotEmpty,
+                            storyPossible: _storyPossible,
+                            hasStoryTarget: !widget.storyTarget.isEmpty,
+                            storyAudienceSize: _storyAudienceChats?.length,
+                          )
+                          ? _send
+                          : null,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -366,7 +446,7 @@ class _ShareImageView extends State<ShareImageView> {
                             ),
                           const SizedBox(width: 8),
                           Text(
-                            '${context.lang.shareImagedEditorSendImage} (${widget.selectedGroupIds.length})',
+                            '${context.lang.shareImagedEditorSendImage} ($_recipientCount)',
                           ),
                         ],
                       ),

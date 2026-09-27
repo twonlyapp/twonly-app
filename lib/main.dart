@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
+import 'package:twonly/core/bridge/stories.dart' as stories;
 import 'package:twonly/core/bridge/wrapper/app_database.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/core/frb_generated.dart';
@@ -290,6 +291,7 @@ Future<void> postStartupTasks() async {
   unawaited(MemoriesService.prewarmCache());
 
   // 1. Immediate background cleanup (Non-blocking for UI)
+  unawaitedRustCall(stories.purgeExpiredStories(), 'purgeExpiredStories');
   await twonlyDB.messagesDao.purgeMessageTable();
   unawaited(twonlyDB.receiptsDao.purgeReceivedReceipts());
   unawaited(MediaFileService.purgeTempFolder());

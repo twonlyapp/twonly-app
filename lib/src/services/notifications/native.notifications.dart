@@ -37,11 +37,16 @@ class NativeNotificationService {
   /// Emits metadata for every native notification tapped while the app runs.
   static Stream<NativeNotificationTap> get taps => _taps.stream;
 
-  /// Text messages (including quoted replies) and the announcements an app
-  /// writes into a chat open their conversation. Media and every other
-  /// notification kind stay on the chat overview.
+  /// Text messages (including quoted replies, and replies and reactions to
+  /// the user's story) and the announcements an app writes into a chat open
+  /// their conversation. Media and every other notification kind stay on the
+  /// chat overview.
   static bool opensConversation(String? kind) =>
-      kind == 'text' || kind == 'response' || kind == 'webxdc';
+      kind == 'text' ||
+      kind == 'response' ||
+      kind == 'webxdc' ||
+      kind == 'story_reply' ||
+      kind == 'story_reaction';
 
   static void init() {
     _startBadgeSync();

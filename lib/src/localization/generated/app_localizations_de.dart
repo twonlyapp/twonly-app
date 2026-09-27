@@ -2851,4 +2851,98 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get webxdcExternalLinkBody =>
       'Dieser Link öffnet sich außerhalb von twonly in deinem Browser:';
+
+  @override
+  String get notificationStory => 'hat eine Story gepostet.';
+
+  @override
+  String get settingsNotifyStories => 'Story-Benachrichtigungen';
+
+  @override
+  String get settingsNotifyStoriesSubtitle =>
+      'Werde über die erste Story des Tages von Kontakten benachrichtigt, mit denen du in den letzten zwei Wochen geschrieben hast.';
+
+  @override
+  String get contactGroupShareStories => 'Stories teilen';
+
+  @override
+  String get contactGroupShareStoriesSubtitle =>
+      'Biete diese Gruppe als Publikum an, wenn du eine Story postest.';
+
+  @override
+  String get contactGroupStoriesFeature => 'Stories';
+
+  @override
+  String get story => 'Story';
+
+  @override
+  String get storyExpired => 'Story abgelaufen';
+
+  @override
+  String get storyMine => 'Meine Story';
+
+  @override
+  String get storyDeleteTitle => 'Story löschen?';
+
+  @override
+  String get storyDeleteBody => 'Dadurch wird sie aus deiner Story entfernt.';
+
+  @override
+  String get storyDelete => 'Löschen';
+
+  @override
+  String get storyDeleteFailed =>
+      'Konnte nicht gelöscht werden. Versuche es gleich noch einmal.';
+
+  @override
+  String get shareImageStory => 'Story';
+
+  @override
+  String shareImageStoryAudience(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Erreicht $count Kontakte',
+      one: 'Erreicht 1 Kontakt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareImageStoryUnavailable =>
+      'Mit twonly geschützte Medien können nicht als Story gepostet werden.';
+
+  @override
+  String get shareImageStoryAll => 'Alle Kontakte';
+
+  @override
+  String get shareImageStoryNewGroup => 'Neue Story-Gruppe';
+
+  @override
+  String shareImageStoryFailed(int max) {
+    return 'Die Story konnte nicht gepostet werden. Ein Versand erreicht höchstens $max Personen.';
+  }
+
+  @override
+  String get notificationStoryReply => 'hat auf deine Story geantwortet.';
+
+  @override
+  String notificationStoryReaction(Object reaction) {
+    return 'hat mit $reaction auf deine Story reagiert.';
+  }
+
+  @override
+  String get notificationStoredStory => 'hat deine Story gespeichert.';
+
+  @override
+  String storyViews(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufrufe',
+      one: '1 Aufruf',
+      zero: 'Noch keine Aufrufe',
+    );
+    return '$_temp0';
+  }
 }

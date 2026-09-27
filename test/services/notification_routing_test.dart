@@ -7,6 +7,26 @@ void main() {
     expect(NativeNotificationService.opensConversation('response'), isTrue);
   });
 
+  test('replies and reactions to the own story open the conversation', () {
+    for (final kind in ['story_reply', 'story_reaction']) {
+      expect(
+        NativeNotificationService.opensConversation(kind),
+        isTrue,
+        reason: kind,
+      );
+    }
+  });
+
+  test('stories and saves of them stay on the chat overview', () {
+    for (final kind in ['story', 'stored_story']) {
+      expect(
+        NativeNotificationService.opensConversation(kind),
+        isFalse,
+        reason: kind,
+      );
+    }
+  });
+
   test('media notifications stay on the chat overview', () {
     for (final kind in ['twonly', 'image', 'video', 'audio']) {
       expect(

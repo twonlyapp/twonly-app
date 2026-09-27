@@ -14,6 +14,7 @@ use crate::services::contacts::ContactService;
 use crate::services::media_upload::{MediaSizeReport, MediaUploadService};
 use crate::services::messages::MessageService;
 use crate::services::outbox_dispatch::OutboxDispatchService;
+use crate::services::stories::StoryAudience;
 use crate::user_config::UserConfig;
 use flutter_rust_bridge::frb;
 use std::collections::HashMap;
@@ -223,16 +224,24 @@ impl RustApi {
         crate::services::location_metadata::prewarm(ctx)
     }
 
-    /// Creates one outgoing message per selected group and starts the upload.
+    /// Creates one outgoing message per selected group, plus the story rows
+    /// for `story_audience`, and starts the upload they all share.
     pub async fn send_media_to_groups(
         media_id: String,
         group_ids: Vec<String>,
         additional_message_data: Option<Vec<u8>>,
         widget_only: bool,
+        story_audience: Option<StoryAudience>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
         MediaUploadService::new(ctx)
-            .insert_into_messages(media_id, group_ids, additional_message_data, widget_only)
+            .insert_into_messages(
+                media_id,
+                group_ids,
+                additional_message_data,
+                widget_only,
+                story_audience,
+            )
             .await
     }
 

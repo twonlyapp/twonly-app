@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM messages WHERE quotes_message_id = ?) AS \"quoted!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "quoted!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4add98e13f0f12e3d852e0b23183d57a2501ebf7df4e3daecef0c43e9ec5f0ab"
+}

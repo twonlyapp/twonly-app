@@ -12,6 +12,7 @@ class ContactGroups extends Table {
   BoolColumn get showAsShortcut =>
       boolean().withDefault(const Constant(false))();
   BoolColumn get showAsLabel => boolean().withDefault(const Constant(true))();
+  BoolColumn get shareStories => boolean().withDefault(const Constant(false))();
   IntColumn get usageCounter => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

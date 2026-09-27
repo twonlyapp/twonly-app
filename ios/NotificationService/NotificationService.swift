@@ -107,12 +107,16 @@ final class NotificationService: UNNotificationServiceExtension {
         WidgetCenter.shared.reloadAllTimelines()
       }
       guard let batch = response.batch, !batch.additions.isEmpty else {
-        // Nothing is waiting on screen for this wake-up — widget-only media is
-        // the ordinary case — so the deferred work runs while the extension is
-        // still guaranteed its time, rather than after the content handler has
-        // made it eligible for termination.
+        // Nothing is waiting on screen for this wake-up — widget-only media, a
+        // story the user muted or one that already expired — so the deferred
+        // work runs while the extension is still guaranteed its time, rather
+        // than after the content handler has made it eligible for termination.
         Self.finalizeRuntime()
-        self.deliverFallback(reason: "notification worker returned no messages")
+        // The worker ran and decided there is nothing to announce. With the
+        // notification filtering entitlement, empty content drops the push
+        // instead of showing its "You got a new message" placeholder.
+        NSLog("Twonly wake-up had nothing to announce; suppressing the alert")
+        self.finish(with: UNNotificationContent())
         return
       }
       self.render(batch: batch, original: request.content)

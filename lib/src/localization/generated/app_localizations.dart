@@ -4857,6 +4857,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This link opens outside twonly, in your browser:'**
   String get webxdcExternalLinkBody;
+
+  /// No description provided for @notificationStory.
+  ///
+  /// In en, this message translates to:
+  /// **'posted a story.'**
+  String get notificationStory;
+
+  /// No description provided for @settingsNotifyStories.
+  ///
+  /// In en, this message translates to:
+  /// **'Story notifications'**
+  String get settingsNotifyStories;
+
+  /// No description provided for @settingsNotifyStoriesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Be notified of the first story of the day from contacts you\'ve written with in the last two weeks.'**
+  String get settingsNotifyStoriesSubtitle;
+
+  /// No description provided for @contactGroupShareStories.
+  ///
+  /// In en, this message translates to:
+  /// **'Share stories'**
+  String get contactGroupShareStories;
+
+  /// No description provided for @contactGroupShareStoriesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer this group as an audience when you post a story.'**
+  String get contactGroupShareStoriesSubtitle;
+
+  /// No description provided for @contactGroupStoriesFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories'**
+  String get contactGroupStoriesFeature;
+
+  /// No description provided for @story.
+  ///
+  /// In en, this message translates to:
+  /// **'Story'**
+  String get story;
+
+  /// No description provided for @storyExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Story expired'**
+  String get storyExpired;
+
+  /// No description provided for @storyMine.
+  ///
+  /// In en, this message translates to:
+  /// **'My story'**
+  String get storyMine;
+
+  /// No description provided for @storyDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete story?'**
+  String get storyDeleteTitle;
+
+  /// No description provided for @storyDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes it from your story.'**
+  String get storyDeleteBody;
+
+  /// No description provided for @storyDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get storyDelete;
+
+  /// No description provided for @storyDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete it. Try again in a moment.'**
+  String get storyDeleteFailed;
+
+  /// No description provided for @shareImageStory.
+  ///
+  /// In en, this message translates to:
+  /// **'Story'**
+  String get shareImageStory;
+
+  /// No description provided for @shareImageStoryAudience.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Reaches 1 contact} other{Reaches {count} contacts}}'**
+  String shareImageStoryAudience(int count);
+
+  /// No description provided for @shareImageStoryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly-protected media can\'t be posted as a story.'**
+  String get shareImageStoryUnavailable;
+
+  /// No description provided for @shareImageStoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All contacts'**
+  String get shareImageStoryAll;
+
+  /// No description provided for @shareImageStoryNewGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New story group'**
+  String get shareImageStoryNewGroup;
+
+  /// No description provided for @shareImageStoryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not post the story. One send can reach at most {max} people.'**
+  String shareImageStoryFailed(int max);
+
+  /// No description provided for @notificationStoryReply.
+  ///
+  /// In en, this message translates to:
+  /// **'has replied to your story.'**
+  String get notificationStoryReply;
+
+  /// No description provided for @notificationStoryReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted with {reaction} to your story.'**
+  String notificationStoryReaction(Object reaction);
+
+  /// No description provided for @notificationStoredStory.
+  ///
+  /// In en, this message translates to:
+  /// **'has saved your story.'**
+  String get notificationStoredStory;
+
+  /// No description provided for @storyViews.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No views yet} =1{1 view} other{{count} views}}'**
+  String storyViews(int count);
 }
 
 class _AppLocalizationsDelegate

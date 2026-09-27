@@ -37,6 +37,7 @@ pub(crate) async fn handle_text_message(
         .await?;
 
     Group::increase_last_message_exchange(t, group_id, timestamp).await?;
+    Group::record_text_or_media(t, group_id, timestamp).await?;
 
     Ok(())
 }
@@ -72,6 +73,17 @@ pub(crate) async fn handle_message_update(
                     .remove_files_if_deleted(t, &media.media_id, &media.media_type)
                     .await?;
             }
+
+            // A story taken down before it was seen should not stay announced.
+            let cleared_at = crate::utils::current_time().timestamp();
+            sqlx::query!(
+                r#"UPDATE notification_outbox SET cleared_at = ?
+                   WHERE message_id = ? AND kind = 'story' AND cleared_at IS NULL"#,
+                cleared_at,
+                update.sender_message_id,
+            )
+            .execute(&mut **t)
+            .await?;
         }
         Type::EditText => {
             Message::edit_text(

@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT type AS media_type, stored, is_draft_media FROM media_files\n               WHERE media_id = ?\n                 AND NOT EXISTS (SELECT 1 FROM messages WHERE media_id = media_files.media_id)",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_type",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "stored",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "stored"
+          }
+        }
+      },
+      {
+        "name": "is_draft_media",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "is_draft_media"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e2f68ef88181ad5b8f35a9be2d56ed2c3f4e0cac87d58e18fc27704a4d7688dc"
+}

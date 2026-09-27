@@ -3,7 +3,7 @@
  *
  */
 
-use super::handle_encrypted;
+use super::{handle_encrypted, Delivery};
 use crate::api::proto::client::{self as proto};
 use crate::api::Server;
 use crate::bridge::api::ServerResult;
@@ -167,16 +167,16 @@ pub(crate) async fn process_encrypted_or_queue_error(
     from_user_id: i64,
     receipt_id: &str,
     content: proto::EncryptedContent,
-) -> Result<Option<String>> {
+) -> Result<Delivery> {
     let group_id = content.group_id.clone();
 
     match handle_encrypted(ctx, t, from_user_id, receipt_id, content).await {
-        Ok(()) => Ok(None),
+        Ok(delivery) => Ok(delivery),
         Err(error) => {
             let description = error.to_string();
             if description.contains("group join arrived before") {
                 queue_retry_control(t, from_user_id, receipt_id).await?;
-                return Ok(Some(receipt_id.to_owned()));
+                return Ok(Delivery::Withhold);
             }
 
             let error_type = if description.contains("not a member") {
@@ -221,7 +221,7 @@ pub(crate) async fn process_encrypted_or_queue_error(
             .execute(&mut **t)
             .await?;
 
-            Ok(Some(outgoing_receipt_id))
+            Ok(Delivery::Withhold)
         }
     }
 }

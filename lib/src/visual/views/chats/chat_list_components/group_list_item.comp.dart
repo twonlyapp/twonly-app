@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
+import 'package:twonly/src/database/daos/stories.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -15,11 +17,13 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
+import 'package:twonly/src/visual/components/story_preview.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/group.context_menu.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/last_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/typing_indicator_subtitle.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_send_state_icon.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expiry_timer.dart';
 
 class GroupListItemComp extends StatefulWidget {
   const GroupListItemComp({
@@ -33,6 +37,7 @@ class GroupListItemComp extends StatefulWidget {
     this.useSharedSummary = false,
     this.verificationStatus,
     this.contactGroups = const [],
+    this.storyItems,
     super.key,
   });
   final Group group;
@@ -45,6 +50,9 @@ class GroupListItemComp extends StatefulWidget {
   final bool useSharedSummary;
   final VerificationStatus? verificationStatus;
   final List<ContactGroup> contactGroups;
+
+  /// The contact's story items in a direct chat. Null subscribes itself.
+  final List<StoryItem>? storyItems;
 
   @override
   State<GroupListItemComp> createState() => _UserListItem();
@@ -63,6 +71,9 @@ class _UserListItem extends State<GroupListItemComp> {
   StreamSubscription<List<MediaFile>>? _lastMediaFilesStream;
   Contact? _directContact;
   StreamSubscription<List<Contact>>? _directContactStream;
+  List<StoryItem> _storyItems = const [];
+  StreamSubscription<List<StoryItem>>? _storyItemsStream;
+  final StoryExpiryTimer _storyExpiry = StoryExpiryTimer();
 
   List<Message> _previewMessages = [];
   final List<MediaFile> _previewMediaFiles = [];
@@ -75,6 +86,8 @@ class _UserListItem extends State<GroupListItemComp> {
     _applyContacts();
     _lastReaction = widget.lastReaction;
     _lastMessage = widget.lastMessage;
+    _storyItems = widget.storyItems ?? const [];
+    _scheduleStoryExpiry();
     _applyMediaFiles();
     if (widget.useSharedSummary) {
       _updateState(widget.lastMessage, widget.unopenedMessages ?? const []);
@@ -95,6 +108,11 @@ class _UserListItem extends State<GroupListItemComp> {
       _updateState(widget.lastMessage, widget.unopenedMessages ?? const []);
     }
     if (widget.mediaFiles != oldWidget.mediaFiles) _applyMediaFiles();
+    if (widget.storyItems != null &&
+        widget.storyItems != oldWidget.storyItems) {
+      _storyItems = widget.storyItems!;
+      _scheduleStoryExpiry();
+    }
   }
 
   void _applyContacts() {
@@ -120,10 +138,22 @@ class _UserListItem extends State<GroupListItemComp> {
     _lastMessageStream?.cancel();
     _lastMediaFilesStream?.cancel();
     _directContactStream?.cancel();
+    _storyItemsStream?.cancel();
+    _storyExpiry.cancel();
     super.dispose();
   }
 
   Future<void> initStreams() async {
+    if (widget.storyItems == null && widget.group.isDirectChat) {
+      _storyItemsStream = twonlyDB.storiesDao
+          .watchReceivedStoryItemsForGroup(widget.group.groupId)
+          .listen((items) {
+            if (!mounted) return;
+            setState(() => _storyItems = items);
+            _scheduleStoryExpiry();
+          });
+    }
+
     if (!widget.useSharedSummary) {
       final lastMsgStream = await twonlyDB.messagesDao.watchLastMessage(
         widget.group.groupId,
@@ -319,6 +349,72 @@ class _UserListItem extends State<GroupListItemComp> {
     );
   }
 
+  List<StoryItem> get _activeStoryItems {
+    final now = clock.now();
+    return _storyItems.where((item) => item.isActiveAt(now)).toList();
+  }
+
+  /// Redraws the row when its oldest story item runs out, so the preview
+  /// does not outlive the story.
+  void _scheduleStoryExpiry() {
+    final oldest = _activeStoryItems.firstOrNull;
+    if (oldest == null) {
+      _storyExpiry.cancel();
+      return;
+    }
+    _storyExpiry.schedule(
+      postedAt: oldest.postedAt,
+      now: clock.now(),
+      onExpired: () {
+        if (!mounted) return;
+        setState(() {});
+        _scheduleStoryExpiry();
+      },
+    );
+  }
+
+  /// While the contact has a story, it stands in for their avatar: the item
+  /// that plays first, with the avatar small in its corner. Once all of it
+  /// has been seen it is drawn softer.
+  Widget _avatar() {
+    final avatar = AvatarIcon(group: widget.group, contacts: widget.contacts);
+    if (!widget.group.isDirectChat) return avatar;
+    final active = _activeStoryItems;
+    if (active.isEmpty) return avatar;
+    final unseen = active.where((item) => !item.seen);
+    final shown = unseen.firstOrNull ?? active.last;
+    return StoryPreview(
+      mediaFile: shown.mediaFile,
+      width: 40,
+      height: 40,
+      faded: unseen.isEmpty,
+      badge: AvatarIcon(
+        group: widget.group,
+        contacts: widget.contacts,
+        fontSize: 9,
+      ),
+    );
+  }
+
+  /// A contact's avatar opens their story while they have one, and their
+  /// profile otherwise.
+  Future<void> _onAvatarTap() async {
+    if (!widget.group.isDirectChat) {
+      await context.push(Routes.profileGroup(widget.group.groupId));
+      return;
+    }
+    final active = _activeStoryItems;
+    if (active.isNotEmpty) {
+      await context.push(Routes.chatsStory(active.first.senderId));
+      return;
+    }
+    final contacts = await twonlyDB.groupsDao.getGroupContact(
+      widget.group.groupId,
+    );
+    if (!mounted || contacts.isEmpty) return;
+    await context.push(Routes.profileContact(contacts.first.userId));
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<void>(
@@ -414,21 +510,8 @@ class _UserListItem extends State<GroupListItemComp> {
                     ],
                   ),
             leading: GestureDetector(
-              onTap: () async {
-                if (widget.group.isDirectChat) {
-                  final contacts = await twonlyDB.groupsDao.getGroupContact(
-                    widget.group.groupId,
-                  );
-                  if (!context.mounted) return;
-                  await context.push(
-                    Routes.profileContact(contacts.first.userId),
-                  );
-                  return;
-                } else {
-                  await context.push(Routes.profileGroup(widget.group.groupId));
-                }
-              },
-              child: AvatarIcon(group: widget.group, contacts: widget.contacts),
+              onTap: _onAvatarTap,
+              child: _avatar(),
             ),
             trailing: (widget.group.leftGroup || _receiverDeletedAccount)
                 ? null

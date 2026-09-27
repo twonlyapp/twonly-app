@@ -9,6 +9,7 @@ import 'bridge/api.dart';
 import 'bridge/callbacks.dart';
 import 'bridge/groups.dart';
 import 'bridge/logging.dart';
+import 'bridge/stories.dart';
 import 'bridge/user_config.dart';
 import 'bridge/webxdc.dart';
 import 'bridge/wrapper.dart';
@@ -119,6 +120,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PasswordlessRecoveryConfig
   dco_decode_box_autoadd_passwordless_recovery_config(dynamic raw);
+
+  @protected
+  StoryAudience dco_decode_box_autoadd_story_audience(dynamic raw);
 
   @protected
   TwonlySafeBackup dco_decode_box_autoadd_twonly_safe_backup(dynamic raw);
@@ -299,6 +303,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_opt_box_autoadd_passwordless_recovery_config(dynamic raw);
 
   @protected
+  StoryAudience? dco_decode_opt_box_autoadd_story_audience(dynamic raw);
+
+  @protected
   TwonlySafeBackup? dco_decode_opt_box_autoadd_twonly_safe_backup(dynamic raw);
 
   @protected
@@ -375,6 +382,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SqlValue dco_decode_sql_value(dynamic raw);
+
+  @protected
+  StoryAudience dco_decode_story_audience(dynamic raw);
 
   @protected
   ThemeMode dco_decode_theme_mode(dynamic raw);
@@ -518,6 +528,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PasswordlessRecoveryConfig
   sse_decode_box_autoadd_passwordless_recovery_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  StoryAudience sse_decode_box_autoadd_story_audience(
     SseDeserializer deserializer,
   );
 
@@ -734,6 +749,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  StoryAudience? sse_decode_opt_box_autoadd_story_audience(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   TwonlySafeBackup? sse_decode_opt_box_autoadd_twonly_safe_backup(
     SseDeserializer deserializer,
   );
@@ -826,6 +846,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SqlValue sse_decode_sql_value(SseDeserializer deserializer);
+
+  @protected
+  StoryAudience sse_decode_story_audience(SseDeserializer deserializer);
 
   @protected
   ThemeMode sse_decode_theme_mode(SseDeserializer deserializer);
@@ -1010,6 +1033,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_passwordless_recovery_config(
     PasswordlessRecoveryConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_story_audience(
+    StoryAudience self,
     SseSerializer serializer,
   );
 
@@ -1281,6 +1310,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_story_audience(
+    StoryAudience? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_twonly_safe_backup(
     TwonlySafeBackup? self,
     SseSerializer serializer,
@@ -1396,6 +1431,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_sql_value(SqlValue self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_story_audience(StoryAudience self, SseSerializer serializer);
 
   @protected
   void sse_encode_theme_mode(ThemeMode self, SseSerializer serializer);

@@ -373,12 +373,15 @@ class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
     $core.String? text,
     $fixnum.Int64? timestamp,
     $core.String? quoteMessageId,
+    $core.List<$core.int>? additionalMessageData,
   }) {
     final result = create();
     if (senderMessageId != null) result.senderMessageId = senderMessageId;
     if (text != null) result.text = text;
     if (timestamp != null) result.timestamp = timestamp;
     if (quoteMessageId != null) result.quoteMessageId = quoteMessageId;
+    if (additionalMessageData != null)
+      result.additionalMessageData = additionalMessageData;
     return result;
   }
 
@@ -398,6 +401,8 @@ class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'text')
     ..aInt64(3, _omitFieldNames ? '' : 'timestamp')
     ..aOS(4, _omitFieldNames ? '' : 'quoteMessageId')
+    ..a<$core.List<$core.int>>(
+        5, _omitFieldNames ? '' : 'additionalMessageData', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -457,6 +462,18 @@ class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
   $core.bool hasQuoteMessageId() => $_has(3);
   @$pb.TagNumber(4)
   void clearQuoteMessageId() => $_clearField(4);
+
+  /// Carries where the text came from when it was not typed by the sender --
+  /// today, the webxdc app that produced it.
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get additionalMessageData => $_getN(4);
+  @$pb.TagNumber(5)
+  set additionalMessageData($core.List<$core.int> value) =>
+      $_setBytes(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasAdditionalMessageData() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearAdditionalMessageData() => $_clearField(5);
 }
 
 class EncryptedContent_AdditionalDataMessage extends $pb.GeneratedMessage {
@@ -465,6 +482,7 @@ class EncryptedContent_AdditionalDataMessage extends $pb.GeneratedMessage {
     $fixnum.Int64? timestamp,
     $core.String? type,
     $core.List<$core.int>? additionalMessageData,
+    $core.bool? hidden,
   }) {
     final result = create();
     if (senderMessageId != null) result.senderMessageId = senderMessageId;
@@ -472,6 +490,7 @@ class EncryptedContent_AdditionalDataMessage extends $pb.GeneratedMessage {
     if (type != null) result.type = type;
     if (additionalMessageData != null)
       result.additionalMessageData = additionalMessageData;
+    if (hidden != null) result.hidden = hidden;
     return result;
   }
 
@@ -493,6 +512,7 @@ class EncryptedContent_AdditionalDataMessage extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'type')
     ..a<$core.List<$core.int>>(
         4, _omitFieldNames ? '' : 'additionalMessageData', $pb.PbFieldType.OY)
+    ..aOB(5, _omitFieldNames ? '' : 'hidden')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -554,6 +574,22 @@ class EncryptedContent_AdditionalDataMessage extends $pb.GeneratedMessage {
   $core.bool hasAdditionalMessageData() => $_has(3);
   @$pb.TagNumber(4)
   void clearAdditionalMessageData() => $_clearField(4);
+
+  /// State a feature exchanges rather than something a person sent. A hidden
+  /// message leaves no row in `messages`, so it never appears in a chat, and
+  /// it neither raises a notification nor wakes the receiver.
+  ///
+  /// The one exception is a webxdc update carrying an `info`: the state stays
+  /// hidden, but the announcement in it is written to be read and becomes a
+  /// chat row of its own on arrival, which is worth waking for.
+  @$pb.TagNumber(5)
+  $core.bool get hidden => $_getBF(4);
+  @$pb.TagNumber(5)
+  set hidden($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasHidden() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearHidden() => $_clearField(5);
 }
 
 class EncryptedContent_Reaction extends $pb.GeneratedMessage {
@@ -747,6 +783,7 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
     $core.List<$core.int>? encryptionMac,
     $core.List<$core.int>? encryptionNonce,
     $core.List<$core.int>? additionalMessageData,
+    $core.bool? widgetOnly,
   }) {
     final result = create();
     if (senderMessageId != null) result.senderMessageId = senderMessageId;
@@ -763,6 +800,7 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
     if (encryptionNonce != null) result.encryptionNonce = encryptionNonce;
     if (additionalMessageData != null)
       result.additionalMessageData = additionalMessageData;
+    if (widgetOnly != null) result.widgetOnly = widgetOnly;
     return result;
   }
 
@@ -795,6 +833,7 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
         10, _omitFieldNames ? '' : 'encryptionNonce', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
         11, _omitFieldNames ? '' : 'additionalMessageData', $pb.PbFieldType.OY)
+    ..aOB(12, _omitFieldNames ? '' : 'widgetOnly')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -916,6 +955,90 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
   $core.bool hasAdditionalMessageData() => $_has(10);
   @$pb.TagNumber(11)
   void clearAdditionalMessageData() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.bool get widgetOnly => $_getBF(11);
+  @$pb.TagNumber(12)
+  set widgetOnly($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasWidgetOnly() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearWidgetOnly() => $_clearField(12);
+}
+
+/// A story item. It carries no group ID: the receiver files it under its 1:1
+/// chat with the sender, keeps it for 24 hours after `media.timestamp`, and
+/// never shows it in that chat unless it is saved.
+class EncryptedContent_Story extends $pb.GeneratedMessage {
+  factory EncryptedContent_Story({
+    EncryptedContent_Media? media,
+    $core.bool? notify,
+  }) {
+    final result = create();
+    if (media != null) result.media = media;
+    if (notify != null) result.notify = notify;
+    return result;
+  }
+
+  EncryptedContent_Story._();
+
+  factory EncryptedContent_Story.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_Story.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.Story',
+      createEmptyInstance: create)
+    ..aOM<EncryptedContent_Media>(1, _omitFieldNames ? '' : 'media',
+        subBuilder: EncryptedContent_Media.create)
+    ..aOB(2, _omitFieldNames ? '' : 'notify')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_Story clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_Story copyWith(
+          void Function(EncryptedContent_Story) updates) =>
+      super.copyWith((message) => updates(message as EncryptedContent_Story))
+          as EncryptedContent_Story;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_Story create() => EncryptedContent_Story._();
+  @$core.override
+  EncryptedContent_Story createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_Story getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EncryptedContent_Story>(create);
+  static EncryptedContent_Story? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  EncryptedContent_Media get media => $_getN(0);
+  @$pb.TagNumber(1)
+  set media(EncryptedContent_Media value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMedia() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMedia() => $_clearField(1);
+  @$pb.TagNumber(1)
+  EncryptedContent_Media ensureMedia() => $_ensure(0);
+
+  /// Whether the sender woke the receiver for this item, which it does for
+  /// the first story in 24 hours only. The receiver announces the story only
+  /// when this is set, so a push and its notification never disagree.
+  @$pb.TagNumber(2)
+  $core.bool get notify => $_getBF(1);
+  @$pb.TagNumber(2)
+  set notify($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasNotify() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearNotify() => $_clearField(2);
 }
 
 class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
@@ -1649,6 +1772,8 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_PasswordLessRecovery? passwordlessRecovery,
     EncryptedContent_PasswordLessRecoveryHeartbeat?
         passwordlessRecoveryHeartbeat,
+    $core.bool? widgetSharingAllowed,
+    EncryptedContent_Story? story,
   }) {
     final result = create();
     if (groupId != null) result.groupId = groupId;
@@ -1686,6 +1811,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
       result.passwordlessRecovery = passwordlessRecovery;
     if (passwordlessRecoveryHeartbeat != null)
       result.passwordlessRecoveryHeartbeat = passwordlessRecoveryHeartbeat;
+    if (widgetSharingAllowed != null)
+      result.widgetSharingAllowed = widgetSharingAllowed;
+    if (story != null) result.story = story;
     return result;
   }
 
@@ -1762,6 +1890,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOM<EncryptedContent_PasswordLessRecoveryHeartbeat>(
         27, _omitFieldNames ? '' : 'passwordlessRecoveryHeartbeat',
         subBuilder: EncryptedContent_PasswordLessRecoveryHeartbeat.create)
+    ..aOB(29, _omitFieldNames ? '' : 'widgetSharingAllowed')
+    ..aOM<EncryptedContent_Story>(30, _omitFieldNames ? '' : 'story',
+        subBuilder: EncryptedContent_Story.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2071,6 +2202,26 @@ class EncryptedContent extends $pb.GeneratedMessage {
   @$pb.TagNumber(27)
   EncryptedContent_PasswordLessRecoveryHeartbeat
       ensurePasswordlessRecoveryHeartbeat() => $_ensure(24);
+
+  @$pb.TagNumber(29)
+  $core.bool get widgetSharingAllowed => $_getBF(25);
+  @$pb.TagNumber(29)
+  set widgetSharingAllowed($core.bool value) => $_setBool(25, value);
+  @$pb.TagNumber(29)
+  $core.bool hasWidgetSharingAllowed() => $_has(25);
+  @$pb.TagNumber(29)
+  void clearWidgetSharingAllowed() => $_clearField(29);
+
+  @$pb.TagNumber(30)
+  EncryptedContent_Story get story => $_getN(26);
+  @$pb.TagNumber(30)
+  set story(EncryptedContent_Story value) => $_setField(30, value);
+  @$pb.TagNumber(30)
+  $core.bool hasStory() => $_has(26);
+  @$pb.TagNumber(30)
+  void clearStory() => $_clearField(30);
+  @$pb.TagNumber(30)
+  EncryptedContent_Story ensureStory() => $_ensure(26);
 }
 
 const $core.bool _omitFieldNames =

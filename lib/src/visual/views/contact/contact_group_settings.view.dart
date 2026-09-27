@@ -21,11 +21,13 @@ class ContactGroupSettingsView extends StatefulWidget {
   const ContactGroupSettingsView({
     this.contactGroup,
     this.initialShowAsShortcut = false,
+    this.initialShareStories = false,
     super.key,
   });
 
   final ContactGroup? contactGroup;
   final bool initialShowAsShortcut;
+  final bool initialShareStories;
 
   @override
   State<ContactGroupSettingsView> createState() =>
@@ -69,6 +71,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   late int _textColor;
   late bool _showAsShortcut;
   late bool _showAsLabel;
+  late bool _shareStories;
   String? _emoji;
   bool _saving = false;
   String _memberFilter = '';
@@ -96,6 +99,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
     _showAsShortcut =
         contactGroup?.showAsShortcut ?? widget.initialShowAsShortcut;
     _showAsLabel = contactGroup?.showAsLabel ?? !widget.initialShowAsShortcut;
+    _shareStories = contactGroup?.shareStories ?? widget.initialShareStories;
     _emoji = contactGroup?.emoji;
     if (contactGroup != null) unawaited(_loadWidgetUsage(contactGroup.id));
 
@@ -226,6 +230,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
             backgroundColor: _backgroundColor,
             showAsShortcut: _showAsShortcut,
             showAsLabel: _showAsLabel,
+            shareStories: _shareStories,
           );
       if (_isEditing) {
         await twonlyDB.contactGroupsDao.updateContactGroup(
@@ -236,6 +241,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
           backgroundColor: _backgroundColor,
           showAsShortcut: _showAsShortcut,
           showAsLabel: _showAsLabel,
+          shareStories: _shareStories,
         );
       }
       await twonlyDB.contactGroupsDao.replaceMembers(
@@ -527,6 +533,13 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
               subtitle: Text(context.lang.contactGroupShowAsShortcutSubtitle),
               value: _showAsShortcut,
               onChanged: (value) => setState(() => _showAsShortcut = value),
+            ),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: Text(context.lang.contactGroupShareStories),
+              subtitle: Text(context.lang.contactGroupShareStoriesSubtitle),
+              value: _shareStories,
+              onChanged: (value) => setState(() => _shareStories = value),
             ),
             if (_showAsShortcut)
               ListTile(

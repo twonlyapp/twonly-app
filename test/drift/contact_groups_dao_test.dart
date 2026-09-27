@@ -30,6 +30,7 @@ void main() {
       backgroundColor: 0,
       showAsShortcut: true,
       showAsLabel: true,
+      shareStories: false,
     );
 
     await database.contactGroupsDao.replaceMembers(

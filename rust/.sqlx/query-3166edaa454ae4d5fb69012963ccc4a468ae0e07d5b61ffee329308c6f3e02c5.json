@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE groups\n               SET last_text_or_media_at = MAX(COALESCE(last_text_or_media_at, 0), ?)\n               WHERE group_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "3166edaa454ae4d5fb69012963ccc4a468ae0e07d5b61ffee329308c6f3e02c5"
+}

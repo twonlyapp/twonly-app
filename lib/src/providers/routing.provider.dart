@@ -98,6 +98,24 @@ final routerProvider = GoRouter(
           },
         ),
         GoRoute(
+          path: 'story/:contactId',
+          builder: (context, state) {
+            final contactId = int.parse(state.pathParameters['contactId']!);
+            return MediaViewerView.story(
+              StorySource.contact(
+                contactId,
+                initialMediaId: state.extra as String?,
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: 'own_story',
+          builder: (context, state) => MediaViewerView.story(
+            StorySource.own(initialMediaId: state.extra as String?),
+          ),
+        ),
+        GoRoute(
           path: 'messages/:groupId',
           builder: (context, state) {
             final groupId = state.pathParameters['groupId']!;

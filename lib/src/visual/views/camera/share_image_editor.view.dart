@@ -15,6 +15,7 @@ import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection.view.dart';
+import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/story_target_selector.comp.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/discard_media_dialog.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/display_time_picker.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_bottom_bar.dart';
@@ -67,6 +68,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool loadingImage = true;
   bool isDisposed = false;
   HashSet<String> selectedGroupIds = HashSet();
+  final StoryTarget storyTarget = StoryTarget();
   double pixelRatio = 1;
   VideoPlayerController? videoController;
 
@@ -352,6 +354,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Future<void> _toggleRequiresAuth() async {
     await mediaService.setRequiresAuth(!media.requiresAuthentication);
     selectedGroupIds = HashSet();
+    storyTarget.clear();
     if (mounted) setState(() {});
   }
 
@@ -361,6 +364,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     if (widget.sendToGroup == null) {
       selectedGroupIds.clear();
     }
+    storyTarget.clear();
 
     if (enabled) {
       _displayLimitBeforeWidget = media.displayLimitInMilliseconds;
@@ -467,6 +471,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           mediaFileService: mediaService,
           additionalData: getAdditionalData(),
           sendToWidget: _sendToWidget,
+          storyTarget: storyTarget,
         ),
       ),
     );

@@ -31,6 +31,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   // ignore: matching_super_parameters
   MessagesDao(super.db);
 
+  /// A story row stays out of the chat until somebody saves it; from then on
+  /// it is an ordinary stored media message there.
+  Expression<bool> get _visibleInChat =>
+      messages.isStory.equals(false) | messages.mediaStored.equals(true);
+
   Stream<List<Message>> watchMessageNotOpened(String groupId) {
     final query =
         select(messages).join([
@@ -42,6 +47,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ..where(
             messages.openedAt.isNull() &
                 messages.isWidgetMedia.equals(false) &
+                _visibleInChat &
                 messages.groupId.equals(groupId) &
                 messages.isDeletedFromSender.equals(false) &
                 (messages.mediaId.isNull() |
@@ -65,6 +71,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ..where(
             messages.openedAt.isNull() &
                 messages.isWidgetMedia.equals(false) &
+                _visibleInChat &
                 messages.isDeletedFromSender.equals(false) &
                 (messages.mediaId.isNull() |
                     mediaFiles.downloadState.isNull() |
@@ -92,6 +99,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                 mediaFiles.type.equals(MediaType.audio.name).not() &
                 messages.openedAt.isNull() &
                 messages.isWidgetMedia.equals(false) &
+                _visibleInChat &
                 messages.groupId.equals(groupId) &
                 messages.mediaId.isNotNull() &
                 messages.senderId.isNotNull() &
@@ -111,6 +119,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         ])..where(
           messages.openedAt.isNull() &
               messages.isWidgetMedia.equals(false) &
+              _visibleInChat &
               messages.mediaId.isNotNull() &
               messages.type.equals(MessageType.media.name) &
               mediaFiles.downloadState.equals(DownloadState.ready.name) &
@@ -136,6 +145,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ])
           ..where(
             messages.groupId.equals(groupId) &
+                _visibleInChat &
                 // messages in groups will only be removed in case all members have received it...
                 // so ensuring that this message is not shown in the messages anymore
                 (messages.openedAt.isBiggerThanValue(deletionTime) |
@@ -169,7 +179,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         FROM messages
         INNER JOIN groups ON groups.group_id = messages.group_id
         LEFT JOIN media_files ON media_files.media_id = messages.media_id
-        WHERE (
+        WHERE (messages.is_story = 0 OR messages.media_stored = 1)
+        AND (
           messages.opened_at IS NULL OR
           messages.media_stored = 1 OR
           messages.opened_at > CAST(strftime('%s', 'now') AS INTEGER) -
@@ -207,6 +218,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ])
           ..where(
             messages.groupId.equals(groupId) &
+                _visibleInChat &
                 (messages.openedAt.isBiggerThanValue(deletionTime) |
                     messages.openedAt.isNull() |
                     messages.mediaStored.equals(true) |
@@ -251,6 +263,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ])
           ..where(
             messages.groupId.equals(groupId) &
+                _visibleInChat &
                 (messages.createdAt.isSmallerThanValue(before) |
                     (messages.createdAt.equals(before) &
                         messages.messageId.isSmallerThanValue(
@@ -319,6 +332,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                     // without ever clearing the storage its origin holds, so
                     // apps leave only when somebody deletes them.
                     m.type.equals(MessageType.webxdcApp.name).not() &
+                    // Unsaved story rows expire with the story, not the chat.
+                    (m.isStory.equals(false) | m.mediaStored.equals(true)) &
                     ((m.mediaStored.equals(true) &
                             m.isDeletedFromSender.equals(true)) |
                         m.mediaStored.equals(false)) &
@@ -645,11 +660,13 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     await transaction(() async {
       // A one-time app is the chat's durable shared object. Keep its card (and
       // therefore its instance and update log) while removing the visible chat
-      // history and every ordinary app.
+      // history and every ordinary app. Unsaved story rows are not chat
+      // history; they leave when their story expires.
       await customStatement(
         '''
            DELETE FROM messages
            WHERE group_id = ?
+             AND (is_story = 0 OR media_stored = 1)
              AND NOT EXISTS (
                SELECT 1
                FROM webxdc_instances AS instance
@@ -669,6 +686,15 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         [groupId],
       );
     });
+  }
+
+  /// The rows behind [messageIds], whatever the chat shows of them. A reply
+  /// can quote a story row that the chat itself never lists.
+  Stream<List<Message>> watchMessagesByIds(Set<String> messageIds) {
+    if (messageIds.isEmpty) return Stream.value(const []);
+    return (select(
+      messages,
+    )..where((t) => t.messageId.isIn(messageIds))).watch();
   }
 
   SingleOrNullSelectable<Message> getMessageById(String messageId) {

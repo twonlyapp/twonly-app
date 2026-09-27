@@ -21,6 +21,7 @@ class ReactionButtons extends StatefulWidget {
     required this.groupId,
     required this.emojiKey,
     required this.hide,
+    this.asQuotedText = false,
     super.key,
   });
 
@@ -31,6 +32,9 @@ class ReactionButtons extends StatefulWidget {
   final String messageId;
   final String groupId;
   final void Function() hide;
+
+  /// Send the emoji as a message quoting the target instead of a reaction.
+  final bool asQuotedText;
 
   @override
   State<ReactionButtons> createState() => _ReactionButtonsState();
@@ -123,6 +127,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                             show: _renderAnimations,
                             emoji: emoji as String,
                             emojiKey: widget.emojiKey,
+                            asQuotedText: widget.asQuotedText,
                           ),
                         )
                         .toList(),
@@ -140,6 +145,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                         show: _renderAnimations,
                         emoji: emoji,
                         emojiKey: widget.emojiKey,
+                        asQuotedText: widget.asQuotedText,
                       ),
                     ),
                     GestureDetector(
@@ -160,6 +166,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                           widget.groupId,
                           widget.messageId,
                           layer.text,
+                          asQuotedText: widget.asQuotedText,
                         );
                         widget.emojiKey.currentState?.spawn(
                           getGlobalOffset(_keyEmojiPicker),

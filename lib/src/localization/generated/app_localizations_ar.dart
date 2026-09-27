@@ -2851,4 +2851,97 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get webxdcExternalLinkBody =>
       'يُفتح هذا الرابط خارج twonly، في متصفحك:';
+
+  @override
+  String get notificationStory => 'قصة جديدة.';
+
+  @override
+  String get settingsNotifyStories => 'إشعارات القصص';
+
+  @override
+  String get settingsNotifyStoriesSubtitle =>
+      'تلقَّ إشعارًا بأول قصة في اليوم من جهات الاتصال التي راسلتها خلال الأسبوعين الماضيين.';
+
+  @override
+  String get contactGroupShareStories => 'مشاركة القصص';
+
+  @override
+  String get contactGroupShareStoriesSubtitle =>
+      'اعرض هذه المجموعة كجمهور عند نشر قصة.';
+
+  @override
+  String get contactGroupStoriesFeature => 'القصص';
+
+  @override
+  String get story => 'قصة';
+
+  @override
+  String get storyExpired => 'انتهت صلاحية القصة';
+
+  @override
+  String get storyMine => 'قصتي';
+
+  @override
+  String get storyDeleteTitle => 'حذف القصة؟';
+
+  @override
+  String get storyDeleteBody => 'سيؤدي هذا إلى إزالتها من قصتك.';
+
+  @override
+  String get storyDelete => 'حذف';
+
+  @override
+  String get storyDeleteFailed => 'تعذّر الحذف. حاول مرة أخرى بعد قليل.';
+
+  @override
+  String get shareImageStory => 'قصة';
+
+  @override
+  String shareImageStoryAudience(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تصل إلى $count من جهات الاتصال',
+      one: 'تصل إلى جهة اتصال واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareImageStoryUnavailable =>
+      'لا يمكن نشر الوسائط المحمية بـ twonly كقصة.';
+
+  @override
+  String get shareImageStoryAll => 'كل جهات الاتصال';
+
+  @override
+  String get shareImageStoryNewGroup => 'مجموعة قصص جديدة';
+
+  @override
+  String shareImageStoryFailed(int max) {
+    return 'تعذّر نشر القصة. يمكن أن يصل الإرسال الواحد إلى $max شخص كحد أقصى.';
+  }
+
+  @override
+  String get notificationStoryReply => 'رد على قصتك.';
+
+  @override
+  String notificationStoryReaction(Object reaction) {
+    return 'تفاعل $reaction مع قصتك.';
+  }
+
+  @override
+  String get notificationStoredStory => 'تم حفظ قصتك.';
+
+  @override
+  String storyViews(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مشاهدات',
+      one: 'مشاهدة واحدة',
+      zero: 'لا مشاهدات بعد',
+    );
+    return '$_temp0';
+  }
 }

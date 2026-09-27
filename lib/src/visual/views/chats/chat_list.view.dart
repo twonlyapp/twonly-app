@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -8,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
+import 'package:twonly/src/database/daos/stories.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
@@ -17,10 +19,12 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/connection_status.comp.dart';
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
+import 'package:twonly/src/visual/components/story_preview.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/news_btn.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_indicator.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expiry_timer.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/missing_backup_setup.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/missing_recovery_contacts.comp.dart';
@@ -46,6 +50,9 @@ class _ChatListViewState extends State<ChatListView>
   StreamSubscription<Map<String, VerificationStatus>>? _verificationSub;
   StreamSubscription<List<(int, ContactGroup)>>? _contactGroupsSub;
   StreamSubscription<List<(String, ContactGroup)>>? _chatContactGroupsSub;
+  StreamSubscription<List<StoryItem>>? _storiesSub;
+  StreamSubscription<List<OwnStoryItem>>? _ownStoriesSub;
+  final StoryExpiryTimer _ownStoryExpiry = StoryExpiryTimer();
   Timer? _typingUpdateTimer;
   final Set<String> _precachedMediaIds = {};
   List<Group> _groupsNotPinned = [];
@@ -61,6 +68,8 @@ class _ChatListViewState extends State<ChatListView>
   Map<String, VerificationStatus> _verificationByGroup = {};
   Map<int, List<ContactGroup>> _contactGroupsByUser = {};
   Map<String, List<ContactGroup>> _contactGroupsByGroup = {};
+  Map<String, List<StoryItem>> _storiesByGroup = {};
+  List<OwnStoryItem> _ownStories = [];
 
   final ValueNotifier<bool> _hasContacts = ValueNotifier(false);
   bool _loading = true;
@@ -231,6 +240,42 @@ class _ChatListViewState extends State<ChatListView>
           }
           setState(() => _contactGroupsByGroup = contactGroups);
         });
+    _storiesSub = twonlyDB.storiesDao.watchReceivedStoryItems().listen((items) {
+      if (!mounted) return;
+      final byGroup = <String, List<StoryItem>>{};
+      for (final item in items) {
+        byGroup.putIfAbsent(item.message.groupId, () => []).add(item);
+      }
+      setState(() => _storiesByGroup = byGroup);
+    });
+    _ownStoriesSub = twonlyDB.storiesDao.watchOwnStoryItems().listen((items) {
+      if (!mounted) return;
+      setState(() => _ownStories = items);
+      _scheduleOwnStoryExpiry();
+    });
+  }
+
+  List<OwnStoryItem> get _activeOwnStories {
+    final now = clock.now();
+    return _ownStories.where((item) => item.isActiveAt(now)).toList();
+  }
+
+  /// Puts the avatar back when the oldest own story item runs out.
+  void _scheduleOwnStoryExpiry() {
+    final oldest = _activeOwnStories.firstOrNull;
+    if (oldest == null) {
+      _ownStoryExpiry.cancel();
+      return;
+    }
+    _ownStoryExpiry.schedule(
+      postedAt: oldest.postedAt,
+      now: clock.now(),
+      onExpired: () {
+        if (!mounted) return;
+        setState(() {});
+        _scheduleOwnStoryExpiry();
+      },
+    );
   }
 
   /// Labels of a chat: those of the contact for direct chats, those of the
@@ -265,6 +310,9 @@ class _ChatListViewState extends State<ChatListView>
     _verificationSub?.cancel();
     _contactGroupsSub?.cancel();
     _chatContactGroupsSub?.cancel();
+    _storiesSub?.cancel();
+    _ownStoriesSub?.cancel();
+    _ownStoryExpiry.cancel();
     super.dispose();
   }
 
@@ -307,12 +355,22 @@ class _ChatListViewState extends State<ChatListView>
           children: [
             ConnectionStatusComp(
               child: GestureDetector(
+                // The profile is where the user's own story is followed.
                 onTap: () => context.push(Routes.settingsProfile),
-                child: AvatarIcon(
-                  myAvatar: true,
-                  fontSize: 14,
-                  color: context.color.onSurface.withAlpha(20),
-                ),
+                child: switch (_activeOwnStories.lastOrNull) {
+                  // While the user has a story, it replaces their avatar.
+                  final OwnStoryItem newest => StoryPreview(
+                    mediaFile: newest.mediaFile,
+                    width: 28,
+                    height: 28,
+                    circle: true,
+                  ),
+                  null => AvatarIcon(
+                    myAvatar: true,
+                    fontSize: 14,
+                    color: context.color.onSurface.withAlpha(20),
+                  ),
+                },
               ),
             ),
             const SizedBox(width: 10),
@@ -446,6 +504,7 @@ class _ChatListViewState extends State<ChatListView>
                         useSharedSummary: true,
                         verificationStatus: _verificationByGroup[group.groupId],
                         contactGroups: _contactGroupsFor(group),
+                        storyItems: _storiesByGroup[group.groupId] ?? const [],
                       );
                     }
 
@@ -475,6 +534,7 @@ class _ChatListViewState extends State<ChatListView>
                       useSharedSummary: true,
                       verificationStatus: _verificationByGroup[group.groupId],
                       contactGroups: _contactGroupsFor(group),
+                      storyItems: _storiesByGroup[group.groupId] ?? const [],
                     );
                   },
                 ),

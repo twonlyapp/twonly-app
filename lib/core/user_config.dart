@@ -140,6 +140,10 @@ class UserConfig {
   bool storeLocationInMemories;
   bool autoStoreAllSendUnlimitedMediaFiles;
   bool typingIndicators;
+
+  /// Announce a contact's first story in 24 hours. Checked only on this
+  /// device, where the notification is created; senders always wake.
+  bool storyNotifications;
   bool showRestoreFlame;
 
   /// Unused: the best friend is derived from `total_media_counter` whenever
@@ -217,6 +221,7 @@ class UserConfig {
     required this.storeLocationInMemories,
     required this.autoStoreAllSendUnlimitedMediaFiles,
     required this.typingIndicators,
+    required this.storyNotifications,
     required this.showRestoreFlame,
     this.myBestFriendGroupId,
     this.signalLastSignedPreKeyUpdated,
@@ -284,6 +289,7 @@ class UserConfig {
       storeLocationInMemories.hashCode ^
       autoStoreAllSendUnlimitedMediaFiles.hashCode ^
       typingIndicators.hashCode ^
+      storyNotifications.hashCode ^
       showRestoreFlame.hashCode ^
       myBestFriendGroupId.hashCode ^
       signalLastSignedPreKeyUpdated.hashCode ^
@@ -356,6 +362,7 @@ class UserConfig {
           autoStoreAllSendUnlimitedMediaFiles ==
               other.autoStoreAllSendUnlimitedMediaFiles &&
           typingIndicators == other.typingIndicators &&
+          storyNotifications == other.storyNotifications &&
           showRestoreFlame == other.showRestoreFlame &&
           myBestFriendGroupId == other.myBestFriendGroupId &&
           signalLastSignedPreKeyUpdated ==

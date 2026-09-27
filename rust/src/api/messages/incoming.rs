@@ -11,6 +11,7 @@ mod media;
 pub mod messages;
 mod reaction;
 pub mod recovery;
+pub(crate) mod story;
 mod text_message;
 mod typing_indicator;
 mod user_discovery;
@@ -495,7 +496,7 @@ pub async fn handle_decoded_server_message(
         return Ok(());
     }
 
-    let mut sends_error_response = false;
+    let mut withhold_delivery_receipt = false;
     let mut rebuild_session = false;
 
     match message_type {
@@ -520,7 +521,7 @@ pub async fn handle_decoded_server_message(
             }
             // Never acknowledged: the message was not read, so the sender must
             // not be told it was delivered.
-            sends_error_response = true;
+            withhold_delivery_receipt = true;
         }
         Type::CiphertextV2 => {
             let decrypted = match resumed_plaintext {
@@ -577,7 +578,7 @@ pub async fn handle_decoded_server_message(
                                 "invalid decrypted client content: {error}"
                             ))
                         })?;
-                    sends_error_response = process_encrypted_or_queue_error(
+                    withhold_delivery_receipt = process_encrypted_or_queue_error(
                         ctx,
                         &mut t,
                         from_user_id,
@@ -585,7 +586,7 @@ pub async fn handle_decoded_server_message(
                         content,
                     )
                     .await?
-                    .is_some();
+                        == Delivery::Withhold;
                 }
                 // The ratchet has already consumed this message, so it was
                 // handled and the peer is only missing the answer. Falling
@@ -611,7 +612,7 @@ pub async fn handle_decoded_server_message(
                         error_type as i32,
                     )
                     .await?;
-                    sends_error_response = true;
+                    withhold_delivery_receipt = true;
                 }
             }
         }
@@ -627,7 +628,7 @@ pub async fn handle_decoded_server_message(
         Type::TestNotification => {}
     }
 
-    if is_encrypted_message & !sends_error_response {
+    if is_encrypted_message & !withhold_delivery_receipt {
         queue_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
     }
 
@@ -720,6 +721,16 @@ async fn rebuild_session(ctx: &Arc<Context>, from_user_id: i64) -> Result<()> {
     Ok(())
 }
 
+/// Whether the sender learns that a handled message arrived.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Delivery {
+    /// Queue the sender delivery receipt, which ends the sender's retries.
+    Ack,
+    /// Tell the sender nothing, either because an error response goes back
+    /// instead or because the content is ignored outright.
+    Withhold,
+}
+
 /// Dispatches already-decrypted client-to-client content to its concrete
 /// feature module. Transport decoding and Signal decryption do not belong in
 /// this dispatcher.
@@ -729,7 +740,15 @@ pub(crate) async fn handle_encrypted(
     from_user_id: i64,
     receipt_id: &str,
     content: proto::EncryptedContent,
-) -> Result<()> {
+) -> Result<Delivery> {
+    // A story that arrives after its 24 hours is ignored whole: no row, no
+    // notification and no receipt. The sender drops its receipt when the story
+    // expires there, which is what ends its retransmissions.
+    if content.story.as_ref().is_some_and(story::is_expired) {
+        tracing::info!("Ignoring a story that arrived after it expired");
+        return Ok(Delivery::Withhold);
+    }
+
     let notification_content = content.clone();
     handle_encrypted_inner(ctx, t, from_user_id, receipt_id, content).await?;
     crate::services::notifications::record_incoming_event(
@@ -739,7 +758,8 @@ pub(crate) async fn handle_encrypted(
         receipt_id,
         &notification_content,
     )
-    .await
+    .await?;
+    Ok(Delivery::Ack)
 }
 
 async fn handle_encrypted_inner(
@@ -791,6 +811,10 @@ async fn handle_encrypted_inner(
 
     if let Some(update) = content.media_update {
         return media::handle_media_update(ctx, t, from_user_id, update).await;
+    }
+
+    if let Some(item) = content.story {
+        return story::handle_story(ctx, t, from_user_id, item).await;
     }
 
     if let Some(error) = content.error_messages {
@@ -925,7 +949,7 @@ async fn handle_encrypted_inner(
     }
 
     if let Some(media) = content.media {
-        return media::handle_media(ctx, t, from_user_id, &group_id, media).await;
+        return media::handle_media(ctx, t, from_user_id, &group_id, media, false).await;
     }
 
     if let Some(reaction) = content.reaction {

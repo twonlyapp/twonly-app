@@ -57,6 +57,7 @@ pub(crate) async fn handle_media(
     from_user_id: i64,
     group_id: &str,
     media: encrypted_content::Media,
+    is_story: bool,
 ) -> Result<()> {
     let media_type = MediaType::try_from(media.r#type)?;
     let widget_only = media.widget_only == Some(true);
@@ -225,10 +226,11 @@ pub(crate) async fn handle_media(
             additional_message_data,
             quotes_message_id,
             is_widget_media,
+            is_story,
             opened_at,
             opened_by_all,
             created_at
-        ) VALUES (?, ?, ?, 'media', ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, 'media', ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
         group_id,
         media.sender_message_id,
@@ -237,6 +239,7 @@ pub(crate) async fn handle_media(
         media.additional_message_data,
         media.quote_message_id,
         widget_only,
+        is_story,
         opened_at,
         opened_by_all,
         timestamp,
@@ -244,9 +247,12 @@ pub(crate) async fn handle_media(
     .execute(&mut **t)
     .await?;
 
-    if !widget_only {
+    // A story is not an exchange in the chat it is filed under: it neither
+    // moves the chat up nor feeds its flames.
+    if !widget_only && !is_story {
         Group::increase_last_message_exchange(t, group_id, timestamp).await?;
         Group::record_media_exchange(t, group_id, true, timestamp).await?;
+        Group::record_text_or_media(t, group_id, timestamp).await?;
     }
 
     spawn_media_download(ctx, media_id);
@@ -300,7 +306,18 @@ pub(crate) async fn handle_media_update(
             .execute(&mut **t)
             .await?;
 
-            spawn_media_store(ctx, media_id.clone());
+            // Every recipient of a story shares one media file here, so the
+            // second person saving it must not export it to the gallery again.
+            let already_stored = sqlx::query_scalar!(
+                r#"SELECT stored AS "stored: bool" FROM media_files WHERE media_id = ?"#,
+                media_id,
+            )
+            .fetch_optional(&mut **t)
+            .await?
+            .unwrap_or(false);
+            if !already_stored {
+                spawn_media_store(ctx, media_id.clone());
+            }
         }
         MediaUpdateType::DecryptionError => {
             // The upload state and the requester list are owned by the reupload

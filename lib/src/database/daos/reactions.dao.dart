@@ -115,7 +115,8 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
           ..orderBy([(reaction) => OrderingTerm.desc(reaction.createdAt)]))
         .watch();
   }
-Stream<Reaction?> watchLastReactions(String groupId) {
+
+  Stream<Reaction?> watchLastReactions(String groupId) {
     final query =
         (select(reactions)).join(
             [
@@ -126,7 +127,11 @@ Stream<Reaction?> watchLastReactions(String groupId) {
               ),
             ],
           )
-          ..where(messages.groupId.equals(groupId))
+          ..where(
+            messages.groupId.equals(groupId) &
+                (messages.isStory.equals(false) |
+                    messages.mediaStored.equals(true)),
+          )
           ..orderBy([OrderingTerm.desc(messages.createdAt)])
           ..limit(1);
     return query.map((row) => row.readTable(reactions)).watchSingleOrNull();
@@ -145,6 +150,7 @@ Stream<Reaction?> watchLastReactions(String groupId) {
                ) AS reaction_rank
         FROM reactions
         INNER JOIN messages ON messages.message_id = reactions.message_id
+        WHERE messages.is_story = 0 OR messages.media_stored = 1
       ) AS reaction_rows
       WHERE reaction_rank = 1
       ''',

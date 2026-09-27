@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 
@@ -28,6 +30,13 @@ class _NotificationViewState extends State<NotificationView> {
         _hasNotificationPermission = isGranted;
       });
     }
+  }
+
+  Future<void> _toggleStoryNotifications() async {
+    await UserService.update((u) {
+      u.storyNotifications = !u.storyNotifications;
+    });
+    setState(() {});
   }
 
   Future<void> _resetTokens() async {
@@ -60,6 +69,15 @@ class _NotificationViewState extends State<NotificationView> {
               subtitle: Text(context.lang.settingsNotifyPermissionDesc),
               onTap: openAppSettings,
             ),
+          ListTile(
+            title: Text(context.lang.settingsNotifyStories),
+            subtitle: Text(context.lang.settingsNotifyStoriesSubtitle),
+            onTap: _toggleStoryNotifications,
+            trailing: Switch.adaptive(
+              value: userService.currentUser.storyNotifications,
+              onChanged: (_) => _toggleStoryNotifications(),
+            ),
+          ),
           if (_hasNotificationPermission == true)
             ListTile(
               title: Text(context.lang.settingsNotifyResetTitle),
