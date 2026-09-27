@@ -2,12 +2,11 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/stories.dao.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/story_preview.comp.dart';
-import 'package:twonly/src/visual/views/chats/chat_list_components/last_message_time.comp.dart';
+import 'package:twonly/src/visual/components/story_strip.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expiry_timer.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_viewers.bottom_sheet.dart';
 
@@ -65,11 +64,11 @@ class _OwnStoryStripState extends State<OwnStoryStrip> {
     );
   }
 
-  Future<void> _showViewers(OwnStoryItem item) async {
+  Future<void> _showViewers(MediaFile mediaFile) async {
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => StoryViewersBottomSheet(mediaFile: item.mediaFile),
+      builder: (context) => StoryViewersBottomSheet(mediaFile: mediaFile),
     );
   }
 
@@ -77,72 +76,17 @@ class _OwnStoryStripState extends State<OwnStoryStrip> {
   Widget build(BuildContext context) {
     // Newest first: the item posted last is the one people see next to the
     // user's name.
-    final items = _active.reversed.toList();
-    if (items.isEmpty) return const SizedBox.shrink();
-    final secondary = TextStyle(
-      fontSize: 12,
-      color: context.color.onSurface.withAlpha(170),
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
-          child: Text(
-            context.lang.storyMine,
-            style: Theme.of(context).textTheme.titleMedium,
+    return StoryStrip(
+      title: context.lang.storyMine,
+      items: [
+        for (final item in _active.reversed)
+          StoryStripItem(
+            mediaFile: item.mediaFile,
+            postedAt: item.postedAt,
+            viewerCount: item.viewerCount,
           ),
-        ),
-        SizedBox(
-          height: 150,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return GestureDetector(
-                key: ValueKey(item.mediaFile.mediaId),
-                onTap: () => _showViewers(item),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    StoryPreview(
-                      mediaFile: item.mediaFile,
-                      width: 72,
-                      height: 110,
-                    ),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      width: 72,
-                      child: Row(
-                        children: [
-                          DefaultTextStyle.merge(
-                            style: secondary,
-                            child: LastMessageTimeComp(
-                              dateTime: item.postedAt,
-                            ),
-                          ),
-                          const Spacer(),
-                          FaIcon(
-                            FontAwesomeIcons.eye,
-                            size: 11,
-                            color: secondary.color,
-                          ),
-                          const SizedBox(width: 4),
-                          Text('${item.viewerCount}', style: secondary),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 10),
       ],
+      onTap: (item) => _showViewers(item.mediaFile),
     );
   }
 }

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -11,7 +10,6 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/daos/stories.dao.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
@@ -565,22 +563,17 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   }
 
   Future<void> scrollToMessage(String messageId) async {
-    // A quoted story is not in the chat to scroll to; it opens the story at
-    // that item instead, for as long as the story is still there.
+    // A quoted story is not in the chat to scroll to. The user's own story
+    // leads to their profile, which lists it with its viewers; a contact's
+    // story leads nowhere.
     if (!_data.messagesById.containsKey(messageId)) {
       final quoted = await twonlyDB.messagesDao
           .getMessageById(messageId)
           .getSingleOrNull();
       if (quoted != null && quoted.isStory && !quoted.mediaStored) {
-        final alive =
-            quoted.mediaId != null &&
-            clock.now().isBefore(quoted.createdAt.add(storyLifetime));
-        if (!alive || !mounted) return;
-        final senderId = quoted.senderId;
-        await context.push(
-          senderId == null ? Routes.chatsOwnStory : Routes.chatsStory(senderId),
-          extra: quoted.mediaId,
-        );
+        if (quoted.senderId == null && mounted) {
+          await context.push(Routes.settingsProfile);
+        }
         return;
       }
     }
