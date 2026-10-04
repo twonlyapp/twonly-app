@@ -46,12 +46,12 @@ enum AppColor {
   scanHighlight(light: Color(0xFF76FF03), dark: Color(0xFF76FF03)),
 
   // Message-kind indicators
-  messageText(light: Color(0xFF35618D), dark: Color(0xFF9FCBFF)),
-  messageRestore(light: Color(0xFFB85F00), dark: Color(0xFFFFB95F)),
-  messageWidget(light: Color(0xFF79528D), dark: Color(0xFFD7B9E8)),
-  messageVideo(light: Color(0xFF9C3A8D), dark: Color(0xFFFFA9E5)),
-  messageAudio(light: Color(0xFFB85F00), dark: Color(0xFFFFB68A)),
-  messageImage(light: Color(0xFFBA1A1A), dark: Color(0xFFFFB4AB));
+  messageText(light: Color(0xFF448AFF), dark: Color(0xFF448AFF)),
+  messageRestore(light: Color(0xFFFF9800), dark: Color(0xFFFF9800)),
+  messageWidget(light: Color(0xFF9B59B6), dark: Color(0xFF9B59B6)),
+  messageVideo(light: Color(0xFFF321D0), dark: Color(0xFFF321D0)),
+  messageAudio(light: Color(0xFFFC9555), dark: Color(0xFFFC9555)),
+  messageImage(light: Color(0xFFFF5252), dark: Color(0xFFFF5252));
 
   const AppColor({required this.light, required this.dark});
 

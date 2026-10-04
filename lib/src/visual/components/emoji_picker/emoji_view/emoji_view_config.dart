@@ -1,0 +1,124 @@
+/*
+ * Modified version of https://github.com/Fintasys/emoji_picker_flutter
+ * MIT License
+ * Copyright (c) 2024 Stefan Humm
+ */
+
+import 'dart:math';
+
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
+import 'package:flutter/material.dart';
+
+/// Callback function for custom view
+typedef EmojiViewBuilder =
+    Widget Function(
+      Config config,
+      EmojiViewState state,
+      VoidCallback showSearchBar,
+    );
+
+/// Default Widget if no recent is available
+const DefaultNoRecentsWidget = Text(
+  'No Recents',
+  style: TextStyle(fontSize: 20, color: Colors.black26),
+  textAlign: TextAlign.center,
+);
+
+/// Emoji View Config
+class EmojiViewConfig {
+  /// Constructor
+  const EmojiViewConfig({
+    this.columns = 10,
+    this.emojiSizeMax = 28.0,
+    this.backgroundColor = const Color(0xFFEBEFF2),
+    this.verticalSpacing = 0,
+    this.horizontalSpacing = 0,
+    this.categorySpacing = 12,
+    this.gridPadding = EdgeInsets.zero,
+    this.recentsLimit = 28,
+    this.replaceEmojiOnLimitExceed = false,
+    this.noRecents = DefaultNoRecentsWidget,
+    this.loadingIndicator = const SizedBox.shrink(),
+    this.buttonMode = ButtonMode.MATERIAL,
+  }) : assert(categorySpacing >= 0);
+
+  /// Number of emojis per row
+  final int columns;
+
+  /// Width and height the emoji will be maximal displayed
+  /// Can be smaller due to screen size and amount of columns
+  final double emojiSizeMax;
+
+  /// The background color of the emoji view
+  final Color backgroundColor;
+
+  /// Verical spacing between emojis
+  final double verticalSpacing;
+
+  /// Horizontal spacing between emojis
+  final double horizontalSpacing;
+
+  /// Vertical spacing between consecutive emoji categories
+  final double categorySpacing;
+
+  /// Limit of recently used emoji that will be saved
+  final int recentsLimit;
+
+  /// A widget (usually [Text]) to be displayed if no recent emojis to display
+  /// Hot reload is not supported
+  final Widget noRecents;
+
+  /// A widget to display while emoji picker is initializing
+  /// Hot reload is not supported
+  final Widget loadingIndicator;
+
+  /// Choose visual response for tapping on an emoji cell
+  final ButtonMode buttonMode;
+
+  /// The padding of GridView, default is [EdgeInsets.zero]
+  final EdgeInsets gridPadding;
+
+  /// Replace latest emoji on recents list on limit exceed
+  final bool replaceEmojiOnLimitExceed;
+
+  /// Get Emoji size based on properties and screen width
+  double getEmojiSize(double width) {
+    final maxSize = getEmojiBoxSize(width);
+    return min(maxSize, emojiSizeMax);
+  }
+
+  /// Get Emoji hitbox size based on properties and screen width
+  double getEmojiBoxSize(double width) {
+    final totalHorizontalSpacing = (columns - 1) * horizontalSpacing;
+    final availableWidth = width - totalHorizontalSpacing;
+    return availableWidth / columns;
+  }
+
+  @override
+  bool operator ==(other) {
+    return (other is EmojiViewConfig) &&
+        other.columns == columns &&
+        other.emojiSizeMax == emojiSizeMax &&
+        other.backgroundColor == backgroundColor &&
+        other.verticalSpacing == verticalSpacing &&
+        other.horizontalSpacing == horizontalSpacing &&
+        other.categorySpacing == categorySpacing &&
+        other.recentsLimit == recentsLimit &&
+        other.buttonMode == buttonMode &&
+        other.gridPadding == gridPadding &&
+        other.replaceEmojiOnLimitExceed == replaceEmojiOnLimitExceed;
+  }
+
+  @override
+  int get hashCode =>
+      columns.hashCode ^
+      emojiSizeMax.hashCode ^
+      backgroundColor.hashCode ^
+      verticalSpacing.hashCode ^
+      horizontalSpacing.hashCode ^
+      categorySpacing.hashCode ^
+      recentsLimit.hashCode ^
+      buttonMode.hashCode ^
+      gridPadding.hashCode ^
+      replaceEmojiOnLimitExceed.hashCode;
+}

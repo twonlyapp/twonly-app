@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:flutter/foundation.dart' show setEquals;
+import 'package:flutter/foundation.dart' show listEquals, setEquals;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -111,8 +111,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
       ItemPositionsListener.create();
   int? focusedScrollItem;
   bool _receiverDeletedAccount = false;
+  bool _emojiPickerShowing = false;
   Future<void>? _olderMessagesLoad;
   bool _hasMoreMessages = true;
+  int _loadedMessagesRevision = 0;
 
   Timer? _nextTypingIndicator;
 
@@ -220,6 +222,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   }
 
   Future<void> _applyLoadedMessages({required bool reportOpened}) async {
+    final revision = ++_loadedMessagesRevision;
     final byId = <String, Message>{
       for (final message in _data.olderMessages) message.messageId: message,
       for (final message in _data.latestMessages) message.messageId: message,
@@ -229,6 +232,30 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
         final byTime = a.createdAt.compareTo(b.createdAt);
         return byTime != 0 ? byTime : a.messageId.compareTo(b.messageId);
       });
+
+    // A media row must know its type before it is exposed to the list. Without
+    // this initial read, stored media first renders as an empty bubble and then
+    // grows to the preview height when the media watch emits. That changes the
+    // extent of rows around the active scroll position and makes the positioned
+    // list jump, especially while another page is being appended.
+    final missingMediaIds = loadedMessages
+        .map((message) => message.mediaId)
+        .whereType<String>()
+        .where((mediaId) => !_data.mediaFilesById.containsKey(mediaId))
+        .toSet();
+    final missingMediaFiles = missingMediaIds.isEmpty
+        ? const <MediaFile>[]
+        : await twonlyDB.mediaFilesDao.getMediaFilesByIds(
+            missingMediaIds.toList(),
+          );
+    if (!mounted || revision != _loadedMessagesRevision) return;
+
+    if (missingMediaFiles.isNotEmpty) {
+      _data.mediaFilesById = {
+        ..._data.mediaFilesById,
+        for (final mediaFile in missingMediaFiles) mediaFile.mediaId: mediaFile,
+      };
+    }
     _data.allMessages = loadedMessages;
     _data.messagesById = byId;
     _watchGroupActionsForLoadedRange();
@@ -315,8 +342,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
           _data.mediaFilesById = {
             for (final mediaFile in mediaFiles) mediaFile.mediaId: mediaFile,
           };
-          _notifyMessageDataChanged();
           _updateGalleryItems(force: true);
+          // Publish the media map and matching gallery snapshot together. A
+          // single database emission must not rebuild the entire message list
+          // once with stale gallery data and immediately again with fresh data.
+          _notifyMessageDataChanged();
         });
     _subscriptions.reactions = twonlyDB.reactionsDao
         .watchReactionsForMessages(messageIds)
@@ -489,6 +519,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
 
     if (!mounted) return;
     _data.chatItems = chatItems.reversed.toList();
+    _updateGalleryItems(messages: storedMediaFiles);
     _notifyMessageDataChanged();
 
     if (wasSentByMe) {
@@ -506,8 +537,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
         }
       });
     }
-
-    _updateGalleryItems(messages: storedMediaFiles);
   }
 
   Future<void> _reportMessagesOpened(
@@ -541,24 +570,56 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
         .toSet();
     if (!force && setEquals(_data.galleryMessageIds, messageIds)) return;
 
-    final items = <String, MemoryItem>{};
+    final messagesByMediaId = <String, List<Message>>{};
     for (final message in storedMediaMessages) {
       final mediaFile = _data.mediaFilesById[message.mediaId];
       if (mediaFile == null) continue;
-      final mediaService = MediaFileService(mediaFile);
-      if (!mediaService.imagePreviewAvailable) continue;
-      items
-          .putIfAbsent(
-            mediaFile.mediaId,
-            () => MemoryItem(mediaService: mediaService, messages: []),
-          )
-          .messages
+      if (!MediaFileService(mediaFile).imagePreviewAvailable) continue;
+      messagesByMediaId
+          .putIfAbsent(mediaFile.mediaId, () => <Message>[])
           .add(message);
     }
     if (!mounted) return;
+
+    final previousItems = {
+      for (final item in _data.galleryItems)
+        item.mediaService.mediaFile.mediaId: item,
+    };
+    final nextItems = <MemoryItem>[];
+    for (final entry in messagesByMediaId.entries) {
+      final mediaFile = _data.mediaFilesById[entry.key]!;
+      final previous = previousItems[entry.key];
+      if (previous != null &&
+          previous.mediaService.mediaFile == mediaFile &&
+          listEquals(previous.messages, entry.value)) {
+        nextItems.add(previous);
+      } else {
+        nextItems.add(
+          MemoryItem(
+            mediaService: MediaFileService(mediaFile),
+            messages: entry.value,
+          ),
+        );
+      }
+    }
+
+    final previousOrder = _data.galleryItems
+        .map((item) => item.mediaService.mediaFile.mediaId)
+        .toList();
+    final nextOrder = nextItems
+        .map((item) => item.mediaService.mediaFile.mediaId)
+        .toList();
+    if (listEquals(previousOrder, nextOrder)) {
+      // Preserve the list identity when its indexes are unchanged. Media rows
+      // cache their gallery index, so replacing this list on every media status
+      // update made every visible preview scan the whole gallery again.
+      for (var i = 0; i < nextItems.length; i++) {
+        _data.galleryItems[i] = nextItems[i];
+      }
+    } else {
+      _data.galleryItems = nextItems;
+    }
     _data.galleryMessageIds = messageIds;
-    _data.galleryItems = items.values.toList();
-    _notifyMessageDataChanged();
   }
 
   Future<void> scrollToMessage(String messageId) async {
@@ -612,6 +673,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        resizeToAvoidBottomInset: !_emojiPickerShowing,
         appBar: AppBar(
           title: GestureDetector(
             onTap: () async {
@@ -672,6 +734,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
           ),
         ),
         body: SafeArea(
+          // Keep the system bottom inset reserved while the custom picker is
+          // visible. Otherwise it reappears during the final keyboard-close
+          // frames and makes the layout jump by roughly the navigation-bar
+          // height.
+          maintainBottomViewPadding: _emojiPickerShowing,
           child: Column(
             children: [
               Expanded(
@@ -806,6 +873,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                     setState(() {
                       quotesMessage = null;
                     });
+                  },
+                  onEmojiVisibilityChanged: (visible) {
+                    if (_emojiPickerShowing == visible) return;
+                    setState(() => _emojiPickerShowing = visible);
                   },
                 ),
               if (_receiverDeletedAccount)

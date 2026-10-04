@@ -146,6 +146,12 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
     );
 
     var imageBorderRadius = widget.borderRadius;
+    // ChatMediaEntry is only used for non-audio media. Reserve the final
+    // preview extent for every stored item, even while its thumbnail metadata
+    // is still catching up, so the row cannot grow underneath the scroll
+    // position. Widget media deliberately remains the compact status bubble.
+    final reservesStoredPreviewSpace =
+        widget.message.mediaStored && !widget.message.isWidgetMedia;
 
     Widget additionalMessageData = Container();
 
@@ -186,17 +192,13 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
           onDoubleTap: onDoubleTap,
           onTap: (widget.message.type == MessageType.media.name) ? onTap : null,
           child: SizedBox(
+            key: ValueKey('chat_media_frame_${widget.message.messageId}'),
             width: (widget.info.minWidth > 150)
                 ? widget.info.minWidth
-                : (widget.message.mediaStored &&
-                      widget.mediaService.imagePreviewAvailable)
+                : reservesStoredPreviewSpace
                 ? 150
                 : null,
-            height:
-                (widget.message.mediaStored &&
-                    widget.mediaService.imagePreviewAvailable)
-                ? 271
-                : null,
+            height: reservesStoredPreviewSpace ? 271 : null,
             child: Align(
               alignment: Alignment.centerRight,
               child: ClipRRect(

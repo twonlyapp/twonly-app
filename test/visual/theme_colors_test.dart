@@ -47,4 +47,21 @@ void main() {
       expect(middle[color], Color.lerp(color.light, color.dark, 0.5));
     }
   });
+
+  test('message-kind indicators keep their original fixed colors', () {
+    const expectedColors = {
+      AppColor.messageText: Color(0xFF448AFF),
+      AppColor.messageRestore: Color(0xFFFF9800),
+      AppColor.messageWidget: Color(0xFF9B59B6),
+      AppColor.messageVideo: Color(0xFFF321D0),
+      AppColor.messageAudio: Color(0xFFFC9555),
+      AppColor.messageImage: Color(0xFFFF5252),
+    };
+
+    for (final MapEntry(key: color, value: expected)
+        in expectedColors.entries) {
+      expect(color.light, expected);
+      expect(color.dark, expected);
+    }
+  });
 }

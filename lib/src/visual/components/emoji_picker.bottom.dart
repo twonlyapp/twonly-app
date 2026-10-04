@@ -1,7 +1,8 @@
 import 'dart:io';
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 
 class EmojiPickerBottom extends StatelessWidget {
@@ -54,6 +55,7 @@ class EmojiPickerBottom extends StatelessWidget {
                     height: 400,
                     locale: Localizations.localeOf(context),
                     checkPlatformCompatibility: false,
+                    resizeConfig: const ResizeConfig(showDragHandle: false),
                     emojiTextStyle: TextStyle(
                       fontSize: 24 * (Platform.isIOS ? 1.2 : 1),
                       fontFamilyFallback: Platform.isAndroid

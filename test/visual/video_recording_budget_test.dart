@@ -10,6 +10,7 @@ void main() {
   late Directory tempDir;
 
   const hd = Size(1280, 720);
+  const fullHd = Size(1920, 1080);
 
   setUp(() {
     tempDir = Directory.systemTemp.createTempSync('twonly_video_budget_test_');
@@ -54,14 +55,14 @@ void main() {
       expect(free.inSeconds, inInclusiveRange(45, 60));
     });
 
-    test('an unknown recording size falls back to 720p', () {
+    test('an unknown recording size falls back to 1080p', () {
       expect(
         budgetFor(SubscriptionPlan.Free, size: null),
-        budgetFor(SubscriptionPlan.Free),
+        budgetFor(SubscriptionPlan.Free, size: fullHd),
       );
       expect(
         budgetFor(SubscriptionPlan.Free, size: Size.zero),
-        budgetFor(SubscriptionPlan.Free),
+        budgetFor(SubscriptionPlan.Free, size: fullHd),
       );
     });
 
@@ -69,7 +70,7 @@ void main() {
       final hdBudget = budgetFor(SubscriptionPlan.Free);
       final fullHdBudget = budgetFor(
         SubscriptionPlan.Free,
-        size: const Size(1920, 1080),
+        size: fullHd,
       );
       expect(fullHdBudget.inMilliseconds, lessThan(hdBudget.inMilliseconds));
     });
@@ -118,7 +119,7 @@ void main() {
       );
       // A different recording size has not been measured.
       expect(
-        budgetFor(SubscriptionPlan.Free, size: const Size(1920, 1080)),
+        budgetFor(SubscriptionPlan.Free, size: fullHd),
         lessThan(budgetFor(SubscriptionPlan.Free)),
       );
     });

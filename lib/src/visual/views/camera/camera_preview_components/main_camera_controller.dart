@@ -32,6 +32,12 @@ import 'package:twonly/src/visual/views/camera/camera_preview_components/painter
 import 'package:twonly/src/visual/views/camera/camera_preview_components/painters/face_filters/dog_filter_painter.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/painters/face_filters/face_filter_painter.dart';
 
+// A captured widget cannot contain more camera detail than the live preview.
+// Full HD keeps the screenshot capture fast while avoiding the visible 720p
+// upscale on most modern phone displays. Ultra-high/max would also make the
+// continuously running barcode and face-detection image stream much heavier.
+const ResolutionPreset _cameraResolutionPreset = ResolutionPreset.veryHigh;
+
 class PreviewLink {
   const PreviewLink({
     required this.url,
@@ -208,7 +214,7 @@ class MainCameraController {
 
       var controller = CameraController(
         AppEnvironment.cameras[cameraId],
-        ResolutionPreset.high,
+        _cameraResolutionPreset,
         enableAudio: hasMic,
         imageFormatGroup: Platform.isAndroid
             ? ImageFormatGroup.nv21
@@ -228,7 +234,7 @@ class MainCameraController {
           await controller.dispose();
           controller = CameraController(
             AppEnvironment.cameras[cameraId],
-            ResolutionPreset.high,
+            _cameraResolutionPreset,
             enableAudio: hasMic,
           );
           _initializeFuture = controller.initialize();

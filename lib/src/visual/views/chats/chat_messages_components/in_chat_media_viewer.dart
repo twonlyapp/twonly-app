@@ -137,36 +137,46 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
 
   @override
   Widget build(BuildContext context) {
+    final awaitsStoredPreview =
+        !widget.message.isWidgetMedia &&
+        widget.message.mediaStored &&
+        !widget.mediaService.imagePreviewAvailable;
     if (widget.message.isWidgetMedia ||
         !widget.message.mediaStored ||
         !widget.mediaService.imagePreviewAvailable) {
+      final status = Row(
+        mainAxisSize: awaitsStoredPreview ? MainAxisSize.min : MainAxisSize.max,
+        children: [
+          MessageSendStateIcon(
+            [widget.message],
+            [widget.mediaService.mediaFile],
+            mainAxisAlignment: widget.message.senderId == null
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            canBeReopened: widget.canBeReopened,
+          ),
+          if (widget.info.displayTime || widget.message.modifiedAt != null)
+            FriendlyMessageTime(
+              message: widget.message,
+              color: context.appColor(AppColor.chatMessageMeta),
+            ),
+        ],
+      );
       return Container(
-        constraints: const BoxConstraints(
-          minHeight: 39,
-        ),
+        constraints: awaitsStoredPreview
+            ? const BoxConstraints.expand()
+            : const BoxConstraints(minHeight: 39),
         decoration: BoxDecoration(
           color: widget.info.color,
           borderRadius: widget.borderRadius,
         ),
         child: Padding(
           padding: widget.info.padding,
-          child: Row(
-            children: [
-              MessageSendStateIcon(
-                [widget.message],
-                [widget.mediaService.mediaFile],
-                mainAxisAlignment: widget.message.senderId == null
-                    ? MainAxisAlignment.end
-                    : MainAxisAlignment.start,
-                canBeReopened: widget.canBeReopened,
-              ),
-              if (widget.info.displayTime || widget.message.modifiedAt != null)
-                FriendlyMessageTime(
-                  message: widget.message,
-                  color: context.appColor(AppColor.chatMessageMeta),
-                ),
-            ],
-          ),
+          child: awaitsStoredPreview
+              ? Center(
+                  child: FittedBox(fit: BoxFit.scaleDown, child: status),
+                )
+              : status,
         ),
       );
     }

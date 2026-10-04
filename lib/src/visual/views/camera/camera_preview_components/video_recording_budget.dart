@@ -14,13 +14,14 @@ import 'package:twonly/src/utils/log.dart';
 /// `maximal_upload_size_of_single_media_size`. That makes the recording budget
 /// a plain division: plan limit divided by the rate the encoder writes at.
 ///
-/// The rate is the part that cannot be known up front. Both platforms record
-/// `ResolutionPreset.high`, which is 720p, but what an encoder spends on those
-/// pixels differs by a factor of several between devices - the same minute
-/// that costs 18 MB on one phone costs far more on a phone whose camcorder
-/// profile asks for a high bitrate. So the first recording on a device is
-/// budgeted from a deliberately pessimistic estimate, and every recording
-/// after that is budgeted from what this device actually wrote.
+/// The rate is the part that cannot be known up front. Both platforms request
+/// `ResolutionPreset.veryHigh`, which is approximately 1080p, but what an
+/// encoder spends on those pixels differs by a factor of several between
+/// devices - the same minute that costs 18 MB on one phone costs far more on a
+/// phone whose camcorder profile asks for a high bitrate. So the first
+/// recording on a device is budgeted from a deliberately pessimistic estimate,
+/// and every recording after that is budgeted from what this device actually
+/// wrote.
 abstract final class VideoRecordingBudget {
   /// Mirrors `maximal_upload_size_of_single_media_size` of the server's plans.
   /// Every paid plan shares the same per-file limit.
@@ -40,8 +41,9 @@ abstract final class VideoRecordingBudget {
   /// AAC alongside the video, when the microphone is available.
   static const double _audioBitsPerSecond = 128000;
 
-  /// Falls back to 720p when the camera has not reported its preview size.
-  static const Size _assumedRecordingSize = Size(1280, 720);
+  /// Falls back to the requested 1080p when the camera has not reported its
+  /// preview size.
+  static const Size _assumedRecordingSize = Size(1920, 1080);
 
   /// Leaves the container overhead and a scene busier than the one that was
   /// measured somewhere to go.

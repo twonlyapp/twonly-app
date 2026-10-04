@@ -1,5 +1,6 @@
 package eu.twonly
 
+import android.graphics.Paint
 import io.flutter.embedding.android.FlutterFragmentActivity
 import android.view.KeyEvent
 import dev.darttools.flutter_android_volume_keydown.FlutterAndroidVolumeKeydownPlugin.eventSink
@@ -10,6 +11,7 @@ import android.content.Context
 import android.content.Intent
 import io.crates.keyring.Keyring
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.graphics.PaintCompat
 import android.os.Bundle
 import android.net.Uri
 import java.io.InputStream
@@ -25,6 +27,7 @@ import android.content.pm.PackageManager
 
 class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "eu.twonly/photo_picker"
+    private val emojiPaint = Paint()
     private var pendingResult: MethodChannel.Result? = null
     private var pendingLocationPermissionResult: MethodChannel.Result? = null
     
@@ -94,6 +97,18 @@ class MainActivity : FlutterFragmentActivity() {
         NotificationTapChannel.configure(flutterEngine, applicationContext)
         WidgetRuntimeChannel.configure(flutterEngine, applicationContext)
         WebxdcChannel.configure(flutterEngine, this)
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "eu.twonly/emoji_picker",
+        ).setMethodCallHandler { call, result ->
+            if (call.method != "getSupportedEmojis") {
+                result.notImplemented()
+                return@setMethodCallHandler
+            }
+            val emoji = call.argument<List<String>>("source")
+            result.success(emoji?.map { PaintCompat.hasGlyph(emojiPaint, it) })
+        }
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {

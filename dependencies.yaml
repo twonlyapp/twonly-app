@@ -12,9 +12,6 @@ dependencies:
   blurhash_dart:
     git: https://github.com/justacid/blurhash-dart.git
     tag: v1.2.1
-  emoji_picker_flutter:
-    git: https://github.com/otsmr/emoji_picker_flutter.git
-    commit: 47ddf705fb4840d6fbe305b79e896666dda7b0d5
   exif:
     git: https://github.com/bigflood/dartexif.git
     dependencies:

@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -15,6 +14,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
@@ -30,6 +30,7 @@ class MessageInput extends StatefulWidget {
     required this.quotesMessage,
     required this.textFieldFocus,
     required this.onMessageSend,
+    required this.onEmojiVisibilityChanged,
     required this.composing,
     super.key,
   });
@@ -38,6 +39,7 @@ class MessageInput extends StatefulWidget {
   final FocusNode textFieldFocus;
   final Message? quotesMessage;
   final VoidCallback onMessageSend;
+  final ValueChanged<bool> onEmojiVisibilityChanged;
 
   /// Published so the chat-open heartbeat can stay quiet while the typing
   /// announcement is already covering this conversation.
@@ -63,11 +65,13 @@ const _lockOffset = 100.0;
 enum RecordingState { none, recording, finished }
 
 class _MessageInputState extends State<MessageInput>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final TextEditingController _textFieldController;
   late final RecorderController recorderController;
   final bool isApple = Platform.isIOS;
   bool _emojiShowing = false;
+  bool _switchingToSystemKeyboard = false;
+  double _emojiPickerHeight = 300;
   bool _showSparks = false;
   bool _audioRecordingLock = false;
   bool _overLockIcon = false;
@@ -79,6 +83,7 @@ class _MessageInputState extends State<MessageInput>
   DateTime? _lastTextChangeTime;
   int? _contactId;
   Timer? _recordingTimer;
+  Timer? _keyboardTransitionTimer;
   DateTime? _recordingStartTime;
 
   /// Pulses the microphone icon while a recording is running so the composer
@@ -111,6 +116,7 @@ class _MessageInputState extends State<MessageInput>
   void initState() {
     super.initState();
 
+    WidgetsBinding.instance.addObserver(this);
     _textFieldController = TextEditingController();
     _textFieldController.addListener(_handleTextChange);
     if (widget.group.draftMessage != null) {
@@ -138,10 +144,12 @@ class _MessageInputState extends State<MessageInput>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _textFieldController.removeListener(_handleTextChange);
     widget.textFieldFocus.removeListener(_handleTextFocusChange);
     widget.textFieldFocus.dispose();
     _recordingTimer?.cancel();
+    _keyboardTransitionTimer?.cancel();
     _recordingBlink.dispose();
     recorderController.dispose();
     _nextTypingIndicator?.cancel();
@@ -201,11 +209,78 @@ class _MessageInputState extends State<MessageInput>
   }
 
   void _handleTextFocusChange() {
-    if (widget.textFieldFocus.hasFocus) {
-      setState(() {
-        _emojiShowing = false;
-      });
+    if (widget.textFieldFocus.hasFocus &&
+        _emojiShowing &&
+        !_switchingToSystemKeyboard) {
+      _showSystemKeyboard();
     }
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (!mounted || !_switchingToSystemKeyboard) return;
+    final keyboardHeight = _currentKeyboardHeight();
+    if (keyboardHeight < _emojiPickerHeight * 0.8) return;
+
+    _keyboardTransitionTimer?.cancel();
+    _keyboardTransitionTimer = Timer(
+      const Duration(milliseconds: 80),
+      _finishSystemKeyboardTransition,
+    );
+  }
+
+  void _toggleKeyboard() {
+    if (_emojiShowing) {
+      _showSystemKeyboard();
+    } else {
+      _showEmojiPicker();
+    }
+  }
+
+  void _showEmojiPicker() {
+    _keyboardTransitionTimer?.cancel();
+    final keyboardHeight = _currentKeyboardHeight();
+    setState(() {
+      _switchingToSystemKeyboard = false;
+      if (keyboardHeight > 0) {
+        _emojiPickerHeight = keyboardHeight;
+      }
+      _emojiShowing = true;
+    });
+    widget.onEmojiVisibilityChanged(true);
+    widget.textFieldFocus.unfocus();
+  }
+
+  double _currentKeyboardHeight() {
+    final view = View.of(context);
+    final keyboardHeight = view.viewInsets.bottom / view.devicePixelRatio;
+    final safeAreaBottom = view.viewPadding.bottom / view.devicePixelRatio;
+    return (keyboardHeight - safeAreaBottom).clamp(0, double.infinity);
+  }
+
+  void _showSystemKeyboard() {
+    if (_switchingToSystemKeyboard) return;
+    setState(() => _switchingToSystemKeyboard = true);
+    widget.textFieldFocus.requestFocus();
+
+    // Some platforms only report the final keyboard inset. The fallback still
+    // performs a single picker/keyboard swap instead of following every inset
+    // animation frame.
+    _keyboardTransitionTimer?.cancel();
+    _keyboardTransitionTimer = Timer(
+      const Duration(milliseconds: 700),
+      _finishSystemKeyboardTransition,
+    );
+  }
+
+  void _finishSystemKeyboardTransition() {
+    if (!mounted || !_switchingToSystemKeyboard) return;
+    _keyboardTransitionTimer?.cancel();
+    setState(() {
+      _switchingToSystemKeyboard = false;
+      _emojiShowing = false;
+    });
+    widget.onEmojiVisibilityChanged(false);
   }
 
   Future<void> _startAudioRecording() async {
@@ -387,16 +462,7 @@ class _MessageInputState extends State<MessageInput>
                     children: [
                       if (_recordingState != RecordingState.recording)
                         GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _emojiShowing = !_emojiShowing;
-                              if (_emojiShowing) {
-                                widget.textFieldFocus.unfocus();
-                              } else {
-                                widget.textFieldFocus.requestFocus();
-                              }
-                            });
-                          },
+                          onTap: _toggleKeyboard,
                           child: ColoredBox(
                             color: Colors.transparent,
                             child: Padding(
@@ -407,7 +473,7 @@ class _MessageInputState extends State<MessageInput>
                                 right: 8,
                               ),
                               child: FaIcon(
-                                size: 20,
+                                size: _emojiShowing ? 18 : 20,
                                 _emojiShowing
                                     ? FontAwesomeIcons.keyboard
                                     : FontAwesomeIcons.faceSmile,
@@ -698,13 +764,8 @@ class _MessageInputState extends State<MessageInput>
               setState(() {});
             },
             config: Config(
-              height: 300,
+              height: _emojiPickerHeight,
               locale: Localizations.localeOf(context),
-              viewOrderConfig: const ViewOrderConfig(
-                top: EmojiPickerItem.searchBar,
-                // middle: EmojiPickerItem.emojiView,
-                bottom: EmojiPickerItem.categoryBar,
-              ),
               emojiTextStyle: TextStyle(
                 fontSize: 24 * (Platform.isIOS ? 1.2 : 1),
               ),
@@ -718,7 +779,6 @@ class _MessageInputState extends State<MessageInput>
               ),
               categoryViewConfig: CategoryViewConfig(
                 backgroundColor: context.color.surfaceContainer,
-                dividerColor: context.color.outlineVariant,
                 indicatorColor: context.color.primary,
                 iconColorSelected: context.color.primary,
                 iconColor: context.color.secondary,
