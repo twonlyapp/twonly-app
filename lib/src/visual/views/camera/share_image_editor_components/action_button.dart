@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class ActionButton extends StatelessWidget {
   const ActionButton(
@@ -27,11 +28,11 @@ class ActionButton extends StatelessWidget {
                 icon as FaIconData?,
                 size: 25,
                 color: disable
-                    ? const Color.fromARGB(154, 255, 255, 255)
-                    : color ?? Colors.white,
-                shadows: const [
+                    ? context.appColor(AppColor.mediaForegroundMuted)
+                    : color ?? context.appColor(AppColor.mediaForeground),
+                shadows: [
                   Shadow(
-                    color: Color.fromARGB(122, 0, 0, 0),
+                    color: context.appColor(AppColor.mediaScrim),
                     blurRadius: 5,
                   ),
                 ],
@@ -40,11 +41,11 @@ class ActionButton extends StatelessWidget {
                 icon as IconData?,
                 size: 30,
                 color: disable
-                    ? const Color.fromARGB(154, 255, 255, 255)
-                    : color ?? Colors.white,
-                shadows: const [
+                    ? context.appColor(AppColor.mediaForegroundMuted)
+                    : color ?? context.appColor(AppColor.mediaForeground),
+                shadows: [
                   Shadow(
-                    color: Color.fromARGB(122, 0, 0, 0),
+                    color: context.appColor(AppColor.mediaScrim),
                     blurRadius: 5,
                   ),
                 ],

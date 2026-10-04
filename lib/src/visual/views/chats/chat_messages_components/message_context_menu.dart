@@ -116,7 +116,7 @@ class MessageContextMenu extends StatelessWidget {
               final layer =
                   await showModalBottomSheet(
                         context: navigator.context,
-                        backgroundColor: Colors.black,
+                        backgroundColor: context.color.surface,
                         builder: (context) {
                           return const EmojiPickerBottom();
                         },

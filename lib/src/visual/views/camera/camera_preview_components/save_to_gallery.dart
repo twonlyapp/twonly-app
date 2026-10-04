@@ -89,12 +89,14 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (_imageSaving || widget.isLoading)
-            const SizedBox(
+            SizedBox(
               width: 12,
               height: 12,
               child: CircularProgressIndicator.adaptive(
                 strokeWidth: 1,
-                valueColor: AlwaysStoppedAnimation(Colors.white),
+                valueColor: AlwaysStoppedAnimation(
+                  context.appColor(AppColor.mediaForeground),
+                ),
               ),
             )
           else if (_imageSaved)

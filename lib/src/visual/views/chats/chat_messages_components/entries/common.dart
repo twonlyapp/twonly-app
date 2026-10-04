@@ -28,8 +28,10 @@ BubbleInfo getBubbleInfo(
 ) {
   final info = BubbleInfo()
     ..text = message.content ?? ''
-    ..textColor = Colors.white
-    ..color = getMessageColor(message.senderId != null)
+    ..textColor = message.senderId != null
+        ? context.appColor(AppColor.onChatBubbleReceived)
+        : context.appColor(AppColor.onChatBubbleSent)
+    ..color = getMessageColor(context, message.senderId != null)
     ..displayTime = !combineTextMessageWithNext(message, nextMessage)
     ..displayUserName = ''
     ..minWidth = minWidth
@@ -61,7 +63,7 @@ BubbleInfo getBubbleInfo(
     ..expanded = false
     ..color = message.quotesMessageId != null
         ? Colors.transparent
-        : getMessageColor(message.senderId != null);
+        : getMessageColor(context, message.senderId != null);
   if (message.isDeletedFromSender) {
     info
       ..color = context.color.surfaceBright
@@ -73,10 +75,8 @@ BubbleInfo getBubbleInfo(
   if (message.isDeletedFromSender) {
     info
       ..text = context.lang.messageWasDeleted
-      ..color = isDarkMode(context) ? Colors.black : Colors.grey;
-    if (isDarkMode(context)) {
-      info.textColor = const Color.fromARGB(255, 99, 99, 99);
-    }
+      ..color = context.appColor(AppColor.chatBubbleDeleted)
+      ..textColor = context.appColor(AppColor.onChatBubbleDeleted);
   }
   return info;
 }

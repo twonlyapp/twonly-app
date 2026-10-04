@@ -104,6 +104,7 @@ class MainCameraController {
   bool _isBusy = false;
   bool _isBusyFaces = false;
   CustomPaint? qrCodePain;
+  Color? scanHighlightColor;
   CustomPaint? facePaint;
   Offset? focusPointOffset;
 
@@ -529,12 +530,14 @@ class MainCameraController {
       final controller = cameraController;
       if (inputImage.metadata?.size != null &&
           inputImage.metadata?.rotation != null &&
-          controller != null) {
+          controller != null &&
+          scanHighlightColor != null) {
         final painter = BarcodeDetectorPainter(
           barcodes,
           inputImage.metadata!.size,
           inputImage.metadata!.rotation,
           controller.description.lensDirection,
+          scanHighlightColor!,
         );
         qrCodePain = CustomPaint(painter: painter);
 

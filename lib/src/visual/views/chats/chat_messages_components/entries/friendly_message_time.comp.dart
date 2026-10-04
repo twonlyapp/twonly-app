@@ -20,7 +20,10 @@ class FriendlyMessageTime extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusIcon = _buildStatusIcon(context, Colors.grey.shade400);
+    final statusIcon = _buildStatusIcon(
+      context,
+      context.appColor(AppColor.chatMessageMeta),
+    );
 
     return Padding(
       padding: const EdgeInsets.only(left: 6),
@@ -34,7 +37,7 @@ class FriendlyMessageTime extends StatelessWidget {
                 height: 10,
                 child: FaIcon(
                   FontAwesomeIcons.pencil,
-                  color: color ?? Colors.white.withAlpha(150),
+                  color: color ?? context.appColor(AppColor.chatMessageMeta),
                   size: 10,
                 ),
               ),
@@ -48,7 +51,7 @@ class FriendlyMessageTime extends StatelessWidget {
             ),
             style: TextStyle(
               fontSize: 10,
-              color: color ?? Colors.white.withAlpha(150),
+              color: color ?? context.appColor(AppColor.chatMessageMeta),
               decoration: TextDecoration.none,
               fontWeight: FontWeight.normal,
             ),

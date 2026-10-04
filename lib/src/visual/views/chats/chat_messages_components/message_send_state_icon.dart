@@ -11,9 +11,9 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
-import 'package:twonly/src/visual/themes/colors.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/file_limit_reached.dialog.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/message_color.dart';
 
 enum MessageSendState {
   received,
@@ -310,7 +310,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
           widget.group!.draftMessage != null &&
           widget.group!.draftMessage != '') {
         icons = [
-          const FaIcon(FontAwesomeIcons.pen, size: 12, color: Colors.grey),
+          FaIcon(
+            FontAwesomeIcons.pen,
+            size: 12,
+            color: context.color.onSurfaceVariant,
+          ),
         ];
         textWidget = Text(
           '${context.lang.draftMessage}: ${substringBy(widget.group!.draftMessage!, 10)}',

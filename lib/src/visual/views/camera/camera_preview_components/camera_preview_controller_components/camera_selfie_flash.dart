@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 /// Full-screen white overlay used as a "flash" when taking selfies
 /// with the front camera and flash enabled.
@@ -11,7 +12,7 @@ class CameraSelfieFlash extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
         child: Container(
-          color: Colors.white,
+          color: context.appColor(AppColor.mediaForeground),
         ),
       ),
     );

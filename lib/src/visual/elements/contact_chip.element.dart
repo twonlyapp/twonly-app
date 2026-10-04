@@ -68,9 +68,9 @@ class ContactChip extends StatelessWidget {
             ],
             if (onTap != null && contact != null) ...[
               const SizedBox(width: 15),
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.xmark,
-                color: Colors.grey,
+                color: context.color.onSurfaceVariant,
                 size: 12,
               ),
             ],

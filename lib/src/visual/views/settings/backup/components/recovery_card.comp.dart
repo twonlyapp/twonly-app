@@ -25,7 +25,7 @@ class RecoveryCard extends StatelessWidget {
       title: title,
       subtitle: subtitle,
       onTap: onTap,
-      accentColor: isEnabled ? context.color.primary : Colors.red,
+      accentColor: isEnabled ? context.color.primary : context.color.error,
     );
   }
 }

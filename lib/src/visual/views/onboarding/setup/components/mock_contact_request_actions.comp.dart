@@ -30,9 +30,9 @@ class MockContactRequestActionsComp extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.person_off_rounded,
-                          color: Color.fromARGB(164, 244, 67, 54),
+                          color: context.color.error,
                           size: 12,
                         ),
                         Text(
@@ -56,7 +56,11 @@ class MockContactRequestActionsComp extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.check, color: Colors.green, size: 12),
+                        Icon(
+                          Icons.check,
+                          color: context.appColor(AppColor.success),
+                          size: 12,
+                        ),
                         Text(
                           context.lang.contactActionAccept,
                           style: const TextStyle(fontSize: 8),

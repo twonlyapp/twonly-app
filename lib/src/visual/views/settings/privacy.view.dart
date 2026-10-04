@@ -4,7 +4,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/verification_badge_info.comp.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
 
 class PrivacyView extends StatefulWidget {
@@ -113,12 +112,12 @@ class _VerificationBadgeTriangle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
+    return SizedBox(
       width: 30,
       height: 30,
       child: Stack(
         children: [
-          Positioned(
+          const Positioned(
             top: 0,
             left: 9,
             child: SvgIcon(
@@ -132,10 +131,10 @@ class _VerificationBadgeTriangle extends StatelessWidget {
             child: SvgIcon(
               assetPath: SvgIcons.verifiedGreen,
               size: 14,
-              color: colorVerificationBadgeYellow,
+              color: context.appColor(AppColor.verificationPending),
             ),
           ),
-          Positioned(
+          const Positioned(
             bottom: 0,
             right: 0,
             child: SvgIcon(

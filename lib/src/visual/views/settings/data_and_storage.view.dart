@@ -65,7 +65,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
                 onPressed: () => Navigator.of(context).pop(true),
                 child: Text(
                   context.lang.galleryDisableWarningConfirm,
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: context.color.error),
                 ),
               ),
             ],
@@ -216,7 +216,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
                   autoDownloadOptions[ConnectivityResult.mobile.name]!
                       .where((e) => e != 'audio')
                       .join(', '),
-                  style: const TextStyle(color: Colors.grey),
+                  style: TextStyle(color: context.color.onSurfaceVariant),
                 ),
                 onTap: () async {
                   await showAutoDownloadOptions(
@@ -231,7 +231,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
                   autoDownloadOptions[ConnectivityResult.wifi.name]!
                       .where((e) => e != 'audio')
                       .join(', '),
-                  style: const TextStyle(color: Colors.grey),
+                  style: TextStyle(color: context.color.onSurfaceVariant),
                 ),
                 onTap: () async {
                   await showAutoDownloadOptions(

@@ -30,7 +30,7 @@ class SynchronizedViewerActionsToolbarComp extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.50),
+          color: context.appColor(AppColor.mediaScrim),
           borderRadius: BorderRadius.circular(20),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -40,26 +40,28 @@ class SynchronizedViewerActionsToolbarComp extends StatelessWidget {
             if (showStoreButton)
               _ToolbarAction(
                 icon: isImageSaving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator.adaptive(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                          valueColor: AlwaysStoppedAnimation(
+                            context.appColor(AppColor.mediaForeground),
+                          ),
                         ),
                       )
-                    : const FaIcon(
+                    : FaIcon(
                         FontAwesomeIcons.floppyDisk,
-                        color: Colors.white,
+                        color: context.appColor(AppColor.mediaForeground),
                         size: 18,
                       ),
                 label: context.lang.galleryActionSave,
                 onTap: isImageSaving ? null : onStore,
               ),
             _ToolbarAction(
-              icon: const FaIcon(
+              icon: FaIcon(
                 FontAwesomeIcons.download,
-                color: Colors.white,
+                color: context.appColor(AppColor.mediaForeground),
                 size: 19,
               ),
               label: context.lang.galleryActionExport,
@@ -68,7 +70,9 @@ class SynchronizedViewerActionsToolbarComp extends StatelessWidget {
             _ToolbarAction(
               icon: Icon(
                 isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: isFavorite ? Colors.redAccent : Colors.white,
+                color: isFavorite
+                    ? context.color.error
+                    : context.appColor(AppColor.mediaForeground),
                 size: 22,
               ),
               label: isFavorite
@@ -77,18 +81,18 @@ class SynchronizedViewerActionsToolbarComp extends StatelessWidget {
               onTap: onToggleFavorite,
             ),
             _ToolbarAction(
-              icon: const Icon(
+              icon: Icon(
                 Icons.delete,
-                color: Colors.white,
+                color: context.appColor(AppColor.mediaForeground),
                 size: 22,
               ),
               label: context.lang.galleryActionDelete,
               onTap: onDelete,
             ),
             _ToolbarAction(
-              icon: const FaIcon(
+              icon: FaIcon(
                 FontAwesomeIcons.shareNodes,
-                color: Colors.white,
+                color: context.appColor(AppColor.mediaForeground),
                 size: 19,
               ),
               label: context.lang.galleryActionShare,
@@ -135,7 +139,7 @@ class _ToolbarAction extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: context.appColor(AppColor.mediaForegroundMuted),
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.1,

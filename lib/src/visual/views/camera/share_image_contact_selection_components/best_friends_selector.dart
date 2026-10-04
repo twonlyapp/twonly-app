@@ -49,10 +49,10 @@ class BestFriendsSelector extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.outline.withAlpha(50),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
                         blurRadius: 10.9,
-                        color: Color.fromRGBO(0, 0, 0, 0.1),
+                        color: context.color.shadow.withValues(alpha: 0.1),
                       ),
                     ],
                     borderRadius: BorderRadius.circular(8),
@@ -135,10 +135,10 @@ class UserCheckbox extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.outline.withAlpha(50),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
                 blurRadius: 10.9,
-                color: Color.fromRGBO(0, 0, 0, 0.1),
+                color: context.color.shadow.withValues(alpha: 0.1),
               ),
             ],
             borderRadius: BorderRadius.circular(8),

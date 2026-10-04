@@ -429,13 +429,13 @@ class _ShareImageView extends State<ShareImageView> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (!mediaStoreFutureReady || sendingImage)
-                            const SizedBox(
+                            SizedBox(
                               height: 14,
                               width: 14,
                               child: CircularProgressIndicator.adaptive(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation(
-                                  Colors.black87,
+                                  context.color.onPrimary,
                                 ),
                               ),
                             )

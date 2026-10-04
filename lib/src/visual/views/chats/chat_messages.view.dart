@@ -21,7 +21,6 @@ import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
-import 'package:twonly/src/visual/themes/colors.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/animated_new_message.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/blink.component.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_group_action.dart';
@@ -819,8 +818,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   }
 }
 
-Color getMessageColor(bool isOther) {
-  return isOther ? DefaultColors.messageSelf : DefaultColors.messageOther;
+Color getMessageColor(BuildContext context, bool isOther) {
+  return isOther
+      ? context.appColor(AppColor.chatBubbleReceived)
+      : context.appColor(AppColor.chatBubbleSent);
 }
 
 class ChatItem {

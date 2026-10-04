@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 
@@ -131,7 +132,7 @@ class _TypingIndicatorState extends State<TypingIndicator> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: getMessageColor(true),
+                            color: getMessageColor(context, true),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: AnimatedTypingDots(
@@ -246,8 +247,8 @@ class _AnimatedDot extends AnimatedWidget {
           child: Container(
             width: 8,
             height: 8,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: context.appColor(AppColor.onChatBubbleReceived),
               shape: BoxShape.circle,
             ),
           ),

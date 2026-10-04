@@ -41,14 +41,13 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
 
   AvatarMakerThemeData getAvatarMakerTheme(BuildContext context) {
     final colors = context.color;
-    final isDark = isDarkMode(context);
     return AvatarMakerThemeData(
       boxDecoration: BoxDecoration(
         color: colors.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+            color: colors.shadow.withValues(alpha: 0.12),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

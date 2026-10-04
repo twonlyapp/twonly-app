@@ -68,7 +68,7 @@ class _SelectChatDeletionTimeListTitleState
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         // Provide a background color for the popup.
-        color: CupertinoColors.systemBackground.resolveFrom(context),
+        color: context.color.surface,
         // Use a SafeArea widget to avoid system overlaps.
         child: SafeArea(top: false, child: child),
       ),

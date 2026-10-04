@@ -187,7 +187,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   Future<void> _selectEmoji() async {
     final result = await showModalBottomSheet<dynamic>(
       context: context,
-      backgroundColor: Colors.black,
+      backgroundColor: context.color.surface,
       builder: (context) => const EmojiPickerBottom(),
     );
     if (result is EmojiLayerData && mounted) {
@@ -330,9 +330,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
           color: color == noContactGroupBackgroundColor ? null : Color(color),
           shape: BoxShape.circle,
           border: Border.all(
-            color: selected
-                ? (isDarkMode(context) ? Colors.white : Colors.black)
-                : Theme.of(context).colorScheme.outline,
+            color: selected ? context.color.onSurface : context.color.outline,
             width: selected ? 3 : 1,
           ),
         ),
@@ -431,10 +429,10 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
             IconButton(
               tooltip: context.lang.deleteContactGroup,
               onPressed: _delete,
-              icon: const FaIcon(
+              icon: FaIcon(
                 FontAwesomeIcons.trashCan,
                 size: 18,
-                color: Colors.red,
+                color: context.color.error,
               ),
             ),
         ],

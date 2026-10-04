@@ -133,7 +133,8 @@ class _RecoveryViewState extends State<RecoveryView> {
                   onPressed: _registerNewAccount,
                   icon: const Icon(Icons.person_add_rounded),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: context.color.error,
+                    foregroundColor: context.color.onError,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 32,
                       vertical: 12,

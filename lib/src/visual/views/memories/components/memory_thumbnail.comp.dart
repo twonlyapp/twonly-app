@@ -8,6 +8,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/selectable_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_transition_painter.dart';
 
@@ -234,11 +235,11 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                     }
                     Log.warn(error);
                     return ColoredBox(
-                      color: Colors.grey.shade200,
-                      child: const Center(
+                      color: context.color.surfaceContainerHigh,
+                      child: Center(
                         child: FaIcon(
                           FontAwesomeIcons.image,
-                          color: Colors.black26,
+                          color: context.color.onSurfaceVariant,
                         ),
                       ),
                     );
@@ -251,37 +252,43 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                 )
               else
                 ColoredBox(
-                  color: Colors.grey.shade200,
-                  child: const Center(
+                  color: context.color.surfaceContainerHigh,
+                  child: Center(
                     child: FaIcon(
                       FontAwesomeIcons.image,
-                      color: Colors.black26,
+                      color: context.color.onSurfaceVariant,
                     ),
                   ),
                 ),
               if (isVideo)
-                const Positioned.fill(
+                Positioned.fill(
                   child: Center(
                     child: FaIcon(
                       FontAwesomeIcons.circlePlay,
-                      color: Colors.white,
+                      color: context.appColor(AppColor.mediaForeground),
                       size: 32,
                       shadows: [
-                        Shadow(color: Colors.black54, blurRadius: 6),
+                        Shadow(
+                          color: context.appColor(AppColor.mediaScrim),
+                          blurRadius: 6,
+                        ),
                       ],
                     ),
                   ),
                 ),
               if (media.mediaFile.isFavorite)
-                const Positioned(
+                Positioned(
                   bottom: 6,
                   left: 6,
                   child: Icon(
                     Icons.favorite,
-                    color: Colors.redAccent,
+                    color: context.color.error,
                     size: 16,
                     shadows: [
-                      Shadow(color: Colors.black54, blurRadius: 4),
+                      Shadow(
+                        color: context.appColor(AppColor.mediaScrim),
+                        blurRadius: 4,
+                      ),
                     ],
                   ),
                 ),
@@ -294,17 +301,17 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                   switch (media.mediaFile.cloudState) {
                     case CloudState.none:
                       iconData = Icons.cloud_off_outlined;
-                      color = Colors.white54;
+                      color = context.appColor(AppColor.mediaForegroundMuted);
                     case CloudState.pending:
                       iconData = Icons.cloud_upload_outlined;
-                      color = Colors.white70;
+                      color = context.appColor(AppColor.mediaForegroundMuted);
                     case CloudState.uploaded:
                       if (hasStored) {
                         iconData = Icons.cloud_done_outlined;
-                        color = Colors.white;
+                        color = context.appColor(AppColor.mediaForeground);
                       } else {
                         iconData = Icons.cloud_outlined;
-                        color = Colors.white;
+                        color = context.appColor(AppColor.mediaForeground);
                       }
                   }
 
@@ -315,8 +322,11 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                       iconData,
                       color: color,
                       size: 16,
-                      shadows: const [
-                        Shadow(color: Colors.black54, blurRadius: 4),
+                      shadows: [
+                        Shadow(
+                          color: context.appColor(AppColor.mediaScrim),
+                          blurRadius: 4,
+                        ),
                       ],
                     ),
                   );

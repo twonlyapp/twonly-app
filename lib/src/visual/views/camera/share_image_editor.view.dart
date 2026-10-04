@@ -545,9 +545,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         await askToCloseThenClose();
       },
       child: Scaffold(
-        backgroundColor: widget.sharedFromGallery
-            ? null
-            : Colors.white.withAlpha(0),
+        backgroundColor: widget.sharedFromGallery ? null : Colors.transparent,
         resizeToAvoidBottomInset: false,
         body: Stack(
           key: _editorStackKey,

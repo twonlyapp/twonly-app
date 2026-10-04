@@ -322,7 +322,7 @@ class _GroupViewState extends State<GroupView> {
           if (!_group!.leftGroup)
             BetterListTile(
               icon: FontAwesomeIcons.rightFromBracket,
-              color: Colors.red,
+              color: context.color.error,
               text: context.lang.leaveGroup,
               onTap: _leaveGroup,
             )

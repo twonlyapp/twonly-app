@@ -7,7 +7,7 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/visual/components/verification_badge_info.comp.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
 
 class VerificationBadgeComp extends StatefulWidget {
@@ -198,7 +198,7 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
                 ? SvgIcons.verifiedNumeric(_verifiedByTransferredTrustCount)
                 : SvgIcons.verifiedRed,
             color: (_verifiedByTransferredTrustCount > 0 && !_isVerified)
-                ? colorVerificationBadgeYellow
+                ? context.appColor(AppColor.verificationPending)
                 : null,
             size: widget.size,
           ),

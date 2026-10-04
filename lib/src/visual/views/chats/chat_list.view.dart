@@ -348,7 +348,6 @@ class _ChatListViewState extends State<ChatListView>
     final plan = context.select<PurchasesProvider, SubscriptionPlan>(
       (p) => p.plan,
     );
-    final dark = isDarkMode(context);
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -392,7 +391,7 @@ class _ChatListViewState extends State<ChatListView>
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: dark ? Colors.black : Colors.white,
+                      color: context.color.onPrimary,
                     ),
                   ),
                 ),
@@ -421,11 +420,11 @@ class _ChatListViewState extends State<ChatListView>
                     ),
                   Center(
                     child: NotificationBadgeComp(
-                      backgroundColor: dark ? Colors.white : Colors.black,
-                      textColor: dark ? Colors.black : Colors.white,
+                      backgroundColor: context.color.inverseSurface,
+                      textColor: context.color.onInverseSurface,
                       count: badgeCount.toString(),
                       child: IconButton(
-                        color: badgeCount > 0 ? Colors.black : null,
+                        color: badgeCount > 0 ? context.color.onPrimary : null,
                         key: searchForOtherUsers,
                         icon: const FaIcon(FontAwesomeIcons.userPlus, size: 18),
                         onPressed: () => context.push(Routes.chatsAddNewUser),
@@ -555,12 +554,12 @@ class _ChatListViewState extends State<ChatListView>
                 FloatingActionButton(
                   heroTag: 'qrcode_fab',
                   elevation: 2,
-                  backgroundColor: dark ? Colors.grey[800] : Colors.grey[200],
-                  foregroundColor: dark ? Colors.white : Colors.black87,
+                  backgroundColor: context.color.surfaceContainerHigh,
+                  foregroundColor: context.color.onSurface,
                   onPressed: () => context.push(Routes.settingsPublicProfile),
                   child: FaIcon(
                     FontAwesomeIcons.qrcode,
-                    color: dark ? Colors.white : Colors.black87,
+                    color: context.color.onSurface,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -568,11 +567,11 @@ class _ChatListViewState extends State<ChatListView>
                   heroTag: 'new_chat_fab',
                   elevation: 2,
                   backgroundColor: context.color.primary,
-                  foregroundColor: Colors.black87,
+                  foregroundColor: context.color.onPrimary,
                   onPressed: () => context.push(Routes.chatsStartNewChat),
-                  child: const FaIcon(
+                  child: FaIcon(
                     FontAwesomeIcons.penToSquare,
-                    color: Colors.black87,
+                    color: context.color.onPrimary,
                   ),
                 ),
               ],

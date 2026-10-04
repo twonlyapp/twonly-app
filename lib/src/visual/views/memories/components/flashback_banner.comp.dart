@@ -51,11 +51,11 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
                       width: 120,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
-                            color: Colors.black12,
+                            color: context.color.shadow.withValues(alpha: 0.12),
                             blurRadius: 6,
-                            offset: Offset(0, 2),
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -68,11 +68,15 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return ColoredBox(
-                                color: Colors.grey.shade800,
-                                child: const Center(
+                                color: context.appColor(
+                                  AppColor.mediaBackground,
+                                ),
+                                child: Center(
                                   child: Icon(
                                     Icons.broken_image_outlined,
-                                    color: Colors.white30,
+                                    color: context.appColor(
+                                      AppColor.mediaForegroundMuted,
+                                    ),
                                     size: 32,
                                   ),
                                 ),
@@ -86,7 +90,7 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.center,
                                   colors: [
-                                    Colors.black.withValues(alpha: 0.7),
+                                    context.appColor(AppColor.mediaScrim),
                                     Colors.transparent,
                                   ],
                                 ),
@@ -100,8 +104,10 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
                             child: Text(
                               text,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: context.appColor(
+                                  AppColor.mediaForeground,
+                                ),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                               ),

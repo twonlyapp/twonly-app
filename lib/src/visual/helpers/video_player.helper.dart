@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPlayerHelper extends StatefulWidget {
@@ -98,15 +99,15 @@ class _VideoPlayerHelperState extends State<VideoPlayerHelper>
                   child: Container(
                     width: 64,
                     height: 64,
-                    decoration: const BoxDecoration(
-                      color: Colors.black54,
+                    decoration: BoxDecoration(
+                      color: context.appColor(AppColor.mediaScrim),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       _isPaused
                           ? Icons.pause_rounded
                           : Icons.play_arrow_rounded,
-                      color: Colors.white,
+                      color: context.appColor(AppColor.mediaForeground),
                       size: 36,
                     ),
                   ),

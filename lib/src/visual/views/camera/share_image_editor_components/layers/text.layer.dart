@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 
@@ -113,7 +114,7 @@ class _TextViewState extends State<TextLayer> {
         right: 0,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.black.withAlpha(100),
+            color: context.appColor(AppColor.mediaScrim),
           ),
           child: TextField(
             controller: textController,
@@ -151,8 +152,8 @@ class _TextViewState extends State<TextLayer> {
               ),
             ),
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.appColor(AppColor.mediaForeground),
               fontSize: 20,
             ),
           ),
@@ -219,13 +220,13 @@ class _TextViewState extends State<TextLayer> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.black.withAlpha(100),
+                color: context.appColor(AppColor.mediaScrim),
               ),
               child: Text(
                 widget.layerData.text,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.appColor(AppColor.mediaForeground),
                   fontSize: 20,
                 ),
               ),
@@ -245,7 +246,9 @@ class _TextViewState extends State<TextLayer> {
                 child: ActionButton(
                   FontAwesomeIcons.trashCan,
                   tooltipText: '',
-                  color: deleteLayer ? Colors.red : Colors.white,
+                  color: deleteLayer
+                      ? context.appColor(AppColor.recording)
+                      : context.appColor(AppColor.mediaForeground),
                 ),
               ),
             ),

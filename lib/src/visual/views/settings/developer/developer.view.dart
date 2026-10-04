@@ -527,9 +527,9 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 },
               ),
               ListTile(
-                title: const Text(
+                title: Text(
                   'Delete all app data',
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(color: context.color.error),
                 ),
                 onTap: () async {
                   final ok = await showAlertDialog(

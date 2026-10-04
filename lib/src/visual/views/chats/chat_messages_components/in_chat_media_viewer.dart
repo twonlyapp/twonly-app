@@ -145,10 +145,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
           minHeight: 39,
         ),
         decoration: BoxDecoration(
-          color: widget.info.color.withValues(alpha: 0.3),
-          border: Border.all(
-            color: widget.info.color.withValues(alpha: 0.4),
-          ),
+          color: widget.info.color,
           borderRadius: widget.borderRadius,
         ),
         child: Padding(
@@ -166,9 +163,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
               if (widget.info.displayTime || widget.message.modifiedAt != null)
                 FriendlyMessageTime(
                   message: widget.message,
-                  color: isDarkMode(context)
-                      ? Colors.white.withAlpha(100)
-                      : Colors.black.withAlpha(100),
+                  color: context.appColor(AppColor.chatMessageMeta),
                 ),
             ],
           ),

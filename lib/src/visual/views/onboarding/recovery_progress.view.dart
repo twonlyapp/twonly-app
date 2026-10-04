@@ -144,12 +144,11 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
   }
 
   Widget _buildStatusIcon(BuildContext context, _StepStatus status) {
-    final isDark = isDarkMode(context);
     switch (status) {
       case _StepStatus.done:
-        return const Icon(
+        return Icon(
           Icons.check_circle_rounded,
-          color: Colors.green,
+          color: context.appColor(AppColor.success),
           size: 24,
         );
       case _StepStatus.active:
@@ -165,43 +164,41 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
           ),
         );
       case _StepStatus.error:
-        return const Icon(
+        return Icon(
           Icons.error_rounded,
-          color: Colors.redAccent,
+          color: context.color.error,
           size: 24,
         );
       case _StepStatus.pending:
         return Icon(
           Icons.circle_outlined,
           size: 24,
-          color: isDark ? Colors.white24 : Colors.black26,
+          color: context.color.outlineVariant,
         );
     }
   }
 
   TextStyle _labelStyle(BuildContext context, _StepStatus status) {
-    final isDark = isDarkMode(context);
     const base = TextStyle(fontSize: 15, height: 1.3);
     switch (status) {
       case _StepStatus.active:
         return base.copyWith(
           fontWeight: FontWeight.w600,
-          color: isDark ? Colors.white : Colors.black87,
+          color: context.color.onSurface,
         );
       case _StepStatus.error:
         return base.copyWith(
           fontWeight: FontWeight.w600,
-          color: Colors.redAccent,
+          color: context.color.error,
         );
       case _StepStatus.done:
-        return base.copyWith(color: isDark ? Colors.white60 : Colors.black54);
+        return base.copyWith(color: context.color.onSurfaceVariant);
       case _StepStatus.pending:
-        return base.copyWith(color: isDark ? Colors.white30 : Colors.black38);
+        return base.copyWith(color: context.color.outline);
     }
   }
 
   Widget _buildStepRow(BuildContext context, int index) {
-    final isDark = isDarkMode(context);
     final isLast = index == _stepCount - 1;
     final status = _statusFor(index);
 
@@ -218,8 +215,10 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
                     width: 2,
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     color: status == _StepStatus.done
-                        ? Colors.green.withValues(alpha: 0.4)
-                        : (isDark ? Colors.white12 : Colors.black12),
+                        ? context
+                              .appColor(AppColor.success)
+                              .withValues(alpha: 0.4)
+                        : context.color.outlineVariant,
                   ),
                 ),
             ],
@@ -257,8 +256,7 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = isDarkMode(context);
-    final titleColor = isDark ? Colors.white : Colors.black87;
+    final titleColor = context.color.onSurface;
     final hasFailed = _error != null;
 
     return PopScope(
@@ -280,7 +278,7 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
                           ? () => Navigator.of(context).pop()
                           : null,
                       icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                      color: isDark ? Colors.white70 : Colors.black54,
+                      color: context.color.onSurfaceVariant,
                       iconSize: 20,
                     ),
                   ],
@@ -291,7 +289,7 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
                     padding: const EdgeInsets.all(12),
                     child: LinkLogoAnimation(
                       size: 90,
-                      color: isDark ? Colors.white : Colors.black,
+                      color: context.color.onSurface,
                     ),
                   ),
                 ),
@@ -312,20 +310,16 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
-                    color: isDark ? Colors.white54 : Colors.black45,
+                    color: context.color.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 32),
                 Container(
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.black.withValues(alpha: 0.04),
+                    color: context.color.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.black.withValues(alpha: 0.06),
+                      color: context.color.outlineVariant,
                     ),
                   ),
                   padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
@@ -341,8 +335,8 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
                   Text(
                     _error!.toLocalizedString(context),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.redAccent,
+                    style: TextStyle(
+                      color: context.color.error,
                       fontSize: 14,
                     ),
                   ),

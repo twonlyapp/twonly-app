@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class ShowTitleText extends StatelessWidget {
   const ShowTitleText({
@@ -15,13 +16,13 @@ class ShowTitleText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textStyle = TextStyle(
-      color: Colors.white,
+      color: context.appColor(AppColor.mediaForeground),
       fontWeight: FontWeight.bold,
       fontSize: isLink ? 14 : 24,
       decoration: TextDecoration.none,
-      shadows: const [
+      shadows: [
         Shadow(
-          color: Color.fromARGB(122, 0, 0, 0),
+          color: context.appColor(AppColor.mediaScrim),
           blurRadius: 5,
         ),
       ],

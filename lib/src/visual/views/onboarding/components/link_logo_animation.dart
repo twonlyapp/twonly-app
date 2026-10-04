@@ -4,9 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class LinkLogoAnimation extends StatefulWidget {
   const LinkLogoAnimation({
+    required this.color,
     super.key,
     this.size = 130,
-    this.color = Colors.white,
   });
 
   final double size;

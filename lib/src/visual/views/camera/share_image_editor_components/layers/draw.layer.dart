@@ -109,8 +109,8 @@ class _DrawLayerState extends State<DrawLayer> {
                   FontAwesomeIcons.arrowRotateLeft,
                   tooltipText: context.lang.undo,
                   color: widget.layerData.control.paths.isNotEmpty
-                      ? Colors.white
-                      : Colors.white.withAlpha(80),
+                      ? context.appColor(AppColor.mediaForeground)
+                      : context.appColor(AppColor.mediaForegroundMuted),
                   onPressed: () {
                     if (widget.layerData.control.paths.isEmpty) return;
                     skipNextEvent = true;
@@ -123,8 +123,8 @@ class _DrawLayerState extends State<DrawLayer> {
                   tooltipText: context.lang.redo,
                   FontAwesomeIcons.arrowRotateRight,
                   color: undoList.isNotEmpty
-                      ? Colors.white
-                      : Colors.white.withAlpha(80),
+                      ? context.appColor(AppColor.mediaForeground)
+                      : context.appColor(AppColor.mediaForegroundMuted),
                   onPressed: () {
                     if (undoList.isEmpty) return;
 
@@ -226,7 +226,7 @@ class MagnifyingGlass extends StatelessWidget {
           color: color,
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white,
+            color: context.appColor(AppColor.mediaForeground),
             width: 2,
           ),
         ),

@@ -113,7 +113,7 @@ class ThresholdPicker extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: isSelected
-                              ? Colors.black87
+                              ? context.color.onPrimary
                               : context.color.onSurfaceVariant,
                         ),
                       ),

@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/stories.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_icon_button.element.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_viewers.bottom_sheet.dart';
 
@@ -23,7 +24,7 @@ class OwnStoryBottomBar extends StatelessWidget {
   Future<void> _showViewers(BuildContext context, MediaFile media) async {
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.black,
+      backgroundColor: context.appColor(AppColor.mediaBackground),
       builder: (context) => StoryViewersBottomSheet(mediaFile: media),
     );
   }

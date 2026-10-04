@@ -14,9 +14,9 @@ import 'package:twonly/src/services/mediafiles/media_download_policy.dart'
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
-import 'package:twonly/src/visual/themes/colors.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/in_chat_media_viewer.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/message_color.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer.view.dart';
 
 class ChatMediaEntry extends StatefulWidget {

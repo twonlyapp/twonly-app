@@ -15,14 +15,12 @@ class ChatUnknownEntry extends StatelessWidget {
       ),
       padding: const EdgeInsets.only(left: 10, top: 6, bottom: 6, right: 10),
       decoration: BoxDecoration(
-        color: isDarkMode(context) ? Colors.black : Colors.grey,
+        color: context.appColor(AppColor.chatBubbleDeleted),
         borderRadius: BorderRadius.circular(12),
       ),
       child: BetterText(
         text: context.lang.updateTwonlyMessage,
-        textColor: isDarkMode(context)
-            ? const Color.fromARGB(255, 99, 99, 99)
-            : Colors.black,
+        textColor: context.appColor(AppColor.onChatBubbleDeleted),
       ),
     );
   }

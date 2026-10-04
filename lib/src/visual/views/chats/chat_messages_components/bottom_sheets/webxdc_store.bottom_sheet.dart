@@ -109,7 +109,7 @@ class _WebxdcStoreViewState extends State<WebxdcStoreView> {
               margin: const EdgeInsets.only(top: 12, bottom: 8),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
-                color: Colors.grey,
+                color: context.color.outline,
               ),
               height: 3,
               width: 60,

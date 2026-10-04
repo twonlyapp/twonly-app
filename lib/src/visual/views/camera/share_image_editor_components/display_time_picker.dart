@@ -53,7 +53,7 @@ Future<void> showDisplayTimePicker(
 
   await showModalBottomSheet<void>(
     context: context,
-    backgroundColor: Colors.black,
+    backgroundColor: Theme.of(context).colorScheme.surface,
     builder: (sheetContext) {
       return SelectShowTime(
         initialItem: initialItem,

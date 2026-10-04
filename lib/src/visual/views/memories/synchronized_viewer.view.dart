@@ -287,7 +287,11 @@ class _SynchronizedImageViewerScreenState
           valueListenable: _backdropOpacityNotifier,
           builder: (context, opacity, child) {
             return ColoredBox(
-              color: Colors.black.withValues(alpha: opacity),
+              color: context
+                  .appColor(AppColor.mediaBackground)
+                  .withValues(
+                    alpha: opacity,
+                  ),
               child: child,
             );
           },

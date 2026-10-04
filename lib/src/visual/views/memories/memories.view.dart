@@ -441,14 +441,14 @@ class MemoriesViewState extends State<MemoriesView>
                         Icon(
                           Icons.photo_library_outlined,
                           size: 64,
-                          color: Colors.grey.shade400,
+                          color: context.color.onSurfaceVariant,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           context.lang.memoriesEmpty,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.grey,
+                          style: TextStyle(
+                            color: context.color.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -489,7 +489,7 @@ class MemoriesViewState extends State<MemoriesView>
                 children: [
                   if (_isUsageLimitReached)
                     Container(
-                      color: Colors.redAccent,
+                      color: context.color.error,
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                         vertical: 8,
@@ -497,8 +497,8 @@ class MemoriesViewState extends State<MemoriesView>
                       ),
                       child: Text(
                         context.lang.memoriesBackupLimitReached,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.color.onError,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
@@ -656,7 +656,7 @@ class MemoriesViewState extends State<MemoriesView>
                                                 ? Icons.favorite
                                                 : Icons.favorite_border,
                                             color: _filterFavoritesOnly
-                                                ? Colors.redAccent
+                                                ? context.color.error
                                                 : null,
                                           ),
                                           onPressed: () {

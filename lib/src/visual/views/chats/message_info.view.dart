@@ -238,7 +238,7 @@ class _MessageInfoViewState extends State<MessageInfoView> {
                   // ignore: inference_failure_on_function_invocation
                   await showModalBottomSheet(
                     context: context,
-                    backgroundColor: Colors.black,
+                    backgroundColor: context.color.surface,
                     builder: (context) {
                       return MessageHistoryView(
                         message: widget.message,

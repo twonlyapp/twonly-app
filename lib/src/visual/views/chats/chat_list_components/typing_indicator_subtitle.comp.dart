@@ -77,7 +77,7 @@ class _TypingIndicatorSubtitleCompState
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 3),
           decoration: BoxDecoration(
-            color: getMessageColor(true),
+            color: getMessageColor(context, true),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Transform.scale(

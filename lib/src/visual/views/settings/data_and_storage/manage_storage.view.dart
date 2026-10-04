@@ -128,7 +128,7 @@ class _ManageStorageViewState extends State<ManageStorageView> {
             height: 24,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.2),
+              color: context.color.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
             ),
             child: ClipRRect(
@@ -145,11 +145,20 @@ class _ManageStorageViewState extends State<ManageStorageView> {
                   return Row(
                     children: [
                       if (imageBytes > 0)
-                        Container(width: imageWidth, color: Colors.blue),
+                        Container(
+                          width: imageWidth,
+                          color: context.appColor(AppColor.info),
+                        ),
                       if (videoBytes > 0)
-                        Container(width: videoWidth, color: Colors.green),
+                        Container(
+                          width: videoWidth,
+                          color: context.appColor(AppColor.success),
+                        ),
                       if (gifBytes > 0)
-                        Container(width: gifWidth, color: Colors.orange),
+                        Container(
+                          width: gifWidth,
+                          color: context.appColor(AppColor.warning),
+                        ),
                     ],
                   );
                 },
@@ -160,17 +169,17 @@ class _ManageStorageViewState extends State<ManageStorageView> {
           _StorageCategoryTile(
             title: context.lang.settingsStorageImages,
             size: formatBytes(imageBytes),
-            color: Colors.blue,
+            color: context.appColor(AppColor.info),
           ),
           _StorageCategoryTile(
             title: context.lang.settingsStorageVideos,
             size: formatBytes(videoBytes),
-            color: Colors.green,
+            color: context.appColor(AppColor.success),
           ),
           _StorageCategoryTile(
             title: context.lang.settingsStorageGifs,
             size: formatBytes(gifBytes),
-            color: Colors.orange,
+            color: context.appColor(AppColor.warning),
           ),
           const SizedBox(height: 32),
           Align(
@@ -229,9 +238,9 @@ class _StorageCategoryTile extends StatelessWidget {
           ),
           Text(
             size,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
-              color: Colors.grey,
+              color: context.color.onSurfaceVariant,
             ),
           ),
         ],

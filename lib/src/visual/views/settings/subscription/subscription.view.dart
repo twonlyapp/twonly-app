@@ -119,7 +119,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: isDarkMode(context) ? Colors.black : Colors.white,
+                      color: context.color.onPrimary,
                     ),
                   ),
                 ),
@@ -295,7 +295,7 @@ class CurrentPlanBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.bold,
-          color: isDarkMode(context) ? Colors.black : Colors.white,
+          color: context.color.onPrimary,
         ),
       ),
     );
@@ -580,9 +580,9 @@ class _MissionRow extends StatelessWidget {
         Text(
           desc,
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
-            color: Colors.grey,
+            color: context.color.onSurfaceVariant,
             height: 1.3,
           ),
         ),

@@ -22,17 +22,9 @@ class MyChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = isDarkMode(context);
-    final background = selected
-        ? context.color.primary
-        : isDark
-        ? Colors.grey[800]!
-        : Colors.grey[200]!;
-    final foreground = selected
-        ? Colors.black87
-        : isDark
-        ? Colors.white
-        : Colors.black87;
+    final colors = context.color;
+    final background = selected ? colors.primary : colors.surfaceContainerHigh;
+    final foreground = selected ? colors.onPrimary : colors.onSurface;
     Widget chip = AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       height: 36,

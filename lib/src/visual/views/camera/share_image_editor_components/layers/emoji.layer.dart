@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 
@@ -171,7 +172,9 @@ class _EmojiLayerState extends State<EmojiLayer> {
                 child: ActionButton(
                   FontAwesomeIcons.trashCan,
                   tooltipText: '',
-                  color: deleteLayer ? Colors.red : Colors.white,
+                  color: deleteLayer
+                      ? context.appColor(AppColor.recording)
+                      : context.appColor(AppColor.mediaForeground),
                 ),
               ),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class UserDiscoveryDeveloperView extends StatefulWidget {
   const UserDiscoveryDeveloperView({super.key});
@@ -121,10 +122,10 @@ class _TableExpansionTile<T> extends StatelessWidget {
           children: data.isNotEmpty
               ? data.map((item) => itemBuilder(context, item)).toList()
               : [
-                  const ListTile(
+                  ListTile(
                     title: Text(
                       'No entries',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: context.color.onSurfaceVariant),
                     ),
                   ),
                 ],

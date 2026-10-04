@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/zoom_tutorial_overlay.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
@@ -66,13 +67,13 @@ class CameraBottomControls extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (!isVideoRecording)
-                  _buildSideButtonLeft()
+                  _buildSideButtonLeft(context)
                 else
-                  _buildLockOrStopButton(),
-                _buildShutterButton(),
+                  _buildLockOrStopButton(context),
+                _buildShutterButton(context),
                 if (!isVideoRecording)
                   if (isFront)
-                    _buildSideButtonRight()
+                    _buildSideButtonRight(context)
                   else
                     const SizedBox(width: 80)
                 else
@@ -85,7 +86,7 @@ class CameraBottomControls extends StatelessWidget {
     );
   }
 
-  Widget _buildLockOrStopButton() {
+  Widget _buildLockOrStopButton(BuildContext context) {
     if (videoRecordingLocked) {
       // Show stop button
       return GestureDetector(
@@ -100,7 +101,7 @@ class CameraBottomControls extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: Colors.red,
+                color: context.appColor(AppColor.recording),
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
@@ -113,7 +114,7 @@ class CameraBottomControls extends StatelessWidget {
     }
   }
 
-  Widget _buildSideButtonLeft() {
+  Widget _buildSideButtonLeft(BuildContext context) {
     return GestureDetector(
       onTap: onPressSideButtonLeft,
       child: Align(
@@ -128,7 +129,7 @@ class CameraBottomControls extends StatelessWidget {
                         ? FontAwesomeIcons.xmark
                         : FontAwesomeIcons.arrowLeft
                   : FontAwesomeIcons.photoFilm,
-              color: Colors.white,
+              color: context.appColor(AppColor.mediaForeground),
               size: 25,
             ),
           ),
@@ -137,7 +138,7 @@ class CameraBottomControls extends StatelessWidget {
     );
   }
 
-  Widget _buildShutterButton() {
+  Widget _buildShutterButton(BuildContext context) {
     return StreamBuilder(
       stream: userService.onUserUpdated,
       builder: (context, snapshot) {
@@ -156,7 +157,9 @@ class CameraBottomControls extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(
                     width: 7,
-                    color: isVideoRecording ? Colors.red : Colors.white,
+                    color: isVideoRecording
+                        ? context.appColor(AppColor.recording)
+                        : context.appColor(AppColor.mediaForeground),
                   ),
                 ),
                 child: mc.currentFilterType.preview,
@@ -168,7 +171,7 @@ class CameraBottomControls extends StatelessWidget {
     );
   }
 
-  Widget _buildSideButtonRight() {
+  Widget _buildSideButtonRight(BuildContext context) {
     return GestureDetector(
       onTap: onPressSideButtonRight,
       child: Align(
@@ -184,7 +187,7 @@ class CameraBottomControls extends StatelessWidget {
                         ? FontAwesomeIcons.xmark
                         : FontAwesomeIcons.arrowRight
                   : FontAwesomeIcons.faceGrinTongueSquint,
-              color: Colors.white,
+              color: context.appColor(AppColor.mediaForeground),
               size: 25,
             ),
           ),
@@ -249,10 +252,10 @@ class _AnimatedLockButtonState extends State<_AnimatedLockButton>
         height: 50,
         width: 80,
         padding: const EdgeInsets.all(2),
-        child: const Center(
+        child: Center(
           child: FaIcon(
             FontAwesomeIcons.lock,
-            color: Colors.white,
+            color: context.appColor(AppColor.mediaForeground),
             size: 25,
           ),
         ),

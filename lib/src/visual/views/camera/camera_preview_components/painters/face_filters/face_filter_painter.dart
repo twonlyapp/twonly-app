@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 abstract class FaceFilterPainter extends CustomPainter {
   FaceFilterPainter(
@@ -34,7 +35,7 @@ class Preview extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.grey.withValues(alpha: 0.2),
+        color: context.color.surfaceContainerHighest,
       ),
       child: Center(
         child: child,

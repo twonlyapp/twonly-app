@@ -143,13 +143,13 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
             ? Container(
                 key: const ValueKey('qr_code_container'),
                 decoration: BoxDecoration(
-                  color: context.color.primary,
+                  color: context.appColor(AppColor.qrBackground),
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Colors.black26,
+                      color: context.color.shadow.withValues(alpha: 0.2),
                       blurRadius: 3,
-                      offset: Offset(0, 2),
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -159,11 +159,11 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
                     errorCorrectLevel: QrErrorCorrectLevel.M,
                   ),
                   eyeStyle: QrEyeStyle(
-                    color: isDarkMode(context) ? Colors.black : Colors.white,
+                    color: context.appColor(AppColor.qrForeground),
                     borderRadius: 2,
                   ),
                   dataModuleStyle: QrDataModuleStyle(
-                    color: isDarkMode(context) ? Colors.black : Colors.white,
+                    color: context.appColor(AppColor.qrForeground),
                     borderRadius: 2,
                   ),
                   gapless: false,
@@ -173,7 +173,7 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
                   embeddedImageStyle: QrEmbeddedImageStyle(
                     size: const Size(60, 66),
                     embeddedImageShape: EmbeddedImageShape.square,
-                    shapeColor: context.color.primary,
+                    shapeColor: context.appColor(AppColor.qrBackground),
                     safeArea: true,
                   ),
                   size: widget.size,

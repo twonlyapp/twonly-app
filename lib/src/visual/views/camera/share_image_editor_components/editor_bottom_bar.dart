@@ -65,12 +65,14 @@ class EditorBottomBar extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (isSending)
-                    const SizedBox(
+                    SizedBox(
                       height: 12,
                       width: 12,
                       child: CircularProgressIndicator.adaptive(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation(Colors.black87),
+                        valueColor: AlwaysStoppedAnimation(
+                          context.color.onPrimary,
+                        ),
                       ),
                     )
                   else

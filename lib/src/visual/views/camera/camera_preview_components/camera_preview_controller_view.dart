@@ -84,6 +84,9 @@ class _CameraPreviewControllerViewState
 
   @override
   Widget build(BuildContext context) {
+    widget.mainController.scanHighlightColor = context.appColor(
+      AppColor.scanHighlight,
+    );
     if (AppState.hasCameraPermissions) {
       return CameraPreviewView(
         sendToGroup: widget.sendToGroup,

@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 
 String beautifulZoomScale(double scale) {
@@ -60,7 +61,7 @@ class CameraZoomButtons extends StatelessWidget {
 
     final zoomButtonStyle = TextButton.styleFrom(
       padding: EdgeInsets.zero,
-      foregroundColor: Colors.white,
+      foregroundColor: context.appColor(AppColor.mediaForeground),
       minimumSize: const Size(40, 40),
       alignment: Alignment.center,
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -90,7 +91,7 @@ class CameraZoomButtons extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(40),
         child: ColoredBox(
-          color: const Color.fromARGB(90, 0, 0, 0),
+          color: context.appColor(AppColor.mediaScrim),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -98,7 +99,9 @@ class CameraZoomButtons extends StatelessWidget {
                 TextButton(
                   style: zoomButtonStyle.copyWith(
                     foregroundColor: WidgetStateProperty.all(
-                      isSmallerFocused ? Colors.yellow : Colors.white,
+                      isSmallerFocused
+                          ? context.appColor(AppColor.warning)
+                          : context.appColor(AppColor.mediaForeground),
                     ),
                   ),
                   onPressed: () async {
@@ -121,7 +124,9 @@ class CameraZoomButtons extends StatelessWidget {
               TextButton(
                 style: zoomButtonStyle.copyWith(
                   foregroundColor: WidgetStateProperty.all(
-                    isMiddleFocused ? Colors.yellow : Colors.white,
+                    isMiddleFocused
+                        ? context.appColor(AppColor.warning)
+                        : context.appColor(AppColor.mediaForeground),
                   ),
                 ),
                 onPressed: () async {
@@ -142,7 +147,9 @@ class CameraZoomButtons extends StatelessWidget {
               TextButton(
                 style: zoomButtonStyle.copyWith(
                   foregroundColor: WidgetStateProperty.all(
-                    (scaleFactor >= 2) ? Colors.yellow : Colors.white,
+                    (scaleFactor >= 2)
+                        ? context.appColor(AppColor.warning)
+                        : context.appColor(AppColor.mediaForeground),
                   ),
                 ),
                 onPressed: () async {

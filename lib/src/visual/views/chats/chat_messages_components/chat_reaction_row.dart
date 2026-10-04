@@ -22,7 +22,7 @@ class ReactionRow extends StatelessWidget {
     // ignore: inference_failure_on_function_invocation
     await showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.black,
+      backgroundColor: context.color.surface,
       builder: (context) {
         return AllReactionsView(
           message: message,
@@ -103,9 +103,7 @@ class ReactionRow extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border.all(),
                 borderRadius: BorderRadius.circular(12),
-                color: isDarkMode(context)
-                    ? const Color.fromARGB(255, 74, 74, 74)
-                    : const Color.fromARGB(255, 197, 197, 197),
+                color: context.appColor(AppColor.reactionBackground),
               ),
               child: Row(
                 children: [
@@ -119,9 +117,7 @@ class ReactionRow extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 13,
-                          color: isDarkMode(context)
-                              ? Colors.white
-                              : Colors.black,
+                          color: context.appColor(AppColor.onReaction),
                           decoration: TextDecoration.none,
                           fontWeight: FontWeight.normal,
                         ),

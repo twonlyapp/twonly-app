@@ -33,7 +33,7 @@ class EmojiPickerBottom extends StatelessWidget {
                 margin: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(32),
-                  color: Colors.grey,
+                  color: context.color.outline,
                 ),
                 height: 3,
                 width: 60,
@@ -66,7 +66,7 @@ class EmojiPickerBottom extends StatelessWidget {
                     ),
                     searchViewConfig: SearchViewConfig(
                       backgroundColor: context.color.surfaceContainer,
-                      buttonIconColor: Colors.white,
+                      buttonIconColor: context.color.onSurface,
                     ),
                     categoryViewConfig: CategoryViewConfig(
                       backgroundColor: context.color.surfaceContainer,

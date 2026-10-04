@@ -85,10 +85,10 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
             topRight: Radius.circular(32),
           ),
           color: context.color.surface,
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
               blurRadius: 10.9,
-              color: Color.fromRGBO(0, 0, 0, 0.1),
+              color: context.color.shadow.withValues(alpha: 0.1),
             ),
           ],
         ),
@@ -98,7 +98,7 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
               margin: const EdgeInsets.only(top: 30),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
-                color: Colors.grey,
+                color: context.color.outline,
               ),
               height: 3,
               width: 60,
@@ -145,9 +145,7 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
               color: context.color.surfaceContainer,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: icon is IconData
-                ? Icon(icon)
-                : FaIcon(icon as FaIconData?),
+            child: icon is IconData ? Icon(icon) : FaIcon(icon as FaIconData?),
           ),
           const SizedBox(height: 8),
           Text(label, textAlign: TextAlign.center),

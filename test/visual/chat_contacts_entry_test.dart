@@ -11,6 +11,7 @@ import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_contacts.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 
@@ -70,6 +71,7 @@ void main() {
       ChangeNotifierProvider<SettingsChangeProvider>(
         create: (_) => SettingsChangeProvider()..loadSettings(),
         child: MaterialApp(
+          theme: lightTheme,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(

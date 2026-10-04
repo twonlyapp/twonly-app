@@ -14,11 +14,17 @@ import 'package:twonly/src/model/error_code.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/themes/colors.dart';
+
+export 'package:twonly/src/visual/themes/colors.dart' show AppColor;
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
   ColorScheme get color => Theme.of(this).colorScheme;
+  Color appColor(AppColor color) {
+    return Theme.of(this).extension<AppColors>()![color];
+  }
+
   Future<dynamic> navPush(Widget route) async {
     return Navigator.push(
       this,

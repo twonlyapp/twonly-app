@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 typedef TextLabelBuilder = Widget Function(String label);
 
@@ -99,14 +100,9 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
                     child: ValueListenableBuilder<double>(
                       valueListenable: _thumbOffsetNotifier,
                       builder: (context, thumbOffset, child) {
-                        final isDark =
-                            Theme.of(context).brightness == Brightness.dark;
-                        final handleColor = isDark
-                            ? Colors.grey.shade900
-                            : Colors.white;
-                        final iconColor = isDark
-                            ? Colors.white70
-                            : Colors.black54;
+                        final colors = context.color;
+                        final handleColor = colors.surfaceContainerLowest;
+                        final iconColor = colors.onSurfaceVariant;
 
                         final label = widget.labelBuilder?.call(
                           _viewOffsetNotifier.value,
@@ -145,17 +141,14 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
                                             horizontal: 12,
                                           ),
                                           decoration: BoxDecoration(
-                                            color:
-                                                (isDark
-                                                        ? Colors.grey.shade900
-                                                        : Colors.grey.shade200)
-                                                    .withValues(alpha: 0.95),
+                                            color: colors.surfaceContainerHigh
+                                                .withValues(alpha: 0.95),
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withValues(
+                                                color: colors.shadow.withValues(
                                                   alpha: 0.2,
                                                 ),
                                                 blurRadius: 8,
@@ -166,9 +159,7 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
                                           child: Text(
                                             label,
                                             style: TextStyle(
-                                              color: isDark
-                                                  ? Colors.white
-                                                  : Colors.black,
+                                              color: colors.onSurface,
                                               fontSize: 14,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -182,9 +173,7 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
                                     decoration: BoxDecoration(
                                       color: handleColor,
                                       border: Border.all(
-                                        color: isDark
-                                            ? Colors.white10
-                                            : Colors.black12,
+                                        color: colors.outlineVariant,
                                         width: 0.5,
                                       ),
                                       borderRadius: const BorderRadius.only(

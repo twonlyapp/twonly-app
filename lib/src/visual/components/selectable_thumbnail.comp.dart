@@ -20,11 +20,11 @@ class SelectableThumbnailComp extends StatelessWidget {
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
         color: isSelected ? context.color.primary : Colors.transparent,
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color: context.color.shadow.withValues(alpha: 0.12),
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -49,20 +49,20 @@ class SelectableThumbnailComp extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
-                    color: isSelected ? context.color.primary : Colors.black38,
+                    color: isSelected
+                        ? context.color.primary
+                        : context.color.scrim.withValues(alpha: 0.38),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Colors.black,
+                      color: context.color.onSurface,
                       width: 1.5,
                     ),
                   ),
                   child: isSelected
-                      ? const Icon(
+                      ? Icon(
                           Icons.check,
                           size: 14,
-                          color: Colors.white,
+                          color: context.color.onPrimary,
                         )
                       : const SizedBox(width: 14, height: 14),
                 ),

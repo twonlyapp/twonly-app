@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 enum SnackbarLevel {
   info,
@@ -14,23 +15,28 @@ void showSnackbar(
   String message, {
   SnackbarLevel level = SnackbarLevel.error,
 }) {
-  Color backgroundColor;
-  IconData iconData;
-
-  switch (level) {
-    case SnackbarLevel.info:
-      backgroundColor = Colors.blue.shade700;
-      iconData = Icons.info_outline;
-    case SnackbarLevel.success:
-      backgroundColor = Colors.green.shade700;
-      iconData = Icons.check_circle_outline;
-    case SnackbarLevel.warning:
-      backgroundColor = Colors.orange.shade800;
-      iconData = Icons.warning_amber_rounded;
-    case SnackbarLevel.error:
-      backgroundColor = Colors.red.shade700;
-      iconData = Icons.error_outline;
-  }
+  final (backgroundColor, foregroundColor, iconData) = switch (level) {
+    SnackbarLevel.info => (
+      context.appColor(AppColor.info),
+      context.appColor(AppColor.onInfo),
+      Icons.info_outline,
+    ),
+    SnackbarLevel.success => (
+      context.appColor(AppColor.success),
+      context.appColor(AppColor.onSuccess),
+      Icons.check_circle_outline,
+    ),
+    SnackbarLevel.warning => (
+      context.appColor(AppColor.warning),
+      context.appColor(AppColor.onWarning),
+      Icons.warning_amber_rounded,
+    ),
+    SnackbarLevel.error => (
+      context.color.error,
+      context.color.onError,
+      Icons.error_outline,
+    ),
+  };
 
   AnimationController? localAnimationController;
 
@@ -44,7 +50,8 @@ void showSnackbar(
     child: _SnackbarWidget(
       message: message,
       backgroundColor: backgroundColor,
-      icon: Icon(iconData, color: Colors.white, size: 28),
+      foregroundColor: foregroundColor,
+      icon: Icon(iconData, color: foregroundColor, size: 28),
       onCloseClick: () {
         localAnimationController?.reverse();
       },
@@ -101,11 +108,13 @@ class _SnackbarWidget extends StatelessWidget {
   const _SnackbarWidget({
     required this.message,
     required this.backgroundColor,
+    required this.foregroundColor,
     required this.icon,
     required this.onCloseClick,
   });
   final String message;
   final Color backgroundColor;
+  final Color foregroundColor;
   final Icon icon;
   final VoidCallback onCloseClick;
 
@@ -118,9 +127,9 @@ class _SnackbarWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: const BorderRadius.all(Radius.circular(12)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Colors.black26,
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
             spreadRadius: 1,
             blurRadius: 30,
           ),
@@ -138,10 +147,10 @@ class _SnackbarWidget extends StatelessWidget {
               child: Text(
                 message,
                 style: theme.textTheme.bodyMedium?.merge(
-                  const TextStyle(
+                  TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
-                    color: Colors.white,
+                    color: foregroundColor,
                   ),
                 ),
                 textAlign: TextAlign.start,
@@ -151,9 +160,13 @@ class _SnackbarWidget extends StatelessWidget {
           GestureDetector(
             onTap: onCloseClick,
             behavior: HitTestBehavior.opaque,
-            child: const Padding(
-              padding: EdgeInsets.all(16),
-              child: Icon(Icons.close, color: Colors.white70, size: 20),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Icon(
+                Icons.close,
+                color: foregroundColor.withValues(alpha: 0.75),
+                size: 20,
+              ),
             ),
           ),
         ],

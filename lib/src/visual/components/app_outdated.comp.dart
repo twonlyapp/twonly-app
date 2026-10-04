@@ -60,7 +60,7 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
             decoration: BoxDecoration(
-              color: Colors.red.withAlpha(100),
+              color: context.color.errorContainer,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
@@ -71,7 +71,7 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
                   textAlign: TextAlign.center,
                   softWrap: true,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
+                    color: context.color.onErrorContainer,
                     fontSize: 16,
                   ),
                 ),
@@ -90,7 +90,7 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
             decoration: BoxDecoration(
-              color: Colors.red,
+              color: context.color.error,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
@@ -101,7 +101,7 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
                   textAlign: TextAlign.center,
                   softWrap: true,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
+                    color: context.color.onError,
                     fontSize: 16,
                   ),
                 ),
@@ -123,7 +123,7 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
                     child: Text(
                       context.lang.appOutdatedBtn,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white,
+                        color: context.color.onSurface,
                         fontSize: 16,
                       ),
                     ),

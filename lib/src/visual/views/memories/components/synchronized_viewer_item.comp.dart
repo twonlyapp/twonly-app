@@ -5,6 +5,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/helpers/video_player_file.helper.dart';
 
 class SynchronizedViewerItemComp extends StatefulWidget {
@@ -124,10 +125,10 @@ class _SynchronizedViewerItemCompState
                       hash: item.mediaService.mediaFile.blurhash!,
                       optimizationMode: BlurHashOptimizationMode.approximation,
                     )
-                  : const Center(
+                  : Center(
                       child: Icon(
                         Icons.broken_image_outlined,
-                        color: Colors.white38,
+                        color: context.appColor(AppColor.mediaForegroundMuted),
                         size: 64,
                       ),
                     )
@@ -143,10 +144,10 @@ class _SynchronizedViewerItemCompState
                   color: Colors.transparent,
                 ),
                 errorBuilder: (context, error, stackTrace) {
-                  return const Center(
+                  return Center(
                     child: Icon(
                       Icons.broken_image_outlined,
-                      color: Colors.white38,
+                      color: context.appColor(AppColor.mediaForegroundMuted),
                       size: 64,
                     ),
                   );

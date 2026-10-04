@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/datetime_filter.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/image_filter.dart';
@@ -45,11 +46,11 @@ class FilterText extends StatelessWidget {
     this.text, {
     super.key,
     this.fontSize = 24,
-    this.color = Colors.white,
+    this.color,
   });
   final String text;
   final double fontSize;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -58,10 +59,10 @@ class FilterText extends StatelessWidget {
       textAlign: TextAlign.start,
       style: TextStyle(
         fontSize: fontSize,
-        color: color,
-        shadows: const [
+        color: color ?? context.appColor(AppColor.mediaForeground),
+        shadows: [
           Shadow(
-            color: Color.fromARGB(122, 0, 0, 0),
+            color: context.appColor(AppColor.mediaScrim),
             blurRadius: 5,
           ),
         ],

@@ -29,23 +29,19 @@ class _MyIconButtonState extends State<MyIconButton> {
   @override
   Widget build(BuildContext context) {
     final isEnabled = widget.onPressed != null || widget.onLongPress != null;
-    final isDark = isDarkMode(context);
-    final disabledBgColor = isDark
-        ? const Color(0xFF353535)
-        : const Color(0xFFE0E0E0);
-    final disabledFgColor = isDark
-        ? const Color(0xFF757575)
-        : const Color(0xFF9E9E9E);
+    final colors = context.color;
+    final disabledBgColor = colors.surfaceContainerHighest;
+    final disabledFgColor = colors.onSurface.withValues(alpha: 0.38);
 
     late final Color bgColor;
     late final Color fgColor;
 
     if (widget.variant == MyIconButtonVariant.primary) {
       bgColor = context.color.primary;
-      fgColor = Colors.black87;
+      fgColor = colors.onPrimary;
     } else {
-      bgColor = isDark ? Colors.grey[800]! : Colors.grey[200]!;
-      fgColor = isDark ? Colors.white : Colors.black87;
+      bgColor = colors.surfaceContainerHigh;
+      fgColor = colors.onSurface;
     }
 
     final childButton = FilledButton(

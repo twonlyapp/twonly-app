@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:video_player/video_player.dart';
 
 /// Cuts a recorded video down to the part the user wants to send.
@@ -183,7 +184,7 @@ class _VideoTrimmerState extends State<VideoTrimmer> {
       decoration: BoxDecoration(
         // Translucent rather than opaque: the frames being cut away stay
         // visible underneath, which is most of what makes a cut readable.
-        color: Colors.black.withAlpha(90),
+        color: context.appColor(AppColor.mediaScrim),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -243,10 +244,15 @@ class _VideoTrimmerState extends State<VideoTrimmer> {
                 : _format(_duration),
             style: TextStyle(
               fontSize: 11,
-              color: Colors.white.withAlpha(isTrimmed ? 235 : 150),
+              color: isTrimmed
+                  ? context.appColor(AppColor.mediaForeground)
+                  : context.appColor(AppColor.mediaForegroundMuted),
               fontFeatures: const [FontFeature.tabularFigures()],
-              shadows: const [
-                Shadow(color: Color.fromARGB(122, 0, 0, 0), blurRadius: 4),
+              shadows: [
+                Shadow(
+                  color: context.appColor(AppColor.mediaScrim),
+                  blurRadius: 4,
+                ),
               ],
             ),
           ),
@@ -287,7 +293,9 @@ class _TrimTrack extends StatelessWidget {
           right: handleWidth,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(46),
+              color: context
+                  .appColor(AppColor.mediaForeground)
+                  .withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(6),
             ),
           ),
@@ -307,8 +315,14 @@ class _TrimTrack extends StatelessWidget {
             ),
           ),
         ),
-        _handle(left: startOffset),
-        _handle(left: endOffset + handleWidth),
+        _handle(
+          left: startOffset,
+          foregroundColor: context.appColor(AppColor.mediaForeground),
+        ),
+        _handle(
+          left: endOffset + handleWidth,
+          foregroundColor: context.appColor(AppColor.mediaForeground),
+        ),
         Positioned(
           left: playheadOffset + handleWidth - 1,
           top: 4,
@@ -316,10 +330,13 @@ class _TrimTrack extends StatelessWidget {
           width: 3,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.appColor(AppColor.mediaForeground),
               borderRadius: BorderRadius.circular(2),
-              boxShadow: const [
-                BoxShadow(color: Color.fromARGB(122, 0, 0, 0), blurRadius: 4),
+              boxShadow: [
+                BoxShadow(
+                  color: context.appColor(AppColor.mediaScrim),
+                  blurRadius: 4,
+                ),
               ],
             ),
           ),
@@ -328,7 +345,7 @@ class _TrimTrack extends StatelessWidget {
     );
   }
 
-  Widget _handle({required double left}) {
+  Widget _handle({required double left, required Color foregroundColor}) {
     return Positioned(
       left: left,
       top: 0,
@@ -346,7 +363,7 @@ class _TrimTrack extends StatelessWidget {
               width: 2,
               height: 14,
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(220),
+                color: foregroundColor,
                 borderRadius: BorderRadius.circular(1),
               ),
             ),

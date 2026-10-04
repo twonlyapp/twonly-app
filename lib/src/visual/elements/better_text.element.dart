@@ -90,9 +90,9 @@ class _BetterTextState extends State<BetterText> {
       spans.add(
         TextSpan(
           text: url,
-          style: const TextStyle(
+          style: TextStyle(
             decoration: TextDecoration.underline,
-            decorationColor: Colors.white,
+            decorationColor: widget.textColor,
           ),
           recognizer: recognizer,
         ),

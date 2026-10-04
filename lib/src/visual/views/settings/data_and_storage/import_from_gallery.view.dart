@@ -14,7 +14,8 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/android_photo_picker.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/misc.dart' show ShortCutsExtension, sha256File;
+import 'package:twonly/src/utils/misc.dart'
+    show AppColor, ShortCutsExtension, sha256File;
 import 'package:twonly/src/visual/components/selectable_thumbnail.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/themes/light.dart';
@@ -570,10 +571,10 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.photo_library_outlined,
                 size: 64,
-                color: Colors.grey,
+                color: context.color.onSurfaceVariant,
               ),
               const SizedBox(height: 16),
               Text(
@@ -604,7 +605,11 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: context.color.error,
+              ),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
@@ -629,10 +634,10 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.photo_album_outlined,
                 size: 64,
-                color: Colors.grey,
+                color: context.color.onSurfaceVariant,
               ),
               const SizedBox(height: 16),
               Text(
@@ -650,7 +655,7 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
                     ? context.lang.importGalleryNoImagesFoundDesc
                     : context.lang.importGalleryAlbumNotFoundDesc,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.grey),
+                style: TextStyle(color: context.color.onSurfaceVariant),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
@@ -699,7 +704,7 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
 
   Widget _buildImportingOverlay() {
     return ColoredBox(
-      color: Colors.black54,
+      color: context.appColor(AppColor.mediaScrim),
       child: Center(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 32),
@@ -776,7 +781,7 @@ class _GalleryThumbnailWidgetState extends State<GalleryThumbnailWidget> {
                   );
                 }
                 return ColoredBox(
-                  color: Colors.grey.withValues(alpha: 0.1),
+                  color: context.color.surfaceContainerHigh,
                   child: const Center(
                     child: SizedBox(
                       width: 24,
@@ -788,14 +793,17 @@ class _GalleryThumbnailWidgetState extends State<GalleryThumbnailWidget> {
               },
             ),
             if (widget.asset.type == AssetType.video)
-              const Positioned.fill(
+              Positioned.fill(
                 child: Center(
                   child: Icon(
                     Icons.play_circle_outline,
-                    color: Colors.white,
+                    color: context.appColor(AppColor.mediaForeground),
                     size: 32,
                     shadows: [
-                      Shadow(color: Colors.black54, blurRadius: 6),
+                      Shadow(
+                        color: context.appColor(AppColor.mediaScrim),
+                        blurRadius: 6,
+                      ),
                     ],
                   ),
                 ),

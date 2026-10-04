@@ -870,10 +870,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     fontWeight: FontWeight.bold,
                     color: showSendTextMessageInput
                         ? null
-                        : const Color.fromARGB(255, 126, 126, 126),
-                    shadows: const [
+                        : context.appColor(AppColor.mediaForegroundMuted),
+                    shadows: [
                       Shadow(
-                        color: Color.fromARGB(122, 0, 0, 0),
+                        color: context.appColor(AppColor.mediaScrim),
                         blurRadius: 5,
                       ),
                     ],

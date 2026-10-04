@@ -1,41 +1,97 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/utils/misc.dart';
 
-class DefaultColors {
-  static const messageSelf = Color.fromARGB(255, 58, 136, 102);
-  static const messageOther = Color.fromARGB(233, 68, 137, 255);
+/// Every Twonly-specific color, with its light and dark values side by side.
+///
+/// To add a color, add exactly one entry here and use it with:
+/// `context.appColor(AppColor.yourColor)`.
+enum AppColor {
+  // Chat bubbles
+  chatBubbleSent(light: Color(0xFFE8EBE9), dark: Color(0xFF292C2A)),
+  chatBubbleReceived(light: Color(0xFFF3F4F3), dark: Color(0xFF1D201E)),
+  onChatBubbleSent(light: Color(0xFF191C1A), dark: Color(0xFFF0F2F0)),
+  onChatBubbleReceived(light: Color(0xFF191C1A), dark: Color(0xFFE2E4E1)),
+  chatBubbleDeleted(light: Color(0xFFE1E4E1), dark: Color(0xFF101311)),
+  onChatBubbleDeleted(light: Color(0xFF626863), dark: Color(0xFF8A918B)),
+  chatMessageMeta(light: Color(0xFF69706A), dark: Color(0xFFAAB2AC)),
+  reactionBackground(light: Color(0xFFE1E5E2), dark: Color(0xFF343936)),
+  onReaction(light: Color(0xFF191C1A), dark: Color(0xFFF0F2F0)),
+
+  // Feedback and status
+  success(light: Color(0xFF177245), dark: Color(0xFF65D99A)),
+  onSuccess(light: Color(0xFFFFFFFF), dark: Color(0xFF00391F)),
+  successContainer(light: Color(0xFFC0F0D2), dark: Color(0xFF00522F)),
+  onSuccessContainer(light: Color(0xFF002112), dark: Color(0xFF83F7B5)),
+  warning(light: Color(0xFF8A5700), dark: Color(0xFFFFB95F)),
+  onWarning(light: Color(0xFFFFFFFF), dark: Color(0xFF492900)),
+  warningContainer(light: Color(0xFFFFDDB4), dark: Color(0xFF673D00)),
+  onWarningContainer(light: Color(0xFF2C1700), dark: Color(0xFFFFDDB4)),
+  info(light: Color(0xFF35618D), dark: Color(0xFF9FCBFF)),
+  onInfo(light: Color(0xFFFFFFFF), dark: Color(0xFF003257)),
+  infoContainer(light: Color(0xFFD1E4FF), dark: Color(0xFF164A70)),
+  onInfoContainer(light: Color(0xFF001D35), dark: Color(0xFFD1E4FF)),
+  premium(light: Color(0xFF8A6500), dark: Color(0xFFFFC94C)),
+  verificationPending(light: Color(0xFF007FA3), dark: Color(0xFF5DD5F5)),
+  verificationIdle(light: Color(0xFF7A8497), dark: Color(0xFFAEB8CC)),
+
+  // QR codes
+  qrForeground(light: Color(0xFF000000), dark: Color(0xFF000000)),
+  qrBackground(light: Color(0xFFFFFFFF), dark: Color(0xFFFFFFFF)),
+
+  // Controls displayed over photos and videos
+  mediaForeground(light: Color(0xFFFFFFFF), dark: Color(0xFFFFFFFF)),
+  mediaForegroundMuted(light: Color(0xB3FFFFFF), dark: Color(0xB3FFFFFF)),
+  mediaBackground(light: Color(0xFF000000), dark: Color(0xFF000000)),
+  mediaScrim(light: Color(0x8A000000), dark: Color(0x8A000000)),
+  recording(light: Color(0xFFD32F2F), dark: Color(0xFFFF5252)),
+  scanHighlight(light: Color(0xFF76FF03), dark: Color(0xFF76FF03)),
+
+  // Message-kind indicators
+  messageText(light: Color(0xFF35618D), dark: Color(0xFF9FCBFF)),
+  messageRestore(light: Color(0xFFB85F00), dark: Color(0xFFFFB95F)),
+  messageWidget(light: Color(0xFF79528D), dark: Color(0xFFD7B9E8)),
+  messageVideo(light: Color(0xFF9C3A8D), dark: Color(0xFFFFA9E5)),
+  messageAudio(light: Color(0xFFB85F00), dark: Color(0xFFFFB68A)),
+  messageImage(light: Color(0xFFBA1A1A), dark: Color(0xFFFFB4AB));
+
+  const AppColor({required this.light, required this.dark});
+
+  final Color light;
+  final Color dark;
+
+  Color resolve(Brightness brightness) {
+    return brightness == Brightness.dark ? dark : light;
+  }
 }
 
-Color getMessageColorFromType(
-  Message message,
-  MediaFile? mediaFile,
-  BuildContext context,
-) {
-  Color color;
+/// Resolves [AppColor] tokens for one theme and keeps theme transitions smooth.
+@immutable
+class AppColors extends ThemeExtension<AppColors> {
+  const AppColors.light()
+    : _brightness = Brightness.light,
+      _interpolatedColors = null;
 
-  if (message.type == MessageType.restoreFlameCounter.name) {
-    color = Colors.orange;
-  } else if (message.type == MessageType.text.name) {
-    color = Colors.blueAccent;
-  } else if (message.isWidgetMedia) {
-    color = const Color.fromARGB(255, 155, 89, 182);
-  } else if (mediaFile != null) {
-    if (mediaFile.requiresAuthentication) {
-      color = context.color.primary;
-    } else {
-      if (mediaFile.type == MediaType.video) {
-        color = const Color.fromARGB(255, 243, 33, 208);
-      } else if (mediaFile.type == MediaType.audio) {
-        color = const Color.fromARGB(255, 252, 149, 85);
-      } else {
-        color = Colors.redAccent;
-      }
-    }
-  } else {
-    return (isDarkMode(context)) ? Colors.white : Colors.black;
+  const AppColors.dark()
+    : _brightness = Brightness.dark,
+      _interpolatedColors = null;
+
+  const AppColors._interpolated(this._interpolatedColors) : _brightness = null;
+
+  final Brightness? _brightness;
+  final Map<AppColor, Color>? _interpolatedColors;
+
+  Color operator [](AppColor color) {
+    return _interpolatedColors?[color] ?? color.resolve(_brightness!);
   }
-  return color;
+
+  @override
+  AppColors copyWith() => this;
+
+  @override
+  AppColors lerp(covariant AppColors? other, double t) {
+    if (other == null) return this;
+    return AppColors._interpolated({
+      for (final color in AppColor.values)
+        color: Color.lerp(this[color], other[color], t)!,
+    });
+  }
 }

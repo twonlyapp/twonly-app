@@ -129,9 +129,12 @@ class _HelpViewState extends State<HelpView> {
                     await UserService.update((u) => u.isDeveloper = true);
                   }
                 },
-                title: const Text(
+                title: Text(
                   'Copyright twonly',
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(
+                    color: context.color.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],

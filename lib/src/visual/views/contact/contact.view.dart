@@ -21,7 +21,6 @@ import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/mutual_groups_expansion_tile.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
-import 'package:twonly/src/visual/views/contact/contact_components/user_discovery_contact_settings.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/verification_expansion_tile.comp.dart';
 import 'package:twonly/src/visual/views/contact/select_contact_groups.view.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
@@ -301,9 +300,6 @@ class _ContactViewState extends State<ContactView> {
           MutualGroupsExpansionTileComp(
             contact: contact,
           ),
-          UserDiscoveryContactSettingsComp(
-            contact: contact,
-          ),
           const Divider(),
           BetterListTile(
             icon: FontAwesomeIcons.flag,
@@ -331,7 +327,7 @@ class _ContactViewState extends State<ContactView> {
           BetterListTile(
             icon: FontAwesomeIcons.userMinus,
             iconSize: 16,
-            color: Colors.red,
+            color: context.color.error,
             text: context.lang.contactRemove,
             onTap: () => handleUserRemoveRequest(contact),
           ),
@@ -382,12 +378,16 @@ class _ContactViewState extends State<ContactView> {
                         SignalVersion.v1 => 'Signal Protocol (v1)',
                         SignalVersion.v2 => 'PQXDH (v2)',
                       }}',
-                      style: const TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: context.color.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Can send widgets: ${contact.widgetSharingAllowed ? 'Yes' : 'No'}',
-                      style: const TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: context.color.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),

@@ -283,7 +283,10 @@ class EmojiFloatWidgetState extends State<EmojiFloatWidget>
   Widget build(BuildContext context) {
     return IgnorePointer(
       child: CustomPaint(
-        painter: _ParticlePainter(List<_Particle>.from(_particles)),
+        painter: _ParticlePainter(
+          List<_Particle>.from(_particles),
+          context.appColor(AppColor.mediaBackground),
+        ),
         size: Size.infinite,
       ),
     );
@@ -339,8 +342,9 @@ class _Particle {
 }
 
 class _ParticlePainter extends CustomPainter {
-  _ParticlePainter(this.particles);
+  _ParticlePainter(this.particles, this.particleColor);
   final List<_Particle> particles;
+  final Color particleColor;
 
   static final _textPainter = TextPainter(textDirection: TextDirection.ltr);
 
@@ -351,7 +355,7 @@ class _ParticlePainter extends CustomPainter {
         text: p.emoji,
         style: TextStyle(
           fontSize: 24 * p.currentScale,
-          color: Colors.black.withValues(alpha: p.opacity),
+          color: particleColor.withValues(alpha: p.opacity),
           fontFamily: Platform.isAndroid ? 'sans-serif' : null,
           fontFamilyFallback: Platform.isAndroid
               ? const ['NotoColorEmoji']

@@ -71,7 +71,7 @@ class _MemoriesBackupDetailViewState extends State<MemoriesBackupDetailView> {
                   height: 24,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.2),
+                    color: context.color.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: ClipRRect(
@@ -94,7 +94,7 @@ class _MemoriesBackupDetailViewState extends State<MemoriesBackupDetailView> {
                             if (usageWidth > 0)
                               Container(
                                 width: usageWidth,
-                                color: Colors.blue,
+                                color: context.appColor(AppColor.info),
                               ),
                           ],
                         );

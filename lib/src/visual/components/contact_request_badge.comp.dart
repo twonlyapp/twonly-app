@@ -34,13 +34,11 @@ class ContactRequestBadgeComp extends StatelessWidget {
             ),
             Center(
               child: NotificationBadgeComp(
-                backgroundColor: isDarkMode(context)
-                    ? Colors.white
-                    : Colors.black,
-                textColor: isDarkMode(context) ? Colors.black : Colors.white,
+                backgroundColor: context.color.inverseSurface,
+                textColor: context.color.onInverseSurface,
                 count: count.toString(),
                 child: IconButton(
-                  color: Colors.black,
+                  color: context.color.onPrimary,
                   icon: const FaIcon(
                     FontAwesomeIcons.userPlus,
                     size: 18,

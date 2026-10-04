@@ -175,14 +175,16 @@ class _AppearanceViewState extends State<AppearanceView> {
                           ),
                         ],
                         border: Border.all(
-                          color: isSelected ? Colors.white : Colors.transparent,
+                          color: isSelected
+                              ? context.appColor(AppColor.mediaForeground)
+                              : Colors.transparent,
                           width: 3,
                         ),
                       ),
                       child: isSelected
-                          ? const Icon(
+                          ? Icon(
                               Icons.check,
-                              color: Colors.white,
+                              color: context.appColor(AppColor.mediaForeground),
                               size: 24,
                             )
                           : null,
@@ -209,7 +211,10 @@ class _AppearanceViewState extends State<AppearanceView> {
                         Colors.red,
                       ],
                     ),
-                    border: Border.all(color: Colors.white24, width: 2),
+                    border: Border.all(
+                      color: context.color.outlineVariant,
+                      width: 2,
+                    ),
                   ),
                 ),
                 title: Text(context.lang.customColor),
@@ -298,7 +303,7 @@ class _AppearanceViewState extends State<AppearanceView> {
                 title: Text(context.lang.settingsAppearanceTheme),
                 subtitle: Text(
                   _themeModeLabel(context, selectedTheme),
-                  style: const TextStyle(color: Colors.grey),
+                  style: TextStyle(color: context.color.onSurfaceVariant),
                 ),
                 onTap: () async {
                   await _showSelectThemeMode(context);
@@ -310,7 +315,7 @@ class _AppearanceViewState extends State<AppearanceView> {
                   selectedLocale == null
                       ? context.lang.themeSystemDefault
                       : _languageName(selectedLocale),
-                  style: const TextStyle(color: Colors.grey),
+                  style: TextStyle(color: context.color.onSurfaceVariant),
                 ),
                 onTap: () async {
                   await _showSelectLanguage(context);
@@ -324,7 +329,10 @@ class _AppearanceViewState extends State<AppearanceView> {
                   decoration: BoxDecoration(
                     color: primaryColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1.5),
+                    border: Border.all(
+                      color: context.color.outlineVariant,
+                      width: 1.5,
+                    ),
                   ),
                 ),
                 onTap: () async {

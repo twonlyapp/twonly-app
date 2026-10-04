@@ -58,9 +58,8 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = isDarkMode(context);
-    final titleColor = isDark ? Colors.white : Colors.black87;
-    final iconColor = isDark ? Colors.white70 : Colors.black54;
+    final titleColor = context.color.onSurface;
+    final iconColor = context.color.onSurfaceVariant;
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -104,7 +103,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                           child: Padding(
                             padding: const EdgeInsets.all(20),
                             child: LinkLogoAnimation(
-                              color: isDark ? Colors.white : Colors.black,
+                              color: context.color.onSurface,
                             ),
                           ),
                         ),

@@ -117,6 +117,7 @@ class _ChatAudioEntryState extends State<ChatAudioEntry> {
                           ? InChatAudioPlayer(
                               path: mediaService.tempPath.path,
                               message: message,
+                              foregroundColor: info.textColor,
                               trailing: messageTime,
                             )
                           : Container())
@@ -137,12 +138,14 @@ class InChatAudioPlayer extends StatefulWidget {
   const InChatAudioPlayer({
     required this.path,
     required this.message,
+    required this.foregroundColor,
     this.trailing,
     super.key,
   });
 
   final String path;
   final Message message;
+  final Color foregroundColor;
 
   /// Shown below the waveform, next to the remaining playback time.
   final Widget? trailing;
@@ -158,11 +161,14 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
   static const double _cursorHeight = 20;
   static const double _playSlotWidth = 34;
   static const List<double> _rates = [1, 1.5, 2, 0.5];
-  static const _waveStyle = PlayerWaveStyle(
+  PlayerWaveStyle get _waveStyle => PlayerWaveStyle(
     spacing: 4,
     waveThickness: 2.5,
     scaleFactor: 80,
     showSeekLine: false,
+    fixedWaveColor: widget.foregroundColor.withValues(alpha: 0.45),
+    liveWaveColor: widget.foregroundColor,
+    backgroundColor: widget.foregroundColor.withAlpha(0),
   );
 
   AudioPlayback? _playback;
@@ -307,7 +313,7 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
                         ? FontAwesomeIcons.solidCirclePause
                         : FontAwesomeIcons.solidCirclePlay,
                     size: 28,
-                    color: Colors.white,
+                    color: widget.foregroundColor,
                   ),
                 ),
               ),
@@ -347,7 +353,7 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
                         child: Container(
                           width: _cursorWidth,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: widget.foregroundColor,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -367,8 +373,8 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
                 child: Text(
                   formatMsToMinSec(remaining),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: widget.foregroundColor,
                     fontSize: 10,
                   ),
                 ),

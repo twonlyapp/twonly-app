@@ -20,7 +20,10 @@ InputDecoration inputTextMessageDeco(BuildContext context, String hintText) {
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(20),
-      borderSide: const BorderSide(color: Colors.grey, width: 2),
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.outline,
+        width: 2,
+      ),
     ),
   );
 }

@@ -60,7 +60,7 @@ class ChatFlameRestoredEntry extends StatelessWidget {
               text: context.lang.chatEntryFlameRestored(
                 data.restoredFlameCounter.toInt(),
               ),
-              textColor: isDarkMode(context) ? Colors.black : Colors.black,
+              textColor: info.textColor,
             ),
           ),
         ],

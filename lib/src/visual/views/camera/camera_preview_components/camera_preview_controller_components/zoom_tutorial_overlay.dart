@@ -105,13 +105,13 @@ class _ZoomTutorialOverlayState extends State<ZoomTutorialOverlay>
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black,
+                          color: context.appColor(AppColor.mediaBackground),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
                           context.lang.dragToZoom,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: context.appColor(AppColor.mediaForeground),
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.3,
@@ -131,13 +131,15 @@ class _ZoomTutorialOverlayState extends State<ZoomTutorialOverlay>
                           height: 42,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: context.appColor(
+                              AppColor.mediaForegroundMuted,
+                            ),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: FaIcon(
                               FontAwesomeIcons.handPointer,
                               size: 18,
-                              color: Colors.white,
+                              color: context.appColor(AppColor.mediaForeground),
                             ),
                           ),
                         ),

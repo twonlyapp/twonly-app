@@ -109,13 +109,13 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
   Color _colorForLevel(String? level) {
     switch (level) {
       case 'WARNING':
-        return Colors.orange.shade700;
+        return context.appColor(AppColor.warning);
       case 'SHOUT':
-        return Colors.red.shade600;
+        return context.color.error;
       case 'FINE':
-        return Colors.blueGrey.shade600;
+        return context.appColor(AppColor.info);
       default:
-        return Colors.grey.shade700;
+        return context.color.onSurfaceVariant;
     }
   }
 
@@ -145,18 +145,18 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
 
   TextSpan _formatLineSpan(_LogEntry e) {
     final tsStyle = TextStyle(
-      color: isDarkMode(context) ? Colors.white : Colors.black,
+      color: context.color.onSurface,
       fontFamily: 'monospace',
       fontSize: 12,
     );
     final fileNameStyle = TextStyle(
-      color: Colors.blueGrey.shade400,
+      color: context.appColor(AppColor.info),
       fontWeight: FontWeight.bold,
       fontFamily: 'monospace',
       fontSize: 11,
     );
     final msgStyle = TextStyle(
-      color: isDarkMode(context) ? Colors.white : Colors.black,
+      color: context.color.onSurface,
       fontFamily: 'monospace',
       fontSize: 13,
     );
@@ -175,7 +175,7 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
             child: FaIcon(
               e.isBackground ? FontAwesomeIcons.clock : FontAwesomeIcons.mobile,
               size: 12,
-              color: Colors.grey,
+              color: context.color.onSurfaceVariant,
             ),
           ),
         ),
@@ -214,7 +214,7 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
               const Spacer(),
               Text(
                 '${_filtered.length} lines',
-                style: TextStyle(color: Colors.grey.shade600),
+                style: TextStyle(color: context.color.onSurfaceVariant),
               ),
               const SizedBox(width: 8),
             ],

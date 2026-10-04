@@ -17,9 +17,9 @@ class ConnectionStatusComp extends StatelessWidget {
     return Stack(
       children: [
         if (!isConnected)
-          const Positioned.fill(
+          Positioned.fill(
             child: SpinKitRipple(
-              color: Colors.red,
+              color: context.color.error,
             ),
           ),
         Container(
@@ -29,7 +29,7 @@ class ConnectionStatusComp extends StatelessWidget {
             border: Border.all(
               color: isConnected
                   ? context.color.primary.withAlpha(100)
-                  : Colors.red,
+                  : context.color.error,
             ),
           ),
           padding: const EdgeInsets.all(0.5),

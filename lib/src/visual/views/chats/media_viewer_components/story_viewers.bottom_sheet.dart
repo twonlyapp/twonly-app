@@ -94,10 +94,10 @@ class _StoryViewersBottomSheetState extends State<StoryViewersBottomSheet> {
           topRight: Radius.circular(32),
         ),
         color: context.color.surface,
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             blurRadius: 10.9,
-            color: Color.fromRGBO(0, 0, 0, 0.1),
+            color: context.color.shadow.withValues(alpha: 0.1),
           ),
         ],
       ),
@@ -107,7 +107,7 @@ class _StoryViewersBottomSheetState extends State<StoryViewersBottomSheet> {
             margin: const EdgeInsets.only(top: 20, bottom: 8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(32),
-              color: Colors.grey,
+              color: context.color.outline,
             ),
             height: 3,
             width: 60,

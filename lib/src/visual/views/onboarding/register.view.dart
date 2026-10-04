@@ -198,8 +198,6 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = isDarkMode(context);
-
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       behavior: HitTestBehavior.opaque,
@@ -223,7 +221,7 @@ class _RegisterViewState extends State<RegisterView> {
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             child: LinkLogoAnimation(
-                              color: isDark ? Colors.white : Colors.black,
+                              color: context.color.onSurface,
                             ),
                           ),
                         ),
@@ -238,9 +236,7 @@ class _RegisterViewState extends State<RegisterView> {
                               color:
                                   Theme.of(context).textTheme.bodyMedium?.color
                                       ?.withValues(alpha: 0.7) ??
-                                  (isDark
-                                      ? Colors.white.withValues(alpha: 0.7)
-                                      : Colors.black.withValues(alpha: 0.7)),
+                                  context.color.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -250,9 +246,9 @@ class _RegisterViewState extends State<RegisterView> {
                           Text(
                             context.lang.registrationClosed,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
-                              color: Colors.redAccent,
+                              color: context.color.error,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -263,7 +259,7 @@ class _RegisterViewState extends State<RegisterView> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 22,
-                              color: isDark ? Colors.white : Colors.black87,
+                              color: context.color.onSurface,
                               fontWeight: FontWeight.bold,
                               letterSpacing: -0.5,
                             ),
@@ -299,8 +295,8 @@ class _RegisterViewState extends State<RegisterView> {
                             const SizedBox(height: 10),
                             Text(
                               context.lang.registerProofOfWorkFailed,
-                              style: const TextStyle(
-                                color: Colors.redAccent,
+                              style: TextStyle(
+                                color: context.color.error,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -313,12 +309,12 @@ class _RegisterViewState extends State<RegisterView> {
                                 ? null
                                 : createNewUser,
                             child: _isTryingToRegister
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 24,
                                     height: 24,
                                     child: CircularProgressIndicator.adaptive(
                                       valueColor: AlwaysStoppedAnimation(
-                                        Colors.white,
+                                        context.color.onPrimary,
                                       ),
                                       strokeWidth: 3,
                                     ),

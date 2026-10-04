@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class VideoRecordingTimer extends StatelessWidget {
   const VideoRecordingTimer({
@@ -38,19 +39,23 @@ class VideoRecordingTimer extends StatelessWidget {
                                 maxRecordingTime.inMilliseconds)
                             .clamp(0.0, 1.0),
                   strokeWidth: 4,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
-                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    context.appColor(AppColor.recording),
+                  ),
+                  backgroundColor: context.appColor(
+                    AppColor.mediaForegroundMuted,
+                  ),
                 ),
               ),
               Center(
                 child: Text(
                   elapsed.inSeconds.toString(),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 17,
                     shadows: [
                       Shadow(
-                        color: Color.fromARGB(122, 0, 0, 0),
+                        color: context.appColor(AppColor.mediaScrim),
                         blurRadius: 5,
                       ),
                     ],

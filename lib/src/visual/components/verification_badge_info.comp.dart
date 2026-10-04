@@ -10,8 +10,6 @@ import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
 
-const colorVerificationBadgeYellow = Color.fromARGB(255, 0, 182, 238);
-
 class VerificationBadgeInfo extends StatelessWidget {
   const VerificationBadgeInfo({
     this.displayButtons = false,
@@ -121,19 +119,19 @@ class VerificationBadgeInfo extends StatelessWidget {
           ),
         _buildItem(
           context,
-          icon: const SvgIcon(
+          icon: SvgIcon(
             assetPath: SvgIcons.verifiedGreen,
             size: 40,
-            color: colorVerificationBadgeYellow,
+            color: context.appColor(AppColor.verificationPending),
           ),
           description: context.lang.verificationBadgeYellowDesc,
-          boldTextColor: colorVerificationBadgeYellow,
+          boldTextColor: context.appColor(AppColor.verificationPending),
         ),
         _buildItem(
           context,
           icon: const SvgIcon(assetPath: SvgIcons.verifiedRed, size: 40),
           description: context.lang.verificationBadgeRedDesc,
-          boldTextColor: const Color(0xffff0000),
+          boldTextColor: context.color.error,
         ),
       ],
     );

@@ -161,13 +161,13 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
                 child: FaIcon(
                   icon,
                   size: 10,
-                  color: Colors.grey,
+                  color: context.color.onSurfaceVariant,
                 ),
               ),
               const WidgetSpan(child: SizedBox(width: 8)),
               TextSpan(
                 text: text,
-                style: const TextStyle(color: Colors.grey),
+                style: TextStyle(color: context.color.onSurfaceVariant),
               ),
             ],
           ),

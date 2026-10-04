@@ -107,7 +107,7 @@ class EditorSideToolbar extends StatelessWidget {
             onPressed: () async {
               final layer = await showModalBottomSheet<Layer>(
                 context: context,
-                backgroundColor: Colors.black,
+                backgroundColor: context.color.surface,
                 builder: (context) => const EmojiPickerBottom(),
               );
               if (layer == null) return;
@@ -124,7 +124,7 @@ class EditorSideToolbar extends StatelessWidget {
               tooltipText: context.lang.shareImageSendToWidget,
               color: sendToWidget || highlightWidgetOption
                   ? Theme.of(context).colorScheme.primary
-                  : Colors.white,
+                  : context.appColor(AppColor.mediaForeground),
               disable: isUpdatingWidgetMode,
               onPressed: onToggleSendToWidget,
             ),
@@ -148,7 +148,7 @@ class EditorSideToolbar extends StatelessWidget {
             tooltipText: 'Trim video',
             color: trimmerVisible
                 ? Theme.of(context).colorScheme.primary
-                : Colors.white,
+                : context.appColor(AppColor.mediaForeground),
             onPressed: onToggleTrimmer,
           ),
         ],
@@ -160,8 +160,8 @@ class EditorSideToolbar extends StatelessWidget {
                 : Icons.volume_up_rounded,
             tooltipText: 'Enable Audio in Video',
             color: (mediaService.removeAudio)
-                ? Colors.white.withAlpha(160)
-                : Colors.white,
+                ? context.appColor(AppColor.mediaForegroundMuted)
+                : context.appColor(AppColor.mediaForeground),
             onPressed: onToggleAudio,
           ),
         ],
@@ -170,7 +170,7 @@ class EditorSideToolbar extends StatelessWidget {
           ActionButton(
             Icons.crop_rotate_outlined,
             tooltipText: 'Crop or rotate image',
-            color: Colors.white,
+            color: context.appColor(AppColor.mediaForeground),
             onPressed: () {
               layerStack.toggleBackgroundEditing();
               onChanged();
@@ -184,7 +184,7 @@ class EditorSideToolbar extends StatelessWidget {
             tooltipText: context.lang.protectAsARealTwonly,
             color: media.requiresAuthentication
                 ? Theme.of(context).colorScheme.primary
-                : Colors.white,
+                : context.appColor(AppColor.mediaForeground),
             onPressed: onToggleRequiresAuth,
           ),
         ],

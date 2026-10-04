@@ -260,8 +260,8 @@ $debugLogToken
                 onTap: () => context.push(Routes.settingsHelpFaq),
                 child: Text(
                   context.lang.contactUsFaq,
-                  style: const TextStyle(
-                    color: Colors.blue,
+                  style: TextStyle(
+                    color: context.appColor(AppColor.info),
                   ),
                 ),
               ),
@@ -285,12 +285,14 @@ $debugLogToken
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (isLoading)
-                      const SizedBox(
+                      SizedBox(
                         height: 12,
                         width: 12,
                         child: CircularProgressIndicator.adaptive(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.black87),
+                          valueColor: AlwaysStoppedAnimation(
+                            context.color.onPrimary,
+                          ),
                         ),
                       )
                     else
@@ -345,8 +347,8 @@ class _IncludeDebugLogState extends State<IncludeDebugLog> {
           ),
           child: Text(
             context.lang.contactUsWhatsThat,
-            style: const TextStyle(
-              color: Colors.blue,
+            style: TextStyle(
+              color: context.appColor(AppColor.info),
             ),
           ),
         ),
@@ -368,11 +370,11 @@ class FeedbackEmojiRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _buildEmojiButton(5, Icons.sentiment_very_satisfied),
-        _buildEmojiButton(4, Icons.sentiment_satisfied),
-        _buildEmojiButton(3, Icons.sentiment_neutral),
-        _buildEmojiButton(2, Icons.sentiment_dissatisfied),
-        _buildEmojiButton(1, Icons.sentiment_very_dissatisfied),
+        _buildEmojiButton(context, 5, Icons.sentiment_very_satisfied),
+        _buildEmojiButton(context, 4, Icons.sentiment_satisfied),
+        _buildEmojiButton(context, 3, Icons.sentiment_neutral),
+        _buildEmojiButton(context, 2, Icons.sentiment_dissatisfied),
+        _buildEmojiButton(context, 1, Icons.sentiment_very_dissatisfied),
       ],
     );
   }
@@ -395,7 +397,7 @@ class FeedbackEmojiRow extends StatelessWidget {
     }
   }
 
-  Widget _buildEmojiButton(int value, IconData icon) {
+  Widget _buildEmojiButton(BuildContext context, int value, IconData icon) {
     final isSelected = selectedFeedback == value;
 
     return GestureDetector(
@@ -405,22 +407,22 @@ class FeedbackEmojiRow extends StatelessWidget {
       child: Icon(
         icon,
         size: 40,
-        color: _getColorForValue(value, isSelected),
+        color: _getColorForValue(context, value, isSelected),
       ),
     );
   }
 
-  Color _getColorForValue(int value, bool isSelected) {
+  Color _getColorForValue(BuildContext context, int value, bool isSelected) {
     if (isSelected) {
       if (value == 5) {
-        return Colors.greenAccent;
+        return context.appColor(AppColor.success);
       } else if (value > 1) {
-        return Colors.yellow;
+        return context.appColor(AppColor.warning);
       } else {
-        return Colors.red;
+        return context.color.error;
       }
     } else {
-      return const Color.fromARGB(155, 134, 134, 134);
+      return context.color.onSurfaceVariant;
     }
   }
 }

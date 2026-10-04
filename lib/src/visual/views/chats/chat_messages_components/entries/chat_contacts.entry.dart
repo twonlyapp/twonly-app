@@ -95,12 +95,13 @@ class _ChatContactsEntryState extends State<ChatContactsEntry> {
               if (i > 0)
                 Divider(
                   height: 1,
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: widget.info.textColor.withValues(alpha: 0.2),
                 ),
               _ContactRow(
                 contact: data.contacts[i],
                 message: widget.message,
                 contactsById: widget.contactsById,
+                foregroundColor: widget.info.textColor,
               ),
             ],
           ],
@@ -114,11 +115,13 @@ class _ContactRow extends StatefulWidget {
   const _ContactRow({
     required this.contact,
     required this.message,
+    required this.foregroundColor,
     this.contactsById,
   });
 
   final SharedContact contact;
   final Message message;
+  final Color foregroundColor;
   final Map<int, Contact>? contactsById;
 
   @override
@@ -220,36 +223,36 @@ class _ContactRowState extends State<_ContactRow> {
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           child: Row(
             children: [
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.user,
-                color: Colors.white,
+                color: widget.foregroundColor,
                 size: 16,
               ),
               const SizedBox(width: 8),
               Flexible(
                 child: BetterText(
                   text: widget.contact.displayName,
-                  textColor: Colors.white,
+                  textColor: widget.foregroundColor,
                 ),
               ),
               if (widget.message.senderId != null && !isAdded) ...[
                 const Spacer(),
                 const SizedBox(width: 8),
                 if (_isLoading)
-                  const SizedBox(
+                  SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator.adaptive(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        Colors.white,
+                        widget.foregroundColor,
                       ),
                     ),
                   )
                 else
-                  const FaIcon(
+                  FaIcon(
                     FontAwesomeIcons.userPlus,
-                    color: Colors.white,
+                    color: widget.foregroundColor,
                     size: 16,
                   ),
               ],

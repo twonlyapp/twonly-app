@@ -66,9 +66,12 @@ class _ChatStorageOverviewViewState extends State<ChatStorageOverviewView> {
                   child: Text(
                     context.lang.settingsStorageNoChats,
                     textAlign: TextAlign.center,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.copyWith(color: Colors.grey),
+                    style:
+                        Theme.of(
+                          context,
+                        ).textTheme.bodyLarge?.copyWith(
+                          color: context.color.onSurfaceVariant,
+                        ),
                   ),
                 )
               else

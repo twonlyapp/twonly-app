@@ -87,7 +87,7 @@ class QrCodeScannerViewState extends State<QrCodeScannerView> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: context.appColor(AppColor.mediaScrim),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -96,8 +96,8 @@ class QrCodeScannerViewState extends State<QrCodeScannerView> {
                           getContactDisplayName(widget.contact!),
                         )
                       : context.lang.qrScannerVerifyHint,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.appColor(AppColor.mediaForeground),
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,

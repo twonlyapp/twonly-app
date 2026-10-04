@@ -54,7 +54,7 @@ class ResponseContainer extends StatelessWidget {
           maxWidth: MediaQuery.sizeOf(context).width * 0.8,
         ),
         decoration: BoxDecoration(
-          color: getMessageColor(msg.senderId != null),
+          color: getMessageColor(context, msg.senderId != null),
           borderRadius: borderRadius,
         ),
         child: IntrinsicWidth(
@@ -187,7 +187,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
   @override
   Widget build(BuildContext context) {
     String? subtitle;
-    var color = const Color.fromARGB(233, 68, 137, 255);
+    var color = context.appColor(AppColor.messageText);
 
     if (_message != null) {
       if (_message!.type == MessageType.text.name) {
@@ -238,7 +238,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
         subtitle = _storyAlive ? context.lang.story : context.lang.storyExpired;
       }
 
-      color = getMessageColor(_message!.senderId != null);
+      color = getMessageColor(context, _message!.senderId != null);
     }
 
     final hasImage =

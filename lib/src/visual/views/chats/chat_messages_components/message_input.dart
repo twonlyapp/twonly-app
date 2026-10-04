@@ -324,7 +324,7 @@ class _MessageInputState extends State<MessageInput>
     // ignore: inference_failure_on_function_invocation
     await showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.black,
+      backgroundColor: context.color.surface,
       builder: (context) {
         return ShareAdditionalView(
           group: widget.group,
@@ -457,10 +457,12 @@ class _MessageInputState extends State<MessageInput>
                                       ),
                                       child: FadeTransition(
                                         opacity: _recordingBlink,
-                                        child: const FaIcon(
+                                        child: FaIcon(
                                           FontAwesomeIcons.microphone,
                                           size: 20,
-                                          color: Colors.red,
+                                          color: context.appColor(
+                                            AppColor.recording,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -470,9 +472,7 @@ class _MessageInputState extends State<MessageInput>
                                         _currentDuration,
                                       ),
                                       style: TextStyle(
-                                        color: isDarkMode(context)
-                                            ? Colors.white
-                                            : Colors.black,
+                                        color: context.color.onSurface,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -491,8 +491,10 @@ class _MessageInputState extends State<MessageInput>
                                         onTap: _cancelAudioRecording,
                                         child: Text(
                                           context.lang.voiceMessageCancel,
-                                          style: const TextStyle(
-                                            color: Colors.red,
+                                          style: TextStyle(
+                                            color: context.appColor(
+                                              AppColor.recording,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -591,9 +593,7 @@ class _MessageInputState extends State<MessageInput>
                                         borderRadius: BorderRadius.circular(
                                           90,
                                         ),
-                                        color: isDarkMode(context)
-                                            ? Colors.black
-                                            : Colors.white,
+                                        color: context.color.surface,
                                       ),
                                       child: const Center(
                                         child: Column(
@@ -622,7 +622,9 @@ class _MessageInputState extends State<MessageInput>
                                   right: -20,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: Colors.red,
+                                      color: context.appColor(
+                                        AppColor.recording,
+                                      ),
                                       borderRadius: BorderRadius.circular(90),
                                     ),
                                     width: 60,
@@ -644,7 +646,7 @@ class _MessageInputState extends State<MessageInput>
                                       color:
                                           (_recordingState ==
                                               RecordingState.recording)
-                                          ? Colors.white
+                                          ? context.color.onError
                                           : null,
                                       (_recordingState == RecordingState.none)
                                           ? FontAwesomeIcons.microphone
@@ -712,11 +714,11 @@ class _MessageInputState extends State<MessageInput>
               ),
               searchViewConfig: SearchViewConfig(
                 backgroundColor: context.color.surfaceContainer,
-                buttonIconColor: Colors.white,
+                buttonIconColor: context.color.onSurface,
               ),
               categoryViewConfig: CategoryViewConfig(
                 backgroundColor: context.color.surfaceContainer,
-                dividerColor: Colors.white,
+                dividerColor: context.color.outlineVariant,
                 indicatorColor: context.color.primary,
                 iconColorSelected: context.color.primary,
                 iconColor: context.color.secondary,

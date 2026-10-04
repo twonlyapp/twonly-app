@@ -117,7 +117,6 @@ class _HelpAFriendPasswordlessRecoveryViewState
 
   @override
   Widget build(BuildContext context) {
-    final isDark = isDarkMode(context);
     final query = _searchController.text.trim().toLowerCase();
 
     final filteredContacts =
@@ -145,14 +144,10 @@ class _HelpAFriendPasswordlessRecoveryViewState
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.05)
-                            : Colors.black.withValues(alpha: 0.04),
+                        color: context.color.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : Colors.black.withValues(alpha: 0.06),
+                          color: context.color.outlineVariant,
                         ),
                       ),
                       padding: const EdgeInsets.all(16),
@@ -228,8 +223,10 @@ class _HelpAFriendPasswordlessRecoveryViewState
                                             context
                                                 .lang
                                                 .passwordlessRecoveryCantHelpHim,
-                                            style: const TextStyle(
-                                              color: Colors.grey,
+                                            style: TextStyle(
+                                              color: context
+                                                  .color
+                                                  .onSurfaceVariant,
                                             ),
                                           ),
                                     onTap: () => _onContactSelected(contact),

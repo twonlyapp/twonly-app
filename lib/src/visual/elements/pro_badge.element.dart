@@ -10,23 +10,23 @@ class ProBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.amber.shade700,
+        color: context.appColor(AppColor.premium),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const FaIcon(
+          FaIcon(
             FontAwesomeIcons.star,
             size: 10,
-            color: Colors.white,
+            color: context.appColor(AppColor.onWarning),
           ),
           const SizedBox(width: 4),
           Text(
             context.lang.backupCloudProBadge,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
-              color: Colors.white,
+              color: context.appColor(AppColor.onWarning),
               fontWeight: FontWeight.bold,
             ),
           ),
