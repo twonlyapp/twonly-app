@@ -143,7 +143,6 @@ class _StartNewChatView extends State<StartNewChatView> {
           padding: const EdgeInsets.only(
             bottom: 40,
             left: 10,
-            top: 0,
             right: 10,
           ),
           child: Column(

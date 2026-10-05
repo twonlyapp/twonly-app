@@ -1,11 +1,13 @@
+// ignore_for_file: constant_identifier_names, prefer_asserts_with_message
+
 /*
  * Modified version of https://github.com/Fintasys/emoji_picker_flutter
  * MIT License
  * Copyright (c) 2024 Stefan Humm
  */
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:flutter/widgets.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 
 /// Default delimiter for regex
 const delimiter = '|';
@@ -14,7 +16,7 @@ const delimiter = '|';
 /// a particular style to emoji characters.
 class EmojiTextEditingController extends TextEditingController {
   /// Constructor, requres emojiStyle, since otherwise this class has no effect
-  EmojiTextEditingController({super.text, required this.emojiTextStyle});
+  EmojiTextEditingController({required this.emojiTextStyle, super.text});
 
   /// The style used for the emoji characters
   final TextStyle emojiTextStyle;
@@ -25,8 +27,8 @@ class EmojiTextEditingController extends TextEditingController {
   @override
   TextSpan buildTextSpan({
     required BuildContext context,
-    TextStyle? style,
     required bool withComposing,
+    TextStyle? style,
   }) {
     assert(
       !value.composing.isValid || !withComposing || value.isComposingRangeValid,
@@ -83,7 +85,6 @@ class EmojiTextEditingController extends TextEditingController {
 
 /// Emoji text style providing commonly available fallback fonts.
 const DefaultEmojiTextStyle = TextStyle(
-  inherit: true,
   fontFamilyFallback: [
     'Apple Color Emoji',
     'Noto Color Emoji',

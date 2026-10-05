@@ -11,6 +11,7 @@ use crate::error::{Result, TwonlyError};
 pub(crate) struct GroupRecord {
     pub group_id: String,
     pub group_name: String,
+    #[allow(dead_code)]
     pub state_version_id: i64,
     pub state_encryption_key: Option<Vec<u8>>,
     pub my_group_private_key: Option<Vec<u8>>,

@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes, constant_identifier_names
+
 /*
  * Modified version of https://github.com/Fintasys/emoji_picker_flutter
  * MIT License
@@ -6,8 +8,8 @@
 
 import 'dart:math';
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 
 /// Callback function for custom view
 typedef EmojiViewBuilder =
@@ -40,6 +42,7 @@ class EmojiViewConfig {
     this.noRecents = DefaultNoRecentsWidget,
     this.loadingIndicator = const SizedBox.shrink(),
     this.buttonMode = ButtonMode.MATERIAL,
+    // ignore: prefer_asserts_with_message
   }) : assert(categorySpacing >= 0);
 
   /// Number of emojis per row
@@ -95,7 +98,7 @@ class EmojiViewConfig {
   }
 
   @override
-  bool operator ==(other) {
+  bool operator ==(Object other) {
     return (other is EmojiViewConfig) &&
         other.columns == columns &&
         other.emojiSizeMax == emojiSizeMax &&

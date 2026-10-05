@@ -6,13 +6,14 @@
 
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker_internal_utils.dart';
-import 'package:flutter/material.dart';
 
 /// Emoji Regex
 /// Keycap Sequence '((\u0023|\u002a|[\u0030-\u0039])\ufe0f\u20e3){1}'
 /// Issue: https://github.com/flutter/flutter/issues/36062
+// ignore: constant_identifier_names
 const EmojiRegex =
     r'((\u0023|\u002a|[\u0030-\u0039])\ufe0f\u20e3){1}|\p{Emoji}|\u200D|\uFE0F';
 
@@ -56,7 +57,7 @@ class EmojiPickerUtils {
           : data;
 
       // Set all the emoji entities
-      for (var emojis in availableCategoryEmoji) {
+      for (final emojis in availableCategoryEmoji) {
         _allAvailableEmojiEntities.addAll(emojis.emoji);
       }
     }
@@ -186,7 +187,7 @@ class EmojiPickerUtils {
   /// instead of an invalid double-modifier one (e.g. 👋🏻🏽).
   Emoji applySkinTone(Emoji emoji, String color) {
     final codeUnits = removeSkinTone(emoji).emoji.codeUnits;
-    var result = List<int>.empty(growable: true)
+    final result = List<int>.empty(growable: true)
       // Basic emoji without gender (until char 2)
       ..addAll(codeUnits.sublist(0, min(codeUnits.length, 2)))
       // Skin tone
@@ -246,9 +247,9 @@ class EmojiPickerUtils {
   Future<void> clearRecentEmojis({
     required GlobalKey<EmojiPickerState> key,
   }) async {
-    return await EmojiPickerInternalUtils()
-        .clearRecentEmojisInLocalStorage()
-        .then((_) => key.currentState?.updateRecentEmoji([], refresh: true));
+    return EmojiPickerInternalUtils().clearRecentEmojisInLocalStorage().then(
+      (_) => key.currentState?.updateRecentEmoji([], refresh: true),
+    );
   }
 
   /// Returns the emoji regex

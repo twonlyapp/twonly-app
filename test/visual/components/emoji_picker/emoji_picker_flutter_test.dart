@@ -4,9 +4,9 @@
  * Copyright (c) 2024 Stefan Humm
  */
 
+import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker_internal_utils.dart';
-import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   skinToneTests();
@@ -100,7 +100,7 @@ void skinToneTests() {
       utils
           .applyDisplaySkinTone(
             toneable,
-            const SkinToneConfig(rememberSkinTone: false),
+            const SkinToneConfig(),
             SkinTone.medium,
           )
           .emoji,
@@ -123,7 +123,7 @@ void skinToneTests() {
 
 void emojiModelTests() {
   test('encode Emoji', () {
-    final encode = const Emoji('🤣', 'name');
+    const encode = Emoji('🤣', 'name');
     expect(encode.toJson(), <String, dynamic>{
       'emoji': '🤣',
       'name': 'name',

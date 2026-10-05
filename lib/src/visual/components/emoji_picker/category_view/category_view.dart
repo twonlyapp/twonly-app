@@ -4,8 +4,8 @@
  * Copyright (c) 2024 Stefan Humm
  */
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 
 /// Template class for custom implementation
 /// Inhert this class to create your own Category view
@@ -89,7 +89,7 @@ class DefaultCategoryView extends CategoryView {
 class DefaultCategoryViewState extends CategoryViewState<DefaultCategoryView> {
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ColoredBox(
       color: widget.config.categoryViewConfig.backgroundColor,
       child: Row(
         children: [

@@ -43,7 +43,7 @@ class _TriangleShapePainter extends BoxPainter {
     // per documentation, the size should be always not null here, no need
     // for null checks
     final s = configuration.size!;
-    var path = Path()
+    final path = Path()
       ..moveTo(s.width + offset.dx, s.height - _size + offset.dy)
       ..lineTo(s.width - _size + offset.dx, s.height + offset.dy)
       ..lineTo(s.width + offset.dx, s.height + offset.dy)

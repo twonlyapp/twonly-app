@@ -24,5 +24,11 @@ class SkinTone {
   static const String dark = '🏿';
 
   /// Return all values as Array
-  static const values = [light, mediumLight, medium, mediumDark, dark];
+  static const List<String> values = [
+    light,
+    mediumLight,
+    medium,
+    mediumDark,
+    dark,
+  ];
 }

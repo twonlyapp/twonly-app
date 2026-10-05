@@ -1,12 +1,14 @@
+// ignore_for_file: comment_references
+
 /*
  * Modified version of https://github.com/Fintasys/emoji_picker_flutter
  * MIT License
  * Copyright (c) 2024 Stefan Humm
  */
 
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart'
     show Category;
-import 'package:flutter/foundation.dart' hide Category;
 
 /// Controller for EmojiPicker widget that allows reading and changing
 /// the selected category programmatically.

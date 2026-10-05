@@ -1,11 +1,13 @@
+// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes
+
 /*
  * Modified version of https://github.com/Fintasys/emoji_picker_flutter
  * MIT License
  * Copyright (c) 2024 Stefan Humm
  */
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 
 /// Callback function for custom category view
 typedef CategoryViewBuilder =
@@ -77,7 +79,7 @@ class CategoryViewConfig {
   final CategoryViewBuilder? customCategoryView;
 
   @override
-  bool operator ==(other) {
+  bool operator ==(Object other) {
     return (other is CategoryViewConfig) &&
         other.tabBarHeight == tabBarHeight &&
         other.tabIndicatorAnimDuration == tabIndicatorAnimDuration &&

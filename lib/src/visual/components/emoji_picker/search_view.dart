@@ -1,12 +1,14 @@
+// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes
+
 /*
  * Modified version of https://github.com/Fintasys/emoji_picker_flutter
  * MIT License
  * Copyright (c) 2024 Stefan Humm
  */
 
+import 'package:flutter/material.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker_internal_utils.dart';
-import 'package:flutter/material.dart';
 
 /// Template class for custom implementation
 /// Inhert this class to create your own search view
@@ -138,7 +140,7 @@ class SearchViewState<T extends SearchView> extends State<T>
                 emojiBoxPosition,
                 emoji,
                 emojiSize,
-                null, // Todo: check if we can provide the category
+                null,
                 widget.config,
                 _onSkinTonedEmojiSelected,
                 links[emoji.emoji]!,
@@ -205,7 +207,7 @@ class SearchViewConfig {
   final SearchViewBuilder? customSearchView;
 
   @override
-  bool operator ==(other) {
+  bool operator ==(Object other) {
     return other is SearchViewConfig &&
         other.backgroundColor == backgroundColor &&
         other.buttonIconColor == buttonIconColor &&
@@ -251,7 +253,7 @@ class DefaultSearchViewState extends SearchViewState<DefaultSearchView> {
           constraints.maxWidth,
         );
 
-        return Container(
+        return ColoredBox(
           color: widget.config.searchViewConfig.backgroundColor,
           child: Column(
             mainAxisSize: MainAxisSize.min,

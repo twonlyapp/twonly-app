@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 /*
  * Modified version of https://github.com/Fintasys/emoji_picker_flutter
  * MIT License
@@ -6,17 +8,17 @@
 
 import 'dart:io';
 
-import 'package:twonly/src/visual/components/emoji_picker/locales/default_emoji_set_locale.dart';
+import 'package:flutter/material.dart';
 import 'package:twonly/src/visual/components/emoji_picker/category_view/category.dart';
 import 'package:twonly/src/visual/components/emoji_picker/config.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker_controller.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker_internal_utils.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_view/default_emoji_picker_view.dart';
-import 'package:twonly/src/visual/components/emoji_picker/emoji_view/emoji_view_config.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_view/emoji_picker_view.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_view/emoji_view_config.dart';
+import 'package:twonly/src/visual/components/emoji_picker/locales/default_emoji_set_locale.dart';
 import 'package:twonly/src/visual/components/emoji_picker/search_view.dart';
-import 'package:flutter/material.dart';
 
 /// All the possible categories that [Emoji] can be put into
 ///
@@ -342,7 +344,7 @@ class EmojiPickerState extends State<EmojiPicker> {
       if (cursorPosition >= 0) {
         final selection = controller.value.selection;
         final newTextBeforeCursor = _deleteWordByWord(
-          selection.textBefore(text).toString(),
+          selection.textBefore(text),
         );
         controller.value = controller.value.copyWith(
           text: newTextBeforeCursor + selection.textAfter(text),
@@ -558,8 +560,7 @@ class EmojiPickerState extends State<EmojiPicker> {
               final maximumHeight = _maximumPickerHeight(initialHeight);
               final nextHeight =
                   ((_currentPickerHeight ?? initialHeight) - details.delta.dy)
-                      .clamp(initialHeight, maximumHeight)
-                      .toDouble();
+                      .clamp(initialHeight, maximumHeight);
               if (nextHeight != _currentPickerHeight) {
                 setState(() => _currentPickerHeight = nextHeight);
               }
@@ -596,12 +597,10 @@ class EmojiPickerState extends State<EmojiPicker> {
     final resizeConfig = widget.config.resizeConfig;
     final configuredMaximum =
         resizeConfig.maxHeight ?? safeHeight * resizeConfig.maxHeightFactor;
-    return configuredMaximum
-        .clamp(
-          initialHeight,
-          safeHeight < initialHeight ? initialHeight : safeHeight,
-        )
-        .toDouble();
+    return configuredMaximum.clamp(
+      initialHeight,
+      safeHeight < initialHeight ? initialHeight : safeHeight,
+    );
   }
 
   void _showSearchView() {

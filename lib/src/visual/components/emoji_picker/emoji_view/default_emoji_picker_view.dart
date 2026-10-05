@@ -4,8 +4,8 @@
  * Copyright (c) 2024 Stefan Humm
  */
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 
 /// Default EmojiPicker Implementation
 class DefaultEmojiPickerView extends EmojiPickerView {
@@ -254,7 +254,6 @@ class _DefaultEmojiPickerViewState extends State<DefaultEmojiPickerView>
             ),
             sliver: SliverGrid.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                childAspectRatio: 1,
                 crossAxisCount: viewConfig.columns,
                 mainAxisSpacing: viewConfig.verticalSpacing,
                 crossAxisSpacing: viewConfig.horizontalSpacing,

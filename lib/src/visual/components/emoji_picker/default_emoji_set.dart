@@ -4,8 +4,6 @@
  * Copyright (c) 2024 Stefan Humm
  */
 
-// ignore_for_file: lines_longer_than_80_chars
-
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 
 /// List of categories of emojis

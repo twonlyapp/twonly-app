@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes
+
 /*
  * Modified version of https://github.com/Fintasys/emoji_picker_flutter
  * MIT License
@@ -37,7 +39,7 @@ class SkinToneConfig {
   final bool rememberSkinTone;
 
   @override
-  bool operator ==(other) {
+  bool operator ==(Object other) {
     return (other is SkinToneConfig) &&
         other.enabled == enabled &&
         other.dialogBackgroundColor == dialogBackgroundColor &&

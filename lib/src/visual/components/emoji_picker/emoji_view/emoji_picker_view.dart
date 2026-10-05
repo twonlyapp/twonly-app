@@ -32,11 +32,11 @@ abstract class EmojiPickerView extends StatefulWidget {
 class EmojiContainer extends StatelessWidget {
   /// Constructor.
   const EmojiContainer({
-    super.key,
     required this.color,
     required this.buttonMode,
-    this.padding,
     required this.child,
+    super.key,
+    this.padding,
   });
 
   final Color color;

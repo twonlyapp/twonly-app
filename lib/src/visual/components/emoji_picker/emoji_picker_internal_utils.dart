@@ -9,10 +9,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 
 /// Initial value for RecentEmoji
 const initVal = 1;
@@ -107,11 +107,11 @@ class EmojiPickerInternalUtils {
 
     return Future(() async {
       final prefs = await SharedPreferences.getInstance();
-      var emojiJson = prefs.getString('recent');
+      final emojiJson = prefs.getString('recent');
       if (emojiJson == null) {
         return _recentEmojis = [];
       }
-      var json = jsonDecode(emojiJson) as List<dynamic>;
+      final json = jsonDecode(emojiJson) as List<dynamic>;
       return _recentEmojis = json
           .map<RecentEmoji>(RecentEmoji.fromJson)
           .toList();
@@ -128,7 +128,7 @@ class EmojiPickerInternalUtils {
       emoji = removeSkinTone(emoji);
     }
     var recentEmoji = await getRecentEmojis();
-    var recentEmojiIndex = recentEmoji.indexWhere(
+    final recentEmojiIndex = recentEmoji.indexWhere(
       (element) => element.emoji.emoji == emoji.emoji,
     );
     if (recentEmojiIndex != -1) {
@@ -147,7 +147,7 @@ class EmojiPickerInternalUtils {
 
     // save locally
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString('recent', jsonEncode(recentEmoji));
+    unawaited(prefs.setString('recent', jsonEncode(recentEmoji)));
 
     return _recentEmojis = recentEmoji;
   }
@@ -162,7 +162,7 @@ class EmojiPickerInternalUtils {
       emoji = removeSkinTone(emoji);
     }
     var recentEmoji = await getRecentEmojis();
-    var recentEmojiIndex = recentEmoji.indexWhere(
+    final recentEmojiIndex = recentEmoji.indexWhere(
       (element) => element.emoji.emoji == emoji.emoji,
     );
     if (recentEmojiIndex != -1) {
@@ -188,7 +188,7 @@ class EmojiPickerInternalUtils {
 
     // save locally
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString('recent', jsonEncode(recentEmoji));
+    unawaited(prefs.setString('recent', jsonEncode(recentEmoji)));
 
     return _recentEmojis = recentEmoji;
   }
@@ -196,7 +196,7 @@ class EmojiPickerInternalUtils {
   /// Clears the list of recent emojis in local storage
   Future<void> clearRecentEmojisInLocalStorage() async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString('recent', jsonEncode([]));
+    unawaited(prefs.setString('recent', jsonEncode([])));
     _recentEmojis = [];
   }
 

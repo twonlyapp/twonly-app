@@ -1,12 +1,14 @@
+// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes, prefer_asserts_with_message
+
 /*
  * Modified version of https://github.com/Fintasys/emoji_picker_flutter
  * MIT License
  * Copyright (c) 2024 Stefan Humm
  */
 
+import 'package:flutter/material.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:twonly/src/visual/components/emoji_picker/locales/default_emoji_set_locale.dart';
-import 'package:flutter/material.dart';
 
 /// Number of skin tone icons
 const kSkinToneCount = 6;
@@ -89,7 +91,7 @@ class Config {
   final ResizeConfig resizeConfig;
 
   @override
-  bool operator ==(other) {
+  bool operator ==(Object other) {
     return (other is Config) &&
         other.height == height &&
         other.viewOrderConfig == viewOrderConfig &&
@@ -143,7 +145,7 @@ class ViewOrderConfig {
   final EmojiPickerItem bottom;
 
   @override
-  bool operator ==(other) {
+  bool operator ==(Object other) {
     return other is ViewOrderConfig &&
         other.top == top &&
         other.middle == middle &&

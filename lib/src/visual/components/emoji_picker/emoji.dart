@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_dynamic_calls, prefer_constructors_over_static_methods
+
 /*
  * Modified version of https://github.com/Fintasys/emoji_picker_flutter
  * MIT License
@@ -39,9 +41,7 @@ class Emoji {
     return Emoji(
       json['emoji'] as String,
       json['name'] as String,
-      hasSkinTone: json['hasSkinTone'] != null
-          ? json['hasSkinTone'] as bool
-          : false,
+      hasSkinTone: json['hasSkinTone'] != null && json['hasSkinTone'] as bool,
     );
   }
 

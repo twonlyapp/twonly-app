@@ -6,8 +6,8 @@
 
 import 'dart:collection';
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 
 /// Skin tone overlay mixin
 mixin SkinToneOverlayStateMixin<T extends StatefulWidget> on State<T> {
@@ -52,7 +52,7 @@ mixin SkinToneOverlayStateMixin<T extends StatefulWidget> on State<T> {
         .toList();
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final emojiPickerRenderbox = context.findRenderObject() as RenderBox;
+    final emojiPickerRenderbox = context.findRenderObject()! as RenderBox;
     final emojiBoxSize = config.emojiViewConfig.getEmojiBoxSize(
       emojiPickerRenderbox.size.width,
     );
@@ -74,9 +74,9 @@ mixin SkinToneOverlayStateMixin<T extends StatefulWidget> on State<T> {
           child: TapRegion(
             onTapOutside: (_) => closeSkinToneOverlay(),
             child: Material(
-              elevation: 4.0,
+              elevation: 4,
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 color: config.skinToneConfig.dialogBackgroundColor,
                 child: Row(
                   children: [
@@ -120,7 +120,7 @@ mixin SkinToneOverlayStateMixin<T extends StatefulWidget> on State<T> {
   }
 
   double _calculateTopOffset(double emojiBoxSize) {
-    final verticalPaddingOverlay = 8.0;
+    const verticalPaddingOverlay = 8.0;
     final top = -emojiBoxSize - verticalPaddingOverlay;
     return top;
   }

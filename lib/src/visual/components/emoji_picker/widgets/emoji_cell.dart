@@ -4,9 +4,9 @@
  * Copyright (c) 2024 Stefan Humm
  */
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 
 /// A widget that represents an individual clickable emoji cell.
 /// Can have a long pressed listener [onSkinToneDialogRequested] that
@@ -14,30 +14,30 @@ import 'package:flutter/material.dart';
 class EmojiCell extends StatelessWidget {
   /// Constructor for manually setting all properties
   const EmojiCell({
-    super.key,
     required this.emoji,
     required this.emojiSize,
     required this.emojiBoxSize,
-    this.categoryEmoji,
     required this.buttonMode,
     required this.enableSkinTones,
     required this.textStyle,
     required this.skinToneIndicatorColor,
-    this.onSkinToneDialogRequested,
     required this.onEmojiSelected,
+    super.key,
+    this.categoryEmoji,
+    this.onSkinToneDialogRequested,
   });
 
   /// Constructor that can retrieve as much information as possible from
   /// [Config]
   EmojiCell.fromConfig({
-    super.key,
     required this.emoji,
     required this.emojiSize,
     required this.emojiBoxSize,
-    this.categoryEmoji,
     required this.onEmojiSelected,
-    this.onSkinToneDialogRequested,
     required Config config,
+    super.key,
+    this.categoryEmoji,
+    this.onSkinToneDialogRequested,
   }) : buttonMode = config.emojiViewConfig.buttonMode,
        enableSkinTones = config.skinToneConfig.enabled,
        textStyle = config.emojiTextStyle,
@@ -77,12 +77,12 @@ class EmojiCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    onPressed() {
+    void onPressed() {
       onEmojiSelected(categoryEmoji?.category, emoji);
     }
 
-    onLongPressed() {
-      final renderBox = context.findRenderObject() as RenderBox;
+    void onLongPressed() {
+      final renderBox = context.findRenderObject()! as RenderBox;
       final emojiBoxPosition = renderBox.localToGlobal(Offset.zero);
       onSkinToneDialogRequested?.call(
         emojiBoxPosition,
@@ -106,8 +106,8 @@ class EmojiCell extends StatelessWidget {
   /// Build different Button based on ButtonMode
   Widget _buildButtonWidget({
     required VoidCallback onPressed,
-    VoidCallback? onLongPressed,
     required Widget child,
+    VoidCallback? onLongPressed,
   }) {
     if (buttonMode == ButtonMode.MATERIAL) {
       return MaterialButton(
@@ -116,7 +116,7 @@ class EmojiCell extends StatelessWidget {
         elevation: 0,
         highlightElevation: 0,
         padding: EdgeInsets.zero,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: const RoundedRectangleBorder(),
         child: child,
       );
     }
@@ -126,7 +126,6 @@ class EmojiCell extends StatelessWidget {
         child: CupertinoButton(
           onPressed: onPressed,
           padding: EdgeInsets.zero,
-          alignment: Alignment.center,
           child: child,
         ),
       );
@@ -142,7 +141,7 @@ class EmojiCell extends StatelessWidget {
   Widget _buildEmoji() {
     final emojiText = Text(
       emoji.emoji,
-      textScaler: const TextScaler.linear(1.0),
+      textScaler: TextScaler.noScaling,
       style: _getEmojiTextStyle(),
     );
 
@@ -152,7 +151,7 @@ class EmojiCell extends StatelessWidget {
         ? Container(
             decoration: TriangleDecoration(
               color: skinToneIndicatorColor,
-              size: 8.0,
+              size: 8,
             ),
             child: emojiText,
           )

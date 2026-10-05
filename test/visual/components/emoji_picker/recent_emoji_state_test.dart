@@ -4,19 +4,19 @@
  * Copyright (c) 2024 Stefan Humm
  */
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker_internal_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker_internal_utils.dart';
 
 /// Test harness that lets us trigger a rebuild of [EmojiPicker] from its
 /// parent, mimicking an unrelated `setState()` higher up in the widget tree.
 class _RebuildHarness extends StatefulWidget {
   const _RebuildHarness({
-    super.key,
     required this.pickerKey,
     required this.config,
+    super.key,
   });
 
   final GlobalKey<EmojiPickerState> pickerKey;
@@ -59,10 +59,6 @@ void main() {
 
   const config = Config(
     height: 400,
-    categoryViewConfig: CategoryViewConfig(
-      initCategory: Category.RECENT,
-      recentTabBehavior: RecentTabBehavior.RECENT,
-    ),
   );
 
   // Deliberately not part of the built-in set. In the continuous picker a

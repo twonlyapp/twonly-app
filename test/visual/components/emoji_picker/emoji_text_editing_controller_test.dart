@@ -4,18 +4,18 @@
  * Copyright (c) 2024 Stefan Humm
  */
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 
 void main() {
   group('EmojiTextEditingController', () {
     testWidgets('should apply emojiTextStyle to emojis', (tester) async {
       await tester.pumpWidget(
         Builder(
-          builder: (BuildContext context) {
-            final emojiStyle = const TextStyle(color: Colors.red);
-            final regularStyle = const TextStyle(color: Colors.black);
+          builder: (context) {
+            const emojiStyle = TextStyle(color: Colors.red);
+            const regularStyle = TextStyle(color: Colors.black);
             final controller = EmojiTextEditingController(
               text: 'Hello 👋 World',
               emojiTextStyle: emojiStyle,

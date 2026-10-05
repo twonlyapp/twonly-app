@@ -6,8 +6,8 @@
 
 import 'dart:async';
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 
 /// Backspace Button Widget
 class BackspaceButton extends StatefulWidget {
@@ -72,7 +72,7 @@ class _BackspaceButtonState extends State<BackspaceButton> {
     var millisecondsSincePressed = 0;
 
     // Callback function executed on each timer tick
-    void _callback(Timer timer) {
+    void callback(Timer timer) {
       // Accumulate elapsed time since the last tick
       millisecondsSincePressed += callbackInterval.inMilliseconds;
 
@@ -87,7 +87,7 @@ class _BackspaceButtonState extends State<BackspaceButton> {
         _onBackspacePressedCallbackTimer?.cancel();
         _onBackspacePressedCallbackTimer = Timer.periodic(
           callbackInterval,
-          _callback,
+          callback,
         );
 
         // Reset the elapsed time for the new interval
@@ -105,7 +105,7 @@ class _BackspaceButtonState extends State<BackspaceButton> {
     // Start the initial timer with the short-press interval
     _onBackspacePressedCallbackTimer = Timer.periodic(
       callbackInterval,
-      _callback,
+      callback,
     );
   }
 

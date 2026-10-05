@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 /*
  * Modified version of https://github.com/Fintasys/emoji_picker_flutter
  * MIT License

@@ -4,10 +4,10 @@
  * Copyright (c) 2024 Stefan Humm
  */
 
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
-import 'package:twonly/src/visual/components/emoji_picker/emoji_picker_internal_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker_internal_utils.dart';
 
 // Use for golden tests, helpful in debugging
 // await expectLater(
@@ -21,24 +21,23 @@ void main() {
     setUp(EmojiPickerInternalUtils.resetCaches);
 
     testWidgets('Should allow user to select an emoji', (
-      WidgetTester tester,
+      tester,
     ) async {
-      final _controller = TextEditingController();
-      Emoji? _emojiSelected;
-      Category? _categorySelected;
+      final controller0 = TextEditingController();
+      Emoji? emojiSelected;
+      Category? categorySelected;
 
       // Build our app and trigger a frame.
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: EmojiPicker(
-              textEditingController: _controller,
+              textEditingController: controller0,
               onEmojiSelected: (category, emoji) {
-                _emojiSelected = emoji;
-                _categorySelected = category;
+                emojiSelected = emoji;
+                categorySelected = category;
               },
               config: const Config(
-                height: 256,
                 categoryViewConfig: CategoryViewConfig(
                   recentTabBehavior: RecentTabBehavior.NONE,
                 ),
@@ -64,20 +63,20 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check if the emoji is added to the text controller
-      expect(_controller.text, contains('🙂'));
+      expect(controller0.text, contains('🙂'));
 
       // Check if the emoji been passed to the 'onEmojiSelected' callback
       expect(
-        _emojiSelected,
+        emojiSelected,
         equals(const Emoji('🙂', 'face | happy | slightly | smile | smiling')),
       );
 
       // Check if the category been passed to the 'onEmojiSelected' callback
-      expect(_categorySelected, equals(Category.SMILEYS));
+      expect(categorySelected, equals(Category.SMILEYS));
     });
 
     testWidgets('Shows the redesigned header and one continuous emoji list', (
-      WidgetTester tester,
+      tester,
     ) async {
       var stickerPressed = false;
       final controller = EmojiPickerController(
@@ -137,7 +136,7 @@ void main() {
     });
 
     testWidgets('Drag handle grows picker from its configured height', (
-      WidgetTester tester,
+      tester,
     ) async {
       var showing = true;
       late StateSetter setHarnessState;
@@ -158,7 +157,6 @@ void main() {
                     child: EmojiPicker(
                       controller: pickerController,
                       config: const Config(
-                        height: 256,
                         resizeConfig: ResizeConfig(maxHeight: 420),
                         emojiViewConfig: EmojiViewConfig(
                           backgroundColor: pickerColor,
@@ -192,7 +190,7 @@ void main() {
       final dragIndicator = tester.widget<Container>(
         find.byKey(const Key('emojiPickerDragIndicator')),
       );
-      final dragDecoration = dragIndicator.decoration as BoxDecoration;
+      final dragDecoration = dragIndicator.decoration! as BoxDecoration;
       expect(dragDecoration.color, ThemeData.dark().colorScheme.outline);
       expect(dragDecoration.borderRadius, BorderRadius.circular(32));
 
@@ -212,13 +210,12 @@ void main() {
       expect(tester.getSize(picker).height, 256);
     });
 
-    testWidgets('Drag handle can be hidden', (WidgetTester tester) async {
+    testWidgets('Drag handle can be hidden', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: EmojiPicker(
               config: Config(
-                height: 256,
                 resizeConfig: ResizeConfig(showDragHandle: false),
                 categoryViewConfig: CategoryViewConfig(
                   recentTabBehavior: RecentTabBehavior.NONE,
@@ -240,25 +237,25 @@ void main() {
     });
 
     testWidgets('Should allow to select an emoji with skintone on longPress', (
-      WidgetTester tester,
+      tester,
     ) async {
-      final _controller = TextEditingController();
-      final _utils = EmojiPickerUtils();
-      final emoji = const Emoji('👍', 'Thumbs Up', hasSkinTone: true);
-      Emoji? _emojiSelected;
-      Category? _categorySelected;
+      final controller0 = TextEditingController();
+      final utils = EmojiPickerUtils();
+      const emoji = Emoji('👍', 'Thumbs Up', hasSkinTone: true);
+      Emoji? emojiSelected;
+      Category? categorySelected;
 
       // Build our app and trigger a frame.
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Padding(
-              padding: const EdgeInsets.only(top: 64.0),
+              padding: const EdgeInsets.only(top: 64),
               child: EmojiPicker(
-                textEditingController: _controller,
+                textEditingController: controller0,
                 onEmojiSelected: (category, emoji) {
-                  _emojiSelected = emoji;
-                  _categorySelected = category;
+                  emojiSelected = emoji;
+                  categorySelected = category;
                 },
                 config: const Config(
                   height: 500,
@@ -298,7 +295,7 @@ void main() {
       Finder? skinToneVariantToFind;
       for (var i = 0; i < SkinTone.values.length; i++) {
         skinToneVariantToFind = find.text(
-          _utils.applySkinTone(emoji, SkinTone.values[i]).emoji,
+          utils.applySkinTone(emoji, SkinTone.values[i]).emoji,
         );
         // Verify if we can find the skintone variant
         expect(skinToneVariantToFind, findsOneWidget);
@@ -308,24 +305,24 @@ void main() {
       await tester.tap(skinToneVariantToFind!);
 
       // Check if the emoji is added to the text controller
-      expect(_controller.text, contains('👍🏿'));
+      expect(controller0.text, contains('👍🏿'));
 
       // Check if the emoji been passed to the 'onEmojiSelected' callback
-      expect(_emojiSelected?.emoji, equals('👍🏿'));
+      expect(emojiSelected?.emoji, equals('👍🏿'));
       expect(
-        _emojiSelected?.name,
+        emojiSelected?.name,
         equals('+1 | good | hand | like | thumb | up | yes'),
       );
-      expect(_emojiSelected?.hasSkinTone, equals(true));
+      expect(emojiSelected?.hasSkinTone, equals(true));
 
       // Check if the category been passed to the 'onEmojiSelected' callback
-      expect(_categorySelected, equals(Category.SMILEYS));
+      expect(categorySelected, equals(Category.SMILEYS));
     });
 
     testWidgets('Clips overflow when constrained tighter than natural height', (
-      WidgetTester tester,
+      tester,
     ) async {
-      final _controller = TextEditingController();
+      final controller0 = TextEditingController();
 
       // Constrain the picker far below the natural sum of the category bar
       // and bottom action bar to force the inner Column to overflow (#256).
@@ -337,7 +334,7 @@ void main() {
                 width: 300,
                 height: 30,
                 child: EmojiPicker(
-                  textEditingController: _controller,
+                  textEditingController: controller0,
                   config: const Config(
                     height: 30,
                     categoryViewConfig: CategoryViewConfig(
