@@ -7,6 +7,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
@@ -41,6 +42,7 @@ class _SynchronizedImageViewerScreenState
 
   final Set<String> _favoritedMediaIds = {};
   bool _isSaving = false;
+  bool _isCreatingSticker = false;
   final Set<String> _storedMediaIds = {};
   final Set<String> _precachedMediaIds = {};
 
@@ -92,6 +94,26 @@ class _SynchronizedImageViewerScreenState
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _createSticker() async {
+    if (_isCreatingSticker) return;
+    final media = widget.galleryItems[_currentIndex].mediaService;
+    setState(() => _isCreatingSticker = true);
+    try {
+      await StickerService.createFromMedia(media);
+      if (!mounted) return;
+      showSnackbar(
+        context,
+        context.lang.stickerAdded,
+        level: SnackbarLevel.success,
+      );
+    } on Object {
+      if (!mounted) return;
+      showSnackbar(context, context.lang.stickerCreateFailed);
+    } finally {
+      if (mounted) setState(() => _isCreatingSticker = false);
     }
   }
 
@@ -365,6 +387,11 @@ class _SynchronizedImageViewerScreenState
                             onExport: _exportFile,
                             onToggleFavorite: () =>
                                 _toggleFavorite(currentMediaId),
+                            showCreateStickerButton:
+                                orgMediaService.mediaFile.type ==
+                                MediaType.image,
+                            onCreateSticker: _createSticker,
+                            isCreatingSticker: _isCreatingSticker,
                             onDelete: _deleteFile,
                             showStoreButton: !_storedMediaIds.contains(
                               currentMediaId,

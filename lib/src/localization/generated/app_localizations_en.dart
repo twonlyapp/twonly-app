@@ -1023,6 +1023,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupNameInput => 'Group name';
 
   @override
+  String get contactGroupNamePlaceholder => 'Enter name here';
+
+  @override
   String get groupMembers => 'Members';
 
   @override
@@ -2761,6 +2764,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactGroupUsedByWidget => 'Home screen widget';
 
   @override
+  String get contactGroupAddWidgetSubtitle =>
+      'Add a widget for this contact group.';
+
+  @override
+  String get contactGroupWidgetTutorialTitle => 'Add a home screen widget';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep1 =>
+      'Touch and hold an empty area on your home screen, then tap Widgets.';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep2 =>
+      'Find twonly, then drag its widget onto your home screen.';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep3 =>
+      'Select this contact group in the setup screen, then tap Save.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep1 =>
+      'Touch and hold an empty area on your Home Screen, then tap Edit and Add Widget.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep2 =>
+      'Find twonly, choose a size, then tap Add Widget.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep3 =>
+      'Touch and hold the widget, tap Edit Widget, then select this contact group.';
+
+  @override
   String contactGroupUsedByWidgetSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2925,6 +2959,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createSticker => 'Create sticker';
+
+  @override
+  String get stickerPickFromGallery => 'Gallery';
 
   @override
   String get noStickersYet => 'Create your first sticker from a photo.';

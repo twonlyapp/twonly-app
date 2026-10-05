@@ -1906,6 +1906,12 @@ abstract class AppLocalizations {
   /// **'Group name'**
   String get groupNameInput;
 
+  /// No description provided for @contactGroupNamePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter name here'**
+  String get contactGroupNamePlaceholder;
+
   /// No description provided for @groupMembers.
   ///
   /// In en, this message translates to:
@@ -4774,6 +4780,54 @@ abstract class AppLocalizations {
   /// **'Home screen widget'**
   String get contactGroupUsedByWidget;
 
+  /// No description provided for @contactGroupAddWidgetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a widget for this contact group.'**
+  String get contactGroupAddWidgetSubtitle;
+
+  /// No description provided for @contactGroupWidgetTutorialTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a home screen widget'**
+  String get contactGroupWidgetTutorialTitle;
+
+  /// No description provided for @contactGroupWidgetTutorialAndroidStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold an empty area on your home screen, then tap Widgets.'**
+  String get contactGroupWidgetTutorialAndroidStep1;
+
+  /// No description provided for @contactGroupWidgetTutorialAndroidStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Find twonly, then drag its widget onto your home screen.'**
+  String get contactGroupWidgetTutorialAndroidStep2;
+
+  /// No description provided for @contactGroupWidgetTutorialAndroidStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Select this contact group in the setup screen, then tap Save.'**
+  String get contactGroupWidgetTutorialAndroidStep3;
+
+  /// No description provided for @contactGroupWidgetTutorialIosStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold an empty area on your Home Screen, then tap Edit and Add Widget.'**
+  String get contactGroupWidgetTutorialIosStep1;
+
+  /// No description provided for @contactGroupWidgetTutorialIosStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Find twonly, choose a size, then tap Add Widget.'**
+  String get contactGroupWidgetTutorialIosStep2;
+
+  /// No description provided for @contactGroupWidgetTutorialIosStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold the widget, tap Edit Widget, then select this contact group.'**
+  String get contactGroupWidgetTutorialIosStep3;
+
   /// No description provided for @contactGroupUsedByWidgetSubtitle.
   ///
   /// In en, this message translates to:
@@ -5013,6 +5067,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create sticker'**
   String get createSticker;
+
+  /// No description provided for @stickerPickFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get stickerPickFromGallery;
 
   /// No description provided for @noStickersYet.
   ///

@@ -11,8 +11,8 @@ import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
-import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/elements/my_input.element.dart';
 
 class GroupCreateSelectGroupNameView extends StatefulWidget {
   const GroupCreateSelectGroupNameView({
@@ -101,16 +101,11 @@ class _GroupCreateSelectGroupNameViewState
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: TextField(
-                    onChanged: (_) async {
-                      setState(() {});
-                    },
-                    autofocus: true,
+                  child: MyInput(
                     controller: textFieldGroupName,
-                    decoration: getInputDecoration(
-                      context,
-                      context.lang.groupNameInput,
-                    ),
+                    autofocus: true,
+                    hintText: context.lang.groupNameInput,
+                    onChanged: (_) => setState(() {}),
                   ),
                 ),
                 const SizedBox(height: 10),

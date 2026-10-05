@@ -9,9 +9,12 @@ class SynchronizedViewerActionsToolbarComp extends StatelessWidget {
     required this.onExport,
     required this.onToggleFavorite,
     required this.onDelete,
+    required this.showCreateStickerButton,
+    required this.onCreateSticker,
     this.showStoreButton = false,
     this.onStore,
     this.isImageSaving = false,
+    this.isCreatingSticker = false,
     super.key,
   });
 
@@ -20,9 +23,12 @@ class SynchronizedViewerActionsToolbarComp extends StatelessWidget {
   final VoidCallback onExport;
   final VoidCallback onToggleFavorite;
   final VoidCallback onDelete;
+  final bool showCreateStickerButton;
+  final VoidCallback onCreateSticker;
   final bool showStoreButton;
   final VoidCallback? onStore;
   final bool isImageSaving;
+  final bool isCreatingSticker;
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +86,27 @@ class SynchronizedViewerActionsToolbarComp extends StatelessWidget {
                   : context.lang.galleryActionFavorite,
               onTap: onToggleFavorite,
             ),
+            if (showCreateStickerButton)
+              _ToolbarAction(
+                icon: isCreatingSticker
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator.adaptive(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(
+                            context.appColor(AppColor.mediaForeground),
+                          ),
+                        ),
+                      )
+                    : FaIcon(
+                        FontAwesomeIcons.wandMagicSparkles,
+                        color: context.appColor(AppColor.mediaForeground),
+                        size: 18,
+                      ),
+                label: context.lang.createSticker,
+                onTap: isCreatingSticker ? null : onCreateSticker,
+              ),
             _ToolbarAction(
               icon: Icon(
                 Icons.delete,

@@ -1034,6 +1034,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupNameInput => 'اسم المجموعة';
 
   @override
+  String get contactGroupNamePlaceholder => 'أدخل الاسم هنا';
+
+  @override
   String get groupMembers => 'الأعضاء';
 
   @override
@@ -2780,6 +2783,38 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contactGroupUsedByWidget => 'أداة الشاشة الرئيسية';
 
   @override
+  String get contactGroupAddWidgetSubtitle =>
+      'أضف أداة لمجموعة جهات الاتصال هذه.';
+
+  @override
+  String get contactGroupWidgetTutorialTitle =>
+      'إضافة أداة إلى الشاشة الرئيسية';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep1 =>
+      'المس مطولاً مساحة فارغة على شاشتك الرئيسية، ثم اضغط على «الأدوات».';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep2 =>
+      'ابحث عن twonly، ثم اسحب أداته إلى شاشتك الرئيسية.';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep3 =>
+      'اختر مجموعة جهات الاتصال هذه في شاشة الإعداد، ثم اضغط على «حفظ».';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep1 =>
+      'المس مطولاً مساحة فارغة على شاشتك الرئيسية، ثم اضغط على «تحرير» و«إضافة أداة».';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep2 =>
+      'ابحث عن twonly، واختر حجماً، ثم اضغط على «إضافة أداة».';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep3 =>
+      'المس الأداة مطولاً، واضغط على «تحرير الأداة»، ثم اختر مجموعة جهات الاتصال هذه.';
+
+  @override
   String contactGroupUsedByWidgetSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2953,6 +2988,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get createSticker => 'إنشاء ملصق';
+
+  @override
+  String get stickerPickFromGallery => 'المعرض';
 
   @override
   String get noStickersYet => 'أنشئ ملصقك الأول من صورة.';

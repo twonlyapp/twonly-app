@@ -1029,6 +1029,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get groupNameInput => 'Gruppennamen';
 
   @override
+  String get contactGroupNamePlaceholder => 'Namen hier eingeben';
+
+  @override
   String get groupMembers => 'Mitglieder';
 
   @override
@@ -2786,6 +2789,38 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactGroupUsedByWidget => 'Homebildschirm-Widget';
 
   @override
+  String get contactGroupAddWidgetSubtitle =>
+      'Füge ein Widget für diese Kontaktgruppe hinzu.';
+
+  @override
+  String get contactGroupWidgetTutorialTitle =>
+      'Homebildschirm-Widget hinzufügen';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep1 =>
+      'Halte eine freie Stelle auf deinem Homebildschirm gedrückt und tippe dann auf „Widgets“.';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep2 =>
+      'Suche nach twonly und ziehe das Widget auf deinen Homebildschirm.';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep3 =>
+      'Wähle diese Kontaktgruppe in der Einrichtung aus und tippe dann auf „Speichern“.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep1 =>
+      'Halte eine freie Stelle auf deinem Homebildschirm gedrückt und tippe dann auf „Bearbeiten“ und „Widget hinzufügen“.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep2 =>
+      'Suche nach twonly, wähle eine Größe und tippe dann auf „Widget hinzufügen“.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep3 =>
+      'Halte das Widget gedrückt, tippe auf „Widget bearbeiten“ und wähle dann diese Kontaktgruppe aus.';
+
+  @override
   String contactGroupUsedByWidgetSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2954,6 +2989,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get createSticker => 'Sticker erstellen';
+
+  @override
+  String get stickerPickFromGallery => 'Galerie';
 
   @override
   String get noStickersYet => 'Erstelle deinen ersten Sticker aus einem Foto.';

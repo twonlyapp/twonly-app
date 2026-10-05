@@ -13,8 +13,8 @@ import 'package:twonly/src/visual/components/custom_color_picker_dialog.comp.dar
 import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
-import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 
 class ContactGroupSettingsView extends StatefulWidget {
@@ -67,6 +67,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   ];
 
   late final TextEditingController _nameController;
+  final TextEditingController _memberFilterController = TextEditingController();
   late int _backgroundColor;
   late int _textColor;
   late bool _showAsShortcut;
@@ -86,6 +87,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   /// members are what makes those widgets able to receive anything, so the
   /// group cannot be deleted while any of them is still placed.
   int _widgetCount = 0;
+  bool _widgetUsageLoaded = false;
 
   bool get _isEditing => widget.contactGroup != null;
 
@@ -161,6 +163,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
       unawaited(subscription.cancel());
     }
     _nameController.dispose();
+    _memberFilterController.dispose();
     super.dispose();
   }
 
@@ -265,7 +268,70 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
         .where((placed) => placed.contactGroupIds.contains(contactGroupId))
         .length;
     if (!mounted) return;
-    setState(() => _widgetCount = count);
+    setState(() {
+      _widgetCount = count;
+      _widgetUsageLoaded = true;
+    });
+  }
+
+  Future<void> _showWidgetTutorial() async {
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.lang.contactGroupWidgetTutorialTitle),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _widgetTutorialStep(
+                1,
+                isIOS
+                    ? context.lang.contactGroupWidgetTutorialIosStep1
+                    : context.lang.contactGroupWidgetTutorialAndroidStep1,
+              ),
+              _widgetTutorialStep(
+                2,
+                isIOS
+                    ? context.lang.contactGroupWidgetTutorialIosStep2
+                    : context.lang.contactGroupWidgetTutorialAndroidStep2,
+              ),
+              _widgetTutorialStep(
+                3,
+                isIOS
+                    ? context.lang.contactGroupWidgetTutorialIosStep3
+                    : context.lang.contactGroupWidgetTutorialAndroidStep3,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.lang.ok),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _widgetTutorialStep(int number, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: context.color.primaryContainer,
+            foregroundColor: context.color.onPrimaryContainer,
+            child: Text('$number'),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    );
   }
 
   Future<void> _delete() async {
@@ -365,6 +431,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   Widget _nameEditor() {
     final hasBackground = contactGroupHasBackground(_backgroundColor);
     final fontSize = contactGroupFontSize(13, _backgroundColor);
+    final placeholder = context.lang.contactGroupNamePlaceholder;
     final style = TextStyle(
       color: Color(_textColor),
       fontSize: fontSize,
@@ -373,7 +440,10 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
     // The field has no intrinsic width, so measure the text to let the badge
     // hug its content just like the rendered label does.
     final painter = TextPainter(
-      text: TextSpan(text: _nameController.text, style: style),
+      text: TextSpan(
+        text: _nameController.text.isEmpty ? placeholder : _nameController.text,
+        style: style,
+      ),
       textDirection: Directionality.of(context),
       textScaler: MediaQuery.textScalerOf(context),
     )..layout();
@@ -400,7 +470,11 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
             textAlign: TextAlign.center,
             textCapitalization: TextCapitalization.words,
             style: style,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
+              hintText: placeholder,
+              hintStyle: style.copyWith(
+                color: style.color?.withValues(alpha: 0.65),
+              ),
               border: InputBorder.none,
               isDense: true,
               contentPadding: EdgeInsets.zero,
@@ -532,6 +606,25 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
               value: _showAsShortcut,
               onChanged: (value) => setState(() => _showAsShortcut = value),
             ),
+            if (_showAsShortcut)
+              Container(
+                margin: const EdgeInsets.only(left: 16, bottom: 8),
+                decoration: BoxDecoration(
+                  color: context.color.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  leading: const Icon(Icons.emoji_emotions_outlined),
+                  title: Text(context.lang.selectEmoji),
+                  trailing: Text(
+                    _emoji ?? '+',
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  onTap: _selectEmoji,
+                ),
+              ),
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
               title: Text(context.lang.contactGroupShareStories),
@@ -539,30 +632,25 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
               value: _shareStories,
               onChanged: (value) => setState(() => _shareStories = value),
             ),
-            if (_showAsShortcut)
+            if (_isEditing && _widgetUsageLoaded)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(context.lang.selectEmoji),
-                trailing: Text(
-                  _emoji ?? '+',
-                  style: const TextStyle(fontSize: 24),
-                ),
-                onTap: _selectEmoji,
-              ),
-            if (_widgetCount > 0)
-              // Stated rather than offered as a switch: which groups a widget
-              // draws from is chosen on the home screen, not here.
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(context.lang.contactGroupUsedByWidget),
-                subtitle: Text(
-                  context.lang.contactGroupUsedByWidgetSubtitle(_widgetCount),
-                ),
-                trailing: FaIcon(
-                  FontAwesomeIcons.image,
-                  size: 18,
+                leading: Icon(
+                  Icons.widgets_outlined,
                   color: context.color.primary,
                 ),
+                title: Text(context.lang.contactGroupUsedByWidget),
+                subtitle: Text(
+                  _widgetCount > 0
+                      ? context.lang.contactGroupUsedByWidgetSubtitle(
+                          _widgetCount,
+                        )
+                      : context.lang.contactGroupAddWidgetSubtitle,
+                ),
+                trailing: _widgetCount == 0
+                    ? const Icon(Icons.chevron_right)
+                    : null,
+                onTap: _widgetCount == 0 ? _showWidgetTutorial : null,
               ),
             const Divider(height: 40),
             Text(
@@ -570,12 +658,13 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
-            TextField(
+            MyInput(
+              controller: _memberFilterController,
+              dense: true,
+              fontWeight: FontWeight.normal,
+              hintText: context.lang.shareImageSearchAllContacts,
+              prefixIcon: const Icon(Icons.search, size: 20),
               onChanged: (value) => setState(() => _memberFilter = value),
-              decoration: getInputDecoration(
-                context,
-                context.lang.shareImageSearchAllContacts,
-              ),
             ),
             for (final entry in members) _memberTile(entry),
           ],

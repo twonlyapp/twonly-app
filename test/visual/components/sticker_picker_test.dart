@@ -2,10 +2,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
@@ -16,6 +18,7 @@ import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_sticker.entry.dart';
+import 'package:twonly/src/visual/views/memories/sticker_source_picker.view.dart';
 
 // A small valid image for exercising image widgets; protocol codec validation
 // and real transparent WebP inference are covered by the Rust sticker tests.
@@ -50,10 +53,17 @@ Future<void> _settle(WidgetTester tester) async {
 void main() {
   late TwonlyDB database;
 
+  setUpAll(AppEnvironment.initTesting);
+
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await locator.reset();
-    database = TwonlyDB(NativeDatabase.memory());
+    database = TwonlyDB.forTesting(
+      DatabaseConnection(
+        NativeDatabase.memory(),
+        closeStreamsSynchronously: true,
+      ),
+    );
     locator.registerSingleton<TwonlyDB>(database);
     await database.customSelect('SELECT 1').get();
   });
@@ -114,6 +124,61 @@ void main() {
       expect(tester.getRect(handle), handleRect);
     },
   );
+
+  testWidgets('new sticker opens Memories with a Gallery option', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        SizedBox(
+          height: 300,
+          child: StickerPicker(
+            onEmojiPressed: () {},
+            onStickerSelected: (_) {},
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+
+    await tester.tap(find.byIcon(Icons.add_photo_alternate_outlined));
+    await _settle(tester);
+
+    expect(find.byType(StickerSourcePickerView), findsOneWidget);
+    expect(find.text('Gallery'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await tester.pump();
+  });
+
+  testWidgets('moves add action to the header once a sticker exists', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        SizedBox(
+          height: 300,
+          child: StickerPicker(
+            onEmojiPressed: () {},
+            onStickerSelected: (_) {},
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+
+    expect(find.byKey(const Key('stickerPickerEmptyAdd')), findsOneWidget);
+    expect(find.byKey(const Key('stickerPickerHeaderAdd')), findsNothing);
+
+    await tester.runAsync(() => StickerService.saveReceived(_sticker()));
+    await _settle(tester);
+
+    expect(find.byKey(const Key('stickerPickerEmptyAdd')), findsNothing);
+    expect(find.byKey(const Key('stickerPickerHeaderAdd')), findsOneWidget);
+  });
 
   testWidgets('chat tap previews without saving; buttons save then remove', (
     tester,

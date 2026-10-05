@@ -33,6 +33,7 @@ class MessageInput extends StatefulWidget {
     required this.textFieldFocus,
     required this.onMessageSend,
     required this.onEmojiVisibilityChanged,
+    required this.emojiPickerShowing,
     required this.composing,
     super.key,
   });
@@ -42,6 +43,7 @@ class MessageInput extends StatefulWidget {
   final Message? quotesMessage;
   final VoidCallback onMessageSend;
   final ValueChanged<bool> onEmojiVisibilityChanged;
+  final bool emojiPickerShowing;
 
   /// Published so the chat-open heartbeat can stay quiet while the typing
   /// announcement is already covering this conversation.
@@ -71,7 +73,6 @@ class _MessageInputState extends State<MessageInput>
   late final TextEditingController _textFieldController;
   late final RecorderController recorderController;
   final bool isApple = Platform.isIOS;
-  bool _emojiShowing = false;
   bool _stickerShowing = false;
   bool _switchingToSystemKeyboard = false;
   double _emojiPickerHeight = 300;
@@ -226,7 +227,7 @@ class _MessageInputState extends State<MessageInput>
 
   void _handleTextFocusChange() {
     if (widget.textFieldFocus.hasFocus &&
-        _emojiShowing &&
+        widget.emojiPickerShowing &&
         !_switchingToSystemKeyboard) {
       _showSystemKeyboard();
     }
@@ -246,7 +247,7 @@ class _MessageInputState extends State<MessageInput>
   }
 
   void _toggleKeyboard() {
-    if (_emojiShowing) {
+    if (widget.emojiPickerShowing) {
       _showSystemKeyboard();
     } else {
       _showEmojiPicker();
@@ -261,7 +262,6 @@ class _MessageInputState extends State<MessageInput>
       if (keyboardHeight > 0) {
         _emojiPickerHeight = keyboardHeight;
       }
-      _emojiShowing = true;
       _stickerShowing = false;
     });
     widget.onEmojiVisibilityChanged(true);
@@ -295,7 +295,6 @@ class _MessageInputState extends State<MessageInput>
     _keyboardTransitionTimer?.cancel();
     setState(() {
       _switchingToSystemKeyboard = false;
-      _emojiShowing = false;
     });
     widget.onEmojiVisibilityChanged(false);
   }
@@ -490,8 +489,8 @@ class _MessageInputState extends State<MessageInput>
                                 right: 8,
                               ),
                               child: FaIcon(
-                                size: _emojiShowing ? 18 : 20,
-                                _emojiShowing
+                                size: widget.emojiPickerShowing ? 18 : 20,
+                                widget.emojiPickerShowing
                                     ? FontAwesomeIcons.keyboard
                                     : FontAwesomeIcons.faceSmile,
                               ),
@@ -771,7 +770,7 @@ class _MessageInputState extends State<MessageInput>
           ),
         ),
         Offstage(
-          offstage: !_emojiShowing,
+          offstage: !widget.emojiPickerShowing,
           child: EmojiPicker(
             alternateView: _stickerShowing
                 ? StickerPicker(

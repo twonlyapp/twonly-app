@@ -671,7 +671,12 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     }
     final group = _group!;
     return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
+      onTap: () {
+        FocusScope.of(context).unfocus();
+        if (_emojiPickerShowing) {
+          setState(() => _emojiPickerShowing = false);
+        }
+      },
       child: Scaffold(
         resizeToAvoidBottomInset: !_emojiPickerShowing,
         appBar: AppBar(
@@ -869,6 +874,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                   quotesMessage: quotesMessage,
                   textFieldFocus: textFieldFocus!,
                   composing: _composing,
+                  emojiPickerShowing: _emojiPickerShowing,
                   onMessageSend: () {
                     setState(() {
                       quotesMessage = null;

@@ -1,11 +1,14 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 
 class StickerService {
   const StickerService._();
@@ -73,10 +76,40 @@ class StickerService {
     return sticker;
   }
 
-  static Future<LocalSticker?> createFromGallery() async {
-    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (image == null) return null;
-    return createFromPath(image.path);
+  /// Finds the best full-resolution local source for a stored memory. A
+  /// cloud-only memory is downloaded before its path is returned.
+  static Future<String?> resolveMediaPath(MediaFileService media) async {
+    File? readableSource() {
+      for (final file in [
+        media.storedPath,
+        media.tempPath,
+        media.originalPath,
+      ]) {
+        final stat = file.statSync();
+        if (stat.type != FileSystemEntityType.notFound && stat.size > 0) {
+          return file;
+        }
+      }
+      return null;
+    }
+
+    var source = readableSource();
+    if (source == null && media.mediaFile.cloudState == CloudState.uploaded) {
+      final downloaded = await MemoriesCloudService.downloadFromCloud(
+        media,
+        isThumbnail: false,
+      );
+      if (downloaded) source = readableSource();
+    }
+    return source?.path;
+  }
+
+  static Future<LocalSticker> createFromMedia(MediaFileService media) async {
+    final path = await resolveMediaPath(media);
+    if (path == null) {
+      throw StateError('sticker source media is unavailable');
+    }
+    return createFromPath(path);
   }
 
   static Future<bool> saveReceived(StickerData sticker) {
