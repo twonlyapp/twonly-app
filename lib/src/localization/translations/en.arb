@@ -98,6 +98,13 @@
       "len": {}
     }
   },
+  "publicProfilePrivacyTitle": "Public Profile",
+  "publicProfilePrivacyDescription": "Choose who can see information about your profile.",
+  "publicProfileTwonlyScore": "twonly Score",
+  "contactTwonlyScoreDescription": "The twonly Score reflects a person's activity on twonly. It is calculated from several factors, such as how many photos and videos they send and receive.",
+  "privacyVisibilityNobody": "Nobody",
+  "privacyVisibilityOnlyContacts": "Only Contacts",
+  "privacyVisibilityEveryone": "Everyone",
   "settingsNotification": "Notification",
   "settingsNotifyPermission": "Notification permissions",
   "settingsNotifyPermissionDesc": "Open system settings to allow push notifications.",

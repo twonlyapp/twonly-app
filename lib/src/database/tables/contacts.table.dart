@@ -53,6 +53,8 @@ class Contacts extends Table {
   BoolColumn get widgetSharingGranted =>
       boolean().withDefault(const Constant(false))();
 
+  IntColumn get twonlyScore => integer().nullable()();
+
   IntColumn get mediaSendCounter => integer().withDefault(const Constant(0))();
   IntColumn get mediaReceivedCounter =>
       integer().withDefault(const Constant(0))();

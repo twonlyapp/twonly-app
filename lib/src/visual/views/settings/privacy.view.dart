@@ -48,6 +48,10 @@ class _PrivacyViewState extends State<PrivacyView> {
       body: ListView(
         children: [
           ListTile(
+            title: Text(context.lang.publicProfilePrivacyTitle),
+            onTap: () => context.push(Routes.settingsPrivacyPublicProfile),
+          ),
+          ListTile(
             title: Text(context.lang.settingsPrivacyBlockUsers),
             subtitle: StreamBuilder(
               stream: twonlyDB.contactsDao.watchContactsBlocked(),

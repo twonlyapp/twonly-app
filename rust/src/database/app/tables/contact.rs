@@ -41,6 +41,7 @@ pub struct Contact {
     pub media_received_counter: i64,
     pub widget_sharing_allowed: i64,
     pub widget_sharing_granted: i64,
+    pub twonly_score: Option<i64>,
 }
 
 #[derive(bon::Builder)]
@@ -199,6 +200,21 @@ impl Contact {
         sqlx::query!(
             "UPDATE contacts SET widget_sharing_allowed = ? WHERE user_id = ?",
             allowed,
+            user_id,
+        )
+        .execute(&mut **t)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn update_twonly_score(
+        t: &mut Transaction<'_, Sqlite>,
+        user_id: i64,
+        score: Option<i64>,
+    ) -> Result<()> {
+        sqlx::query!(
+            "UPDATE contacts SET twonly_score = ? WHERE user_id = ?",
+            score,
             user_id,
         )
         .execute(&mut **t)

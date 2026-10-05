@@ -11,6 +11,8 @@ message EncryptedContent {
   optional bool  ask_for_friend_promotions     = 25;
   reserved 28;
   optional bool  widget_sharing_allowed        = 29;
+  // Sum of all exchanged media, omitted when profile sharing is disabled.
+  optional int64 sender_twonly_score            = 31;
 
   optional MessageUpdate                 message_update                  = 5;
   optional Media                         media                           = 6;

@@ -102,6 +102,12 @@ class TwonlySafeBackup {
           encryptionKey == other.encryptionKey;
 }
 
+enum TwonlyScoreVisibility {
+  nobody,
+  onlyContacts,
+  everyone,
+}
+
 class UserConfig {
   PlatformInt64 userId;
   String username;
@@ -155,6 +161,9 @@ class UserConfig {
   bool allowErrorTrackingViaSentry;
   bool screenLockEnabled;
   bool isCloudBackupEnabled;
+
+  /// Controls which recipients receive the current twonly Score in sender metadata.
+  TwonlyScoreVisibility twonlyScoreVisibility;
   bool isUserDiscoveryEnabled;
   PlatformInt64 requiredSendImages;
   int userDiscoveryThreshold;
@@ -229,6 +238,7 @@ class UserConfig {
     required this.allowErrorTrackingViaSentry,
     required this.screenLockEnabled,
     required this.isCloudBackupEnabled,
+    required this.twonlyScoreVisibility,
     required this.isUserDiscoveryEnabled,
     required this.requiredSendImages,
     required this.userDiscoveryThreshold,
@@ -297,6 +307,7 @@ class UserConfig {
       allowErrorTrackingViaSentry.hashCode ^
       screenLockEnabled.hashCode ^
       isCloudBackupEnabled.hashCode ^
+      twonlyScoreVisibility.hashCode ^
       isUserDiscoveryEnabled.hashCode ^
       requiredSendImages.hashCode ^
       userDiscoveryThreshold.hashCode ^
@@ -371,6 +382,7 @@ class UserConfig {
           allowErrorTrackingViaSentry == other.allowErrorTrackingViaSentry &&
           screenLockEnabled == other.screenLockEnabled &&
           isCloudBackupEnabled == other.isCloudBackupEnabled &&
+          twonlyScoreVisibility == other.twonlyScoreVisibility &&
           isUserDiscoveryEnabled == other.isUserDiscoveryEnabled &&
           requiredSendImages == other.requiredSendImages &&
           userDiscoveryThreshold == other.userDiscoveryThreshold &&

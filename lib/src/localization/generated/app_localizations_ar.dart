@@ -303,6 +303,29 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get publicProfilePrivacyTitle => 'الملف الشخصي العام';
+
+  @override
+  String get publicProfilePrivacyDescription =>
+      'اختر من يمكنه رؤية معلومات ملفك الشخصي.';
+
+  @override
+  String get publicProfileTwonlyScore => 'نقاط twonly';
+
+  @override
+  String get contactTwonlyScoreDescription =>
+      'تعكس نقاط twonly نشاط الشخص على twonly. ويتم احتسابها استنادًا إلى عدة عوامل، مثل عدد الصور ومقاطع الفيديو التي يرسلها ويستلمها.';
+
+  @override
+  String get privacyVisibilityNobody => 'لا أحد';
+
+  @override
+  String get privacyVisibilityOnlyContacts => 'جهات الاتصال فقط';
+
+  @override
+  String get privacyVisibilityEveryone => 'الجميع';
+
+  @override
   String get settingsNotification => 'الإشعارات';
 
   @override

@@ -42,6 +42,8 @@ class Routes {
       '/settings/privacy/block_users';
   static const String settingsPrivacyUserDiscovery =
       '/settings/privacy/user_discovery';
+  static const String settingsPrivacyPublicProfile =
+      '/settings/privacy/public_profile';
   static const String settingsNotification = '/settings/notification';
   static const String settingsStorage = '/settings/storage_data';
   static const String settingsStorageManage = '/settings/storage_data/manage';

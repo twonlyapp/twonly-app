@@ -8,7 +8,7 @@ use crate::api::messages::incoming::messages;
 use crate::api::proto::client as proto;
 use crate::context::Context;
 use crate::error::Result;
-use crate::user_config::UserConfig;
+use crate::user_config::{TwonlyScoreVisibility, UserConfig};
 use prost::Message as _;
 use sqlx::{Sqlite, Transaction};
 use std::sync::Arc;
@@ -66,6 +66,31 @@ pub(crate) async fn decorate_content(
         .unwrap_or(0)
             != 0,
     );
+    let share_twonly_score = match config.twonly_score_visibility {
+        TwonlyScoreVisibility::Nobody => false,
+        TwonlyScoreVisibility::OnlyContacts => {
+            sqlx::query_scalar!(
+                "SELECT accepted FROM contacts WHERE user_id = ?",
+                contact_id,
+            )
+            .fetch_optional(&mut **t)
+            .await?
+            .unwrap_or(0)
+                != 0
+        }
+        TwonlyScoreVisibility::Everyone => true,
+    };
+    content.sender_twonly_score = if share_twonly_score {
+        Some(
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COALESCE(SUM(total_media_counter), 0) FROM groups",
+            )
+            .fetch_one(&mut **t)
+            .await?,
+        )
+    } else {
+        None
+    };
     if config.ask_for_friend_promotions {
         let accepted = sqlx::query_scalar!("SELECT COUNT(*) FROM contacts WHERE accepted = 1")
             .fetch_one(&mut **t)
@@ -202,4 +227,74 @@ pub async fn send_c2c_message_to_contact(
         });
     }
     Ok(None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn twonly_score_respects_recipient_visibility() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"ben","displayName":"Ben"}"#,
+        )?;
+
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'anna')")
+            .execute(&database.pool)
+            .await?;
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, total_media_counter) VALUES ('a', 'A', 4), ('b', 'B', 7)",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        let mut content = proto::EncryptedContent::default();
+        let mut transaction = database.pool.begin().await?;
+        decorate_content(&ctx, &mut transaction, 7, &mut content, false).await?;
+        transaction.rollback().await?;
+        assert_eq!(content.sender_twonly_score, Some(11));
+
+        UserConfig::update(&ctx, |config| {
+            config.twonly_score_visibility = TwonlyScoreVisibility::OnlyContacts;
+        })?;
+        let mut hidden_content = proto::EncryptedContent {
+            sender_twonly_score: Some(999),
+            ..Default::default()
+        };
+        let mut transaction = database.pool.begin().await?;
+        decorate_content(&ctx, &mut transaction, 7, &mut hidden_content, false).await?;
+        transaction.rollback().await?;
+        assert_eq!(hidden_content.sender_twonly_score, None);
+
+        sqlx::query("UPDATE contacts SET accepted = 1 WHERE user_id = 7")
+            .execute(&database.pool)
+            .await?;
+        let mut contact_content = proto::EncryptedContent::default();
+        let mut transaction = database.pool.begin().await?;
+        decorate_content(&ctx, &mut transaction, 7, &mut contact_content, false).await?;
+        transaction.rollback().await?;
+        assert_eq!(contact_content.sender_twonly_score, Some(11));
+
+        UserConfig::update(&ctx, |config| {
+            config.twonly_score_visibility = TwonlyScoreVisibility::Nobody;
+        })?;
+        let mut nobody_content = proto::EncryptedContent {
+            sender_twonly_score: Some(999),
+            ..Default::default()
+        };
+        let mut transaction = database.pool.begin().await?;
+        decorate_content(&ctx, &mut transaction, 7, &mut nobody_content, false).await?;
+        transaction.rollback().await?;
+        assert_eq!(nobody_content.sender_twonly_score, None);
+
+        Ok(())
+    }
 }

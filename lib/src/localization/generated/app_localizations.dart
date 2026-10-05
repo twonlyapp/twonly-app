@@ -658,6 +658,48 @@ abstract class AppLocalizations {
   /// **'{len} contact(s)'**
   String settingsPrivacyBlockUsersCount(Object len);
 
+  /// No description provided for @publicProfilePrivacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Profile'**
+  String get publicProfilePrivacyTitle;
+
+  /// No description provided for @publicProfilePrivacyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose who can see information about your profile.'**
+  String get publicProfilePrivacyDescription;
+
+  /// No description provided for @publicProfileTwonlyScore.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly Score'**
+  String get publicProfileTwonlyScore;
+
+  /// No description provided for @contactTwonlyScoreDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The twonly Score reflects a person\'s activity on twonly. It is calculated from several factors, such as how many photos and videos they send and receive.'**
+  String get contactTwonlyScoreDescription;
+
+  /// No description provided for @privacyVisibilityNobody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody'**
+  String get privacyVisibilityNobody;
+
+  /// No description provided for @privacyVisibilityOnlyContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Contacts'**
+  String get privacyVisibilityOnlyContacts;
+
+  /// No description provided for @privacyVisibilityEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get privacyVisibilityEveryone;
+
   /// No description provided for @settingsNotification.
   ///
   /// In en, this message translates to:

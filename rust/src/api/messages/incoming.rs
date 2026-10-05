@@ -794,6 +794,8 @@ async fn handle_encrypted_inner(
         return contact::handle_contact_request(ctx, t, from_user_id, request).await;
     }
 
+    Contact::update_twonly_score(t, from_user_id, content.sender_twonly_score).await?;
+
     if let Some(update) = content.contact_update {
         return contact::handle_contact_update(
             ctx,
@@ -969,6 +971,57 @@ async fn handle_encrypted_inner(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn incoming_twonly_score_is_stored_and_missing_score_clears_it() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice')")
+            .execute(&database.pool)
+            .await?;
+
+        let mut transaction = database.pool.begin().await?;
+        handle_encrypted_inner(
+            &ctx,
+            &mut transaction,
+            7,
+            "score-present",
+            proto::EncryptedContent {
+                sender_twonly_score: Some(23),
+                ..Default::default()
+            },
+        )
+        .await?;
+        transaction.commit().await?;
+        let score: Option<i64> =
+            sqlx::query_scalar("SELECT twonly_score FROM contacts WHERE user_id = 7")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(score, Some(23));
+
+        let mut transaction = database.pool.begin().await?;
+        handle_encrypted_inner(
+            &ctx,
+            &mut transaction,
+            7,
+            "score-missing",
+            proto::EncryptedContent::default(),
+        )
+        .await?;
+        transaction.commit().await?;
+        let score: Option<i64> =
+            sqlx::query_scalar("SELECT twonly_score FROM contacts WHERE user_id = 7")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(score, None);
+
+        Ok(())
+    }
 
     #[test]
     fn copies_of_one_receipt_share_a_lock_until_the_last_one_goes() {

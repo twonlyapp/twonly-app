@@ -8083,6 +8083,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  TwonlyScoreVisibility dco_decode_twonly_score_visibility(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return TwonlyScoreVisibility.values[raw as int];
+  }
+
+  @protected
   int dco_decode_u_16(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -8122,8 +8128,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   UserConfig dco_decode_user_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 64)
-      throw Exception('unexpected arr length: expect 64 but see ${arr.length}');
+    if (arr.length != 65)
+      throw Exception('unexpected arr length: expect 65 but see ${arr.length}');
     return UserConfig(
       userId: dco_decode_i_64(arr[0]),
       username: dco_decode_String(arr[1]),
@@ -8169,31 +8175,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       allowErrorTrackingViaSentry: dco_decode_bool(arr[37]),
       screenLockEnabled: dco_decode_bool(arr[38]),
       isCloudBackupEnabled: dco_decode_bool(arr[39]),
-      isUserDiscoveryEnabled: dco_decode_bool(arr[40]),
-      requiredSendImages: dco_decode_i_64(arr[41]),
-      userDiscoveryThreshold: dco_decode_u_8(arr[42]),
-      userDiscoveryRequiresManualApproval: dco_decode_bool(arr[43]),
-      userDiscoverySharePromotion: dco_decode_bool(arr[44]),
-      userDiscoveryInitializationError: dco_decode_bool(arr[45]),
-      askForFriendPromotions: dco_decode_bool(arr[46]),
-      currentPreKeyIndexStart: dco_decode_i_64(arr[47]),
-      currentSignedPreKeyIndexStart: dco_decode_i_64(arr[48]),
-      lastChangeLogHash: dco_decode_opt_list_prim_u_8_strict(arr[49]),
-      hideChangeLog: dco_decode_bool(arr[50]),
-      hideMemoriesBackupPromo: dco_decode_bool(arr[51]),
-      hideWidgetShareExplainer: dco_decode_bool(arr[52]),
-      updateFcmToken: dco_decode_bool(arr[53]),
-      canUseLoginTokenForAuth: dco_decode_bool(arr[54]),
-      twonlySafeBackup: dco_decode_opt_box_autoadd_twonly_safe_backup(arr[55]),
-      isBackupEnabled: dco_decode_bool(arr[56]),
+      twonlyScoreVisibility: dco_decode_twonly_score_visibility(arr[40]),
+      isUserDiscoveryEnabled: dco_decode_bool(arr[41]),
+      requiredSendImages: dco_decode_i_64(arr[42]),
+      userDiscoveryThreshold: dco_decode_u_8(arr[43]),
+      userDiscoveryRequiresManualApproval: dco_decode_bool(arr[44]),
+      userDiscoverySharePromotion: dco_decode_bool(arr[45]),
+      userDiscoveryInitializationError: dco_decode_bool(arr[46]),
+      askForFriendPromotions: dco_decode_bool(arr[47]),
+      currentPreKeyIndexStart: dco_decode_i_64(arr[48]),
+      currentSignedPreKeyIndexStart: dco_decode_i_64(arr[49]),
+      lastChangeLogHash: dco_decode_opt_list_prim_u_8_strict(arr[50]),
+      hideChangeLog: dco_decode_bool(arr[51]),
+      hideMemoriesBackupPromo: dco_decode_bool(arr[52]),
+      hideWidgetShareExplainer: dco_decode_bool(arr[53]),
+      updateFcmToken: dco_decode_bool(arr[54]),
+      canUseLoginTokenForAuth: dco_decode_bool(arr[55]),
+      twonlySafeBackup: dco_decode_opt_box_autoadd_twonly_safe_backup(arr[56]),
+      isBackupEnabled: dco_decode_bool(arr[57]),
       passwordLessRecovery:
-          dco_decode_opt_box_autoadd_passwordless_recovery_config(arr[57]),
-      fcmToken: dco_decode_opt_String(arr[58]),
-      lastFcmWakeupAt: dco_decode_opt_box_autoadd_i_64(arr[59]),
-      lastServerMessageAt: dco_decode_opt_box_autoadd_i_64(arr[60]),
-      currentSetupPage: dco_decode_opt_String(arr[61]),
-      skipSetupPages: dco_decode_bool(arr[62]),
-      hasZoomed: dco_decode_bool(arr[63]),
+          dco_decode_opt_box_autoadd_passwordless_recovery_config(arr[58]),
+      fcmToken: dco_decode_opt_String(arr[59]),
+      lastFcmWakeupAt: dco_decode_opt_box_autoadd_i_64(arr[60]),
+      lastServerMessageAt: dco_decode_opt_box_autoadd_i_64(arr[61]),
+      currentSetupPage: dco_decode_opt_String(arr[62]),
+      skipSetupPages: dco_decode_bool(arr[63]),
+      hasZoomed: dco_decode_bool(arr[64]),
     );
   }
 
@@ -9450,6 +9457,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  TwonlyScoreVisibility sse_decode_twonly_score_visibility(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return TwonlyScoreVisibility.values[inner];
+  }
+
+  @protected
   int sse_decode_u_16(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint16();
@@ -9534,6 +9550,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_allowErrorTrackingViaSentry = sse_decode_bool(deserializer);
     var var_screenLockEnabled = sse_decode_bool(deserializer);
     var var_isCloudBackupEnabled = sse_decode_bool(deserializer);
+    var var_twonlyScoreVisibility = sse_decode_twonly_score_visibility(
+      deserializer,
+    );
     var var_isUserDiscoveryEnabled = sse_decode_bool(deserializer);
     var var_requiredSendImages = sse_decode_i_64(deserializer);
     var var_userDiscoveryThreshold = sse_decode_u_8(deserializer);
@@ -9606,6 +9625,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       allowErrorTrackingViaSentry: var_allowErrorTrackingViaSentry,
       screenLockEnabled: var_screenLockEnabled,
       isCloudBackupEnabled: var_isCloudBackupEnabled,
+      twonlyScoreVisibility: var_twonlyScoreVisibility,
       isUserDiscoveryEnabled: var_isUserDiscoveryEnabled,
       requiredSendImages: var_requiredSendImages,
       userDiscoveryThreshold: var_userDiscoveryThreshold,
@@ -10857,6 +10877,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_twonly_score_visibility(
+    TwonlyScoreVisibility self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
   void sse_encode_u_16(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint16(self);
@@ -10943,6 +10972,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self.allowErrorTrackingViaSentry, serializer);
     sse_encode_bool(self.screenLockEnabled, serializer);
     sse_encode_bool(self.isCloudBackupEnabled, serializer);
+    sse_encode_twonly_score_visibility(self.twonlyScoreVisibility, serializer);
     sse_encode_bool(self.isUserDiscoveryEnabled, serializer);
     sse_encode_i_64(self.requiredSendImages, serializer);
     sse_encode_u_8(self.userDiscoveryThreshold, serializer);

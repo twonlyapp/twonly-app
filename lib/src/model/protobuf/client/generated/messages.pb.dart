@@ -1774,6 +1774,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
         passwordlessRecoveryHeartbeat,
     $core.bool? widgetSharingAllowed,
     EncryptedContent_Story? story,
+    $fixnum.Int64? senderTwonlyScore,
   }) {
     final result = create();
     if (groupId != null) result.groupId = groupId;
@@ -1814,6 +1815,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     if (widgetSharingAllowed != null)
       result.widgetSharingAllowed = widgetSharingAllowed;
     if (story != null) result.story = story;
+    if (senderTwonlyScore != null) result.senderTwonlyScore = senderTwonlyScore;
     return result;
   }
 
@@ -1893,6 +1895,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOB(29, _omitFieldNames ? '' : 'widgetSharingAllowed')
     ..aOM<EncryptedContent_Story>(30, _omitFieldNames ? '' : 'story',
         subBuilder: EncryptedContent_Story.create)
+    ..aInt64(31, _omitFieldNames ? '' : 'senderTwonlyScore')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2222,6 +2225,15 @@ class EncryptedContent extends $pb.GeneratedMessage {
   void clearStory() => $_clearField(30);
   @$pb.TagNumber(30)
   EncryptedContent_Story ensureStory() => $_ensure(26);
+
+  @$pb.TagNumber(31)
+  $fixnum.Int64 get senderTwonlyScore => $_getI64(27);
+  @$pb.TagNumber(31)
+  set senderTwonlyScore($fixnum.Int64 value) => $_setInt64(27, value);
+  @$pb.TagNumber(31)
+  $core.bool hasSenderTwonlyScore() => $_has(27);
+  @$pb.TagNumber(31)
+  void clearSenderTwonlyScore() => $_clearField(31);
 }
 
 const $core.bool _omitFieldNames =

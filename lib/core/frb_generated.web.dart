@@ -399,6 +399,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TwonlySafeBackup dco_decode_twonly_safe_backup(dynamic raw);
 
   @protected
+  TwonlyScoreVisibility dco_decode_twonly_score_visibility(dynamic raw);
+
+  @protected
   int dco_decode_u_16(dynamic raw);
 
   @protected
@@ -864,6 +867,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   TwonlySafeBackup sse_decode_twonly_safe_backup(SseDeserializer deserializer);
+
+  @protected
+  TwonlyScoreVisibility sse_decode_twonly_score_visibility(
+    SseDeserializer deserializer,
+  );
 
   @protected
   int sse_decode_u_16(SseDeserializer deserializer);
@@ -1453,6 +1461,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_twonly_safe_backup(
     TwonlySafeBackup self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_twonly_score_visibility(
+    TwonlyScoreVisibility self,
     SseSerializer serializer,
   );
 

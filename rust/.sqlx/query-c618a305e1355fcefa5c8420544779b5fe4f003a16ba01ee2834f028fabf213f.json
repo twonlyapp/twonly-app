@@ -321,6 +321,17 @@
             "name": "widget_sharing_granted"
           }
         }
+      },
+      {
+        "name": "twonly_score",
+        "ordinal": 29,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "twonly_score"
+          }
+        }
       }
     ],
     "parameters": {
@@ -355,7 +366,8 @@
       false,
       false,
       false,
-      false
+      false,
+      true
     ]
   },
   "hash": "c618a305e1355fcefa5c8420544779b5fe4f003a16ba01ee2834f028fabf213f"

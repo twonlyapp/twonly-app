@@ -306,6 +306,29 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get publicProfilePrivacyTitle => 'Öffentliches Profil';
+
+  @override
+  String get publicProfilePrivacyDescription =>
+      'Wähle aus, wer Informationen über dein Profil sehen kann.';
+
+  @override
+  String get publicProfileTwonlyScore => 'twonly Score';
+
+  @override
+  String get contactTwonlyScoreDescription =>
+      'Der twonly Score spiegelt die Aktivität einer Person auf twonly wider. Er wird aus verschiedenen Faktoren berechnet, zum Beispiel daraus, wie viele Fotos und Videos sie sendet und empfängt.';
+
+  @override
+  String get privacyVisibilityNobody => 'Niemand';
+
+  @override
+  String get privacyVisibilityOnlyContacts => 'Nur Kontakte';
+
+  @override
+  String get privacyVisibilityEveryone => 'Alle';
+
+  @override
   String get settingsNotification => 'Benachrichtigung';
 
   @override

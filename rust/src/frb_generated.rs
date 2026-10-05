@@ -7830,6 +7830,19 @@ impl SseDecode for crate::user_config::TwonlySafeBackup {
     }
 }
 
+impl SseDecode for crate::user_config::TwonlyScoreVisibility {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::user_config::TwonlyScoreVisibility::Nobody,
+            1 => crate::user_config::TwonlyScoreVisibility::OnlyContacts,
+            2 => crate::user_config::TwonlyScoreVisibility::Everyone,
+            _ => unreachable!("Invalid variant for TwonlyScoreVisibility: {}", inner),
+        };
+    }
+}
+
 impl SseDecode for u16 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -7918,6 +7931,8 @@ impl SseDecode for crate::user_config::UserConfig {
         let mut var_allowErrorTrackingViaSentry = <bool>::sse_decode(deserializer);
         let mut var_screenLockEnabled = <bool>::sse_decode(deserializer);
         let mut var_isCloudBackupEnabled = <bool>::sse_decode(deserializer);
+        let mut var_twonlyScoreVisibility =
+            <crate::user_config::TwonlyScoreVisibility>::sse_decode(deserializer);
         let mut var_isUserDiscoveryEnabled = <bool>::sse_decode(deserializer);
         let mut var_requiredSendImages = <i64>::sse_decode(deserializer);
         let mut var_userDiscoveryThreshold = <u8>::sse_decode(deserializer);
@@ -7986,6 +8001,7 @@ impl SseDecode for crate::user_config::UserConfig {
             allow_error_tracking_via_sentry: var_allowErrorTrackingViaSentry,
             screen_lock_enabled: var_screenLockEnabled,
             is_cloud_backup_enabled: var_isCloudBackupEnabled,
+            twonly_score_visibility: var_twonlyScoreVisibility,
             is_user_discovery_enabled: var_isUserDiscoveryEnabled,
             required_send_images: var_requiredSendImages,
             user_discovery_threshold: var_userDiscoveryThreshold,
@@ -9202,6 +9218,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::user_config::TwonlySafeBackup>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::user_config::TwonlyScoreVisibility {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Nobody => 0.into_dart(),
+            Self::OnlyContacts => 1.into_dart(),
+            Self::Everyone => 2.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::user_config::TwonlyScoreVisibility
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::user_config::TwonlyScoreVisibility>
+    for crate::user_config::TwonlyScoreVisibility
+{
+    fn into_into_dart(self) -> crate::user_config::TwonlyScoreVisibility {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::user_config::UserConfig {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -9261,6 +9299,7 @@ impl flutter_rust_bridge::IntoDart for crate::user_config::UserConfig {
                 .into_dart(),
             self.screen_lock_enabled.into_into_dart().into_dart(),
             self.is_cloud_backup_enabled.into_into_dart().into_dart(),
+            self.twonly_score_visibility.into_into_dart().into_dart(),
             self.is_user_discovery_enabled.into_into_dart().into_dart(),
             self.required_send_images.into_into_dart().into_dart(),
             self.user_discovery_threshold.into_into_dart().into_dart(),
@@ -10344,6 +10383,23 @@ impl SseEncode for crate::user_config::TwonlySafeBackup {
     }
 }
 
+impl SseEncode for crate::user_config::TwonlyScoreVisibility {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::user_config::TwonlyScoreVisibility::Nobody => 0,
+                crate::user_config::TwonlyScoreVisibility::OnlyContacts => 1,
+                crate::user_config::TwonlyScoreVisibility::Everyone => 2,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for u16 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -10445,6 +10501,10 @@ impl SseEncode for crate::user_config::UserConfig {
         <bool>::sse_encode(self.allow_error_tracking_via_sentry, serializer);
         <bool>::sse_encode(self.screen_lock_enabled, serializer);
         <bool>::sse_encode(self.is_cloud_backup_enabled, serializer);
+        <crate::user_config::TwonlyScoreVisibility>::sse_encode(
+            self.twonly_score_visibility,
+            serializer,
+        );
         <bool>::sse_encode(self.is_user_discovery_enabled, serializer);
         <i64>::sse_encode(self.required_send_images, serializer);
         <u8>::sse_encode(self.user_discovery_threshold, serializer);

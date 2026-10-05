@@ -35,6 +35,7 @@ UserConfig testUserConfig({
   allowErrorTrackingViaSentry: false,
   screenLockEnabled: false,
   isCloudBackupEnabled: false,
+  twonlyScoreVisibility: TwonlyScoreVisibility.everyone,
   isUserDiscoveryEnabled: false,
   requiredSendImages: 4,
   userDiscoveryThreshold: 3,

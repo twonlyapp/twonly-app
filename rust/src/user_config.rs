@@ -166,6 +166,41 @@ pub enum ThemeMode {
     Dark,
 }
 
+#[derive(Clone, Copy, Debug, Default, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum TwonlyScoreVisibility {
+    Nobody,
+    OnlyContacts,
+    #[default]
+    Everyone,
+}
+
+impl<'de> Deserialize<'de> for TwonlyScoreVisibility {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = serde_json::Value::deserialize(deserializer)?;
+        match value {
+            serde_json::Value::String(value) => match value.as_str() {
+                "nobody" => Ok(Self::Nobody),
+                "onlyContacts" => Ok(Self::OnlyContacts),
+                "everyone" => Ok(Self::Everyone),
+                _ => Err(serde::de::Error::custom(format!(
+                    "unknown twonly Score visibility: {value}"
+                ))),
+            },
+            // Migrate the boolean setting used by the first version of this
+            // feature without changing an existing privacy choice.
+            serde_json::Value::Bool(true) => Ok(Self::Everyone),
+            serde_json::Value::Bool(false) => Ok(Self::Nobody),
+            _ => Err(serde::de::Error::custom(
+                "twonly Score visibility must be a visibility name",
+            )),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[flutter_rust_bridge::frb(non_final)]
@@ -287,6 +322,11 @@ pub struct UserConfig {
     #[serde(default)]
     #[frb(non_final)]
     pub is_cloud_backup_enabled: bool,
+
+    /// Controls which recipients receive the current twonly Score in sender metadata.
+    #[serde(default, alias = "shareTwonlyScore")]
+    #[frb(non_final)]
+    pub twonly_score_visibility: TwonlyScoreVisibility,
 
     #[serde(default)]
     #[frb(non_final)]
@@ -480,7 +520,9 @@ impl UserConfig {
 
 #[cfg(test)]
 mod tests {
-    use super::{merge_changed_fields, UserConfig, MIN_USER_DISCOVERY_THRESHOLD};
+    use super::{
+        merge_changed_fields, TwonlyScoreVisibility, UserConfig, MIN_USER_DISCOVERY_THRESHOLD,
+    };
 
     #[test]
     fn parses_only_rust_fields_and_applies_defaults() {
@@ -503,8 +545,43 @@ mod tests {
         );
 
         assert!(config.can_use_login_token_for_auth);
+        assert_eq!(
+            config.twonly_score_visibility,
+            TwonlyScoreVisibility::Everyone
+        );
         assert!(!config.is_user_discovery_enabled);
         assert_eq!(config.last_server_message_at, None);
+    }
+
+    #[test]
+    fn migrates_legacy_twonly_score_boolean() {
+        let hidden: UserConfig = serde_json::from_str(
+            r#"{
+                "userId": 42,
+                "username": "alice",
+                "displayName": "Alice",
+                "shareTwonlyScore": false
+            }"#,
+        )
+        .unwrap();
+        assert_eq!(
+            hidden.twonly_score_visibility,
+            TwonlyScoreVisibility::Nobody
+        );
+
+        let shared: UserConfig = serde_json::from_str(
+            r#"{
+                "userId": 42,
+                "username": "alice",
+                "displayName": "Alice",
+                "shareTwonlyScore": true
+            }"#,
+        )
+        .unwrap();
+        assert_eq!(
+            shared.twonly_score_visibility,
+            TwonlyScoreVisibility::Everyone
+        );
     }
 
     #[test]
