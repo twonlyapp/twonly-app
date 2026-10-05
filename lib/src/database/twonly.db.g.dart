@@ -348,6 +348,17 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _joinedAtMeta = const VerificationMeta(
+    'joinedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> joinedAt = GeneratedColumn<DateTime>(
+    'joined_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _mediaSendCounterMeta = const VerificationMeta(
     'mediaSendCounter',
   );
@@ -400,6 +411,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     widgetSharingAllowed,
     widgetSharingGranted,
     twonlyScore,
+    joinedAt,
     mediaSendCounter,
     mediaReceivedCounter,
   ];
@@ -627,6 +639,12 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
       );
     }
+    if (data.containsKey('joined_at')) {
+      context.handle(
+        _joinedAtMeta,
+        joinedAt.isAcceptableOrUnknown(data['joined_at']!, _joinedAtMeta),
+      );
+    }
     if (data.containsKey('media_send_counter')) {
       context.handle(
         _mediaSendCounterMeta,
@@ -764,6 +782,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.int,
         data['${effectivePrefix}twonly_score'],
       ),
+      joinedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}joined_at'],
+      ),
       mediaSendCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}media_send_counter'],
@@ -814,6 +836,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool widgetSharingAllowed;
   final bool widgetSharingGranted;
   final int? twonlyScore;
+  final DateTime? joinedAt;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
   const Contact({
@@ -844,6 +867,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     required this.widgetSharingAllowed,
     required this.widgetSharingGranted,
     this.twonlyScore,
+    this.joinedAt,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
   });
@@ -915,6 +939,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     if (!nullToAbsent || twonlyScore != null) {
       map['twonly_score'] = Variable<int>(twonlyScore);
     }
+    if (!nullToAbsent || joinedAt != null) {
+      map['joined_at'] = Variable<DateTime>(joinedAt);
+    }
     map['media_send_counter'] = Variable<int>(mediaSendCounter);
     map['media_received_counter'] = Variable<int>(mediaReceivedCounter);
     return map;
@@ -977,6 +1004,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       twonlyScore: twonlyScore == null && nullToAbsent
           ? const Value.absent()
           : Value(twonlyScore),
+      joinedAt: joinedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(joinedAt),
       mediaSendCounter: Value(mediaSendCounter),
       mediaReceivedCounter: Value(mediaReceivedCounter),
     );
@@ -1045,6 +1075,7 @@ class Contact extends DataClass implements Insertable<Contact> {
         json['widgetSharingGranted'],
       ),
       twonlyScore: serializer.fromJson<int?>(json['twonlyScore']),
+      joinedAt: serializer.fromJson<DateTime?>(json['joinedAt']),
       mediaSendCounter: serializer.fromJson<int>(json['mediaSendCounter']),
       mediaReceivedCounter: serializer.fromJson<int>(
         json['mediaReceivedCounter'],
@@ -1100,6 +1131,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       'widgetSharingAllowed': serializer.toJson<bool>(widgetSharingAllowed),
       'widgetSharingGranted': serializer.toJson<bool>(widgetSharingGranted),
       'twonlyScore': serializer.toJson<int?>(twonlyScore),
+      'joinedAt': serializer.toJson<DateTime?>(joinedAt),
       'mediaSendCounter': serializer.toJson<int>(mediaSendCounter),
       'mediaReceivedCounter': serializer.toJson<int>(mediaReceivedCounter),
     };
@@ -1133,6 +1165,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     bool? widgetSharingAllowed,
     bool? widgetSharingGranted,
     Value<int?> twonlyScore = const Value.absent(),
+    Value<DateTime?> joinedAt = const Value.absent(),
     int? mediaSendCounter,
     int? mediaReceivedCounter,
   }) => Contact(
@@ -1182,6 +1215,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     widgetSharingAllowed: widgetSharingAllowed ?? this.widgetSharingAllowed,
     widgetSharingGranted: widgetSharingGranted ?? this.widgetSharingGranted,
     twonlyScore: twonlyScore.present ? twonlyScore.value : this.twonlyScore,
+    joinedAt: joinedAt.present ? joinedAt.value : this.joinedAt,
     mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
     mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
   );
@@ -1252,6 +1286,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       twonlyScore: data.twonlyScore.present
           ? data.twonlyScore.value
           : this.twonlyScore,
+      joinedAt: data.joinedAt.present ? data.joinedAt.value : this.joinedAt,
       mediaSendCounter: data.mediaSendCounter.present
           ? data.mediaSendCounter.value
           : this.mediaSendCounter,
@@ -1293,6 +1328,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('widgetSharingAllowed: $widgetSharingAllowed, ')
           ..write('widgetSharingGranted: $widgetSharingGranted, ')
           ..write('twonlyScore: $twonlyScore, ')
+          ..write('joinedAt: $joinedAt, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -1328,6 +1364,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     widgetSharingAllowed,
     widgetSharingGranted,
     twonlyScore,
+    joinedAt,
     mediaSendCounter,
     mediaReceivedCounter,
   ]);
@@ -1376,6 +1413,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.widgetSharingAllowed == this.widgetSharingAllowed &&
           other.widgetSharingGranted == this.widgetSharingGranted &&
           other.twonlyScore == this.twonlyScore &&
+          other.joinedAt == this.joinedAt &&
           other.mediaSendCounter == this.mediaSendCounter &&
           other.mediaReceivedCounter == this.mediaReceivedCounter);
 }
@@ -1408,6 +1446,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> widgetSharingAllowed;
   final Value<bool> widgetSharingGranted;
   final Value<int?> twonlyScore;
+  final Value<DateTime?> joinedAt;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
   const ContactsCompanion({
@@ -1438,6 +1477,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.widgetSharingAllowed = const Value.absent(),
     this.widgetSharingGranted = const Value.absent(),
     this.twonlyScore = const Value.absent(),
+    this.joinedAt = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   });
@@ -1469,6 +1509,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.widgetSharingAllowed = const Value.absent(),
     this.widgetSharingGranted = const Value.absent(),
     this.twonlyScore = const Value.absent(),
+    this.joinedAt = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   }) : username = Value(username);
@@ -1500,6 +1541,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? widgetSharingAllowed,
     Expression<bool>? widgetSharingGranted,
     Expression<int>? twonlyScore,
+    Expression<DateTime>? joinedAt,
     Expression<int>? mediaSendCounter,
     Expression<int>? mediaReceivedCounter,
   }) {
@@ -1545,6 +1587,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (widgetSharingGranted != null)
         'widget_sharing_granted': widgetSharingGranted,
       if (twonlyScore != null) 'twonly_score': twonlyScore,
+      if (joinedAt != null) 'joined_at': joinedAt,
       if (mediaSendCounter != null) 'media_send_counter': mediaSendCounter,
       if (mediaReceivedCounter != null)
         'media_received_counter': mediaReceivedCounter,
@@ -1579,6 +1622,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<bool>? widgetSharingAllowed,
     Value<bool>? widgetSharingGranted,
     Value<int?>? twonlyScore,
+    Value<DateTime?>? joinedAt,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
   }) {
@@ -1618,6 +1662,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       widgetSharingAllowed: widgetSharingAllowed ?? this.widgetSharingAllowed,
       widgetSharingGranted: widgetSharingGranted ?? this.widgetSharingGranted,
       twonlyScore: twonlyScore ?? this.twonlyScore,
+      joinedAt: joinedAt ?? this.joinedAt,
       mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
       mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
     );
@@ -1735,6 +1780,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (twonlyScore.present) {
       map['twonly_score'] = Variable<int>(twonlyScore.value);
     }
+    if (joinedAt.present) {
+      map['joined_at'] = Variable<DateTime>(joinedAt.value);
+    }
     if (mediaSendCounter.present) {
       map['media_send_counter'] = Variable<int>(mediaSendCounter.value);
     }
@@ -1776,6 +1824,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('widgetSharingAllowed: $widgetSharingAllowed, ')
           ..write('widgetSharingGranted: $widgetSharingGranted, ')
           ..write('twonlyScore: $twonlyScore, ')
+          ..write('joinedAt: $joinedAt, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -15812,6 +15861,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<bool> widgetSharingAllowed,
       Value<bool> widgetSharingGranted,
       Value<int?> twonlyScore,
+      Value<DateTime?> joinedAt,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -15844,6 +15894,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<bool> widgetSharingAllowed,
       Value<bool> widgetSharingGranted,
       Value<int?> twonlyScore,
+      Value<DateTime?> joinedAt,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -16265,6 +16316,11 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<int> get twonlyScore => $composableBuilder(
     column: $table.twonlyScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get joinedAt => $composableBuilder(
+    column: $table.joinedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -16733,6 +16789,11 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get joinedAt => $composableBuilder(
+    column: $table.joinedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get mediaSendCounter => $composableBuilder(
     column: $table.mediaSendCounter,
     builder: (column) => ColumnOrderings(column),
@@ -16874,6 +16935,9 @@ class $$ContactsTableAnnotationComposer
     column: $table.twonlyScore,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get joinedAt =>
+      $composableBuilder(column: $table.joinedAt, builder: (column) => column);
 
   GeneratedColumn<int> get mediaSendCounter => $composableBuilder(
     column: $table.mediaSendCounter,
@@ -17270,6 +17334,7 @@ class $$ContactsTableTableManager
                 Value<bool> widgetSharingAllowed = const Value.absent(),
                 Value<bool> widgetSharingGranted = const Value.absent(),
                 Value<int?> twonlyScore = const Value.absent(),
+                Value<DateTime?> joinedAt = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion(
@@ -17300,6 +17365,7 @@ class $$ContactsTableTableManager
                 widgetSharingAllowed: widgetSharingAllowed,
                 widgetSharingGranted: widgetSharingGranted,
                 twonlyScore: twonlyScore,
+                joinedAt: joinedAt,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),
@@ -17334,6 +17400,7 @@ class $$ContactsTableTableManager
                 Value<bool> widgetSharingAllowed = const Value.absent(),
                 Value<bool> widgetSharingGranted = const Value.absent(),
                 Value<int?> twonlyScore = const Value.absent(),
+                Value<DateTime?> joinedAt = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion.insert(
@@ -17364,6 +17431,7 @@ class $$ContactsTableTableManager
                 widgetSharingAllowed: widgetSharingAllowed,
                 widgetSharingGranted: widgetSharingGranted,
                 twonlyScore: twonlyScore,
+                joinedAt: joinedAt,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),

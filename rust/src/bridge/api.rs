@@ -112,6 +112,7 @@ pub struct FrbUserData {
     pub user_id: i64,
     pub username: Vec<u8>,
     pub public_identity_key: Vec<u8>,
+    pub joined_at: Option<i64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -593,7 +594,12 @@ impl RustApi {
             user_id: res.user_id,
             username: res.username.unwrap_or_default(),
             public_identity_key: res.public_identity_key.unwrap_or_default(),
+            joined_at: res.joined_at,
         })
+    }
+    pub async fn refresh_contact_joined_dates() -> Result<()> {
+        let ctx = Context::get_static()?;
+        Server::refresh_contact_joined_dates(ctx).await
     }
     pub async fn check_for_deleted_usernames() -> Result<()> {
         let ctx = Context::get_static()?;
@@ -614,6 +620,7 @@ impl RustApi {
             user_id: res.user_id,
             username: res.username.unwrap_or_default(),
             public_identity_key: res.public_identity_key.unwrap_or_default(),
+            joined_at: res.joined_at,
         })
     }
     pub async fn get_proof_of_work() -> Result<FrbProofOfWork> {

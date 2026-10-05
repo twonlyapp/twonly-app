@@ -175,6 +175,9 @@ class UserConfig {
   PlatformInt64 currentSignedPreKeyIndexStart;
   Uint8List? lastChangeLogHash;
   bool hideChangeLog;
+
+  /// Last in-app release note the user dismissed.
+  String? lastReleaseNotesVersion;
   bool hideMemoriesBackupPromo;
   bool hideWidgetShareExplainer;
   bool updateFcmToken;
@@ -250,6 +253,7 @@ class UserConfig {
     required this.currentSignedPreKeyIndexStart,
     this.lastChangeLogHash,
     required this.hideChangeLog,
+    this.lastReleaseNotesVersion,
     required this.hideMemoriesBackupPromo,
     required this.hideWidgetShareExplainer,
     required this.updateFcmToken,
@@ -319,6 +323,7 @@ class UserConfig {
       currentSignedPreKeyIndexStart.hashCode ^
       lastChangeLogHash.hashCode ^
       hideChangeLog.hashCode ^
+      lastReleaseNotesVersion.hashCode ^
       hideMemoriesBackupPromo.hashCode ^
       hideWidgetShareExplainer.hashCode ^
       updateFcmToken.hashCode ^
@@ -397,6 +402,7 @@ class UserConfig {
               other.currentSignedPreKeyIndexStart &&
           lastChangeLogHash == other.lastChangeLogHash &&
           hideChangeLog == other.hideChangeLog &&
+          lastReleaseNotesVersion == other.lastReleaseNotesVersion &&
           hideMemoriesBackupPromo == other.hideMemoriesBackupPromo &&
           hideWidgetShareExplainer == other.hideWidgetShareExplainer &&
           updateFcmToken == other.updateFcmToken &&

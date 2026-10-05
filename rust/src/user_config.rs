@@ -361,6 +361,10 @@ pub struct UserConfig {
     #[serde(default = "defaults::true_value")]
     #[frb(non_final)]
     pub hide_change_log: bool,
+    /// Last in-app release note the user dismissed.
+    #[serde(default)]
+    #[frb(non_final)]
+    pub last_release_notes_version: Option<String>,
     #[serde(default)]
     #[frb(non_final)]
     pub hide_memories_backup_promo: bool,
@@ -551,6 +555,7 @@ mod tests {
         );
         assert!(!config.is_user_discovery_enabled);
         assert_eq!(config.last_server_message_at, None);
+        assert_eq!(config.last_release_notes_version, None);
     }
 
     #[test]

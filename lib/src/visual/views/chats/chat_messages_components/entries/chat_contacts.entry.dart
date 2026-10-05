@@ -170,6 +170,14 @@ class _ContactRowState extends State<_ContactRow> {
           requested: const Value(false),
           blocked: const Value(false),
           deletedByUser: const Value(false),
+          joinedAt: userdata.joinedAt == null
+              ? const Value.absent()
+              : Value(
+                  DateTime.fromMillisecondsSinceEpoch(
+                    userdata.joinedAt! * Duration.millisecondsPerSecond,
+                    isUtc: true,
+                  ),
+                ),
         ),
       );
 

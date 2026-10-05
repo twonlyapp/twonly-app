@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.0
+
+- New: Stickers
+- New: Home screen widgets
+- New: Stories
+- New: Mini games
+- New: Custom avatars
+- New: Arabic language (Experimental)
+- Improve: Message delivery and push notification reliability
+- Improve: Many smaller new changes
+- Fix: Many small issues
+
 ## 0.5.4
 
 - Fix: Recover broken sessions more reliably

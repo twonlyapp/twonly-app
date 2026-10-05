@@ -134,6 +134,7 @@ message Response {
     optional int64 signed_prekey_id = 6;
     optional int64 registration_id = 8;
     optional PqcBundle pqc_bundle = 9;
+    optional int64 joined_at = 10;
   }
 
   message UploadToken {

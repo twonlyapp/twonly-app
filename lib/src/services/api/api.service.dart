@@ -68,6 +68,10 @@ class ApiService {
         rust_api.RustApi.reuploadPendingMedia(),
         'reuploadPendingMedia',
       );
+      unawaitedRustCall(
+        rust_api.RustApi.refreshContactJoinedDates(),
+        'refreshContactJoinedDates',
+      );
 
       twonlyDB.markUpdated();
       // resetUserDiscoveryRequestUpdates();

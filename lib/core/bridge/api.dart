@@ -245,16 +245,21 @@ class FrbUserData {
   final PlatformInt64 userId;
   final Uint8List username;
   final Uint8List publicIdentityKey;
+  final PlatformInt64? joinedAt;
 
   const FrbUserData({
     required this.userId,
     required this.username,
     required this.publicIdentityKey,
+    this.joinedAt,
   });
 
   @override
   int get hashCode =>
-      userId.hashCode ^ username.hashCode ^ publicIdentityKey.hashCode;
+      userId.hashCode ^
+      username.hashCode ^
+      publicIdentityKey.hashCode ^
+      joinedAt.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -263,7 +268,8 @@ class FrbUserData {
           runtimeType == other.runtimeType &&
           userId == other.userId &&
           username == other.username &&
-          publicIdentityKey == other.publicIdentityKey;
+          publicIdentityKey == other.publicIdentityKey &&
+          joinedAt == other.joinedAt;
 }
 
 /// Flutter-facing facade for the Rust-owned API runtime.
@@ -596,6 +602,9 @@ class RustApi {
 
   static Future<void> purgeWidgetMedia() =>
       RustLib.instance.api.crateBridgeApiRustApiPurgeWidgetMedia();
+
+  static Future<void> refreshContactJoinedDates() =>
+      RustLib.instance.api.crateBridgeApiRustApiRefreshContactJoinedDates();
 
   /// Republishes the widget manifest.
   ///

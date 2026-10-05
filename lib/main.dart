@@ -310,6 +310,10 @@ Future<void> postStartupTasks() async {
     RustApi.finishStartedMediaUploads(),
     'finishStartedMediaUploads',
   );
+  unawaitedRustCall(
+    RustApi.refreshContactJoinedDates(),
+    'refreshContactJoinedDates',
+  );
   unawaited(
     newsService.init().then((_) {
       final lastDownload = newsService.lastDownloadedAt;

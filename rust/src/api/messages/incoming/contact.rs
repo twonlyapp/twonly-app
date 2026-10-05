@@ -146,6 +146,13 @@ pub(crate) async fn handle_contact_request(
                     .build()
                     .insert_on_conflict_update(tr)
                     .await?;
+                if let Some(joined_at) = user.joined_at {
+                    sqlx::query("UPDATE contacts SET joined_at = ? WHERE user_id = ?")
+                        .bind(joined_at)
+                        .bind(from_user_id)
+                        .execute(&mut **tr)
+                        .await?;
+                }
             }
         }
         Type::Accept => {

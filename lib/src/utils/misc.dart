@@ -99,6 +99,22 @@ String formatDuration(BuildContext context, int seconds) {
   }
 }
 
+String formatJoinedAt(BuildContext context, DateTime joinedAt) {
+  final elapsed = clock.now().toUtc().difference(joinedAt.toUtc());
+  final days = max(0, elapsed.inDays);
+
+  if (days == 0) {
+    return context.lang.contactJoinedToday;
+  }
+  if (days < 30) {
+    return context.lang.contactJoinedDaysAgo(days);
+  }
+  if (days < 365) {
+    return context.lang.contactJoinedMonthsAgo(days ~/ 30);
+  }
+  return context.lang.contactJoinedYearsAgo(days ~/ 365);
+}
+
 Future<bool> authenticateUser(
   String localizedReason, {
   bool force = true,

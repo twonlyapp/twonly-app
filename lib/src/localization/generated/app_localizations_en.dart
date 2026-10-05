@@ -317,6 +317,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'The twonly Score reflects a person\'s activity on twonly. It is calculated from several factors, such as how many photos and videos they send and receive.';
 
   @override
+  String get contactJoinedToday => 'Joined today';
+
+  @override
+  String contactJoinedDaysAgo(num days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Joined $days days ago',
+      one: 'Joined 1 day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactJoinedMonthsAgo(num months) {
+    String _temp0 = intl.Intl.pluralLogic(
+      months,
+      locale: localeName,
+      other: 'Joined $months months ago',
+      one: 'Joined 1 month ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactJoinedYearsAgo(num years) {
+    String _temp0 = intl.Intl.pluralLogic(
+      years,
+      locale: localeName,
+      other: 'Joined $years years ago',
+      one: 'Joined 1 year ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get privacyVisibilityNobody => 'Nobody';
 
   @override
@@ -3014,4 +3050,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteSticker => 'Delete sticker';
+
+  @override
+  String get releaseNotesTitle => 'What\'s new';
+
+  @override
+  String get releaseNotesIntroduction =>
+      'The biggest twonly update yet is here. Here\'s a quick look at what\'s new.';
+
+  @override
+  String get releaseNotesAlsoImproved => 'Also improved';
+
+  @override
+  String get releaseNotesStickers => 'Stickers';
+
+  @override
+  String get releaseNotesStickersDescription =>
+      'Turn your photos into stickers and share them in chats.';
+
+  @override
+  String get releaseNotesWidgets => 'Widgets';
+
+  @override
+  String get releaseNotesWidgetsDescription =>
+      'See fresh photos from your favorite people right on your home screen.';
+
+  @override
+  String get releaseNotesStories => 'Stories';
+
+  @override
+  String get releaseNotesStoriesDescription =>
+      'Share moments with your contacts for 24 hours.';
+
+  @override
+  String get releaseNotesMiniGames => 'Mini games in chats & groups';
+
+  @override
+  String get releaseNotesMiniGamesDescription =>
+      'Play small games together, right inside your conversations.';
+
+  @override
+  String get releaseNotesReliableMessages =>
+      'Better message and push reliability';
+
+  @override
+  String get releaseNotesImprovedUi => 'Improved interface';
+
+  @override
+  String get releaseNotesCustomAvatars => 'Custom avatars';
+
+  @override
+  String get releaseNotesArabic => 'Arabic language (experimental)';
 }

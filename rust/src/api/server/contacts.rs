@@ -38,6 +38,39 @@ impl Server {
         })
     }
 
+    /// Loads the immutable account creation date for contacts that do not
+    /// already have it. Server-deleted contacts are deliberately excluded.
+    pub async fn refresh_contact_joined_dates(ctx: &Arc<Context>) -> Result<()> {
+        let database = ctx.app_db.read().await.clone();
+        let contact_ids = sqlx::query_scalar::<_, i64>(
+            "SELECT user_id FROM contacts WHERE account_deleted = 0 AND joined_at IS NULL",
+        )
+        .fetch_all(&database.pool)
+        .await?;
+
+        for contact_id in contact_ids {
+            let user = match Self::get_user_by_id(ctx, contact_id).await? {
+                ServerResult::Ok(user) => user,
+                // The shared API error handler marks UserIdNotFound contacts
+                // as deleted. Other per-contact errors should not prevent the
+                // remaining contacts from being refreshed.
+                ServerResult::ErrorCode(_) => continue,
+            };
+            let Some(joined_at) = user.joined_at else {
+                // Backwards compatibility while an older server is still
+                // running: leave the value NULL so a later startup retries it.
+                continue;
+            };
+            sqlx::query("UPDATE contacts SET joined_at = ? WHERE user_id = ?")
+                .bind(joined_at)
+                .bind(contact_id)
+                .execute(&database.pool)
+                .await?;
+        }
+
+        Ok(())
+    }
+
     pub async fn check_for_deleted_usernames(ctx: &Arc<Context>) -> Result<()> {
         let database = ctx.app_db.read().await.clone();
         let contacts = sqlx::query_scalar!(

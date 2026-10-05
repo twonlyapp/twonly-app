@@ -16,7 +16,7 @@ mod legacy_import;
 pub mod tables;
 
 pub const APP_DATABASE_FILE: &str = "app_db.sqlite";
-pub const APP_SCHEMA_VERSION: i64 = 14;
+pub const APP_SCHEMA_VERSION: i64 = 15;
 
 /// User-owned application tables in the current Rust schema. Rust-only outbox
 /// tables are deliberately absent because they are reconstructed locally.
@@ -400,6 +400,34 @@ mod change_notification_tests {
             .unwrap();
         database.run_migrations().await.unwrap();
         (directory, database)
+    }
+
+    #[tokio::test]
+    async fn contact_joined_at_is_nullable_and_persisted() {
+        let (_dir, database) = open().await;
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES(7, 'alice')")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+
+        let joined_at: Option<i64> =
+            sqlx::query_scalar("SELECT joined_at FROM contacts WHERE user_id = 7")
+                .fetch_one(&database.pool)
+                .await
+                .unwrap();
+        assert_eq!(joined_at, None);
+
+        sqlx::query("UPDATE contacts SET joined_at = ? WHERE user_id = 7")
+            .bind(1_700_000_000_i64)
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        let joined_at: Option<i64> =
+            sqlx::query_scalar("SELECT joined_at FROM contacts WHERE user_id = 7")
+                .fetch_one(&database.pool)
+                .await
+                .unwrap();
+        assert_eq!(joined_at, Some(1_700_000_000));
     }
 
     fn insert(key: &str) -> String {

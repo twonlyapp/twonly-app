@@ -682,6 +682,30 @@ abstract class AppLocalizations {
   /// **'The twonly Score reflects a person\'s activity on twonly. It is calculated from several factors, such as how many photos and videos they send and receive.'**
   String get contactTwonlyScoreDescription;
 
+  /// No description provided for @contactJoinedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined today'**
+  String get contactJoinedToday;
+
+  /// No description provided for @contactJoinedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Joined 1 day ago} other{Joined {days} days ago}}'**
+  String contactJoinedDaysAgo(num days);
+
+  /// No description provided for @contactJoinedMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{months, plural, =1{Joined 1 month ago} other{Joined {months} months ago}}'**
+  String contactJoinedMonthsAgo(num months);
+
+  /// No description provided for @contactJoinedYearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{years, plural, =1{Joined 1 year ago} other{Joined {years} years ago}}'**
+  String contactJoinedYearsAgo(num years);
+
   /// No description provided for @privacyVisibilityNobody.
   ///
   /// In en, this message translates to:
@@ -5169,6 +5193,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete sticker'**
   String get deleteSticker;
+
+  /// No description provided for @releaseNotesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get releaseNotesTitle;
+
+  /// No description provided for @releaseNotesIntroduction.
+  ///
+  /// In en, this message translates to:
+  /// **'The biggest twonly update yet is here. Here\'s a quick look at what\'s new.'**
+  String get releaseNotesIntroduction;
+
+  /// No description provided for @releaseNotesAlsoImproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Also improved'**
+  String get releaseNotesAlsoImproved;
+
+  /// No description provided for @releaseNotesStickers.
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers'**
+  String get releaseNotesStickers;
+
+  /// No description provided for @releaseNotesStickersDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn your photos into stickers and share them in chats.'**
+  String get releaseNotesStickersDescription;
+
+  /// No description provided for @releaseNotesWidgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Widgets'**
+  String get releaseNotesWidgets;
+
+  /// No description provided for @releaseNotesWidgetsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'See fresh photos from your favorite people right on your home screen.'**
+  String get releaseNotesWidgetsDescription;
+
+  /// No description provided for @releaseNotesStories.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories'**
+  String get releaseNotesStories;
+
+  /// No description provided for @releaseNotesStoriesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Share moments with your contacts for 24 hours.'**
+  String get releaseNotesStoriesDescription;
+
+  /// No description provided for @releaseNotesMiniGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Mini games in chats & groups'**
+  String get releaseNotesMiniGames;
+
+  /// No description provided for @releaseNotesMiniGamesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Play small games together, right inside your conversations.'**
+  String get releaseNotesMiniGamesDescription;
+
+  /// No description provided for @releaseNotesReliableMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Better message and push reliability'**
+  String get releaseNotesReliableMessages;
+
+  /// No description provided for @releaseNotesImprovedUi.
+  ///
+  /// In en, this message translates to:
+  /// **'Improved interface'**
+  String get releaseNotesImprovedUi;
+
+  /// No description provided for @releaseNotesCustomAvatars.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom avatars'**
+  String get releaseNotesCustomAvatars;
+
+  /// No description provided for @releaseNotesArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic language (experimental)'**
+  String get releaseNotesArabic;
 }
 
 class _AppLocalizationsDelegate

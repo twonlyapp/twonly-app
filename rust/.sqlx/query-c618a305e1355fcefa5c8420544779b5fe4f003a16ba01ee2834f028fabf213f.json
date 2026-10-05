@@ -332,6 +332,17 @@
             "name": "twonly_score"
           }
         }
+      },
+      {
+        "name": "joined_at",
+        "ordinal": 30,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "joined_at"
+          }
+        }
       }
     ],
     "parameters": {
@@ -367,6 +378,7 @@
       false,
       false,
       false,
+      true,
       true
     ]
   },

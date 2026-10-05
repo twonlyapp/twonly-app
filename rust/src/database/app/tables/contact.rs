@@ -42,6 +42,7 @@ pub struct Contact {
     pub widget_sharing_allowed: i64,
     pub widget_sharing_granted: i64,
     pub twonly_score: Option<i64>,
+    pub joined_at: Option<i64>,
 }
 
 #[derive(bon::Builder)]

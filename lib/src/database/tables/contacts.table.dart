@@ -54,6 +54,7 @@ class Contacts extends Table {
       boolean().withDefault(const Constant(false))();
 
   IntColumn get twonlyScore => integer().nullable()();
+  DateTimeColumn get joinedAt => dateTime().nullable()();
 
   IntColumn get mediaSendCounter => integer().withDefault(const Constant(0))();
   IntColumn get mediaReceivedCounter =>

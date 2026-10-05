@@ -226,36 +226,64 @@ class _ContactViewState extends State<ContactView> {
           ),
           if (getContactDisplayName(contact) != contact.username)
             Center(child: Text('(${contact.username})')),
-          if (contact.twonlyScore != null)
+          if (contact.twonlyScore != null ||
+              (contact.joinedAt != null && !contact.accountDeleted))
             Padding(
               padding: const EdgeInsets.only(top: 10),
               child: Center(
-                child: IntrinsicWidth(
-                  child: MyChip(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const FaIcon(FontAwesomeIcons.trophy, size: 14),
-                        const SizedBox(width: 7),
-                        Text('${contact.twonlyScore}'),
-                      ],
-                    ),
-                    onTap: () => showDialog<void>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text(context.lang.publicProfileTwonlyScore),
-                        content: Text(
-                          context.lang.contactTwonlyScoreDescription,
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text(context.lang.ok),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (contact.twonlyScore != null)
+                      IntrinsicWidth(
+                        child: MyChip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const FaIcon(FontAwesomeIcons.trophy, size: 14),
+                              const SizedBox(width: 7),
+                              Text('${contact.twonlyScore}'),
+                            ],
                           ),
-                        ],
+                          onTap: () => showDialog<void>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text(
+                                context.lang.publicProfileTwonlyScore,
+                              ),
+                              content: Text(
+                                context.lang.contactTwonlyScoreDescription,
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(context.lang.ok),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    if (contact.joinedAt != null && !contact.accountDeleted)
+                      IntrinsicWidth(
+                        child: MyChip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const FaIcon(
+                                FontAwesomeIcons.calendarDay,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 7),
+                              Text(formatJoinedAt(context, contact.joinedAt!)),
+                            ],
+                          ),
+                          onTap: null,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),

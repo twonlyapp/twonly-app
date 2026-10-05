@@ -17,6 +17,8 @@ import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/release_notes.comp.dart';
+import 'package:twonly/src/visual/release_notes/release_notes_0_6_0.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
@@ -45,6 +47,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   /// Whether [_openEditor] has the editor open over this view.
   bool _editorOpen = false;
   bool _startPreloading = false;
+  bool _startupChecksComplete = false;
+  bool _releaseNotesCheckScheduled = false;
 
   final MainCameraController _mainCameraController = MainCameraController();
   late final PageController _homeViewPageController;
@@ -67,6 +71,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    routerProvider.routerDelegate.addListener(_onRouteChanged);
     var initialPage = widget.initialPage;
     if (HomeViewState.pendingSharedLink != null) {
       initialPage = 1;
@@ -97,6 +102,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       if (index != 1) {
         unawaited(_mainCameraController.closeCamera());
       }
+      _scheduleReleaseNotesIfNeeded();
     });
 
     _selectNotificationSub = selectNotificationStream.stream.listen((
@@ -179,7 +185,12 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       });
     }
 
-    unawaited(_initAsync());
+    unawaited(
+      _initAsync().whenComplete(() {
+        _startupChecksComplete = true;
+        _scheduleReleaseNotesIfNeeded();
+      }),
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_mainCameraController.sharedLinkForPreview == null &&
@@ -293,6 +304,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    routerProvider.routerDelegate.removeListener(_onRouteChanged);
     _onMessageOpenedAppSub?.cancel();
     _homeViewPageIndexSub?.cancel();
     _selectNotificationSub?.cancel();
@@ -310,10 +322,29 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     return ModalRoute.of(context)?.isCurrent ?? false;
   }
 
+  void _onRouteChanged() => _scheduleReleaseNotesIfNeeded();
+
+  void _scheduleReleaseNotesIfNeeded() {
+    if (!_startupChecksComplete ||
+        _releaseNotesCheckScheduled ||
+        _activePageIdx != 0) {
+      return;
+    }
+    _releaseNotesCheckScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _releaseNotesCheckScheduled = false;
+      if (!mounted || _activePageIdx != 0 || !_isViewActive()) return;
+      unawaited(
+        ReleaseNotesPresenter.showIfNeeded(context, releaseNotes060(context)),
+      );
+    });
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
+      _scheduleReleaseNotesIfNeeded();
       if (AppState.hasCameraPermissions &&
           _offsetRatio < 1 &&
           !_mainCameraController.isSharePreviewIsShown &&
@@ -378,6 +409,9 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           _activePageIdx = pageIndex;
         }
       });
+      if (notification is ScrollEndNotification) {
+        _scheduleReleaseNotesIfNeeded();
+      }
     }
 
     if (AppState.hasCameraPermissions &&
@@ -505,7 +539,10 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                     duration: const Duration(milliseconds: 100),
                     curve: Curves.bounceIn,
                   );
-                  if (mounted) setState(() {});
+                  if (mounted) {
+                    setState(() {});
+                    _scheduleReleaseNotesIfNeeded();
+                  }
                 },
                 currentIndex: _activePageIdx,
               )

@@ -317,6 +317,51 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعكس نقاط twonly نشاط الشخص على twonly. ويتم احتسابها استنادًا إلى عدة عوامل، مثل عدد الصور ومقاطع الفيديو التي يرسلها ويستلمها.';
 
   @override
+  String get contactJoinedToday => 'انضم اليوم';
+
+  @override
+  String contactJoinedDaysAgo(num days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'انضم منذ $days يوم',
+      many: 'انضم منذ $days يومًا',
+      few: 'انضم منذ $days أيام',
+      two: 'انضم منذ يومين',
+      one: 'انضم منذ يوم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactJoinedMonthsAgo(num months) {
+    String _temp0 = intl.Intl.pluralLogic(
+      months,
+      locale: localeName,
+      other: 'انضم منذ $months شهر',
+      many: 'انضم منذ $months شهرًا',
+      few: 'انضم منذ $months أشهر',
+      two: 'انضم منذ شهرين',
+      one: 'انضم منذ شهر واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactJoinedYearsAgo(num years) {
+    String _temp0 = intl.Intl.pluralLogic(
+      years,
+      locale: localeName,
+      other: 'انضم منذ $years سنة',
+      many: 'انضم منذ $years سنة',
+      few: 'انضم منذ $years سنوات',
+      two: 'انضم منذ سنتين',
+      one: 'انضم منذ سنة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get privacyVisibilityNobody => 'لا أحد';
 
   @override
@@ -3043,4 +3088,54 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteSticker => 'حذف الملصق';
+
+  @override
+  String get releaseNotesTitle => 'ما الجديد؟';
+
+  @override
+  String get releaseNotesIntroduction =>
+      'وصل أكبر تحديث لـ twonly حتى الآن. إليك نظرة سريعة على الجديد.';
+
+  @override
+  String get releaseNotesAlsoImproved => 'تحسينات أخرى';
+
+  @override
+  String get releaseNotesStickers => 'الملصقات';
+
+  @override
+  String get releaseNotesStickersDescription =>
+      'حوّل صورك إلى ملصقات وشاركها في المحادثات.';
+
+  @override
+  String get releaseNotesWidgets => 'الأدوات';
+
+  @override
+  String get releaseNotesWidgetsDescription =>
+      'شاهد أحدث صور الأشخاص المفضلين لديك مباشرة على شاشتك الرئيسية.';
+
+  @override
+  String get releaseNotesStories => 'القصص';
+
+  @override
+  String get releaseNotesStoriesDescription =>
+      'شارك لحظاتك مع جهات اتصالك لمدة 24 ساعة.';
+
+  @override
+  String get releaseNotesMiniGames => 'ألعاب مصغّرة في المحادثات والمجموعات';
+
+  @override
+  String get releaseNotesMiniGamesDescription =>
+      'العبوا ألعابًا صغيرة معًا داخل محادثاتكم مباشرة.';
+
+  @override
+  String get releaseNotesReliableMessages => 'موثوقية أفضل للرسائل والإشعارات';
+
+  @override
+  String get releaseNotesImprovedUi => 'واجهة مستخدم محسّنة';
+
+  @override
+  String get releaseNotesCustomAvatars => 'صور رمزية مخصّصة';
+
+  @override
+  String get releaseNotesArabic => 'اللغة العربية (تجريبية)';
 }
