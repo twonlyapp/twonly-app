@@ -8,7 +8,7 @@ import 'package:twonly/src/visual/views/camera/share_image_editor_components/lay
 ///
 /// The stack always starts with the [BackgroundLayerData] (the photo itself)
 /// followed by the [FilterLayerData]; everything the user adds (text, drawings,
-/// emojis, link previews) is stacked on top of those two.
+/// emojis, stickers, link previews) is stacked on top of those two.
 ///
 /// Layers are not removed immediately when the user deletes them. They are
 /// flagged via [Layer.isDeleted] by the layer widgets and only collected later,

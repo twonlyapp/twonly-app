@@ -2944,4 +2944,42 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get sticker => 'ملصق';
+
+  @override
+  String get stickers => 'الملصقات';
+
+  @override
+  String get createSticker => 'إنشاء ملصق';
+
+  @override
+  String get noStickersYet => 'أنشئ ملصقك الأول من صورة.';
+
+  @override
+  String get stickerAdded => 'تم حفظ الملصق';
+
+  @override
+  String get stickerAlreadySaved => 'هذا الملصق محفوظ بالفعل';
+
+  @override
+  String get stickerCreateFailed => 'تعذّر إنشاء الملصق.';
+
+  @override
+  String get stickerSaveFailed => 'تعذّر حفظ الملصق.';
+
+  @override
+  String notificationSticker(Object inGroup) {
+    return 'أرسل ملصقًا$inGroup.';
+  }
+
+  @override
+  String get storeSticker => 'حفظ الملصق';
+
+  @override
+  String get removeSticker => 'إزالة من المجموعة';
+
+  @override
+  String get deleteSticker => 'حذف الملصق';
 }

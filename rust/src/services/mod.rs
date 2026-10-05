@@ -17,5 +17,6 @@ pub mod mediafiles;
 pub mod messages;
 pub mod notifications;
 pub mod outbox_dispatch;
+pub mod stickers;
 pub mod stories;
 pub mod webxdc;

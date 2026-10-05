@@ -6,6 +6,7 @@
 import '../api/server/prekeys.dart';
 import '../frb_generated.dart';
 import '../services/media_upload.dart';
+import '../services/stickers.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'stories.dart';
 
@@ -345,6 +346,14 @@ class RustApi {
 
   static Future<ApiConnectionState> connectionState() =>
       RustLib.instance.api.crateBridgeApiRustApiConnectionState();
+
+  /// Creates a transparent, message-sized sticker from a local image. Model
+  /// inference and image encoding are CPU-heavy, so neither runs on Tokio's
+  /// async worker threads.
+  static Future<StickerOutput> createSticker({required String imagePath}) =>
+      RustLib.instance.api.crateBridgeApiRustApiCreateSticker(
+        imagePath: imagePath,
+      );
 
   /// Trims fully transparent borders an editor left around a stored image and
   /// refreshes the preview and content hash derived from it.

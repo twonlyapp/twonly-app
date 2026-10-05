@@ -5,6 +5,7 @@ import 'package:twonly/src/visual/views/camera/share_image_editor_components/lay
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/emoji.layer.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filter.layer.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview.layer.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/sticker.layer.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/text.layer.dart';
 
 /// View stacked layers (unbounded height, width)
@@ -43,6 +44,7 @@ class LayersViewer extends StatelessWidget {
             .where(
               (layerItem) =>
                   layerItem is EmojiLayerData ||
+                  layerItem is StickerLayerData ||
                   layerItem is DrawLayerData ||
                   layerItem is LinkPreviewLayerData ||
                   layerItem is TextLayerData,
@@ -50,6 +52,12 @@ class LayersViewer extends StatelessWidget {
             .map((layerItem) {
               if (layerItem is EmojiLayerData) {
                 return EmojiLayer(
+                  key: layerItem.key,
+                  layerData: layerItem,
+                  onUpdate: onUpdate,
+                );
+              } else if (layerItem is StickerLayerData) {
+                return StickerLayer(
                   key: layerItem.key,
                   layerData: layerItem,
                   onUpdate: onUpdate,

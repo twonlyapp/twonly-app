@@ -240,6 +240,9 @@ impl MessageService {
         quote_message_id: Option<String>,
         additional_message_data: Option<Vec<u8>>,
     ) -> Result<String> {
+        if let Some(data) = additional_message_data.as_deref() {
+            crate::services::stickers::validate_additional_if_sticker(data)?;
+        }
         let database = self.ctx.app_db.read().await.clone();
         let message_id = uuid::Uuid::new_v4().to_string();
         let timestamp = chrono::Utc::now().timestamp_millis();
@@ -415,6 +418,7 @@ impl MessageService {
             webxdc_origin: None,
             webxdc_sync: None,
             webxdc_sync_request: None,
+            sticker: None,
         }
         .encode_to_vec();
         self.insert_and_send_additional_data(group_id, "contacts".into(), data, false)
@@ -452,6 +456,7 @@ impl MessageService {
             webxdc_origin: None,
             webxdc_sync: None,
             webxdc_sync_request: None,
+            sticker: None,
         }
         .encode_to_vec();
         self.insert_and_send_additional_data(group_id, "askAboutUser".into(), data, false)

@@ -78,6 +78,7 @@ bon = "3.9.3"
 stream-tungstenite = "0.6.1"
 image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "gif", "bmp", "webp"] }
 webp = "0.3.1"
+tract = { version = "0.23.8", default-features = false, features = ["onnx"] }
 [target.'cfg(target_os = "ios")'.dependencies]
 # iOS backend: Requires the 'protected' feature for Data Protection Keychain
 apple-native-keyring-store = { version = "1", features = ["protected"] }

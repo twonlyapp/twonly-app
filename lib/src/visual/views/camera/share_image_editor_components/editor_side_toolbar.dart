@@ -108,7 +108,8 @@ class EditorSideToolbar extends StatelessWidget {
               final layer = await showModalBottomSheet<Layer>(
                 context: context,
                 backgroundColor: context.color.surface,
-                builder: (context) => const EmojiPickerBottom(),
+                builder: (context) =>
+                    const EmojiPickerBottom(allowStickers: true),
               );
               if (layer == null) return;
               layerStack.add(layer);

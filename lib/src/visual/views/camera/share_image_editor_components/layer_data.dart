@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:hand_signature/signature.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/image_item.dart';
@@ -66,6 +68,28 @@ class EmojiLayerData extends Layer {
     super.isEditing,
   });
   String text;
+  double size;
+}
+
+class StickerLayerData extends Layer {
+  StickerLayerData({
+    required super.key,
+    required this.webp,
+    required this.contentHash,
+    required this.width,
+    required this.height,
+    this.size = 160,
+    super.offset,
+    super.opacity,
+    super.rotation,
+    super.scale,
+    super.isEditing,
+  });
+
+  final Uint8List webp;
+  final String contentHash;
+  final int width;
+  final int height;
   double size;
 }
 

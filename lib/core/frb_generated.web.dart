@@ -29,6 +29,7 @@ import 'keys/backup_password_keys.dart';
 import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 import 'services/media_upload.dart';
+import 'services/stickers.dart';
 import 'signal/engine.dart';
 import 'user_config.dart';
 
@@ -384,6 +385,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SqlValue dco_decode_sql_value(dynamic raw);
+
+  @protected
+  StickerOutput dco_decode_sticker_output(dynamic raw);
 
   @protected
   StoryAudience dco_decode_story_audience(dynamic raw);
@@ -848,6 +852,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SqlValue sse_decode_sql_value(SseDeserializer deserializer);
+
+  @protected
+  StickerOutput sse_decode_sticker_output(SseDeserializer deserializer);
 
   @protected
   StoryAudience sse_decode_story_audience(SseDeserializer deserializer);
@@ -1433,6 +1440,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_sql_value(SqlValue self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sticker_output(StickerOutput self, SseSerializer serializer);
 
   @protected
   void sse_encode_story_audience(StoryAudience self, SseSerializer serializer);

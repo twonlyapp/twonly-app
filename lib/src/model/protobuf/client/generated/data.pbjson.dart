@@ -126,6 +126,16 @@ const AdditionalMessageData$json = {
       '10': 'webxdcSyncRequest',
       '17': true
     },
+    {
+      '1': 'sticker',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.StickerData',
+      '9': 8,
+      '10': 'sticker',
+      '17': true
+    },
   ],
   '4': [AdditionalMessageData_Type$json],
   '8': [
@@ -137,6 +147,7 @@ const AdditionalMessageData$json = {
     {'1': '_webxdc_origin'},
     {'1': '_webxdc_sync'},
     {'1': '_webxdc_sync_request'},
+    {'1': '_sticker'},
   ],
 };
 
@@ -153,6 +164,7 @@ const AdditionalMessageData_Type$json = {
     {'1': 'WEBXDC_SENT', '2': 6},
     {'1': 'WEBXDC_SYNC', '2': 7},
     {'1': 'WEBXDC_SYNC_REQUEST', '2': 8},
+    {'1': 'STICKER', '2': 9},
   ],
 };
 
@@ -167,13 +179,32 @@ final $typed_data.Uint8List additionalMessageDataDescriptor = $convert.base64Dec
     'ZUgEUgx3ZWJ4ZGNVcGRhdGWIAQESNwoNd2VieGRjX29yaWdpbhgIIAEoCzINLldlYnhkY09yaW'
     'dpbkgFUgx3ZWJ4ZGNPcmlnaW6IAQESNgoLd2VieGRjX3N5bmMYCSABKAsyEC5XZWJ4ZGNTeW5j'
     'Q2h1bmtIBlIKd2VieGRjU3luY4gBARJHChN3ZWJ4ZGNfc3luY19yZXF1ZXN0GAogASgLMhIuV2'
-    'VieGRjU3luY1JlcXVlc3RIB1IRd2VieGRjU3luY1JlcXVlc3SIAQEirAEKBFR5cGUSCAoETElO'
-    'SxAAEgwKCENPTlRBQ1RTEAESGgoWUkVTVE9SRURfRkxBTUVfQ09VTlRFUhACEhIKDkFTS19BQk'
-    '9VVF9VU0VSEAMSDgoKV0VCWERDX0FQUBAEEhEKDVdFQlhEQ19VUERBVEUQBRIPCgtXRUJYRENf'
-    'U0VOVBAGEg8KC1dFQlhEQ19TWU5DEAcSFwoTV0VCWERDX1NZTkNfUkVRVUVTVBAIQgcKBV9saW'
-    '5rQhkKF19yZXN0b3JlZF9mbGFtZV9jb3VudGVyQhQKEl9hc2tfYWJvdXRfdXNlcl9pZEINCgtf'
-    'd2VieGRjX2FwcEIQCg5fd2VieGRjX3VwZGF0ZUIQCg5fd2VieGRjX29yaWdpbkIOCgxfd2VieG'
-    'RjX3N5bmNCFgoUX3dlYnhkY19zeW5jX3JlcXVlc3Q=');
+    'VieGRjU3luY1JlcXVlc3RIB1IRd2VieGRjU3luY1JlcXVlc3SIAQESKwoHc3RpY2tlchgLIAEo'
+    'CzIMLlN0aWNrZXJEYXRhSAhSB3N0aWNrZXKIAQEiuQEKBFR5cGUSCAoETElOSxAAEgwKCENPTl'
+    'RBQ1RTEAESGgoWUkVTVE9SRURfRkxBTUVfQ09VTlRFUhACEhIKDkFTS19BQk9VVF9VU0VSEAMS'
+    'DgoKV0VCWERDX0FQUBAEEhEKDVdFQlhEQ19VUERBVEUQBRIPCgtXRUJYRENfU0VOVBAGEg8KC1'
+    'dFQlhEQ19TWU5DEAcSFwoTV0VCWERDX1NZTkNfUkVRVUVTVBAIEgsKB1NUSUNLRVIQCUIHCgVf'
+    'bGlua0IZChdfcmVzdG9yZWRfZmxhbWVfY291bnRlckIUChJfYXNrX2Fib3V0X3VzZXJfaWRCDQ'
+    'oLX3dlYnhkY19hcHBCEAoOX3dlYnhkY191cGRhdGVCEAoOX3dlYnhkY19vcmlnaW5CDgoMX3dl'
+    'YnhkY19zeW5jQhYKFF93ZWJ4ZGNfc3luY19yZXF1ZXN0QgoKCF9zdGlja2Vy');
+
+@$core.Deprecated('Use stickerDataDescriptor instead')
+const StickerData$json = {
+  '1': 'StickerData',
+  '2': [
+    {'1': 'version', '3': 1, '4': 1, '5': 13, '10': 'version'},
+    {'1': 'webp', '3': 2, '4': 1, '5': 12, '10': 'webp'},
+    {'1': 'sha256', '3': 3, '4': 1, '5': 12, '10': 'sha256'},
+    {'1': 'width', '3': 4, '4': 1, '5': 13, '10': 'width'},
+    {'1': 'height', '3': 5, '4': 1, '5': 13, '10': 'height'},
+  ],
+};
+
+/// Descriptor for `StickerData`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List stickerDataDescriptor = $convert.base64Decode(
+    'CgtTdGlja2VyRGF0YRIYCgd2ZXJzaW9uGAEgASgNUgd2ZXJzaW9uEhIKBHdlYnAYAiABKAxSBH'
+    'dlYnASFgoGc2hhMjU2GAMgASgMUgZzaGEyNTYSFAoFd2lkdGgYBCABKA1SBXdpZHRoEhYKBmhl'
+    'aWdodBgFIAEoDVIGaGVpZ2h0');
 
 @$core.Deprecated('Use webxdcSyncChunkDescriptor instead')
 const WebxdcSyncChunk$json = {

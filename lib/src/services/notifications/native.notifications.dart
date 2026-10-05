@@ -44,6 +44,7 @@ class NativeNotificationService {
   static bool opensConversation(String? kind) =>
       kind == 'text' ||
       kind == 'response' ||
+      kind == 'sticker' ||
       kind == 'webxdc' ||
       kind == 'story_reply' ||
       kind == 'story_reaction';

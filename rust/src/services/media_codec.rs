@@ -35,7 +35,7 @@ const MIN_CROPPED_EDGE: u32 = 10;
 
 /// Encodes with libwebp. RGB input is encoded without an alpha channel so
 /// opaque photos do not pay for one.
-fn encode_webp(image: &DynamicImage, quality: f32) -> Result<Vec<u8>> {
+pub(crate) fn encode_webp(image: &DynamicImage, quality: f32) -> Result<Vec<u8>> {
     let total_started = Instant::now();
     let has_alpha = image.color().has_alpha();
     let conversion_started = Instant::now();

@@ -2945,4 +2945,43 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get sticker => 'Sticker';
+
+  @override
+  String get stickers => 'Sticker';
+
+  @override
+  String get createSticker => 'Sticker erstellen';
+
+  @override
+  String get noStickersYet => 'Erstelle deinen ersten Sticker aus einem Foto.';
+
+  @override
+  String get stickerAdded => 'Sticker gespeichert';
+
+  @override
+  String get stickerAlreadySaved => 'Dieser Sticker ist bereits gespeichert';
+
+  @override
+  String get stickerCreateFailed => 'Der Sticker konnte nicht erstellt werden.';
+
+  @override
+  String get stickerSaveFailed =>
+      'Der Sticker konnte nicht gespeichert werden.';
+
+  @override
+  String notificationSticker(Object inGroup) {
+    return 'hat einen Sticker gesendet$inGroup.';
+  }
+
+  @override
+  String get storeSticker => 'Sticker speichern';
+
+  @override
+  String get removeSticker => 'Aus Sammlung entfernen';
+
+  @override
+  String get deleteSticker => 'Sticker löschen';
 }

@@ -5,6 +5,7 @@ void main() {
   test('text notifications open their conversation', () {
     expect(NativeNotificationService.opensConversation('text'), isTrue);
     expect(NativeNotificationService.opensConversation('response'), isTrue);
+    expect(NativeNotificationService.opensConversation('sticker'), isTrue);
   });
 
   test('replies and reactions to the own story open the conversation', () {

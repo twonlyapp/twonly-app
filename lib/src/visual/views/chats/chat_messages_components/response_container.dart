@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
@@ -8,6 +10,7 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 
@@ -191,7 +194,12 @@ class _ResponsePreviewState extends State<ResponsePreview> {
 
     if (_message != null) {
       if (_message!.type == MessageType.text.name) {
-        if (_message!.content != null) {
+        final sticker = StickerService.decodeAdditional(
+          _message!.additionalMessageData,
+        );
+        if (sticker != null) {
+          subtitle = context.lang.sticker;
+        } else if (_message!.content != null) {
           subtitle = truncateString(_message!.content!);
         }
       }
@@ -248,6 +256,9 @@ class _ResponsePreviewState extends State<ResponsePreview> {
         _mediaService!.mediaFile.type != MediaType.audio;
 
     Widget? imageWidget;
+    final quotedSticker = StickerService.decodeAdditional(
+      _message?.additionalMessageData,
+    );
     if (hasImage) {
       final isVideo = _mediaService!.mediaFile.type == MediaType.video;
       // A story nobody saved is still in its temporary file.
@@ -267,6 +278,16 @@ class _ResponsePreviewState extends State<ResponsePreview> {
             fit: BoxFit.cover,
             errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
+        ),
+      );
+    } else if (quotedSticker != null) {
+      imageWidget = Container(
+        height: 40,
+        width: 40,
+        margin: const EdgeInsets.only(left: 8),
+        child: Image.memory(
+          Uint8List.fromList(quotedSticker.webp),
+          fit: BoxFit.contain,
         ),
       );
     }

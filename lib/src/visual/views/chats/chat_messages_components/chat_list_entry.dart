@@ -10,6 +10,7 @@ import 'package:twonly/src/database/tables/messages.table.dart'
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -19,6 +20,7 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/c
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_contacts.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_flame_restored.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_media_entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_sticker.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_text_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_unknown.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_webxdc.entry.dart';
@@ -146,9 +148,12 @@ class _ChatListEntryState extends State<ChatListEntry> {
     BubbleInfo info,
   ) {
     if (widget.message.type == MessageType.text.name) {
-      // Only a message a webxdc app produced -- text handed to a chat, or an
-      // announcement an app made in one -- carries data alongside its text, so
-      // this is enough to route it without decoding anything here.
+      final sticker = StickerService.decodeAdditional(
+        widget.message.additionalMessageData,
+      );
+      if (sticker != null) {
+        return ChatStickerEntry(message: widget.message, sticker: sticker);
+      }
       if (widget.message.additionalMessageData != null) {
         return ChatWebxdcMessageEntry(
           message: widget.message,

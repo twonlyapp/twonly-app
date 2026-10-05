@@ -1149,5 +1149,17 @@
         "type": "int"
       }
     }
-  }
+  },
+  "sticker": "Sticker",
+  "stickers": "Sticker",
+  "createSticker": "Sticker erstellen",
+  "noStickersYet": "Erstelle deinen ersten Sticker aus einem Foto.",
+  "stickerAdded": "Sticker gespeichert",
+  "stickerAlreadySaved": "Dieser Sticker ist bereits gespeichert",
+  "stickerCreateFailed": "Der Sticker konnte nicht erstellt werden.",
+  "stickerSaveFailed": "Der Sticker konnte nicht gespeichert werden.",
+  "notificationSticker": "hat einen Sticker gesendet{inGroup}.",
+  "storeSticker": "Sticker speichern",
+  "removeSticker": "Aus Sammlung entfernen",
+  "deleteSticker": "Sticker löschen"
 }

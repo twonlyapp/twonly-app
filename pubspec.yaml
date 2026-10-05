@@ -211,6 +211,7 @@ flutter:
   assets:
     # Add assets from the images directory to the application.
     - assets/images/
+    - assets/licenses/
     - assets/icons/
     - assets/icons/verification_badge_numeric/
     - assets/animated_icons/

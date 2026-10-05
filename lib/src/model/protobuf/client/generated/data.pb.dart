@@ -111,6 +111,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     WebxdcOrigin? webxdcOrigin,
     WebxdcSyncChunk? webxdcSync,
     WebxdcSyncRequest? webxdcSyncRequest,
+    StickerData? sticker,
   }) {
     final result = create();
     if (type != null) result.type = type;
@@ -124,6 +125,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     if (webxdcOrigin != null) result.webxdcOrigin = webxdcOrigin;
     if (webxdcSync != null) result.webxdcSync = webxdcSync;
     if (webxdcSyncRequest != null) result.webxdcSyncRequest = webxdcSyncRequest;
+    if (sticker != null) result.sticker = sticker;
     return result;
   }
 
@@ -156,6 +158,8 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
         subBuilder: WebxdcSyncChunk.create)
     ..aOM<WebxdcSyncRequest>(10, _omitFieldNames ? '' : 'webxdcSyncRequest',
         subBuilder: WebxdcSyncRequest.create)
+    ..aOM<StickerData>(11, _omitFieldNames ? '' : 'sticker',
+        subBuilder: StickerData.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -271,6 +275,123 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
   void clearWebxdcSyncRequest() => $_clearField(10);
   @$pb.TagNumber(10)
   WebxdcSyncRequest ensureWebxdcSyncRequest() => $_ensure(9);
+
+  @$pb.TagNumber(11)
+  StickerData get sticker => $_getN(10);
+  @$pb.TagNumber(11)
+  set sticker(StickerData value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasSticker() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearSticker() => $_clearField(11);
+  @$pb.TagNumber(11)
+  StickerData ensureSticker() => $_ensure(10);
+}
+
+/// A small, self-contained sticker. Keeping the bytes beside the text message
+/// makes it available immediately and preserves end-to-end encryption without
+/// introducing a second media download lifecycle.
+class StickerData extends $pb.GeneratedMessage {
+  factory StickerData({
+    $core.int? version,
+    $core.List<$core.int>? webp,
+    $core.List<$core.int>? sha256,
+    $core.int? width,
+    $core.int? height,
+  }) {
+    final result = create();
+    if (version != null) result.version = version;
+    if (webp != null) result.webp = webp;
+    if (sha256 != null) result.sha256 = sha256;
+    if (width != null) result.width = width;
+    if (height != null) result.height = height;
+    return result;
+  }
+
+  StickerData._();
+
+  factory StickerData.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StickerData.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StickerData',
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'version', fieldType: $pb.PbFieldType.OU3)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'webp', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'sha256', $pb.PbFieldType.OY)
+    ..aI(4, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StickerData clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StickerData copyWith(void Function(StickerData) updates) =>
+      super.copyWith((message) => updates(message as StickerData))
+          as StickerData;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StickerData create() => StickerData._();
+  @$core.override
+  StickerData createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StickerData getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<StickerData>(create);
+  static StickerData? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get version => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set version($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVersion() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVersion() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get webp => $_getN(1);
+  @$pb.TagNumber(2)
+  set webp($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasWebp() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearWebp() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get sha256 => $_getN(2);
+  @$pb.TagNumber(3)
+  set sha256($core.List<$core.int> value) => $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSha256() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSha256() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.int get width => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set width($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasWidth() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearWidth() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.int get height => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set height($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasHeight() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearHeight() => $_clearField(5);
 }
 
 /// A peer-to-peer transfer of existing one-time app state. The encoded payload

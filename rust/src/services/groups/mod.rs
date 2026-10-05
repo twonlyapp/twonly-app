@@ -239,6 +239,7 @@ impl GroupService {
             webxdc_origin: None,
             webxdc_sync: None,
             webxdc_sync_request: None,
+            sticker: None,
         }
         .encode_to_vec();
 

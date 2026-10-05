@@ -134,10 +134,14 @@ class EmojiPicker extends StatefulWidget {
     this.onCategoryChanged,
     this.config = const Config(),
     this.customWidget,
+    this.alternateView,
   });
 
   /// Custom widget
   final EmojiViewBuilder? customWidget;
+
+  /// Alternate picker content, sharing the same resize handle and height.
+  final Widget? alternateView;
 
   /// If you provide the [TextEditingController] that is linked to a
   /// [TextField] this widget handles inserting and deleting for you
@@ -260,6 +264,9 @@ class EmojiPickerState extends State<EmojiPicker> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.alternateView != null) {
+      return _buildPickerSurface(widget.alternateView!);
+    }
     if (!_loaded) {
       return widget.config.emojiViewConfig.loadingIndicator;
     }

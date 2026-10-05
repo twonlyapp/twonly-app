@@ -14,10 +14,14 @@ use crate::services::contacts::ContactService;
 use crate::services::media_upload::{MediaSizeReport, MediaUploadService};
 use crate::services::messages::MessageService;
 use crate::services::outbox_dispatch::OutboxDispatchService;
+use crate::services::stickers;
 use crate::services::stories::StoryAudience;
 use crate::user_config::UserConfig;
 use flutter_rust_bridge::frb;
 use std::collections::HashMap;
+use std::path::Path;
+
+pub use crate::services::stickers::StickerOutput;
 
 #[frb(ignore)]
 pub enum ServerResult<T> {
@@ -157,6 +161,17 @@ pub struct FrbMemoriesUploadUrls {
 pub struct RustApi {}
 
 impl RustApi {
+    /// Creates a transparent, message-sized sticker from a local image. Model
+    /// inference and image encoding are CPU-heavy, so neither runs on Tokio's
+    /// async worker threads.
+    pub async fn create_sticker(image_path: String) -> Result<StickerOutput> {
+        tokio::task::spawn_blocking(move || stickers::create(Path::new(&image_path)))
+            .await
+            .map_err(|error| {
+                TwonlyError::Generic(format!("sticker creation task failed: {error}"))
+            })?
+    }
+
     #[frb(sync)]
     pub fn decode_avatar_svg(avatar_svg_compressed: Vec<u8>) -> String {
         avatars::decode_avatar_svg(avatar_svg_compressed)

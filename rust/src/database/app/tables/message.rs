@@ -116,7 +116,8 @@ impl Message {
             .await?;
         sqlx::query!(
             r#"UPDATE messages
-               SET is_deleted_from_sender = 1, content = NULL, media_id = NULL, modified_at = ?
+               SET is_deleted_from_sender = 1, content = NULL, media_id = NULL,
+                   additional_message_data = NULL, modified_at = ?
                WHERE message_id = ? AND sender_id = ?"#,
             timestamp,
             message_id,

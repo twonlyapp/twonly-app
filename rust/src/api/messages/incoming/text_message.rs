@@ -22,6 +22,19 @@ pub(crate) async fn handle_text_message(
 
     let timestamp = milliseconds_to_seconds(message.timestamp);
 
+    let additional_message_data = match message.additional_message_data.as_deref() {
+        Some(data) => match crate::services::stickers::validate_additional_if_sticker(data) {
+            Ok(()) => Some(data),
+            Err(error) => {
+                // Keep the fallback text so an invalid attachment cannot make
+                // a reliable-mailbox message retry forever.
+                tracing::warn!(%error, "discarding invalid sticker attachment");
+                None
+            }
+        },
+        None => None,
+    };
+
     NewMessage::builder()
         .group_id(group_id)
         .message_id(&message.sender_message_id)
@@ -30,7 +43,7 @@ pub(crate) async fn handle_text_message(
         .sender_id(from_user_id)
         .content(&message.text)
         .maybe_quotes_message_id(message.quote_message_id.as_deref())
-        .maybe_additional_message_data(message.additional_message_data.as_deref())
+        .maybe_additional_message_data(additional_message_data)
         .ack_by_server(current_time().timestamp())
         .build()
         .insert(t)

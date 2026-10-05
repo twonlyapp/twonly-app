@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mutex/mutex.dart';
@@ -94,6 +95,12 @@ class StartupResult {
 
 void main() {
   SentryWidgetsFlutterBinding.ensureInitialized();
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(
+      ['U²-Net-P'],
+      await rootBundle.loadString('assets/licenses/u2net.txt'),
+    );
+  });
 
   // `App` used to set this as it mounted, which was at the same moment the
   // engine started. It now mounts only once startup finishes, and the API can

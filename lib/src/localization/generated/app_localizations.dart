@@ -4995,6 +4995,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{No views yet} =1{1 view} other{{count} views}}'**
   String storyViews(int count);
+
+  /// No description provided for @sticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Sticker'**
+  String get sticker;
+
+  /// No description provided for @stickers.
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers'**
+  String get stickers;
+
+  /// No description provided for @createSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Create sticker'**
+  String get createSticker;
+
+  /// No description provided for @noStickersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first sticker from a photo.'**
+  String get noStickersYet;
+
+  /// No description provided for @stickerAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Sticker saved'**
+  String get stickerAdded;
+
+  /// No description provided for @stickerAlreadySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'This sticker is already saved'**
+  String get stickerAlreadySaved;
+
+  /// No description provided for @stickerCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The sticker could not be created.'**
+  String get stickerCreateFailed;
+
+  /// No description provided for @stickerSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The sticker could not be saved.'**
+  String get stickerSaveFailed;
+
+  /// No description provided for @notificationSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a sticker{inGroup}.'**
+  String notificationSticker(Object inGroup);
+
+  /// No description provided for @storeSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Save sticker'**
+  String get storeSticker;
+
+  /// No description provided for @removeSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from collection'**
+  String get removeSticker;
+
+  /// No description provided for @deleteSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete sticker'**
+  String get deleteSticker;
 }
 
 class _AppLocalizationsDelegate

@@ -2916,4 +2916,42 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get sticker => 'Sticker';
+
+  @override
+  String get stickers => 'Stickers';
+
+  @override
+  String get createSticker => 'Create sticker';
+
+  @override
+  String get noStickersYet => 'Create your first sticker from a photo.';
+
+  @override
+  String get stickerAdded => 'Sticker saved';
+
+  @override
+  String get stickerAlreadySaved => 'This sticker is already saved';
+
+  @override
+  String get stickerCreateFailed => 'The sticker could not be created.';
+
+  @override
+  String get stickerSaveFailed => 'The sticker could not be saved.';
+
+  @override
+  String notificationSticker(Object inGroup) {
+    return 'sent a sticker$inGroup.';
+  }
+
+  @override
+  String get storeSticker => 'Save sticker';
+
+  @override
+  String get removeSticker => 'Remove from collection';
+
+  @override
+  String get deleteSticker => 'Delete sticker';
 }

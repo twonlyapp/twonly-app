@@ -310,19 +310,30 @@ pub(crate) async fn record_incoming_event(
     let conversation_id = content.group_id.clone();
     let now = current_time().timestamp();
     let draft = if let Some(message) = content.text_message.as_ref() {
+        let is_sticker = message
+            .additional_message_data
+            .as_deref()
+            .and_then(|data| {
+                crate::services::stickers::decode_additional(data)
+                    .ok()
+                    .flatten()
+            })
+            .is_some();
         // An answer to the user's own story says so: an emoji is a reaction
         // to it, anything else a reply.
         let about_story = match message.quote_message_id.as_deref() {
             Some(quoted) => is_own_story(transaction, quoted).await?,
             None => false,
         };
-        let (kind, reaction) = match (about_story, message.quote_message_id.is_some()) {
-            (true, _) if is_emoji_only(&message.text) => {
+        let (kind, reaction) = match (about_story, message.quote_message_id.is_some(), is_sticker) {
+            (true, _, true) => ("story_reply", None),
+            (true, _, false) if is_emoji_only(&message.text) => {
                 ("story_reaction", Some(message.text.trim().to_owned()))
             }
-            (true, _) => ("story_reply", None),
-            (false, true) => ("response", None),
-            (false, false) => ("text", None),
+            (true, _, false) => ("story_reply", None),
+            (false, _, true) => ("sticker", None),
+            (false, true, false) => ("response", None),
+            (false, false, false) => ("text", None),
         };
         Some(NotificationDraft {
             event_id: receipt_id.to_owned(),
@@ -516,7 +527,7 @@ async fn clear_stale_opened(database: &Arc<AppDatabase>) -> Result<()> {
         UPDATE notification_outbox
         SET cleared_at = ?
         WHERE cleared_at IS NULL
-          AND kind IN ('text', 'response', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
+          AND kind IN ('text', 'response', 'sticker', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
           AND EXISTS (
               SELECT 1
               FROM messages
@@ -838,7 +849,7 @@ pub(crate) async fn clear_opened_messages(
             SET cleared_at = ?
             WHERE message_id = ?
               AND cleared_at IS NULL
-              AND kind IN ('text', 'response', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
+              AND kind IN ('text', 'response', 'sticker', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
             "#,
         )
         .bind(cleared_at)
@@ -925,6 +936,7 @@ fn localized_body(locale: &str, row: &PendingRow) -> String {
     let key = match row.kind.as_str() {
         "text" => "notificationText",
         "response" => "notificationResponse",
+        "sticker" => "notificationSticker",
         "twonly" => "notificationTwonly",
         "video" => "notificationVideo",
         "image" => "notificationImage",

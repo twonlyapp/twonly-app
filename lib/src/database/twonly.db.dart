@@ -9,6 +9,7 @@ import 'package:twonly/src/database/daos/mediafiles.dao.dart';
 import 'package:twonly/src/database/daos/messages.dao.dart';
 import 'package:twonly/src/database/daos/reactions.dao.dart';
 import 'package:twonly/src/database/daos/receipts.dao.dart';
+import 'package:twonly/src/database/daos/stickers.dao.dart';
 import 'package:twonly/src/database/daos/stories.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/rust_change_notifier.dart';
@@ -20,6 +21,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/tables/reactions.table.dart';
 import 'package:twonly/src/database/tables/receipts.table.dart';
+import 'package:twonly/src/database/tables/stickers.table.dart';
 import 'package:twonly/src/database/tables/user_discovery.table.dart';
 import 'package:twonly/src/database/tables/webxdc.table.dart';
 import 'package:twonly/src/database/twonly.db.steps.dart';
@@ -53,6 +55,7 @@ part 'twonly.db.g.dart';
     WebxdcApps,
     WebxdcInstances,
     WebxdcUpdates,
+    Stickers,
   ],
   daos: [
     MessagesDao,
@@ -65,6 +68,7 @@ part 'twonly.db.g.dart';
     KeyVerificationDao,
     ContactGroupsDao,
     StoriesDao,
+    StickersDao,
   ],
 )
 class TwonlyDB extends _$TwonlyDB {

@@ -14969,6 +14969,479 @@ class WebxdcUpdatesCompanion extends UpdateCompanion<WebxdcUpdate> {
   }
 }
 
+class $StickersTable extends Stickers
+    with TableInfo<$StickersTable, LocalSticker> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StickersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _contentHashMeta = const VerificationMeta(
+    'contentHash',
+  );
+  @override
+  late final GeneratedColumn<String> contentHash = GeneratedColumn<String>(
+    'content_hash',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 64,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _webpMeta = const VerificationMeta('webp');
+  @override
+  late final GeneratedColumn<Uint8List> webp = GeneratedColumn<Uint8List>(
+    'webp',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _widthMeta = const VerificationMeta('width');
+  @override
+  late final GeneratedColumn<int> width = GeneratedColumn<int>(
+    'width',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _heightMeta = const VerificationMeta('height');
+  @override
+  late final GeneratedColumn<int> height = GeneratedColumn<int>(
+    'height',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _usageCountMeta = const VerificationMeta(
+    'usageCount',
+  );
+  @override
+  late final GeneratedColumn<int> usageCount = GeneratedColumn<int>(
+    'usage_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _lastUsedAtMeta = const VerificationMeta(
+    'lastUsedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastUsedAt = GeneratedColumn<DateTime>(
+    'last_used_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    contentHash,
+    webp,
+    width,
+    height,
+    usageCount,
+    createdAt,
+    lastUsedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'stickers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LocalSticker> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('content_hash')) {
+      context.handle(
+        _contentHashMeta,
+        contentHash.isAcceptableOrUnknown(
+          data['content_hash']!,
+          _contentHashMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_contentHashMeta);
+    }
+    if (data.containsKey('webp')) {
+      context.handle(
+        _webpMeta,
+        webp.isAcceptableOrUnknown(data['webp']!, _webpMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_webpMeta);
+    }
+    if (data.containsKey('width')) {
+      context.handle(
+        _widthMeta,
+        width.isAcceptableOrUnknown(data['width']!, _widthMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_widthMeta);
+    }
+    if (data.containsKey('height')) {
+      context.handle(
+        _heightMeta,
+        height.isAcceptableOrUnknown(data['height']!, _heightMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_heightMeta);
+    }
+    if (data.containsKey('usage_count')) {
+      context.handle(
+        _usageCountMeta,
+        usageCount.isAcceptableOrUnknown(data['usage_count']!, _usageCountMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('last_used_at')) {
+      context.handle(
+        _lastUsedAtMeta,
+        lastUsedAt.isAcceptableOrUnknown(
+          data['last_used_at']!,
+          _lastUsedAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {contentHash};
+  @override
+  LocalSticker map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalSticker(
+      contentHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_hash'],
+      )!,
+      webp: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}webp'],
+      )!,
+      width: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}width'],
+      )!,
+      height: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}height'],
+      )!,
+      usageCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}usage_count'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      lastUsedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_used_at'],
+      )!,
+    );
+  }
+
+  @override
+  $StickersTable createAlias(String alias) {
+    return $StickersTable(attachedDatabase, alias);
+  }
+}
+
+class LocalSticker extends DataClass implements Insertable<LocalSticker> {
+  final String contentHash;
+  final Uint8List webp;
+  final int width;
+  final int height;
+  final int usageCount;
+  final DateTime createdAt;
+  final DateTime lastUsedAt;
+  const LocalSticker({
+    required this.contentHash,
+    required this.webp,
+    required this.width,
+    required this.height,
+    required this.usageCount,
+    required this.createdAt,
+    required this.lastUsedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['content_hash'] = Variable<String>(contentHash);
+    map['webp'] = Variable<Uint8List>(webp);
+    map['width'] = Variable<int>(width);
+    map['height'] = Variable<int>(height);
+    map['usage_count'] = Variable<int>(usageCount);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['last_used_at'] = Variable<DateTime>(lastUsedAt);
+    return map;
+  }
+
+  StickersCompanion toCompanion(bool nullToAbsent) {
+    return StickersCompanion(
+      contentHash: Value(contentHash),
+      webp: Value(webp),
+      width: Value(width),
+      height: Value(height),
+      usageCount: Value(usageCount),
+      createdAt: Value(createdAt),
+      lastUsedAt: Value(lastUsedAt),
+    );
+  }
+
+  factory LocalSticker.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalSticker(
+      contentHash: serializer.fromJson<String>(json['contentHash']),
+      webp: serializer.fromJson<Uint8List>(json['webp']),
+      width: serializer.fromJson<int>(json['width']),
+      height: serializer.fromJson<int>(json['height']),
+      usageCount: serializer.fromJson<int>(json['usageCount']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      lastUsedAt: serializer.fromJson<DateTime>(json['lastUsedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'contentHash': serializer.toJson<String>(contentHash),
+      'webp': serializer.toJson<Uint8List>(webp),
+      'width': serializer.toJson<int>(width),
+      'height': serializer.toJson<int>(height),
+      'usageCount': serializer.toJson<int>(usageCount),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'lastUsedAt': serializer.toJson<DateTime>(lastUsedAt),
+    };
+  }
+
+  LocalSticker copyWith({
+    String? contentHash,
+    Uint8List? webp,
+    int? width,
+    int? height,
+    int? usageCount,
+    DateTime? createdAt,
+    DateTime? lastUsedAt,
+  }) => LocalSticker(
+    contentHash: contentHash ?? this.contentHash,
+    webp: webp ?? this.webp,
+    width: width ?? this.width,
+    height: height ?? this.height,
+    usageCount: usageCount ?? this.usageCount,
+    createdAt: createdAt ?? this.createdAt,
+    lastUsedAt: lastUsedAt ?? this.lastUsedAt,
+  );
+  LocalSticker copyWithCompanion(StickersCompanion data) {
+    return LocalSticker(
+      contentHash: data.contentHash.present
+          ? data.contentHash.value
+          : this.contentHash,
+      webp: data.webp.present ? data.webp.value : this.webp,
+      width: data.width.present ? data.width.value : this.width,
+      height: data.height.present ? data.height.value : this.height,
+      usageCount: data.usageCount.present
+          ? data.usageCount.value
+          : this.usageCount,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      lastUsedAt: data.lastUsedAt.present
+          ? data.lastUsedAt.value
+          : this.lastUsedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalSticker(')
+          ..write('contentHash: $contentHash, ')
+          ..write('webp: $webp, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('usageCount: $usageCount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUsedAt: $lastUsedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    contentHash,
+    $driftBlobEquality.hash(webp),
+    width,
+    height,
+    usageCount,
+    createdAt,
+    lastUsedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocalSticker &&
+          other.contentHash == this.contentHash &&
+          $driftBlobEquality.equals(other.webp, this.webp) &&
+          other.width == this.width &&
+          other.height == this.height &&
+          other.usageCount == this.usageCount &&
+          other.createdAt == this.createdAt &&
+          other.lastUsedAt == this.lastUsedAt);
+}
+
+class StickersCompanion extends UpdateCompanion<LocalSticker> {
+  final Value<String> contentHash;
+  final Value<Uint8List> webp;
+  final Value<int> width;
+  final Value<int> height;
+  final Value<int> usageCount;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> lastUsedAt;
+  final Value<int> rowid;
+  const StickersCompanion({
+    this.contentHash = const Value.absent(),
+    this.webp = const Value.absent(),
+    this.width = const Value.absent(),
+    this.height = const Value.absent(),
+    this.usageCount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.lastUsedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StickersCompanion.insert({
+    required String contentHash,
+    required Uint8List webp,
+    required int width,
+    required int height,
+    this.usageCount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.lastUsedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : contentHash = Value(contentHash),
+       webp = Value(webp),
+       width = Value(width),
+       height = Value(height);
+  static Insertable<LocalSticker> custom({
+    Expression<String>? contentHash,
+    Expression<Uint8List>? webp,
+    Expression<int>? width,
+    Expression<int>? height,
+    Expression<int>? usageCount,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? lastUsedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (contentHash != null) 'content_hash': contentHash,
+      if (webp != null) 'webp': webp,
+      if (width != null) 'width': width,
+      if (height != null) 'height': height,
+      if (usageCount != null) 'usage_count': usageCount,
+      if (createdAt != null) 'created_at': createdAt,
+      if (lastUsedAt != null) 'last_used_at': lastUsedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StickersCompanion copyWith({
+    Value<String>? contentHash,
+    Value<Uint8List>? webp,
+    Value<int>? width,
+    Value<int>? height,
+    Value<int>? usageCount,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? lastUsedAt,
+    Value<int>? rowid,
+  }) {
+    return StickersCompanion(
+      contentHash: contentHash ?? this.contentHash,
+      webp: webp ?? this.webp,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      usageCount: usageCount ?? this.usageCount,
+      createdAt: createdAt ?? this.createdAt,
+      lastUsedAt: lastUsedAt ?? this.lastUsedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (contentHash.present) {
+      map['content_hash'] = Variable<String>(contentHash.value);
+    }
+    if (webp.present) {
+      map['webp'] = Variable<Uint8List>(webp.value);
+    }
+    if (width.present) {
+      map['width'] = Variable<int>(width.value);
+    }
+    if (height.present) {
+      map['height'] = Variable<int>(height.value);
+    }
+    if (usageCount.present) {
+      map['usage_count'] = Variable<int>(usageCount.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (lastUsedAt.present) {
+      map['last_used_at'] = Variable<DateTime>(lastUsedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StickersCompanion(')
+          ..write('contentHash: $contentHash, ')
+          ..write('webp: $webp, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('usageCount: $usageCount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUsedAt: $lastUsedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$TwonlyDB extends GeneratedDatabase {
   _$TwonlyDB(QueryExecutor e) : super(e);
   $TwonlyDBManager get managers => $TwonlyDBManager(this);
@@ -15010,6 +15483,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     this,
   );
   late final $WebxdcUpdatesTable webxdcUpdates = $WebxdcUpdatesTable(this);
+  late final $StickersTable stickers = $StickersTable(this);
   late final Index idxMessagesGroupIdCreatedAt = Index(
     'idx_messages_group_id_created_at',
     'CREATE INDEX idx_messages_group_id_created_at ON messages (group_id, created_at)',
@@ -15034,6 +15508,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     this as TwonlyDB,
   );
   late final StoriesDao storiesDao = StoriesDao(this as TwonlyDB);
+  late final StickersDao stickersDao = StickersDao(this as TwonlyDB);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -15062,6 +15537,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     webxdcApps,
     webxdcInstances,
     webxdcUpdates,
+    stickers,
     idxMessagesGroupIdCreatedAt,
     idxReceiptsMessageId,
   ];
@@ -27736,6 +28212,256 @@ typedef $$WebxdcUpdatesTableProcessedTableManager =
       WebxdcUpdate,
       PrefetchHooks Function()
     >;
+typedef $$StickersTableCreateCompanionBuilder =
+    StickersCompanion Function({
+      required String contentHash,
+      required Uint8List webp,
+      required int width,
+      required int height,
+      Value<int> usageCount,
+      Value<DateTime> createdAt,
+      Value<DateTime> lastUsedAt,
+      Value<int> rowid,
+    });
+typedef $$StickersTableUpdateCompanionBuilder =
+    StickersCompanion Function({
+      Value<String> contentHash,
+      Value<Uint8List> webp,
+      Value<int> width,
+      Value<int> height,
+      Value<int> usageCount,
+      Value<DateTime> createdAt,
+      Value<DateTime> lastUsedAt,
+      Value<int> rowid,
+    });
+
+class $$StickersTableFilterComposer
+    extends Composer<_$TwonlyDB, $StickersTable> {
+  $$StickersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get webp => $composableBuilder(
+    column: $table.webp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get width => $composableBuilder(
+    column: $table.width,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get usageCount => $composableBuilder(
+    column: $table.usageCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastUsedAt => $composableBuilder(
+    column: $table.lastUsedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StickersTableOrderingComposer
+    extends Composer<_$TwonlyDB, $StickersTable> {
+  $$StickersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get webp => $composableBuilder(
+    column: $table.webp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get width => $composableBuilder(
+    column: $table.width,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get usageCount => $composableBuilder(
+    column: $table.usageCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastUsedAt => $composableBuilder(
+    column: $table.lastUsedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StickersTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $StickersTable> {
+  $$StickersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<Uint8List> get webp =>
+      $composableBuilder(column: $table.webp, builder: (column) => column);
+
+  GeneratedColumn<int> get width =>
+      $composableBuilder(column: $table.width, builder: (column) => column);
+
+  GeneratedColumn<int> get height =>
+      $composableBuilder(column: $table.height, builder: (column) => column);
+
+  GeneratedColumn<int> get usageCount => $composableBuilder(
+    column: $table.usageCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastUsedAt => $composableBuilder(
+    column: $table.lastUsedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$StickersTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $StickersTable,
+          LocalSticker,
+          $$StickersTableFilterComposer,
+          $$StickersTableOrderingComposer,
+          $$StickersTableAnnotationComposer,
+          $$StickersTableCreateCompanionBuilder,
+          $$StickersTableUpdateCompanionBuilder,
+          (
+            LocalSticker,
+            BaseReferences<_$TwonlyDB, $StickersTable, LocalSticker>,
+          ),
+          LocalSticker,
+          PrefetchHooks Function()
+        > {
+  $$StickersTableTableManager(_$TwonlyDB db, $StickersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StickersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StickersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StickersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> contentHash = const Value.absent(),
+                Value<Uint8List> webp = const Value.absent(),
+                Value<int> width = const Value.absent(),
+                Value<int> height = const Value.absent(),
+                Value<int> usageCount = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> lastUsedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StickersCompanion(
+                contentHash: contentHash,
+                webp: webp,
+                width: width,
+                height: height,
+                usageCount: usageCount,
+                createdAt: createdAt,
+                lastUsedAt: lastUsedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String contentHash,
+                required Uint8List webp,
+                required int width,
+                required int height,
+                Value<int> usageCount = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> lastUsedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StickersCompanion.insert(
+                contentHash: contentHash,
+                webp: webp,
+                width: width,
+                height: height,
+                usageCount: usageCount,
+                createdAt: createdAt,
+                lastUsedAt: lastUsedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$StickersTable, LocalSticker>(table),
+                  BaseReferences<_$TwonlyDB, $StickersTable, LocalSticker>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StickersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $StickersTable,
+      LocalSticker,
+      $$StickersTableFilterComposer,
+      $$StickersTableOrderingComposer,
+      $$StickersTableAnnotationComposer,
+      $$StickersTableCreateCompanionBuilder,
+      $$StickersTableUpdateCompanionBuilder,
+      (LocalSticker, BaseReferences<_$TwonlyDB, $StickersTable, LocalSticker>),
+      LocalSticker,
+      PrefetchHooks Function()
+    >;
 
 class $TwonlyDBManager {
   final _$TwonlyDB _db;
@@ -27802,4 +28528,6 @@ class $TwonlyDBManager {
       $$WebxdcInstancesTableTableManager(_db, _db.webxdcInstances);
   $$WebxdcUpdatesTableTableManager get webxdcUpdates =>
       $$WebxdcUpdatesTableTableManager(_db, _db.webxdcUpdates);
+  $$StickersTableTableManager get stickers =>
+      $$StickersTableTableManager(_db, _db.stickers);
 }

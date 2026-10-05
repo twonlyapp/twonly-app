@@ -1159,5 +1159,17 @@
         "type": "int"
       }
     }
-  }
+  },
+  "sticker": "Sticker",
+  "stickers": "Stickers",
+  "createSticker": "Create sticker",
+  "noStickersYet": "Create your first sticker from a photo.",
+  "stickerAdded": "Sticker saved",
+  "stickerAlreadySaved": "This sticker is already saved",
+  "stickerCreateFailed": "The sticker could not be created.",
+  "stickerSaveFailed": "The sticker could not be saved.",
+  "notificationSticker": "sent a sticker{inGroup}.",
+  "storeSticker": "Save sticker",
+  "removeSticker": "Remove from collection",
+  "deleteSticker": "Delete sticker"
 }

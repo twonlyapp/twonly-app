@@ -836,5 +836,17 @@
         "type": "int"
       }
     }
-  }
+  },
+  "sticker": "ملصق",
+  "stickers": "الملصقات",
+  "createSticker": "إنشاء ملصق",
+  "noStickersYet": "أنشئ ملصقك الأول من صورة.",
+  "stickerAdded": "تم حفظ الملصق",
+  "stickerAlreadySaved": "هذا الملصق محفوظ بالفعل",
+  "stickerCreateFailed": "تعذّر إنشاء الملصق.",
+  "stickerSaveFailed": "تعذّر حفظ الملصق.",
+  "notificationSticker": "أرسل ملصقًا{inGroup}.",
+  "storeSticker": "حفظ الملصق",
+  "removeSticker": "إزالة من المجموعة",
+  "deleteSticker": "حذف الملصق"
 }

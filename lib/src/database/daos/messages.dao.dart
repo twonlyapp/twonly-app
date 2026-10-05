@@ -401,6 +401,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             isDeletedFromSender: Value(true),
             content: Value(null),
             mediaId: Value(null),
+            additionalMessageData: Value(null),
           ),
         );
   }

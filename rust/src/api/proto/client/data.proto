@@ -17,6 +17,7 @@ message AdditionalMessageData {
         WEBXDC_SENT = 6;
         WEBXDC_SYNC = 7;
         WEBXDC_SYNC_REQUEST = 8;
+        STICKER = 9;
     }
     Type type = 1;
 
@@ -29,6 +30,18 @@ message AdditionalMessageData {
     optional WebxdcOrigin webxdc_origin = 8;
     optional WebxdcSyncChunk webxdc_sync = 9;
     optional WebxdcSyncRequest webxdc_sync_request = 10;
+    optional StickerData sticker = 11;
+}
+
+// A small, self-contained sticker. Keeping the bytes beside the text message
+// makes it available immediately and preserves end-to-end encryption without
+// introducing a second media download lifecycle.
+message StickerData {
+    uint32 version = 1;
+    bytes webp = 2;
+    bytes sha256 = 3;
+    uint32 width = 4;
+    uint32 height = 5;
 }
 
 // A peer-to-peer transfer of existing one-time app state. The encoded payload

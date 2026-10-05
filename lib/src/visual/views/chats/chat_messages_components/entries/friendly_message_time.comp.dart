@@ -22,7 +22,7 @@ class FriendlyMessageTime extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusIcon = _buildStatusIcon(
       context,
-      context.appColor(AppColor.chatMessageMeta),
+      color ?? context.appColor(AppColor.chatMessageMeta),
     );
 
     return Padding(

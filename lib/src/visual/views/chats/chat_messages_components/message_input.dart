@@ -13,8 +13,10 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
+import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
@@ -70,6 +72,7 @@ class _MessageInputState extends State<MessageInput>
   late final RecorderController recorderController;
   final bool isApple = Platform.isIOS;
   bool _emojiShowing = false;
+  bool _stickerShowing = false;
   bool _switchingToSystemKeyboard = false;
   double _emojiPickerHeight = 300;
   bool _showSparks = false;
@@ -109,6 +112,19 @@ class _MessageInputState extends State<MessageInput>
         quoteMessageId: quoteMessageId,
       ),
       'insertAndSendText',
+    );
+  }
+
+  void _sendSticker(LocalSticker sticker) {
+    final quoteMessageId = widget.quotesMessage?.messageId;
+    widget.onMessageSend();
+    unawaitedRustCall(
+      StickerService.send(
+        groupId: widget.group.groupId,
+        sticker: sticker,
+        quoteMessageId: quoteMessageId,
+      ),
+      'sendSticker',
     );
   }
 
@@ -246,6 +262,7 @@ class _MessageInputState extends State<MessageInput>
         _emojiPickerHeight = keyboardHeight;
       }
       _emojiShowing = true;
+      _stickerShowing = false;
     });
     widget.onEmojiVisibilityChanged(true);
     widget.textFieldFocus.unfocus();
@@ -756,6 +773,14 @@ class _MessageInputState extends State<MessageInput>
         Offstage(
           offstage: !_emojiShowing,
           child: EmojiPicker(
+            alternateView: _stickerShowing
+                ? StickerPicker(
+                    onEmojiPressed: () {
+                      setState(() => _stickerShowing = false);
+                    },
+                    onStickerSelected: _sendSticker,
+                  )
+                : null,
             textEditingController: _textFieldController,
             onEmojiSelected: (category, emoji) {
               setState(() {});
@@ -787,6 +812,10 @@ class _MessageInputState extends State<MessageInput>
                 backgroundColor: context.color.surfaceContainer,
                 buttonColor: context.color.surfaceContainer,
                 buttonIconColor: context.color.secondary,
+                stickerButtonLabel: context.lang.sticker,
+                onStickerButtonPressed: () {
+                  setState(() => _stickerShowing = true);
+                },
               ),
             ),
           ),
