@@ -757,9 +757,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get monthly => 'شهريًا';
 
   @override
-  String get proFeature1 => 'رفع غير محدود لملفات الوسائط';
-
-  @override
   String get proFeature2 => 'مستخدم Plus إضافي واحد';
 
   @override
@@ -767,9 +764,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get proFeature4 => 'استعادة الشعلات';
-
-  @override
-  String get familyFeature1 => 'رفع غير محدود لملفات الوسائط';
 
   @override
   String get familyFeature2 => '4 مستخدمين Plus إضافيين';
@@ -782,9 +776,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get freeFeature1 => 'رفع 10 ملفات وسائط يوميًا';
-
-  @override
-  String get plusFeature1 => 'رفع غير محدود لملفات الوسائط';
 
   @override
   String get plusFeature2 => 'ميزات إضافية (قريبًا)';

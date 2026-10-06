@@ -368,21 +368,19 @@ class _PlanCardState extends State<PlanCard> {
       case 'Free':
         features = [context.lang.freeFeature1];
       case 'Plus':
-        features = [context.lang.plusFeature1]; //, context.lang.plusFeature2];
+        features = [];
       case 'Tester':
       case 'Pro':
         features = [
-          context.lang.proFeature1,
-          context.lang.proFeature2,
           context.lang.proFeature3,
+          context.lang.proFeature2,
           context.lang.proFeature4,
           context.lang.subscriptionAllApps,
         ];
       case 'Family':
         features = [
-          context.lang.familyFeature1,
-          context.lang.familyFeature2,
           context.lang.familyFeature3,
+          context.lang.familyFeature2,
           context.lang.familyFeature4,
           context.lang.subscriptionAllApps,
         ];

@@ -184,9 +184,13 @@ class EmojiPicker extends StatefulWidget {
 
 /// EmojiPickerState
 class EmojiPickerState extends State<EmojiPicker> {
-  final List<CategoryEmoji> _categoryEmoji = List.empty(growable: true);
+  List<CategoryEmoji> _categoryEmoji = List.empty(growable: true);
   List<RecentEmoji> _recentEmoji = List.empty(growable: true);
   late EmojiViewState _state;
+
+  // Identifies the newest asynchronous emoji load so an older load cannot
+  // replace data produced for a more recent config.
+  int _emojiLoadGeneration = 0;
 
   // Prevent emojis to be reloaded with every build
   bool _loaded = false;
@@ -243,8 +247,10 @@ class EmojiPickerState extends State<EmojiPicker> {
     if (oldWidget.config.height != widget.config.height) {
       _currentPickerHeight = widget.config.height;
     }
-    if (oldWidget.config != widget.config) {
-      // Config changed - rebuild EmojiPickerView completely
+    if (_emojiDataConfigChanged(oldWidget.config, widget.config)) {
+      // Only reload data when a setting that affects the category contents
+      // changes. Visual config and callback changes already flow through the
+      // normal widget rebuild and must not start overlapping async loads.
       _loaded = false;
       _updateEmojis();
     }
@@ -262,6 +268,15 @@ class EmojiPickerState extends State<EmojiPicker> {
     }
     _resetStateWhenOffstage();
     super.didUpdateWidget(oldWidget);
+  }
+
+  bool _emojiDataConfigChanged(Config oldConfig, Config newConfig) {
+    return oldConfig.locale != newConfig.locale ||
+        oldConfig.emojiSet != newConfig.emojiSet ||
+        oldConfig.checkPlatformCompatibility !=
+            newConfig.checkPlatformCompatibility ||
+        oldConfig.categoryViewConfig.recentTabBehavior !=
+            newConfig.categoryViewConfig.recentTabBehavior;
   }
 
   @override
@@ -445,33 +460,44 @@ class EmojiPickerState extends State<EmojiPicker> {
 
   // Initialize emoji data
   Future<void> _updateEmojis() async {
-    _categoryEmoji.clear();
+    final loadGeneration = ++_emojiLoadGeneration;
+    final config = widget.config;
+    final categoryEmoji = <CategoryEmoji>[];
+    var recentEmoji = _recentEmoji;
+
     if ([
       RecentTabBehavior.RECENT,
       RecentTabBehavior.POPULAR,
-    ].contains(widget.config.categoryViewConfig.recentTabBehavior)) {
+    ].contains(config.categoryViewConfig.recentTabBehavior)) {
       final futureOrRecent = _emojiPickerInternalUtils.getRecentEmojis();
-      _recentEmoji = futureOrRecent is List<RecentEmoji>
+      recentEmoji = futureOrRecent is List<RecentEmoji>
           ? futureOrRecent
           : await futureOrRecent;
-      final recentEmojiMap = _recentEmoji.map((e) => e.emoji).toList();
-      _categoryEmoji.add(CategoryEmoji(Category.RECENT, recentEmojiMap));
+      final recentEmojiMap = recentEmoji.map((e) => e.emoji).toList();
+      categoryEmoji.add(CategoryEmoji(Category.RECENT, recentEmojiMap));
     }
     final data =
-        widget.config.emojiSet?.call(widget.config.locale) ??
-        getDefaultEmojiLocale(widget.config.locale);
-    if (widget.config.checkPlatformCompatibility) {
+        config.emojiSet?.call(config.locale) ??
+        getDefaultEmojiLocale(config.locale);
+    if (config.checkPlatformCompatibility) {
       final futureOrCategories = _emojiPickerInternalUtils.filterUnsupported(
         data,
       );
-      _categoryEmoji.addAll(
+      categoryEmoji.addAll(
         futureOrCategories is List<CategoryEmoji>
             ? futureOrCategories
             : await futureOrCategories,
       );
     } else {
-      _categoryEmoji.addAll(data);
+      categoryEmoji.addAll(data);
     }
+
+    if (!mounted || loadGeneration != _emojiLoadGeneration) {
+      return;
+    }
+
+    _recentEmoji = recentEmoji;
+    _categoryEmoji = categoryEmoji;
     _state = EmojiViewState(
       _categoryEmoji,
       _onEmojiSelected,

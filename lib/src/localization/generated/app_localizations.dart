@@ -1408,12 +1408,6 @@ abstract class AppLocalizations {
   /// **'Monthly'**
   String get monthly;
 
-  /// No description provided for @proFeature1.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlimited media file uploads'**
-  String get proFeature1;
-
   /// No description provided for @proFeature2.
   ///
   /// In en, this message translates to:
@@ -1431,12 +1425,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore flames'**
   String get proFeature4;
-
-  /// No description provided for @familyFeature1.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlimited media file uploads'**
-  String get familyFeature1;
 
   /// No description provided for @familyFeature2.
   ///
@@ -1461,12 +1449,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'10 Media file uploads per day'**
   String get freeFeature1;
-
-  /// No description provided for @plusFeature1.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlimited media file uploads'**
-  String get plusFeature1;
 
   /// No description provided for @plusFeature2.
   ///

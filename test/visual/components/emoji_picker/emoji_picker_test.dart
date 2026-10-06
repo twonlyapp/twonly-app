@@ -6,8 +6,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker_internal_utils.dart';
+
+List<CategoryEmoji> _duplicatedEmojiSet(Locale _) => [
+  ...defaultEmojiSet,
+  ...defaultEmojiSet,
+];
 
 // Use for golden tests, helpful in debugging
 // await expectLater(
@@ -18,7 +24,10 @@ import 'package:twonly/src/visual/components/emoji_picker/emoji_picker_internal_
 void main() {
   group('EmojiPicker Tests', () {
     // Caches are static and would otherwise leak between test cases.
-    setUp(EmojiPickerInternalUtils.resetCaches);
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      EmojiPickerInternalUtils.resetCaches();
+    });
 
     testWidgets('Should allow user to select an emoji', (
       tester,
@@ -133,6 +142,76 @@ void main() {
         ),
       );
       expect(scrollable.position.pixels, greaterThan(0));
+    });
+
+    testWidgets('Recreates category navigation when the emoji set changes', (
+      tester,
+    ) async {
+      var config = const Config(checkPlatformCompatibility: false);
+      late StateSetter setHarnessState;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                setHarnessState = setState;
+                return EmojiPicker(config: config);
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      var tabBar = tester.widget<TabBar>(find.byType(TabBar));
+      expect(tabBar.controller!.length, 9);
+      expect(tabBar.tabs.length, 9);
+
+      setHarnessState(() {
+        config = const Config(
+          checkPlatformCompatibility: false,
+          emojiSet: _duplicatedEmojiSet,
+        );
+      });
+      await tester.pumpAndSettle();
+
+      tabBar = tester.widget<TabBar>(find.byType(TabBar));
+      expect(tabBar.controller!.length, 17);
+      expect(tabBar.tabs.length, 17);
+    });
+
+    testWidgets('Keeps only the newest emoji load when configs overlap', (
+      tester,
+    ) async {
+      var config = const Config(checkPlatformCompatibility: false);
+      late StateSetter setHarnessState;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                setHarnessState = setState;
+                return EmojiPicker(config: config);
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Change the config while the first recent-emoji read is still pending.
+      setHarnessState(() {
+        config = const Config(
+          checkPlatformCompatibility: false,
+          emojiSet: _duplicatedEmojiSet,
+        );
+      });
+      await tester.pumpAndSettle();
+
+      final tabBar = tester.widget<TabBar>(find.byType(TabBar));
+      expect(tabBar.controller!.length, 17);
+      expect(tabBar.tabs.length, 17);
     });
 
     testWidgets('Drag handle grows picker from its configured height', (

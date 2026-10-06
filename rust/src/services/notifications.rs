@@ -17,6 +17,13 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock};
 
+// Temporary companion guard for the server's iOS 0.6.x wake-up workaround.
+// The server can bound APNs attempts, but only this device-side query can bound
+// events that were already downloaded into the local notification outbox.
+// Keep Android's existing batch size unchanged.
+#[cfg(target_os = "ios")]
+const MAX_BATCH_SIZE: i64 = 40;
+#[cfg(not(target_os = "ios"))]
 const MAX_BATCH_SIZE: i64 = 100;
 const EN_ARB: &str = include_str!("../../../lib/src/localization/translations/en.arb");
 const DE_ARB: &str = include_str!("../../../lib/src/localization/translations/de.arb");

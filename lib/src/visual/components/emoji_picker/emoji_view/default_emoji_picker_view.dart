@@ -22,7 +22,7 @@ class DefaultEmojiPickerView extends EmojiPickerView {
 }
 
 class _DefaultEmojiPickerViewState extends State<DefaultEmojiPickerView>
-    with SingleTickerProviderStateMixin, SkinToneOverlayStateMixin {
+    with TickerProviderStateMixin, SkinToneOverlayStateMixin {
   late TabController _tabController;
   late PageController _legacyPageController;
   final _scrollController = ScrollController();
@@ -39,12 +39,65 @@ class _DefaultEmojiPickerViewState extends State<DefaultEmojiPickerView>
 
   @override
   void initState() {
-    // Use controller's current category if available,
-    // otherwise use config's initCategory
+    final initCategory = _createCategoryControllers();
+    _scrollController.addListener(_onEmojiScroll);
+
+    // Listen to programmatic category changes from controller
+    widget.state.categoryNavigationNotifier.addListener(
+      _onCategoryNavigationChanged,
+    );
+
+    _loadRememberedSkinTone();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _scrollToCategory(initCategory, animate: false);
+      }
+    });
+
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant DefaultEmojiPickerView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (identical(oldWidget.state, widget.state)) {
+      return;
+    }
+
+    final previousCategory =
+        _activeCategoryIndex < oldWidget.state.categoryEmoji.length
+        ? oldWidget.state.categoryEmoji[_activeCategoryIndex].category
+        : null;
+    oldWidget.state.categoryNavigationNotifier.removeListener(
+      _onCategoryNavigationChanged,
+    );
+    closeSkinToneOverlay();
+    _tabController.dispose();
+    _legacyPageController.dispose();
+    _categoryOffsets = const [];
+    _isNavigatingToCategory = false;
+
+    final initCategory = _createCategoryControllers(
+      preferredCategory: previousCategory,
+    );
+    widget.state.categoryNavigationNotifier.addListener(
+      _onCategoryNavigationChanged,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _scrollToCategory(initCategory, animate: false);
+      }
+    });
+  }
+
+  int _createCategoryControllers({Category? preferredCategory}) {
+    // Prefer an externally controlled category, then preserve the current
+    // category across data reloads, and finally fall back to the config.
     final targetCategory =
         widget.state.currentCategory ??
+        preferredCategory ??
         widget.config.categoryViewConfig.initCategory;
-
     var initCategory = widget.state.categoryEmoji.indexWhere(
       (element) => element.category == targetCategory,
     );
@@ -62,22 +115,7 @@ class _DefaultEmojiPickerViewState extends State<DefaultEmojiPickerView>
       initialPage: initCategory,
       onPageRequested: _scrollToCategory,
     );
-    _scrollController.addListener(_onEmojiScroll);
-
-    // Listen to programmatic category changes from controller
-    widget.state.categoryNavigationNotifier.addListener(
-      _onCategoryNavigationChanged,
-    );
-
-    _loadRememberedSkinTone();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _scrollToCategory(initCategory, animate: false);
-      }
-    });
-
-    super.initState();
+    return initCategory;
   }
 
   void _loadRememberedSkinTone() {
@@ -110,6 +148,7 @@ class _DefaultEmojiPickerViewState extends State<DefaultEmojiPickerView>
       _onCategoryNavigationChanged,
     );
     closeSkinToneOverlay();
+    _tabController.dispose();
     _legacyPageController.dispose();
     _scrollController.removeListener(_onEmojiScroll);
     _scrollController.dispose();

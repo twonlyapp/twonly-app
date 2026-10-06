@@ -755,9 +755,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get monthly => 'Monatlich';
 
   @override
-  String get proFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
-
-  @override
   String get proFeature2 => '1 zusätzlicher Plus Benutzer';
 
   @override
@@ -765,9 +762,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get proFeature4 => 'Flammen wiederherstellen';
-
-  @override
-  String get familyFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
 
   @override
   String get familyFeature2 => '4 zusätzliche Plus Benutzer';
@@ -780,9 +774,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get freeFeature1 => '10 Medien-Datei-Uploads pro Tag';
-
-  @override
-  String get plusFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
 
   @override
   String get plusFeature2 => 'Zusatzfunktionen (coming-soon)';
