@@ -271,6 +271,7 @@ class _UserListItem extends State<GroupListItemComp> {
         .toList();
     if (msgs.isNotEmpty &&
         msgs.first.type == MessageType.media.name &&
+        msgs.first.mediaId != null &&
         !msgs.first.isDeletedFromSender &&
         msgs.first.senderId != null &&
         msgs.first.openedAt == null) {
@@ -320,19 +321,23 @@ class _UserListItem extends State<GroupListItemComp> {
     }
 
     if (_hasNonOpenedMediaFile) {
-      final msgs = _previewMessages
-          .where((x) => x.type == MessageType.media.name && !x.isWidgetMedia)
-          .toList();
-      final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
-        msgs.first.mediaId!,
-      );
-      if (mediaFile?.type != MediaType.audio) {
-        if (mediaFile?.downloadState == null) return;
-        if (mediaFile!.downloadState! == DownloadState.pending) {
+      final message = _previewMessages
+          .where(
+            (x) =>
+                x.type == MessageType.media.name &&
+                !x.isWidgetMedia &&
+                x.mediaId != null,
+          )
+          .firstOrNull;
+      final mediaFile = message == null
+          ? null
+          : await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
+      if (mediaFile != null && mediaFile.type != MediaType.audio) {
+        if (mediaFile.downloadState == DownloadState.pending) {
           await startDownloadMedia(mediaFile, true);
           return;
         }
-        if (mediaFile.downloadState! == DownloadState.ready) {
+        if (mediaFile.downloadState == DownloadState.ready) {
           if (!mounted) return;
           await context.push(
             Routes.chatsMediaViewer,

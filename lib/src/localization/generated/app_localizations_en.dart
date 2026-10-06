@@ -681,6 +681,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addEmoji => 'Emoji';
 
   @override
+  String get drawingColorPicker => 'Pick color from image';
+
+  @override
+  String get createStickerFromImage => 'Create sticker from image';
+
+  @override
+  String get stickerSelectionHint =>
+      'Move or resize the frame around the part you want as a sticker.';
+
+  @override
+  String get stickerCreating => 'Creating sticker…';
+
+  @override
   String get toggleFlashLight => 'Toggle the flash light';
 
   @override

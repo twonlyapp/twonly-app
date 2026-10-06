@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -74,6 +75,22 @@ class StickerService {
       throw StateError('created sticker was not stored');
     }
     return sticker;
+  }
+
+  /// Creates a sticker from encoded image bytes without making the caller
+  /// manage the temporary source file required by the native sticker model.
+  static Future<LocalSticker> createFromBytes(Uint8List imageBytes) async {
+    final source = File(
+      '${AppEnvironment.cacheDir}/sticker-source-'
+      '${DateTime.now().microsecondsSinceEpoch}.png',
+    );
+    try {
+      await source.parent.create(recursive: true);
+      await source.writeAsBytes(imageBytes, flush: true);
+      return await createFromPath(source.path);
+    } finally {
+      if (source.existsSync()) source.deleteSync();
+    }
   }
 
   /// Finds the best full-resolution local source for a stored memory. A

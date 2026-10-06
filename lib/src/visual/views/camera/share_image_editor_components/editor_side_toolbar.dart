@@ -29,6 +29,8 @@ class EditorSideToolbar extends StatelessWidget {
     required this.isUpdatingWidgetMode,
     required this.widgetActionKey,
     required this.onToggleSendToWidget,
+    required this.colorSamplerLoader,
+    required this.onCreateStickerFromImage,
     super.key,
   });
 
@@ -52,6 +54,8 @@ class EditorSideToolbar extends StatelessWidget {
   final bool isUpdatingWidgetMode;
   final GlobalKey widgetActionKey;
   final VoidCallback onToggleSendToWidget;
+  final EditorColorSamplerLoader? colorSamplerLoader;
+  final VoidCallback onCreateStickerFromImage;
 
   MediaFile get media => mediaService.mediaFile;
 
@@ -95,7 +99,7 @@ class EditorSideToolbar extends StatelessWidget {
             Icons.draw_rounded,
             tooltipText: context.lang.addDrawing,
             onPressed: () {
-              layerStack.addDrawLayer();
+              layerStack.addDrawLayer(colorSamplerLoader: colorSamplerLoader);
               onChanged();
             },
           ),
@@ -167,6 +171,14 @@ class EditorSideToolbar extends StatelessWidget {
           ),
         ],
         if (media.type == MediaType.image) ...[
+          const SizedBox(height: 8),
+          ActionButton(
+            Icons.select_all_rounded,
+            key: const Key('createStickerFromImage'),
+            tooltipText: context.lang.createStickerFromImage,
+            color: context.appColor(AppColor.mediaForeground),
+            onPressed: onCreateStickerFromImage,
+          ),
           const SizedBox(height: 8),
           ActionButton(
             Icons.crop_rotate_outlined,

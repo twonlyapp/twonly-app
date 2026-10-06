@@ -690,6 +690,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addEmoji => 'رمز تعبيري';
 
   @override
+  String get drawingColorPicker => 'اختيار لون من الصورة';
+
+  @override
+  String get createStickerFromImage => 'إنشاء ملصق من الصورة';
+
+  @override
+  String get stickerSelectionHint =>
+      'حرّك الإطار أو غيّر حجمه حول الجزء الذي تريده كملصق.';
+
+  @override
+  String get stickerCreating => 'جارٍ إنشاء الملصق…';
+
+  @override
   String get toggleFlashLight => 'تشغيل الفلاش أو إيقافه';
 
   @override

@@ -36,6 +36,14 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   Expression<bool> get _visibleInChat =>
       messages.isStory.equals(false) | messages.mediaStored.equals(true);
 
+  /// Media rows whose file reference has already been removed cannot be
+  /// previewed or opened. Keep them out of chat summaries unless they are a
+  /// deletion tombstone, which is still useful to show in the conversation.
+  Expression<bool> get _hasPreviewableContent =>
+      messages.type.equals(MessageType.media.name).not() |
+      mediaFiles.mediaId.isNotNull() |
+      messages.isDeletedFromSender.equals(true);
+
   Stream<List<Message>> watchMessageNotOpened(String groupId) {
     final query =
         select(messages).join([
@@ -48,6 +56,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             messages.openedAt.isNull() &
                 messages.isWidgetMedia.equals(false) &
                 _visibleInChat &
+                _hasPreviewableContent &
                 messages.groupId.equals(groupId) &
                 messages.isDeletedFromSender.equals(false) &
                 (messages.mediaId.isNull() |
@@ -72,6 +81,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             messages.openedAt.isNull() &
                 messages.isWidgetMedia.equals(false) &
                 _visibleInChat &
+                _hasPreviewableContent &
                 messages.isDeletedFromSender.equals(false) &
                 (messages.mediaId.isNull() |
                     mediaFiles.downloadState.isNull() |
@@ -101,6 +111,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                 messages.isWidgetMedia.equals(false) &
                 _visibleInChat &
                 messages.groupId.equals(groupId) &
+                messages.isDeletedFromSender.equals(false) &
                 messages.mediaId.isNotNull() &
                 messages.senderId.isNotNull() &
                 messages.type.equals(MessageType.media.name),
@@ -146,6 +157,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ..where(
             messages.groupId.equals(groupId) &
                 _visibleInChat &
+                _hasPreviewableContent &
                 // messages in groups will only be removed in case all members have received it...
                 // so ensuring that this message is not shown in the messages anymore
                 (messages.openedAt.isBiggerThanValue(deletionTime) |
@@ -180,6 +192,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         INNER JOIN groups ON groups.group_id = messages.group_id
         LEFT JOIN media_files ON media_files.media_id = messages.media_id
         WHERE (messages.is_story = 0 OR messages.media_stored = 1)
+        AND (
+          messages.type != 'media' OR
+          media_files.media_id IS NOT NULL OR
+          messages.is_deleted_from_sender = 1
+        )
         AND (
           messages.opened_at IS NULL OR
           messages.media_stored = 1 OR

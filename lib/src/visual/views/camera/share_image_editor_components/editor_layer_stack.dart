@@ -97,7 +97,9 @@ class EditorLayerStack {
     );
   }
 
-  void addDrawLayer() => add(DrawLayerData(key: GlobalKey()));
+  void addDrawLayer({EditorColorSamplerLoader? colorSamplerLoader}) => add(
+    DrawLayerData(key: GlobalKey(), colorSamplerLoader: colorSamplerLoader),
+  );
 
   /// Toggles the crop/rotate mode of the background layer.
   void toggleBackgroundEditing() {

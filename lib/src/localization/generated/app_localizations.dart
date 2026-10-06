@@ -1294,6 +1294,30 @@ abstract class AppLocalizations {
   /// **'Emoji'**
   String get addEmoji;
 
+  /// No description provided for @drawingColorPicker.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick color from image'**
+  String get drawingColorPicker;
+
+  /// No description provided for @createStickerFromImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create sticker from image'**
+  String get createStickerFromImage;
+
+  /// No description provided for @stickerSelectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Move or resize the frame around the part you want as a sticker.'**
+  String get stickerSelectionHint;
+
+  /// No description provided for @stickerCreating.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating sticker…'**
+  String get stickerCreating;
+
   /// No description provided for @toggleFlashLight.
   ///
   /// In en, this message translates to:

@@ -10,9 +10,11 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
@@ -22,11 +24,13 @@ import 'package:twonly/src/visual/views/camera/share_image_editor_components/dis
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/display_time_picker.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_bottom_bar.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_canvas.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_image_tools.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_layer_stack.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_media_writer.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_side_toolbar.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_top_toolbar.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/image_item.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/video_trimmer.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/widget_share_explainer.dart';
 import 'package:video_player/video_player.dart';
@@ -104,6 +108,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool _previousMediaSettingsCaptured = false;
   int? _displayLimitBeforeWidget;
   bool _requiresAuthBeforeWidget = false;
+  bool _selectingSticker = false;
+  bool _creatingSticker = false;
 
   bool get _showWidgetExplainer =>
       _widgetRecipientAvailable &&
@@ -438,6 +444,80 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     );
   }
 
+  Future<EditorColorSampler?> _loadEditorColorSampler() async {
+    final screenshot = await mediaWriter.captureCanvasImage(pixelRatio);
+    final image = screenshot?.image;
+    if (image == null) return null;
+    final sampler = await EditorImageColorSampler.fromImage(image);
+    return sampler?.sample;
+  }
+
+  void _startStickerSelection() {
+    if (_selectingSticker || _creatingSticker) return;
+    setState(() => _selectingSticker = true);
+  }
+
+  void _cancelStickerSelection() {
+    if (_creatingSticker) return;
+    setState(() => _selectingSticker = false);
+  }
+
+  Future<void> _createStickerFromSelection(
+    Rect selection,
+    Size editorSize,
+  ) async {
+    if (_creatingSticker) return;
+    setState(() => _creatingSticker = true);
+    try {
+      final screenshot = await mediaWriter.captureCanvasImage(pixelRatio);
+      final screenshotBytes = await screenshot?.getBytes();
+      if (screenshotBytes == null) {
+        throw StateError('Could not capture the editor for a sticker.');
+      }
+      final croppedBytes = cropEditorImage(
+        encodedImage: screenshotBytes,
+        selection: selection,
+        editorSize: editorSize,
+      );
+      final sticker = await StickerService.createFromBytes(croppedBytes);
+      if (!mounted) return;
+
+      final stickerSize = selection.longestSide.clamp(80.0, 240.0);
+      final aspect = sticker.width / sticker.height;
+      final displayedWidth = aspect >= 1 ? stickerSize : stickerSize * aspect;
+      final displayedHeight = aspect >= 1 ? stickerSize / aspect : stickerSize;
+      layerStack.add(
+        StickerLayerData(
+          key: GlobalKey(),
+          webp: sticker.webp,
+          contentHash: sticker.contentHash,
+          width: sticker.width,
+          height: sticker.height,
+          size: stickerSize,
+          offset: centeredStickerLayerOffset(
+            editorSize: editorSize,
+            displayedStickerSize: Size(displayedWidth, displayedHeight),
+          ),
+        ),
+      );
+      unawaitedRustCall(
+        twonlyDB.stickersDao.recordUse(sticker.contentHash),
+        'recordEditorStickerUse',
+      );
+      setState(() {
+        _creatingSticker = false;
+        _selectingSticker = false;
+      });
+    } on Object catch (error) {
+      Log.warn('Could not create sticker from editor selection: $error');
+      if (!mounted) return;
+      setState(() => _creatingSticker = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.lang.stickerCreateFailed)),
+      );
+    }
+  }
+
   Future<void> _onClosePressed() async {
     if (!layerStack.hasUserAddedLayers) {
       Navigator.pop(context, false);
@@ -566,6 +646,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+        if (_creatingSticker) return;
+        if (_selectingSticker) {
+          _cancelStickerSelection();
+          return;
+        }
         await askToCloseThenClose();
       },
       child: Scaffold(
@@ -583,21 +668,24 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   tabDownPosition = details.globalPosition.dy;
                 }
               },
-              onTap: _onCanvasTap,
+              onTap: _selectingSticker ? null : _onCanvasTap,
               child: MediaViewSizingHelper.cameraEditor(
-                bottomNavigation: EditorBottomBar(
-                  mediaService: mediaService,
-                  sendToGroup: widget.sendToGroup,
-                  isLoadingImage: loadingImage,
-                  isSending: sendingOrLoadingImage || _updatingWidgetMode,
-                  storeImageAsOriginal: storeImageAsOriginal,
-                  onAddMoreRecipients: pushShareImageView,
-                  onSend: () async {
-                    if (widget.sendToGroup == null) {
-                      return pushShareImageView();
-                    }
-                    await sendImageToSinglePerson();
-                  },
+                bottomNavigation: IgnorePointer(
+                  ignoring: _selectingSticker,
+                  child: EditorBottomBar(
+                    mediaService: mediaService,
+                    sendToGroup: widget.sendToGroup,
+                    isLoadingImage: loadingImage,
+                    isSending: sendingOrLoadingImage || _updatingWidgetMode,
+                    storeImageAsOriginal: storeImageAsOriginal,
+                    onAddMoreRecipients: pushShareImageView,
+                    onSend: () async {
+                      if (widget.sendToGroup == null) {
+                        return pushShareImageView();
+                      }
+                      await sendImageToSinglePerson();
+                    },
+                  ),
                 ),
                 child: EditorCanvas(
                   layerStack: layerStack,
@@ -620,22 +708,29 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                           onChangeEnd: _persistTrim,
                         )
                       : null,
+                  stickerSelectionActive: _selectingSticker,
+                  stickerSelectionBusy: _creatingSticker,
+                  onCancelStickerSelection: _cancelStickerSelection,
+                  onConfirmStickerSelection: _createStickerFromSelection,
                 ),
               ),
             ),
-            Positioned(
-              top: 10,
-              left: 5,
-              right: 0,
-              child: SafeArea(
-                child: EditorTopToolbar(
-                  layerStack: layerStack,
-                  onClose: _onClosePressed,
-                  onChanged: () => setState(() {}),
+            if (!_selectingSticker)
+              Positioned(
+                top: 10,
+                left: 5,
+                right: 0,
+                child: SafeArea(
+                  child: EditorTopToolbar(
+                    layerStack: layerStack,
+                    onClose: _onClosePressed,
+                    onChanged: () => setState(() {}),
+                  ),
                 ),
               ),
-            ),
-            if (_showWidgetExplainer && widgetActionCenter != null)
+            if (!_selectingSticker &&
+                _showWidgetExplainer &&
+                widgetActionCenter != null)
               Positioned(
                 left: math.max(
                   12,
@@ -650,35 +745,40 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   ),
                 ),
               ),
-            Positioned(
-              right: 6,
-              top: 100,
-              child: Container(
-                alignment: Alignment.bottomCenter,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: SafeArea(
-                  child: EditorSideToolbar(
-                    layerStack: layerStack,
-                    mediaService: mediaService,
-                    onChanged: () => setState(() {}),
-                    onEditDisplayTime: _editDisplayTime,
-                    onToggleAudio: _toggleAudio,
-                    onToggleRequiresAuth: _toggleRequiresAuth,
-                    sendToWidget: _sendToWidget,
-                    showWidgetOption: _widgetRecipientAvailable,
-                    highlightWidgetOption: _showWidgetExplainer,
-                    isUpdatingWidgetMode: _updatingWidgetMode,
-                    widgetActionKey: _widgetActionKey,
-                    onToggleSendToWidget: () =>
-                        _setSendToWidget(!_sendToWidget),
-                    canTrim: _canTrim,
-                    trimmerVisible: _trimmerVisible,
-                    onToggleTrimmer: () =>
-                        setState(() => _trimmerVisible = !_trimmerVisible),
+            if (!_selectingSticker)
+              Positioned(
+                right: 6,
+                top: 100,
+                child: Container(
+                  alignment: Alignment.bottomCenter,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: SafeArea(
+                    child: EditorSideToolbar(
+                      layerStack: layerStack,
+                      mediaService: mediaService,
+                      onChanged: () => setState(() {}),
+                      onEditDisplayTime: _editDisplayTime,
+                      onToggleAudio: _toggleAudio,
+                      onToggleRequiresAuth: _toggleRequiresAuth,
+                      sendToWidget: _sendToWidget,
+                      showWidgetOption: _widgetRecipientAvailable,
+                      highlightWidgetOption: _showWidgetExplainer,
+                      isUpdatingWidgetMode: _updatingWidgetMode,
+                      widgetActionKey: _widgetActionKey,
+                      onToggleSendToWidget: () =>
+                          _setSendToWidget(!_sendToWidget),
+                      colorSamplerLoader: media.type == MediaType.image
+                          ? _loadEditorColorSampler
+                          : null,
+                      onCreateStickerFromImage: _startStickerSelection,
+                      canTrim: _canTrim,
+                      trimmerVisible: _trimmerVisible,
+                      onToggleTrimmer: () =>
+                          setState(() => _trimmerVisible = !_trimmerVisible),
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

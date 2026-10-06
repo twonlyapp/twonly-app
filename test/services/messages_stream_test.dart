@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -144,6 +145,80 @@ void main() {
 
       await msgSub.cancel();
       await groupSub.cancel();
+    },
+  );
+
+  test(
+    'chat summaries ignore unopened media after its file is removed',
+    () async {
+      const groupId = 'group_with_removed_media';
+      final now = DateTime(2026, 10, 6, 12);
+
+      await twonlyDB.groupsDao.createNewGroup(
+        GroupsCompanion.insert(groupId: groupId, groupName: 'Removed media'),
+      );
+      await twonlyDB.contactsDao.insertOnConflictUpdate(
+        ContactsCompanion.insert(
+          userId: const Value(2),
+          username: 'sender',
+        ),
+      );
+      await twonlyDB.messagesDao.insertMessage(
+        MessagesCompanion.insert(
+          messageId: 'older_text',
+          groupId: groupId,
+          senderId: const Value(2),
+          type: MessageType.text.name,
+          content: const Value('Still visible'),
+          createdAt: Value(now),
+        ),
+      );
+      await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
+        MediaFilesCompanion.insert(
+          mediaId: 'removed_media',
+          type: MediaType.image,
+          downloadState: const Value(DownloadState.ready),
+        ),
+      );
+      await twonlyDB.messagesDao.insertMessage(
+        MessagesCompanion.insert(
+          messageId: 'broken_media_message',
+          groupId: groupId,
+          senderId: const Value(2),
+          type: MessageType.media.name,
+          mediaId: const Value('removed_media'),
+          createdAt: Value(now.add(const Duration(minutes: 1))),
+        ),
+      );
+
+      await twonlyDB.mediaFilesDao.deleteMediaFile('removed_media');
+
+      final brokenMessage = await twonlyDB.messagesDao
+          .getMessageById('broken_media_message')
+          .getSingleOrNull();
+      expect(brokenMessage, isNotNull);
+      expect(brokenMessage!.mediaId, isNull);
+      expect(await twonlyDB.messagesDao.watchMessageNotOpened(groupId).first, [
+        isA<Message>().having(
+          (message) => message.messageId,
+          'messageId',
+          'older_text',
+        ),
+      ]);
+
+      final allUnopened = await twonlyDB.messagesDao
+          .watchAllMessagesNotOpened()
+          .first;
+      expect(
+        allUnopened.map((message) => message.messageId),
+        isNot(contains('broken_media_message')),
+      );
+      expect(
+        (await twonlyDB.messagesDao.watchLatestMessagesByGroup().first)
+            .single
+            .messageId,
+        'older_text',
+      );
     },
   );
 }

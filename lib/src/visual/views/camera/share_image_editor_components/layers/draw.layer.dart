@@ -25,6 +25,11 @@ class _DrawLayerState extends State<DrawLayer> {
   List<CubicPath> undoList = [];
   bool skipNextEvent = false;
   bool showMagnifyingGlass = false;
+  bool _eyedropperActive = false;
+  bool _loadingColorSampler = false;
+  Offset? _eyedropperPosition;
+  Color? _previewColor;
+  EditorColorSampler? _colorSampler;
 
   @override
   void initState() {
@@ -75,6 +80,55 @@ class _DrawLayerState extends State<DrawLayer> {
     });
   }
 
+  Future<void> _toggleEyedropper() async {
+    if (_eyedropperActive) {
+      setState(() {
+        _eyedropperActive = false;
+        _colorSampler = null;
+        _previewColor = null;
+        showMagnifyingGlass = false;
+      });
+      return;
+    }
+    final loader = widget.layerData.colorSamplerLoader;
+    if (loader == null || _loadingColorSampler) return;
+    setState(() => _loadingColorSampler = true);
+    final sampler = await loader();
+    if (!mounted) return;
+    setState(() {
+      _loadingColorSampler = false;
+      _colorSampler = sampler;
+      _eyedropperActive = sampler != null;
+    });
+  }
+
+  void _previewSample(Offset position, Size editorSize) {
+    final color = _colorSampler?.call(position, editorSize);
+    setState(() {
+      _eyedropperPosition = position;
+      _previewColor = color ?? _previewColor ?? currentColor;
+      showMagnifyingGlass = true;
+    });
+  }
+
+  void _commitSample(Offset position, Size editorSize) {
+    final color = _colorSampler?.call(position, editorSize) ?? _previewColor;
+    setState(() {
+      if (color != null) currentColor = color;
+      _eyedropperActive = false;
+      _colorSampler = null;
+      _previewColor = null;
+      showMagnifyingGlass = false;
+    });
+  }
+
+  void _cancelSample() {
+    setState(() {
+      _previewColor = null;
+      showMagnifyingGlass = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -88,6 +142,24 @@ class _DrawLayerState extends State<DrawLayer> {
             width: 7,
           ),
         ),
+        if (widget.layerData.isEditing &&
+            widget.layerData.showCustomButtons &&
+            _eyedropperActive)
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, constraints) => Listener(
+                key: const Key('drawingEyedropperTarget'),
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: (event) =>
+                    _previewSample(event.localPosition, constraints.biggest),
+                onPointerMove: (event) =>
+                    _previewSample(event.localPosition, constraints.biggest),
+                onPointerUp: (event) =>
+                    _commitSample(event.localPosition, constraints.biggest),
+                onPointerCancel: (_) => _cancelSample(),
+              ),
+            ),
+          ),
         if (widget.layerData.isEditing && widget.layerData.showCustomButtons)
           Positioned(
             top: 5,
@@ -137,6 +209,7 @@ class _DrawLayerState extends State<DrawLayer> {
           ),
         if (widget.layerData.isEditing && widget.layerData.showCustomButtons)
           Positioned(
+            key: const Key('drawingColorSlider'),
             right: 20,
             top: 50,
             child: Stack(
@@ -180,6 +253,8 @@ class _DrawLayerState extends State<DrawLayer> {
                       onChanged: _onSliderChanged,
                       onChangeStart: (value) => {
                         setState(() {
+                          _eyedropperPosition = null;
+                          _previewColor = null;
                           showMagnifyingGlass = true;
                         }),
                       },
@@ -195,11 +270,39 @@ class _DrawLayerState extends State<DrawLayer> {
               ],
             ),
           ),
+        if (widget.layerData.isEditing &&
+            widget.layerData.showCustomButtons &&
+            widget.layerData.colorSamplerLoader != null)
+          Positioned(
+            right: 14,
+            top: 290,
+            child: ActionButton(
+              Icons.colorize_rounded,
+              key: const Key('drawingEyedropper'),
+              tooltipText: context.lang.drawingColorPicker,
+              color: _eyedropperActive
+                  ? Theme.of(context).colorScheme.primary
+                  : context.appColor(AppColor.mediaForeground),
+              disable: _loadingColorSampler,
+              onPressed: _toggleEyedropper,
+            ),
+          ),
         if (showMagnifyingGlass)
           Positioned(
-            right: 80,
-            top: 50 + (185 * _sliderValue),
-            child: MagnifyingGlass(color: currentColor),
+            right: _eyedropperPosition == null ? 80 : null,
+            left: _eyedropperPosition == null
+                ? null
+                : (_eyedropperPosition!.dx - 25).clamp(
+                    4,
+                    MediaQuery.sizeOf(context).width - 54,
+                  ),
+            top: _eyedropperPosition == null
+                ? 50 + (185 * _sliderValue)
+                : (_eyedropperPosition!.dy - 72).clamp(
+                    4,
+                    MediaQuery.sizeOf(context).height - 54,
+                  ),
+            child: MagnifyingGlass(color: _previewColor ?? currentColor),
           ),
         // if (!widget.layerData.isEditing)
         //   Positioned.fill(

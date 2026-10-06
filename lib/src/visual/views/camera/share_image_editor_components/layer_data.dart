@@ -5,6 +5,9 @@ import 'package:hand_signature/signature.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/image_item.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview/parser/base.dart';
 
+typedef EditorColorSampler = Color? Function(Offset position, Size editorSize);
+typedef EditorColorSamplerLoader = Future<EditorColorSampler?> Function();
+
 /// Layer class with some common properties
 class Layer {
   Layer({
@@ -111,6 +114,7 @@ class TextLayerData extends Layer {
 class DrawLayerData extends Layer {
   DrawLayerData({
     required super.key,
+    this.colorSamplerLoader,
     super.offset,
     super.opacity,
     super.rotation,
@@ -118,6 +122,7 @@ class DrawLayerData extends Layer {
     super.hasCustomActionButtons = true,
     super.isEditing = true,
   });
+  final EditorColorSamplerLoader? colorSamplerLoader;
   final control = HandSignatureControl(
     // ignore: prefer_const_constructors
     setup: () => SignaturePathSetup(

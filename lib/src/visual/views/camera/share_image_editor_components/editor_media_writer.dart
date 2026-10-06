@@ -39,22 +39,29 @@ class EditorMediaWriter {
     final unmodified = layerStack.unmodifiedBackgroundImage;
     if (unmodified != null) return unmodified;
 
+    return captureCanvasImage(pixelRatio);
+  }
+
+  /// Always captures the canvas as currently rendered. Unlike
+  /// [captureEditedImage], this deliberately bypasses the original-image fast
+  /// path because tools such as the eyedropper and sticker cutout work in
+  /// logical canvas coordinates.
+  Future<ScreenshotImageHelper?> captureCanvasImage(double pixelRatio) async {
     layerStack.setCustomButtonsVisible(visible: false);
     requestRebuild();
 
-    // Make a short delay, so the rebuild does have its effect...
-    await Future<void>.delayed(const Duration(milliseconds: 80));
-
-    final image = await screenshotController.capture(pixelRatio: pixelRatio);
-    if (image == null) {
-      Log.warn('screenshotController did not return image bytes');
-      return null;
+    try {
+      // Give the frame without editor controls time to reach the boundary.
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      final image = await screenshotController.capture(pixelRatio: pixelRatio);
+      if (image == null) {
+        Log.warn('screenshotController did not return image bytes');
+      }
+      return image;
+    } finally {
+      layerStack.setCustomButtonsVisible(visible: true);
+      requestRebuild();
     }
-
-    layerStack.setCustomButtonsVisible(visible: true);
-    requestRebuild();
-
-    return image;
   }
 
   /// Writes the edited media to disk, replacing any previously written

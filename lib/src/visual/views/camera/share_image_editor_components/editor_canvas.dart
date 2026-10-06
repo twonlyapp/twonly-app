@@ -3,6 +3,7 @@ import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_layer_stack.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/image_item.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers_viewer.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/sticker_cutout_selector.dart';
 import 'package:video_player/video_player.dart';
 
 /// The media itself with all editor layers stacked on top of it.
@@ -19,6 +20,10 @@ class EditorCanvas extends StatelessWidget {
     required this.onLayersUpdated,
     this.videoController,
     this.bottomOverlay,
+    this.stickerSelectionActive = false,
+    this.stickerSelectionBusy = false,
+    this.onCancelStickerSelection,
+    this.onConfirmStickerSelection,
     super.key,
   });
 
@@ -34,6 +39,11 @@ class EditorCanvas extends StatelessWidget {
   /// Editor chrome laid over the bottom of the media, outside the [Screenshot]
   /// so it never ends up burnt into what gets sent. Used by the video trimmer.
   final Widget? bottomOverlay;
+  final bool stickerSelectionActive;
+  final bool stickerSelectionBusy;
+  final VoidCallback? onCancelStickerSelection;
+  final Future<void> Function(Rect selection, Size editorSize)?
+  onConfirmStickerSelection;
 
   bool get _hasVideo =>
       videoController != null && videoController!.value.isInitialized;
@@ -76,6 +86,14 @@ class EditorCanvas extends StatelessWidget {
             _buildLayers(),
           if (bottomOverlay != null)
             Positioned(left: 0, right: 0, bottom: 0, child: bottomOverlay!),
+          if (stickerSelectionActive)
+            Positioned.fill(
+              child: StickerCutoutSelector(
+                busy: stickerSelectionBusy,
+                onCancel: onCancelStickerSelection!,
+                onConfirm: onConfirmStickerSelection!,
+              ),
+            ),
         ],
       ),
     );
