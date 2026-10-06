@@ -11,7 +11,9 @@ import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.com
 /// Selects a full-resolution image from twonly Memories, with an explicit
 /// escape hatch to the device gallery in the top app bar.
 class StickerSourcePickerView extends StatefulWidget {
-  const StickerSourcePickerView({super.key});
+  const StickerSourcePickerView({this.forAvatar = false, super.key});
+
+  final bool forAvatar;
 
   @override
   State<StickerSourcePickerView> createState() =>
@@ -63,7 +65,11 @@ class _StickerSourcePickerViewState extends State<StickerSourcePickerView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.lang.createSticker),
+        title: Text(
+          widget.forAvatar
+              ? context.lang.customAvatarChooseSource
+              : context.lang.createSticker,
+        ),
         actions: [
           TextButton.icon(
             onPressed: _resolvingMediaId == null ? _pickFromGallery : null,

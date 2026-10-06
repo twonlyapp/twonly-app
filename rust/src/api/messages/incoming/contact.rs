@@ -21,6 +21,72 @@ use std::io::Write as _;
 use std::sync::{Arc, Mutex, OnceLock};
 
 static REQUESTED_PROFILES: OnceLock<Mutex<HashMap<i64, i64>>> = OnceLock::new();
+static REQUESTED_CUSTOM_AVATARS: OnceLock<Mutex<HashMap<i64, (i64, std::time::Instant)>>> =
+    OnceLock::new();
+
+pub(crate) async fn check_for_custom_avatar_update(
+    t: &mut Transaction<'_, Sqlite>,
+    from_user_id: i64,
+    content: &EncryptedContent,
+) -> Result<()> {
+    if content.custom_avatar_protocol_version.unwrap_or_default()
+        < crate::services::avatars::CUSTOM_AVATAR_PROTOCOL_VERSION
+        || content
+            .contact_update
+            .as_ref()
+            .is_some_and(|update| update.custom_avatar.is_some())
+    {
+        return Ok(());
+    }
+    let Some(counter) = content.sender_custom_avatar_counter else {
+        return Ok(());
+    };
+    if counter <= crate::services::avatars::applied_counter(t, from_user_id).await? {
+        return Ok(());
+    }
+    let should_request = {
+        let mut requested = REQUESTED_CUSTOM_AVATARS
+            .get_or_init(|| Mutex::new(HashMap::new()))
+            .lock()
+            .unwrap();
+        requested.retain(|_, (_, requested_at)| {
+            requested_at.elapsed() < std::time::Duration::from_secs(120)
+        });
+        let previous = requested
+            .get(&from_user_id)
+            .map(|(counter, _)| *counter)
+            .unwrap_or(-1);
+        if counter > previous {
+            requested.insert(from_user_id, (counter, std::time::Instant::now()));
+            true
+        } else {
+            false
+        }
+    };
+    if should_request {
+        queue_encrypted_content(
+            t,
+            from_user_id,
+            EncryptedContent {
+                contact_update: Some(encrypted_content::ContactUpdate {
+                    r#type: encrypted_content::contact_update::Type::Request as i32,
+                    username: None,
+                    display_name: None,
+                    avatar_svg_compressed: None,
+                    custom_avatar_requested: Some(true),
+                    custom_avatar: None,
+                }),
+                custom_avatar_protocol_version: Some(
+                    crate::services::avatars::CUSTOM_AVATAR_PROTOCOL_VERSION,
+                ),
+                ..Default::default()
+            },
+            true,
+        )
+        .await?;
+    }
+    Ok(())
+}
 
 pub(crate) async fn check_for_profile_update(
     t: &mut Transaction<'_, Sqlite>,
@@ -68,6 +134,8 @@ pub(crate) async fn check_for_profile_update(
                     username: None,
                     display_name: None,
                     avatar_svg_compressed: None,
+                    custom_avatar_requested: None,
+                    custom_avatar: None,
                 }),
                 ..Default::default()
             },
@@ -216,6 +284,11 @@ pub(crate) async fn handle_contact_update(
             })
             .transpose()?;
 
+        let custom_avatar = if update.custom_avatar_requested == Some(true) {
+            Some(crate::services::avatars::publication_payload(tr, from_user_id).await?)
+        } else {
+            None
+        };
         queue_encrypted_content(
             tr,
             from_user_id,
@@ -225,8 +298,16 @@ pub(crate) async fn handle_contact_update(
                     username: Some(user.username),
                     display_name: Some(user.display_name),
                     avatar_svg_compressed,
+                    custom_avatar_requested: None,
+                    custom_avatar: custom_avatar.clone(),
                 }),
                 sender_profile_counter: Some(user.avatar_counter),
+                sender_custom_avatar_counter: custom_avatar
+                    .as_ref()
+                    .map(|avatar| avatar.publication_counter),
+                custom_avatar_protocol_version: Some(
+                    crate::services::avatars::CUSTOM_AVATAR_PROTOCOL_VERSION,
+                ),
                 ..Default::default()
             },
             true,
@@ -240,6 +321,21 @@ pub(crate) async fn handle_contact_update(
     }
 
     let avatar_svg_compressed = update.avatar_svg_compressed.clone();
+    if let Some(custom_avatar) = update.custom_avatar.clone() {
+        match crate::services::avatars::apply_received(tr, from_user_id, custom_avatar).await {
+            Ok(_) => {
+                if let Some(requested) = REQUESTED_CUSTOM_AVATARS.get() {
+                    requested.lock().unwrap().remove(&from_user_id);
+                }
+            }
+            Err(error) => {
+                // A malformed optional avatar must not keep an otherwise valid
+                // reliable-mailbox profile response retrying forever. The
+                // advertised counter stays stale and can be requested again.
+                tracing::warn!(from_user_id, %error, "discarding invalid custom avatar");
+            }
+        }
+    }
 
     let previous = sqlx::query!(
         "SELECT username, display_name FROM contacts WHERE user_id = ?",

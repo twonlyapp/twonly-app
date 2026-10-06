@@ -305,6 +305,8 @@ impl ContactService {
                         username: Some(config.username),
                         display_name: Some(config.display_name),
                         avatar_svg_compressed,
+                        custom_avatar_requested: None,
+                        custom_avatar: None,
                     }),
                     ..Default::default()
                 }

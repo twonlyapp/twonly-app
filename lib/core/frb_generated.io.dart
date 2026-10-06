@@ -26,6 +26,7 @@ import 'frb_generated.dart';
 import 'keys/backup_password_keys.dart';
 import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
+import 'services/avatars.dart';
 import 'services/media_upload.dart';
 import 'services/stickers.dart';
 import 'signal/engine.dart';
@@ -136,6 +137,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   WebxdcInstanceInfo dco_decode_box_autoadd_webxdc_instance_info(dynamic raw);
+
+  @protected
+  CustomAvatarInfo dco_decode_custom_avatar_info(dynamic raw);
 
   @protected
   double dco_decode_f_64(dynamic raw);
@@ -558,6 +562,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   WebxdcInstanceInfo sse_decode_box_autoadd_webxdc_instance_info(
     SseDeserializer deserializer,
   );
+
+  @protected
+  CustomAvatarInfo sse_decode_custom_avatar_info(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
@@ -1075,6 +1082,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_webxdc_instance_info(
     WebxdcInstanceInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_custom_avatar_info(
+    CustomAvatarInfo self,
     SseSerializer serializer,
   );
 

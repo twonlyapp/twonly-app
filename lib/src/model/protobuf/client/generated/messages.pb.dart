@@ -1174,6 +1174,8 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
     $core.List<$core.int>? avatarSvgCompressed,
     $core.String? username,
     $core.String? displayName,
+    $core.bool? customAvatarRequested,
+    EncryptedContent_CustomAvatar? customAvatar,
   }) {
     final result = create();
     if (type != null) result.type = type;
@@ -1181,6 +1183,9 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
       result.avatarSvgCompressed = avatarSvgCompressed;
     if (username != null) result.username = username;
     if (displayName != null) result.displayName = displayName;
+    if (customAvatarRequested != null)
+      result.customAvatarRequested = customAvatarRequested;
+    if (customAvatar != null) result.customAvatar = customAvatar;
     return result;
   }
 
@@ -1202,6 +1207,10 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
         2, _omitFieldNames ? '' : 'avatarSvgCompressed', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'username')
     ..aOS(4, _omitFieldNames ? '' : 'displayName')
+    ..aOB(5, _omitFieldNames ? '' : 'customAvatarRequested')
+    ..aOM<EncryptedContent_CustomAvatar>(
+        6, _omitFieldNames ? '' : 'customAvatar',
+        subBuilder: EncryptedContent_CustomAvatar.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1261,6 +1270,160 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
   $core.bool hasDisplayName() => $_has(3);
   @$pb.TagNumber(4)
   void clearDisplayName() => $_clearField(4);
+
+  /// Set on a REQUEST only by clients that understand CustomAvatar.
+  @$pb.TagNumber(5)
+  $core.bool get customAvatarRequested => $_getBF(4);
+  @$pb.TagNumber(5)
+  set customAvatarRequested($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasCustomAvatarRequested() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearCustomAvatarRequested() => $_clearField(5);
+
+  /// Set on UPDATE only in direct response to such a request.
+  @$pb.TagNumber(6)
+  EncryptedContent_CustomAvatar get customAvatar => $_getN(5);
+  @$pb.TagNumber(6)
+  set customAvatar(EncryptedContent_CustomAvatar value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasCustomAvatar() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearCustomAvatar() => $_clearField(6);
+  @$pb.TagNumber(6)
+  EncryptedContent_CustomAvatar ensureCustomAvatar() => $_ensure(5);
+}
+
+class EncryptedContent_CustomAvatar extends $pb.GeneratedMessage {
+  factory EncryptedContent_CustomAvatar({
+    $core.int? version,
+    $fixnum.Int64? publicationCounter,
+    EncryptedContent_CustomAvatar_State? state,
+    $core.List<$core.int>? webp,
+    $core.List<$core.int>? sha256,
+    $core.int? width,
+    $core.int? height,
+  }) {
+    final result = create();
+    if (version != null) result.version = version;
+    if (publicationCounter != null)
+      result.publicationCounter = publicationCounter;
+    if (state != null) result.state = state;
+    if (webp != null) result.webp = webp;
+    if (sha256 != null) result.sha256 = sha256;
+    if (width != null) result.width = width;
+    if (height != null) result.height = height;
+    return result;
+  }
+
+  EncryptedContent_CustomAvatar._();
+
+  factory EncryptedContent_CustomAvatar.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_CustomAvatar.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.CustomAvatar',
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'version', fieldType: $pb.PbFieldType.OU3)
+    ..aInt64(2, _omitFieldNames ? '' : 'publicationCounter')
+    ..aE<EncryptedContent_CustomAvatar_State>(3, _omitFieldNames ? '' : 'state',
+        enumValues: EncryptedContent_CustomAvatar_State.values)
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'webp', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        5, _omitFieldNames ? '' : 'sha256', $pb.PbFieldType.OY)
+    ..aI(6, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(7, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_CustomAvatar clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_CustomAvatar copyWith(
+          void Function(EncryptedContent_CustomAvatar) updates) =>
+      super.copyWith(
+              (message) => updates(message as EncryptedContent_CustomAvatar))
+          as EncryptedContent_CustomAvatar;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_CustomAvatar create() =>
+      EncryptedContent_CustomAvatar._();
+  @$core.override
+  EncryptedContent_CustomAvatar createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_CustomAvatar getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EncryptedContent_CustomAvatar>(create);
+  static EncryptedContent_CustomAvatar? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get version => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set version($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVersion() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVersion() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get publicationCounter => $_getI64(1);
+  @$pb.TagNumber(2)
+  set publicationCounter($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPublicationCounter() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPublicationCounter() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  EncryptedContent_CustomAvatar_State get state => $_getN(2);
+  @$pb.TagNumber(3)
+  set state(EncryptedContent_CustomAvatar_State value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasState() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearState() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get webp => $_getN(3);
+  @$pb.TagNumber(4)
+  set webp($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasWebp() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearWebp() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get sha256 => $_getN(4);
+  @$pb.TagNumber(5)
+  set sha256($core.List<$core.int> value) => $_setBytes(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSha256() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSha256() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.int get width => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set width($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasWidth() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearWidth() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.int get height => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set height($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasHeight() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearHeight() => $_clearField(7);
 }
 
 class EncryptedContent_FlameSync extends $pb.GeneratedMessage {
@@ -1775,6 +1938,8 @@ class EncryptedContent extends $pb.GeneratedMessage {
     $core.bool? widgetSharingAllowed,
     EncryptedContent_Story? story,
     $fixnum.Int64? senderTwonlyScore,
+    $fixnum.Int64? senderCustomAvatarCounter,
+    $core.int? customAvatarProtocolVersion,
   }) {
     final result = create();
     if (groupId != null) result.groupId = groupId;
@@ -1816,6 +1981,10 @@ class EncryptedContent extends $pb.GeneratedMessage {
       result.widgetSharingAllowed = widgetSharingAllowed;
     if (story != null) result.story = story;
     if (senderTwonlyScore != null) result.senderTwonlyScore = senderTwonlyScore;
+    if (senderCustomAvatarCounter != null)
+      result.senderCustomAvatarCounter = senderCustomAvatarCounter;
+    if (customAvatarProtocolVersion != null)
+      result.customAvatarProtocolVersion = customAvatarProtocolVersion;
     return result;
   }
 
@@ -1896,6 +2065,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOM<EncryptedContent_Story>(30, _omitFieldNames ? '' : 'story',
         subBuilder: EncryptedContent_Story.create)
     ..aInt64(31, _omitFieldNames ? '' : 'senderTwonlyScore')
+    ..aInt64(32, _omitFieldNames ? '' : 'senderCustomAvatarCounter')
+    ..aI(33, _omitFieldNames ? '' : 'customAvatarProtocolVersion',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2226,6 +2398,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
   @$pb.TagNumber(30)
   EncryptedContent_Story ensureStory() => $_ensure(26);
 
+  /// Sum of all exchanged media, omitted when profile sharing is disabled.
   @$pb.TagNumber(31)
   $fixnum.Int64 get senderTwonlyScore => $_getI64(27);
   @$pb.TagNumber(31)
@@ -2234,6 +2407,27 @@ class EncryptedContent extends $pb.GeneratedMessage {
   $core.bool hasSenderTwonlyScore() => $_has(27);
   @$pb.TagNumber(31)
   void clearSenderTwonlyScore() => $_clearField(31);
+
+  /// Per-recipient version of the custom photo-avatar state. Receivers request
+  /// the payload only when this advances; the image is never broadcast.
+  @$pb.TagNumber(32)
+  $fixnum.Int64 get senderCustomAvatarCounter => $_getI64(28);
+  @$pb.TagNumber(32)
+  set senderCustomAvatarCounter($fixnum.Int64 value) => $_setInt64(28, value);
+  @$pb.TagNumber(32)
+  $core.bool hasSenderCustomAvatarCounter() => $_has(28);
+  @$pb.TagNumber(32)
+  void clearSenderCustomAvatarCounter() => $_clearField(32);
+
+  @$pb.TagNumber(33)
+  $core.int get customAvatarProtocolVersion => $_getIZ(29);
+  @$pb.TagNumber(33)
+  set customAvatarProtocolVersion($core.int value) =>
+      $_setUnsignedInt32(29, value);
+  @$pb.TagNumber(33)
+  $core.bool hasCustomAvatarProtocolVersion() => $_has(29);
+  @$pb.TagNumber(33)
+  void clearCustomAvatarProtocolVersion() => $_clearField(33);
 }
 
 const $core.bool _omitFieldNames =

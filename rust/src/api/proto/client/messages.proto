@@ -13,6 +13,10 @@ message EncryptedContent {
   optional bool  widget_sharing_allowed        = 29;
   // Sum of all exchanged media, omitted when profile sharing is disabled.
   optional int64 sender_twonly_score            = 31;
+  // Per-recipient version of the custom photo-avatar state. Receivers request
+  // the payload only when this advances; the image is never broadcast.
+  optional int64 sender_custom_avatar_counter   = 32;
+  optional uint32 custom_avatar_protocol_version = 33;
 
   optional MessageUpdate                 message_update                  = 5;
   optional Media                         media                           = 6;
@@ -177,6 +181,25 @@ message EncryptedContent {
     optional bytes  avatar_svg_compressed = 2;
     optional string username              = 3;
     optional string display_name          = 4;
+    // Set on a REQUEST only by clients that understand CustomAvatar.
+    optional bool custom_avatar_requested = 5;
+    // Set on UPDATE only in direct response to such a request.
+    optional CustomAvatar custom_avatar   = 6;
+  }
+
+  message CustomAvatar {
+    enum State {
+      SVG_ONLY = 0;
+      PHOTO    = 1;
+    }
+
+    uint32 version             = 1;
+    int64 publication_counter = 2;
+    State state               = 3;
+    optional bytes webp       = 4;
+    optional bytes sha256     = 5;
+    optional uint32 width     = 6;
+    optional uint32 height    = 7;
   }
 
   message FlameSync {

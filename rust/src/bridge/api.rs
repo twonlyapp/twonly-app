@@ -198,12 +198,42 @@ impl RustApi {
 
     pub async fn current_user_avatar_path() -> Result<Option<String>> {
         let ctx = Context::get_static()?.clone();
+        if let Some(path) = avatars::current_custom_avatar_path(&ctx).await? {
+            return Ok(Some(path.display().to_string()));
+        }
         let path = tokio::task::spawn_blocking(move || avatars::current_user_avatar_path(&ctx))
             .await
             .map_err(|error| {
                 TwonlyError::Generic(format!("avatar render task failed: {error}"))
             })??;
         Ok(path.map(|path| path.display().to_string()))
+    }
+
+    pub async fn get_custom_avatar() -> Result<avatars::CustomAvatarInfo> {
+        avatars::own_custom_avatar(Context::get_static()?).await
+    }
+
+    pub async fn create_custom_avatar(
+        image_path: String,
+        accepted_contacts_only: bool,
+    ) -> Result<avatars::CustomAvatarInfo> {
+        let avatar = tokio::task::spawn_blocking(move || {
+            avatars::create_custom_avatar(Path::new(&image_path))
+        })
+        .await
+        .map_err(|error| TwonlyError::Generic(format!("avatar creation task failed: {error}")))??;
+        avatars::store_own_custom_avatar(Context::get_static()?, avatar, accepted_contacts_only)
+            .await
+    }
+
+    pub async fn set_custom_avatar_audience(
+        accepted_contacts_only: bool,
+    ) -> Result<avatars::CustomAvatarInfo> {
+        avatars::set_custom_avatar_audience(Context::get_static()?, accepted_contacts_only).await
+    }
+
+    pub async fn remove_custom_avatar() -> Result<avatars::CustomAvatarInfo> {
+        avatars::remove_own_custom_avatar(Context::get_static()?).await
     }
 
     /// Settles every background transfer this device believes is still in

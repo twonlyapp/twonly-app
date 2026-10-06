@@ -82,7 +82,10 @@ class _StoryTargetSelectorState extends State<StoryTargetSelector> {
       );
       if (before != widget.target.contactGroupIds.length) _changed();
     });
-    unawaited(_updateAudience());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_updateAudience());
+    });
   }
 
   @override

@@ -1399,6 +1399,43 @@ class AppLocalizationsAr extends AppLocalizations {
   String get avatarSaveChangesDiscard => 'تجاهل';
 
   @override
+  String get customAvatarSvgTab => 'الصورة الرمزية العامة';
+
+  @override
+  String get customAvatarCustomize => 'تخصيص';
+
+  @override
+  String get customAvatarPhotoTab => 'الصورة الرمزية الشخصية';
+
+  @override
+  String get customAvatarExplanation =>
+      'تحل محل صورتك الرمزية العامة لدى الجمهور المحدد.';
+
+  @override
+  String get customAvatarCreate => 'اختيار صورة';
+
+  @override
+  String get customAvatarReplace => 'تغيير الصورة';
+
+  @override
+  String get customAvatarRemove => 'إزالة';
+
+  @override
+  String get customAvatarAudience => 'من يمكنه رؤية الصورة الرمزية؟';
+
+  @override
+  String get customAvatarAcceptedOnly => 'جهات الاتصال فقط';
+
+  @override
+  String get customAvatarEveryone => 'الجميع';
+
+  @override
+  String get customAvatarChooseSource => 'اختر صورة رمزية';
+
+  @override
+  String get customAvatarCreateFailed => 'تعذر إنشاء الصورة الرمزية.';
+
+  @override
   String get inProcess => 'قيد المعالجة';
 
   @override

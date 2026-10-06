@@ -509,6 +509,9 @@ async fn prepare_queued_receipt_from_row(
         let plaintext = message.encrypted_content.take().ok_or_else(|| {
             TwonlyError::Generic("queued encrypted message has no content".into())
         })?;
+        let plaintext =
+            crate::services::avatars::refresh_queued_response(ctx, row.contact_id, plaintext)
+                .await?;
 
         message.encrypted_content =
             Some(encrypt_v2_with_session_recovery(ctx, row.contact_id, plaintext).await?);

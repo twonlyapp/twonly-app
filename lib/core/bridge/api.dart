@@ -5,6 +5,7 @@
 
 import '../api/server/prekeys.dart';
 import '../frb_generated.dart';
+import '../services/avatars.dart';
 import '../services/media_upload.dart';
 import '../services/stickers.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
@@ -353,6 +354,14 @@ class RustApi {
   static Future<ApiConnectionState> connectionState() =>
       RustLib.instance.api.crateBridgeApiRustApiConnectionState();
 
+  static Future<CustomAvatarInfo> createCustomAvatar({
+    required String imagePath,
+    required bool acceptedContactsOnly,
+  }) => RustLib.instance.api.crateBridgeApiRustApiCreateCustomAvatar(
+    imagePath: imagePath,
+    acceptedContactsOnly: acceptedContactsOnly,
+  );
+
   /// Creates a transparent, message-sized sticker from a local image. Model
   /// inference and image encoding are CPU-heavy, so neither runs on Tokio's
   /// async worker threads.
@@ -425,6 +434,9 @@ class RustApi {
 
   static Future<void> forceIpaCheck() =>
       RustLib.instance.api.crateBridgeApiRustApiForceIpaCheck();
+
+  static Future<CustomAvatarInfo> getCustomAvatar() =>
+      RustLib.instance.api.crateBridgeApiRustApiGetCustomAvatar();
 
   static Future<String> getMemoriesUrl({
     required String mediaId,
@@ -667,6 +679,9 @@ class RustApi {
         userId: userId,
       );
 
+  static Future<CustomAvatarInfo> removeCustomAvatar() =>
+      RustLib.instance.api.crateBridgeApiRustApiRemoveCustomAvatar();
+
   /// Deletes every file of a media item while keeping its row.
   static Future<void> removeMediaFiles({required String mediaId}) => RustLib
       .instance
@@ -799,6 +814,12 @@ class RustApi {
       .instance
       .api
       .crateBridgeApiRustApiSetBackground(inBackground: inBackground);
+
+  static Future<CustomAvatarInfo> setCustomAvatarAudience({
+    required bool acceptedContactsOnly,
+  }) => RustLib.instance.api.crateBridgeApiRustApiSetCustomAvatarAudience(
+    acceptedContactsOnly: acceptedContactsOnly,
+  );
 
   static Future<void> setHomeWidgetGroups({
     required String widgetId,

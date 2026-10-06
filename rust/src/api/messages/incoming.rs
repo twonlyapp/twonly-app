@@ -776,6 +776,7 @@ async fn handle_encrypted_inner(
     }
 
     contact::check_for_profile_update(t, from_user_id, &content).await?;
+    contact::check_for_custom_avatar_update(t, from_user_id, &content).await?;
 
     if content.ask_for_friend_promotions == Some(true) {
         Contact::update_ask_for_friend_promotions(t, from_user_id).await?;

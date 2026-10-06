@@ -5,11 +5,13 @@ import 'dart:math' as math;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
@@ -96,6 +98,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool _widgetRecipientAvailable = false;
   bool _sendToWidget = false;
   bool _updatingWidgetMode = false;
+  bool _widgetExplainerPreferenceLoaded = false;
   bool _widgetExplainerDismissed =
       userService.currentUser.hideWidgetShareExplainer;
   bool _previousMediaSettingsCaptured = false;
@@ -103,7 +106,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool _requiresAuthBeforeWidget = false;
 
   bool get _showWidgetExplainer =>
-      _widgetRecipientAvailable && !_widgetExplainerDismissed;
+      _widgetRecipientAvailable &&
+      _widgetExplainerPreferenceLoaded &&
+      !_widgetExplainerDismissed;
 
   MediaFileService get mediaService => widget.mediaFileService;
   MediaFile get media => widget.mediaFileService.mediaFile;
@@ -138,6 +143,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     _widgetGroupsSubscription = twonlyDB.groupsDao
         .watchGroupsAllowedForWidgetShare()
         .listen(_updateWidgetRecipientAvailability);
+    unawaited(_loadWidgetExplainerPreference());
     if (media.type == MediaType.image || media.type == MediaType.gif) {
       _loadInitialImage();
     }
@@ -162,9 +168,27 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     super.dispose();
   }
 
+  Future<void> _loadWidgetExplainerPreference() async {
+    final preference = await KeyValueStore.get(
+      KeyValueKeys.shareImageWidgetExplainer,
+    );
+    if (!mounted) return;
+    setState(() {
+      _widgetExplainerDismissed =
+          _widgetExplainerDismissed || preference?['dismissed'] == true;
+      _widgetExplainerPreferenceLoaded = true;
+    });
+  }
+
   Future<void> _dismissWidgetExplainer() async {
     setState(() => _widgetExplainerDismissed = true);
-    await UserService.update((u) => u.hideWidgetShareExplainer = true);
+    await Future.wait([
+      KeyValueStore.put(
+        KeyValueKeys.shareImageWidgetExplainer,
+        const {'dismissed': true},
+      ),
+      UserService.update((u) => u.hideWidgetShareExplainer = true),
+    ]);
   }
 
   void _updateWidgetRecipientAvailability(List<Group> widgetGroups) {

@@ -169,5 +169,26 @@ class EncryptedContent_ContactUpdate_Type extends $pb.ProtobufEnum {
   const EncryptedContent_ContactUpdate_Type._(super.value, super.name);
 }
 
+class EncryptedContent_CustomAvatar_State extends $pb.ProtobufEnum {
+  static const EncryptedContent_CustomAvatar_State SVG_ONLY =
+      EncryptedContent_CustomAvatar_State._(
+          0, _omitEnumNames ? '' : 'SVG_ONLY');
+  static const EncryptedContent_CustomAvatar_State PHOTO =
+      EncryptedContent_CustomAvatar_State._(1, _omitEnumNames ? '' : 'PHOTO');
+
+  static const $core.List<EncryptedContent_CustomAvatar_State> values =
+      <EncryptedContent_CustomAvatar_State>[
+    SVG_ONLY,
+    PHOTO,
+  ];
+
+  static final $core.List<EncryptedContent_CustomAvatar_State?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 1);
+  static EncryptedContent_CustomAvatar_State? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const EncryptedContent_CustomAvatar_State._(super.value, super.name);
+}
+
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show listEquals, setEquals;
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:twonly/locator.dart';
@@ -80,6 +80,7 @@ String _avatarPngPathFor(Contact contact) {
 class _AvatarIconState extends State<AvatarIcon> {
   List<Contact> _avatarContacts = [];
   Set<int> _contactsWithPngAvatar = {};
+  final Map<int, String> _resolvedAvatarPaths = {};
   String? _myAvatarPath;
 
   StreamSubscription<List<Contact>>? groupStream;
@@ -105,35 +106,20 @@ class _AvatarIconState extends State<AvatarIcon> {
   }
 
   void _setAvatarContacts(List<Contact> contacts) {
-    _avatarContacts = contacts
-        .where((contact) => contact.avatarSvgCompressed != null)
-        .toList();
+    _avatarContacts = contacts;
     unawaited(_refreshAvatarFiles());
     if (mounted) setState(() {});
   }
 
   Future<void> _refreshAvatarFiles() async {
-    final available = <int>{};
     for (final contact in _avatarContacts) {
-      final path = _avatarPngPathFor(contact);
-      var exists = _existingAvatarPngPaths.contains(path);
-      if (!exists) {
-        // Async file access keeps avatar discovery off the UI thread.
-        // ignore: avoid_slow_async_io
-        exists = await File(path).exists();
-        if (exists) _existingAvatarPngPaths.add(path);
-      }
-      if (exists) {
-        available.add(contact.userId);
-      } else if (!_unrenderableAvatars.contains(_avatarCacheKey(contact))) {
-        // No PNG yet: render one rather than falling back to the SVG. The
-        // default avatar is shown until it lands.
+      if (!_unrenderableAvatars.contains(_avatarCacheKey(contact))) {
+        // Rust resolves a received custom avatar before the SVG fallback. Do
+        // not trust the old profile-counter cache here: a custom-avatar update
+        // deliberately leaves that public counter unchanged.
         unawaited(_renderAvatarPng(contact));
       }
     }
-    if (!mounted) return;
-    if (setEquals(_contactsWithPngAvatar, available)) return;
-    setState(() => _contactsWithPngAvatar = available);
   }
 
   Future<void> _renderAvatarPng(Contact contact) async {
@@ -167,6 +153,7 @@ class _AvatarIconState extends State<AvatarIcon> {
     if (_contactsWithPngAvatar.contains(contactId)) return;
     if (!_avatarContacts.any((entry) => entry.userId == contactId)) return;
     setState(() {
+      _resolvedAvatarPaths[contactId] = path!;
       _contactsWithPngAvatar = {..._contactsWithPngAvatar, contactId};
     });
   }
@@ -189,7 +176,9 @@ class _AvatarIconState extends State<AvatarIcon> {
   Widget getAvatarForContact(Contact contact) {
     if (_contactsWithPngAvatar.contains(contact.userId)) {
       return Image.file(
-        File(_avatarPngPathFor(contact)),
+        File(
+          _resolvedAvatarPaths[contact.userId] ?? _avatarPngPathFor(contact),
+        ),
         errorBuilder: errorBuilder,
       );
     }
@@ -206,16 +195,13 @@ class _AvatarIconState extends State<AvatarIcon> {
           .watchGroupContact(widget.group!.groupId)
           .listen((contacts) {
             _avatarContacts = [];
+            for (final contact in contacts) {
+              _unrenderableAvatars.remove(_avatarCacheKey(contact));
+            }
             if (contacts.length == 1) {
-              if (contacts.first.avatarSvgCompressed != null) {
-                _avatarContacts.add(contacts.first);
-              }
+              _avatarContacts.add(contacts.first);
             } else {
-              for (final contact in contacts) {
-                if (contact.avatarSvgCompressed != null) {
-                  _avatarContacts.add(contact);
-                }
-              }
+              _avatarContacts.addAll(contacts);
             }
             unawaited(_refreshAvatarFiles());
             setState(() {});
@@ -229,7 +215,8 @@ class _AvatarIconState extends State<AvatarIcon> {
       contactStream = twonlyDB.contactsDao
           .watchContact(widget.contactId!)
           .listen((contact) {
-            if (contact != null && contact.avatarSvgCompressed != null) {
+            if (contact != null) {
+              _unrenderableAvatars.remove(_avatarCacheKey(contact));
               _avatarContacts = [contact];
               unawaited(_refreshAvatarFiles());
               setState(() {});

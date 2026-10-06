@@ -571,7 +571,6 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
         r#"
         SELECT n.event_id, n.notification_id, n.conversation_id, n.sender_id,
                COALESCE(c.display_name, c.username) AS "sender_name!: String",
-               c.avatar_svg_compressed, c.sender_profile_counter,
                g.group_name AS conversation_name,
                COALESCE(g.is_direct_chat, 0) AS "is_direct_chat!: i64",
                n.message_id, n.kind, n.content, n.created_at,
@@ -602,21 +601,17 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
         let title = row.sender_name.clone();
         let body = localized_body(locale, &row);
         let is_group = row.conversation_id.is_some() && row.is_direct_chat == 0;
-        let avatar_path = match notification_avatar_path(
-            ctx,
-            row.sender_id,
-            row.sender_profile_counter,
-            row.avatar_svg_compressed.as_deref(),
-        ) {
-            Ok(path) => path.map(|path| path.display().to_string()),
-            Err(error) => {
-                tracing::warn!(
-                    sender_id = row.sender_id,
-                    "failed to prepare notification avatar: {error}"
-                );
-                None
-            }
-        };
+        let avatar_path =
+            match crate::services::avatars::ensure_contact_avatar_png(ctx, row.sender_id).await {
+                Ok(path) => path.map(|path| path.display().to_string()),
+                Err(error) => {
+                    tracing::warn!(
+                        sender_id = row.sender_id,
+                        "failed to prepare notification avatar: {error}"
+                    );
+                    None
+                }
+            };
         additions.push(NotificationAddition {
             event_id: row.event_id,
             notification_id: row.notification_id,
@@ -873,8 +868,6 @@ struct PendingRow {
     conversation_id: Option<String>,
     sender_id: i64,
     sender_name: String,
-    avatar_svg_compressed: Option<Vec<u8>>,
-    sender_profile_counter: i64,
     conversation_name: Option<String>,
     is_direct_chat: i64,
     message_id: Option<String>,
@@ -1091,8 +1084,6 @@ mod tests {
             conversation_id: None,
             sender_id: 7,
             sender_name: "Alice".into(),
-            avatar_svg_compressed: None,
-            sender_profile_counter: 0,
             conversation_name: None,
             is_direct_chat: 1,
             message_id: None,

@@ -2440,6 +2440,78 @@ abstract class AppLocalizations {
   /// **'Discard'**
   String get avatarSaveChangesDiscard;
 
+  /// No description provided for @customAvatarSvgTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Public avatar'**
+  String get customAvatarSvgTab;
+
+  /// No description provided for @customAvatarCustomize.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get customAvatarCustomize;
+
+  /// No description provided for @customAvatarPhotoTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal avatar'**
+  String get customAvatarPhotoTab;
+
+  /// No description provided for @customAvatarExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaces your public avatar for the selected audience.'**
+  String get customAvatarExplanation;
+
+  /// No description provided for @customAvatarCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get customAvatarCreate;
+
+  /// No description provided for @customAvatarReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get customAvatarReplace;
+
+  /// No description provided for @customAvatarRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get customAvatarRemove;
+
+  /// No description provided for @customAvatarAudience.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can see the photo avatar?'**
+  String get customAvatarAudience;
+
+  /// No description provided for @customAvatarAcceptedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts only'**
+  String get customAvatarAcceptedOnly;
+
+  /// No description provided for @customAvatarEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get customAvatarEveryone;
+
+  /// No description provided for @customAvatarChooseSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose avatar photo'**
+  String get customAvatarChooseSource;
+
+  /// No description provided for @customAvatarCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo avatar could not be created.'**
+  String get customAvatarCreateFailed;
+
   /// No description provided for @inProcess.
   ///
   /// In en, this message translates to:

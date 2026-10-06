@@ -56,6 +56,10 @@ pub(crate) async fn decorate_content(
     };
 
     content.sender_profile_counter = Some(config.avatar_counter);
+    content.sender_custom_avatar_counter =
+        Some(crate::services::avatars::prepare_publication(t, contact_id).await?);
+    content.custom_avatar_protocol_version =
+        Some(crate::services::avatars::CUSTOM_AVATAR_PROTOCOL_VERSION);
     content.widget_sharing_allowed = Some(
         sqlx::query_scalar!(
             "SELECT widget_sharing_granted FROM contacts WHERE user_id = ?",

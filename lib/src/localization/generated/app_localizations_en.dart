@@ -1380,6 +1380,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avatarSaveChangesDiscard => 'Discard';
 
   @override
+  String get customAvatarSvgTab => 'Public avatar';
+
+  @override
+  String get customAvatarCustomize => 'Customize';
+
+  @override
+  String get customAvatarPhotoTab => 'Personal avatar';
+
+  @override
+  String get customAvatarExplanation =>
+      'Replaces your public avatar for the selected audience.';
+
+  @override
+  String get customAvatarCreate => 'Choose photo';
+
+  @override
+  String get customAvatarReplace => 'Change photo';
+
+  @override
+  String get customAvatarRemove => 'Remove';
+
+  @override
+  String get customAvatarAudience => 'Who can see the photo avatar?';
+
+  @override
+  String get customAvatarAcceptedOnly => 'Contacts only';
+
+  @override
+  String get customAvatarEveryone => 'Everyone';
+
+  @override
+  String get customAvatarChooseSource => 'Choose avatar photo';
+
+  @override
+  String get customAvatarCreateFailed =>
+      'The photo avatar could not be created.';
+
+  @override
   String get inProcess => 'In process';
 
   @override
