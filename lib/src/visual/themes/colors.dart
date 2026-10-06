@@ -42,6 +42,7 @@ enum AppColor {
   mediaForegroundMuted(light: Color(0xB3FFFFFF), dark: Color(0xB3FFFFFF)),
   mediaBackground(light: Color(0xFF000000), dark: Color(0xFF000000)),
   mediaScrim(light: Color(0x8A000000), dark: Color(0x8A000000)),
+  selectedZoom(light: Color(0xFFFFEB3B), dark: Color(0xFFFFEB3B)),
   recording(light: Color(0xFFD32F2F), dark: Color(0xFFFF5252)),
   scanHighlight(light: Color(0xFF76FF03), dark: Color(0xFF76FF03)),
 

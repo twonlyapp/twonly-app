@@ -100,7 +100,7 @@ class CameraZoomButtons extends StatelessWidget {
                   style: zoomButtonStyle.copyWith(
                     foregroundColor: WidgetStateProperty.all(
                       isSmallerFocused
-                          ? context.appColor(AppColor.warning)
+                          ? context.appColor(AppColor.selectedZoom)
                           : context.appColor(AppColor.mediaForeground),
                     ),
                   ),
@@ -125,7 +125,7 @@ class CameraZoomButtons extends StatelessWidget {
                 style: zoomButtonStyle.copyWith(
                   foregroundColor: WidgetStateProperty.all(
                     isMiddleFocused
-                        ? context.appColor(AppColor.warning)
+                        ? context.appColor(AppColor.selectedZoom)
                         : context.appColor(AppColor.mediaForeground),
                   ),
                 ),
@@ -148,7 +148,7 @@ class CameraZoomButtons extends StatelessWidget {
                 style: zoomButtonStyle.copyWith(
                   foregroundColor: WidgetStateProperty.all(
                     (scaleFactor >= 2)
-                        ? context.appColor(AppColor.warning)
+                        ? context.appColor(AppColor.selectedZoom)
                         : context.appColor(AppColor.mediaForeground),
                   ),
                 ),

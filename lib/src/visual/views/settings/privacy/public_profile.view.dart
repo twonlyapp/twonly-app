@@ -105,30 +105,26 @@ class _PublicProfilePrivacyViewState extends State<PublicProfilePrivacyView> {
           ListTile(
             title: Text(context.lang.customAvatarPhotoTab),
             subtitle: Text(context.lang.customAvatarExplanation),
-            trailing: SizedBox(
-              width: 180,
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<bool>(
-                  isExpanded: true,
-                  value: _customAvatar?.acceptedContactsOnly ?? true,
-                  items: [
-                    DropdownMenuItem(
-                      value: true,
-                      child: Text(context.lang.customAvatarAcceptedOnly),
-                    ),
-                    DropdownMenuItem(
-                      value: false,
-                      child: Text(context.lang.privacyVisibilityEveryone),
-                    ),
-                  ],
-                  onChanged: _customAvatar == null || _updatingAvatarVisibility
-                      ? null
-                      : (acceptedOnly) {
-                          if (acceptedOnly != null) {
-                            _setCustomAvatarVisibility(acceptedOnly);
-                          }
-                        },
-                ),
+            trailing: DropdownButtonHideUnderline(
+              child: DropdownButton<bool>(
+                value: _customAvatar?.acceptedContactsOnly ?? true,
+                items: [
+                  DropdownMenuItem(
+                    value: true,
+                    child: Text(context.lang.customAvatarAcceptedOnly),
+                  ),
+                  DropdownMenuItem(
+                    value: false,
+                    child: Text(context.lang.privacyVisibilityEveryone),
+                  ),
+                ],
+                onChanged: _customAvatar == null || _updatingAvatarVisibility
+                    ? null
+                    : (acceptedOnly) {
+                        if (acceptedOnly != null) {
+                          _setCustomAvatarVisibility(acceptedOnly);
+                        }
+                      },
               ),
             ),
           ),

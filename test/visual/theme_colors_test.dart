@@ -64,4 +64,9 @@ void main() {
       expect(color.dark, expected);
     }
   });
+
+  test('selected zoom uses yellow in both themes', () {
+    expect(AppColor.selectedZoom.light, const Color(0xFFFFEB3B));
+    expect(AppColor.selectedZoom.dark, const Color(0xFFFFEB3B));
+  });
 }
