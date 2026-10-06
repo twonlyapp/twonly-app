@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/daos/stories.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -23,6 +24,7 @@ import 'package:twonly/src/visual/components/story_preview.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/news_btn.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_list_components/story_bubble_strip.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_indicator.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expiry_timer.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
@@ -53,6 +55,7 @@ class _ChatListViewState extends State<ChatListView>
   StreamSubscription<List<StoryItem>>? _storiesSub;
   StreamSubscription<List<OwnStoryItem>>? _ownStoriesSub;
   final StoryExpiryTimer _ownStoryExpiry = StoryExpiryTimer();
+  final StoryExpiryTimer _receivedStoryExpiry = StoryExpiryTimer();
   Timer? _typingUpdateTimer;
   final Set<String> _precachedMediaIds = {};
   List<Group> _groupsNotPinned = [];
@@ -247,6 +250,7 @@ class _ChatListViewState extends State<ChatListView>
         byGroup.putIfAbsent(item.message.groupId, () => []).add(item);
       }
       setState(() => _storiesByGroup = byGroup);
+      _scheduleReceivedStoryExpiry();
     });
     _ownStoriesSub = twonlyDB.storiesDao.watchOwnStoryItems().listen((items) {
       if (!mounted) return;
@@ -258,6 +262,30 @@ class _ChatListViewState extends State<ChatListView>
   List<OwnStoryItem> get _activeOwnStories {
     final now = clock.now();
     return _ownStories.where((item) => item.isActiveAt(now)).toList();
+  }
+
+  List<StoryBubbleItem> get _storyBubbles {
+    final contactsById = <int, Contact>{
+      for (final contacts in _contactsByGroup.values)
+        for (final contact in contacts) contact.userId: contact,
+    };
+    final groupsById = <String, Group>{
+      for (final group in [
+        ..._groupsPinned,
+        ..._groupsNotPinned,
+        ..._groupsArchived,
+      ])
+        group.groupId: group,
+    };
+    return buildStoryBubbleItems(
+      stories: _storiesByGroup.values.expand((items) => items),
+      labelFor: (story) => switch (contactsById[story.senderId]) {
+        final Contact contact => getContactDisplayName(contact),
+        null =>
+          groupsById[story.message.groupId]?.groupName ??
+              story.senderId.toString(),
+      },
+    );
   }
 
   /// Puts the avatar back when the oldest own story item runs out.
@@ -274,6 +302,32 @@ class _ChatListViewState extends State<ChatListView>
         if (!mounted) return;
         setState(() {});
         _scheduleOwnStoryExpiry();
+      },
+    );
+  }
+
+  /// Removes an unseen story bubble at its exact 24-hour boundary even if
+  /// the database stream is otherwise quiet.
+  void _scheduleReceivedStoryExpiry() {
+    final now = clock.now();
+    final active =
+        _storiesByGroup.values
+            .expand((items) => items)
+            .where((item) => !item.seen && item.isActiveAt(now))
+            .toList()
+          ..sort((a, b) => a.postedAt.compareTo(b.postedAt));
+    final oldest = active.firstOrNull;
+    if (oldest == null) {
+      _receivedStoryExpiry.cancel();
+      return;
+    }
+    _receivedStoryExpiry.schedule(
+      postedAt: oldest.postedAt,
+      now: now,
+      onExpired: () {
+        if (!mounted) return;
+        setState(() {});
+        _scheduleReceivedStoryExpiry();
       },
     );
   }
@@ -313,6 +367,7 @@ class _ChatListViewState extends State<ChatListView>
     _storiesSub?.cancel();
     _ownStoriesSub?.cancel();
     _ownStoryExpiry.cancel();
+    _receivedStoryExpiry.cancel();
     super.dispose();
   }
 
@@ -348,6 +403,7 @@ class _ChatListViewState extends State<ChatListView>
     final plan = context.select<PurchasesProvider, SubscriptionPlan>(
       (p) => p.plan,
     );
+    final storyBubbles = _storyBubbles;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -468,11 +524,23 @@ class _ChatListViewState extends State<ChatListView>
               Expanded(
                 child: ListView.builder(
                   itemCount:
+                      (storyBubbles.isNotEmpty ? 1 : 0) +
                       _groupsPinned.length +
                       (_groupsPinned.isNotEmpty ? 1 : 0) +
                       _groupsNotPinned.length +
                       (_groupsArchived.isNotEmpty ? 1 : 0),
                   itemBuilder: (context, index) {
+                    if (storyBubbles.isNotEmpty) {
+                      if (index == 0) {
+                        return StoryBubbleStrip(
+                          items: storyBubbles,
+                          onTap: (item) => context.push(
+                            Routes.chatsStory(item.story.senderId),
+                          ),
+                        );
+                      }
+                      index -= 1;
+                    }
                     if (index >=
                         _groupsNotPinned.length +
                             _groupsPinned.length +
