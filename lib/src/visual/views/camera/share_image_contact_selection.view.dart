@@ -166,6 +166,9 @@ class _ShareImageView extends State<ShareImageView> {
         otherUsers.add(group);
       }
     }
+    otherUsers.sort(
+      (a, b) => b.lastMessageExchange.compareTo(a.lastMessageExchange),
+    );
 
     setState(() {
       _bestFriends = bestFriends;
@@ -271,103 +274,119 @@ class _ShareImageView extends State<ShareImageView> {
             left: 10,
             right: 10,
           ),
-          child: ListView(
-            children: [
+          child: CustomScrollView(
+            restorationId: 'share_image_contact_selection',
+            slivers: [
               if (_allGroups.isEmpty)
-                const EmptyChatListComp()
+                const SliverToBoxAdapter(child: EmptyChatListComp())
               else ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: MyInput(
-                    controller: searchUserName,
-                    dense: true,
-                    fontWeight: FontWeight.normal,
-                    hintText: context.lang.shareImageSearchAllContacts,
-                    prefixIcon: const Icon(Icons.search, size: 20),
-                    onChanged: _filterUsers,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (!widget.sendToWidget) ...[
-                  ContactGroupShortcutRow(
-                    selectedGroupIds: widget.selectedGroupIds,
-                    updateSelectedGroupIds: updateSelectedGroupIds,
-                  ),
-                  const SizedBox(height: 10),
-                  StoryTargetSelector(
-                    target: widget.storyTarget,
-                    enabled: _storyPossible,
-                    onChanged: () => setState(() {}),
-                    onAudienceChanged: (chats) {
-                      if (!mounted) return;
-                      setState(() => _storyAudienceChats = chats);
-                    },
-                  ),
-                  // The next section's heading brings its own space.
-                  const SizedBox(height: 4),
-                ],
-                BestFriendsSelector(
-                  groups: _pinnedContacts,
-                  selectedGroupIds: widget.selectedGroupIds,
-                  updateSelectedGroupIds: updateSelectedGroupIds,
-                  title: context.lang.shareImagePinnedContacts,
-                  showSelectAll:
-                      !widget.sendToWidget &&
-                      !widget.mediaFileService.mediaFile.requiresAuthentication,
-                ),
-                if (_pinnedContacts.isNotEmpty) const SizedBox(height: 10),
-                BestFriendsSelector(
-                  groups: _bestFriends,
-                  selectedGroupIds: widget.selectedGroupIds,
-                  updateSelectedGroupIds: updateSelectedGroupIds,
-                  title: context.lang.shareImageBestFriends,
-                  showSelectAll:
-                      !widget.sendToWidget &&
-                      !widget.mediaFileService.mediaFile.requiresAuthentication,
-                ),
-                if (_bestFriends.isNotEmpty) const SizedBox(height: 10),
-                if (_otherUsers.isNotEmpty)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                SliverToBoxAdapter(
+                  child: Column(
                     children: [
-                      HeadLineComp(context.lang.shareImageAllUsers),
-                      if (_allGroups.any((x) => x.archived))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: MyInput(
+                          controller: searchUserName,
+                          dense: true,
+                          fontWeight: FontWeight.normal,
+                          hintText: context.lang.shareImageSearchAllContacts,
+                          prefixIcon: const Icon(Icons.search, size: 20),
+                          onChanged: _filterUsers,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (!widget.sendToWidget) ...[
+                        ContactGroupShortcutRow(
+                          selectedGroupIds: widget.selectedGroupIds,
+                          updateSelectedGroupIds: updateSelectedGroupIds,
+                        ),
+                        const SizedBox(height: 10),
+                        StoryTargetSelector(
+                          target: widget.storyTarget,
+                          enabled: _storyPossible,
+                          onChanged: () => setState(() {}),
+                          onAudienceChanged: (chats) {
+                            if (!mounted) return;
+                            setState(() => _storyAudienceChats = chats);
+                          },
+                        ),
+                        // The next section's heading brings its own space.
+                        const SizedBox(height: 4),
+                      ],
+                      BestFriendsSelector(
+                        groups: _pinnedContacts,
+                        selectedGroupIds: widget.selectedGroupIds,
+                        updateSelectedGroupIds: updateSelectedGroupIds,
+                        title: context.lang.shareImagePinnedContacts,
+                        showSelectAll:
+                            !widget.sendToWidget &&
+                            !widget
+                                .mediaFileService
+                                .mediaFile
+                                .requiresAuthentication,
+                      ),
+                      if (_pinnedContacts.isNotEmpty)
+                        const SizedBox(height: 10),
+                      BestFriendsSelector(
+                        groups: _bestFriends,
+                        selectedGroupIds: widget.selectedGroupIds,
+                        updateSelectedGroupIds: updateSelectedGroupIds,
+                        title: context.lang.shareImageBestFriends,
+                        showSelectAll:
+                            !widget.sendToWidget &&
+                            !widget
+                                .mediaFileService
+                                .mediaFile
+                                .requiresAuthentication,
+                      ),
+                      if (_bestFriends.isNotEmpty) const SizedBox(height: 10),
+                      if (_otherUsers.isNotEmpty)
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              context.lang.shareImageShowArchived,
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                            Transform.scale(
-                              scale: 0.75,
-                              child: Checkbox.adaptive(
-                                value: !hideArchivedUsers,
-                                side: WidgetStateBorderSide.resolveWith(
-                                  (states) {
-                                    if (states.contains(WidgetState.selected)) {
-                                      return const BorderSide(width: 0);
-                                    }
-                                    return BorderSide(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.outline,
-                                    );
-                                  },
-                                ),
-                                onChanged: (a) async {
-                                  hideArchivedUsers = !hideArchivedUsers;
-                                  await _filterUsers(lastQuery);
-                                  if (mounted) setState(() {});
-                                },
+                            HeadLineComp(context.lang.shareImageAllUsers),
+                            if (_allGroups.any((x) => x.archived))
+                              Row(
+                                children: [
+                                  Text(
+                                    context.lang.shareImageShowArchived,
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                  Transform.scale(
+                                    scale: 0.75,
+                                    child: Checkbox.adaptive(
+                                      value: !hideArchivedUsers,
+                                      side: WidgetStateBorderSide.resolveWith((
+                                        states,
+                                      ) {
+                                        if (states.contains(
+                                          WidgetState.selected,
+                                        )) {
+                                          return const BorderSide(width: 0);
+                                        }
+                                        return BorderSide(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.outline,
+                                        );
+                                      }),
+                                      onChanged: (a) async {
+                                        hideArchivedUsers = !hideArchivedUsers;
+                                        await _filterUsers(lastQuery);
+                                        if (mounted) setState(() {});
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
                           ],
                         ),
                     ],
                   ),
+                ),
                 if (_otherUsers.isNotEmpty)
                   UserList(
-                    List.from(_otherUsers),
+                    _otherUsers,
                     selectedGroupIds: widget.selectedGroupIds,
                     updateSelectedGroupIds: updateSelectedGroupIds,
                   ),
@@ -472,56 +491,52 @@ class UserList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Step 1: Sort the users alphabetically
-    groups.sort(
-      (a, b) => b.lastMessageExchange.compareTo(a.lastMessageExchange),
-    );
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      restorationId: 'new_message_users_list',
-      itemCount: groups.length,
-      itemBuilder: (context, i) {
-        final group = groups[i];
-        return ListTile(
-          key: ValueKey(group.groupId),
-          title: Row(
-            children: [
-              Text(substringBy(group.groupName, 12)),
-              FlameCounterWidget(
-                groupId: group.groupId,
-                prefix: true,
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        childCount: groups.length,
+        (context, i) {
+          final group = groups[i];
+          return ListTile(
+            key: ValueKey(group.groupId),
+            title: Row(
+              children: [
+                Text(substringBy(group.groupName, 12)),
+                FlameCounterWidget(
+                  groupId: group.groupId,
+                  prefix: true,
+                ),
+              ],
+            ),
+            leading: AvatarIcon(
+              group: group,
+              fontSize: 15,
+            ),
+            trailing: Checkbox.adaptive(
+              value: selectedGroupIds.contains(group.groupId),
+              side: WidgetStateBorderSide.resolveWith(
+                (states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return const BorderSide(width: 0);
+                  }
+                  return BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
+                  );
+                },
               ),
-            ],
-          ),
-          leading: AvatarIcon(
-            group: group,
-            fontSize: 15,
-          ),
-          trailing: Checkbox.adaptive(
-            value: selectedGroupIds.contains(group.groupId),
-            side: WidgetStateBorderSide.resolveWith(
-              (states) {
-                if (states.contains(WidgetState.selected)) {
-                  return const BorderSide(width: 0);
-                }
-                return BorderSide(color: Theme.of(context).colorScheme.outline);
+              onChanged: (value) {
+                if (value == null) return;
+                updateSelectedGroupIds(group.groupId, value);
               },
             ),
-            onChanged: (value) {
-              if (value == null) return;
-              updateSelectedGroupIds(group.groupId, value);
+            onTap: () {
+              updateSelectedGroupIds(
+                group.groupId,
+                !selectedGroupIds.contains(group.groupId),
+              );
             },
-          ),
-          onTap: () {
-            updateSelectedGroupIds(
-              group.groupId,
-              !selectedGroupIds.contains(group.groupId),
-            );
-          },
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/loader/ripple.loader.dart';
@@ -13,6 +14,8 @@ class ConnectionStatusComp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!userService.currentUser.isDeveloper) return child;
+
     final isConnected = context.watch<CustomChangeProvider>().isConnected;
     return Stack(
       children: [

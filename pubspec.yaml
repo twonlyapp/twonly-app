@@ -3,7 +3,7 @@ description: "twonly, a privacy-friendly way to connect with friends through sec
 
 publish_to: 'none'
 
-version: 0.6.0+175
+version: 0.6.0+178
 
 environment:
   sdk: ^3.11.0
@@ -97,6 +97,7 @@ dependencies:
   video_player_android: ^2.12.0
   video_player_avfoundation: ^2.11.0
   camera_android_camerax: ^0.7.4+6
+  camera_avfoundation: ^0.10.3
   flutter_sharing_intent: ^2.0.4
   hand_signature: ^3.1.0+2
   hashlib: ^2.3.0
@@ -143,6 +144,8 @@ dependency_overrides:
     path: ./dependencies/video_player_avfoundation
   camera_android_camerax:
     path: ./dependencies/camera_android_camerax
+  camera_avfoundation:
+    path: ./dependencies/camera_avfoundation
   flutter_sharing_intent:
     path: ./dependencies/flutter_sharing_intent
   hand_signature:

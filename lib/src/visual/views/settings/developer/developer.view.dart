@@ -25,6 +25,7 @@ import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
+import 'package:twonly/src/visual/views/settings/developer/database_sizes_developer.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/home_widget_developer.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/user_discovery_developer.view.dart';
 
@@ -404,6 +405,12 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               ListTile(
                 title: const Text('Informations'),
                 onTap: () => context.push(Routes.settingsDeveloperInformations),
+              ),
+              ListTile(
+                title: const Text('Database & Backup Sizes'),
+                subtitle: const Text('Table sizes and backup contents'),
+                onTap: () =>
+                    context.navPush(const DatabaseSizesDeveloperView()),
               ),
               ListTile(
                 title: const Text('Show Retransmission Database'),

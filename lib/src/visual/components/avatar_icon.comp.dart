@@ -78,6 +78,24 @@ String _avatarPngPathFor(Contact contact) {
 }
 
 class _AvatarIconState extends State<AvatarIcon> {
+  double get _avatarSize => 2 * (widget.fontSize ?? 20);
+
+  bool _isPhotoAvatar(String? path) => path?.endsWith('.webp') ?? false;
+
+  Widget _avatarImage(String path) {
+    final image = Image.file(
+      File(path),
+      width: _avatarSize,
+      height: _avatarSize,
+      errorBuilder: errorBuilder,
+    );
+    if (!_isPhotoAvatar(path)) return image;
+    return Transform.scale(
+      scale: (_avatarSize + 10) / _avatarSize,
+      child: image,
+    );
+  }
+
   List<Contact> _avatarContacts = [];
   Set<int> _contactsWithPngAvatar = {};
   final Map<int, String> _resolvedAvatarPaths = {};
@@ -175,11 +193,8 @@ class _AvatarIconState extends State<AvatarIcon> {
 
   Widget getAvatarForContact(Contact contact) {
     if (_contactsWithPngAvatar.contains(contact.userId)) {
-      return Image.file(
-        File(
-          _resolvedAvatarPaths[contact.userId] ?? _avatarPngPathFor(contact),
-        ),
-        errorBuilder: errorBuilder,
+      return _avatarImage(
+        _resolvedAvatarPaths[contact.userId] ?? _avatarPngPathFor(contact),
       );
     }
     // Deliberately no SVG fallback: the render kicked off by
@@ -227,17 +242,8 @@ class _AvatarIconState extends State<AvatarIcon> {
   }
 
   Future<void> _updateMyAvatar() async {
-    final avatarSvg = userService.currentUser.avatarSvg;
-    if (avatarSvg == null) {
-      if (mounted) {
-        setState(() {
-          _myAvatarPath = null;
-          _avatarContacts = [];
-        });
-      }
-      return;
-    }
-
+    // Rust resolves photo avatars as well as public SVG avatars, including
+    // profiles that have only a photo avatar.
     final path = await RustApi.currentUserAvatarPath();
 
     if (mounted) {
@@ -249,16 +255,13 @@ class _AvatarIconState extends State<AvatarIcon> {
 
   @override
   Widget build(BuildContext context) {
-    final proSize = (widget.fontSize == null) ? 40 : (widget.fontSize! * 2);
+    final proSize = _avatarSize;
 
     Widget avatars = Container();
 
     if (widget.myAvatar) {
       if (_myAvatarPath != null) {
-        avatars = Image.file(
-          File(_myAvatarPath!),
-          errorBuilder: errorBuilder,
-        );
+        avatars = _avatarImage(_myAvatarPath!);
       } else {
         avatars = const SvgPicture(
           AssetBytesLoader('assets/images/default_avatar.svg.vec'),
@@ -320,16 +323,16 @@ class _AvatarIconState extends State<AvatarIcon> {
 
     return Container(
       constraints: BoxConstraints(
-        minHeight: 2 * (widget.fontSize ?? 20),
-        minWidth: 2 * (widget.fontSize ?? 20),
-        maxWidth: 2 * (widget.fontSize ?? 20),
-        maxHeight: 2 * (widget.fontSize ?? 20),
+        minHeight: proSize,
+        minWidth: proSize,
+        maxWidth: proSize,
+        maxHeight: proSize,
       ),
       child: Center(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            height: proSize as double,
+            height: proSize,
             width: proSize,
             color: widget.color,
             child: Center(child: avatars),

@@ -10,6 +10,7 @@ use crate::error::Result;
 use crate::keys::{DatabaseKey, KeyManager};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use sqlx::{AssertSqlSafe, Row};
 use std::collections::BTreeMap;
 use std::fs::{remove_file, File};
 use std::io::{copy, Cursor};
@@ -52,7 +53,104 @@ struct BackupManifestFile {
     sha256: String,
 }
 
+pub struct BackupStorageInfo {
+    pub database_size_bytes: i64,
+    pub free_size_bytes: i64,
+    pub tables: Vec<BackupTableSize>,
+    pub files: Vec<BackupFileSize>,
+}
+
+pub struct BackupTableSize {
+    pub name: String,
+    pub rows: i64,
+    pub table_size_bytes: i64,
+    pub index_size_bytes: i64,
+}
+
+pub struct BackupFileSize {
+    pub name: String,
+    /// None means the source file is absent and will be skipped by the backup.
+    pub size_bytes: Option<i64>,
+}
+
 impl BackupArchive {
+    /// Read current storage usage without creating or uploading a backup.
+    pub(crate) async fn storage_info(ctx: &Context) -> Result<BackupStorageInfo> {
+        let files = {
+            let keys = ctx.key_manager.lock().await;
+            Self::get_backup_files(ctx, &keys)?
+                .into_iter()
+                .map(|(name, directory, _, mut key)| {
+                    key.zeroize();
+                    let size_bytes = match directory.join(name).metadata() {
+                        Ok(metadata) => Some(metadata.len() as i64),
+                        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+                        Err(error) => return Err(error.into()),
+                    };
+                    Ok(BackupFileSize {
+                        name: name.to_owned(),
+                        size_bytes,
+                    })
+                })
+                .collect::<Result<Vec<_>>>()?
+        };
+
+        let database = ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+        // SQLCipher returns page_size as TEXT for encrypted databases, unlike
+        // SQLite. Cast the table-valued pragma so both return an integer.
+        let page_size: i64 =
+            sqlx::query_scalar("SELECT CAST(page_size AS INTEGER) FROM pragma_page_size")
+                .fetch_one(&mut *transaction)
+                .await?;
+        let page_count: i64 = sqlx::query_scalar("PRAGMA page_count")
+            .fetch_one(&mut *transaction)
+            .await?;
+        let free_pages: i64 = sqlx::query_scalar("PRAGMA freelist_count")
+            .fetch_one(&mut *transaction)
+            .await?;
+
+        // Attribute each index (including SQLite's automatic indexes) to its
+        // owning table. dbstat includes overflow pages for large text/blobs.
+        let table_sizes = sqlx::query(
+            "SELECT t.name, \
+             COALESCE(SUM(CASE WHEN s.type = 'table' THEN d.pgsize ELSE 0 END), 0) AS table_bytes, \
+             COALESCE(SUM(CASE WHEN s.type = 'index' THEN d.pgsize ELSE 0 END), 0) AS index_bytes \
+             FROM sqlite_schema t \
+             LEFT JOIN sqlite_schema s ON s.tbl_name = t.name AND s.type IN ('table', 'index') \
+             LEFT JOIN dbstat d ON d.name = s.name \
+             WHERE t.type = 'table' AND t.name NOT LIKE 'sqlite_%' \
+             GROUP BY t.name ORDER BY table_bytes + index_bytes DESC, t.name",
+        )
+        .fetch_all(&mut *transaction)
+        .await?;
+
+        let mut tables = Vec::with_capacity(table_sizes.len());
+        for table in table_sizes {
+            let name: String = table.try_get("name")?;
+            let quoted_name = name.replace('"', "\"\"");
+            let rows = sqlx::query_scalar(AssertSqlSafe(format!(
+                "SELECT COUNT(*) FROM \"{quoted_name}\""
+            )))
+            .fetch_one(&mut *transaction)
+            .await?;
+            tables.push(BackupTableSize {
+                name,
+                rows,
+                table_size_bytes: table.try_get("table_bytes")?,
+                index_size_bytes: table.try_get("index_bytes")?,
+            });
+        }
+        transaction.commit().await?;
+
+        Ok(BackupStorageInfo {
+            database_size_bytes: page_count * page_size,
+            free_size_bytes: free_pages * page_size,
+            tables,
+            files,
+        })
+    }
+
     #[allow(clippy::type_complexity)]
     fn get_backup_files(
         ctx: &Context,
@@ -439,6 +537,98 @@ mod tests {
 
     use super::*;
     use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn storage_info_measures_pages_indexes_and_backup_sources() {
+        let temp_dir = tempdir().unwrap();
+        let ctx = Context::init_for_testing(
+            temp_dir.path().join("database"),
+            temp_dir.path().join("data"),
+        )
+        .await
+        .unwrap();
+        let data_dir = PathBuf::from(&ctx.config.data_dir);
+        std::fs::create_dir_all(data_dir.join("keyvalue")).unwrap();
+        std::fs::write(data_dir.join("keyvalue/user.json"), "{\"userId\":1}").unwrap();
+        std::fs::write(data_dir.join("user_discovery_config.json"), "{}").unwrap();
+
+        let database = ctx.app_db.read().await.clone();
+        // A quoted identifier exercises row counting; the large blobs require
+        // overflow pages, and UNIQUE creates an automatic index.
+        sqlx::query("CREATE TABLE \"size\"\"test\" (name TEXT UNIQUE, payload BLOB)")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        sqlx::query("CREATE INDEX size_test_payload ON \"size\"\"test\" (payload)")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        sqlx::query(
+            "INSERT INTO \"size\"\"test\" VALUES ('first', zeroblob(100000)), ('second', zeroblob(100000))",
+        )
+        .execute(&database.pool)
+        .await
+        .unwrap();
+
+        let info = BackupArchive::storage_info(&ctx).await.unwrap();
+        let table = info.tables.iter().find(|t| t.name == "size\"test").unwrap();
+        assert_eq!(table.rows, 2);
+        assert!(table.table_size_bytes >= 200000);
+        assert!(table.index_size_bytes >= 200000);
+        let empty = info.tables.iter().find(|t| t.name == "contacts").unwrap();
+        assert_eq!(empty.rows, 0);
+        assert!(empty.table_size_bytes > 0);
+        assert!(info.tables.windows(2).all(|pair| {
+            pair[0].table_size_bytes + pair[0].index_size_bytes
+                >= pair[1].table_size_bytes + pair[1].index_size_bytes
+        }));
+        let used_bytes: i64 = info
+            .tables
+            .iter()
+            .map(|t| t.table_size_bytes + t.index_size_bytes)
+            .sum();
+        assert!(used_bytes + info.free_size_bytes <= info.database_size_bytes);
+        let main_file = info
+            .files
+            .iter()
+            .find(|f| f.name == APP_DATABASE_FILE)
+            .unwrap();
+        assert_eq!(main_file.size_bytes, Some(info.database_size_bytes));
+        assert_eq!(info.files.len(), 5);
+        for (name, size) in [
+            ("twonly.sqlite", None),
+            ("user.json", Some(12)),
+            ("user_discovery_config.json", Some(2)),
+        ] {
+            assert_eq!(
+                info.files
+                    .iter()
+                    .find(|f| f.name == name)
+                    .unwrap()
+                    .size_bytes,
+                size
+            );
+        }
+        assert!(!data_dir.join("temp_backup_dir").exists());
+        assert!(!data_dir.join("temp_backup.zip").exists());
+
+        sqlx::query("DELETE FROM \"size\"\"test\" WHERE 1")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        let after_delete = BackupArchive::storage_info(&ctx).await.unwrap();
+        assert_eq!(after_delete.database_size_bytes, info.database_size_bytes);
+        assert!(after_delete.free_size_bytes > info.free_size_bytes);
+        assert_eq!(
+            after_delete
+                .tables
+                .iter()
+                .find(|t| t.name == "size\"test")
+                .unwrap()
+                .rows,
+            0
+        );
+    }
 
     #[tokio::test]
     async fn test_backup_and_restore() {

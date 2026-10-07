@@ -145,7 +145,8 @@ class CameraPreviewView extends StatefulWidget {
   State<CameraPreviewView> createState() => _CameraPreviewViewState();
 }
 
-class _CameraPreviewViewState extends State<CameraPreviewView> {
+class _CameraPreviewViewState extends State<CameraPreviewView>
+    with WidgetsBindingObserver {
   bool _galleryLoadedImageIsShown = false;
   bool _showSelfieFlash = false;
   double _basePanY = 0;
@@ -164,10 +165,22 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   MainCameraController get mc => widget.mainCameraController;
 
   StreamSubscription<HardwareButton>? androidVolumeDownSub;
+  StreamSubscription<void>? _userUpdates;
+  late bool _storeLocationInMemories;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _storeLocationInMemories = userService.currentUser.storeLocationInMemories;
+    _userUpdates = userService.onUserUpdated.listen((_) {
+      final enabled = userService.currentUser.storeLocationInMemories;
+      final wasEnabled = _storeLocationInMemories;
+      _storeLocationInMemories = enabled;
+      // The camera can remain mounted while settings are open, so enabling
+      // location does not necessarily cause a visibility change.
+      if (enabled && !wasEnabled) _prewarmMemoryLocation();
+    });
     unawaited(VideoRecordingBudget.ensureLoaded());
     initVolumeControl();
     initAsync();
@@ -200,6 +213,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     );
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _prewarmMemoryLocation();
+  }
+
   void _checkAndInitCamera() {
     if (widget.isVisible &&
         mc.cameraController == null &&
@@ -215,6 +233,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_userUpdates?.cancel());
     _videoRecordingTimer?.cancel();
     _deInitVolumeControl();
     super.dispose();

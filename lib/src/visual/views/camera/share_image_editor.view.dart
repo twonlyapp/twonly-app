@@ -538,6 +538,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   // ---------------------------------------------------------------------------
 
   void updateSelectedGroupIds(String groupId, bool checked) {
+    // ShareImageView rebuilds its own controls. Rebuilding this editor while it
+    // is covered by that route needlessly redraws the full media composition.
     if (checked) {
       if (media.requiresAuthentication) {
         selectedGroupIds.clear();
@@ -546,7 +548,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     } else {
       selectedGroupIds.remove(groupId);
     }
-    setState(() {});
   }
 
   Future<ScreenshotImageHelper?> storeImageAsOriginal() =>

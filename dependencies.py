@@ -41,7 +41,39 @@ def get_default_branch(repo_path='.'):
         return result.stdout.strip().split('/')[-1]
     return 'main'
 
+def get_package_version(package_path):
+    pubspec_path = os.path.join(package_path, "pubspec.yaml")
+    if os.path.exists(pubspec_path):
+        with open(pubspec_path, "r") as f:
+            ps = yaml.safe_load(f)
+            if ps and isinstance(ps, dict):
+                return ps.get("version", "any")
+    return "any"
+
+def preserve_custom_package(pkg_name, out_dir):
+    out_path = os.path.join(out_dir, pkg_name)
+    if not os.path.isfile(os.path.join(out_path, "pubspec.yaml")):
+        raise FileNotFoundError(
+            f"Custom package not found: {out_path}. "
+            "Restore it from the dependencies repository; automatic updates are disabled."
+        )
+    print_yellow(f"Preserving {pkg_name}: custom_changes is enabled.")
+    return (pkg_name, get_package_version(out_path))
+
 def integrate_package(folder_name, data, cache_dir, out_dir, cache_only=False):
+    packages_to_extract = data.get(
+        "subpackages", [{"name": folder_name, "path": data.get("path", "")}]
+    )
+    # Keep custom packages intact, including when copying from the cache.
+    # Read their local versions so managed pubspec entries are retained.
+    if data.get("custom_changes") or all(
+        pkg.get("custom_changes") for pkg in packages_to_extract
+    ):
+        return [
+            preserve_custom_package(pkg["name"], out_dir)
+            for pkg in packages_to_extract
+        ]
+
     keep_list = ["lib", "LICENSE", "pubspec.yaml", "android", "ios", "darwin"]
     if "keep" in data:
         keep_list += [item.rstrip('/') for item in data['keep']]
@@ -82,13 +114,11 @@ def integrate_package(folder_name, data, cache_dir, out_dir, cache_only=False):
 
     results = [] # List of (pkg_name, version)
     
-    if "subpackages" in data:
-        packages_to_extract = data["subpackages"]
-    else:
-        packages_to_extract = [{"name": folder_name, "path": data.get("path", "")}]
-
     for pkg in packages_to_extract:
         pkg_name = pkg["name"]
+        if pkg.get("custom_changes"):
+            results.append(preserve_custom_package(pkg_name, out_dir))
+            continue
         subpath = pkg.get("path", "")
 
         package_src_path = os.path.join(cache_path, subpath) if subpath else cache_path
@@ -115,12 +145,7 @@ def integrate_package(folder_name, data, cache_dir, out_dir, cache_only=False):
                     
         version = "any"
         try:
-            pubspec_path = os.path.join(package_src_path, "pubspec.yaml")
-            if os.path.exists(pubspec_path):
-                with open(pubspec_path, "r") as f:
-                    ps = yaml.safe_load(f)
-                    if ps and isinstance(ps, dict):
-                        version = ps.get("version", "any")
+            version = get_package_version(package_src_path)
         except Exception as e:
             print_yellow(f"Warning: Could not read version from {pkg_name}/pubspec.yaml")
             

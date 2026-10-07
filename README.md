@@ -57,6 +57,16 @@ guarantee a bounty currently :/
 
 Currently there are still some core features and rewrites open I want to do involving a huge rewrite in Rust. Because of this, contributions are currently not wanted. You can still view the code (if you find any security issues please contact me!). Also, issues are currently closed. If you find a bug, please use the in-app option as there you can upload your debug log which helps a lot. 
 
+## Custom dependencies
+
+Vendored packages are tracked in `dependencies.yaml`. Set `custom_changes: true`
+on a dependency or an individual subpackage when it contains local modifications.
+`dependencies.py` preserves these folders during normal and `--cache-only`
+updates, and keeps their local versions and paths in the managed `pubspec.yaml`
+sections. Update these packages manually and merge upstream changes with the
+local modifications. Missing custom packages must be restored from the
+`dependencies` repository.
+
 ## Signing Keys
 
 When you download the app **via GitHub or F-Droid** you can verify the signing keys using for example the [AppVerifyer](https://github.com/soupslurpr/AppVerifier) and the following SHA-256 fingerprint of the signing certificate.

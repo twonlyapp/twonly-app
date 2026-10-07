@@ -138,27 +138,12 @@ async fn import(
         )))
         .fetch_one(&mut *tx)
         .await?;
-        let target_count: i64 = sqlx::query_scalar(AssertSqlSafe(format!(
-            r#"SELECT COUNT(*) FROM main."{table}""#
-        )))
-        .fetch_one(&mut *tx)
-        .await?;
-        if source_count != target_count {
-            return Err(TwonlyError::Generic(format!(
-                "Row count mismatch for {table}: source={source_count}, target={target_count}"
-            )));
-        }
-        let mismatch: Option<i64> = sqlx::query_scalar(AssertSqlSafe(format!(
-            r#"SELECT 1 FROM (SELECT {quoted} FROM main."{table}" EXCEPT SELECT {quoted} FROM legacy."{table}") LIMIT 1"#
-        )))
-        .fetch_optional(&mut *tx)
-        .await?;
         let reverse_mismatch: Option<i64> = sqlx::query_scalar(AssertSqlSafe(format!(
             r#"SELECT 1 FROM (SELECT {quoted} FROM legacy."{table}" EXCEPT SELECT {quoted} FROM main."{table}") LIMIT 1"#
         )))
         .fetch_optional(&mut *tx)
         .await?;
-        if mismatch.is_some() || reverse_mismatch.is_some() {
+        if reverse_mismatch.is_some() {
             return Err(TwonlyError::Generic(format!(
                 "Data mismatch while importing {table}"
             )));

@@ -32,11 +32,12 @@ import 'package:twonly/src/visual/views/camera/camera_preview_components/painter
 import 'package:twonly/src/visual/views/camera/camera_preview_components/painters/face_filters/dog_filter_painter.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/painters/face_filters/face_filter_painter.dart';
 
-// A captured widget cannot contain more camera detail than the live preview.
-// Full HD keeps the screenshot capture fast while avoiding the visible 720p
-// upscale on most modern phone displays. Ultra-high/max would also make the
-// continuously running barcode and face-detection image stream much heavier.
-const ResolutionPreset _cameraResolutionPreset = ResolutionPreset.veryHigh;
+// Ordinary photos retain the rear camera's 1080p preview. Selfie previews and
+// face-filter streams use 720p.
+ResolutionPreset cameraPreviewResolution(CameraLensDirection direction) =>
+    direction == CameraLensDirection.front
+    ? ResolutionPreset.high
+    : ResolutionPreset.veryHigh;
 
 class PreviewLink {
   const PreviewLink({
@@ -120,6 +121,7 @@ class MainCameraController {
   Future<void>? _initializeFuture;
   Future<void>? _pendingDisposal;
   int _cameraSessionId = 0;
+  DateTime? _lastBarcodeFrame;
 
   Future<void> closeCamera() async {
     _cameraSessionId++;
@@ -200,13 +202,24 @@ class MainCameraController {
     }
 
     selectedCameraDetails.isZoomAble = false;
-
+    _lastBarcodeFrame = null;
     final currentController = cameraController;
-    if (currentController == null || !currentController.value.isInitialized) {
+    // Preserve an active recording's preset when switching lenses. Recreating
+    // its controller just to lower the selfie preview would end the video.
+    final resolution = isVideoRecording && currentController != null
+        ? currentController.resolutionPreset
+        : cameraPreviewResolution(
+            AppEnvironment.cameras[cameraId].lensDirection,
+          );
+    if (currentController == null ||
+        !currentController.value.isInitialized ||
+        currentController.resolutionPreset != resolution) {
       final controllerToDispose = cameraController;
       cameraController = null;
+      setState?.call();
       if (controllerToDispose != null) {
-        unawaited(controllerToDispose.dispose());
+        await controllerToDispose.dispose();
+        if (sessionId != _cameraSessionId) return;
       }
 
       final hasMic = await micPermissionFuture;
@@ -214,7 +227,7 @@ class MainCameraController {
 
       var controller = CameraController(
         AppEnvironment.cameras[cameraId],
-        _cameraResolutionPreset,
+        resolution,
         enableAudio: hasMic,
         imageFormatGroup: Platform.isAndroid
             ? ImageFormatGroup.nv21
@@ -234,7 +247,7 @@ class MainCameraController {
           await controller.dispose();
           controller = CameraController(
             AppEnvironment.cameras[cameraId],
-            _cameraResolutionPreset,
+            resolution,
             enableAudio: hasMic,
           );
           _initializeFuture = controller.initialize();
@@ -457,16 +470,23 @@ class MainCameraController {
     if (isVideoRecording || isSharePreviewIsShown) {
       return;
     }
-    final inputImage = _inputImageFromCameraImage(image);
-    if (inputImage == null) return;
     // check if front camera is selected
     if (cameraController?.description.lensDirection ==
         CameraLensDirection.front) {
-      if (_currentFilterType != FaceFilterType.none) {
-        _processFaces(inputImage);
-      }
+      if (_currentFilterType == FaceFilterType.none || _isBusyFaces) return;
+      final inputImage = _inputImageFromCameraImage(image);
+      if (inputImage != null) unawaited(_processFaces(inputImage));
     } else {
-      _processBarcode(inputImage);
+      if (_isBusy) return;
+      final now = clock.now();
+      if (_lastBarcodeFrame != null &&
+          now.difference(_lastBarcodeFrame!) <
+              const Duration(milliseconds: 150)) {
+        return;
+      }
+      _lastBarcodeFrame = now;
+      final inputImage = _inputImageFromCameraImage(image);
+      if (inputImage != null) unawaited(_processBarcode(inputImage));
     }
   }
 

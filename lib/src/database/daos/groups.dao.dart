@@ -22,6 +22,13 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   // of this object.
   // ignore: matching_super_parameters
   GroupsDao(super.db);
+
+  // Former members stay stored so their messages and group history remain
+  // readable. A null state is a legacy member who is still in the group.
+  Expression<bool> _isActiveMember(GroupMembers member) =>
+      member.memberState.equals(MemberState.leftGroup.name).not() |
+      member.memberState.isNull();
+
   Future<void> deleteGroup(String groupId) async {
     await (delete(groups)..where((t) => t.groupId.equals(groupId))).go();
   }
@@ -37,10 +44,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
   Future<List<GroupMember>> getGroupNonLeftMembers(String groupId) async {
     return (select(groupMembers)..where(
-          (t) =>
-              t.groupId.equals(groupId) &
-              (t.memberState.equals(MemberState.leftGroup.name).not() |
-                  t.memberState.isNull()),
+          (t) => t.groupId.equals(groupId) & _isActiveMember(t),
         ))
         .get();
   }
@@ -131,7 +135,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
             ),
           ])
           ..orderBy([OrderingTerm.desc(groupMembers.lastMessage)])
-          ..where(groupMembers.groupId.equals(groupId)));
+          ..where(
+            groupMembers.groupId.equals(groupId) &
+                _isActiveMember(groupMembers),
+          ));
     return query.map((row) => row.readTable(contacts)).get();
   }
 
@@ -145,25 +152,31 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
             ),
           ])
           ..orderBy([OrderingTerm.desc(groupMembers.lastMessage)])
-          ..where(groupMembers.groupId.equals(groupId)));
+          ..where(
+            groupMembers.groupId.equals(groupId) &
+                _isActiveMember(groupMembers),
+          ));
     return query.map((row) => row.readTable(contacts)).watch();
   }
 
   Stream<List<(Contact, GroupMember)>> watchGroupMembers(String groupId) {
     final query =
-        (select(groupMembers)..where((t) => t.groupId.equals(groupId))).join([
-          leftOuterJoin(
-            contacts,
-            contacts.userId.equalsExp(groupMembers.contactId),
-          ),
-        ]);
+        (select(groupMembers)..where(
+              (t) => t.groupId.equals(groupId) & _isActiveMember(t),
+            ))
+            .join([
+              leftOuterJoin(
+                contacts,
+                contacts.userId.equalsExp(groupMembers.contactId),
+              ),
+            ]);
     return query
         .map((row) => (row.readTable(contacts), row.readTable(groupMembers)))
         .watch();
   }
 
   Stream<List<(Contact, GroupMember)>> watchAllGroupMembers() {
-    final query = select(groupMembers).join([
+    final query = (select(groupMembers)..where(_isActiveMember)).join([
       innerJoin(contacts, contacts.userId.equalsExp(groupMembers.contactId)),
     ]);
     return query
@@ -207,8 +220,12 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
   Stream<List<GroupMember>> watchTypingGroupMembers() {
     return (select(
-      groupMembers,
-    )..where((member) => member.lastTypeIndicator.isNotNull())).watch();
+          groupMembers,
+        )..where(
+          (member) =>
+              member.lastTypeIndicator.isNotNull() & _isActiveMember(member),
+        ))
+        .watch();
   }
 
   Stream<Group?> watchGroup(String groupId) {
@@ -333,7 +350,8 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
           ),
         ])..where(
           groups.isDirectChat.equals(false) &
-              groupMembers.contactId.equals(contactId),
+              groupMembers.contactId.equals(contactId) &
+              _isActiveMember(groupMembers),
         );
 
     return query.map((row) => row.readTable(groups)).watch();

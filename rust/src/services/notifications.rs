@@ -570,7 +570,7 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
         PendingRow,
         r#"
         SELECT n.event_id, n.notification_id, n.conversation_id, n.sender_id,
-               COALESCE(c.display_name, c.username) AS "sender_name!: String",
+               COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username) AS "sender_name!: String",
                g.group_name AS conversation_name,
                COALESCE(g.is_direct_chat, 0) AS "is_direct_chat!: i64",
                n.message_id, n.kind, n.content, n.created_at,

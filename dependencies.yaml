@@ -12,6 +12,12 @@ dependencies:
   blurhash_dart:
     git: https://github.com/justacid/blurhash-dart.git
     tag: v1.2.1
+  camera_avfoundation:
+    git: https://github.com/flutter/packages.git
+    tag: camera_avfoundation-v0.10.3
+    path: packages/camera/camera_avfoundation
+    custom_changes: true
+    custom_changes_description: Downscale and throttle rear-camera QR analysis frames.
   exif:
     git: https://github.com/bigflood/dartexif.git
     dependencies:
@@ -36,6 +42,8 @@ dependencies:
       path: packages/video_player/video_player_avfoundation
     - name: camera_android_camerax
       path: packages/camera/camera_android_camerax
+      custom_changes: true
+      custom_changes_description: Use lower-resolution rear-camera QR analysis frames.
     commit: b4f7d807a822a8ce327aae21353ac2217e928f6d
   flutter_sharing_intent:
     git: https://github.com/bhagat-techind/flutter_sharing_intent.git

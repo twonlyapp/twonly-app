@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/server/prekeys.dart';
+import 'backup/backup_archive.dart';
 import 'bridge.dart';
 import 'bridge/api.dart';
 import 'bridge/callbacks.dart';
@@ -87,7 +88,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ApiEventKind dco_decode_api_event_kind(dynamic raw);
 
   @protected
+  BackupFileSize dco_decode_backup_file_size(dynamic raw);
+
+  @protected
   BackupPasswordKeys dco_decode_backup_password_keys(dynamic raw);
+
+  @protected
+  BackupStorageInfo dco_decode_backup_storage_info(dynamic raw);
+
+  @protected
+  BackupTableSize dco_decode_backup_table_size(dynamic raw);
 
   @protected
   bool dco_decode_bool(dynamic raw);
@@ -206,6 +216,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<BackupFileSize> dco_decode_list_backup_file_size(dynamic raw);
+
+  @protected
+  List<BackupTableSize> dco_decode_list_backup_table_size(dynamic raw);
 
   @protected
   List<FrbAdditionalAccount> dco_decode_list_frb_additional_account(
@@ -494,9 +510,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ApiEventKind sse_decode_api_event_kind(SseDeserializer deserializer);
 
   @protected
+  BackupFileSize sse_decode_backup_file_size(SseDeserializer deserializer);
+
+  @protected
   BackupPasswordKeys sse_decode_backup_password_keys(
     SseDeserializer deserializer,
   );
+
+  @protected
+  BackupStorageInfo sse_decode_backup_storage_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  BackupTableSize sse_decode_backup_table_size(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
@@ -643,6 +670,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<BackupFileSize> sse_decode_list_backup_file_size(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<BackupTableSize> sse_decode_list_backup_table_size(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<FrbAdditionalAccount> sse_decode_list_frb_additional_account(
@@ -996,8 +1033,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_api_event_kind(ApiEventKind self, SseSerializer serializer);
 
   @protected
+  void sse_encode_backup_file_size(
+    BackupFileSize self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_backup_password_keys(
     BackupPasswordKeys self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_backup_storage_info(
+    BackupStorageInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_backup_table_size(
+    BackupTableSize self,
     SseSerializer serializer,
   );
 
@@ -1189,6 +1244,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_backup_file_size(
+    List<BackupFileSize> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_backup_table_size(
+    List<BackupTableSize> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_frb_additional_account(
