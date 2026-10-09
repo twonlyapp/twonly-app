@@ -48,42 +48,59 @@ class TwonlyWidgetConfigureActivity : AppCompatActivity() {
         val emptyState = findViewById<View>(R.id.empty_state)
         val saveButton = findViewById<MaterialButton>(R.id.save_button)
 
-        val selected = TwonlyWidgetProvider.preferences(this)
+        val preferences = TwonlyWidgetProvider.preferences(this)
+        val selected = preferences
             .getStringSet(TwonlyWidgetProvider.groupsKey(widgetId), emptySet())
             .orEmpty()
             .toMutableSet()
-        val groups = runCatching {
-            JSONObject(File(filesDir, "widget/manifest.json").readText()).getJSONArray("groups")
+        val selectedContacts = preferences
+            .getStringSet(TwonlyWidgetProvider.contactsKey(widgetId), emptySet())
+            .orEmpty().toMutableSet()
+        val manifest = runCatching {
+            JSONObject(File(filesDir, "widget/manifest.json").readText())
         }.getOrNull()
+        val groups = manifest?.optJSONArray("groups") ?: JSONArray()
+        val contacts = manifest?.optJSONArray("contacts") ?: JSONArray()
 
-        if (groups == null || groups.length() == 0) {
+        if (groups.length() == 0 && contacts.length() == 0) {
             groupCard.visibility = View.GONE
             emptyState.visibility = View.VISIBLE
             saveButton.isEnabled = false
         } else {
             val inflater = LayoutInflater.from(this)
-            for (index in 0 until groups.length()) {
-                val group = groups.getJSONObject(index)
-                val id = group.getLong("id").toString()
-                val checkBox = inflater.inflate(
-                    R.layout.twonly_widget_configure_group,
-                    groupList,
-                    false,
-                ) as MaterialCheckBox
-                checkBox.text = group.getString("name")
-                checkBox.isChecked = selected.contains(id)
-                checkBox.setOnCheckedChangeListener { _, checked ->
-                    if (checked) selected.add(id) else selected.remove(id)
-                    saveButton.isEnabled = selected.isNotEmpty()
+            fun addChoices(items: JSONArray, selection: MutableSet<String>, title: Int) {
+                val available = (0 until items.length()).map { items.getJSONObject(it).getLong("id").toString() }.toSet()
+                selection.retainAll(available)
+                if (items.length() == 0) return
+                val heading = inflater.inflate(R.layout.twonly_widget_configure_heading, groupList, false)
+                    as android.widget.TextView
+                heading.setText(title)
+                groupList.addView(heading)
+                for (index in 0 until items.length()) {
+                    val item = items.getJSONObject(index)
+                    val id = item.getLong("id").toString()
+                    val checkBox = inflater.inflate(
+                        R.layout.twonly_widget_configure_group, groupList, false,
+                    ) as MaterialCheckBox
+                    checkBox.text = item.getString("name")
+                    checkBox.isChecked = selection.contains(id)
+                    checkBox.setOnCheckedChangeListener { _, checked ->
+                        if (checked) selection.add(id) else selection.remove(id)
+                        saveButton.isEnabled = selected.isNotEmpty() || selectedContacts.isNotEmpty()
+                    }
+                    groupList.addView(checkBox)
                 }
-                groupList.addView(checkBox)
             }
-            saveButton.isEnabled = selected.isNotEmpty()
+            addChoices(contacts, selectedContacts, R.string.widget_people)
+            addChoices(groups, selected, R.string.widget_contact_groups)
+            saveButton.isEnabled = selected.isNotEmpty() || selectedContacts.isNotEmpty()
         }
 
         saveButton.setOnClickListener {
-            TwonlyWidgetProvider.preferences(this)
-                .edit().putStringSet(TwonlyWidgetProvider.groupsKey(widgetId), selected).apply()
+            preferences.edit()
+                .putStringSet(TwonlyWidgetProvider.groupsKey(widgetId), selected)
+                .putStringSet(TwonlyWidgetProvider.contactsKey(widgetId), selectedContacts)
+                .apply()
             persistNativeConfiguration(this)
             TwonlyWidgetProvider.update(this, AppWidgetManager.getInstance(this), widgetId)
             setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
@@ -129,7 +146,11 @@ class TwonlyWidgetConfigureActivity : AppCompatActivity() {
                 val groups = JSONArray()
                 preferences.getStringSet(TwonlyWidgetProvider.groupsKey(id), emptySet()).orEmpty()
                     .mapNotNull(String::toLongOrNull).forEach(groups::put)
-                widgets.put(JSONObject().put("id", "android:$id").put("platform", "android").put("group_ids", groups))
+                val contacts = JSONArray()
+                preferences.getStringSet(TwonlyWidgetProvider.contactsKey(id), emptySet()).orEmpty()
+                    .mapNotNull(String::toLongOrNull).forEach(contacts::put)
+                widgets.put(JSONObject().put("id", "android:$id").put("platform", "android")
+                    .put("group_ids", groups).put("contact_ids", contacts))
             }
             val directory = File(context.filesDir, "widget").apply { mkdirs() }
             val temporary = File(directory, "native-config.json.tmp")

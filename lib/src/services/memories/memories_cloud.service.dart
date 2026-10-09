@@ -146,14 +146,15 @@ class MemoriesCloudService {
 
   Future<void> checkUploads() async {
     if (_isProcessing || !userService.currentUser.isCloudBackupEnabled) return;
+    // Claim the worker before the first await so simultaneous saves cannot
+    // start duplicate uploads of the same queue.
+    _isProcessing = true;
 
     try {
       final memories = await twonlyDB.mediaFilesDao.getMemoriesToBackup();
       if (memories.isEmpty) {
         return;
       }
-
-      _isProcessing = true;
 
       final total = memories.length;
       var uploaded = 0;

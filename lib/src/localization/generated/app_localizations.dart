@@ -526,6 +526,54 @@ abstract class AppLocalizations {
   /// **'Memories & Storage'**
   String get settingsStorageData;
 
+  /// No description provided for @memoryDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get memoryDetailsTitle;
+
+  /// No description provided for @memoryDetailsCapturedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Captured'**
+  String get memoryDetailsCapturedAt;
+
+  /// No description provided for @memoryDetailsLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get memoryDetailsLocation;
+
+  /// No description provided for @memoryDetailsLocationPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding capture location…'**
+  String get memoryDetailsLocationPending;
+
+  /// No description provided for @memoryDetailsNoLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'No location recorded'**
+  String get memoryDetailsNoLocation;
+
+  /// No description provided for @memoryDetailsAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy: ±{meters} m'**
+  String memoryDetailsAccuracy(int meters);
+
+  /// No description provided for @memoryDetailsOpenMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in maps'**
+  String get memoryDetailsOpenMap;
+
+  /// No description provided for @memoryDetailsMapUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open maps.'**
+  String get memoryDetailsMapUnavailable;
+
   /// No description provided for @memoryLocationTitle.
   ///
   /// In en, this message translates to:
@@ -2206,6 +2254,12 @@ abstract class AppLocalizations {
   /// **'sent a message{inGroup}.'**
   String notificationText(Object inGroup);
 
+  /// No description provided for @notificationTextMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'sent {count} messages{inGroup}.'**
+  String notificationTextMessages(Object count, Object inGroup);
+
   /// No description provided for @notificationTwonly.
   ///
   /// In en, this message translates to:
@@ -2463,6 +2517,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discard'**
   String get avatarSaveChangesDiscard;
+
+  /// No description provided for @contactAvatarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar'**
+  String get contactAvatarTitle;
+
+  /// No description provided for @contactAvatarPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo avatar'**
+  String get contactAvatarPhoto;
+
+  /// No description provided for @contactAvatarIllustrated.
+  ///
+  /// In en, this message translates to:
+  /// **'Illustrated avatar'**
+  String get contactAvatarIllustrated;
 
   /// No description provided for @customAvatarSvgTab.
   ///

@@ -31,7 +31,18 @@ let widgetLog = Logger(subsystem: "eu.twonly.widget", category: "timeline")
 
 struct Manifest: Decodable {
   let groups: [ManifestGroup]
+  let contacts: [ManifestContact]?
   let images: [ManifestImage]
+}
+
+struct ManifestContact: Decodable {
+  let id: Int64
+  let name: String
+}
+
+struct WidgetSelection {
+  let groupIds: [Int64]
+  let contactIds: [Int64]
 }
 
 struct ManifestGroup: Decodable {
@@ -44,6 +55,8 @@ struct ManifestImage: Decodable {
   let mediaId: String
   let path: String
   let sender: String
+  // Optional while a widget still has a manifest from an older app version.
+  let senderId: Int64?
   /// The contact groups this image is the current one for. The app publishes
   /// one image per group, so a widget shows the newest image whose groups meet
   /// its own selection and never has a second one to fall back on.
@@ -53,6 +66,7 @@ struct ManifestImage: Decodable {
   enum CodingKeys: String, CodingKey {
     case path, sender
     case mediaId = "media_id"
+    case senderId = "sender_id"
     case groupIds = "group_ids"
     case receivedAt = "received_at"
   }
@@ -113,8 +127,12 @@ enum WidgetStorage {
     manifest().map(\.images)
   }
 
-  static func selectionKey(_ ids: [Int64]) -> String {
-    ids.sorted().map(String.init).joined(separator: "-")
+  static func selectionKey(_ ids: [Int64], contactIds: [Int64] = []) -> String {
+    let groups = ids.sorted().map(String.init).joined(separator: "-")
+    // Keep existing group-only widget IDs stable across this update.
+    guard !contactIds.isEmpty else { return groups }
+    let contacts = contactIds.sorted().map(String.init).joined(separator: ",")
+    return "\(groups)|contacts:\(contacts)"
   }
 
   /// Records this widget's contact groups for Rust to import.
@@ -160,7 +178,7 @@ enum WidgetStorage {
   /// Rewrites the placement file from the widgets the app has established are
   /// really placed. Each entry keeps the timestamp its widget wrote: stamping
   /// `now` here would forge the very evidence the next reconcile depends on.
-  static func replaceIosSelections(_ selections: [[Int64]]) {
+  static func replaceIosSelections(_ selections: [WidgetSelection]) {
     guard let directory = runtimeDirectory?.appendingPathComponent("widget", isDirectory: true)
     else { return }
     try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -176,13 +194,14 @@ enum WidgetStorage {
     // here: the id is the selection, and Rust only reads the union anyway.
     var seen = Set<String>()
     var widgets: [[String: Any]] = []
-    for ids in selections {
-      let identifier = "ios:\(selectionKey(ids))"
+    for selection in selections {
+      let identifier = "ios:\(selectionKey(selection.groupIds, contactIds: selection.contactIds))"
       guard seen.insert(identifier).inserted else { continue }
       widgets.append([
         "id": identifier,
         "platform": "ios",
-        "group_ids": ids,
+        "group_ids": selection.groupIds,
+        "contact_ids": selection.contactIds,
         "last_seen": lastSeen[identifier] ?? 0,
       ])
     }
@@ -216,7 +235,7 @@ enum WidgetStorage {
       at: directory.appendingPathComponent("native-config.json.tmp"))
   }
 
-  static func persistSelection(_ ids: [Int64]) {
+  static func persistSelection(_ ids: [Int64], contactIds: [Int64] = []) {
     guard let directory = runtimeDirectory?.appendingPathComponent("widget", isDirectory: true)
     else { return }
     try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -224,11 +243,12 @@ enum WidgetStorage {
       URLFileProtection.completeUntilFirstUserAuthentication,
       forKey: .fileProtectionKey
     )
-    let identifier = "ios:\(selectionKey(ids))"
+    let identifier = "ios:\(selectionKey(ids, contactIds: contactIds))"
     let widget: [String: Any] = [
       "id": identifier,
       "platform": "ios",
       "group_ids": ids,
+      "contact_ids": contactIds,
       "last_seen": Int(Date().timeIntervalSince1970),
     ]
 
@@ -249,6 +269,34 @@ enum WidgetStorage {
 
     write(widgets: widgets, to: directory)
   }
+}
+
+@available(iOS 17.0, *)
+struct WidgetContactEntity: AppEntity {
+  static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Person")
+  static let defaultQuery = WidgetContactQuery()
+
+  let id: String
+  let name: String
+
+  var displayRepresentation: DisplayRepresentation {
+    DisplayRepresentation(title: "\(name)")
+  }
+}
+
+@available(iOS 17.0, *)
+struct WidgetContactQuery: EntityQuery {
+  func entities(for identifiers: [String]) async throws -> [WidgetContactEntity] {
+    let wanted = Set(identifiers)
+    return allEntities().filter { wanted.contains($0.id) }
+  }
+
+  private func allEntities() -> [WidgetContactEntity] {
+    let contacts = (try? WidgetStorage.manifest().get())?.contacts ?? []
+    return contacts.map { WidgetContactEntity(id: String($0.id), name: $0.name) }
+  }
+
+  func suggestedEntities() async throws -> [WidgetContactEntity] { allEntities() }
 }
 
 @available(iOS 17.0, *)
@@ -284,12 +332,17 @@ struct ContactGroupQuery: EntityQuery {
 
 @available(iOS 17.0, *)
 struct TwonlyWidgetIntent: WidgetConfigurationIntent {
-  static let title: LocalizedStringResource = "twonly contact groups"
+  static let title: LocalizedStringResource = "twonly people and contact groups"
   static let description = IntentDescription("Choose who may share images with this widget.")
+
+  @Parameter(title: "People")
+  var contacts: [WidgetContactEntity]?
 
   @Parameter(title: "Contact groups")
   var groups: [ContactGroupEntity]?
 
-  init() { groups = nil }
+  init() {
+    groups = nil
+    contacts = nil
+  }
 }
-

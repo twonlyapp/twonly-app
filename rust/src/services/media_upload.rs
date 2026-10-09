@@ -294,7 +294,7 @@ impl MediaUploadService {
             .await?;
             if !widget_only {
                 sqlx::query(
-                    r#"UPDATE groups SET archived = 0, deleted_content = 0,
+                    r#"UPDATE groups SET deleted_content = 0,
                            last_message_exchange = MAX(last_message_exchange, ?)
                        WHERE group_id = ?"#,
                 )
@@ -454,7 +454,18 @@ impl MediaUploadService {
         if !temp_path.exists() {
             if stored_path.exists() {
                 MediaFileService::ensure_parent(&temp_path)?;
-                std::fs::copy(&stored_path, &temp_path)?;
+                let (source, destination) = (stored_path.clone(), temp_path.clone());
+                if media.media_type == "image" {
+                    // A Memory may be an original JPEG/PNG or lossless WebP.
+                    // Prepare its separate delivery copy without changing it.
+                    blocking(move || media_codec::compress_for_send(&source, &destination)).await?;
+                } else {
+                    blocking(move || {
+                        std::fs::copy(source, destination)?;
+                        Ok(())
+                    })
+                    .await?;
+                }
             } else {
                 self.compress(&media).await?;
             }
@@ -756,23 +767,45 @@ impl MediaUploadService {
         let files = MediaFileService::new(&self.ctx);
         let temp_path = files.temp_path(media_id, &media.media_type);
         let stored_path = files.stored_path(media_id, &media.media_type);
-        if !temp_path.exists() && files.original_path(media_id, &media.media_type).exists() {
+        let original_path = files.original_path(media_id, &media.media_type);
+        let mut keep_original = media.media_type == "image";
+        if media.media_type == "video"
+            && original_path.exists()
+            && media.remove_audio.unwrap_or(0) == 0
+            && trim_bounds(&media) == (None, None)
+        {
+            let overlay = files.overlay_image_path(media_id);
+            keep_original = !overlay.exists()
+                || !blocking(move || media_codec::has_visible_content(&overlay)).await?;
+        }
+        if !keep_original && !temp_path.exists() && original_path.exists() {
             self.compress(&media).await?;
         }
-        if !temp_path.exists() {
+        // An outgoing still may already have a lossy delivery copy. The
+        // original editor capture is the source of the full-quality Memory.
+        let source = if keep_original && original_path.exists() {
+            original_path
+        } else {
+            temp_path
+        };
+        if !source.exists() {
             tracing::warn!(media_id, "cannot store media without its plaintext");
             return Ok(());
         }
         MediaFileService::ensure_parent(&stored_path)?;
-        std::fs::copy(&temp_path, &stored_path)?;
-
-        let config = UserConfig::load_required_from(&self.ctx)?;
-        if config.store_media_files_in_gallery {
-            if let Err(error) = self.save_to_gallery(media_id).await {
-                tracing::warn!(media_id, %error, "could not export the media to the gallery");
+        let destination = stored_path.clone();
+        let is_image = media.media_type == "image";
+        blocking(move || {
+            if is_image {
+                media_codec::store_image_losslessly(&source, &destination)
+            } else {
+                std::fs::copy(source, destination)?;
+                Ok(())
             }
-        }
+        })
+        .await?;
         self.create_thumbnail(&media).await?;
+        self.refresh_stored_metadata(media_id, &stored_path).await?;
         // Trust the filesystem rather than what the encoder reported: a
         // thumbnail that was not written must not be advertised to the UI.
         let has_thumbnail = i64::from(files.thumbnail_path(media_id).exists());
@@ -782,17 +815,30 @@ impl MediaUploadService {
             media_id,
         )
         .await?;
-        self.refresh_stored_metadata(media_id, &stored_path).await
+        // Publish the Memory before waiting for Photos/MediaStore. Gallery
+        // authorisation or insertion must not delay its preview in the app.
+        let config = UserConfig::load_required_from(&self.ctx)?;
+        if config.store_media_files_in_gallery {
+            if let Err(error) = self.save_to_gallery(media_id).await {
+                tracing::warn!(media_id, %error, "could not export the media to the gallery");
+            }
+        }
+        Ok(())
     }
 
     /// Size and content hash are read back from the file that was actually
     /// written, never from the value the caller believed it wrote. Videos can
     /// be tens of megabytes, so the hash streams instead of buffering.
     async fn refresh_stored_metadata(&self, media_id: &str, stored_path: &Path) -> Result<()> {
-        let mut file = std::fs::File::open(stored_path)?;
-        let mut hasher = <sha2::Sha256 as sha2::Digest>::new();
-        let size = std::io::copy(&mut file, &mut hasher)? as i64;
-        let hash = <sha2::Sha256 as sha2::Digest>::finalize(hasher).to_vec();
+        let stored_path = stored_path.to_owned();
+        let (size, hash) = blocking(move || {
+            let mut file = std::fs::File::open(stored_path)?;
+            let mut hasher = <sha2::Sha256 as sha2::Digest>::new();
+            let size = std::io::copy(&mut file, &mut hasher)? as i64;
+            let hash = <sha2::Sha256 as sha2::Digest>::finalize(hasher).to_vec();
+            Ok((size, hash))
+        })
+        .await?;
         let database = self.ctx.app_db.read().await.clone();
         sqlx::query(
             "UPDATE media_files SET size_in_bytes = ?, stored_file_hash = ? WHERE media_id = ?",
@@ -1508,35 +1554,30 @@ impl MediaUploadService {
         let is_video = media.media_type == "video";
         let media_id = media_id.to_owned();
         blocking(move || {
-            // Video containers carry their own metadata, and the photo library
-            // is told the capture time either way; only stills are rewritten.
-            let exported = if is_video {
-                stored.clone()
-            } else {
-                let metadata = media_exif::ExifMetadata {
-                    created_at: chrono::DateTime::from_timestamp_millis(created_at_millis),
-                    latitude: location.location_latitude,
-                    longitude: location.location_longitude,
-                    accuracy: location.location_accuracy,
-                };
-                let bytes = std::fs::read(&stored)?;
-                match media_exif::with_exif(&bytes, &metadata) {
-                    Ok(stamped) => {
-                        let path = stored.with_extension("export.webp");
-                        std::fs::write(&path, stamped)?;
-                        path
-                    }
-                    Err(error) => {
-                        tracing::warn!(%error, "exporting without EXIF metadata");
-                        stored.clone()
-                    }
-                }
+            let metadata = media_exif::ExifMetadata {
+                created_at: chrono::DateTime::from_timestamp_millis(created_at_millis),
+                latitude: location.location_latitude,
+                longitude: location.location_longitude,
+                accuracy: location.location_accuracy,
             };
-            let result = gallery::save(&exported, is_video, &media_id, created_at_millis);
-            if exported != stored {
-                let _ = std::fs::remove_file(&exported);
-            }
-            result
+            let exported = prepare_gallery_export(&stored, &media.media_type, &metadata)?;
+            let fix = metadata
+                .latitude
+                .zip(metadata.longitude)
+                .filter(|(latitude, longitude)| {
+                    latitude.is_finite()
+                        && longitude.is_finite()
+                        && (-90.0..=90.0).contains(latitude)
+                        && (-180.0..=180.0).contains(longitude)
+                })
+                .map(
+                    |(latitude, longitude)| crate::native::location::LocationFix {
+                        latitude,
+                        longitude,
+                        accuracy: metadata.accuracy.unwrap_or(-1.0),
+                    },
+                );
+            gallery::save(&exported.path, is_video, &media_id, created_at_millis, fix)
         })
         .await
     }
@@ -1564,6 +1605,107 @@ impl MediaUploadService {
         }
         self.media_step_finished(media_id, "crop").await
     }
+}
+
+struct GalleryExport {
+    path: std::path::PathBuf,
+    temporary_directory: Option<std::path::PathBuf>,
+}
+
+impl Drop for GalleryExport {
+    fn drop(&mut self) {
+        if let Some(directory) = &self.temporary_directory {
+            let _ = std::fs::remove_dir_all(directory);
+        }
+    }
+}
+
+fn prepare_gallery_export(
+    stored: &Path,
+    media_type: &str,
+    metadata: &media_exif::ExifMetadata,
+) -> Result<GalleryExport> {
+    // Videos, animated GIFs, and audio never pass through a still-image codec.
+    if media_type != "image" {
+        return Ok(GalleryExport {
+            path: stored.to_owned(),
+            temporary_directory: None,
+        });
+    }
+    // Guess from bytes, not the historical .webp suffix. HEIF containers are
+    // decoded by the platform and are not recognised by image's Rust decoders.
+    use std::io::Read;
+    let mut header = [0_u8; 64];
+    let read = std::fs::File::open(stored)?.read(&mut header)?;
+    let header = &header[..read];
+    let format = image::guess_format(header).ok();
+    let extension = match format {
+        Some(image::ImageFormat::WebP) => "webp",
+        Some(image::ImageFormat::Png) => "png",
+        Some(image::ImageFormat::Jpeg) => "jpg",
+        Some(image::ImageFormat::Gif) => "gif",
+        Some(image::ImageFormat::Bmp) => "bmp",
+        Some(image::ImageFormat::Avif) => "avif",
+        _ if header.len() >= 16 && &header[4..8] == b"ftyp" => {
+            let brands = std::iter::once(&header[8..12]).chain(header[16..].chunks_exact(4));
+            if brands
+                .clone()
+                .any(|brand| matches!(brand, b"avif" | b"avis"))
+            {
+                "avif"
+            } else if brands.clone().any(|brand| {
+                matches!(
+                    brand,
+                    b"heic" | b"heix" | b"hevc" | b"hevx" | b"mif1" | b"msf1"
+                )
+            }) {
+                "heic"
+            } else {
+                return Ok(GalleryExport {
+                    path: stored.to_owned(),
+                    temporary_directory: None,
+                });
+            }
+        }
+        _ => {
+            return Ok(GalleryExport {
+                path: stored.to_owned(),
+                temporary_directory: None,
+            })
+        }
+    };
+    // Isolate simultaneous exports and keep the original media ID as the asset
+    // filename so a later import can recognise its existing Memory row.
+    let directory = stored
+        .parent()
+        .unwrap()
+        .join(format!(".gallery-{}", new_uuid_v7()));
+    std::fs::create_dir_all(&directory)?;
+    let exported = GalleryExport {
+        path: directory
+            .join(stored.file_name().unwrap())
+            .with_extension(extension),
+        temporary_directory: Some(directory),
+    };
+    if extension == "webp" {
+        if let Err(error) = media_exif::write_with_exif(stored, &exported.path, metadata) {
+            tracing::warn!(%error, "exporting without EXIF metadata");
+            std::fs::copy(stored, &exported.path)?;
+        }
+    } else {
+        // Some originals live under a historical .webp path. Give Photos and
+        // MediaStore the actual format without rewriting its pixels/metadata.
+        // A hard link costs no extra file-sized read/write when supported.
+        // Android writes GPS EXIF into PNG/JPEG exports. They must have their
+        // own bytes rather than sharing an inode with the immutable Memory.
+        let needs_location_write = matches!(extension, "png" | "jpg")
+            && metadata.latitude.is_some()
+            && metadata.longitude.is_some();
+        if needs_location_write || std::fs::hard_link(stored, &exported.path).is_err() {
+            std::fs::copy(stored, &exported.path)?;
+        }
+    }
+    Ok(exported)
 }
 
 /// Everything the video transcode reads off the media row.
@@ -1668,6 +1810,52 @@ fn parse_reupload_requested_by(value: Option<&str>) -> Vec<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn sending_media_preserves_the_archive_choice() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
+            .await?;
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'sender', 1)")
+            .execute(&database.pool)
+            .await?;
+        for (group_id, archived) in [("archived", 1_i64), ("active", 0)] {
+            sqlx::query("INSERT INTO groups(group_id, group_name, archived, deleted_content) VALUES (?, ?, ?, 1)")
+                .bind(group_id).bind(group_id).bind(archived).execute(&database.pool).await?;
+            sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES (?, 7)")
+                .bind(group_id)
+                .execute(&database.pool)
+                .await?;
+        }
+        let service = MediaUploadService::new(&ctx);
+        let media_id = service.initialize("image".into(), None, false).await?;
+        service
+            .insert_into_messages(
+                media_id,
+                vec!["archived".into(), "active".into()],
+                None,
+                false,
+                None,
+            )
+            .await?;
+        let groups: Vec<(String, i64, i64)> = sqlx::query_as(
+            "SELECT group_id, archived, deleted_content FROM groups ORDER BY group_id",
+        )
+        .fetch_all(&database.pool)
+        .await?;
+        assert_eq!(
+            groups,
+            vec![("active".into(), 0, 0), ("archived".into(), 1, 0)]
+        );
+        let count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE sender_id IS NULL")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(count, 2);
+        Ok(())
+    }
 
     #[tokio::test]
     async fn refuses_a_story_send_with_no_resolved_recipients() -> anyhow::Result<()> {
@@ -1777,9 +1965,22 @@ mod tests {
         drop(database);
 
         let files = MediaFileService::new(&ctx);
-        let source = files.temp_path(media_id, "image");
+        let source = files.original_path(media_id, "image");
         MediaFileService::ensure_parent(&source)?;
-        image::DynamicImage::ImageRgb8(image::RgbImage::new(900, 1600)).save(&source)?;
+        let original =
+            image::DynamicImage::ImageRgb8(image::RgbImage::from_fn(256, 192, |x, y| {
+                image::Rgb([(x % 16) as u8 * 13, (y % 16) as u8 * 11, 153])
+            }));
+        original.save_with_format(&source, image::ImageFormat::Png)?;
+        // The delivery copy deliberately contains different pixels. It must
+        // never replace the original capture in Memories.
+        std::fs::write(
+            files.temp_path(media_id, "image"),
+            media_codec::encode_webp(
+                &image::DynamicImage::ImageRgb8(image::RgbImage::new(256, 192)),
+                60.0,
+            )?,
+        )?;
 
         MediaUploadService::new(&ctx).store(media_id).await?;
 
@@ -1791,6 +1992,94 @@ mod tests {
                 .fetch_one(&database.pool)
                 .await?;
         assert_eq!(state, (1, 1));
+        let stored = files.stored_path(media_id, "image");
+        assert_eq!(
+            media_codec::decode(&stored)?.to_rgba8(),
+            original.to_rgba8()
+        );
+        let (size, hash): (i64, Vec<u8>) = sqlx::query_as(
+            "SELECT size_in_bytes, stored_file_hash FROM media_files WHERE media_id = ?",
+        )
+        .bind(media_id)
+        .fetch_one(&database.pool)
+        .await?;
+        use sha2::Digest;
+        assert_eq!(size as u64, std::fs::metadata(&stored)?.len());
+        assert_eq!(hash, sha2::Sha256::digest(std::fs::read(&stored)?).to_vec());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn unedited_video_memory_keeps_the_original_without_transcoding() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let data_dir = temp.path().join("data");
+        std::fs::create_dir_all(data_dir.join("keyvalue"))?;
+        std::fs::write(
+            data_dir.join("keyvalue/user.json"),
+            serde_json::to_vec(&UserConfig::default())?,
+        )?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), data_dir).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO media_files(media_id, type) VALUES ('original-video', 'video')")
+            .execute(&database.pool)
+            .await?;
+        let files = MediaFileService::new(&ctx);
+        let original = files.original_path("original-video", "video");
+        MediaFileService::ensure_parent(&original)?;
+        std::fs::write(&original, b"original camera video bytes")?;
+        std::fs::write(
+            files.temp_path("original-video", "video"),
+            b"lossy delivery video bytes",
+        )?;
+        // The editor writes a transparent overlay even when nothing was drawn.
+        image::DynamicImage::ImageRgba8(image::RgbaImage::new(8, 8))
+            .save(files.overlay_image_path("original-video"))?;
+        MediaUploadService::new(&ctx)
+            .store("original-video")
+            .await?;
+        assert_eq!(
+            std::fs::read(files.stored_path("original-video", "video"))?,
+            b"original camera video bytes"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn gallery_export_uses_real_format_and_cleans_its_temporary_file() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let stored = temp.path().join("memory-id.webp");
+        image::DynamicImage::ImageRgb16(image::ImageBuffer::from_pixel(
+            16,
+            12,
+            image::Rgb([12345_u16, 32123, 54321]),
+        ))
+        .save_with_format(&stored, image::ImageFormat::Png)?;
+        let original_bytes = std::fs::read(&stored)?;
+        let exported =
+            prepare_gallery_export(&stored, "image", &media_exif::ExifMetadata::default())?;
+        let path = exported.path.clone();
+        assert_eq!(path.file_name().unwrap(), "memory-id.png");
+        assert_eq!(std::fs::read(&path)?, original_bytes);
+        drop(exported);
+        assert!(!path.exists());
+        assert_eq!(std::fs::read(&stored)?, original_bytes);
+
+        // A HEIC original must retain its native format when exported, even
+        // though its Memory path uses the historical .webp suffix.
+        let heic_header = b"\x00\x00\x00\x18ftypheic\x00\x00\x00\x00mif1heic";
+        std::fs::write(&stored, heic_header)?;
+        let exported =
+            prepare_gallery_export(&stored, "image", &media_exif::ExifMetadata::default())?;
+        assert_eq!(exported.path.extension().unwrap(), "heic");
+        assert_eq!(std::fs::read(&exported.path)?, heic_header);
+        drop(exported);
+
+        let gif = temp.path().join("animation.gif");
+        std::fs::write(&gif, b"animated bytes")?;
+        let exported = prepare_gallery_export(&gif, "gif", &media_exif::ExifMetadata::default())?;
+        assert_eq!(exported.path, gif);
+        drop(exported);
+        assert!(gif.exists());
         Ok(())
     }
 
@@ -1801,5 +2090,32 @@ mod tests {
         let other = media_lock("media-b");
         assert!(Arc::ptr_eq(&first, &second));
         assert!(!Arc::ptr_eq(&first, &other));
+    }
+
+    #[test]
+    fn gps_export_writes_cannot_mutate_the_original_png_or_jpeg() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let image = image::DynamicImage::ImageRgb8(image::ImageBuffer::from_pixel(
+            16,
+            12,
+            image::Rgb([1, 2, 3]),
+        ));
+        let metadata = media_exif::ExifMetadata {
+            latitude: Some(52.52),
+            longitude: Some(13.405),
+            accuracy: Some(8.5),
+            ..Default::default()
+        };
+        for format in [image::ImageFormat::Png, image::ImageFormat::Jpeg] {
+            let stored = temp.path().join("captured-memory.webp");
+            image.save_with_format(&stored, format)?;
+            let original = std::fs::read(&stored)?;
+            let export = prepare_gallery_export(&stored, "image", &metadata)?;
+            assert_eq!(std::fs::read(&export.path)?, original);
+            // ExifInterface rewrites only this copy on Android.
+            std::fs::write(&export.path, b"export with native EXIF")?;
+            assert_eq!(std::fs::read(&stored)?, original);
+        }
+        Ok(())
     }
 }

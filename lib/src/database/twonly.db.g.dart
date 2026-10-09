@@ -61,6 +61,20 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         type: DriftSqlType.blob,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _preferPhotoAvatarMeta = const VerificationMeta(
+    'preferPhotoAvatar',
+  );
+  @override
+  late final GeneratedColumn<bool> preferPhotoAvatar = GeneratedColumn<bool>(
+    'prefer_photo_avatar',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("prefer_photo_avatar" IN (0, 1))',
+    ),
+  );
   static const VerificationMeta _senderProfileCounterMeta =
       const VerificationMeta('senderProfileCounter');
   @override
@@ -389,6 +403,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     displayName,
     nickName,
     avatarSvgCompressed,
+    preferPhotoAvatar,
     senderProfileCounter,
     accepted,
     deletedByUser,
@@ -462,6 +477,15 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         avatarSvgCompressed.isAcceptableOrUnknown(
           data['avatar_svg_compressed']!,
           _avatarSvgCompressedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('prefer_photo_avatar')) {
+      context.handle(
+        _preferPhotoAvatarMeta,
+        preferPhotoAvatar.isAcceptableOrUnknown(
+          data['prefer_photo_avatar']!,
+          _preferPhotoAvatarMeta,
         ),
       );
     }
@@ -692,6 +716,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.blob,
         data['${effectivePrefix}avatar_svg_compressed'],
       ),
+      preferPhotoAvatar: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}prefer_photo_avatar'],
+      ),
       senderProfileCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sender_profile_counter'],
@@ -814,6 +842,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final String? displayName;
   final String? nickName;
   final Uint8List? avatarSvgCompressed;
+  final bool? preferPhotoAvatar;
   final int senderProfileCounter;
   final bool accepted;
   final bool deletedByUser;
@@ -845,6 +874,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     this.displayName,
     this.nickName,
     this.avatarSvgCompressed,
+    this.preferPhotoAvatar,
     required this.senderProfileCounter,
     required this.accepted,
     required this.deletedByUser,
@@ -884,6 +914,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     }
     if (!nullToAbsent || avatarSvgCompressed != null) {
       map['avatar_svg_compressed'] = Variable<Uint8List>(avatarSvgCompressed);
+    }
+    if (!nullToAbsent || preferPhotoAvatar != null) {
+      map['prefer_photo_avatar'] = Variable<bool>(preferPhotoAvatar);
     }
     map['sender_profile_counter'] = Variable<int>(senderProfileCounter);
     map['accepted'] = Variable<bool>(accepted);
@@ -960,6 +993,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       avatarSvgCompressed: avatarSvgCompressed == null && nullToAbsent
           ? const Value.absent()
           : Value(avatarSvgCompressed),
+      preferPhotoAvatar: preferPhotoAvatar == null && nullToAbsent
+          ? const Value.absent()
+          : Value(preferPhotoAvatar),
       senderProfileCounter: Value(senderProfileCounter),
       accepted: Value(accepted),
       deletedByUser: Value(deletedByUser),
@@ -1025,6 +1061,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       avatarSvgCompressed: serializer.fromJson<Uint8List?>(
         json['avatarSvgCompressed'],
       ),
+      preferPhotoAvatar: serializer.fromJson<bool?>(json['preferPhotoAvatar']),
       senderProfileCounter: serializer.fromJson<int>(
         json['senderProfileCounter'],
       ),
@@ -1091,6 +1128,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       'displayName': serializer.toJson<String?>(displayName),
       'nickName': serializer.toJson<String?>(nickName),
       'avatarSvgCompressed': serializer.toJson<Uint8List?>(avatarSvgCompressed),
+      'preferPhotoAvatar': serializer.toJson<bool?>(preferPhotoAvatar),
       'senderProfileCounter': serializer.toJson<int>(senderProfileCounter),
       'accepted': serializer.toJson<bool>(accepted),
       'deletedByUser': serializer.toJson<bool>(deletedByUser),
@@ -1143,6 +1181,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     Value<String?> displayName = const Value.absent(),
     Value<String?> nickName = const Value.absent(),
     Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
+    Value<bool?> preferPhotoAvatar = const Value.absent(),
     int? senderProfileCounter,
     bool? accepted,
     bool? deletedByUser,
@@ -1176,6 +1215,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     avatarSvgCompressed: avatarSvgCompressed.present
         ? avatarSvgCompressed.value
         : this.avatarSvgCompressed,
+    preferPhotoAvatar: preferPhotoAvatar.present
+        ? preferPhotoAvatar.value
+        : this.preferPhotoAvatar,
     senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
     accepted: accepted ?? this.accepted,
     deletedByUser: deletedByUser ?? this.deletedByUser,
@@ -1230,6 +1272,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       avatarSvgCompressed: data.avatarSvgCompressed.present
           ? data.avatarSvgCompressed.value
           : this.avatarSvgCompressed,
+      preferPhotoAvatar: data.preferPhotoAvatar.present
+          ? data.preferPhotoAvatar.value
+          : this.preferPhotoAvatar,
       senderProfileCounter: data.senderProfileCounter.present
           ? data.senderProfileCounter.value
           : this.senderProfileCounter,
@@ -1304,6 +1349,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('displayName: $displayName, ')
           ..write('nickName: $nickName, ')
           ..write('avatarSvgCompressed: $avatarSvgCompressed, ')
+          ..write('preferPhotoAvatar: $preferPhotoAvatar, ')
           ..write('senderProfileCounter: $senderProfileCounter, ')
           ..write('accepted: $accepted, ')
           ..write('deletedByUser: $deletedByUser, ')
@@ -1342,6 +1388,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     displayName,
     nickName,
     $driftBlobEquality.hash(avatarSvgCompressed),
+    preferPhotoAvatar,
     senderProfileCounter,
     accepted,
     deletedByUser,
@@ -1380,6 +1427,7 @@ class Contact extends DataClass implements Insertable<Contact> {
             other.avatarSvgCompressed,
             this.avatarSvgCompressed,
           ) &&
+          other.preferPhotoAvatar == this.preferPhotoAvatar &&
           other.senderProfileCounter == this.senderProfileCounter &&
           other.accepted == this.accepted &&
           other.deletedByUser == this.deletedByUser &&
@@ -1424,6 +1472,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<String?> displayName;
   final Value<String?> nickName;
   final Value<Uint8List?> avatarSvgCompressed;
+  final Value<bool?> preferPhotoAvatar;
   final Value<int> senderProfileCounter;
   final Value<bool> accepted;
   final Value<bool> deletedByUser;
@@ -1455,6 +1504,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.displayName = const Value.absent(),
     this.nickName = const Value.absent(),
     this.avatarSvgCompressed = const Value.absent(),
+    this.preferPhotoAvatar = const Value.absent(),
     this.senderProfileCounter = const Value.absent(),
     this.accepted = const Value.absent(),
     this.deletedByUser = const Value.absent(),
@@ -1487,6 +1537,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.displayName = const Value.absent(),
     this.nickName = const Value.absent(),
     this.avatarSvgCompressed = const Value.absent(),
+    this.preferPhotoAvatar = const Value.absent(),
     this.senderProfileCounter = const Value.absent(),
     this.accepted = const Value.absent(),
     this.deletedByUser = const Value.absent(),
@@ -1519,6 +1570,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<String>? displayName,
     Expression<String>? nickName,
     Expression<Uint8List>? avatarSvgCompressed,
+    Expression<bool>? preferPhotoAvatar,
     Expression<int>? senderProfileCounter,
     Expression<bool>? accepted,
     Expression<bool>? deletedByUser,
@@ -1552,6 +1604,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (nickName != null) 'nick_name': nickName,
       if (avatarSvgCompressed != null)
         'avatar_svg_compressed': avatarSvgCompressed,
+      if (preferPhotoAvatar != null) 'prefer_photo_avatar': preferPhotoAvatar,
       if (senderProfileCounter != null)
         'sender_profile_counter': senderProfileCounter,
       if (accepted != null) 'accepted': accepted,
@@ -1600,6 +1653,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<String?>? displayName,
     Value<String?>? nickName,
     Value<Uint8List?>? avatarSvgCompressed,
+    Value<bool?>? preferPhotoAvatar,
     Value<int>? senderProfileCounter,
     Value<bool>? accepted,
     Value<bool>? deletedByUser,
@@ -1632,6 +1686,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       displayName: displayName ?? this.displayName,
       nickName: nickName ?? this.nickName,
       avatarSvgCompressed: avatarSvgCompressed ?? this.avatarSvgCompressed,
+      preferPhotoAvatar: preferPhotoAvatar ?? this.preferPhotoAvatar,
       senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
       accepted: accepted ?? this.accepted,
       deletedByUser: deletedByUser ?? this.deletedByUser,
@@ -1687,6 +1742,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       map['avatar_svg_compressed'] = Variable<Uint8List>(
         avatarSvgCompressed.value,
       );
+    }
+    if (preferPhotoAvatar.present) {
+      map['prefer_photo_avatar'] = Variable<bool>(preferPhotoAvatar.value);
     }
     if (senderProfileCounter.present) {
       map['sender_profile_counter'] = Variable<int>(senderProfileCounter.value);
@@ -1800,6 +1858,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('displayName: $displayName, ')
           ..write('nickName: $nickName, ')
           ..write('avatarSvgCompressed: $avatarSvgCompressed, ')
+          ..write('preferPhotoAvatar: $preferPhotoAvatar, ')
           ..write('senderProfileCounter: $senderProfileCounter, ')
           ..write('accepted: $accepted, ')
           ..write('deletedByUser: $deletedByUser, ')
@@ -15839,6 +15898,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<String?> displayName,
       Value<String?> nickName,
       Value<Uint8List?> avatarSvgCompressed,
+      Value<bool?> preferPhotoAvatar,
       Value<int> senderProfileCounter,
       Value<bool> accepted,
       Value<bool> deletedByUser,
@@ -15872,6 +15932,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<String?> displayName,
       Value<String?> nickName,
       Value<Uint8List?> avatarSvgCompressed,
+      Value<bool?> preferPhotoAvatar,
       Value<int> senderProfileCounter,
       Value<bool> accepted,
       Value<bool> deletedByUser,
@@ -16203,6 +16264,11 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<Uint8List> get avatarSvgCompressed => $composableBuilder(
     column: $table.avatarSvgCompressed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get preferPhotoAvatar => $composableBuilder(
+    column: $table.preferPhotoAvatar,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -16677,6 +16743,11 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get preferPhotoAvatar => $composableBuilder(
+    column: $table.preferPhotoAvatar,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get senderProfileCounter => $composableBuilder(
     column: $table.senderProfileCounter,
     builder: (column) => ColumnOrderings(column),
@@ -16830,6 +16901,11 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<Uint8List> get avatarSvgCompressed => $composableBuilder(
     column: $table.avatarSvgCompressed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get preferPhotoAvatar => $composableBuilder(
+    column: $table.preferPhotoAvatar,
     builder: (column) => column,
   );
 
@@ -17310,6 +17386,7 @@ class $$ContactsTableTableManager
                 Value<String?> displayName = const Value.absent(),
                 Value<String?> nickName = const Value.absent(),
                 Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
+                Value<bool?> preferPhotoAvatar = const Value.absent(),
                 Value<int> senderProfileCounter = const Value.absent(),
                 Value<bool> accepted = const Value.absent(),
                 Value<bool> deletedByUser = const Value.absent(),
@@ -17343,6 +17420,7 @@ class $$ContactsTableTableManager
                 displayName: displayName,
                 nickName: nickName,
                 avatarSvgCompressed: avatarSvgCompressed,
+                preferPhotoAvatar: preferPhotoAvatar,
                 senderProfileCounter: senderProfileCounter,
                 accepted: accepted,
                 deletedByUser: deletedByUser,
@@ -17376,6 +17454,7 @@ class $$ContactsTableTableManager
                 Value<String?> displayName = const Value.absent(),
                 Value<String?> nickName = const Value.absent(),
                 Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
+                Value<bool?> preferPhotoAvatar = const Value.absent(),
                 Value<int> senderProfileCounter = const Value.absent(),
                 Value<bool> accepted = const Value.absent(),
                 Value<bool> deletedByUser = const Value.absent(),
@@ -17409,6 +17488,7 @@ class $$ContactsTableTableManager
                 displayName: displayName,
                 nickName: nickName,
                 avatarSvgCompressed: avatarSvgCompressed,
+                preferPhotoAvatar: preferPhotoAvatar,
                 senderProfileCounter: senderProfileCounter,
                 accepted: accepted,
                 deletedByUser: deletedByUser,

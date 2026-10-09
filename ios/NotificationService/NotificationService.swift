@@ -50,6 +50,7 @@ private struct NativeNotificationAddition: Decodable {
   let senderName: String
   let title: String
   let body: String
+  let textMessagesBody: String?
   let conversationName: String?
   let isGroup: Bool
   let messageId: String?
@@ -70,6 +71,26 @@ private struct NativeNotificationAddition: Decodable {
     case messageId = "message_id"
     case createdAt = "created_at"
     case avatarPath = "avatar_path"
+    case textMessagesBody = "text_messages_body"
+  }
+
+  var textGroup: String? {
+    guard kind == "text" || kind == "response" else { return nil }
+    return "text:\(conversationId ?? ""):\(senderId)"
+  }
+}
+
+private struct RenderedNotification {
+  let addition: NativeNotificationAddition
+  let eventIds: [String]
+  let notificationIds: [String]
+  let replacingRequestIds: [String]
+
+  var body: String {
+    guard notificationIds.count > 1, let template = addition.textMessagesBody else {
+      return addition.body
+    }
+    return template.replacingOccurrences(of: "{count}", with: String(notificationIds.count))
   }
 }
 
@@ -129,27 +150,80 @@ final class NotificationService: UNNotificationServiceExtension {
 
   private func render(batch: NativeNotificationBatch, original: UNNotificationContent) {
     let center = UNUserNotificationCenter.current()
+    center.getDeliveredNotifications { [weak self] delivered in
+      self?.render(
+        groups: Self.groupedAdditions(batch.additions, delivered: delivered.map(\.request)),
+        badgeCount: batch.badgeCount,
+        original: original
+      )
+    }
+  }
+
+  private static func groupedAdditions(
+    _ additions: [NativeNotificationAddition], delivered: [UNNotificationRequest]
+  ) -> [RenderedNotification] {
+    // A single request represents each sender's text messages in a chat, even
+    // when they arrive in different wake-ups. Dismissed alerts are absent here
+    // and therefore start a fresh group on the next message.
+    let grouped = Dictionary(grouping: additions) {
+      $0.textGroup ?? "event:\($0.eventId)"
+    }
+    return grouped.values.compactMap { entries -> RenderedNotification? in
+      guard let latest = entries.last else { return nil }
+      let previous = delivered.filter {
+        guard let key = latest.textGroup else { return false }
+        return $0.content.userInfo["text_group"] as? String == key
+      }
+      var ids = Set(entries.map(\.notificationId))
+      for notification in previous {
+        let info = notification.content.userInfo
+        if let values = info["notification_ids"] as? [String] {
+          ids.formUnion(values)
+        } else if let value = info["notification_id"] as? String {
+          ids.insert(value)
+        }
+      }
+      return RenderedNotification(
+        addition: latest,
+        eventIds: entries.map(\.eventId),
+        notificationIds: ids.sorted(),
+        replacingRequestIds: previous.map(\.identifier)
+      )
+    }.sorted {
+      if $0.addition.createdAt == $1.addition.createdAt {
+        return $0.addition.eventId < $1.addition.eventId
+      }
+      return $0.addition.createdAt < $1.addition.createdAt
+    }
+  }
+
+  private func render(
+    groups: [RenderedNotification], badgeCount: Int64, original: UNNotificationContent
+  ) {
+    let center = UNUserNotificationCenter.current()
     let group = DispatchGroup()
     let stateLock = NSLock()
     var deliveredEventIds: [String] = []
+    var replacedRequestIds: [String] = []
     var finalContent: UNNotificationContent = original
 
-    for (index, addition) in batch.additions.enumerated() {
+    for (index, rendered) in groups.enumerated() {
       group.enter()
-      communicationContent(for: addition, badgeCount: batch.badgeCount, original: original) {
+      communicationContent(for: rendered, badgeCount: badgeCount, original: original) {
         content in
-        let isFinal = index == batch.additions.count - 1
+        let isFinal = index == groups.count - 1
         if isFinal {
           stateLock.lock()
           finalContent = content
-          deliveredEventIds.append(addition.eventId)
+          deliveredEventIds.append(contentsOf: rendered.eventIds)
+          replacedRequestIds.append(contentsOf: rendered.replacingRequestIds)
           stateLock.unlock()
           group.leave()
           return
         }
 
         let request = UNNotificationRequest(
-          identifier: addition.notificationId,
+          identifier: rendered.addition.textGroup ?? rendered.addition.notificationId,
           content: content,
           trigger: nil
         )
@@ -158,7 +232,11 @@ final class NotificationService: UNNotificationServiceExtension {
             NSLog("Could not schedule Twonly notification: \(error)")
           } else {
             stateLock.lock()
-            deliveredEventIds.append(addition.eventId)
+            deliveredEventIds.append(contentsOf: rendered.eventIds)
+            // A local replacement may reuse the same request identifier.
+            replacedRequestIds.append(contentsOf: rendered.replacingRequestIds.filter {
+              $0 != request.identifier
+            })
             stateLock.unlock()
           }
           group.leave()
@@ -170,8 +248,10 @@ final class NotificationService: UNNotificationServiceExtension {
       stateLock.lock()
       let eventIds = deliveredEventIds
       let content = finalContent
+      let replacedIds = replacedRequestIds
       stateLock.unlock()
       Self.acknowledge(eventIds: eventIds)
+      center.removeDeliveredNotifications(withIdentifiers: replacedIds)
       self?.finish(with: content)
       // The alert is on screen. Whatever time the system still grants this
       // extension goes to the deferred work; being terminated part-way only
@@ -181,16 +261,17 @@ final class NotificationService: UNNotificationServiceExtension {
   }
 
   private func communicationContent(
-    for addition: NativeNotificationAddition,
+    for rendered: RenderedNotification,
     badgeCount: Int64,
     original: UNNotificationContent,
     completion: @escaping (UNNotificationContent) -> Void
   ) {
+    let addition = rendered.addition
     let mutable = (original.mutableCopy() as? UNMutableNotificationContent)
       ?? UNMutableNotificationContent()
-    mutable.title = addition.title
-    mutable.body = addition.body
-    mutable.threadIdentifier = addition.conversationId ?? String(addition.senderId)
+    mutable.title = addition.senderName
+    mutable.body = rendered.body
+    mutable.threadIdentifier = addition.textGroup ?? addition.conversationId ?? String(addition.senderId)
     mutable.badge = NSNumber(value: badgeCount)
     mutable.sound = .default
     var userInfo = mutable.userInfo
@@ -199,6 +280,8 @@ final class NotificationService: UNNotificationServiceExtension {
     }
     userInfo["notification_kind"] = addition.kind
     userInfo["notification_id"] = addition.notificationId
+    userInfo["notification_ids"] = rendered.notificationIds
+    userInfo["text_group"] = addition.textGroup
     mutable.userInfo = userInfo
 
     let avatar = addition.avatarPath
@@ -218,7 +301,7 @@ final class NotificationService: UNNotificationServiceExtension {
     let intent = INSendMessageIntent(
       recipients: nil,
       outgoingMessageType: .outgoingMessageText,
-      content: addition.body,
+      content: rendered.body,
       speakableGroupName: groupName,
       conversationIdentifier: addition.conversationId ?? String(addition.senderId),
       serviceName: "Twonly",
@@ -234,7 +317,16 @@ final class NotificationService: UNNotificationServiceExtension {
         return
       }
       do {
-        completion(try mutable.updating(from: intent))
+        let content = try mutable.updating(from: intent)
+        // Keep our grouping and tap metadata after SiriKit enriches the alert.
+        if let enriched = content.mutableCopy() as? UNMutableNotificationContent {
+          enriched.title = addition.senderName
+          enriched.threadIdentifier = mutable.threadIdentifier
+          enriched.userInfo = mutable.userInfo
+          completion(enriched)
+        } else {
+          completion(content)
+        }
       } catch {
         NSLog("Could not create Twonly communication notification: \(error)")
         completion(mutable)

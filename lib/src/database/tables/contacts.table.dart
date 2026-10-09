@@ -10,6 +10,8 @@ class Contacts extends Table {
   TextColumn get displayName => text().nullable()();
   TextColumn get nickName => text().nullable()();
   BlobColumn get avatarSvgCompressed => blob().nullable()();
+  // Null keeps the default preference for a photo avatar when available.
+  BoolColumn get preferPhotoAvatar => boolean().nullable()();
 
   IntColumn get senderProfileCounter =>
       integer().withDefault(const Constant(0))();

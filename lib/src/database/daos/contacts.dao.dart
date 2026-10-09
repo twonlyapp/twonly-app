@@ -12,7 +12,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   // of this object.
   // ignore: matching_super_parameters
   ContactsDao(super.db);
-Future<int> insertOnConflictUpdate(ContactsCompanion contact) async {
+  Future<int> insertOnConflictUpdate(ContactsCompanion contact) async {
     try {
       return await into(contacts).insertOnConflictUpdate(contact);
     } catch (e) {
@@ -29,6 +29,13 @@ Future<int> insertOnConflictUpdate(ContactsCompanion contact) async {
     if (userIds.isEmpty) return Stream.value(const []);
     return (select(contacts)..where((t) => t.userId.isIn(userIds))).watch();
   }
+
+  Stream<bool> watchHasPhotoAvatar(int userId) => customSelect(
+    'SELECT EXISTS(SELECT 1 FROM received_custom_avatars WHERE contact_id = ? AND webp IS NOT NULL) AS has_photo',
+    variables: [Variable.withInt(userId)],
+    // Receiving/removing a photo also touches contacts to refresh its avatars.
+    readsFrom: {contacts},
+  ).watchSingle().map((row) => row.read<bool>('has_photo'));
 
   Future<Contact?> getContactById(int userId) async {
     return (select(
@@ -164,7 +171,8 @@ Future<int> insertOnConflictUpdate(ContactsCompanion contact) async {
         }))
         .watch();
   }
-Stream<List<Contact>> watchAllContacts() {
+
+  Stream<List<Contact>> watchAllContacts() {
     return select(contacts).watch();
   }
 }

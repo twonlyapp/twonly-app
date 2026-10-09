@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:twonly/core/bridge/api.dart' as rust_api;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/services/api/connection_lifecycle.dart';
 import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
@@ -29,6 +30,24 @@ class ApiService {
   late final Stream<ApiEvent> events;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   late final StreamSubscription<ApiEvent> _apiEventSubscription;
+  late final _connectionLifecycle = ConnectionLifecycle(
+    readNetworkAvailable: () async =>
+        !(await Connectivity().checkConnectivity()).contains(
+          ConnectivityResult.none,
+        ),
+    applyNetworkAvailable: (available) =>
+        rust_api.RustApi.setNetworkAvailable(available: available),
+    applyBackground: (background) =>
+        rust_api.RustApi.setBackground(inBackground: background),
+    onError: (error, stackTrace) => Log.error(
+      'API lifecycle update failed',
+      error: error,
+      stackTrace: stackTrace,
+    ),
+  );
+
+  Future<void> setBackground(bool inBackground) =>
+      _connectionLifecycle.setBackground(inBackground);
 
   /// The server rejects an outdated app or a superseded device during the
   /// handshake, which usually happens before the widget showing that banner is
@@ -84,12 +103,11 @@ class ApiService {
       return;
     }
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
-      result,
-    ) async {
-      await rust_api.RustApi.setNetworkAvailable(
-        available: !result.contains(ConnectivityResult.none),
-      );
+      _,
+    ) {
+      unawaited(_connectionLifecycle.networkChanged());
     });
+    await _connectionLifecycle.networkChanged();
   }
 
   Future<void> dispose() async {

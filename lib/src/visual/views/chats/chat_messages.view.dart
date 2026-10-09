@@ -21,6 +21,7 @@ import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_components/chat_body_safe_area.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/animated_new_message.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/blink.component.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_group_action.dart';
@@ -738,12 +739,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
             ),
           ),
         ),
-        body: SafeArea(
-          // Keep the system bottom inset reserved while the custom picker is
-          // visible. Otherwise it reappears during the final keyboard-close
-          // frames and makes the layout jump by roughly the navigation-bar
-          // height.
-          maintainBottomViewPadding: _emojiPickerShowing,
+        body: ChatBodySafeArea(
+          showingPicker: _emojiPickerShowing,
           child: Column(
             children: [
               Expanded(

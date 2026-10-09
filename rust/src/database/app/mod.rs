@@ -12,6 +12,10 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::sync::broadcast;
 
+#[cfg(test)]
+mod avatar_activity_tests;
+#[cfg(test)]
+mod direct_chat_archive_tests;
 mod legacy_import;
 pub mod tables;
 

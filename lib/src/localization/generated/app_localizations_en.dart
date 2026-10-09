@@ -232,6 +232,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStorageData => 'Memories & Storage';
 
   @override
+  String get memoryDetailsTitle => 'Details';
+
+  @override
+  String get memoryDetailsCapturedAt => 'Captured';
+
+  @override
+  String get memoryDetailsLocation => 'Location';
+
+  @override
+  String get memoryDetailsLocationPending => 'Finding capture location…';
+
+  @override
+  String get memoryDetailsNoLocation => 'No location recorded';
+
+  @override
+  String memoryDetailsAccuracy(int meters) {
+    return 'Accuracy: ±$meters m';
+  }
+
+  @override
+  String get memoryDetailsOpenMap => 'Open in maps';
+
+  @override
+  String get memoryDetailsMapUnavailable => 'Could not open maps.';
+
+  @override
   String get memoryLocationTitle => 'Store location in Memories';
 
   @override
@@ -1234,6 +1260,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String notificationTextMessages(Object count, Object inGroup) {
+    return 'sent $count messages$inGroup.';
+  }
+
+  @override
   String notificationTwonly(Object inGroup) {
     return 'sent a twonly$inGroup.';
   }
@@ -1391,6 +1422,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get avatarSaveChangesDiscard => 'Discard';
+
+  @override
+  String get contactAvatarTitle => 'Avatar';
+
+  @override
+  String get contactAvatarPhoto => 'Photo avatar';
+
+  @override
+  String get contactAvatarIllustrated => 'Illustrated avatar';
 
   @override
   String get customAvatarSvgTab => 'Public avatar';

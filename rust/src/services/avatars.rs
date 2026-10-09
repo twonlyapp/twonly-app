@@ -454,36 +454,40 @@ pub(crate) async fn ensure_contact_avatar_png(
     contact_id: i64,
 ) -> Result<Option<PathBuf>> {
     let database = ctx.app_db.read().await.clone();
-    if let Some(custom) = sqlx::query(
-        "SELECT applied_counter, webp FROM received_custom_avatars \
-         WHERE contact_id = ? AND webp IS NOT NULL",
+    let row: Option<(Option<Vec<u8>>, i64, Option<i64>)> = sqlx::query_as(
+        "SELECT avatar_svg_compressed, sender_profile_counter, prefer_photo_avatar \
+         FROM contacts WHERE user_id = ?",
     )
     .bind(contact_id)
     .fetch_optional(&database.pool)
-    .await?
-    {
-        let counter: i64 = custom.get("applied_counter");
-        let webp: Vec<u8> = custom.get("webp");
-        let output = Path::new(&ctx.config.data_dir)
-            .join("avatars")
-            .join(format!("contact_{contact_id}_custom_{counter}.webp"));
-        write_cached_bytes(&output, &webp)?;
-        return Ok(Some(output));
-    }
-    let row = sqlx::query!(
-        r#"SELECT avatar_svg_compressed, sender_profile_counter FROM contacts WHERE user_id = ?"#,
-        contact_id,
-    )
-    .fetch_optional(&database.pool)
     .await?;
-
-    let Some(row) = row else {
+    let Some((svg, profile_counter, prefer_photo)) = row else {
         return Ok(None);
     };
-    let Some(svg) = row.avatar_svg_compressed else {
+    let svg = svg.filter(|bytes| !bytes.is_empty());
+    // Preferences are local, just like nicknames. If the preferred kind is no
+    // longer shared by this contact, continue to use whichever is available.
+    if prefer_photo.unwrap_or(1) != 0 || svg.is_none() {
+        if let Some(custom) = sqlx::query(
+            "SELECT applied_counter, webp FROM received_custom_avatars \
+         WHERE contact_id = ? AND webp IS NOT NULL",
+        )
+        .bind(contact_id)
+        .fetch_optional(&database.pool)
+        .await?
+        {
+            let counter: i64 = custom.get("applied_counter");
+            let webp: Vec<u8> = custom.get("webp");
+            let output = Path::new(&ctx.config.data_dir)
+                .join("avatars")
+                .join(format!("contact_{contact_id}_custom_{counter}.webp"));
+            write_cached_bytes(&output, &webp)?;
+            return Ok(Some(output));
+        }
+    }
+    let Some(svg) = svg else {
         return Ok(None);
     };
-    let profile_counter = row.sender_profile_counter;
     let output = contact_avatar_path(ctx, contact_id, profile_counter);
     if output.exists() {
         return Ok(Some(output));
@@ -657,6 +661,47 @@ mod tests {
         assert_eq!(path.as_deref(), Some(expected.as_path()));
         assert!(expected.exists(), "the PNG has to be rendered on demand");
         image::load_from_memory(&std::fs::read(&expected).unwrap()).unwrap();
+    }
+
+    #[tokio::test]
+    async fn contact_avatar_preference_and_missing_kind_fallbacks() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
+            .await?;
+        let db = ctx.app_db.read().await.clone();
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, avatar_svg_compressed) VALUES (7, 'peer', ?)",
+        )
+        .bind(SVG.as_bytes())
+        .execute(&db.pool)
+        .await?;
+        let image = DynamicImage::ImageRgba8(RgbaImage::from_pixel(8, 8, Rgba([1, 2, 3, 255])));
+        let webp = media_codec::encode_webp(&image, 90.0)?;
+        sqlx::query("INSERT INTO received_custom_avatars(contact_id, webp, sha256, width, height) VALUES (7, ?, ?, 8, 8)")
+            .bind(&webp).bind(vec![0_u8; 32]).execute(&db.pool).await?;
+        let photo = ensure_contact_avatar_png(&ctx, 7).await?.unwrap();
+        assert_eq!(photo.extension().unwrap(), "webp");
+        assert_eq!(std::fs::read(&photo)?, webp);
+        sqlx::query("UPDATE contacts SET prefer_photo_avatar = 0 WHERE user_id = 7")
+            .execute(&db.pool)
+            .await?;
+        let illustrated = ensure_contact_avatar_png(&ctx, 7).await?.unwrap();
+        assert_eq!(illustrated, contact_avatar_path(&ctx, 7, 0));
+        sqlx::query("UPDATE contacts SET avatar_svg_compressed = NULL WHERE user_id = 7")
+            .execute(&db.pool)
+            .await?;
+        assert_eq!(
+            ensure_contact_avatar_png(&ctx, 7).await?,
+            Some(photo.clone())
+        );
+        sqlx::query("UPDATE contacts SET prefer_photo_avatar = 1, avatar_svg_compressed = ? WHERE user_id = 7")
+            .bind(SVG.as_bytes()).execute(&db.pool).await?;
+        assert_eq!(ensure_contact_avatar_png(&ctx, 7).await?, Some(photo));
+        sqlx::query("DELETE FROM received_custom_avatars WHERE contact_id = 7")
+            .execute(&db.pool)
+            .await?;
+        assert_eq!(ensure_contact_avatar_png(&ctx, 7).await?, Some(illustrated));
+        Ok(())
     }
 
     #[tokio::test]

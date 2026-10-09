@@ -163,7 +163,6 @@ impl BackupArchive {
         let app_db_key = keys.main_key.get_database_key(DatabaseKey::AppDb);
 
         Ok(vec![
-            ("twonly.sqlite", database_dir.clone(), true, None),
             (
                 "rust_db.sqlite",
                 database_dir.clone(),
@@ -236,6 +235,19 @@ impl BackupArchive {
                     false, // Open the copy in write mode required for encrypted backups
                 )
                 .await?;
+                // Restore discards peer ratchets and their reset throttles.
+                // Remove them only from the temporary copy before exporting
+                // into a fresh database, which also reclaims their pages.
+                if file_name == "rust_db.sqlite" {
+                    let mut transaction = db.pool.begin().await?;
+                    sqlx::query!("DELETE FROM signal_sessions")
+                        .execute(&mut *transaction)
+                        .await?;
+                    sqlx::query!("DELETE FROM signal_session_resets")
+                        .execute(&mut *transaction)
+                        .await?;
+                    transaction.commit().await?;
+                }
                 let backup_database_file = backup_data_dir.join(file_name).display().to_string();
                 db.create_backup(backup_database_file.as_str(), encryption_key.as_deref())
                     .await?;
@@ -594,9 +606,9 @@ mod tests {
             .find(|f| f.name == APP_DATABASE_FILE)
             .unwrap();
         assert_eq!(main_file.size_bytes, Some(info.database_size_bytes));
-        assert_eq!(info.files.len(), 5);
+        assert_eq!(info.files.len(), 4);
+        assert!(!info.files.iter().any(|file| file.name == "twonly.sqlite"));
         for (name, size) in [
-            ("twonly.sqlite", None),
             ("user.json", Some(12)),
             ("user_discovery_config.json", Some(2)),
         ] {
@@ -628,6 +640,90 @@ mod tests {
                 .rows,
             0
         );
+    }
+
+    #[tokio::test]
+    async fn backup_omits_peer_sessions_without_changing_live_signal_state() {
+        let temp_dir = tempdir().unwrap();
+        let ctx = Context::init_for_testing(
+            temp_dir.path().join("database"),
+            temp_dir.path().join("data"),
+        )
+        .await
+        .unwrap();
+        let live_db = ctx.rust_db.read().await.clone();
+        for statement in [
+            "INSERT INTO signal_sessions VALUES ('peer', 1, zeroblob(262144))",
+            "INSERT INTO signal_session_resets VALUES ('peer', 1, 1, 1, 1)",
+            "INSERT INTO signal_identities VALUES ('peer', x'040506', 1)",
+            "INSERT INTO signal_pre_keys VALUES (1, x'010203')",
+            "INSERT INTO signal_signed_pre_keys VALUES (1, x'010203')",
+            "INSERT INTO signal_kyber_pre_keys VALUES (1, x'010203')",
+        ] {
+            sqlx::query(AssertSqlSafe(statement))
+                .execute(&live_db.pool)
+                .await
+                .unwrap();
+        }
+        let live_path = PathBuf::from(&ctx.config.database_dir).join("rust_db.sqlite");
+        let live_size = live_path.metadata().unwrap().len();
+
+        let backup_path = BackupArchive::create_backup(&ctx).await.unwrap();
+        let keys = ctx.key_manager.lock().await;
+        let archive_bytes = keys
+            .main_key
+            .decrypt_backup(&std::fs::read(&backup_path).unwrap())
+            .unwrap();
+        let database_key = keys.main_key.get_database_key(DatabaseKey::RustDb);
+        drop(keys);
+        let mut archive = ZipArchive::new(Cursor::new(archive_bytes)).unwrap();
+        let extracted_path = temp_dir.path().join("backup_signal.sqlite");
+        copy(
+            &mut archive.by_name("rust_db.sqlite").unwrap(),
+            &mut File::create(&extracted_path).unwrap(),
+        )
+        .unwrap();
+        let backup_db = Database::new(
+            &extracted_path.display().to_string(),
+            Some(&database_key),
+            true,
+        )
+        .await
+        .unwrap();
+        backup_db.check_integrity().await.unwrap();
+
+        for (table, expected_backup_rows) in [
+            ("signal_sessions", 0_i64),
+            ("signal_session_resets", 0),
+            ("signal_identities", 1),
+            ("signal_pre_keys", 1),
+            ("signal_signed_pre_keys", 1),
+            ("signal_kyber_pre_keys", 1),
+        ] {
+            let query = format!("SELECT COUNT(*) FROM {table}");
+            let backup_rows: i64 = sqlx::query_scalar(AssertSqlSafe(query.as_str()))
+                .fetch_one(&backup_db.pool)
+                .await
+                .unwrap();
+            assert_eq!(backup_rows, expected_backup_rows, "backup rows in {table}");
+            let live_rows: i64 = sqlx::query_scalar(AssertSqlSafe(query.as_str()))
+                .fetch_one(&live_db.pool)
+                .await
+                .unwrap();
+            assert_eq!(live_rows, 1, "backup must preserve live rows in {table}");
+        }
+        let live_session_bytes: i64 =
+            sqlx::query_scalar("SELECT length(record_bytes) FROM signal_sessions")
+                .fetch_one(&live_db.pool)
+                .await
+                .unwrap();
+        assert_eq!(live_session_bytes, 262144);
+        assert_eq!(live_path.metadata().unwrap().len(), live_size);
+        assert!(
+            extracted_path.metadata().unwrap().len() + 262144 <= live_size,
+            "the exported backup must reclaim the discarded session pages"
+        );
+        backup_db.pool.close().await;
     }
 
     #[tokio::test]
@@ -700,8 +796,20 @@ mod tests {
         }
 
         // 2. Create backup
+        let legacy_file = PathBuf::from(&ctx.config.database_dir).join("twonly.sqlite");
+        std::fs::write(&legacy_file, b"obsolete legacy database").unwrap();
         let backup_path = BackupArchive::create_backup(&ctx).await.unwrap();
         assert!(backup_path.exists());
+        {
+            let keys = ctx.key_manager.lock().await;
+            let archive_bytes = keys
+                .main_key
+                .decrypt_backup(&std::fs::read(&backup_path).unwrap())
+                .unwrap();
+            let mut archive = ZipArchive::new(Cursor::new(archive_bytes)).unwrap();
+            assert!(archive.by_name("twonly.sqlite").is_err());
+            assert!(archive.by_name(APP_DATABASE_FILE).is_ok());
+        }
 
         // 3. Modify data (to simulate state before restore)
         {
@@ -727,6 +835,10 @@ mod tests {
         BackupArchive::restore_from_backup(&ctx, &backup_path)
             .await
             .unwrap();
+        assert_eq!(
+            std::fs::read(&legacy_file).unwrap(),
+            b"obsolete legacy database"
+        );
 
         // 5. Verify restored data
         {
@@ -835,7 +947,15 @@ mod tests {
         legacy.pool.close().await;
 
         let archive_path = BackupArchive::create_backup(&ctx).await.unwrap();
-        remove_file_from_encrypted_archive(&ctx, &archive_path, APP_DATABASE_FILE).await;
+        // Build an actual historical archive explicitly; current backups no
+        // longer include the old database.
+        remove_file_from_encrypted_archive(
+            &ctx,
+            &archive_path,
+            APP_DATABASE_FILE,
+            Some(&legacy_path),
+        )
+        .await;
 
         let app_db = ctx.app_db.read().await.clone();
         sqlx::query!(
@@ -873,6 +993,7 @@ mod tests {
         ctx: &Context,
         archive_path: &Path,
         excluded_name: &str,
+        legacy_file: Option<&Path>,
     ) {
         let keys = ctx.key_manager.lock().await;
         let encrypted = std::fs::read(archive_path).unwrap();
@@ -893,6 +1014,10 @@ mod tests {
                 }
                 writer.start_file(entry.name(), options).unwrap();
                 copy(&mut entry, &mut writer).unwrap();
+            }
+            if let Some(path) = legacy_file {
+                writer.start_file("twonly.sqlite", options).unwrap();
+                copy(&mut File::open(path).unwrap(), &mut writer).unwrap();
             }
             writer.finish().unwrap();
         }

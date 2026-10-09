@@ -128,7 +128,9 @@ class MediaFileService {
     Log.info('Storing media file ${mediaFile.mediaId}');
     await RustApi.storeMedia(mediaId: mediaFile.mediaId);
     await updateFromDB();
-    await MemoriesCloudService().checkUploads();
+    // Local saving is complete. Uploading this or older queued Memories must
+    // not keep the save button waiting on network transfers.
+    unawaited(MemoriesCloudService().checkUploads());
   }
 
   /// Recomputes the size and content hash Rust keeps for the stored file.

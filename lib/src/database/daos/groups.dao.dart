@@ -134,7 +134,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
               useColumns: false,
             ),
           ])
-          ..orderBy([OrderingTerm.desc(groupMembers.lastMessage)])
+          ..orderBy([
+            OrderingTerm.desc(groupMembers.lastMessage),
+            OrderingTerm.asc(contacts.userId),
+          ])
           ..where(
             groupMembers.groupId.equals(groupId) &
                 _isActiveMember(groupMembers),
@@ -151,7 +154,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
               useColumns: false,
             ),
           ])
-          ..orderBy([OrderingTerm.desc(groupMembers.lastMessage)])
+          ..orderBy([
+            OrderingTerm.desc(groupMembers.lastMessage),
+            OrderingTerm.asc(contacts.userId),
+          ])
           ..where(
             groupMembers.groupId.equals(groupId) &
                 _isActiveMember(groupMembers),
@@ -176,9 +182,17 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   }
 
   Stream<List<(Contact, GroupMember)>> watchAllGroupMembers() {
-    final query = (select(groupMembers)..where(_isActiveMember)).join([
-      innerJoin(contacts, contacts.userId.equalsExp(groupMembers.contactId)),
-    ]);
+    final query =
+        (select(groupMembers)..where(_isActiveMember)).join([
+          innerJoin(
+            contacts,
+            contacts.userId.equalsExp(groupMembers.contactId),
+          ),
+        ])..orderBy([
+          OrderingTerm.asc(groupMembers.groupId),
+          OrderingTerm.desc(groupMembers.lastMessage),
+          OrderingTerm.asc(contacts.userId),
+        ]);
     return query
         .map((row) => (row.readTable(contacts), row.readTable(groupMembers)))
         .watch();

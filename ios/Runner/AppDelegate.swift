@@ -184,8 +184,10 @@ class NativeNotificationChannel {
       let requestIds = delivered.compactMap { notification -> String? in
         let request = notification.request
         let notificationId = request.content.userInfo["notification_id"] as? String
+        let groupedIds = request.content.userInfo["notification_ids"] as? [String] ?? []
         return notificationIds.contains(request.identifier)
           || notificationId.map(notificationIds.contains) == true
+          || !notificationIds.isDisjoint(with: groupedIds)
           ? request.identifier
           : nil
       }
@@ -193,8 +195,10 @@ class NativeNotificationChannel {
       center.getPendingNotificationRequests { pending in
         let pendingIds = pending.compactMap { request -> String? in
           let notificationId = request.content.userInfo["notification_id"] as? String
+          let groupedIds = request.content.userInfo["notification_ids"] as? [String] ?? []
           return notificationIds.contains(request.identifier)
             || notificationId.map(notificationIds.contains) == true
+            || !notificationIds.isDisjoint(with: groupedIds)
             ? request.identifier
             : nil
         }
@@ -261,7 +265,7 @@ class RuntimeStorageChannel {
         WidgetCenter.shared.getCurrentConfigurations { configurations in
           switch configurations {
           case .success(let placed):
-            var selections: [[Int64]] = []
+            var selections: [WidgetSelection] = []
             var report: [[String: Any]] = []
             // A widget that rebuilt just before the reload was asked for still
             // counts; the window only has to exclude records that never rebuild.
@@ -277,17 +281,21 @@ class RuntimeStorageChannel {
                   of: TwonlyWidgetIntent.self)
                 {
                   let ids = (intent.groups ?? []).compactMap { Int64($0.id) }
-                  let live = rebuilt.contains("ios:\(WidgetStorage.selectionKey(ids))")
+                  let contactIds = (intent.contacts ?? []).compactMap { Int64($0.id) }
+                  let key = WidgetStorage.selectionKey(ids, contactIds: contactIds)
+                  let live = rebuilt.contains("ios:\(key)")
                   entry["group_ids"] = ids
-                  entry["id"] = "ios:\(index):\(WidgetStorage.selectionKey(ids))"
+                  entry["contact_ids"] = contactIds
+                  entry["id"] = "ios:\(index):\(key)"
                   entry["live"] = live
-                  if live { selections.append(ids) }
+                  if live { selections.append(WidgetSelection(groupIds: ids, contactIds: contactIds)) }
                 } else {
                   // The widget is placed even though its configuration will not
                   // decode. Recording it as unconfigured keeps it in the file:
                   // dropping it would report a removal that did not happen.
                   entry["configuration"] = "unreadable"
                   entry["group_ids"] = [Int64]()
+                  entry["contact_ids"] = [Int64]()
                   entry["id"] = "ios:\(index)"
                   entry["live"] = false
                 }

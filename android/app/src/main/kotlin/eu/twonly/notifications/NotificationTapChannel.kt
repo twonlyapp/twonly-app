@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -13,6 +14,34 @@ internal fun nativeNotificationId(value: String): Int = value.hashCode() and Int
 
 /** The single channel every twonly notification is posted on. */
 internal const val NOTIFICATION_CHANNEL_ID = "twonly_messages_v2"
+internal const val TEXT_MESSAGE_ID = "twonly_message_id"
+
+/** Retains unread entries when only part of a combined alert was opened. */
+internal fun cancelNativeNotifications(context: Context, notificationIds: Collection<String>) {
+    if (notificationIds.isEmpty()) return
+    val ids = notificationIds.toSet()
+    val manager = NotificationManagerCompat.from(context)
+    val active = manager.activeNotifications
+    ids.forEach { manager.cancel(nativeNotificationId(it)) }
+    active.forEach { entry ->
+        val style = NotificationCompat.MessagingStyle
+            .extractMessagingStyleFromNotification(entry.notification) ?: return@forEach
+        val remaining = style.messages.filter { it.extras.getString(TEXT_MESSAGE_ID) !in ids }
+        if (remaining.size == style.messages.size) return@forEach
+        if (remaining.isEmpty()) {
+            manager.cancel(entry.id)
+        } else {
+            style.messages.clear()
+            remaining.forEach(style::addMessage)
+            val notification = NotificationCompat.Builder(context, entry.notification)
+                .setStyle(style)
+                .setNumber(remaining.size)
+                .setOnlyAlertOnce(true)
+                .build()
+            manager.notify(entry.id, notification)
+        }
+    }
+}
 
 internal fun ensureNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -66,8 +95,7 @@ object NotificationTapChannel {
                 }
                 "cancelNotifications" -> {
                     val notificationIds = call.argument<List<String>>("notification_ids").orEmpty()
-                    val manager = NotificationManagerCompat.from(context.applicationContext)
-                    notificationIds.forEach { manager.cancel(nativeNotificationId(it)) }
+                    cancelNativeNotifications(context.applicationContext, notificationIds)
                     result.success(null)
                 }
                 else -> result.notImplemented()

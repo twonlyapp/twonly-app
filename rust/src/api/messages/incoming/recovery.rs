@@ -90,20 +90,25 @@ pub async fn perform_heartbeat(ctx: &Arc<Context>) -> Result<()> {
             .is_none_or(|last| now.signed_duration_since(last).num_hours() >= 24);
         if contacts_due {
             let database = ctx.app_db.read().await.clone();
-            let contacts = sqlx::query!(
+            // A helper that restored an old backup or lost its local share
+            // cannot send a heartbeat. Retry stale confirmations as well as
+            // never-confirmed shares so it can become a helper again.
+            let contacts = sqlx::query_as::<_, (i64, Vec<u8>)>(
                 r#"SELECT user_id, recovery_secret_share FROM contacts
                    WHERE recovery_is_trusted_friend = 1
-                     AND recovery_last_heartbeat IS NULL
-                     AND recovery_secret_share IS NOT NULL"#
+                     AND (recovery_last_heartbeat IS NULL
+                          OR recovery_last_heartbeat <= ?)
+                     AND recovery_secret_share IS NOT NULL"#,
             )
+            .bind((now - chrono::Duration::days(7)).timestamp())
             .fetch_all(&database.pool)
             .await?;
             drop(database);
 
-            for contact in contacts {
+            for (contact_id, share) in contacts {
                 let content = EncryptedContent {
                     passwordless_recovery: Some(encrypted_content::PasswordLessRecovery {
-                        recovery_secret_share: contact.recovery_secret_share,
+                        recovery_secret_share: Some(share),
                         threshold: recovery.threshold,
                         delete: false,
                     }),
@@ -111,7 +116,7 @@ pub async fn perform_heartbeat(ctx: &Arc<Context>) -> Result<()> {
                 };
                 send_c2c_message_to_contact()
                     .ctx(ctx)
-                    .contact_id(contact.user_id)
+                    .contact_id(contact_id)
                     .encrypted_content(content.encode_to_vec())
                     .call()
                     .await?;
@@ -375,6 +380,77 @@ mod tests {
             .fetch_one(&database.pool)
             .await?;
         assert_eq!(queued, 1);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn heartbeat_distributes_shares_to_every_unconfirmed_helper() -> anyhow::Result<()> {
+        let (_temp, ctx) = context().await?;
+        let database = ctx.app_db.read().await.clone();
+        let recovery = serde_json::from_value(serde_json::json!({"threshold": 2}))?;
+        UserConfig::update(&ctx, |config| {
+            config.password_less_recovery = Some(recovery);
+        })?;
+        for user_id in [7, 8, 9] {
+            insert_contact(&ctx, user_id).await?;
+            sqlx::query("UPDATE contacts SET recovery_is_trusted_friend = 1, recovery_secret_share = ? WHERE user_id = ?")
+                .bind(vec![user_id as u8, 42])
+                .bind(user_id)
+                .execute(&database.pool).await?;
+        }
+
+        perform_heartbeat(&ctx).await?;
+        let queued: Vec<(i64, Vec<u8>)> =
+            sqlx::query_as("SELECT contact_id, message FROM receipts ORDER BY contact_id")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(queued.len(), 3);
+        for (contact_id, bytes) in queued {
+            let message = crate::api::proto::client::Message::decode(bytes.as_slice())?;
+            let content = EncryptedContent::decode(message.encrypted_content.unwrap().as_slice())?;
+            let recovery = content.passwordless_recovery.unwrap();
+            assert_eq!(
+                recovery.recovery_secret_share,
+                Some(vec![contact_id as u8, 42])
+            );
+            assert_eq!(recovery.threshold, 2);
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn heartbeat_retries_stale_helpers_that_cannot_confirm_a_lost_share() -> anyhow::Result<()>
+    {
+        let (_temp, ctx) = context().await?;
+        let database = ctx.app_db.read().await.clone();
+        let recovery = serde_json::from_value(serde_json::json!({"threshold": 2}))?;
+        UserConfig::update(&ctx, |config| {
+            config.password_less_recovery = Some(recovery);
+        })?;
+        let now = crate::utils::current_time().timestamp();
+        // 7 has never acknowledged; 8 acknowledged before losing its share;
+        // 9 still confirms possession of its share regularly.
+        for (user_id, heartbeat) in [(7, None), (8, Some(now - 8 * 86400)), (9, Some(now))] {
+            insert_contact(&ctx, user_id).await?;
+            sqlx::query("UPDATE contacts SET recovery_is_trusted_friend = 1, recovery_secret_share = ?, recovery_last_heartbeat = ? WHERE user_id = ?")
+                .bind(vec![user_id as u8, 42]).bind(heartbeat).bind(user_id)
+                .execute(&database.pool).await?;
+        }
+
+        perform_heartbeat(&ctx).await?;
+        let recipients: Vec<i64> =
+            sqlx::query_scalar("SELECT contact_id FROM receipts ORDER BY contact_id")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(recipients, vec![7, 8]);
+
+        // Keep the daily throttle: reconnecting immediately must not enqueue
+        // the same recovery shares again.
+        perform_heartbeat(&ctx).await?;
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM receipts")
+            .fetch_one(&database.pool)
+            .await?;
+        assert_eq!(count, 2);
         Ok(())
     }
 }

@@ -40,6 +40,62 @@ void main() {
     await twonlyDB.close();
   });
 
+  for (final archived in [true, false]) {
+    test(
+      'sending preserves archived=$archived and restores deleted chats',
+      () async {
+        await twonlyDB.groupsDao.createNewGroup(
+          GroupsCompanion.insert(
+            groupId: 'sending',
+            groupName: 'Sending',
+            archived: Value(archived),
+            deletedContent: const Value(true),
+          ),
+        );
+
+        final message = await twonlyDB.messagesDao.insertMessage(
+          MessagesCompanion.insert(
+            messageId: 'outgoing',
+            groupId: 'sending',
+            type: 'text',
+            content: const Value('Hello'),
+          ),
+        );
+
+        expect(message, isNotNull);
+        final group = await twonlyDB.groupsDao.watchGroup('sending').first;
+        expect(group!.archived, archived);
+        expect(group.deletedContent, isFalse);
+      },
+    );
+  }
+
+  test('an incoming message still unarchives a chat', () async {
+    await twonlyDB.contactsDao.insertOnConflictUpdate(
+      ContactsCompanion.insert(userId: const Value(2), username: 'sender'),
+    );
+    await twonlyDB.groupsDao.createNewGroup(
+      GroupsCompanion.insert(
+        groupId: 'incoming',
+        groupName: 'Incoming',
+        archived: const Value(true),
+      ),
+    );
+    final message = await twonlyDB.messagesDao.insertMessage(
+      MessagesCompanion.insert(
+        messageId: 'received',
+        groupId: 'incoming',
+        type: 'text',
+        senderId: const Value(2),
+      ),
+    );
+    expect(message, isNotNull);
+    expect(
+      (await twonlyDB.groupsDao.watchGroup('incoming').first)!.archived,
+      isFalse,
+    );
+  });
+
   test(
     'watchByGroupId stream emits updates when a new text message is inserted',
     () async {

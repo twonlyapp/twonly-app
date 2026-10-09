@@ -13,6 +13,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
+import 'package:twonly/src/visual/views/memories/components/memory_details.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/memories/components/synchronized_viewer_actions_toolbar.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/synchronized_viewer_item.comp.dart';
 
@@ -260,6 +261,23 @@ class _SynchronizedImageViewerScreenState
     }
   }
 
+  Future<void> _showDetails() async {
+    final media = widget.galleryItems[_currentIndex].mediaService;
+    await media.updateFromDB();
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => StreamBuilder<MediaFile?>(
+        stream: twonlyDB.mediaFilesDao.watchMedia(media.mediaFile.mediaId),
+        initialData: media.mediaFile,
+        builder: (_, snapshot) =>
+            MemoryDetailsSheet(media: snapshot.data ?? media.mediaFile),
+      ),
+    );
+  }
+
   Future<void> _shareMediaFile() async {
     final orgMediaService = widget.galleryItems[_currentIndex].mediaService;
 
@@ -368,6 +386,22 @@ class _SynchronizedImageViewerScreenState
                     },
                   ),
 
+                  Positioned(
+                    top: MediaQuery.paddingOf(context).top + 16,
+                    right: 16,
+                    child: AnimatedOpacity(
+                      opacity: _isZoomed ? 0 : 1,
+                      duration: const Duration(milliseconds: 200),
+                      child: IgnorePointer(
+                        ignoring: _isZoomed,
+                        child: IconButton.filledTonal(
+                          tooltip: context.lang.memoryDetailsTitle,
+                          onPressed: _showDetails,
+                          icon: const Icon(Icons.info_outline),
+                        ),
+                      ),
+                    ),
+                  ),
                   Positioned(
                     bottom: MediaQuery.paddingOf(context).bottom + 16,
                     left: 0,

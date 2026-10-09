@@ -125,6 +125,52 @@ void main() {
     });
   }
 
+  test('chat list avatars follow message activity within each group', () async {
+    await database
+        .into(database.contacts)
+        .insert(
+          ContactsCompanion.insert(userId: const Value(11), username: 'dave'),
+        );
+    await database.groupsDao.insertOrUpdateGroupMember(
+      GroupMembersCompanion.insert(groupId: 'group', contactId: 11),
+    );
+    final activity = DateTime.utc(2024);
+    for (final (contactId, minutes) in [(7, 1), (11, 2), (9, 3), (10, 4)]) {
+      await database.groupsDao.increaseMemberLastMessage(
+        'group',
+        contactId,
+        activity.add(Duration(minutes: minutes)),
+      );
+    }
+    await database.groupsDao.increaseMemberLastMessage(
+      'other',
+      7,
+      activity.add(const Duration(minutes: 10)),
+    );
+
+    final stream = StreamIterator(memberStreams['chat list members']!());
+    addTearDown(stream.cancel);
+    expect(await stream.moveNext(), isTrue);
+    expect(stream.current, [9, 11, 7, 8]);
+    expect(
+      stream.current,
+      (await database.groupsDao.getGroupContact('group')).map((c) => c.userId),
+    );
+
+    final nextMessage = stream.moveNext();
+    await database.groupsDao.increaseMemberLastMessage(
+      'group',
+      8,
+      activity.add(const Duration(minutes: 5)),
+    );
+    expect(await nextMessage, isTrue);
+    expect(stream.current.take(3), [8, 9, 11]);
+    expect(
+      stream.current,
+      (await database.groupsDao.getGroupContact('group')).map((c) => c.userId),
+    );
+  });
+
   test('mutual groups update when a member is removed', () async {
     final stream = StreamIterator(
       database.groupsDao.watchNonDirectGroupsForMember(7),

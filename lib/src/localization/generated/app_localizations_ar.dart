@@ -232,6 +232,32 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsStorageData => 'الذكريات والتخزين';
 
   @override
+  String get memoryDetailsTitle => 'التفاصيل';
+
+  @override
+  String get memoryDetailsCapturedAt => 'وقت الالتقاط';
+
+  @override
+  String get memoryDetailsLocation => 'الموقع';
+
+  @override
+  String get memoryDetailsLocationPending => 'جارٍ تحديد موقع الالتقاط…';
+
+  @override
+  String get memoryDetailsNoLocation => 'لم يتم تسجيل موقع';
+
+  @override
+  String memoryDetailsAccuracy(int meters) {
+    return 'الدقة: ±$meters م';
+  }
+
+  @override
+  String get memoryDetailsOpenMap => 'فتح في الخرائط';
+
+  @override
+  String get memoryDetailsMapUnavailable => 'تعذر فتح الخرائط.';
+
+  @override
   String get memoryLocationTitle => 'حفظ الموقع في الذكريات';
 
   @override
@@ -1254,6 +1280,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String notificationTextMessages(Object count, Object inGroup) {
+    return '$count رسائل جديدة$inGroup.';
+  }
+
+  @override
   String notificationTwonly(Object inGroup) {
     return 'رسالة twonly جديدة$inGroup.';
   }
@@ -1410,6 +1441,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get avatarSaveChangesDiscard => 'تجاهل';
+
+  @override
+  String get contactAvatarTitle => 'الصورة الرمزية';
+
+  @override
+  String get contactAvatarPhoto => 'صورة رمزية فوتوغرافية';
+
+  @override
+  String get contactAvatarIllustrated => 'صورة رمزية مرسومة';
 
   @override
   String get customAvatarSvgTab => 'الصورة الرمزية العامة';

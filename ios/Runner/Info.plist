@@ -32,6 +32,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>SharingMedia-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+				<string>twonly</string>
 			</array>
 		</dict>
 	</array>

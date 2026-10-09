@@ -37,7 +37,7 @@ class PasswordlessRecoveryService {
 
   static String linkPrefix = 'https://me.twonly.eu/r/#';
 
-  static final Set<String> _handledNotificationIds = {};
+  static final Set<String> _openNotificationIds = {};
 
   static Future<void> handleRecoveryLink(String link) async {
     final hashIndex = link.indexOf('#');
@@ -56,25 +56,41 @@ class PasswordlessRecoveryService {
     final notificationId = parts[0];
     final base64Key = parts[1];
 
-    if (_handledNotificationIds.contains(notificationId)) {
+    if (_openNotificationIds.contains(notificationId)) {
       Log.info(
-        'Notification ID $notificationId was already handled, skipping.',
+        'Recovery screen for $notificationId is already open, skipping.',
       );
       return;
     }
-    _handledNotificationIds.add(notificationId);
 
-    final encryptionKey = base64Url.decode(base64Url.normalize(base64Key));
+    final List<int> encryptionKey;
+    try {
+      encryptionKey = base64Url.decode(base64Url.normalize(base64Key));
+    } on FormatException {
+      Log.warn('Recovery link contains an invalid encryption key.');
+      return;
+    }
+    if (notificationId.isEmpty ||
+        parts.length != 2 ||
+        encryptionKey.length != 32) {
+      Log.warn('Recovery link contains invalid recovery data.');
+      return;
+    }
 
     final context = rootNavigatorKey.currentContext;
     if (context != null && context.mounted) {
+      // Suppress duplicate intent deliveries while the screen is open, but
+      // allow reopening after cancellation or a failed submission.
+      _openNotificationIds.add(notificationId);
       unawaited(
-        context.navPush(
-          HelpAFriendPasswordlessRecoveryView(
-            notificationId: notificationId,
-            encryptionKey: encryptionKey,
-          ),
-        ),
+        context
+            .navPush(
+              HelpAFriendPasswordlessRecoveryView(
+                notificationId: notificationId,
+                encryptionKey: encryptionKey,
+              ),
+            )
+            .whenComplete(() => _openNotificationIds.remove(notificationId)),
       );
     }
   }
@@ -295,19 +311,24 @@ class PasswordlessRecoveryService {
       return false;
     }
 
-    await UserService.update((u) => u.passwordLessRecovery = config);
-
     // 3.4. Store the shares in the contact's rows
-    for (final contactId in trustedFriendIds) {
-      await twonlyDB.contactsDao.updateContact(
-        contactId,
-        ContactsCompanion(
-          recoveryIsTrustedFriend: const Value(true),
-          recoveryLastHeartbeat: const Value(null),
-          recoverySecretShare: Value(shares.removeLast()),
-        ),
-      );
-    }
+    // Publish the configuration only after every share is committed. A
+    // connection heartbeat must never see a partially configured helper list
+    // and then postpone sending the remaining shares for 24 hours.
+    await twonlyDB.transaction(() async {
+      for (final contactId in trustedFriendIds) {
+        await twonlyDB.contactsDao.updateContact(
+          contactId,
+          ContactsCompanion(
+            recoveryIsTrustedFriend: const Value(true),
+            recoveryLastHeartbeat: const Value(null),
+            recoverySecretShare: Value(shares.removeLast()),
+          ),
+        );
+      }
+    });
+
+    await UserService.update((u) => u.passwordLessRecovery = config);
 
     unawaited(
       // ignore: inference_failure_on_untyped_parameter

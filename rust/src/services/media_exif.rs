@@ -15,6 +15,8 @@
 
 use crate::error::{Result, TwonlyError};
 use chrono::{DateTime, Utc};
+use std::io::{Read, Seek, SeekFrom, Write};
+use std::path::Path;
 
 /// EXIF stores timestamps as local wall-clock text with no zone.
 const DATE_FORMAT: &str = "%Y:%m:%d %H:%M:%S";
@@ -95,7 +97,8 @@ fn without_exif(webp: &[u8]) -> Result<Vec<u8>> {
 
 /// Returns the WebP bytes with an `EXIF` chunk attached, converting a simple
 /// file to the extended layout when needed.
-pub(crate) fn with_exif(webp: &[u8], metadata: &ExifMetadata) -> Result<Vec<u8>> {
+#[cfg(test)]
+fn with_exif(webp: &[u8], metadata: &ExifMetadata) -> Result<Vec<u8>> {
     if metadata.is_empty() {
         return Ok(webp.to_vec());
     }
@@ -104,7 +107,12 @@ pub(crate) fn with_exif(webp: &[u8], metadata: &ExifMetadata) -> Result<Vec<u8>>
     let has_alpha = chunks.iter().any(has_alpha_channel);
 
     let mut body = Vec::new();
-    let mut flags = FLAG_EXIF;
+    let mut flags = chunks
+        .iter()
+        .find(|chunk| chunk.id == *b"VP8X")
+        .and_then(|chunk| chunk.payload.first().copied())
+        .unwrap_or(0)
+        | FLAG_EXIF;
     if has_alpha {
         flags |= FLAG_ALPHA;
     }
@@ -131,6 +139,100 @@ pub(crate) fn with_exif(webp: &[u8], metadata: &ExifMetadata) -> Result<Vec<u8>>
     output.extend_from_slice(b"WEBP");
     output.extend_from_slice(&body);
     Ok(output)
+}
+
+/// Stamps a gallery export by streaming the existing compressed chunks. A
+/// full-resolution Memory is neither decoded nor held in two byte buffers.
+pub(crate) fn write_with_exif(
+    source: &Path,
+    destination: &Path,
+    metadata: &ExifMetadata,
+) -> Result<()> {
+    if metadata.is_empty() {
+        std::fs::copy(source, destination)?;
+        return Ok(());
+    }
+    let mut input = std::io::BufReader::with_capacity(256 * 1024, std::fs::File::open(source)?);
+    let length = input.get_ref().metadata()?.len();
+    let mut riff = [0_u8; 12];
+    input.read_exact(&mut riff)?;
+    if &riff[..4] != b"RIFF" || &riff[8..] != b"WEBP" {
+        return Err(TwonlyError::Generic("not a WebP file".into()));
+    }
+    let mut chunks = Vec::new();
+    let mut image_headers = Vec::new();
+    let mut offset = 12_u64;
+    while offset + 8 <= length {
+        input.seek(SeekFrom::Start(offset))?;
+        let mut header = [0_u8; 8];
+        input.read_exact(&mut header)?;
+        let id: [u8; 4] = header[..4].try_into().unwrap();
+        let size = u32::from_le_bytes(header[4..].try_into().unwrap());
+        let end = offset + 8 + u64::from(size) + u64::from(size & 1);
+        if end > length {
+            return Err(TwonlyError::Generic(
+                "WebP chunk runs past the end of the file".into(),
+            ));
+        }
+        if matches!(&id, b"VP8X" | b"VP8 " | b"VP8L" | b"ALPH") {
+            let mut payload = vec![0; (size as usize).min(10)];
+            input.read_exact(&mut payload)?;
+            image_headers.push((id, payload));
+        }
+        chunks.push((id, offset, size));
+        offset = end;
+    }
+    let headers: Vec<_> = image_headers
+        .iter()
+        .map(|(id, payload)| Chunk { id: *id, payload })
+        .collect();
+    let (width, height) = dimensions(&headers)?;
+    let mut flags = headers
+        .iter()
+        .find(|chunk| chunk.id == *b"VP8X")
+        .and_then(|chunk| chunk.payload.first().copied())
+        .unwrap_or(0)
+        | FLAG_EXIF;
+    if headers.iter().any(has_alpha_channel) {
+        flags |= FLAG_ALPHA;
+    }
+    let mut vp8x = vec![flags, 0, 0, 0];
+    vp8x.extend_from_slice(&(width - 1).to_le_bytes()[..3]);
+    vp8x.extend_from_slice(&(height - 1).to_le_bytes()[..3]);
+    let exif = tiff_block(metadata);
+    let retained = chunks
+        .iter()
+        .filter(|(id, _, _)| !matches!(id, b"VP8X" | b"EXIF"));
+    let body_size = 18
+        + retained
+            .clone()
+            .map(|(_, _, size)| 8 + u64::from(*size) + u64::from(size & 1))
+            .sum::<u64>()
+        + 8
+        + exif.len() as u64
+        + (exif.len() & 1) as u64;
+    let riff_size = u32::try_from(body_size + 4)
+        .map_err(|_| TwonlyError::Generic("WebP export exceeds the RIFF size limit".into()))?;
+    let mut output =
+        std::io::BufWriter::with_capacity(256 * 1024, std::fs::File::create(destination)?);
+    output.write_all(b"RIFF")?;
+    output.write_all(&riff_size.to_le_bytes())?;
+    output.write_all(b"WEBP")?;
+    let mut prefix = Vec::new();
+    write_chunk(&mut prefix, b"VP8X", &vp8x);
+    output.write_all(&prefix)?;
+    for (_, start, size) in retained {
+        input.seek(SeekFrom::Start(*start))?;
+        std::io::copy(
+            &mut (&mut input).take(8 + u64::from(*size) + u64::from(size & 1)),
+            &mut output,
+        )?;
+    }
+    let mut suffix = Vec::new();
+    write_chunk(&mut suffix, b"EXIF", &exif);
+    output.write_all(&suffix)?;
+    output.flush()?;
+    Ok(())
 }
 
 struct Chunk<'a> {
@@ -403,6 +505,66 @@ mod tests {
         let webp = sample_webp();
         let written = with_exif(&webp, &ExifMetadata::default()).unwrap();
         assert_eq!(written, webp);
+    }
+
+    #[test]
+    fn streaming_export_matches_buffered_metadata_and_preserves_pixels() {
+        let directory = tempfile::tempdir().unwrap();
+        let source = directory.path().join("memory.webp");
+        let destination = directory.path().join("export.webp");
+        let metadata = ExifMetadata {
+            created_at: Some(Utc.with_ymd_and_hms(2026, 10, 8, 12, 34, 56).unwrap()),
+            latitude: Some(52.52),
+            longitude: Some(13.4),
+            accuracy: Some(8.5),
+        };
+        let transparent = image::RgbaImage::from_pixel(16, 12, image::Rgba([13, 27, 153, 127]));
+        let transparent_webp = webp::Encoder::from_rgba(transparent.as_raw(), 16, 12)
+            .encode_simple(false, 80.0)
+            .unwrap()
+            .to_vec();
+        for webp in [
+            sample_webp(),
+            with_exif(&sample_webp(), &metadata).unwrap(),
+            transparent_webp,
+        ] {
+            std::fs::write(&source, &webp).unwrap();
+            write_with_exif(&source, &destination, &metadata).unwrap();
+            let exported = std::fs::read(&destination).unwrap();
+            assert_eq!(exported, with_exif(&webp, &metadata).unwrap());
+            assert_eq!(
+                image::load_from_memory(&exported).unwrap().to_rgba8(),
+                image::load_from_memory(&webp).unwrap().to_rgba8()
+            );
+            assert_eq!(std::fs::read(&source).unwrap(), webp);
+        }
+    }
+
+    #[test]
+    fn streaming_export_preserves_extended_header_flags_and_metadata_chunks() {
+        let directory = tempfile::tempdir().unwrap();
+        let source = directory.path().join("memory.webp");
+        let destination = directory.path().join("export.webp");
+        let metadata = ExifMetadata {
+            created_at: Some(Utc::now()),
+            ..Default::default()
+        };
+        let mut webp = with_exif(&sample_webp(), &metadata).unwrap();
+        // Existing flags and a chunk larger than the streaming buffers must
+        // survive replacement of EXIF.
+        let xmp = vec![b'a'; 1024 * 1024 + 1];
+        webp[20] |= 0x04;
+        write_chunk(&mut webp, b"XMP ", &xmp);
+        let riff_size = (webp.len() - 8) as u32;
+        webp[4..8].copy_from_slice(&riff_size.to_le_bytes());
+        std::fs::write(&source, &webp).unwrap();
+        write_with_exif(&source, &destination, &metadata).unwrap();
+        let exported = std::fs::read(&destination).unwrap();
+        assert_eq!(exported[20], webp[20]);
+        assert!(parse_chunks(&exported)
+            .unwrap()
+            .iter()
+            .any(|chunk| chunk.id == *b"XMP " && chunk.payload == xmp));
     }
 
     #[test]

@@ -103,7 +103,8 @@ private final class NativeLocationRequest: NSObject, CLLocationManagerDelegate {
   }
 
   func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-    for location in locations where location.horizontalAccuracy >= 0 {
+    for location in locations where location.horizontalAccuracy.isFinite
+      && location.horizontalAccuracy >= 0 && abs(location.timestamp.timeIntervalSinceNow) <= 180 {
       if best == nil || location.horizontalAccuracy < best!.horizontalAccuracy {
         best = location
       }

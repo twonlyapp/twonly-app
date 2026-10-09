@@ -98,7 +98,8 @@ class _HomeWidgetDeveloperViewState extends State<HomeWidgetDeveloperView> {
       lines.add(
         '  kind=${widget['kind']} family=${widget['family']} '
         'mine=${widget['mine']} live=${widget['live'] ?? '-'} '
-        'groups=${widget['group_ids'] ?? '-'}'
+        'groups=${widget['group_ids'] ?? '-'} '
+        'people=${widget['contact_ids'] ?? '-'}'
         '${widget['configuration'] == null ? '' : ' UNREADABLE'}',
       );
     }
@@ -132,10 +133,11 @@ class _HomeWidgetDeveloperViewState extends State<HomeWidgetDeveloperView> {
     }
 
     final groups = (decoded['groups'] as List?) ?? [];
+    final contacts = (decoded['contacts'] as List?) ?? [];
     final images = (decoded['images'] as List?) ?? [];
     lines.add(
-      '${groups.length} contact groups, ${images.length} images '
-      '(at most one per contact group)',
+      '${contacts.length} people, ${groups.length} contact groups, '
+      '${images.length} images (latest per group or selected person)',
     );
 
     // The group IDs are the whole matching rule: the widget shows an image only
@@ -144,13 +146,16 @@ class _HomeWidgetDeveloperViewState extends State<HomeWidgetDeveloperView> {
     for (final group in groups.cast<Map<String, dynamic>>()) {
       lines.add('  group ${group['id']}: ${group['name']}');
     }
+    for (final contact in contacts.cast<Map<String, dynamic>>()) {
+      lines.add('  person ${contact['id']}: ${contact['name']}');
+    }
     for (final image in images.cast<Map<String, dynamic>>()) {
       final receivedAt = DateTime.fromMillisecondsSinceEpoch(
         ((image['received_at'] as num?)?.toInt() ?? 0) * 1000,
       );
       final exists = File('${image['path']}').existsSync();
       lines.add(
-        '  ${image['media_id']} from ${image['sender']} '
+        '  ${image['media_id']} from ${image['sender']} (${image['sender_id']}) '
         // One image per contact group, so these are the groups it is the
         // current image for — not the sender's full membership.
         'groups=${image['group_ids']} '

@@ -82,7 +82,7 @@ class EditorMediaWriter {
 
     if (media.type == MediaType.gif) {
       if (gifBytes != null) {
-        mediaService.originalPath.writeAsBytesSync(gifBytes.toList());
+        await mediaService.originalPath.writeAsBytes(gifBytes);
       }
       return image;
     }
@@ -94,9 +94,9 @@ class EditorMediaWriter {
       return null;
     }
     if (media.type == MediaType.image || media.type == MediaType.gif) {
-      mediaService.originalPath.writeAsBytesSync(bytes);
+      await mediaService.originalPath.writeAsBytes(bytes);
     } else if (media.type == MediaType.video) {
-      mediaService.overlayImagePath.writeAsBytesSync(bytes);
+      await mediaService.overlayImagePath.writeAsBytes(bytes);
     } else {
       Log.error('MediaType not supported: ${media.type}');
     }
@@ -120,6 +120,6 @@ class EditorMediaWriter {
   /// app is restarted while the editor is open.
   Future<void> storeAsDraft(ScreenshotImageHelper screenshotImage) async {
     final imageBytes = await screenshotImage.getBytes();
-    mediaService.originalPath.writeAsBytesSync(imageBytes!.toList());
+    await mediaService.originalPath.writeAsBytes(imageBytes!);
   }
 }

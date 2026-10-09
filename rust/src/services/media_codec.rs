@@ -25,7 +25,6 @@ const LARGE_IMAGE_BYTES: usize = 2_000_000;
 
 const THUMBNAIL_MIN_EDGE: u32 = 300;
 const THUMBNAIL_QUALITY: f32 = 50.0;
-const CROP_QUALITY: f32 = 90.0;
 
 /// Alpha at or below this counts as transparent when trimming borders. Matches
 /// the threshold the Dart implementation used, so existing media crops the same.
@@ -202,6 +201,86 @@ pub(crate) fn compress_for_send(source: &Path, destination: &Path) -> Result<()>
     Ok(())
 }
 
+/// Memories never use the delivery encoder. Plain 8-bit PNG captures can be
+/// smaller as lossless WebP; already compressed media, high-bit-depth images,
+/// and files carrying metadata are kept byte for byte. In particular, an ICC
+/// profile or EXIF orientation must not disappear during optimisation.
+pub(crate) fn store_image_losslessly(source: &Path, destination: &Path) -> Result<()> {
+    let mut header = [0_u8; 8];
+    use std::io::Read;
+    let read = std::fs::File::open(source)?.read(&mut header)?;
+    if read == header.len() && header == *b"\x89PNG\r\n\x1a\n" {
+        let bytes = std::fs::read(source)?;
+        let optimised = (|| -> Result<Option<Vec<u8>>> {
+            if !png_can_be_webp(&bytes) {
+                return Ok(None);
+            }
+            let image = image::load_from_memory(&bytes)
+                .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+            let encoded = encode_lossless_webp(&image)?;
+            Ok((encoded.len() < bytes.len()).then_some(encoded))
+        })();
+        match optimised {
+            Ok(Some(encoded)) => return write_atomically(destination, &encoded),
+            Ok(None) => {}
+            Err(error) => {
+                tracing::warn!(%error, "keeping the original Memory after failed lossless compression")
+            }
+        }
+    }
+    if let Some(parent) = destination.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::copy(source, destination)?;
+    Ok(())
+}
+
+fn png_can_be_webp(bytes: &[u8]) -> bool {
+    let mut offset = 8;
+    while offset + 12 <= bytes.len() {
+        let size = u32::from_be_bytes(bytes[offset..offset + 4].try_into().unwrap()) as usize;
+        let Some(end) = offset
+            .checked_add(12)
+            .and_then(|start| start.checked_add(size))
+        else {
+            return false;
+        };
+        if end > bytes.len() {
+            return false;
+        }
+        match &bytes[offset + 4..offset + 8] {
+            b"IHDR" => {
+                // WebP is limited to 8-bit channels; down-converting a 16-bit
+                // original would violate the Memory's lossless contract.
+                if size != 13 || bytes[offset + 16] > 8 {
+                    return false;
+                }
+            }
+            b"PLTE" | b"tRNS" | b"IDAT" | b"sRGB" => {}
+            b"IEND" => return end == bytes.len(),
+            // Includes APNG animation and colour/EXIF/text metadata.
+            _ => return false,
+        }
+        offset = end;
+    }
+    false
+}
+
+fn encode_lossless_webp(image: &DynamicImage) -> Result<Vec<u8>> {
+    let mut config = webp::WebPConfig::new()
+        .map_err(|_| TwonlyError::Generic("could not configure lossless WebP".into()))?;
+    config.lossless = 1;
+    config.quality = 75.0;
+    // Keep RGB values even under fully transparent pixels. libwebp's default
+    // lossless mode may discard those values unless exact is enabled.
+    config.exact = 1;
+    let rgba = image.to_rgba8();
+    webp::Encoder::from_rgba(rgba.as_raw(), rgba.width(), rgba.height())
+        .encode_advanced(&config)
+        .map(|memory| memory.to_vec())
+        .map_err(|error| TwonlyError::Generic(format!("lossless WebP encoding failed: {error:?}")))
+}
+
 /// Scales down so the shorter edge lands on `THUMBNAIL_MIN_EDGE`, never scaling
 /// an already small image up. A GIF decodes to its first frame, which is
 /// exactly what its thumbnail should show.
@@ -274,7 +353,11 @@ pub(crate) fn has_visible_content(path: &Path) -> Result<bool> {
 /// image was rewritten.
 pub(crate) fn crop_transparent_borders(path: &Path) -> Result<bool> {
     let image = decode(path)?;
-    if !image.color().has_alpha() {
+    if !matches!(
+        image.color(),
+        image::ColorType::Rgba8 | image::ColorType::La8
+    ) {
+        // The WebP crop encoder cannot preserve 16-bit/float alpha images.
         return Ok(false);
     }
     let rgba = image.to_rgba8();
@@ -292,7 +375,7 @@ pub(crate) fn crop_transparent_borders(path: &Path) -> Result<bool> {
         return Ok(false);
     }
     let cropped = DynamicImage::ImageRgba8(rgba).crop_imm(min_x, min_y, width, height);
-    let encoded = encode_webp(&cropped, CROP_QUALITY)?;
+    let encoded = encode_lossless_webp(&cropped)?;
     write_atomically(path, &encoded)?;
     Ok(true)
 }
@@ -352,6 +435,89 @@ mod tests {
     }
 
     #[test]
+    fn memory_compression_preserves_every_pixel_including_transparent_rgb() {
+        let directory = tempfile::tempdir().unwrap();
+        let source = directory.path().join("capture.png");
+        let destination = directory.path().join("memory.webp");
+        let image = RgbaImage::from_fn(256, 192, |x, y| {
+            Rgba([
+                (x % 16) as u8 * 13,
+                (y % 16) as u8 * 11,
+                153,
+                if x < 128 { 0 } else { 127 },
+            ])
+        });
+        DynamicImage::ImageRgba8(image.clone())
+            .save(&source)
+            .unwrap();
+        store_image_losslessly(&source, &destination).unwrap();
+        assert_eq!(decode(&destination).unwrap().to_rgba8(), image);
+        assert!(file_size(&destination) < file_size(&source));
+        assert_eq!(&std::fs::read(&destination).unwrap()[8..12], b"WEBP");
+    }
+
+    #[test]
+    fn high_bit_depth_and_existing_compressed_images_are_kept_byte_for_byte() {
+        let directory = tempfile::tempdir().unwrap();
+        let source = directory.path().join("high-bit-depth.png");
+        let destination = directory.path().join("memory.webp");
+        DynamicImage::ImageRgba16(image::ImageBuffer::from_fn(48, 40, |x, y| {
+            image::Rgba([
+                12345_u16,
+                32123,
+                54321,
+                if (8..40).contains(&x) && (8..32).contains(&y) {
+                    65535
+                } else {
+                    0
+                },
+            ])
+        }))
+        .save(&source)
+        .unwrap();
+        store_image_losslessly(&source, &destination).unwrap();
+        assert_eq!(
+            std::fs::read(&destination).unwrap(),
+            std::fs::read(&source).unwrap()
+        );
+        assert!(!crop_transparent_borders(&destination).unwrap());
+        assert_eq!(
+            std::fs::read(&destination).unwrap(),
+            std::fs::read(&source).unwrap()
+        );
+        let source = directory.path().join("already-compressed.webp");
+        let image = DynamicImage::ImageRgba8(transparent_bordered(64, 48, 0));
+        std::fs::write(&source, encode_webp(&image, 80.0).unwrap()).unwrap();
+        store_image_losslessly(&source, &destination).unwrap();
+        assert_eq!(
+            std::fs::read(&destination).unwrap(),
+            std::fs::read(&source).unwrap()
+        );
+    }
+
+    #[test]
+    fn png_colour_profiles_and_exif_prevent_metadata_losing_conversion() {
+        let directory = tempfile::tempdir().unwrap();
+        let source = directory.path().join("with-metadata.png");
+        let destination = directory.path().join("memory.webp");
+        use image::ImageEncoder;
+        let file = std::fs::File::create(&source).unwrap();
+        let mut encoder = image::codecs::png::PngEncoder::new(file);
+        encoder
+            .set_icc_profile(b"embedded colour profile".to_vec())
+            .unwrap();
+        let image = transparent_bordered(64, 48, 0);
+        encoder
+            .write_image(image.as_raw(), 64, 48, image::ExtendedColorType::Rgba8)
+            .unwrap();
+        store_image_losslessly(&source, &destination).unwrap();
+        assert_eq!(
+            std::fs::read(&destination).unwrap(),
+            std::fs::read(&source).unwrap()
+        );
+    }
+
+    #[test]
     fn encodes_a_real_webp_that_decodes_back_to_the_same_size() {
         let directory = tempfile::tempdir().unwrap();
         let source = directory.path().join("source.png");
@@ -402,6 +568,10 @@ mod tests {
         assert!(crop_transparent_borders(&path).unwrap());
         let cropped = decode(&path).unwrap();
         assert_eq!((cropped.width(), cropped.height()), (60, 60));
+        assert!(cropped
+            .to_rgba8()
+            .pixels()
+            .all(|pixel| *pixel == Rgba([10, 200, 30, 255])));
 
         // A second pass has nothing left to trim.
         assert!(!crop_transparent_borders(&path).unwrap());

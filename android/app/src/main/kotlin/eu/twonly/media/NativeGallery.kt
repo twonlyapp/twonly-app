@@ -5,6 +5,8 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import eu.twonly.MyApplication
+import androidx.exifinterface.media.ExifInterface
+import android.util.Log
 import java.io.File
 
 /**
@@ -18,7 +20,8 @@ object NativeGallery {
     private const val ALBUM = "twonly"
 
     @JvmStatic
-    fun save(path: String, isVideo: Boolean, displayName: String, createdAtMillis: Long): Boolean {
+    fun save(path: String, isVideo: Boolean, displayName: String, createdAtMillis: Long,
+             hasLocation: Boolean, latitude: Double, longitude: Double, accuracy: Double): Boolean {
         val source = File(path)
         if (!source.isFile) return false
         val resolver = MyApplication.instance.contentResolver
@@ -28,6 +31,20 @@ object NativeGallery {
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         }
         val extension = source.extension.ifEmpty { if (isVideo) "mp4" else "webp" }
+        // Rust stamps WebP itself. PNG/JPEG originals also need GPS metadata
+        // for Android galleries, without decoding or recompressing the image.
+        if (!isVideo && hasLocation && extension.lowercase() in setOf("png", "jpg", "jpeg")
+            && latitude.isFinite() && longitude.isFinite()
+            && latitude in -90.0..90.0 && longitude in -180.0..180.0) {
+            runCatching {
+                val exif = ExifInterface(source)
+                exif.setLatLong(latitude, longitude)
+                if (accuracy.isFinite() && accuracy >= 0) {
+                    exif.setAttribute(ExifInterface.TAG_GPS_H_POSITIONING_ERROR, accuracy.toString())
+                }
+                exif.saveAttributes()
+            }.onFailure { Log.w("TwonlyGallery", "Could not attach capture location", it) }
+        }
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, "$displayName.$extension")
             put(MediaStore.MediaColumns.MIME_TYPE, mimeType(isVideo, extension))
@@ -51,7 +68,9 @@ object NativeGallery {
         return try {
             resolver.openOutputStream(uri).use { output ->
                 if (output == null) return@use false
-                source.inputStream().use { input -> input.copyTo(output) }
+                // Video exports otherwise make thousands of tiny 8 KB writes
+                // through MediaStore's provider stream.
+                source.inputStream().use { input -> input.copyTo(output, 256 * 1024) }
                 true
             }.also { written ->
                 if (written && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -74,6 +93,10 @@ object NativeGallery {
         isVideo -> "video/mp4"
         extension.equals("gif", ignoreCase = true) -> "image/gif"
         extension.equals("png", ignoreCase = true) -> "image/png"
+        extension.equals("jpg", ignoreCase = true) || extension.equals("jpeg", ignoreCase = true) -> "image/jpeg"
+        extension.equals("bmp", ignoreCase = true) -> "image/bmp"
+        extension.equals("heic", ignoreCase = true) || extension.equals("heif", ignoreCase = true) -> "image/heic"
+        extension.equals("avif", ignoreCase = true) -> "image/avif"
         else -> "image/webp"
     }
 }

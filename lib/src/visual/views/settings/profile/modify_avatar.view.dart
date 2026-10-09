@@ -11,6 +11,8 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/memories/sticker_source_picker.view.dart';
+import 'package:vector_graphics/vector_graphics_compat.dart'
+    show RenderingStrategy;
 
 class ModifyAvatarView extends StatefulWidget {
   const ModifyAvatarView({super.key});
@@ -156,7 +158,12 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
                   child: ColoredBox(
                     color: context.color.surfaceContainerHigh,
                     child: svg != null && svg.isNotEmpty
-                        ? SvgPicture.string(svg)
+                        ? SvgPicture.string(
+                            svg,
+                            width: 150,
+                            height: 150,
+                            renderingStrategy: RenderingStrategy.raster,
+                          )
                         : const Icon(Icons.person_outline, size: 72),
                   ),
                 ),
@@ -403,81 +410,95 @@ class _SvgAvatarEditorViewState extends State<_SvgAvatarEditorView> {
       },
       child: Scaffold(
         appBar: AppBar(title: Text(context.lang.customAvatarSvgTab)),
-        body: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                AvatarMakerAvatar(
-                  radius: 130,
-                  backgroundColor: Colors.transparent,
-                  controller: _avatarMakerController,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Wrap(
-                    spacing: 12,
-                    runSpacing: 10,
-                    alignment: WrapAlignment.center,
+        body: SafeArea(
+          top: false,
+          // The nested body changes height as the preview scrolls away. Build
+          // the customizer from the stable viewport constraints so that those
+          // layout changes don't rebuild its SVG grids on every scroll frame.
+          child: LayoutBuilder(
+            builder: (context, constraints) => NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                SliverToBoxAdapter(
+                  child: Column(
                     children: [
-                      MyButton(
-                        variant: MyButtonVariant.primaryDense,
-                        onPressed: _storeAvatarAndExit,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      RepaintBoundary(
+                        child: AvatarMakerAvatar(
+                          radius: 130,
+                          backgroundColor: Colors.transparent,
+                          controller: _avatarMakerController,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 10,
+                          alignment: WrapAlignment.center,
                           children: [
-                            const FaIcon(
-                              FontAwesomeIcons.floppyDisk,
-                              size: 16,
+                            MyButton(
+                              variant: MyButtonVariant.primaryDense,
+                              onPressed: _storeAvatarAndExit,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const FaIcon(
+                                    FontAwesomeIcons.floppyDisk,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(context.lang.avatarSaveChangesStore),
+                                ],
+                              ),
                             ),
-                            const SizedBox(width: 6),
-                            Text(context.lang.avatarSaveChangesStore),
-                          ],
-                        ),
-                      ),
-                      MyButton(
-                        variant: MyButtonVariant.secondaryDense,
-                        onPressed:
-                            _avatarMakerController.randomizedSelectedOptions,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const FaIcon(FontAwesomeIcons.shuffle, size: 16),
-                            const SizedBox(width: 6),
-                            Text(context.lang.avatarCustomizeRandomize),
-                          ],
-                        ),
-                      ),
-                      MyButton(
-                        variant: MyButtonVariant.secondaryDense,
-                        onPressed: _avatarMakerController.restoreState,
-                        onLongPress: _avatarMakerController.clearCustomizations,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const FaIcon(
-                              FontAwesomeIcons.rotateLeft,
-                              size: 16,
+                            MyButton(
+                              variant: MyButtonVariant.secondaryDense,
+                              onPressed: _avatarMakerController
+                                  .randomizedSelectedOptions,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const FaIcon(
+                                    FontAwesomeIcons.shuffle,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(context.lang.avatarCustomizeRandomize),
+                                ],
+                              ),
                             ),
-                            const SizedBox(width: 6),
-                            Text(context.lang.avatarCustomizeReset),
+                            MyButton(
+                              variant: MyButtonVariant.secondaryDense,
+                              onPressed: _avatarMakerController.restoreState,
+                              onLongPress:
+                                  _avatarMakerController.clearCustomizations,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const FaIcon(
+                                    FontAwesomeIcons.rotateLeft,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(context.lang.avatarCustomizeReset),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 30),
-                  child: AvatarMakerCustomizer(
-                    scaffoldWidth: min(
-                      600,
-                      MediaQuery.of(context).size.width * 0.95,
-                    ),
-                    theme: _theme(context),
-                    controller: _avatarMakerController,
-                  ),
-                ),
               ],
+              body: Center(
+                child: AvatarMakerCustomizer(
+                  scaffoldWidth: min(600, constraints.maxWidth),
+                  scaffoldHeight: constraints.maxHeight,
+                  theme: _theme(context),
+                  controller: _avatarMakerController,
+                ),
+              ),
             ),
           ),
         ),

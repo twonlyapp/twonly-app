@@ -47,11 +47,20 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> with WidgetsBindingObserver {
+  StreamSubscription<Uri>? _widgetLinkSub;
+
   @override
   void initState() {
     super.initState();
     AppState.isAppInBackground = false;
     WidgetsBinding.instance.addObserver(this);
+    // This stays subscribed on routes that do not contain a home view, such
+    // as settings. The home view consumes the sender after navigation/unlock.
+    _widgetLinkSub = AppLinks().uriLinkStream.listen((uri) {
+      if (!HomeWidgetService.handleLink(uri)) return;
+      if (widget.storageError || widget.recoveryPossible) return;
+      if (!HomeWidgetService.hasTapListener) routerProvider.go(Routes.chats);
+    });
   }
 
   @override
@@ -60,27 +69,33 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       AppState.isAppInBackground = false;
       twonlyDB.markUpdated();
-      // Resuming can follow `inactive` without a `paused` event. Always notify
-      // Rust so every transition back to a focused app gets an immediate
-      // WebSocket attempt.
+      // Serialize pause/resume updates and refresh reachability after a real
+      // background transition before Rust replaces its suspended socket.
       unawaited(
-        rust_api.RustApi.setBackground(inBackground: false),
+        apiService.setBackground(false),
       );
       // The notification service extension wrote to the outbox while the app
       // was suspended, and its Rust change broadcast never reached this
       // process, so the badge has to be re-read on the way back in.
       unawaited(NativeNotificationService.refreshBadgeCount());
+      // Home-screen configuration may have changed while the app was away.
+      if (userService.isUserCreated) {
+        unawaited(HomeWidgetService.syncPermissions());
+      }
       // A story may have expired while the app was away.
       unawaitedRustCall(stories.purgeExpiredStories(), 'purgeExpiredStories');
     } else if (state == AppLifecycleState.paused) {
       AppState.isAppInBackground = true;
       unawaited(
-        rust_api.RustApi.setBackground(inBackground: true),
+        apiService.setBackground(true),
       );
       // Anything this session downloaded rewrote the widget manifest, but
       // WidgetKit still shows the timeline it built earlier. Leaving the app is
       // the moment the home screen becomes visible again.
-      unawaited(HomeWidgetService.refresh());
+      // Republish names and selectable people changed during this session.
+      if (userService.isUserCreated) {
+        unawaited(HomeWidgetService.refreshManifest());
+      }
     } else if (state == AppLifecycleState.detached) {
       // Last chance before the engine goes away: hand anything still unsent to
       // the OS, which delivers it once there is a network again whether or not
@@ -95,6 +110,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _widgetLinkSub?.cancel();
     super.dispose();
   }
 

@@ -6,7 +6,7 @@
 //! Optional, device-local location metadata for Memories.
 
 use crate::context::Context;
-use crate::error::{Result, TwonlyError};
+use crate::error::Result;
 use crate::native::location::{self, LocationFix};
 use crate::services::media_upload::MediaUploadService;
 use crate::user_config::UserConfig;
@@ -87,6 +87,24 @@ pub(crate) async fn initialize_for_media(ctx: &Arc<Context>, media_id: &str) -> 
     }
     let deadline = chrono::Utc::now().timestamp() + LOCATION_WINDOW_SECONDS;
     let database = ctx.app_db.read().await.clone();
+    // Saving an editor capture creates a second row for its Memory. Carry its
+    // original fix/window through, rather than restarting capture at save time.
+    let existing: Option<(Option<String>, Option<i64>)> = sqlx::query_as(
+        "SELECT location_status, location_deadline_at FROM media_files WHERE media_id = ?",
+    )
+    .bind(media_id)
+    .fetch_optional(&database.pool)
+    .await?;
+    if let Some((Some(status), existing_deadline)) = existing {
+        if status == "pending" {
+            schedule(
+                ctx,
+                media_id.to_owned(),
+                existing_deadline.unwrap_or(deadline),
+            );
+        }
+        return Ok(());
+    }
     sqlx::query(
         r#"UPDATE media_files
            SET location_status = 'pending', location_deadline_at = ?,
@@ -148,9 +166,17 @@ async fn capture(ctx: &Arc<Context>, media_id: &str, deadline: i64) -> Result<()
         return Ok(());
     }
     let timeout = Duration::from_secs(remaining as u64);
-    let location = tokio::task::spawn_blocking(move || location::current(timeout))
-        .await
-        .map_err(|error| TwonlyError::Generic(format!("location worker failed: {error}")))??;
+    let location = match tokio::task::spawn_blocking(move || location::current(timeout)).await {
+        Ok(Ok(location)) => location,
+        Ok(Err(error)) => {
+            tracing::warn!(%error, "Memory location request failed");
+            None
+        }
+        Err(error) => {
+            tracing::warn!(%error, "Memory location worker failed");
+            None
+        }
+    };
     if let Some(location) = location {
         *request = Some((SystemTime::now(), location));
     }
@@ -230,4 +256,80 @@ pub(crate) async fn disable_pending(ctx: &Arc<Context>) -> Result<()> {
             .await?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn initializing_a_saved_capture_preserves_its_original_fix_and_time() -> anyhow::Result<()>
+    {
+        let temp = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
+            .await?;
+        UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me","storeLocationInMemories":true}"#,
+        )?;
+        let db = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO media_files(media_id, type, created_at, location_status, location_deadline_at, location_latitude, location_longitude, location_accuracy) VALUES ('saved-capture', 'image', 1700000000, 'resolved', 1700000180, 52.52, 13.405, 8.5)")
+            .execute(&db.pool).await?;
+        initialize_for_media(&ctx, "saved-capture").await?;
+        let actual: (String, i64, f64, f64, f64, i64) = sqlx::query_as("SELECT location_status, location_deadline_at, location_latitude, location_longitude, location_accuracy, created_at FROM media_files WHERE media_id = 'saved-capture'")
+            .fetch_one(&db.pool).await?;
+        assert_eq!(
+            actual,
+            (
+                "resolved".into(),
+                1700000180,
+                52.52,
+                13.405,
+                8.5,
+                1700000000
+            )
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn pending_saved_capture_keeps_its_original_location_deadline() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
+            .await?;
+        UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me","storeLocationInMemories":true}"#,
+        )?;
+        let db = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO media_files(media_id, type, location_status, location_deadline_at) VALUES ('pending-saved-capture', 'image', 'pending', 1700000180)")
+            .execute(&db.pool).await?;
+        initialize_for_media(&ctx, "pending-saved-capture").await?;
+        let deadline: i64 = sqlx::query_scalar(
+            "SELECT location_deadline_at FROM media_files WHERE media_id = 'pending-saved-capture'",
+        )
+        .fetch_one(&db.pool)
+        .await?;
+        assert_eq!(deadline, 1700000180);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn expired_capture_is_not_given_another_location_window() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
+            .await?;
+        UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me","storeLocationInMemories":true}"#,
+        )?;
+        let db = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO media_files(media_id, type, location_status, location_deadline_at) VALUES ('expired-capture', 'image', 'timedOut', 1700000180)")
+            .execute(&db.pool).await?;
+        initialize_for_media(&ctx, "expired-capture").await?;
+        let actual: (String, i64) = sqlx::query_as("SELECT location_status, location_deadline_at FROM media_files WHERE media_id = 'expired-capture'")
+            .fetch_one(&db.pool).await?;
+        assert_eq!(actual, ("timedOut".into(), 1700000180));
+        Ok(())
+    }
 }

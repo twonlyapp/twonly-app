@@ -14,7 +14,6 @@ use crate::user_config::UserConfig;
 use async_trait::async_trait;
 use prost::Message;
 use rand::SeedableRng;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 use stream_tungstenite::context::ConnectionContext;
 use stream_tungstenite::error::HandshakeError;
@@ -33,7 +32,7 @@ pub(crate) const APP_VERSION: &str = env!("TWONLY_APP_VERSION");
 pub(crate) struct ApiAuthHandshaker {
     pub context: Arc<Context>,
     pub api_client: Weak<ApiClient>,
-    pub is_authenticated: Arc<AtomicBool>,
+    pub generation: u64,
     pub in_background: bool,
     pub events: broadcast::Sender<ApiEvent>,
 }
@@ -302,18 +301,17 @@ impl ApiAuthHandshaker {
         Ok(())
     }
 
-    fn authentication_succeeded(&self) {
-        self.is_authenticated.store(true, Ordering::Release);
-
-        if let Some(client) = self.api_client.upgrade() {
-            client.note_authenticated();
-            tokio::spawn(async move {
-                client.set_state(ApiConnectionState::Authenticated).await;
-                // Runs on every (re)connect, so this covers both the initial
-                // authentication and reconnection catch-up.
-                client.request_catch_up().await;
-            });
+    async fn authentication_succeeded(&self) {
+        let Some(client) = self.api_client.upgrade() else {
+            return;
+        };
+        if !client
+            .set_state_for_generation(self.generation, ApiConnectionState::Authenticated)
+            .await
+        {
+            return;
         }
+        client.request_catch_up().await;
 
         let _ = self.events.send(ApiEvent {
             kind: ApiEventKind::Authenticated,
@@ -356,11 +354,14 @@ impl Handshaker for ApiAuthHandshaker {
         let can_use_login_token = user.can_use_login_token_for_auth;
         let app_version = user.app_version;
 
-        let _ = self.events.send(ApiEvent {
-            kind: ApiEventKind::ConnectionStateChanged,
-            state: Some(ApiConnectionState::Authenticating),
-            message: None,
-        });
+        if let Some(client) = self.api_client.upgrade() {
+            if !client
+                .set_state_for_generation(self.generation, ApiConnectionState::Authenticating)
+                .await
+            {
+                return Err(HandshakeError::Protocol("connection was replaced".into()));
+            }
+        }
 
         if can_use_login_token {
             match self
@@ -369,7 +370,7 @@ impl Handshaker for ApiAuthHandshaker {
             {
                 Ok(()) => {
                     tracing::info!("ApiAuthHandshaker: authenticated with login token");
-                    self.authentication_succeeded();
+                    self.authentication_succeeded().await;
                     return Ok(());
                 }
                 Err(error) => {
@@ -384,7 +385,7 @@ impl Handshaker for ApiAuthHandshaker {
                 .unwrap_or(false)
         {
             tracing::info!("ApiAuthHandshaker: authenticated with legacy token");
-            self.authentication_succeeded();
+            self.authentication_succeeded().await;
             return Ok(());
         }
 
@@ -421,7 +422,7 @@ impl Handshaker for ApiAuthHandshaker {
             }
         }
 
-        self.authentication_succeeded();
+        self.authentication_succeeded().await;
         Ok(())
     }
 

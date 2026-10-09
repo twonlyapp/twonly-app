@@ -234,6 +234,33 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStorageData => 'Memories & Speicher';
 
   @override
+  String get memoryDetailsTitle => 'Details';
+
+  @override
+  String get memoryDetailsCapturedAt => 'Aufgenommen';
+
+  @override
+  String get memoryDetailsLocation => 'Standort';
+
+  @override
+  String get memoryDetailsLocationPending => 'Aufnahmestandort wird ermittelt…';
+
+  @override
+  String get memoryDetailsNoLocation => 'Kein Standort gespeichert';
+
+  @override
+  String memoryDetailsAccuracy(int meters) {
+    return 'Genauigkeit: ±$meters m';
+  }
+
+  @override
+  String get memoryDetailsOpenMap => 'In Karten öffnen';
+
+  @override
+  String get memoryDetailsMapUnavailable =>
+      'Karten konnten nicht geöffnet werden.';
+
+  @override
   String get memoryLocationTitle => 'Standort in Memories speichern';
 
   @override
@@ -1240,6 +1267,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String notificationTextMessages(Object count, Object inGroup) {
+    return 'hat $count Nachrichten$inGroup gesendet.';
+  }
+
+  @override
   String notificationTwonly(Object inGroup) {
     return 'hat ein twonly$inGroup gesendet.';
   }
@@ -1399,6 +1431,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get avatarSaveChangesDiscard => 'Verwerfen';
+
+  @override
+  String get contactAvatarTitle => 'Avatar';
+
+  @override
+  String get contactAvatarPhoto => 'Foto-Avatar';
+
+  @override
+  String get contactAvatarIllustrated => 'Gezeichneter Avatar';
 
   @override
   String get customAvatarSvgTab => 'Öffentlicher Avatar';

@@ -640,9 +640,12 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
       await twonlyDB.groupsDao.updateGroup(
         message.groupId.value,
-        const GroupsCompanion(
-          archived: Value(false),
-          deletedContent: Value(false),
+        GroupsCompanion(
+          // Sending into an archived chat preserves the user's choice.
+          archived: message.senderId.present && message.senderId.value != null
+              ? const Value(false)
+              : const Value.absent(),
+          deletedContent: const Value(false),
         ),
       );
 

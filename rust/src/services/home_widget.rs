@@ -7,9 +7,8 @@
 //! WidgetKit and AppWidget never open the encrypted application database. They
 //! only read the JSON and PNG files produced here under the shared data root.
 //!
-//! Every contact group holds exactly one image — the last one a member of it
-//! sent — and an arriving image deletes the one it replaces. Nothing is kept on
-//! a clock, so the manifest is at most as long as the user has contact groups.
+//! Every contact group and directly selected person holds their latest image.
+//! An arriving image deletes the one it replaces once no selection holds it.
 
 use crate::api::messages::outgoing::send_c2c_message_to_contact;
 use crate::api::proto::client::EncryptedContent;
@@ -44,6 +43,7 @@ struct WidgetManifest {
     version: u8,
     updated_at: i64,
     groups: Vec<ManifestGroup>,
+    contacts: Vec<ManifestContact>,
     images: Vec<ManifestImage>,
 }
 
@@ -54,11 +54,18 @@ struct ManifestGroup {
     emoji: Option<String>,
 }
 
+#[derive(Serialize, FromRow)]
+struct ManifestContact {
+    id: i64,
+    name: String,
+}
+
 #[derive(Serialize)]
 struct ManifestImage {
     media_id: String,
     path: String,
     sender: String,
+    sender_id: i64,
     /// The contact groups this image is the current one for. Not the sender's
     /// full membership: an older image still holds every group a newer one did
     /// not claim, and publishing the full list would offer two images to the
@@ -85,12 +92,14 @@ fn config_path(ctx: &Context) -> PathBuf {
     widget_root(ctx).join("native-config.json")
 }
 
-/// Contacts reachable through at least one contact group used by a placed
-/// widget. Group-valued members are expanded through their ordinary members.
+/// People selected directly or through a contact group in a placed widget.
+/// Group-valued members are expanded through their ordinary members.
 pub async fn allowed_contact_ids(ctx: &Arc<Context>) -> Result<Vec<i64>> {
     let database = ctx.app_db.read().await.clone();
     let ids = sqlx::query_scalar::<_, i64>(
         r#"SELECT DISTINCT contact_id FROM (
+             SELECT contact_id FROM home_widget_contacts
+             UNION
              SELECT cgm.user_id AS contact_id
              FROM home_widget_groups hwg
              JOIN contact_group_members cgm
@@ -206,7 +215,7 @@ pub async fn set_widget_groups(
 }
 
 /// Imports native placement/config changes. Both widget implementations write
-/// `{ widgets: [{id, platform, group_ids}] }` atomically to this file.
+/// `{ widgets: [{id, platform, group_ids, contact_ids}] }` atomically to this file.
 async fn import_native_configuration(ctx: &Arc<Context>) -> Result<()> {
     #[derive(serde::Deserialize)]
     struct NativeConfig {
@@ -219,6 +228,8 @@ async fn import_native_configuration(ctx: &Arc<Context>) -> Result<()> {
         platform: String,
         #[serde(default)]
         group_ids: Vec<i64>,
+        #[serde(default)]
+        contact_ids: Vec<i64>,
         /// When this widget last rebuilt itself. Only iOS records it: nothing
         /// tells a WidgetKit extension that its widget was removed, so an entry
         /// that stops refreshing is how a removal becomes visible. Android
@@ -256,6 +267,16 @@ async fn import_native_configuration(ctx: &Arc<Context>) -> Result<()> {
             .execute(&mut *transaction)
             .await?;
         }
+        for contact_id in widget.contact_ids {
+            sqlx::query(
+                r#"INSERT OR IGNORE INTO home_widget_contacts(widget_id, contact_id)
+                   SELECT ?, user_id FROM contacts WHERE user_id = ?"#,
+            )
+            .bind(&widget.id)
+            .bind(contact_id)
+            .execute(&mut *transaction)
+            .await?;
+        }
     }
     transaction.commit().await?;
     Ok(())
@@ -279,8 +300,8 @@ async fn contact_group_ids_for_sender(ctx: &Arc<Context>, sender_id: i64) -> Res
     .await?)
 }
 
-/// Publishes the current widget image of every contact group, and deletes
-/// everything that is no longer one.
+/// Publishes the latest image for each contact group and directly selected
+/// person, then deletes images that no longer belong to any selection.
 ///
 /// A group holds exactly one image: the most recent one a member of it sent.
 /// The next arrival takes that place, and the image it replaced is gone — not
@@ -288,6 +309,9 @@ async fn contact_group_ids_for_sender(ctx: &Arc<Context>, sender_id: i64) -> Res
 /// first and letting each claim only the groups still unclaimed is what makes
 /// that true for every group at once, including a sender who is in several.
 pub async fn refresh_manifest(ctx: &Arc<Context>) -> Result<()> {
+    // Startup pruning and native pushes can run before permission sync. Import
+    // first so a directly selected person's image is never pruned as unused.
+    import_native_configuration(ctx).await?;
     let root = widget_root(ctx);
     let images_dir = root.join("images");
     std::fs::create_dir_all(&images_dir)?;
@@ -298,15 +322,31 @@ pub async fn refresh_manifest(ctx: &Arc<Context>) -> Result<()> {
     )
     .fetch_all(&database.pool)
     .await?;
+    // Matches getContactDisplayName: a nonempty nickname takes priority over
+    // the profile's display name, with the username as the final fallback.
+    let contacts = sqlx::query_as::<_, ManifestContact>(
+        r#"SELECT user_id AS id, COALESCE(NULLIF(nick_name, ''), display_name, username) AS name
+           FROM contacts WHERE accepted = 1 AND blocked = 0
+             AND deleted_by_user = 0 AND account_deleted = 0
+           ORDER BY name COLLATE NOCASE, user_id"#,
+    )
+    .fetch_all(&database.pool)
+    .await?;
+    let directly_selected: BTreeSet<i64> =
+        sqlx::query_scalar::<_, i64>("SELECT DISTINCT contact_id FROM home_widget_contacts")
+            .fetch_all(&database.pool)
+            .await?
+            .into_iter()
+            .collect();
     let rows = sqlx::query_as::<_, WidgetMediaRow>(
         r#"SELECT f.media_id, f.type AS media_type, m.sender_id,
-                  COALESCE(c.display_name, c.username) AS sender, m.created_at,
+                  COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username) AS sender, m.created_at,
                   f.download_state
            FROM messages m
            JOIN media_files f ON f.media_id = m.media_id
            JOIN contacts c ON c.user_id = m.sender_id
            WHERE m.is_widget_media = 1 AND f.is_widget_media = 1
-           ORDER BY m.created_at DESC"#,
+           ORDER BY m.created_at DESC, m.rowid DESC"#,
     )
     .fetch_all(&database.pool)
     .await?;
@@ -314,6 +354,7 @@ pub async fn refresh_manifest(ctx: &Arc<Context>) -> Result<()> {
 
     let abandoned_before = chrono::Utc::now().timestamp() - ABANDONED_MEDIA_SECONDS;
     let mut claimed: BTreeSet<i64> = BTreeSet::new();
+    let mut claimed_contacts: BTreeSet<i64> = BTreeSet::new();
     let mut images = Vec::new();
     let mut superseded: Vec<(String, String)> = Vec::new();
 
@@ -324,9 +365,9 @@ pub async fn refresh_manifest(ctx: &Arc<Context>) -> Result<()> {
                 .into_iter()
                 .filter(|group_id| !claimed.contains(group_id))
                 .collect();
-            // Every group this sender reaches already has something newer, so
-            // nothing can ever show this again.
-            if holds.is_empty() {
+            let holds_contact = directly_selected.contains(&row.sender_id)
+                && !claimed_contacts.contains(&row.sender_id);
+            if holds.is_empty() && !holds_contact {
                 superseded.push((row.media_id, row.media_type));
                 continue;
             }
@@ -336,10 +377,14 @@ pub async fn refresh_manifest(ctx: &Arc<Context>) -> Result<()> {
             // previous image in place.
             if let Some(path) = publish_image(ctx, &images_dir, &row) {
                 claimed.extend(holds.iter().copied());
+                if holds_contact {
+                    claimed_contacts.insert(row.sender_id);
+                }
                 images.push(ManifestImage {
                     media_id: row.media_id,
                     path,
                     sender: row.sender,
+                    sender_id: row.sender_id,
                     group_ids: holds,
                     received_at: row.created_at,
                 });
@@ -364,6 +409,7 @@ pub async fn refresh_manifest(ctx: &Arc<Context>) -> Result<()> {
         version: 1,
         updated_at: chrono::Utc::now().timestamp(),
         groups,
+        contacts,
         images,
     };
     let temporary = root.join("manifest.json.tmp");
@@ -497,4 +543,166 @@ pub async fn delete_media(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
 /// arrived while nothing was running.
 pub async fn purge_widget_media(ctx: &Arc<Context>) -> Result<()> {
     refresh_manifest(ctx).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn native_config(ctx: &Context, widgets: serde_json::Value) -> anyhow::Result<()> {
+        std::fs::create_dir_all(widget_root(ctx))?;
+        std::fs::write(
+            config_path(ctx),
+            serde_json::to_vec(&serde_json::json!({ "widgets": widgets }))?,
+        )?;
+        Ok(())
+    }
+
+    fn manifest(ctx: &Context) -> anyhow::Result<serde_json::Value> {
+        Ok(serde_json::from_slice(&std::fs::read(
+            widget_root(ctx).join("manifest.json"),
+        )?)?)
+    }
+
+    #[tokio::test]
+    async fn direct_and_group_selections_grant_a_union_and_removal_revokes_it() -> anyhow::Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'alice'), (8, 'bob'), (9, 'carol')",
+            "INSERT INTO contact_groups(id, name, text_color, background_color) VALUES (1, 'Friends', 0, 0)",
+            "INSERT INTO contact_group_members(contact_group_id, user_id) VALUES (1, 7), (1, 8)",
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&database.pool).await?;
+        }
+        native_config(
+            &ctx,
+            serde_json::json!([
+                {"id": "android:1", "platform": "android", "group_ids": [1], "contact_ids": [7, 9, 999]},
+                {"id": "ios:expired", "platform": "ios", "contact_ids": [8], "last_seen": 1}
+            ]),
+        )?;
+        import_native_configuration(&ctx).await?;
+        assert_eq!(allowed_contact_ids(&ctx).await?, vec![7, 8, 9]);
+        native_config(
+            &ctx,
+            serde_json::json!([
+                {"id": "android:1", "platform": "android", "contact_ids": [9]}
+            ]),
+        )?;
+        import_native_configuration(&ctx).await?;
+        assert_eq!(allowed_contact_ids(&ctx).await?, vec![9]);
+        native_config(&ctx, serde_json::json!([]))?;
+        import_native_configuration(&ctx).await?;
+        assert!(allowed_contact_ids(&ctx).await?.is_empty());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn a_person_without_contact_groups_keeps_only_their_latest_image() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username, display_name, nick_name, accepted) VALUES (7, 'alice', 'Alice Smith', 'Ali', 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('d', 'Alice', 1)",
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&database.pool).await?;
+        }
+        // The native selection has not been synced into Rust's tables yet.
+        native_config(
+            &ctx,
+            serde_json::json!([
+                {"id": "android:1", "platform": "android", "contact_ids": [7]}
+            ]),
+        )?;
+        for id in ["old", "new"] {
+            sqlx::query("INSERT INTO media_files(media_id, type, is_widget_media, download_state) VALUES (?, 'image', 1, 'ready')")
+                .bind(id).execute(&database.pool).await?;
+            sqlx::query("INSERT INTO messages(message_id, group_id, sender_id, type, media_id, is_widget_media, created_at) VALUES (?, 'd', 7, 'media', ?, 1, 100)")
+                .bind(id).bind(id).execute(&database.pool).await?;
+            let photo = MediaFileService::new(&ctx).temp_path(id, "image");
+            MediaFileService::ensure_parent(&photo)?;
+            image::RgbImage::new(10, 10).save(&photo)?;
+        }
+        refresh_manifest(&ctx).await?;
+        let published = manifest(&ctx)?;
+        assert_eq!(published["images"].as_array().unwrap().len(), 1);
+        assert_eq!(published["images"][0]["media_id"], "new");
+        assert_eq!(published["images"][0]["group_ids"], serde_json::json!([]));
+        assert_eq!(published["images"][0]["sender"], "Ali");
+        assert_eq!(published["contacts"][0]["name"], "Ali");
+        assert!(!MediaFileService::new(&ctx)
+            .temp_path("old", "image")
+            .exists());
+        native_config(&ctx, serde_json::json!([]))?;
+        refresh_manifest(&ctx).await?;
+        assert!(manifest(&ctx)?["images"].as_array().unwrap().is_empty());
+        assert!(!MediaFileService::new(&ctx)
+            .temp_path("new", "image")
+            .exists());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn selectable_people_use_the_app_display_name_priority() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username, display_name, nick_name, accepted) VALUES (7, 'alice', 'Alice Smith', 'Ali', 1), (8, 'bob', 'Robert', '', 1), (9, 'carol', NULL, NULL, 1)",
+            "INSERT INTO contacts(user_id, username, accepted, blocked) VALUES (10, 'blocked', 1, 1)",
+            "INSERT INTO contacts(user_id, username) VALUES (11, 'unaccepted')",
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&database.pool).await?;
+        }
+        refresh_manifest(&ctx).await?;
+        let published = manifest(&ctx)?;
+        let names: Vec<&str> = published["contacts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|contact| contact["name"].as_str().unwrap())
+            .collect();
+        assert_eq!(names, vec!["Ali", "carol", "Robert"]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn a_published_widget_image_identifies_its_sender() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'alice')",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('d', 'Alice', 1)",
+            "INSERT INTO contact_groups(id, name, text_color, background_color) VALUES (1, 'Friends', 0, 0)",
+            "INSERT INTO contact_group_members(contact_group_id, user_id) VALUES (1, 7)",
+            "INSERT INTO media_files(media_id, type, is_widget_media, download_state) VALUES ('photo', 'image', 1, 'ready')",
+            "INSERT INTO messages(message_id, group_id, sender_id, type, media_id, is_widget_media) VALUES ('message', 'd', 7, 'media', 'photo', 1)",
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&database.pool).await?;
+        }
+        let photo = MediaFileService::new(&ctx).temp_path("photo", "image");
+        MediaFileService::ensure_parent(&photo)?;
+        image::RgbImage::new(10, 10).save(&photo)?;
+        refresh_manifest(&ctx).await?;
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(widget_root(&ctx).join("manifest.json"))?)?;
+        assert_eq!(manifest["images"].as_array().unwrap().len(), 1);
+        assert_eq!(manifest["images"][0]["sender_id"], 7);
+        assert_eq!(manifest["images"][0]["sender"], "alice");
+        assert_eq!(manifest["images"][0]["group_ids"], serde_json::json!([1]));
+        Ok(())
+    }
 }

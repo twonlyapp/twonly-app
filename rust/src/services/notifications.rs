@@ -219,6 +219,7 @@ pub struct NotificationAddition {
     pub sender_name: String,
     pub title: String,
     pub body: String,
+    pub text_messages_body: Option<String>,
     pub conversation_name: Option<String>,
     pub is_group: bool,
     pub message_id: Option<String>,
@@ -600,6 +601,10 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
     for row in rows {
         let title = row.sender_name.clone();
         let body = localized_body(locale, &row);
+        let text_messages_body = matches!(row.kind.as_str(), "text" | "response").then(|| {
+            translation(locale, "notificationTextMessages")
+                .replace("{inGroup}", &group_suffix(locale, &row))
+        });
         let is_group = row.conversation_id.is_some() && row.is_direct_chat == 0;
         let avatar_path =
             match crate::services::avatars::ensure_contact_avatar_png(ctx, row.sender_id).await {
@@ -620,6 +625,7 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
             sender_name: row.sender_name,
             title,
             body,
+            text_messages_body,
             conversation_name: row.conversation_name,
             is_group,
             message_id: row.message_id,
@@ -915,15 +921,19 @@ fn translation(locale: &str, key: &str) -> &'static str {
         .unwrap_or_else(|| panic!("notification translation {key} is missing from en.arb"))
 }
 
-fn localized_body(locale: &str, row: &PendingRow) -> String {
-    let in_group = if row.conversation_id.is_some() && row.is_direct_chat == 0 {
+fn group_suffix(locale: &str, row: &PendingRow) -> String {
+    if row.conversation_id.is_some() && row.is_direct_chat == 0 {
         row.conversation_name
             .as_deref()
             .map(|name| format!(" {} {}", translation(locale, "notificationFillerIn"), name))
             .unwrap_or_default()
     } else {
         String::new()
-    };
+    }
+}
+
+fn localized_body(locale: &str, row: &PendingRow) -> String {
+    let in_group = group_suffix(locale, row);
 
     // An app's announcement is already a whole sentence written for the
     // reader, so it is shown as it is rather than described.
@@ -981,6 +991,36 @@ pub(crate) fn notification_avatar_path(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn text_notification_counts_are_localized_without_changing_event_ids() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('g', 'Friends', 0)",
+            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, kind, created_at) VALUES ('event', 'message', 'g', 7, 'text', 1)",
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&database.pool).await?;
+        }
+        for (locale, expected) in [
+            ("en", "sent {count} messages in Friends."),
+            ("de", "hat {count} Nachrichten in Friends gesendet."),
+            ("ar", "{count} رسائل جديدة في Friends."),
+        ] {
+            let batch = pending_batch(&ctx, locale).await?;
+            assert_eq!(batch.additions.len(), 1);
+            let addition = &batch.additions[0];
+            assert_eq!(addition.text_messages_body.as_deref(), Some(expected));
+            assert_eq!(addition.event_id, "event");
+            assert_eq!(addition.notification_id, "message");
+            assert_eq!(batch.badge_count, 1);
+        }
+        Ok(())
+    }
 
     fn webxdc_update(info: Option<&str>) -> proto::EncryptedContent {
         let data = proto::AdditionalMessageData {

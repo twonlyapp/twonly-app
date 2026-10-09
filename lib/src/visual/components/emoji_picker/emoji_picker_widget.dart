@@ -285,7 +285,9 @@ class EmojiPickerState extends State<EmojiPicker> {
       return _buildPickerSurface(widget.alternateView!);
     }
     if (!_loaded) {
-      return widget.config.emojiViewConfig.loadingIndicator;
+      return _buildPickerSurface(
+        widget.config.emojiViewConfig.loadingIndicator,
+      );
     }
     final content = _isSearchBarVisible ? _buildSearchBar() : _buildEmojiView();
     return _wrapScrollBehaviorForPlatforms(_buildPickerSurface(content));
@@ -542,6 +544,10 @@ class EmojiPickerState extends State<EmojiPicker> {
   }
 
   Widget _buildPickerSurface(Widget content) {
+    content = ColoredBox(
+      color: widget.config.emojiViewConfig.backgroundColor,
+      child: content,
+    );
     final initialHeight = widget.config.height;
     if (initialHeight == null) {
       return content;

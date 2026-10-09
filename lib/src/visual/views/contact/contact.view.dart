@@ -20,6 +20,7 @@ import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/elements/my_chip.element.dart';
+import 'package:twonly/src/visual/views/contact/contact_components/avatar_preference.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/mutual_groups_expansion_tile.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/verification_expansion_tile.comp.dart';
@@ -319,6 +320,7 @@ class _ContactViewState extends State<ContactView> {
               }
             },
           ),
+          AvatarPreferenceTile(contact: contact),
           SelectChatDeletionTimeListTitle(
             groupId: getUUIDforDirectChat(
               widget.userId,

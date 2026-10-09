@@ -10,14 +10,22 @@
 //! have no Rust equivalent.
 
 use crate::error::{Result, TwonlyError};
+use crate::native::location::LocationFix;
 use std::path::Path;
 
 #[cfg(target_os = "ios")]
-pub(crate) fn save(path: &Path, is_video: bool, _name: &str, created_at_millis: i64) -> Result<()> {
+pub(crate) fn save(
+    path: &Path,
+    is_video: bool,
+    _name: &str,
+    created_at_millis: i64,
+    location: Option<LocationFix>,
+) -> Result<()> {
     use std::ffi::CString;
     use std::os::raw::c_char;
 
-    type SaveToGallery = unsafe extern "C" fn(*const c_char, bool, i64) -> bool;
+    type SaveToGallery =
+        unsafe extern "C" fn(*const c_char, bool, i64, bool, f64, f64, f64) -> bool;
 
     let path = CString::new(path.as_os_str().as_encoded_bytes())
         .map_err(|_| TwonlyError::Generic("gallery path contains a NUL byte".into()))?;
@@ -31,7 +39,22 @@ pub(crate) fn save(path: &Path, is_video: bool, _name: &str, created_at_millis: 
     // SAFETY: the Swift @_cdecl declaration has this exact stable C ABI signature.
     let callback: SaveToGallery = unsafe { std::mem::transmute(callback) };
     // SAFETY: Swift copies the string before this call returns.
-    if unsafe { callback(path.as_ptr(), is_video, created_at_millis) } {
+    let fix = location.unwrap_or(LocationFix {
+        latitude: 0.0,
+        longitude: 0.0,
+        accuracy: -1.0,
+    });
+    if unsafe {
+        callback(
+            path.as_ptr(),
+            is_video,
+            created_at_millis,
+            location.is_some(),
+            fix.latitude,
+            fix.longitude,
+            fix.accuracy,
+        )
+    } {
         Ok(())
     } else {
         Err(TwonlyError::Generic(
@@ -41,7 +64,13 @@ pub(crate) fn save(path: &Path, is_video: bool, _name: &str, created_at_millis: 
 }
 
 #[cfg(target_os = "android")]
-pub(crate) fn save(path: &Path, is_video: bool, name: &str, created_at_millis: i64) -> Result<()> {
+pub(crate) fn save(
+    path: &Path,
+    is_video: bool,
+    name: &str,
+    created_at_millis: i64,
+    location: Option<LocationFix>,
+) -> Result<()> {
     use crate::native::transfer::android::{gallery_class, jni_env};
     use jni::objects::{JObject, JValue};
 
@@ -53,16 +82,25 @@ pub(crate) fn save(path: &Path, is_video: bool, name: &str, created_at_millis: i
     };
     let path = JObject::from(string(&path.to_string_lossy())?);
     let name = JObject::from(string(name)?);
+    let fix = location.unwrap_or(LocationFix {
+        latitude: 0.0,
+        longitude: 0.0,
+        accuracy: -1.0,
+    });
     let call = env
         .call_static_method(
             class,
             "save",
-            "(Ljava/lang/String;ZLjava/lang/String;J)Z",
+            "(Ljava/lang/String;ZLjava/lang/String;JZDDD)Z",
             &[
                 JValue::Object(&path),
                 JValue::Bool(u8::from(is_video)),
                 JValue::Object(&name),
                 JValue::Long(created_at_millis),
+                JValue::Bool(u8::from(location.is_some())),
+                JValue::Double(fix.latitude),
+                JValue::Double(fix.longitude),
+                JValue::Double(fix.accuracy),
             ],
         )
         .and_then(|value| value.z());
@@ -85,6 +123,7 @@ pub(crate) fn save(
     _is_video: bool,
     _name: &str,
     _created_at_millis: i64,
+    _location: Option<LocationFix>,
 ) -> Result<()> {
     Err(TwonlyError::Generic(
         "platform gallery export is only available on Android and iOS".into(),

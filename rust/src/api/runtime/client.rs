@@ -6,9 +6,9 @@
 use crate::bridge::api::{ApiConfig, ApiConnectionState, ApiEvent, ApiEventKind};
 use crate::context::Context;
 use crate::error::Result;
-use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::sync::{Arc, LazyLock, Weak};
+use std::collections::{HashMap, VecDeque};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock, Mutex as SyncMutex, Weak};
 use std::time::Duration;
 use stream_tungstenite::{ClientConfig, WebSocketClient};
 use tokio::sync::{broadcast, mpsc, oneshot, Mutex, RwLock};
@@ -45,6 +45,127 @@ pub(crate) static API_EVENTS: LazyLock<broadcast::Sender<ApiEvent>> =
     LazyLock::new(|| broadcast::channel(256).0);
 pub(crate) static API_PERMANENTLY_REJECTED: AtomicBool = AtomicBool::new(false);
 
+#[derive(Default)]
+struct ReconnectWork {
+    running: bool,
+    pending: VecDeque<(Arc<WebSocketClient>, String)>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn client() -> Arc<ApiClient> {
+        Arc::new(ApiClient {
+            context: Weak::new(),
+            config: ApiConfig {
+                websocket_url: "ws://127.0.0.1:1".into(),
+                legacy_user_app_version: 0,
+                in_background: false,
+                can_use_login_token_for_auth: true,
+            },
+            state: RwLock::new(ApiConnectionState::Stopped),
+            ws_client: Mutex::new(None),
+            connection_change: Mutex::new(()),
+            connection_generation: AtomicU64::new(0),
+            pending: Arc::new(Mutex::new(HashMap::new())),
+            next_sequence: Mutex::new(1),
+            events: broadcast::channel(32).0,
+            deliberately_closed: AtomicBool::new(false),
+            in_background: AtomicBool::new(false),
+            network_available: AtomicBool::new(true),
+            is_authenticated: Arc::new(AtomicBool::new(false)),
+            catch_up_tx: Mutex::new(None),
+            forced_reconnect: SyncMutex::new(ReconnectWork::default()),
+            forced_reconnect_attempts: AtomicU32::new(0),
+        })
+    }
+
+    fn socket() -> Arc<WebSocketClient> {
+        // Never run the transport: these tests must not access the network.
+        Arc::new(WebSocketClient::builder("ws://127.0.0.1:1").build())
+    }
+
+    #[tokio::test]
+    async fn obsolete_handshake_cannot_publish_authenticated_state() {
+        let client = client();
+        client.connection_generation.store(1, Ordering::Release);
+        assert!(
+            client
+                .set_state_for_generation(1, ApiConnectionState::Authenticated)
+                .await
+        );
+        {
+            let _change = client.connection_change.lock().await;
+            client.discard_current_connection("replacement").await;
+        }
+        assert!(
+            !client
+                .set_state_for_generation(1, ApiConnectionState::Authenticated)
+                .await
+        );
+        assert!(!client.is_authenticated.load(Ordering::Acquire));
+        assert_eq!(*client.state.read().await, ApiConnectionState::Stopped);
+        assert!(
+            client
+                .set_state_for_generation(2, ApiConnectionState::Authenticating)
+                .await
+        );
+        assert_eq!(
+            *client.state.read().await,
+            ApiConnectionState::Authenticating
+        );
+    }
+
+    #[tokio::test]
+    async fn focus_only_resume_keeps_the_authenticated_socket() {
+        let client = client();
+        let socket = socket();
+        *client.ws_client.lock().await = Some(socket.clone());
+        client.is_authenticated.store(true, Ordering::Release);
+        client.set_state(ApiConnectionState::Authenticated).await;
+        client.set_background(false).await.unwrap();
+        assert!(client.is_current_connection(&socket).await);
+        assert_eq!(
+            *client.state.read().await,
+            ApiConnectionState::Authenticated
+        );
+    }
+
+    #[tokio::test]
+    async fn replacement_failure_is_processed_during_an_existing_retry() {
+        let client = client();
+        // Keep the test offline, including once the forced retry timer expires.
+        client.network_available.store(false, Ordering::Release);
+        let first = socket();
+        *client.ws_client.lock().await = Some(first.clone());
+        client.schedule_reconnect(&first, "first failure");
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while client.ws_client.lock().await.is_some() {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+
+        // The first worker is asleep. A foreground/network transition has
+        // installed another transport that now also fails permanently.
+        let replacement = socket();
+        *client.ws_client.lock().await = Some(replacement.clone());
+        client.schedule_reconnect(&replacement, "replacement failure");
+        client.schedule_reconnect(&replacement, "duplicate failure");
+        assert_eq!(client.forced_reconnect.lock().unwrap().pending.len(), 1);
+        tokio::time::timeout(Duration::from_secs(2), async {
+            while client.ws_client.lock().await.is_some() {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        assert_eq!(client.forced_reconnect_attempts.load(Ordering::Acquire), 2);
+    }
+}
+
 pub(crate) struct ApiClient {
     pub(crate) context: Weak<Context>,
     pub(crate) config: ApiConfig,
@@ -53,7 +174,8 @@ pub(crate) struct ApiClient {
     /// Serializes replacing/closing the client slot. The WebSocket runner emits
     /// events asynchronously, so overlapping replacements must not clear each
     /// other's pending requests or publish stale state.
-    connection_change: Mutex<()>,
+    pub(super) connection_change: Mutex<()>,
+    pub(super) connection_generation: AtomicU64,
     pub(crate) pending: PendingRequests,
     pub(crate) next_sequence: Mutex<u64>,
     pub(crate) events: broadcast::Sender<ApiEvent>,
@@ -65,9 +187,9 @@ pub(crate) struct ApiClient {
     /// `try_send`, so repeated triggers collapse into a single pull instead of
     /// queueing one request each.
     catch_up_tx: Mutex<Option<mpsc::Sender<()>>>,
-    /// Set while a forced redial is pending, so the many sends that fail
-    /// against one dead socket schedule a single reconnect between them.
-    forced_reconnect_in_flight: AtomicBool,
+    /// Coalesces failures per socket while retaining failures from replacement
+    /// sockets that die before the preceding retry finishes.
+    forced_reconnect: SyncMutex<ReconnectWork>,
     /// Counts forced redials since the last authenticated session; feeds the
     /// backoff in [`ApiClient::schedule_reconnect`].
     forced_reconnect_attempts: AtomicU32,
@@ -82,6 +204,7 @@ impl ApiClient {
             state: RwLock::const_new(ApiConnectionState::Stopped),
             ws_client: Mutex::const_new(None),
             connection_change: Mutex::const_new(()),
+            connection_generation: AtomicU64::new(0),
             pending: Arc::new(Mutex::const_new(HashMap::new())),
             next_sequence: Mutex::const_new(1),
             events: API_EVENTS.clone(),
@@ -90,7 +213,7 @@ impl ApiClient {
             network_available: AtomicBool::new(true),
             is_authenticated: Arc::new(AtomicBool::new(false)),
             catch_up_tx: Mutex::const_new(None),
-            forced_reconnect_in_flight: AtomicBool::new(false),
+            forced_reconnect: SyncMutex::new(ReconnectWork::default()),
             forced_reconnect_attempts: AtomicU32::new(0),
         })
     }
@@ -205,22 +328,46 @@ impl ApiClient {
         {
             return;
         }
-        // Every send against the dead socket lands here; only the first one
-        // gets to schedule the redial.
-        if self.forced_reconnect_in_flight.swap(true, Ordering::AcqRel) {
+        let mut work = self
+            .forced_reconnect
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        if !work
+            .pending
+            .iter()
+            .any(|(connection, _)| Arc::ptr_eq(connection, stale))
+        {
+            work.pending.push_back((stale.clone(), reason.to_owned()));
+        }
+        // A replacement socket can fail while the preceding retry is still
+        // asleep. Keep that failure queued rather than dropping its only
+        // FatalError event and leaving the replacement permanently stopped.
+        if work.running {
             return;
         }
+        work.running = true;
+        drop(work);
 
         let client = self.clone();
-        let stale = stale.clone();
-        let reason = reason.to_owned();
         tokio::spawn(async move {
-            let result = client.reconnect(&stale, &reason).await;
-            client
-                .forced_reconnect_in_flight
-                .store(false, Ordering::Release);
-            if let Err(error) = result {
-                tracing::warn!("reconnect after a dead API WebSocket failed: {error}");
+            loop {
+                let next = {
+                    let mut work = client
+                        .forced_reconnect
+                        .lock()
+                        .unwrap_or_else(|error| error.into_inner());
+                    match work.pending.pop_front() {
+                        Some(next) => Some(next),
+                        None => {
+                            work.running = false;
+                            None
+                        }
+                    }
+                };
+                let Some((stale, reason)) = next else { break };
+                if let Err(error) = client.reconnect(&stale, &reason).await {
+                    tracing::warn!("reconnect after a dead API WebSocket failed: {error}");
+                }
             }
         });
     }
@@ -288,6 +435,23 @@ impl ApiClient {
         }
     }
 
+    pub(super) async fn set_state_for_generation(
+        &self,
+        generation: u64,
+        state: ApiConnectionState,
+    ) -> bool {
+        let _change = self.connection_change.lock().await;
+        if generation != self.connection_generation.load(Ordering::Acquire) {
+            return false;
+        }
+        if state == ApiConnectionState::Authenticated {
+            self.is_authenticated.store(true, Ordering::Release);
+            self.note_authenticated();
+        }
+        self.set_state(state).await;
+        true
+    }
+
     /// Returns whether `connection` still owns the live client slot.
     ///
     /// A replaced socket can emit its final disconnect/shutdown events after
@@ -305,6 +469,7 @@ impl ApiClient {
     /// timeout. Used for external reachability changes, where waiting would
     /// defeat the purpose of an immediate reconnect.
     async fn discard_current_connection(&self, reason: &str) {
+        self.connection_generation.fetch_add(1, Ordering::AcqRel);
         let current = self.ws_client.lock().await.take();
         self.is_authenticated.store(false, Ordering::Release);
         // Dropping the sender ends the catch-up loop bound to the old socket.
@@ -367,7 +532,7 @@ impl ApiClient {
         let handshaker = ApiAuthHandshaker {
             context,
             api_client: Arc::downgrade(self),
-            is_authenticated: self.is_authenticated.clone(),
+            generation: self.connection_generation.fetch_add(1, Ordering::AcqRel) + 1,
             in_background: self.in_background.load(Ordering::Acquire),
             events: self.events.clone(),
         };
@@ -446,6 +611,7 @@ impl ApiClient {
                     }
                     ev = events.recv() => {
                         use stream_tungstenite::ConnectionEvent;
+                        let _change = self_clone.connection_change.lock().await;
                         let Some(connection) = connection.upgrade() else {
                             break;
                         };
@@ -499,6 +665,7 @@ impl ApiClient {
     pub async fn close(&self) {
         self.deliberately_closed.store(true, Ordering::Release);
         let _connection_change = self.connection_change.lock().await;
+        self.connection_generation.fetch_add(1, Ordering::AcqRel);
         self.is_authenticated.store(false, Ordering::Release);
         // Dropping the sender ends the catch-up loop for this connection.
         *self.catch_up_tx.lock().await = None;
@@ -521,10 +688,24 @@ impl ApiClient {
     // }
 
     pub(crate) async fn set_background(self: &Arc<Self>, in_background: bool) -> Result<()> {
-        self.in_background.store(in_background, Ordering::Release);
+        let was_background = self.in_background.swap(in_background, Ordering::AcqRel);
         if in_background {
             self.set_state(ApiConnectionState::Suspended).await;
         } else {
+            if !was_background
+                && matches!(
+                    *self.state.read().await,
+                    ApiConnectionState::Authenticated
+                        | ApiConnectionState::Authenticating
+                        | ApiConnectionState::Connected
+                        | ApiConnectionState::Connecting
+                        | ApiConnectionState::Reconnecting
+                )
+            {
+                // Permission sheets and control centre also emit resumed.
+                // They must not repeatedly tear down a healthy socket.
+                return Ok(());
+            }
             // Mobile platforms can freeze the process while keeping the socket
             // object alive. Its TCP connection may be dead even though neither
             // the OS nor tungstenite has reported that yet, so foregrounding

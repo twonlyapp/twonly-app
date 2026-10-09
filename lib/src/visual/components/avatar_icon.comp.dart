@@ -46,7 +46,7 @@ final Set<String> _existingAvatarPngPaths = {};
 
 /// Contacts whose PNG render is already in flight, so a list that shows the
 /// same contact in several rows asks Rust to render it only once.
-final Map<int, Future<String?>> _pendingAvatarRenders = {};
+final Map<String, Future<String?>> _pendingAvatarRenders = {};
 
 /// Avatars Rust could not turn into a PNG, keyed by contact plus profile
 /// counter so a broken SVG is not re-rendered on every stream tick while a
@@ -63,7 +63,7 @@ void _putBounded<T>(Map<String, T> cache, String key, T value) {
 }
 
 String _avatarCacheKey(Contact contact) =>
-    '${contact.userId}:${contact.senderProfileCounter}';
+    '${contact.userId}:${contact.senderProfileCounter}:${contact.preferPhotoAvatar}';
 
 String _avatarPngPathFor(Contact contact) {
   final key = _avatarCacheKey(contact);
@@ -142,16 +142,17 @@ class _AvatarIconState extends State<AvatarIcon> {
 
   Future<void> _renderAvatarPng(Contact contact) async {
     final contactId = contact.userId;
+    final cacheKey = _avatarCacheKey(contact);
     // Every widget showing this contact awaits the same render, so each one
     // still learns the path while Rust rasterises it only once.
-    var render = _pendingAvatarRenders[contactId];
+    var render = _pendingAvatarRenders[cacheKey];
     if (render == null) {
       // Block body on purpose: returning `remove`'s value would hand
       // `whenComplete` the future it is completing and hang it.
       render = RustApi.ensureAvatarPng(contactId: contactId).whenComplete(() {
-        _pendingAvatarRenders.remove(contactId);
+        _pendingAvatarRenders.remove(cacheKey);
       });
-      _pendingAvatarRenders[contactId] = render;
+      _pendingAvatarRenders[cacheKey] = render;
     }
 
     String? path;
@@ -168,8 +169,10 @@ class _AvatarIconState extends State<AvatarIcon> {
     }
     _existingAvatarPngPaths.add(path);
     if (!mounted) return;
-    if (_contactsWithPngAvatar.contains(contactId)) return;
-    if (!_avatarContacts.any((entry) => entry.userId == contactId)) return;
+    if (!_avatarContacts.any((entry) => _avatarCacheKey(entry) == cacheKey)) {
+      return;
+    }
+    if (_resolvedAvatarPaths[contactId] == path) return;
     setState(() {
       _resolvedAvatarPaths[contactId] = path!;
       _contactsWithPngAvatar = {..._contactsWithPngAvatar, contactId};

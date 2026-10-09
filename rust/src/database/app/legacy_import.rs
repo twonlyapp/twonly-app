@@ -153,6 +153,16 @@ async fn import(
             rows: source_count,
         });
     }
+    // Imported history is not new chat activity. Restore these flags after
+    // message insertion triggers have run, preserving the user's chat state.
+    sqlx::query(
+        r#"UPDATE main.groups SET
+               archived = (SELECT archived FROM legacy.groups WHERE group_id = main.groups.group_id),
+               deleted_content = (SELECT deleted_content FROM legacy.groups WHERE group_id = main.groups.group_id)
+           WHERE group_id IN (SELECT group_id FROM legacy.groups)"#,
+    )
+    .execute(&mut *tx)
+    .await?;
     migrate_legacy_contact_groups(&mut tx, &mut counts).await?;
     copy_sequences(&mut tx).await?;
     let foreign_key_errors =
@@ -330,6 +340,54 @@ mod tests {
     use crate::database::app::{SqlValue, APPLICATION_TABLES};
     use sqlx::{AssertSqlSafe, SqlitePool};
     use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn importing_history_preserves_archived_direct_chat() {
+        let directory = tempdir().unwrap();
+        let legacy_path = directory.path().join("twonly.sqlite");
+        let legacy = AppDatabase::new(legacy_path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        create_legacy_schema(&legacy.pool).await;
+        sqlx::raw_sql(
+            "PRAGMA user_version = 25;
+             INSERT INTO contacts(user_id, username) VALUES (7, 'alice');
+             INSERT INTO groups(group_id, group_name, is_direct_chat, archived, deleted_content)
+             VALUES ('direct', 'Alice', 1, 1, 1);
+             INSERT INTO messages(message_id, group_id, sender_id, type, content)
+             VALUES ('historic', 'direct', 7, 'text', 'Old message');",
+        )
+        .execute(&legacy.pool)
+        .await
+        .unwrap();
+        legacy.pool.close().await;
+
+        let target = AppDatabase::new(
+            directory.path().join("app.sqlite").to_str().unwrap(),
+            None,
+            false,
+        )
+        .await
+        .unwrap();
+        target.run_migrations().await.unwrap();
+        target.import_legacy(&legacy_path).await.unwrap();
+        let state: (i64, i64) = sqlx::query_as(
+            "SELECT archived, deleted_content FROM groups WHERE group_id = 'direct'",
+        )
+        .fetch_one(&target.pool)
+        .await
+        .unwrap();
+        assert_eq!(state, (1, 1));
+
+        sqlx::query("INSERT INTO messages(message_id, group_id, sender_id, type) VALUES ('new', 'direct', 7, 'text')")
+            .execute(&target.pool).await.unwrap();
+        let archived: i64 =
+            sqlx::query_scalar("SELECT archived FROM groups WHERE group_id = 'direct'")
+                .fetch_one(&target.pool)
+                .await
+                .unwrap();
+        assert_eq!(archived, 0);
+    }
 
     #[tokio::test]
     async fn imports_all_application_tables_and_is_idempotent() {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,17 +8,21 @@ import 'package:twonly/core/bridge/api.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/log.dart';
 
+typedef HomeWidgetTap = ({int? senderId});
+
 /// One widget the user has placed on their home screen.
 class PlacedWidget {
   const PlacedWidget({
     required this.id,
     required this.platform,
     required this.contactGroupIds,
+    this.contactUserIds = const [],
   });
 
   final String id;
   final String platform;
   final List<int> contactGroupIds;
+  final List<int> contactUserIds;
 }
 
 /// Keeps native widget placement and Rust's derived sharing permissions in
@@ -27,6 +32,31 @@ class HomeWidgetService {
   const HomeWidgetService._();
 
   static const _runtimeChannel = MethodChannel('eu.twonly/runtime_storage');
+
+  static final _taps = StreamController<HomeWidgetTap>.broadcast();
+  static HomeWidgetTap? _pendingTap;
+
+  static Stream<HomeWidgetTap> get taps => _taps.stream;
+  static bool get hasTapListener => _taps.hasListener;
+
+  /// Buffers a cold-start tap until the home view is ready, including unlock.
+  static bool handleLink(Uri uri) {
+    if (uri.scheme != 'twonly' || uri.host != 'widget') return false;
+    final values = uri.queryParametersAll['sender_id'];
+    final senderId = values?.length == 1 && uri.path.isEmpty
+        ? int.tryParse(values!.single)
+        : null;
+    final tap = (senderId: senderId);
+    _pendingTap = tap;
+    _taps.add(tap);
+    return true;
+  }
+
+  static HomeWidgetTap? consumeInitialTap() {
+    final tap = _pendingTap;
+    _pendingTap = null;
+    return tap;
+  }
 
   static String get platform => Platform.isIOS ? 'ios' : 'android';
 
@@ -167,6 +197,9 @@ class HomeWidgetService {
             contactGroupIds: ((entry['group_ids'] as List?) ?? const [])
                 .map((id) => (id as num).toInt())
                 .toList(),
+            contactUserIds: ((entry['contact_ids'] as List?) ?? const [])
+                .map((id) => (id as num).toInt())
+                .toList(),
           ),
     ];
   }
@@ -186,6 +219,9 @@ class HomeWidgetService {
               id: '${widget['id']}',
               platform: '${widget['platform']}',
               contactGroupIds: ((widget['group_ids'] as List?) ?? const [])
+                  .map((id) => (id as num).toInt())
+                  .toList(),
+              contactUserIds: ((widget['contact_ids'] as List?) ?? const [])
                   .map((id) => (id as num).toInt())
                   .toList(),
             ),

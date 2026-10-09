@@ -12,6 +12,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
+import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
@@ -58,6 +59,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   StreamSubscription<int>? _homeViewPageIndexSub;
   StreamSubscription<NotificationResponse>? _selectNotificationSub;
   StreamSubscription<NativeNotificationTap>? _nativeNotificationSub;
+  StreamSubscription<HomeWidgetTap>? _widgetTapSub;
   StreamSubscription<(String, MediaType)>? _sharedMediaSub;
 
   static Uri? pendingSharedLink;
@@ -129,6 +131,11 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _nativeNotificationSub = NativeNotificationService.taps.listen(
       _openNativeNotification,
     );
+
+    _widgetTapSub = HomeWidgetService.taps.listen((tap) {
+      HomeWidgetService.consumeInitialTap();
+      unawaited(_openWidgetTap(tap));
+    });
 
     _sharedLinkSub = streamSharedLink.stream.listen((uri) {
       HomeViewState.pendingSharedLink = null;
@@ -214,6 +221,21 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _openNotification(conversationId: tap.conversationId, kind: tap.kind);
   }
 
+  Future<void> _openWidgetTap(HomeWidgetTap tap) async {
+    try {
+      final group = tap.senderId == null
+          ? null
+          : await twonlyDB.groupsDao.getDirectChat(tap.senderId!);
+      if (!mounted) return;
+      routerProvider.go(
+        group == null ? Routes.chats : Routes.chatsMessages(group.groupId),
+      );
+      streamHomeViewPageIndex.add(0);
+    } catch (error) {
+      Log.error('Could not open the widget sender chat: $error');
+    }
+  }
+
   void _openNotification({String? conversationId, String? kind}) {
     if (conversationId != null &&
         NativeNotificationService.opensConversation(kind)) {
@@ -228,6 +250,11 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   }
 
   Future<void> _initAsync() async {
+    final initialWidgetTap = HomeWidgetService.consumeInitialTap();
+    if (initialWidgetTap != null) {
+      await _openWidgetTap(initialWidgetTap);
+      return;
+    }
     final initialNativeTap =
         await NativeNotificationService.consumeInitialTap();
     if (initialNativeTap != null) {
@@ -309,6 +336,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _homeViewPageIndexSub?.cancel();
     _selectNotificationSub?.cancel();
     _nativeNotificationSub?.cancel();
+    _widgetTapSub?.cancel();
     _disableCameraTimer?.cancel();
     _mainCameraController.setState = null;
     _mainCameraController.closeCamera();

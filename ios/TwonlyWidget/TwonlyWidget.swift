@@ -13,11 +13,11 @@ enum EmptyReason: Equatable {
   var message: String {
     switch self {
     case .notConfigured:
-      return "Hold to choose contact groups"
+      return "Hold to choose people or groups"
     case .noMatchingImages(let total):
       // The count separates "the app never delivered anything" from "an image
       // is being held for other groups than the ones this widget selects".
-      return total == 0 ? "No images yet" : "\(total) shared, none in your groups"
+      return total == 0 ? "No images yet" : "No images from your selection"
     case .fault(let fault):
       return fault.summary
     }
@@ -59,9 +59,11 @@ struct TwonlyProvider: AppIntentTimelineProvider {
 
   func snapshot(for configuration: TwonlyWidgetIntent, in context: Context) async -> TwonlyEntry {
     let ids = (configuration.groups ?? []).compactMap { Int64($0.id) }
+    let contactIds = (configuration.contacts ?? []).compactMap { Int64($0.id) }
     return entry(
       images: WidgetStorage.images(),
       ids: ids,
+      contactIds: contactIds,
       date: .now,
       maxPixelSize: maxPixelSize(in: context)
     )
@@ -69,10 +71,12 @@ struct TwonlyProvider: AppIntentTimelineProvider {
 
   func timeline(for configuration: TwonlyWidgetIntent, in context: Context) async -> Timeline<TwonlyEntry> {
     let ids = (configuration.groups ?? []).compactMap { Int64($0.id) }
-    WidgetStorage.persistSelection(ids)
+    let contactIds = (configuration.contacts ?? []).compactMap { Int64($0.id) }
+    WidgetStorage.persistSelection(ids, contactIds: contactIds)
     let entry = entry(
       images: WidgetStorage.images(),
       ids: ids,
+      contactIds: contactIds,
       date: .now,
       maxPixelSize: maxPixelSize(in: context)
     )
@@ -88,6 +92,7 @@ struct TwonlyProvider: AppIntentTimelineProvider {
   private func entry(
     images: Result<[ManifestImage], WidgetStorage.ManifestFault>,
     ids: [Int64],
+    contactIds: [Int64],
     date: Date,
     maxPixelSize: CGFloat
   ) -> TwonlyEntry {
@@ -103,21 +108,25 @@ struct TwonlyProvider: AppIntentTimelineProvider {
 
     // An unconfigured widget selects nothing, and an empty set is disjoint from
     // every image, so this would silently filter everything away.
-    guard !ids.isEmpty else {
-      widgetLog.notice("no contact group configured; nothing can match")
+    guard !ids.isEmpty || !contactIds.isEmpty else {
+      widgetLog.notice("no person or contact group configured; nothing can match")
       return TwonlyEntry(
         date: date, image: nil,
         emptyReason: .notConfigured, maxPixelSize: maxPixelSize)
     }
 
     let selected = Set(ids)
-    guard let newest = available.first(where: { !selected.isDisjoint(with: $0.groupIds) }) else {
+    let selectedContacts = Set(contactIds)
+    guard let newest = available.first(where: {
+      !selected.isDisjoint(with: $0.groupIds)
+        || $0.senderId.map(selectedContacts.contains) == true
+    }) else {
       // The offered groups are what separates "nobody has sent anything" from
       // "the sender is in groups this widget did not select", which look
       // identical on screen.
       widgetLog.notice(
         """
-        no match: selected \(ids, privacy: .public), \
+        no match: groups \(ids, privacy: .public), people \(contactIds, privacy: .public), \
         \(available.count, privacy: .public) images, \
         offered groups \(Set(available.flatMap(\.groupIds)).sorted(), privacy: .public)
         """)
@@ -177,11 +186,16 @@ struct TwonlyWidgetView: View {
   var body: some View {
     content
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-      // Opens the containing app. The scheme is not registered anywhere and
-      // does not need to be: WidgetKit hands the URL to twonly itself, and the
-      // app ignores links it does not recognise.
-      .widgetURL(URL(string: "twonly://widget"))
+      .widgetURL(widgetURL)
       .containerBackground(for: .widget) { brandBackground }
+  }
+
+  private var widgetURL: URL? {
+    var url = URLComponents(string: "twonly://widget")
+    if let senderId = entry.image?.senderId {
+      url?.queryItems = [URLQueryItem(name: "sender_id", value: String(senderId))]
+    }
+    return url?.url
   }
 
   @ViewBuilder
@@ -249,7 +263,7 @@ struct TwonlyWidgetView: View {
           Image(systemName: "photo.on.rectangle.angled").resizable().scaledToFit()
         }
       }
-      .frame(maxWidth: 64, maxHeight: 64)
+      .frame(width: 64, height: 64)
       .foregroundStyle(.white)
       .opacity(0.9)
       Text(message)
@@ -286,4 +300,3 @@ struct TwonlyHomeWidget: Widget {
     .contentMarginsDisabled()
   }
 }
-
