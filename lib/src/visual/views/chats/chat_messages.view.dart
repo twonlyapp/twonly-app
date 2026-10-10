@@ -188,6 +188,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
           ? null
           : StickerService.encodeAdditional(sticker),
     );
+    _animationState.animateMessageIds.add(message.messageId);
     setState(() => quotesMessage = null);
     _showPendingMessages();
     unawaited(_persistOutgoingMessage(message, sticker));

@@ -187,9 +187,18 @@ void main() {
           expect(composer.controller!.text, isEmpty);
         }
         await tester.pump();
+        await tester.pump(const Duration(milliseconds: 1));
         final message = api.requests.single;
         final bubble = find.byKey(Key(message.messageId));
         expect(bubble, findsOneWidget);
+        final animation = find.descendant(
+          of: find.byKey(Key('anim_${message.messageId}')),
+          matching: find.byType(ScaleTransition),
+        );
+        expect(
+          tester.widget<ScaleTransition>(animation).scale.value,
+          allOf(greaterThan(0), lessThan(1)),
+        );
         expect(find.byType(ThreeRotatingDots), findsOneWidget);
         expect(api.completions.single.isCompleted, isFalse);
         expect(
@@ -206,8 +215,17 @@ void main() {
           await tester.pump();
           expect(bubble, findsOneWidget);
         }
-        await tester.pump(const Duration(milliseconds: 160));
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(
+          tester.widget<ScaleTransition>(animation).scale.value,
+          allOf(greaterThan(0), lessThan(1)),
+        );
+        await tester.pump(const Duration(milliseconds: 150));
+        expect(tester.widget<ScaleTransition>(animation).scale.value, 1);
         final originalElement = tester.element(bubble);
+        final originalAnimationElement = tester.element(
+          find.byKey(Key('anim_${message.messageId}')),
+        );
         final originalSize = tester.getSize(bubble);
         final originalPosition = tester.getTopLeft(bubble);
 
@@ -220,6 +238,11 @@ void main() {
         }
         expect(bubble, findsOneWidget);
         expect(tester.element(bubble), same(originalElement));
+        expect(
+          tester.element(find.byKey(Key('anim_${message.messageId}'))),
+          same(originalAnimationElement),
+        );
+        expect(tester.widget<ScaleTransition>(animation).scale.value, 1);
         expect(tester.getSize(bubble), originalSize);
         expect(tester.getTopLeft(bubble), originalPosition);
         expect(find.byType(ThreeRotatingDots), findsOneWidget);
@@ -249,6 +272,7 @@ void main() {
           text: 'Retry this message',
         );
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
     final message = api.requests.single;
     final bubble = find.byKey(Key(message.messageId));
     expect(bubble, findsOneWidget);
