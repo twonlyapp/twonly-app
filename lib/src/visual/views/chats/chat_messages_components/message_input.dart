@@ -26,14 +26,23 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/message_i
 import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_indicator.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
 
+typedef SendChatMessage =
+    void Function({
+      required String text,
+      String? quoteMessageId,
+      LocalSticker? sticker,
+    });
+
+enum ChatInputPanel { none, emoji, additional }
+
 class MessageInput extends StatefulWidget {
   const MessageInput({
     required this.group,
     required this.quotesMessage,
     required this.textFieldFocus,
     required this.onMessageSend,
-    required this.onEmojiVisibilityChanged,
-    required this.emojiPickerShowing,
+    required this.onPanelChanged,
+    required this.panel,
     required this.composing,
     super.key,
   });
@@ -41,9 +50,9 @@ class MessageInput extends StatefulWidget {
   final Group group;
   final FocusNode textFieldFocus;
   final Message? quotesMessage;
-  final VoidCallback onMessageSend;
-  final ValueChanged<bool> onEmojiVisibilityChanged;
-  final bool emojiPickerShowing;
+  final SendChatMessage onMessageSend;
+  final ValueChanged<ChatInputPanel> onPanelChanged;
+  final ChatInputPanel panel;
 
   /// Published so the chat-open heartbeat can stay quiet while the typing
   /// announcement is already covering this conversation.
@@ -99,33 +108,17 @@ class _MessageInputState extends State<MessageInput>
     if (text == '') return;
     final quoteMessageId = widget.quotesMessage?.messageId;
 
-    // Emptying the composer is not allowed to wait on the bridge: Rust commits
-    // the message row before it starts delivering, so the bubble is already on
-    // its way into the chat list while this call is still running.
     _textFieldController.clear();
-    widget.onMessageSend();
+    widget.onMessageSend(text: text, quoteMessageId: quoteMessageId);
     setState(() {});
-
-    unawaitedRustCall(
-      RustApi.insertAndSendText(
-        groupId: widget.group.groupId,
-        text: text,
-        quoteMessageId: quoteMessageId,
-      ),
-      'insertAndSendText',
-    );
   }
 
   void _sendSticker(LocalSticker sticker) {
     final quoteMessageId = widget.quotesMessage?.messageId;
-    widget.onMessageSend();
-    unawaitedRustCall(
-      StickerService.send(
-        groupId: widget.group.groupId,
-        sticker: sticker,
-        quoteMessageId: quoteMessageId,
-      ),
-      'sendSticker',
+    widget.onMessageSend(
+      text: StickerService.fallbackText,
+      sticker: sticker,
+      quoteMessageId: quoteMessageId,
     );
   }
 
@@ -157,6 +150,15 @@ class _MessageInputState extends State<MessageInput>
     }
     _initializeControllers();
     _loadContactId();
+  }
+
+  @override
+  void didUpdateWidget(MessageInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.panel == ChatInputPanel.none) {
+      _keyboardTransitionTimer?.cancel();
+      _switchingToSystemKeyboard = false;
+    }
   }
 
   @override
@@ -227,7 +229,7 @@ class _MessageInputState extends State<MessageInput>
 
   void _handleTextFocusChange() {
     if (widget.textFieldFocus.hasFocus &&
-        widget.emojiPickerShowing &&
+        widget.panel != ChatInputPanel.none &&
         !_switchingToSystemKeyboard) {
       _showSystemKeyboard();
     }
@@ -247,14 +249,16 @@ class _MessageInputState extends State<MessageInput>
   }
 
   void _toggleKeyboard() {
-    if (widget.emojiPickerShowing) {
+    if (widget.panel == ChatInputPanel.emoji) {
       _showSystemKeyboard();
     } else {
       _showEmojiPicker();
     }
   }
 
-  void _showEmojiPicker() {
+  void _showEmojiPicker() => _showPicker(ChatInputPanel.emoji);
+
+  void _showPicker(ChatInputPanel panel) {
     _keyboardTransitionTimer?.cancel();
     final keyboardHeight = _currentKeyboardHeight();
     setState(() {
@@ -264,7 +268,7 @@ class _MessageInputState extends State<MessageInput>
       }
       _stickerShowing = false;
     });
-    widget.onEmojiVisibilityChanged(true);
+    widget.onPanelChanged(panel);
     widget.textFieldFocus.unfocus();
   }
 
@@ -296,7 +300,7 @@ class _MessageInputState extends State<MessageInput>
     setState(() {
       _switchingToSystemKeyboard = false;
     });
-    widget.onEmojiVisibilityChanged(false);
+    widget.onPanelChanged(ChatInputPanel.none);
   }
 
   Future<void> _startAudioRecording() async {
@@ -394,7 +398,12 @@ class _MessageInputState extends State<MessageInput>
     }
   }
 
-  Future<void> _showAdditionalShareModal(BuildContext context) async {
+  Future<void> _toggleAdditionalPicker() async {
+    if (widget.panel == ChatInputPanel.additional) {
+      widget.onPanelChanged(ChatInputPanel.none);
+      return;
+    }
+    _showPicker(ChatInputPanel.additional);
     setState(() {
       _showSparks = false;
     });
@@ -411,17 +420,6 @@ class _MessageInputState extends State<MessageInput>
         );
       }
     }
-    if (!context.mounted) return;
-    // ignore: inference_failure_on_function_invocation
-    await showModalBottomSheet(
-      context: context,
-      backgroundColor: context.color.surface,
-      builder: (context) {
-        return ShareAdditionalView(
-          group: widget.group,
-        );
-      },
-    );
   }
 
   Future<void> _loadContactId() async {
@@ -489,8 +487,10 @@ class _MessageInputState extends State<MessageInput>
                                 right: 8,
                               ),
                               child: FaIcon(
-                                size: widget.emojiPickerShowing ? 18 : 20,
-                                widget.emojiPickerShowing
+                                size: widget.panel == ChatInputPanel.emoji
+                                    ? 18
+                                    : 20,
+                                widget.panel == ChatInputPanel.emoji
                                     ? FontAwesomeIcons.keyboard
                                     : FontAwesomeIcons.faceSmile,
                               ),
@@ -763,14 +763,22 @@ class _MessageInputState extends State<MessageInput>
                   child: IconButton(
                     icon: const FaIcon(FontAwesomeIcons.plus),
                     padding: const EdgeInsets.all(15),
-                    onPressed: () => _showAdditionalShareModal(context),
+                    color: widget.panel == ChatInputPanel.additional
+                        ? context.color.primary
+                        : null,
+                    onPressed: _toggleAdditionalPicker,
                   ),
                 ),
             ],
           ),
         ),
+        if (widget.panel == ChatInputPanel.additional)
+          ShareAdditionalView(
+            group: widget.group,
+            onDismiss: () => widget.onPanelChanged(ChatInputPanel.none),
+          ),
         Offstage(
-          offstage: !widget.emojiPickerShowing,
+          offstage: widget.panel != ChatInputPanel.emoji,
           child: EmojiPicker(
             alternateView: _stickerShowing
                 ? StickerPicker(

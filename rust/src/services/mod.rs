@@ -10,6 +10,7 @@ pub mod direct_media_upload;
 pub mod groups;
 pub mod home_widget;
 pub mod location_metadata;
+pub mod live_location;
 pub mod media_codec;
 pub mod media_exif;
 pub mod media_upload;

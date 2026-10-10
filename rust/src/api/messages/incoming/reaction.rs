@@ -14,6 +14,24 @@ pub(crate) async fn handle_reaction(
     group_id: &str,
     reaction: encrypted_content::Reaction,
 ) -> Result<()> {
+    // A delayed reaction may outlive the message's deletion timer. There is
+    // nothing to update once that row is gone, but the receipt must still be
+    // acknowledged so the reliable mailbox does not retry it forever.
+    let exists: i64 =
+        sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ?)")
+            .bind(&reaction.target_message_id)
+            .fetch_one(&mut **t)
+            .await?;
+    if exists == 0 {
+        tracing::info!(
+            from_user_id,
+            group_id,
+            message_id = reaction.target_message_id,
+            "Ignoring a reaction whose target message is no longer stored"
+        );
+        return Ok(());
+    }
+
     if reaction.remove {
         Receipt::delete_reaction(
             t,

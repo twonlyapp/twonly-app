@@ -40,7 +40,15 @@ pub(crate) async fn handle_additional_data_message(
     };
 
     if let Some(data) = data.as_ref() {
-        if data.webxdc_sync_request.is_some() {
+        if data.r#type == proto::additional_message_data::Type::LiveLocation as i32 {
+            if message.hidden {
+                if let Some(location) = data.live_location.as_ref() {
+                    crate::services::live_location::incoming(tr, group_id, from_user_id, location)
+                        .await?;
+                }
+            }
+            return Ok(());
+        } else if data.webxdc_sync_request.is_some() {
             let ctx = ctx.clone();
             let group_id = group_id.to_owned();
             tokio::spawn(async move {

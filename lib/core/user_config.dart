@@ -144,6 +144,10 @@ class UserConfig {
   /// Adds the capture location to locally stored Memories and gallery
   /// exports. Disabled by default and never added to outgoing media.
   bool storeLocationInMemories;
+
+  /// Allows an explicitly added city sticker in the media editor. Native
+  /// reverse geocoding may send coordinates to the platform provider.
+  bool enableLocationSticker;
   bool autoStoreAllSendUnlimitedMediaFiles;
   bool typingIndicators;
 
@@ -231,6 +235,7 @@ class UserConfig {
     this.autoDownloadOptions,
     required this.storeMediaFilesInGallery,
     required this.storeLocationInMemories,
+    required this.enableLocationSticker,
     required this.autoStoreAllSendUnlimitedMediaFiles,
     required this.typingIndicators,
     required this.storyNotifications,
@@ -301,6 +306,7 @@ class UserConfig {
       autoDownloadOptions.hashCode ^
       storeMediaFilesInGallery.hashCode ^
       storeLocationInMemories.hashCode ^
+      enableLocationSticker.hashCode ^
       autoStoreAllSendUnlimitedMediaFiles.hashCode ^
       typingIndicators.hashCode ^
       storyNotifications.hashCode ^
@@ -375,6 +381,7 @@ class UserConfig {
           autoDownloadOptions == other.autoDownloadOptions &&
           storeMediaFilesInGallery == other.storeMediaFilesInGallery &&
           storeLocationInMemories == other.storeLocationInMemories &&
+          enableLocationSticker == other.enableLocationSticker &&
           autoStoreAllSendUnlimitedMediaFiles ==
               other.autoStoreAllSendUnlimitedMediaFiles &&
           typingIndicators == other.typingIndicators &&

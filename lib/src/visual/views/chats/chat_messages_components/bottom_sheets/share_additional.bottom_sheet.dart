@@ -6,36 +6,35 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_location.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/webxdc_store.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/shared/select_contacts.view.dart';
 
 class ShareAdditionalView extends StatefulWidget {
-  const ShareAdditionalView({required this.group, super.key});
+  const ShareAdditionalView({
+    required this.group,
+    required this.onDismiss,
+    super.key,
+  });
 
   final Group group;
+  final VoidCallback onDismiss;
 
   @override
   State<ShareAdditionalView> createState() => _ShareAdditionalViewState();
 }
 
 class _ShareAdditionalViewState extends State<ShareAdditionalView> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   Future<void> openShareContactView() async {
+    final group = widget.group;
+    final lang = context.lang;
+    widget.onDismiss();
     final selectedContacts =
         await context.navPush(
               SelectContactsView(
                 text: SelectedContactView(
-                  title: context.lang.shareContactsTitle,
-                  submitButton: (_, _) => context.lang.shareContactsSubmit,
+                  title: lang.shareContactsTitle,
+                  submitButton: (_, _) => lang.shareContactsSubmit,
                   submitIcon: FontAwesomeIcons.shareNodes,
                 ),
               ),
@@ -43,12 +42,12 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
             as List<int>?;
     if (selectedContacts != null && selectedContacts.isNotEmpty) {
       await RustApi.insertAndSendContactShare(
-        groupId: widget.group.groupId,
+        groupId: group.groupId,
         contactIds: Int64List.fromList(selectedContacts),
       );
-      if (widget.group.isDirectChat) {
+      if (group.isDirectChat) {
         final members = await twonlyDB.groupsDao.getGroupContact(
-          widget.group.groupId,
+          group.groupId,
         );
         if (members.isNotEmpty) {
           await twonlyDB.contactsDao.updateContact(
@@ -58,13 +57,10 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
         }
       }
     }
-    if (mounted) {
-      Navigator.pop(context);
-    }
   }
 
   Future<void> openAppStore() async {
-    Navigator.pop(context);
+    widget.onDismiss();
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -73,79 +69,80 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
     );
   }
 
+  Future<void> openLocationSharing() async {
+    widget.onDismiss();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => ShareLocationView(group: widget.group),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Container(
-        padding: EdgeInsets.zero,
-        height: 220,
-        decoration: BoxDecoration(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(32),
-            topRight: Radius.circular(32),
-          ),
-          color: context.color.surface,
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 10.9,
-              color: context.color.shadow.withValues(alpha: 0.1),
-            ),
-          ],
+    return Container(
+      height: 180,
+      clipBehavior: Clip.antiAlias,
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(18),
+          topRight: Radius.circular(18),
         ),
-        child: Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 30),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
-                color: context.color.outline,
+      ),
+      child: ColoredBox(
+        color: context.color.surfaceContainer,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 12,
+            children: [
+              Expanded(
+                child: _entry(
+                  icon: const FaIcon(FontAwesomeIcons.circleUser),
+                  label: context.lang.shareContactsMenu,
+                  onTap: openShareContactView,
+                ),
               ),
-              height: 3,
-              width: 60,
-            ),
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: 32,
-                children: [
-                  _entry(
-                    icon: FontAwesomeIcons.circleUser,
-                    label: context.lang.shareContactsMenu,
-                    onTap: openShareContactView,
-                  ),
-                  _entry(
-                    icon: Icons.apps_rounded,
-                    label: context.lang.webxdcStoreMenu,
-                    onTap: openAppStore,
-                  ),
-                ],
+              Expanded(
+                child: _entry(
+                  icon: const Icon(Icons.apps_rounded),
+                  label: context.lang.webxdcStoreMenu,
+                  onTap: openAppStore,
+                ),
               ),
-            ),
-          ],
+              Expanded(
+                child: _entry(
+                  icon: const Icon(Icons.location_on_outlined),
+                  label: context.lang.liveLocationMenu,
+                  onTap: openLocationSharing,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  /// [icon] is an `IconData` or `FaIconData`, matching the rest of the app's
-  /// icon handling.
   Widget _entry({
-    required dynamic icon,
+    required Widget icon,
     required String label,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: context.color.surfaceContainer,
+              color: context.color.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: icon is IconData ? Icon(icon) : FaIcon(icon as FaIconData?),
+            child: icon,
           ),
           const SizedBox(height: 8),
           Text(label, textAlign: TextAlign.center),

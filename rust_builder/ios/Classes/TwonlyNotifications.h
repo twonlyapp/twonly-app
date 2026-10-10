@@ -23,6 +23,10 @@ char *twonly_notification_finalize(uint64_t deadline_ms);
 
 void twonly_notification_string_free(char *pointer);
 
+/* Runs a native live-location state/update/stop operation. Release the JSON
+   response with twonly_notification_string_free. No Flutter engine is needed. */
+char *twonly_live_location_run(const char *directory, const char *request);
+
 /* Runs one maintenance job: preparing a single media file when `media_id` is
    given, or resuming everything left in flight when it is NULL. Returns a JSON
    `{"ok":bool,"error":string?}` that must be released with

@@ -44,6 +44,7 @@ const WATCH_FIRST_DELAY: Duration = Duration::from_secs(2);
 /// The server accepts at most this many recipients for one uploaded attachment.
 pub(crate) const MAX_ATTACHMENT_DISPATCHES: usize = 300;
 const WATCH_MAX_DELAY: Duration = Duration::from_secs(120);
+const NATIVE_RECOVERY_INTERVAL_SECONDS: i64 = 60;
 
 static WATCHING: AtomicBool = AtomicBool::new(false);
 static API_NAMESPACE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
@@ -613,8 +614,46 @@ impl DirectMediaUploadService {
                 // Still reserved or uploading. Only give up once the slot's own
                 // capability has expired, because the native task stops then too.
                 _ if job.expires_at <= now => self.settle(&job, Outcome::Retry).await?,
+                AttachmentState::Reserved | AttachmentState::Uploading => {
+                    if let Err(error) = self.recover_native_transfer(&job).await {
+                        tracing::warn!(attachment_id = job.attachment_id, %error,
+                            "could not recover native media transfer");
+                    }
+                }
                 _ => {}
             }
+        }
+        Ok(())
+    }
+
+    /// Reuse the same immutable requests and attachment. The native scheduler
+    /// keeps live work, repairs missing/failed work, and retries completion for
+    /// an object already uploaded. No replacement recipient envelopes are made.
+    async fn recover_native_transfer(&self, job: &PendingJob) -> Result<()> {
+        if !cfg!(any(target_os = "android", test)) {
+            return Ok(());
+        }
+        let lock = media_lock(&job.media_id);
+        let _guard = lock.lock().await;
+        let database = self.ctx.app_db.read().await.clone();
+        let now = chrono::Utc::now().timestamp();
+        // Claim a recovery interval across foreground/background reconcilers.
+        // Holding the media lock also keeps settle from removing request files.
+        let descriptor = sqlx::query_as::<_, (String, i64)>(
+            r#"UPDATE direct_media_upload_jobs SET updated_at = ?
+               WHERE attachment_id = ? AND state IN ('scheduled', 'waiting_for_server')
+                 AND updated_at <= ?
+               RETURNING native_descriptor_json, created_at"#,
+        )
+        .bind(now)
+        .bind(&job.attachment_id)
+        .bind(now - NATIVE_RECOVERY_INTERVAL_SECONDS)
+        .fetch_optional(&database.pool)
+        .await?;
+        if let Some((descriptor, created_at)) = descriptor {
+            tokio::task::spawn_blocking(move || transfer::recover(&descriptor, created_at))
+                .await
+                .map_err(|error| TwonlyError::Generic(error.to_string()))??;
         }
         Ok(())
     }
@@ -1456,6 +1495,45 @@ mod tests {
         .bind(attachment_id)
         .fetch_one(&database.pool)
         .await?)
+    }
+
+    #[tokio::test]
+    async fn native_recovery_preserves_job_and_does_not_repeat_within_interval(
+    ) -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = upload_test_context(directory.path(), 42).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO media_files(media_id, type) VALUES('recover-media', 'image')")
+            .execute(&database.pool)
+            .await?;
+        let job = reupload_test_job(&database, "recover-media", "recover-slot").await?;
+        sqlx::query("UPDATE direct_media_upload_jobs SET updated_at = 0 WHERE attachment_id = 'recover-slot'")
+            .execute(&database.pool).await?;
+        let service = DirectMediaUploadService::new(&ctx);
+        service.recover_native_transfer(&job).await?;
+        let first: (String, String, i64) = sqlx::query_as(
+            "SELECT attachment_id, native_descriptor_json, updated_at FROM direct_media_upload_jobs WHERE media_id = 'recover-media'",
+        ).fetch_one(&database.pool).await?;
+        assert_eq!(first.0, "recover-slot");
+        assert_eq!(first.1, "{}");
+        assert!(first.2 > 0);
+        // An intervening claim recent enough to skip recovery must stay intact.
+        sqlx::query("UPDATE direct_media_upload_jobs SET updated_at = updated_at + 1 WHERE attachment_id = 'recover-slot'")
+            .execute(&database.pool).await?;
+        service.recover_native_transfer(&job).await?;
+        let second: i64 = sqlx::query_scalar(
+            "SELECT updated_at FROM direct_media_upload_jobs WHERE attachment_id = 'recover-slot'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(second, first.2 + 1);
+        sqlx::query("DELETE FROM direct_media_upload_jobs WHERE attachment_id = 'recover-slot'")
+            .execute(&database.pool)
+            .await?;
+        // A stale reconciliation snapshot cannot resurrect a settled job.
+        service.recover_native_transfer(&job).await?;
+        assert_eq!(service.pending_job_count().await?, 0);
+        Ok(())
     }
 
     #[tokio::test]

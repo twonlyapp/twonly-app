@@ -273,7 +273,6 @@ class FrbUserData {
           joinedAt == other.joinedAt;
 }
 
-/// Flutter-facing facade for the Rust-owned API runtime.
 class RustApi {
   const RustApi();
 
@@ -376,6 +375,10 @@ class RustApi {
       RustLib.instance.api.crateBridgeApiRustApiCropMediaTransparentBorders(
         mediaId: mediaId,
       );
+
+  /// Coordinates for native city lookup, available only with sticker opt-in.
+  static Future<StickerLocation?> currentLocationForSticker() =>
+      RustLib.instance.api.crateBridgeApiRustApiCurrentLocationForSticker();
 
   static Future<String?> currentUserAvatarPath() =>
       RustLib.instance.api.crateBridgeApiRustApiCurrentUserAvatarPath();
@@ -539,11 +542,15 @@ class RustApi {
     required String text,
     String? quoteMessageId,
     Uint8List? additionalMessageData,
+    String? messageId,
+    PlatformInt64? timestampMs,
   }) => RustLib.instance.api.crateBridgeApiRustApiInsertAndSendText(
     groupId: groupId,
     text: text,
     quoteMessageId: quoteMessageId,
     additionalMessageData: additionalMessageData,
+    messageId: messageId,
+    timestampMs: timestampMs,
   );
 
   static Future<void> ipaPurchase({
@@ -603,8 +610,7 @@ class RustApi {
       .api
       .crateBridgeApiRustApiPrerenderMedia(mediaId: mediaId);
 
-  /// Begins the optional precise-location lookup when the capture camera is
-  /// opened, so a later photo usually has a fix immediately available.
+  /// Warms the shared location cache if Memories or city stickers are enabled.
   static Future<void> prewarmMemoryLocation() =>
       RustLib.instance.api.crateBridgeApiRustApiPrewarmMemoryLocation();
 
@@ -942,4 +948,26 @@ class RustApi {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is RustApi && runtimeType == other.runtimeType;
+}
+
+/// Flutter-facing facade for the Rust-owned API runtime.
+class StickerLocation {
+  final double latitude;
+  final double longitude;
+
+  const StickerLocation({
+    required this.latitude,
+    required this.longitude,
+  });
+
+  @override
+  int get hashCode => latitude.hashCode ^ longitude.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StickerLocation &&
+          runtimeType == other.runtimeType &&
+          latitude == other.latitude &&
+          longitude == other.longitude;
 }

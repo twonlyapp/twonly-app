@@ -252,7 +252,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                                 .equals(DownloadState.reuploadRequested.name)
                                 .not()))),
           )
-          ..orderBy([OrderingTerm.desc(messages.createdAt)])
+          ..orderBy([
+            OrderingTerm.desc(messages.createdAt),
+            OrderingTerm.desc(messages.messageId),
+          ])
           ..limit(limit);
 
     return query

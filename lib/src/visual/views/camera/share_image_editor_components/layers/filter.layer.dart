@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/services/location_metadata.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/datetime_filter.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/image_filter.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/location_filter.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/stickers.dart';
 
 /// Main layer
@@ -72,20 +75,53 @@ class FilterText extends StatelessWidget {
 }
 
 class _FilterLayerState extends State<FilterLayer> {
-  final PageController pageController = PageController();
-  List<Widget> pages = [
+  final PageController pageController = PageController(initialPage: 1);
+  final List<Widget> pages = [
     const FilterSkeleton(),
     const DateTimeFilter(),
     const FilterSkeleton(),
   ];
+  StreamSubscription<void>? _userUpdates;
+  LocationFilter? _locationFilter;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      pageController.jumpToPage(1);
+    _userUpdates = userService.onUserUpdated.listen((_) {
+      if (mounted) _refreshLocation();
     });
+    _refreshLocation();
     unawaited(initAsync());
+  }
+
+  void _refreshLocation() {
+    final enabled = LocationMetadataService.stickersEnabled;
+    if (enabled == (_locationFilter != null)) return;
+    _updatePages(() {
+      pages.remove(_locationFilter);
+      _locationFilter = enabled ? const LocationFilter() : null;
+      if (_locationFilter != null) pages.insert(2, _locationFilter!);
+    });
+  }
+
+  // Keep the selected filter when location is enabled or image filters arrive.
+  // If the selected city is removed, return to the unfiltered photo.
+  void _updatePages(VoidCallback update) {
+    final index = (widget.layerData.page - 1).clamp(0, pages.length - 1);
+    final selected = pages[index];
+    final oldPage = widget.layerData.page;
+    setState(update);
+    final selectedIndex = pages.indexOf(selected);
+    final nextPage = selectedIndex < 0 ? 1 : selectedIndex + 1;
+    widget.layerData.page = nextPage;
+    if (oldPage == nextPage) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          pageController.hasClients &&
+          widget.layerData.page == nextPage) {
+        pageController.jumpToPage(nextPage);
+      }
+    });
   }
 
   Future<void> initAsync() async {
@@ -95,11 +131,22 @@ class _FilterLayerState extends State<FilterLayer> {
             .toList()
           ..sortBy((x) => x.imageSrc);
 
-    for (final sticker in stickers) {
-      pages.insert(pages.length - 1, ImageFilter(imagePath: sticker.imageSrc));
-    }
     if (!mounted) return;
-    setState(() {});
+    _updatePages(() {
+      for (final sticker in stickers) {
+        pages.insert(
+          pages.length - 1,
+          ImageFilter(imagePath: sticker.imageSrc),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_userUpdates?.cancel());
+    pageController.dispose();
+    super.dispose();
   }
 
   @override

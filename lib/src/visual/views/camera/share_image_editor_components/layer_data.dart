@@ -74,14 +74,43 @@ class EmojiLayerData extends Layer {
   double size;
 }
 
-class StickerLayerData extends Layer {
+abstract class TransformableStickerLayerData extends Layer {
+  TransformableStickerLayerData({
+    required super.key,
+    this.size = 160,
+    super.offset,
+    super.opacity,
+    super.rotation,
+    super.scale,
+    super.isEditing,
+  });
+
+  double size;
+}
+
+class LocationStickerLayerData extends TransformableStickerLayerData {
+  LocationStickerLayerData({
+    required super.key,
+    required this.city,
+    super.size = 220,
+    super.offset,
+    super.opacity,
+    super.rotation,
+    super.scale,
+    super.isEditing,
+  });
+
+  final String city;
+}
+
+class StickerLayerData extends TransformableStickerLayerData {
   StickerLayerData({
     required super.key,
     required this.webp,
     required this.contentHash,
     required this.width,
     required this.height,
-    this.size = 160,
+    super.size,
     super.offset,
     super.opacity,
     super.rotation,
@@ -93,7 +122,6 @@ class StickerLayerData extends Layer {
   final String contentHash;
   final int width;
   final int height;
-  double size;
 }
 
 class TextLayerData extends Layer {

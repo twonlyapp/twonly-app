@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/services/location_metadata.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
 
@@ -14,6 +16,37 @@ class PrivacyView extends StatefulWidget {
 }
 
 class _PrivacyViewState extends State<PrivacyView> {
+  bool _updatingLocationSticker = false;
+
+  Future<void> toggleLocationSticker() async {
+    if (_updatingLocationSticker) return;
+    setState(() => _updatingLocationSticker = true);
+    final enabled = userService.currentUser.enableLocationSticker;
+    try {
+      if (!enabled &&
+          !await LocationMetadataService.requestPrecisePermission()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.lang.memoryLocationPermissionDenied),
+            ),
+          );
+        }
+        return;
+      }
+      await UserService.update((user) => user.enableLocationSticker = !enabled);
+    } on Object catch (error) {
+      Log.warn('Could not update location sticker setting: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.lang.memoryLocationPermissionDenied)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _updatingLocationSticker = false);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -86,6 +119,17 @@ class _PrivacyViewState extends State<PrivacyView> {
             },
           ),
           const Divider(),
+          ListTile(
+            title: Text(context.lang.locationStickerSettingTitle),
+            subtitle: Text(context.lang.locationStickerSettingSubtitle),
+            onTap: _updatingLocationSticker ? null : toggleLocationSticker,
+            trailing: Switch.adaptive(
+              value: userService.currentUser.enableLocationSticker,
+              onChanged: _updatingLocationSticker
+                  ? null
+                  : (_) => toggleLocationSticker(),
+            ),
+          ),
           ListTile(
             title: Text(context.lang.settingsTypingIndication),
             subtitle: Text(context.lang.settingsTypingIndicationSubtitle),

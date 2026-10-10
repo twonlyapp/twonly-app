@@ -82,9 +82,7 @@ class TwonlyNotificationWorker(
         additions: List<NativeNotificationAddition>,
     ): Boolean {
         val notificationId = nativeNotificationId(nativeNotificationKey(additions.last()))
-        val previous = manager.activeNotifications.firstOrNull { it.id == notificationId }
-            ?.notification
-        val notification = buildNativeChatNotification(applicationContext, additions, previous)
+        val notification = buildNativeChatNotification(applicationContext, additions)
         return try {
             manager.notify(notificationId, notification)
             true

@@ -5,14 +5,16 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
+import android.os.SystemClock
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.ForegroundInfo
+import androidx.work.Data
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import eu.twonly.R
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
+import java.util.concurrent.TimeUnit
 import org.json.JSONObject
 
 /** Transport-only worker: request construction, protobufs, encryption and
@@ -21,26 +23,36 @@ class DirectMediaUploadWorker(
     appContext: Context,
     params: WorkerParameters,
 ) : Worker(appContext, params) {
+    private val transfer = DirectMediaHttpTransfer()
+    private var lastActivity = -10_000L
+
+    override fun onStopped() {
+        transfer.cancel()
+        super.onStopped()
+    }
+
     override fun doWork(): Result {
         val attachmentId = inputData.getString(ATTACHMENT_ID) ?: return Result.failure()
         val role = inputData.getString(ROLE) ?: return Result.failure()
         val expiresAt = inputData.getLong(EXPIRES_AT, 0)
         if (expiresAt <= System.currentTimeMillis() / 1_000) return Result.failure()
         return try {
+            recordActivity()
             // Become a data-sync foreground service before opening the file/network
             // streams, otherwise Android may stop long uploads in the background.
-            setForegroundAsync(foregroundInfo(attachmentId)).get()
+            setForegroundAsync(foregroundInfo(attachmentId)).get(10, TimeUnit.SECONDS)
             val path = inputData.getString(DESCRIPTOR_PATH) ?: return Result.failure()
             val descriptor = JSONObject(File(path).readText(Charsets.UTF_8))
             val request = descriptor.getJSONObject(role)
-            val status = upload(request)
+            val status = transfer.upload(request, ::recordActivity)
+            Log.i(TAG, "Transfer $attachmentId/$role attempt=$runAttemptCount HTTP=$status")
             if (status in 200..299) {
-                // Best effort only. A 202 is success because server reconciliation
-                // owns completion when the manifest has not arrived yet. A
-                // descriptor with no completion step — a queued message envelope —
-                // is finished as soon as its POST is accepted.
+                // Completion owns its own durable retry, so a failed completion
+                // request never forces the already accepted object to upload again.
                 if (role == "media" && descriptor.has("complete")) {
-                    upload(descriptor.getJSONObject("complete"))
+                    DirectMediaTransfer.enqueueCompletion(
+                        applicationContext, attachmentId, File(path), expiresAt,
+                    ).result.get(10, TimeUnit.SECONDS)
                 }
                 Result.success()
             } else if (retryable(status) && expiresAt > System.currentTimeMillis() / 1_000) {
@@ -48,34 +60,20 @@ class DirectMediaUploadWorker(
             } else {
                 Result.failure()
             }
-        } catch (_: Throwable) {
+        } catch (error: Exception) {
+            Log.w(TAG, "Transfer $attachmentId/$role attempt=$runAttemptCount failed", error)
             if (expiresAt > System.currentTimeMillis() / 1_000) Result.retry() else Result.failure()
         }
     }
 
-    private fun upload(request: JSONObject): Int {
-        val file = File(request.getString("body_path"))
-        if (!file.isFile) return 0
-        val connection = (URL(request.getString("url")).openConnection() as HttpURLConnection).apply {
-            requestMethod = request.optString("method", "POST")
-            connectTimeout = 30_000
-            readTimeout = 60_000
-            doOutput = true
-            instanceFollowRedirects = false
-            val headers = request.getJSONObject("headers")
-            for (name in headers.keys()) setRequestProperty(name, headers.getString(name))
-            setFixedLengthStreamingMode(file.length())
+    private fun recordActivity() {
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastActivity >= 10_000) {
+            lastActivity = now
+            setProgressAsync(Data.Builder()
+                .putLong(LAST_ACTIVITY_MS, System.currentTimeMillis())
+                .build())
         }
-        connection.outputStream.use { output ->
-            file.inputStream().use { input -> input.copyTo(output, DEFAULT_BUFFER_SIZE) }
-        }
-        val status = connection.responseCode
-        try {
-            (if (status >= 400) connection.errorStream else connection.inputStream)?.close()
-        } finally {
-            connection.disconnect()
-        }
-        return status
     }
 
     private fun retryable(status: Int): Boolean =
@@ -107,6 +105,8 @@ class DirectMediaUploadWorker(
         const val ROLE = "role"
         const val DESCRIPTOR_PATH = "descriptor_path"
         const val EXPIRES_AT = "expires_at"
+        const val LAST_ACTIVITY_MS = "last_activity_ms"
+        private const val TAG = "TwonlyMediaTransfer"
         private const val CHANNEL_ID = "twonly_direct_media_upload"
     }
 }

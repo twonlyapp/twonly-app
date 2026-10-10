@@ -8,6 +8,7 @@ pub mod api;
 pub mod callbacks;
 pub mod groups;
 pub mod logging;
+pub mod live_location;
 pub mod stories;
 pub mod user_config;
 pub mod webxdc;

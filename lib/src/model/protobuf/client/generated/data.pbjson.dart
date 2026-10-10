@@ -136,6 +136,16 @@ const AdditionalMessageData$json = {
       '10': 'sticker',
       '17': true
     },
+    {
+      '1': 'live_location',
+      '3': 12,
+      '4': 1,
+      '5': 11,
+      '6': '.LiveLocationData',
+      '9': 9,
+      '10': 'liveLocation',
+      '17': true
+    },
   ],
   '4': [AdditionalMessageData_Type$json],
   '8': [
@@ -148,6 +158,7 @@ const AdditionalMessageData$json = {
     {'1': '_webxdc_sync'},
     {'1': '_webxdc_sync_request'},
     {'1': '_sticker'},
+    {'1': '_live_location'},
   ],
 };
 
@@ -165,6 +176,7 @@ const AdditionalMessageData_Type$json = {
     {'1': 'WEBXDC_SYNC', '2': 7},
     {'1': 'WEBXDC_SYNC_REQUEST', '2': 8},
     {'1': 'STICKER', '2': 9},
+    {'1': 'LIVE_LOCATION', '2': 10},
   ],
 };
 
@@ -180,13 +192,79 @@ final $typed_data.Uint8List additionalMessageDataDescriptor = $convert.base64Dec
     'dpbkgFUgx3ZWJ4ZGNPcmlnaW6IAQESNgoLd2VieGRjX3N5bmMYCSABKAsyEC5XZWJ4ZGNTeW5j'
     'Q2h1bmtIBlIKd2VieGRjU3luY4gBARJHChN3ZWJ4ZGNfc3luY19yZXF1ZXN0GAogASgLMhIuV2'
     'VieGRjU3luY1JlcXVlc3RIB1IRd2VieGRjU3luY1JlcXVlc3SIAQESKwoHc3RpY2tlchgLIAEo'
-    'CzIMLlN0aWNrZXJEYXRhSAhSB3N0aWNrZXKIAQEiuQEKBFR5cGUSCAoETElOSxAAEgwKCENPTl'
-    'RBQ1RTEAESGgoWUkVTVE9SRURfRkxBTUVfQ09VTlRFUhACEhIKDkFTS19BQk9VVF9VU0VSEAMS'
-    'DgoKV0VCWERDX0FQUBAEEhEKDVdFQlhEQ19VUERBVEUQBRIPCgtXRUJYRENfU0VOVBAGEg8KC1'
-    'dFQlhEQ19TWU5DEAcSFwoTV0VCWERDX1NZTkNfUkVRVUVTVBAIEgsKB1NUSUNLRVIQCUIHCgVf'
-    'bGlua0IZChdfcmVzdG9yZWRfZmxhbWVfY291bnRlckIUChJfYXNrX2Fib3V0X3VzZXJfaWRCDQ'
-    'oLX3dlYnhkY19hcHBCEAoOX3dlYnhkY191cGRhdGVCEAoOX3dlYnhkY19vcmlnaW5CDgoMX3dl'
-    'YnhkY19zeW5jQhYKFF93ZWJ4ZGNfc3luY19yZXF1ZXN0QgoKCF9zdGlja2Vy');
+    'CzIMLlN0aWNrZXJEYXRhSAhSB3N0aWNrZXKIAQESOwoNbGl2ZV9sb2NhdGlvbhgMIAEoCzIRLk'
+    'xpdmVMb2NhdGlvbkRhdGFICVIMbGl2ZUxvY2F0aW9uiAEBIswBCgRUeXBlEggKBExJTksQABIM'
+    'CghDT05UQUNUUxABEhoKFlJFU1RPUkVEX0ZMQU1FX0NPVU5URVIQAhISCg5BU0tfQUJPVVRfVV'
+    'NFUhADEg4KCldFQlhEQ19BUFAQBBIRCg1XRUJYRENfVVBEQVRFEAUSDwoLV0VCWERDX1NFTlQQ'
+    'BhIPCgtXRUJYRENfU1lOQxAHEhcKE1dFQlhEQ19TWU5DX1JFUVVFU1QQCBILCgdTVElDS0VSEA'
+    'kSEQoNTElWRV9MT0NBVElPThAKQgcKBV9saW5rQhkKF19yZXN0b3JlZF9mbGFtZV9jb3VudGVy'
+    'QhQKEl9hc2tfYWJvdXRfdXNlcl9pZEINCgtfd2VieGRjX2FwcEIQCg5fd2VieGRjX3VwZGF0ZU'
+    'IQCg5fd2VieGRjX29yaWdpbkIOCgxfd2VieGRjX3N5bmNCFgoUX3dlYnhkY19zeW5jX3JlcXVl'
+    'c3RCCgoIX3N0aWNrZXJCEAoOX2xpdmVfbG9jYXRpb24=');
+
+@$core.Deprecated('Use liveLocationDataDescriptor instead')
+const LiveLocationData$json = {
+  '1': 'LiveLocationData',
+  '2': [
+    {'1': 'session_id', '3': 1, '4': 1, '5': 9, '10': 'sessionId'},
+    {'1': 'message_id', '3': 2, '4': 1, '5': 9, '10': 'messageId'},
+    {'1': 'expires_at_ms', '3': 3, '4': 1, '5': 3, '10': 'expiresAtMs'},
+    {'1': 'updated_at_ms', '3': 4, '4': 1, '5': 3, '10': 'updatedAtMs'},
+    {
+      '1': 'latitude',
+      '3': 5,
+      '4': 1,
+      '5': 1,
+      '9': 0,
+      '10': 'latitude',
+      '17': true
+    },
+    {
+      '1': 'longitude',
+      '3': 6,
+      '4': 1,
+      '5': 1,
+      '9': 1,
+      '10': 'longitude',
+      '17': true
+    },
+    {
+      '1': 'accuracy',
+      '3': 7,
+      '4': 1,
+      '5': 1,
+      '9': 2,
+      '10': 'accuracy',
+      '17': true
+    },
+    {'1': 'stopped', '3': 8, '4': 1, '5': 8, '10': 'stopped'},
+    {
+      '1': 'fix_timestamp_ms',
+      '3': 9,
+      '4': 1,
+      '5': 3,
+      '9': 3,
+      '10': 'fixTimestampMs',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_latitude'},
+    {'1': '_longitude'},
+    {'1': '_accuracy'},
+    {'1': '_fix_timestamp_ms'},
+  ],
+};
+
+/// Descriptor for `LiveLocationData`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List liveLocationDataDescriptor = $convert.base64Decode(
+    'ChBMaXZlTG9jYXRpb25EYXRhEh0KCnNlc3Npb25faWQYASABKAlSCXNlc3Npb25JZBIdCgptZX'
+    'NzYWdlX2lkGAIgASgJUgltZXNzYWdlSWQSIgoNZXhwaXJlc19hdF9tcxgDIAEoA1ILZXhwaXJl'
+    'c0F0TXMSIgoNdXBkYXRlZF9hdF9tcxgEIAEoA1ILdXBkYXRlZEF0TXMSHwoIbGF0aXR1ZGUYBS'
+    'ABKAFIAFIIbGF0aXR1ZGWIAQESIQoJbG9uZ2l0dWRlGAYgASgBSAFSCWxvbmdpdHVkZYgBARIf'
+    'CghhY2N1cmFjeRgHIAEoAUgCUghhY2N1cmFjeYgBARIYCgdzdG9wcGVkGAggASgIUgdzdG9wcG'
+    'VkEi0KEGZpeF90aW1lc3RhbXBfbXMYCSABKANIA1IOZml4VGltZXN0YW1wTXOIAQFCCwoJX2xh'
+    'dGl0dWRlQgwKCl9sb25naXR1ZGVCCwoJX2FjY3VyYWN5QhMKEV9maXhfdGltZXN0YW1wX21z');
 
 @$core.Deprecated('Use stickerDataDescriptor instead')
 const StickerData$json = {

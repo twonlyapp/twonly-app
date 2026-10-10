@@ -216,9 +216,10 @@ impl BackupArchive {
                     let backup_db = Database::new(
                         &backup_database_file.display().to_string(),
                         encryption_key.as_deref(),
-                        true,
+                        false,
                     )
                     .await?;
+                    crate::services::live_location::discard_sessions(&backup_db.pool).await?;
                     backup_db.check_integrity().await?;
                     backup_db.pool.close().await;
                     encryption_key.zeroize();
@@ -420,6 +421,8 @@ impl BackupArchive {
         )
         .await?;
         app_database.run_migrations().await?;
+
+        crate::services::live_location::discard_sessions(&app_database.pool).await?;
 
         *ctx.app_db.write().await = Arc::new(app_database);
 

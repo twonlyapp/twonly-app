@@ -63,11 +63,11 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>twonly will save photos or videos to your library.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>If you enable location metadata, twonly uses your precise location to add it to Memories stored on this device and photos you export to your library.</string>
+	<string>twonly uses your location for enabled Memories or city stickers, or to share your live location with chats you choose, including while the app is in the background.</string>
 	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
 	<dict>
 		<key>MemoryLocation</key>
-		<string>Your precise location is needed to attach an accurate capture location to this Memory.</string>
+		<string>Your precise location is used for enabled location features: capture locations in Memories, city lookup for location stickers, or live location sharing with chats you choose.</string>
 	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
@@ -101,6 +101,7 @@
 		<string>fetch</string>
 		<string>remote-notification</string>
 		<string>processing</string>
+		<string>location</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

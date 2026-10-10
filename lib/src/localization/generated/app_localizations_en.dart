@@ -254,7 +254,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get memoryLocationSubtitle =>
-      'Location for Memories and gallery exports. Never sent to contacts.';
+      'Capture coordinates for Memories and gallery exports. These coordinates are never sent to contacts.';
+
+  @override
+  String get locationStickerSettingTitle => 'Location sticker';
+
+  @override
+  String get locationStickerSettingSubtitle =>
+      'Shows your city or country, or coordinates if no place name is available. Your location is shared only when you select the location filter.';
+
+  @override
+  String get locationStickerLoading => 'Finding your location…';
+
+  @override
+  String get liveLocationMenu => 'Location';
+
+  @override
+  String get liveLocationTitle => 'Live location';
+
+  @override
+  String get liveLocationExplanation =>
+      'Share your current location in this chat. Everyone in this group can see it. Only your latest location is kept.';
+
+  @override
+  String get liveLocationDuration => 'Share for';
+
+  @override
+  String liveLocationMinutes(int count) {
+    return '$count minutes';
+  }
+
+  @override
+  String liveLocationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveLocationStart => 'Start sharing';
+
+  @override
+  String get liveLocationStop => 'Stop sharing';
+
+  @override
+  String get liveLocationAlreadySharing =>
+      'Your location is already being shared in this chat.';
+
+  @override
+  String get liveLocationNotificationBody =>
+      'Your current location is being shared. Tap Stop sharing to end it.';
+
+  @override
+  String get liveLocationStartFailed =>
+      'Could not start sharing. Allow location and notifications, then try again.';
+
+  @override
+  String get liveLocationStopFailed =>
+      'Could not stop sharing. Please try again.';
+
+  @override
+  String get liveLocationWaiting => 'Waiting for location…';
+
+  @override
+  String get liveLocationEnded => 'Location sharing ended';
+
+  @override
+  String liveLocationLastUpdate(String time) {
+    return 'Last update: $time';
+  }
 
   @override
   String get memoryLocationPermissionDenied =>
@@ -1247,6 +1319,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationFillerIn => 'in';
 
   @override
+  String notificationLiveLocation(Object inGroup) {
+    return 'shared their live location$inGroup.';
+  }
+
+  @override
   String notificationText(Object inGroup) {
     return 'sent a message$inGroup.';
   }
@@ -1646,6 +1723,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String memoriesXYearsAgo(Object years) {
     return '$years years ago';
+  }
+
+  @override
+  String get memoriesAMonthAgo => 'One month ago';
+
+  @override
+  String memoriesXMonthsAgo(int months) {
+    return '$months months ago';
   }
 
   @override

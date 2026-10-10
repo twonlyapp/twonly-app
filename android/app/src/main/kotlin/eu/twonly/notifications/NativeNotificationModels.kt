@@ -20,6 +20,7 @@ internal data class NativeNotificationAddition(
     val body: String,
     val createdAt: Long,
     val avatarPath: String?,
+    val conversationAvatarPath: String? = null,
 )
 
 internal data class NativeNotificationBatch(
@@ -55,6 +56,7 @@ internal data class NativeNotificationResponse(
                         body = item.getString("body"),
                         createdAt = item.getLong("created_at"),
                         avatarPath = item.nullableString("avatar_path"),
+                        conversationAvatarPath = item.nullableString("conversation_avatar_path"),
                     )
                 }
             }.orEmpty()

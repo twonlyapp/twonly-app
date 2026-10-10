@@ -163,6 +163,7 @@ async fn acknowledge_pending_messages(
 
     for message in batch.messages {
         let delivery_id = message.delivery_id;
+        let from_user_id = message.from_user_id;
         let result = handle_new_server_message(
             ctx,
             NewMessage {
@@ -186,6 +187,7 @@ async fn acknowledge_pending_messages(
             ) => {
                 tracing::warn!(
                     delivery_id,
+                    from_user_id,
                     "dropping an unprocessable mailbox message: {error}"
                 );
                 delivery_ids.push(delivery_id);
@@ -195,6 +197,7 @@ async fn acknowledge_pending_messages(
             Err(error) => {
                 tracing::warn!(
                     delivery_id,
+                    from_user_id,
                     "mailbox message not persisted, will retry: {error}"
                 );
             }
@@ -403,6 +406,7 @@ pub async fn handle_decoded_server_message(
     message: proto::Message,
 ) -> Result<()> {
     tracing::Span::current().record("receipt_id", &message.receipt_id);
+    tracing::Span::current().record("user", from_user_id);
 
     if message.receipt_id.is_empty() {
         return Err(TwonlyError::Generic(
@@ -972,6 +976,82 @@ async fn handle_encrypted_inner(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn reactions_to_expired_messages_are_acknowledged_without_blocking_valid_reactions(
+    ) -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'alice')",
+            "INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat')",
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('chat', 7)",
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('expired', 'chat', 'text'), ('present', 'chat', 'text')",
+            "DELETE FROM messages WHERE message_id = 'expired'",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+
+        let mut messages = Vec::new();
+        for (delivery_id, message_id) in [(1, "expired"), (2, "present")] {
+            let receipt_id = format!("reaction-{message_id}");
+            let content = proto::EncryptedContent {
+                group_id: Some("chat".into()),
+                reaction: Some(proto::encrypted_content::Reaction {
+                    target_message_id: message_id.into(),
+                    emoji: "👍".into(),
+                    remove: false,
+                }),
+                ..Default::default()
+            };
+            // Resume plaintext left by an earlier attempt, as happens when a
+            // database error rolls back handling after decryption committed.
+            let mut t = database.pool.begin().await?;
+            Receipt::claim_received(&mut t, &receipt_id).await?;
+            Receipt::store_pending_plaintext(&mut t, &receipt_id, &content.encode_to_vec()).await?;
+            t.commit().await?;
+            messages.push(server_to_client::PendingMessageV2 {
+                delivery_id,
+                from_user_id: 7,
+                body: proto::Message {
+                    receipt_id,
+                    r#type: Type::CiphertextV2 as i32,
+                    ..Default::default()
+                }
+                .encode_to_vec(),
+            });
+        }
+        let response =
+            acknowledge_pending_messages(&ctx, server_to_client::PendingMessagesV2 { messages })
+                .await;
+        let Some(Response::Ok(response)) = response.response else {
+            panic!("expected a mailbox acknowledgement");
+        };
+        let Some(ok::Ok::AcknowledgedPendingMessages(ack)) = response.ok else {
+            panic!("expected acknowledged delivery IDs");
+        };
+        assert_eq!(ack.delivery_ids, vec![1, 2]);
+        let reactions: Vec<String> = sqlx::query_scalar("SELECT message_id FROM reactions")
+            .fetch_all(&database.pool)
+            .await?;
+        assert_eq!(reactions, vec!["present"]);
+        let pending: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM received_receipts WHERE pending_plaintext IS NOT NULL",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(pending, 0);
+        Ok(())
+    }
 
     #[tokio::test]
     async fn incoming_twonly_score_is_stored_and_missing_score_clears_it() -> Result<()> {

@@ -169,6 +169,7 @@ pub(crate) async fn process_encrypted_or_queue_error(
     content: proto::EncryptedContent,
 ) -> Result<Delivery> {
     let group_id = content.group_id.clone();
+    let kind = crate::api::messages::content_type_kind(&content);
 
     match handle_encrypted(ctx, t, from_user_id, receipt_id, content).await {
         Ok(delivery) => Ok(delivery),
@@ -188,6 +189,14 @@ pub(crate) async fn process_encrypted_or_queue_error(
             };
 
             let Some(error_type) = error_type else {
+                tracing::warn!(
+                    from_user_id,
+                    receipt_id,
+                    group_id,
+                    kind,
+                    %error,
+                    "failed to handle decrypted message"
+                );
                 return Err(error);
             };
 
@@ -894,6 +903,69 @@ pub async fn handle_plaintext_content(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn live_location_receipts_can_be_requeued_without_losing_their_outbox_link() -> Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'alice')",
+            "INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat')",
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('location', 'chat', 'text')",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+        for reset in [false, true] {
+            let mut t = database.pool.begin().await?;
+            NewReceipt::new("old-receipt", 7, b"queued update")
+                .insert(&mut t)
+                .await?;
+            sqlx::query("INSERT INTO live_location_outbox(receipt_id, message_id) VALUES ('old-receipt', 'location')")
+                .execute(&mut *t).await?;
+            let rebuild = handle_plaintext_content(
+                &ctx,
+                &mut t,
+                7,
+                "old-receipt",
+                proto::PlaintextContent {
+                    decryption_error_message: reset.then_some(
+                        proto::plaintext_content::DecryptionErrorMessage {
+                            r#type: proto::plaintext_content::decryption_error_message::Type::SessionResetRequired as i32,
+                        },
+                    ),
+                    retry_control_error: (!reset).then_some(proto::plaintext_content::RetryErrorMessage {}),
+                },
+            )
+            .await?;
+            assert_eq!(rebuild, reset);
+            t.commit().await?;
+
+            let (receipt_id, message_id, retry_count, deferred): (String, String, i64, Option<i64>) = sqlx::query_as(
+                "SELECT r.receipt_id, l.message_id, r.retry_count, r.deferred_until_session FROM receipts r JOIN live_location_outbox l ON l.receipt_id = r.receipt_id",
+            )
+            .fetch_one(&database.pool)
+            .await?;
+            assert_ne!(receipt_id, "old-receipt");
+            assert_eq!(message_id, "location");
+            assert_eq!(retry_count, 1);
+            assert_eq!(deferred.is_some(), reset);
+            sqlx::query("DELETE FROM receipts WHERE receipt_id = ?")
+                .bind(receipt_id)
+                .execute(&database.pool)
+                .await?;
+            let remaining: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM live_location_outbox")
+                .fetch_one(&database.pool)
+                .await?;
+            assert_eq!(remaining, 0);
+        }
+        Ok(())
+    }
 
     #[test]
     fn a_second_flush_request_marks_the_running_one_dirty() {

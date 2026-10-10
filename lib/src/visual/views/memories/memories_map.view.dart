@@ -11,6 +11,7 @@ import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/helpers/map_style.helper.dart';
 import 'package:twonly/src/visual/helpers/memory_map.helper.dart';
 import 'package:twonly/src/visual/views/memories/components/memories_map_gallery.comp.dart';
 import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
@@ -98,9 +99,7 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
       _routeAnimation = animation;
       animation?.addStatusListener(_handleRouteAnimation);
     }
-    final style = Theme.of(context).brightness == Brightness.dark
-        ? 'https://tiles.openfreemap.org/styles/fiord'
-        : 'https://tiles.openfreemap.org/styles/positron';
+    final style = mapStyleForBrightness(Theme.of(context).brightness);
     if (style == _style) return;
     _style = style;
     _epoch++;

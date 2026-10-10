@@ -44,7 +44,7 @@ class LayersViewer extends StatelessWidget {
             .where(
               (layerItem) =>
                   layerItem is EmojiLayerData ||
-                  layerItem is StickerLayerData ||
+                  layerItem is TransformableStickerLayerData ||
                   layerItem is DrawLayerData ||
                   layerItem is LinkPreviewLayerData ||
                   layerItem is TextLayerData,
@@ -56,7 +56,7 @@ class LayersViewer extends StatelessWidget {
                   layerData: layerItem,
                   onUpdate: onUpdate,
                 );
-              } else if (layerItem is StickerLayerData) {
+              } else if (layerItem is TransformableStickerLayerData) {
                 return StickerLayer(
                   key: layerItem.key,
                   layerData: layerItem,

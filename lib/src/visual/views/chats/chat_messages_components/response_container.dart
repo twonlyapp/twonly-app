@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:clock/clock.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
@@ -134,6 +135,20 @@ class _ResponsePreviewState extends State<ResponsePreview> {
   Message? _message;
   MediaFileService? _mediaService;
   String _username = '';
+  Uint8List? _stickerSource;
+  Uint8List? _stickerBytes;
+
+  Uint8List? get _quotedStickerBytes {
+    final source = _message?.additionalMessageData;
+    if (!listEquals(_stickerSource, source)) {
+      _stickerSource = source;
+      final sticker = StickerService.decodeAdditional(source);
+      // MemoryImage uses byte identity as its cache key. Keep the same bytes
+      // across rebuilds so the preview does not reload or restart animations.
+      _stickerBytes = sticker == null ? null : Uint8List.fromList(sticker.webp);
+    }
+    return _stickerBytes;
+  }
 
   @override
   void initState() {
@@ -191,13 +206,11 @@ class _ResponsePreviewState extends State<ResponsePreview> {
   Widget build(BuildContext context) {
     String? subtitle;
     var color = context.appColor(AppColor.messageText);
+    final quotedStickerBytes = _quotedStickerBytes;
 
     if (_message != null) {
       if (_message!.type == MessageType.text.name) {
-        final sticker = StickerService.decodeAdditional(
-          _message!.additionalMessageData,
-        );
-        if (sticker != null) {
+        if (quotedStickerBytes != null) {
           subtitle = context.lang.sticker;
         } else if (_message!.content != null) {
           subtitle = truncateString(_message!.content!);
@@ -256,9 +269,6 @@ class _ResponsePreviewState extends State<ResponsePreview> {
         _mediaService!.mediaFile.type != MediaType.audio;
 
     Widget? imageWidget;
-    final quotedSticker = StickerService.decodeAdditional(
-      _message?.additionalMessageData,
-    );
     if (hasImage) {
       final isVideo = _mediaService!.mediaFile.type == MediaType.video;
       // A story nobody saved is still in its temporary file.
@@ -280,13 +290,13 @@ class _ResponsePreviewState extends State<ResponsePreview> {
           ),
         ),
       );
-    } else if (quotedSticker != null) {
+    } else if (quotedStickerBytes != null) {
       imageWidget = Container(
         height: 40,
         width: 40,
         margin: const EdgeInsets.only(left: 8),
         child: Image.memory(
-          Uint8List.fromList(quotedSticker.webp),
+          quotedStickerBytes,
           fit: BoxFit.contain,
         ),
       );

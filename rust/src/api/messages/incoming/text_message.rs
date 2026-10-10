@@ -35,6 +35,16 @@ pub(crate) async fn handle_text_message(
         None => None,
     };
 
+    let additional_message_data = additional_message_data.filter(|bytes| {
+        match crate::services::live_location::decode(bytes) {
+            Some(location) => {
+                location.message_id == message.sender_message_id
+                    && crate::services::live_location::validate(&location).is_ok()
+            }
+            None => true,
+        }
+    });
+
     NewMessage::builder()
         .group_id(group_id)
         .message_id(&message.sender_message_id)
@@ -48,6 +58,14 @@ pub(crate) async fn handle_text_message(
         .build()
         .insert(t)
         .await?;
+
+    crate::services::live_location::apply_pending(
+        t,
+        group_id,
+        from_user_id,
+        &message.sender_message_id,
+    )
+    .await?;
 
     Group::increase_last_message_exchange(t, group_id, timestamp).await?;
     Group::record_text_or_media(t, group_id, timestamp).await?;

@@ -112,6 +112,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     WebxdcSyncChunk? webxdcSync,
     WebxdcSyncRequest? webxdcSyncRequest,
     StickerData? sticker,
+    LiveLocationData? liveLocation,
   }) {
     final result = create();
     if (type != null) result.type = type;
@@ -126,6 +127,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     if (webxdcSync != null) result.webxdcSync = webxdcSync;
     if (webxdcSyncRequest != null) result.webxdcSyncRequest = webxdcSyncRequest;
     if (sticker != null) result.sticker = sticker;
+    if (liveLocation != null) result.liveLocation = liveLocation;
     return result;
   }
 
@@ -160,6 +162,8 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
         subBuilder: WebxdcSyncRequest.create)
     ..aOM<StickerData>(11, _omitFieldNames ? '' : 'sticker',
         subBuilder: StickerData.create)
+    ..aOM<LiveLocationData>(12, _omitFieldNames ? '' : 'liveLocation',
+        subBuilder: LiveLocationData.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -286,6 +290,167 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
   void clearSticker() => $_clearField(11);
   @$pb.TagNumber(11)
   StickerData ensureSticker() => $_ensure(10);
+
+  @$pb.TagNumber(12)
+  LiveLocationData get liveLocation => $_getN(11);
+  @$pb.TagNumber(12)
+  set liveLocation(LiveLocationData value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasLiveLocation() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearLiveLocation() => $_clearField(12);
+  @$pb.TagNumber(12)
+  LiveLocationData ensureLiveLocation() => $_ensure(11);
+}
+
+/// One text-message card. Hidden updates replace this payload in place.
+class LiveLocationData extends $pb.GeneratedMessage {
+  factory LiveLocationData({
+    $core.String? sessionId,
+    $core.String? messageId,
+    $fixnum.Int64? expiresAtMs,
+    $fixnum.Int64? updatedAtMs,
+    $core.double? latitude,
+    $core.double? longitude,
+    $core.double? accuracy,
+    $core.bool? stopped,
+    $fixnum.Int64? fixTimestampMs,
+  }) {
+    final result = create();
+    if (sessionId != null) result.sessionId = sessionId;
+    if (messageId != null) result.messageId = messageId;
+    if (expiresAtMs != null) result.expiresAtMs = expiresAtMs;
+    if (updatedAtMs != null) result.updatedAtMs = updatedAtMs;
+    if (latitude != null) result.latitude = latitude;
+    if (longitude != null) result.longitude = longitude;
+    if (accuracy != null) result.accuracy = accuracy;
+    if (stopped != null) result.stopped = stopped;
+    if (fixTimestampMs != null) result.fixTimestampMs = fixTimestampMs;
+    return result;
+  }
+
+  LiveLocationData._();
+
+  factory LiveLocationData.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory LiveLocationData.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'LiveLocationData',
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..aOS(2, _omitFieldNames ? '' : 'messageId')
+    ..aInt64(3, _omitFieldNames ? '' : 'expiresAtMs')
+    ..aInt64(4, _omitFieldNames ? '' : 'updatedAtMs')
+    ..aD(5, _omitFieldNames ? '' : 'latitude')
+    ..aD(6, _omitFieldNames ? '' : 'longitude')
+    ..aD(7, _omitFieldNames ? '' : 'accuracy')
+    ..aOB(8, _omitFieldNames ? '' : 'stopped')
+    ..aInt64(9, _omitFieldNames ? '' : 'fixTimestampMs')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LiveLocationData clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LiveLocationData copyWith(void Function(LiveLocationData) updates) =>
+      super.copyWith((message) => updates(message as LiveLocationData))
+          as LiveLocationData;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LiveLocationData create() => LiveLocationData._();
+  @$core.override
+  LiveLocationData createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static LiveLocationData getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<LiveLocationData>(create);
+  static LiveLocationData? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get sessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set sessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get messageId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set messageId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMessageId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMessageId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get expiresAtMs => $_getI64(2);
+  @$pb.TagNumber(3)
+  set expiresAtMs($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasExpiresAtMs() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearExpiresAtMs() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get updatedAtMs => $_getI64(3);
+  @$pb.TagNumber(4)
+  set updatedAtMs($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasUpdatedAtMs() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearUpdatedAtMs() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.double get latitude => $_getN(4);
+  @$pb.TagNumber(5)
+  set latitude($core.double value) => $_setDouble(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasLatitude() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearLatitude() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.double get longitude => $_getN(5);
+  @$pb.TagNumber(6)
+  set longitude($core.double value) => $_setDouble(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasLongitude() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearLongitude() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.double get accuracy => $_getN(6);
+  @$pb.TagNumber(7)
+  set accuracy($core.double value) => $_setDouble(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasAccuracy() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearAccuracy() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.bool get stopped => $_getBF(7);
+  @$pb.TagNumber(8)
+  set stopped($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasStopped() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearStopped() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $fixnum.Int64 get fixTimestampMs => $_getI64(8);
+  @$pb.TagNumber(9)
+  set fixTimestampMs($fixnum.Int64 value) => $_setInt64(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasFixTimestampMs() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearFixTimestampMs() => $_clearField(9);
 }
 
 /// A small, self-contained sticker. Keeping the bytes beside the text message

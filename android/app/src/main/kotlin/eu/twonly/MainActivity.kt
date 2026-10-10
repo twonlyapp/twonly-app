@@ -22,6 +22,8 @@ import io.flutter.plugin.common.MethodChannel
 import eu.twonly.notifications.NotificationTapChannel
 import eu.twonly.webxdc.WebxdcChannel
 import eu.twonly.widget.WidgetRuntimeChannel
+import eu.twonly.location.NativeLocation
+import eu.twonly.location.LiveLocationService
 import android.Manifest
 import android.content.pm.PackageManager
 
@@ -143,6 +145,35 @@ class MainActivity : FlutterFragmentActivity() {
             flutterEngine.dartExecutor.binaryMessenger,
             "eu.twonly/location_metadata",
         ).setMethodCallHandler { call, result ->
+            if (call.method == "startLiveLocation" || call.method == "stopLiveLocation") {
+                try {
+                    if (call.method == "startLiveLocation") {
+                        LiveLocationService.start(this, call.arguments as Map<*, *>)
+                    } else {
+                        LiveLocationService.stop(this, call.argument<String>("session_id")!!)
+                    }
+                    result.success(true)
+                } catch (error: Exception) {
+                    result.error("location_service_failed", error.message, null)
+                }
+                return@setMethodCallHandler
+            }
+            if (call.method == "hasPrecisePermission") {
+                result.success(NativeLocation.hasPrecisePermission())
+                return@setMethodCallHandler
+            }
+            if (call.method == "resolveCity") {
+                val latitude = call.argument<Double>("latitude")
+                val longitude = call.argument<Double>("longitude")
+                if (latitude == null || longitude == null) {
+                    result.success(null)
+                } else {
+                    NativeLocation.resolveCity(latitude, longitude, call.argument<String>("locale")) { city ->
+                        result.success(city)
+                    }
+                }
+                return@setMethodCallHandler
+            }
             if (call.method != "requestPrecisePermission") {
                 result.notImplemented()
                 return@setMethodCallHandler

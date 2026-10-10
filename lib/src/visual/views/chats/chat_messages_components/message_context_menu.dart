@@ -13,6 +13,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     as pb;
+import 'package:twonly/src/services/live_location.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
@@ -157,6 +158,8 @@ class MessageContextMenu extends StatelessWidget {
     late final navigator = Navigator.of(context);
     final isSticker =
         StickerService.decodeAdditional(message.additionalMessageData) != null;
+    final isLocation =
+        LiveLocationService.decode(message.additionalMessageData) != null;
     return ContextMenu(
       items: () => [
         if (!message.isDeletedFromSender)
@@ -219,7 +222,8 @@ class MessageContextMenu extends StatelessWidget {
         if (!message.isDeletedFromSender &&
             message.senderId == null &&
             message.type == MessageType.text.name &&
-            !isSticker)
+            !isSticker &&
+            !isLocation)
           ContextMenuItem(
             title: context.lang.edit,
             onTap: () async {

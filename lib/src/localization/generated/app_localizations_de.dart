@@ -256,7 +256,79 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get memoryLocationSubtitle =>
-      'Standort für Memories und Galerie-Exporte. Wird nicht an Kontakte gesendet.';
+      'Aufnahmekoordinaten für Memories und Galerie-Exporte. Diese Koordinaten werden nie an Kontakte gesendet.';
+
+  @override
+  String get locationStickerSettingTitle => 'Standort-Sticker';
+
+  @override
+  String get locationStickerSettingSubtitle =>
+      'Zeigt deine Stadt oder dein Land, oder Koordinaten, wenn kein Ortsname verfügbar ist. Dein Standort wird nur geteilt, wenn du den Standortfilter auswählst.';
+
+  @override
+  String get locationStickerLoading => 'Dein Standort wird ermittelt…';
+
+  @override
+  String get liveLocationMenu => 'Standort';
+
+  @override
+  String get liveLocationTitle => 'Live-Standort';
+
+  @override
+  String get liveLocationExplanation =>
+      'Teile deinen aktuellen Standort in diesem Chat. Alle Mitglieder dieser Gruppe können ihn sehen. Nur dein letzter Standort wird gespeichert.';
+
+  @override
+  String get liveLocationDuration => 'Teilen für';
+
+  @override
+  String liveLocationMinutes(int count) {
+    return '$count Minuten';
+  }
+
+  @override
+  String liveLocationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Stunden',
+      one: '1 Stunde',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveLocationStart => 'Teilen starten';
+
+  @override
+  String get liveLocationStop => 'Teilen beenden';
+
+  @override
+  String get liveLocationAlreadySharing =>
+      'Dein Standort wird bereits in diesem Chat geteilt.';
+
+  @override
+  String get liveLocationNotificationBody =>
+      'Dein aktueller Standort wird geteilt. Tippe auf Teilen beenden, um es zu stoppen.';
+
+  @override
+  String get liveLocationStartFailed =>
+      'Teilen konnte nicht gestartet werden. Erlaube Standort und Mitteilungen und versuche es erneut.';
+
+  @override
+  String get liveLocationStopFailed =>
+      'Teilen konnte nicht beendet werden. Bitte versuche es erneut.';
+
+  @override
+  String get liveLocationWaiting => 'Standort wird ermittelt…';
+
+  @override
+  String get liveLocationEnded => 'Standortfreigabe beendet';
+
+  @override
+  String liveLocationLastUpdate(String time) {
+    return 'Letzte Aktualisierung: $time';
+  }
 
   @override
   String get memoryLocationPermissionDenied =>
@@ -1253,6 +1325,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notificationFillerIn => 'in';
 
   @override
+  String notificationLiveLocation(Object inGroup) {
+    return 'hat den Live-Standort$inGroup geteilt.';
+  }
+
+  @override
   String notificationText(Object inGroup) {
     return 'hat eine Nachricht$inGroup gesendet.';
   }
@@ -1657,6 +1734,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String memoriesXYearsAgo(Object years) {
     return 'Vor $years Jahren';
+  }
+
+  @override
+  String get memoriesAMonthAgo => 'Vor einem Monat';
+
+  @override
+  String memoriesXMonthsAgo(int months) {
+    return 'Vor $months Monaten';
   }
 
   @override

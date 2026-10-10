@@ -227,6 +227,8 @@ pub struct NotificationAddition {
     pub content: Option<String>,
     pub created_at: i64,
     pub avatar_path: Option<String>,
+    #[serde(default)]
+    pub conversation_avatar_path: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -318,6 +320,14 @@ pub(crate) async fn record_incoming_event(
     let conversation_id = content.group_id.clone();
     let now = current_time().timestamp();
     let draft = if let Some(message) = content.text_message.as_ref() {
+        let is_live_location = message
+            .additional_message_data
+            .as_deref()
+            .and_then(crate::services::live_location::decode)
+            .is_some_and(|location| {
+                location.message_id == message.sender_message_id
+                    && crate::services::live_location::validate(&location).is_ok()
+            });
         let is_sticker = message
             .additional_message_data
             .as_deref()
@@ -333,15 +343,19 @@ pub(crate) async fn record_incoming_event(
             Some(quoted) => is_own_story(transaction, quoted).await?,
             None => false,
         };
-        let (kind, reaction) = match (about_story, message.quote_message_id.is_some(), is_sticker) {
-            (true, _, true) => ("story_reply", None),
-            (true, _, false) if is_emoji_only(&message.text) => {
-                ("story_reaction", Some(message.text.trim().to_owned()))
+        let (kind, reaction) = if is_live_location {
+            ("live_location", None)
+        } else {
+            match (about_story, message.quote_message_id.is_some(), is_sticker) {
+                (true, _, true) => ("story_reply", None),
+                (true, _, false) if is_emoji_only(&message.text) => {
+                    ("story_reaction", Some(message.text.trim().to_owned()))
+                }
+                (true, _, false) => ("story_reply", None),
+                (false, _, true) => ("sticker", None),
+                (false, true, false) => ("response", None),
+                (false, false, false) => ("text", None),
             }
-            (true, _, false) => ("story_reply", None),
-            (false, _, true) => ("sticker", None),
-            (false, true, false) => ("response", None),
-            (false, false, false) => ("text", None),
         };
         Some(NotificationDraft {
             event_id: receipt_id.to_owned(),
@@ -563,7 +577,7 @@ async fn clear_stale_opened(database: &Arc<AppDatabase>) -> Result<()> {
         UPDATE notification_outbox
         SET cleared_at = ?
         WHERE cleared_at IS NULL
-          AND kind IN ('text', 'response', 'sticker', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
+          AND kind IN ('text', 'response', 'sticker', 'live_location', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
           AND EXISTS (
               SELECT 1
               FROM messages
@@ -656,6 +670,13 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
                 .replace("{inGroup}", &group_suffix(locale, &row))
         });
         let is_group = row.conversation_id.is_some() && row.is_direct_chat == 0;
+        // A direct chat's stored name may predate a contact profile update.
+        // Every native presentation should use the current resolved name.
+        let conversation_name = if is_group {
+            row.conversation_name
+        } else {
+            Some(row.sender_name.clone())
+        };
         let avatar_path =
             match crate::services::avatars::ensure_contact_avatar_png(ctx, row.sender_id).await {
                 Ok(path) => path.map(|path| path.display().to_string()),
@@ -667,6 +688,27 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
                     None
                 }
             };
+        let avatar_path = avatar_path.or_else(|| {
+            crate::services::avatars::notification_logo_path(ctx)
+                .ok()
+                .map(|path| path.display().to_string())
+        });
+        let conversation_avatar_path = if is_group {
+            match crate::services::avatars::ensure_group_avatar_png(
+                ctx,
+                row.conversation_id.as_deref().unwrap_or_default(),
+            )
+            .await
+            {
+                Ok(path) => path.map(|path| path.display().to_string()),
+                Err(error) => {
+                    tracing::warn!(%error, "failed to prepare group notification avatar");
+                    None
+                }
+            }
+        } else {
+            None
+        };
         additions.push(NotificationAddition {
             event_id: row.event_id,
             notification_id: row.notification_id,
@@ -676,13 +718,14 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
             title,
             body,
             text_messages_body,
-            conversation_name: row.conversation_name,
+            conversation_name,
             is_group,
             message_id: row.message_id,
             kind: row.kind,
             content: row.content,
             created_at: row.created_at,
             avatar_path,
+            conversation_avatar_path,
         });
     }
 
@@ -921,7 +964,7 @@ pub(crate) async fn clear_opened_messages(
             SET cleared_at = ?
             WHERE message_id = ?
               AND cleared_at IS NULL
-              AND kind IN ('text', 'response', 'sticker', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
+              AND kind IN ('text', 'response', 'sticker', 'live_location', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
             "#,
         )
         .bind(cleared_at)
@@ -1011,6 +1054,7 @@ fn localized_body(locale: &str, row: &PendingRow) -> String {
         "text" => "notificationText",
         "response" => "notificationResponse",
         "sticker" => "notificationSticker",
+        "live_location" => "notificationLiveLocation",
         "twonly" => "notificationTwonly",
         "video" => "notificationVideo",
         "image" => "notificationImage",
@@ -1055,6 +1099,150 @@ pub(crate) fn notification_avatar_path(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn location_shares_notify_once_per_chat_and_updates_stay_silent() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+        let db = ctx.app_db.read().await.clone();
+        let mut tx = db.pool.begin().await?;
+        sqlx::query("INSERT INTO contacts(user_id, username, display_name, accepted) VALUES (7, 'alice', 'Alice', 1)")
+            .execute(&mut *tx).await?;
+        sqlx::query("INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('chat', 'Alice', 1), ('group', 'Friends', 0)")
+            .execute(&mut *tx).await?;
+        sqlx::query(
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('chat', 7), ('group', 7)",
+        )
+        .execute(&mut *tx)
+        .await?;
+        let mut message_ids = Vec::new();
+        for group in ["chat", "group"] {
+            let timestamp = current_time().timestamp_millis();
+            let mut location = proto::LiveLocationData {
+                session_id: uuid::Uuid::new_v4().to_string(),
+                message_id: uuid::Uuid::new_v4().to_string(),
+                updated_at_ms: timestamp,
+                expires_at_ms: timestamp + 600_000,
+                ..Default::default()
+            };
+            let metadata = proto::AdditionalMessageData {
+                r#type: proto::additional_message_data::Type::LiveLocation as i32,
+                live_location: Some(location.clone()),
+                ..Default::default()
+            };
+            let message = encrypted_content::TextMessage {
+                sender_message_id: location.message_id.clone(),
+                text: "Live location".into(),
+                timestamp,
+                additional_message_data: Some(prost::Message::encode_to_vec(&metadata)),
+                ..Default::default()
+            };
+            let content = proto::EncryptedContent {
+                group_id: Some(group.into()),
+                text_message: Some(message),
+                ..Default::default()
+            };
+            assert!(should_wake_receiver(&mut tx, 42, &content).await?);
+            crate::api::messages::incoming::handle_encrypted(
+                &ctx,
+                &mut tx,
+                7,
+                group,
+                content.clone(),
+            )
+            .await?;
+            // A transport retry does not create another alert.
+            crate::api::messages::incoming::handle_encrypted(&ctx, &mut tx, 7, group, content)
+                .await?;
+            message_ids.push(location.message_id.clone());
+
+            for stopped in [false, true] {
+                location.updated_at_ms += 1;
+                location.latitude = Some(52.52);
+                location.longitude = Some(13.405);
+                location.accuracy = Some(8.0);
+                location.fix_timestamp_ms = Some(timestamp);
+                location.stopped = stopped;
+                let metadata = proto::AdditionalMessageData {
+                    live_location: Some(location.clone()),
+                    ..metadata.clone()
+                };
+                let update = encrypted_content::AdditionalDataMessage {
+                    sender_message_id: uuid::Uuid::new_v4().to_string(),
+                    timestamp: location.updated_at_ms,
+                    r#type: "liveLocation".into(),
+                    hidden: true,
+                    additional_message_data: Some(prost::Message::encode_to_vec(&metadata)),
+                };
+                let content = proto::EncryptedContent {
+                    group_id: Some(group.into()),
+                    additional_data_message: Some(update),
+                    ..Default::default()
+                };
+                assert!(!should_wake_receiver(&mut tx, 42, &content).await?);
+                crate::api::messages::incoming::handle_encrypted(
+                    &ctx,
+                    &mut tx,
+                    7,
+                    &location.updated_at_ms.to_string(),
+                    content,
+                )
+                .await?;
+            }
+        }
+        tx.commit().await?;
+        for (locale, direct_body, group_body) in [
+            (
+                "en",
+                "shared their live location.",
+                "shared their live location in Friends.",
+            ),
+            (
+                "de",
+                "hat den Live-Standort geteilt.",
+                "hat den Live-Standort in Friends geteilt.",
+            ),
+            (
+                "ar",
+                "شارك موقعه المباشر.",
+                "شارك موقعه المباشر في Friends.",
+            ),
+        ] {
+            let batch = pending_batch(&ctx, locale).await?;
+            assert_eq!(batch.additions.len(), 2);
+            assert_eq!(batch.badge_count, 2);
+            for addition in batch.additions {
+                assert_eq!(addition.title, "Alice");
+                assert_eq!(addition.kind, "live_location");
+                assert_eq!(addition.text_messages_body, None);
+                assert!(message_ids.contains(addition.message_id.as_ref().unwrap()));
+                assert_eq!(
+                    addition.body,
+                    if addition.is_group {
+                        group_body
+                    } else {
+                        direct_body
+                    }
+                );
+            }
+        }
+        let mut tx = db.pool.begin().await?;
+        clear_opened_messages(&mut tx, &message_ids[..1], current_time().timestamp()).await?;
+        tx.commit().await?;
+        assert_eq!(pending_batch(&ctx, "en").await?.additions.len(), 1);
+        // A chat may be opened before its push worker renders the alert.
+        sqlx::query("UPDATE messages SET opened_at = ? WHERE message_id = ?")
+            .bind(current_time().timestamp())
+            .bind(&message_ids[1])
+            .execute(&db.pool)
+            .await?;
+        assert!(pending_batch(&ctx, "en").await?.additions.is_empty());
+        assert_eq!(badge_count(&ctx).await?, 0);
+        Ok(())
+    }
 
     #[tokio::test]
     async fn opening_chat_clears_reopened_media_with_and_without_a_chat_id() -> Result<()> {
@@ -1132,6 +1320,84 @@ mod tests {
             assert_eq!(addition.notification_id, "message");
             assert_eq!(batch.badge_count, 1);
         }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn direct_notification_titles_follow_current_contact_names_instead_of_stored_chat_names(
+    ) -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let db = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username, display_name, accepted) VALUES (7, 'tobi', 'Tobi ✌', 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('direct', 'Tobi ✌', 1), ('group', 'Friends', 0)",
+            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, kind, created_at) VALUES ('text', 'text', 'direct', 7, 'text', 1), ('image', 'image', 'direct', 7, 'image', 2), ('location', 'location', 'direct', 7, 'live_location', 3), ('group', 'group', 'group', 7, 'image', 4)",
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&db.pool).await?;
+        }
+        for (update, expected) in [
+            (
+                "UPDATE contacts SET display_name = 'Tobi' WHERE user_id = 7",
+                "Tobi",
+            ),
+            (
+                "UPDATE contacts SET nick_name = 'Nickname' WHERE user_id = 7",
+                "Nickname",
+            ),
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(update))
+                .execute(&db.pool)
+                .await?;
+            let batch = pending_batch(&ctx, "de").await?;
+            assert_eq!(batch.additions.len(), 4);
+            for addition in &batch.additions {
+                assert_eq!(addition.sender_name, expected);
+                assert_eq!(addition.title, expected);
+                assert!(!addition.body.contains(expected));
+                assert_eq!(
+                    addition.conversation_name.as_deref(),
+                    Some(if addition.is_group {
+                        "Friends"
+                    } else {
+                        expected
+                    },)
+                );
+            }
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn notification_batch_supplies_group_avatars_and_a_logo_for_missing_sender_avatars(
+    ) -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let db = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1)",
+            "INSERT INTO groups(group_id, group_name) VALUES ('g', 'Friends')",
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('g', 7)",
+            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, kind, created_at) VALUES ('event', 'message', 'g', 7, 'text', 1)",
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&db.pool).await?;
+        }
+        let batch = pending_batch(&ctx, "en").await?;
+        let addition = &batch.additions[0];
+        assert!(addition.is_group);
+        let logo = crate::services::avatars::notification_logo_path(&ctx)?;
+        assert_eq!(addition.avatar_path.as_deref(), logo.to_str());
+        let group = addition.conversation_avatar_path.as_ref().unwrap();
+        assert!(std::path::Path::new(group).exists());
+        let json = serde_json::to_value(addition).unwrap();
+        assert_eq!(
+            json["conversation_avatar_path"].as_str(),
+            Some(group.as_str())
+        );
         Ok(())
     }
 

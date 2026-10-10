@@ -159,6 +159,11 @@ pub struct FrbMemoriesUploadUrls {
 }
 
 /// Flutter-facing facade for the Rust-owned API runtime.
+pub struct StickerLocation {
+    pub latitude: f64,
+    pub longitude: f64,
+}
+
 pub struct RustApi {}
 
 impl RustApi {
@@ -263,11 +268,21 @@ impl RustApi {
         crate::services::location_metadata::initialize_for_media(ctx, &media_id).await
     }
 
-    /// Begins the optional precise-location lookup when the capture camera is
-    /// opened, so a later photo usually has a fix immediately available.
+    /// Warms the shared location cache if Memories or city stickers are enabled.
     pub async fn prewarm_memory_location() -> Result<()> {
         let ctx = Context::get_static()?;
         crate::services::location_metadata::prewarm(ctx)
+    }
+
+    /// Coordinates for native city lookup, available only with sticker opt-in.
+    pub async fn current_location_for_sticker() -> Result<Option<StickerLocation>> {
+        let ctx = Context::get_static()?;
+        Ok(crate::services::location_metadata::current_for_sticker(ctx)
+            .await?
+            .map(|location| StickerLocation {
+                latitude: location.latitude,
+                longitude: location.longitude,
+            }))
     }
 
     /// Creates one outgoing message per selected group, plus the story rows
@@ -992,10 +1007,19 @@ impl RustApi {
         text: String,
         quote_message_id: Option<String>,
         additional_message_data: Option<Vec<u8>>,
+        message_id: Option<String>,
+        timestamp_ms: Option<i64>,
     ) -> Result<String> {
         let ctx = Context::get_static()?;
         crate::services::messages::MessageService::new(ctx)
-            .insert_and_send_text(group_id, text, quote_message_id, additional_message_data)
+            .insert_and_send_text(
+                group_id,
+                text,
+                quote_message_id,
+                additional_message_data,
+                message_id,
+                timestamp_ms,
+            )
             .await
     }
 

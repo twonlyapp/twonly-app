@@ -71,6 +71,11 @@ import flutter_sharing_intent
     _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
     withCompletionHandler completionHandler: @escaping () -> Void
   ) {
+    if response.actionIdentifier == NativeLiveLocation.stopAction,
+      let session = response.notification.request.content.userInfo["live_location_session"] as? String {
+      NativeLiveLocation.shared.stop(expectedSession: session, completion: completionHandler)
+      return
+    }
     NSLog(
       "Application delegate method userNotificationCenter:didReceive:withCompletionHandler: is called with user info: %@",
       response.notification.request.content.userInfo)

@@ -1,1 +1,2 @@
 -keep class net.sqlcipher.** { *; }
+-keep class eu.twonly.location.NativeLiveLocationBridge { *; }

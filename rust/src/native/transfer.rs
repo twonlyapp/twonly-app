@@ -168,10 +168,45 @@ pub(crate) mod android {
             ))
         }
     }
+
+    pub(crate) fn recover(descriptor_json: &str, created_at: i64) -> Result<()> {
+        let transfer = cached_class(&TRANSFER, TRANSFER_CLASS)?;
+        let mut env = jni_env()?;
+        let descriptor = env
+            .new_string(descriptor_json)
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+        let descriptor_object = JObject::from(descriptor);
+        let result = env
+            .call_static_method(
+                transfer,
+                "recover",
+                "(Ljava/lang/String;J)Z",
+                &[JValue::Object(&descriptor_object), JValue::Long(created_at)],
+            )
+            .and_then(|value| value.z());
+        if env.exception_check().unwrap_or(false) {
+            let _ = env.exception_clear();
+        }
+        if result.map_err(|error| TwonlyError::Generic(error.to_string()))? {
+            Ok(())
+        } else {
+            Err(TwonlyError::Generic(
+                "Android could not recover the media transfer".into(),
+            ))
+        }
+    }
 }
 
 #[cfg(target_os = "android")]
 pub(crate) use android::schedule;
+
+#[cfg(target_os = "android")]
+pub(crate) use android::recover;
+
+#[cfg(not(target_os = "android"))]
+pub(crate) fn recover(_descriptor_json: &str, _created_at: i64) -> Result<()> {
+    Ok(())
+}
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub(crate) fn schedule(_descriptor_json: &str) -> Result<()> {

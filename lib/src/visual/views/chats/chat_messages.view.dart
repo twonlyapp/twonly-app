@@ -16,6 +16,8 @@ import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
@@ -30,6 +32,7 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/c
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/in_chat_group_overview.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/pending_chat_messages.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_indicator.dart';
 
@@ -100,6 +103,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   final _animationState = _MessageAnimationState();
   final _subscriptions = _ChatSubscriptions();
   final _data = _ChatViewData();
+  final _pendingMessages = PendingChatMessages();
   final ValueNotifier<int> _messageDataVersion = ValueNotifier(0);
 
   Group? _group;
@@ -112,7 +116,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
       ItemPositionsListener.create();
   int? focusedScrollItem;
   bool _receiverDeletedAccount = false;
-  bool _emojiPickerShowing = false;
+  ChatInputPanel _inputPanel = ChatInputPanel.none;
   Future<void>? _olderMessagesLoad;
   bool _hasMoreMessages = true;
   int _loadedMessagesRevision = 0;
@@ -169,6 +173,84 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
 
   void _notifyMessageDataChanged() {
     _messageDataVersion.value++;
+  }
+
+  void _sendMessage({
+    required String text,
+    String? quoteMessageId,
+    LocalSticker? sticker,
+  }) {
+    final message = _pendingMessages.add(
+      groupId: widget.groupId,
+      text: text,
+      quoteMessageId: quoteMessageId,
+      additionalMessageData: sticker == null
+          ? null
+          : StickerService.encodeAdditional(sticker),
+    );
+    setState(() => quotesMessage = null);
+    _showPendingMessages();
+    unawaited(_persistOutgoingMessage(message, sticker));
+  }
+
+  void _showPendingMessages() {
+    final messages = _pendingMessages.merge([
+      ..._data.olderMessages,
+      ..._data.latestMessages,
+    ]);
+    _data.allMessages = messages;
+    _data.messagesById = {
+      for (final message in messages) message.messageId: message,
+    };
+    // setMessages publishes synchronously; it does not wait for database work.
+    unawaited(setMessages(messages, _data.groupActions));
+  }
+
+  Future<void> _persistOutgoingMessage(
+    Message message,
+    LocalSticker? sticker,
+  ) async {
+    try {
+      await RustApi.insertAndSendText(
+        groupId: message.groupId,
+        text: message.content!,
+        quoteMessageId: message.quotesMessageId,
+        additionalMessageData: message.additionalMessageData,
+        messageId: message.messageId,
+        timestampMs: message.createdAt.millisecondsSinceEpoch,
+      );
+    } catch (error, stackTrace) {
+      Log.error(
+        'Could not persist outgoing message',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted || !_pendingMessages.remove(message.messageId)) return;
+      _showPendingMessages();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.lang.errorInternalError),
+          action: SnackBarAction(
+            label: context.lang.manualVerificationRetry,
+            onPressed: () {
+              if (!mounted) return;
+              _pendingMessages.track(message);
+              _showPendingMessages();
+              unawaited(_persistOutgoingMessage(message, sticker));
+            },
+          ),
+        ),
+      );
+      return;
+    }
+    // A completed bridge call does not mean the database stream has emitted.
+    // Keep the bubble until the corresponding stored row replaces it.
+    if (sticker != null) {
+      unawaitedRustCall(
+        twonlyDB.stickersDao.recordUse(sticker.contentHash),
+        'recordStickerUse',
+      );
+    }
   }
 
   Future<void> initStreams() async {
@@ -257,13 +339,18 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
         for (final mediaFile in missingMediaFiles) mediaFile.mediaId: mediaFile,
       };
     }
-    _data.allMessages = loadedMessages;
-    _data.messagesById = byId;
+    // Merge after the media read: a send may have added a pending bubble while
+    // that read was in flight. A stored row with the same ID wins immediately.
+    final visibleMessages = _pendingMessages.merge(loadedMessages);
+    _data.allMessages = visibleMessages;
+    _data.messagesById = {
+      for (final message in visibleMessages) message.messageId: message,
+    };
     _watchGroupActionsForLoadedRange();
     _watchLoadedMessageData();
     _watchRelevantContacts();
     await setMessages(
-      loadedMessages,
+      visibleMessages,
       _data.groupActions,
       reportOpened: reportOpened,
     );
@@ -324,7 +411,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   }
 
   void _watchLoadedMessageData() {
-    final messageIds = _data.messagesById.keys.toSet();
+    final messageIds = _data.messagesById.keys
+        .where((messageId) => !_pendingMessages.contains(messageId))
+        .toSet();
     if (setEquals(_data.watchedMessageIds, messageIds)) return;
     _data.watchedMessageIds = messageIds;
 
@@ -434,6 +523,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
       // the user. Messages fetched by scrolling up are older and must not
       // animate, no matter who sent them.
       if (_animationState.hasReceivedFirstBatch &&
+          msg.senderId != null &&
           newestKnownAt != null &&
           msg.createdAt.isAfter(newestKnownAt) &&
           !_animationState.knownMessageIds.contains(msg.messageId)) {
@@ -674,12 +764,12 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
-        if (_emojiPickerShowing) {
-          setState(() => _emojiPickerShowing = false);
+        if (_inputPanel != ChatInputPanel.none) {
+          setState(() => _inputPanel = ChatInputPanel.none);
         }
       },
       child: Scaffold(
-        resizeToAvoidBottomInset: !_emojiPickerShowing,
+        resizeToAvoidBottomInset: _inputPanel == ChatInputPanel.none,
         appBar: AppBar(
           title: GestureDetector(
             onTap: () async {
@@ -740,7 +830,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
           ),
         ),
         body: ChatBodySafeArea(
-          showingPicker: _emojiPickerShowing,
+          showingPicker: _inputPanel != ChatInputPanel.none,
           child: Column(
             children: [
               Expanded(
@@ -871,15 +961,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                   quotesMessage: quotesMessage,
                   textFieldFocus: textFieldFocus!,
                   composing: _composing,
-                  emojiPickerShowing: _emojiPickerShowing,
-                  onMessageSend: () {
-                    setState(() {
-                      quotesMessage = null;
-                    });
-                  },
-                  onEmojiVisibilityChanged: (visible) {
-                    if (_emojiPickerShowing == visible) return;
-                    setState(() => _emojiPickerShowing = visible);
+                  panel: _inputPanel,
+                  onMessageSend: _sendMessage,
+                  onPanelChanged: (panel) {
+                    if (_inputPanel == panel) return;
+                    setState(() => _inputPanel = panel);
                   },
                 ),
               if (_receiverDeletedAccount)

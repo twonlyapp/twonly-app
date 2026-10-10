@@ -5,6 +5,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:mutex/mutex.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -24,6 +25,8 @@ import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/home_widget.service.dart';
+import 'package:twonly/src/services/live_location.service.dart';
+import 'package:twonly/src/services/location_metadata.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/services/migrations.service.dart';
@@ -95,6 +98,8 @@ class StartupResult {
 
 void main() {
   SentryWidgetsFlutterBinding.ensureInitialized();
+  // TextureView lets Flutter clip map previews and animate map routes.
+  MapLibreMap.useHybridComposition = true;
   LicenseRegistry.addLicense(() async* {
     yield LicenseEntryWithLineBreaks(
       ['U²-Net-P'],
@@ -178,6 +183,8 @@ Future<StartupResult> _startup(SettingsChangeProvider settings) async {
     if (!storageError) {
       try {
         userExists = await userService.tryInit();
+        if (userExists) LocationMetadataService.initialize();
+        if (userExists) unawaited(LiveLocationService.restore());
       } catch (e) {
         Log.error('Failed to initialize user session due to storage error: $e');
         storageError = true;

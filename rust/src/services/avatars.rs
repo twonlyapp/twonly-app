@@ -504,6 +504,105 @@ pub(crate) async fn ensure_contact_avatar_png(
     Ok(Some(output))
 }
 
+pub(crate) fn notification_logo_path(ctx: &Context) -> Result<PathBuf> {
+    let output = Path::new(&ctx.config.data_dir)
+        .join("notification_avatars")
+        .join("twonly-logo.png");
+    write_cached_bytes(&output, include_bytes!("../../../assets/images/logo.png"))?;
+    Ok(output)
+}
+
+/// Matches the group avatar in Flutter: up to three active members, ordered
+/// by their latest message, with overlapping avatars and rounded corners.
+pub(crate) async fn ensure_group_avatar_png(
+    ctx: &Context,
+    group_id: &str,
+) -> Result<Option<PathBuf>> {
+    let database = ctx.app_db.read().await.clone();
+    let members: Vec<i64> = sqlx::query_scalar(
+        "SELECT c.user_id FROM contacts c \
+         JOIN group_members m ON m.contact_id = c.user_id \
+         WHERE m.group_id = ? AND (m.member_state IS NULL OR m.member_state != 'leftGroup') \
+         ORDER BY m.last_message DESC, c.user_id ASC LIMIT 3",
+    )
+    .bind(group_id)
+    .fetch_all(&database.pool)
+    .await?;
+    if members.is_empty() {
+        return Ok(None);
+    }
+    let logo = notification_logo_path(ctx)?;
+    let mut paths = Vec::with_capacity(members.len());
+    for member in members {
+        let avatar = match ensure_contact_avatar_png(ctx, member).await {
+            Ok(path) => path,
+            Err(error) => {
+                tracing::warn!(%error, member, "failed to prepare group member avatar");
+                None
+            }
+        };
+        paths.push(avatar.unwrap_or_else(|| logo.clone()));
+    }
+    let directory = Path::new(&ctx.config.data_dir).join("notification_avatars");
+    let output = tokio::task::spawn_blocking(move || -> Result<PathBuf> {
+        let logo = image::open(logo)
+            .map_err(|error| TwonlyError::Generic(format!("invalid notification logo: {error}")))?
+            .to_rgba8();
+        let images: Vec<RgbaImage> = paths
+            .iter()
+            .map(|path| {
+                image::open(path)
+                    .map(|image| image.to_rgba8())
+                    .unwrap_or_else(|_| logo.clone())
+            })
+            .collect();
+        let png = compose_group_avatar(&images);
+        let mut bytes = Cursor::new(Vec::new());
+        DynamicImage::ImageRgba8(png)
+            .write_to(&mut bytes, image::ImageFormat::Png)
+            .map_err(|error| {
+                TwonlyError::Generic(format!("group avatar encoding failed: {error}"))
+            })?;
+        let bytes = bytes.into_inner();
+        let output = directory.join(format!("group-{}.png", hex::encode(Sha256::digest(&bytes))));
+        write_cached_bytes(&output, &bytes)?;
+        Ok(output)
+    })
+    .await
+    .map_err(|error| TwonlyError::Generic(format!("group avatar render task failed: {error}")))??;
+    Ok(Some(output))
+}
+
+fn compose_group_avatar(images: &[RgbaImage]) -> RgbaImage {
+    let mut canvas = RgbaImage::new(256, 256);
+    let mut place = |index: usize, size: u32, x: i64, y: i64| {
+        let avatar = imageops::resize(&images[index], size, size, imageops::FilterType::Lanczos3);
+        imageops::overlay(&mut canvas, &avatar, x, y);
+    };
+    match images.len() {
+        1 => place(0, 256, 0, 0),
+        2 => {
+            place(1, 205, -38, 57);
+            place(0, 256, 64, 0);
+        }
+        _ => {
+            place(2, 205, -70, 57);
+            place(1, 205, 122, 57);
+            place(0, 256, 0, 0);
+        }
+    }
+    // Flutter clips the 40px avatar with a 12px corner radius.
+    let radius = 77.0_f32;
+    for (x, y, pixel) in canvas.enumerate_pixels_mut() {
+        let dx = (radius - (x as f32 + 0.5).min(255.5 - x as f32)).max(0.0);
+        let dy = (radius - (y as f32 + 0.5).min(255.5 - y as f32)).max(0.0);
+        if dx * dx + dy * dy > radius * radius {
+            pixel[3] = 0;
+        }
+    }
+    canvas
+}
+
 pub(crate) async fn current_custom_avatar_path(ctx: &Context) -> Result<Option<PathBuf>> {
     let avatar = own_custom_avatar(ctx).await?;
     let Some(webp) = avatar.webp else {
@@ -701,6 +800,65 @@ mod tests {
             .execute(&db.pool)
             .await?;
         assert_eq!(ensure_contact_avatar_png(&ctx, 7).await?, Some(illustrated));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn group_notification_avatar_uses_active_members_and_updates_with_their_avatars(
+    ) -> Result<()> {
+        let temporary = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            temporary.path().join("database"),
+            temporary.path().join("data"),
+        )
+        .await?;
+        let db = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('g', 'Friends')")
+            .execute(&db.pool)
+            .await?;
+        assert!(ensure_group_avatar_png(&ctx, "g").await?.is_none());
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, avatar_svg_compressed) VALUES (7, 'alice', ?)",
+        )
+        .bind(SVG.as_bytes())
+        .execute(&db.pool)
+        .await?;
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (8, 'bob')")
+            .execute(&db.pool)
+            .await?;
+        sqlx::query("INSERT INTO group_members(group_id, contact_id, last_message) VALUES ('g', 7, 2), ('g', 8, 1)")
+            .execute(&db.pool).await?;
+        let first = ensure_group_avatar_png(&ctx, "g").await?.unwrap();
+        let image = image::open(&first)
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?
+            .to_rgba8();
+        assert_eq!(image.dimensions(), (256, 256));
+        assert_eq!(image.get_pixel(200, 128), &Rgba([255, 0, 0, 255]));
+        assert_ne!(image.get_pixel(30, 128), &Rgba([255, 0, 0, 255]));
+        assert_eq!(image.get_pixel(0, 0)[3], 0);
+        assert_eq!(
+            ensure_group_avatar_png(&ctx, "g").await?,
+            Some(first.clone())
+        );
+
+        // A changed member avatar must produce a fresh file rather than reuse
+        // a stale group shortcut icon.
+        let blue = SVG.replace("red", "blue");
+        sqlx::query("UPDATE contacts SET avatar_svg_compressed = ?, sender_profile_counter = 1 WHERE user_id = 7")
+            .bind(blue.as_bytes()).execute(&db.pool).await?;
+        let second = ensure_group_avatar_png(&ctx, "g").await?.unwrap();
+        assert_ne!(first, second);
+        let image = image::open(&second)
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?
+            .to_rgba8();
+        assert_eq!(image.get_pixel(200, 128), &Rgba([0, 0, 255, 255]));
+
+        // A member who left no longer contributes an avatar.
+        sqlx::query("UPDATE group_members SET member_state = 'leftGroup' WHERE contact_id = 7")
+            .execute(&db.pool)
+            .await?;
+        let remaining = ensure_group_avatar_png(&ctx, "g").await?.unwrap();
+        assert_ne!(remaining, second);
         Ok(())
     }
 

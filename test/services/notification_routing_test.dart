@@ -8,6 +8,10 @@ void main() {
     expect(NativeNotificationService.opensConversation('sticker'), isTrue);
   });
 
+  test('location-sharing notifications open their conversation', () {
+    expect(NativeNotificationService.opensConversation('live_location'), isTrue);
+  });
+
   test('replies and reactions to the own story open the conversation', () {
     for (final kind in ['story_reply', 'story_reaction']) {
       expect(

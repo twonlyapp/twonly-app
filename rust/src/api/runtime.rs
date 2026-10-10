@@ -15,7 +15,7 @@ pub(crate) mod client;
 pub(crate) mod helpers;
 pub(crate) mod request;
 
-pub(crate) use client::{ApiClient, API_EVENTS};
+pub(crate) use client::{API_EVENTS, ApiClient};
 use helpers::*;
 
 #[doc(hidden)]
@@ -52,7 +52,26 @@ impl ApiRuntime {
     }
 
     pub async fn set_background(ctx: &Arc<Context>, in_background: bool) -> Result<()> {
-        Self::client(ctx).await?.set_background(in_background).await
+        Self::client(ctx)
+            .await?
+            .requested_background
+            .store(in_background, std::sync::atomic::Ordering::Release);
+        Self::restore_background_policy(ctx).await
+    }
+
+    pub(crate) async fn connect_for_live_location(ctx: &Arc<Context>) -> Result<()> {
+        Self::client(ctx).await?.set_background(false).await
+    }
+
+    pub(crate) async fn restore_background_policy(ctx: &Arc<Context>) -> Result<()> {
+        let client = Self::client(ctx).await?;
+        let in_background = client
+            .requested_background
+            .load(std::sync::atomic::Ordering::Acquire);
+        let sharing = crate::services::live_location::active(ctx)
+            .await?
+            .is_some_and(|session| session.expires_at_ms > chrono::Utc::now().timestamp_millis());
+        client.set_background(in_background && !sharing).await
     }
 
     pub async fn set_network_available(ctx: &Arc<Context>, available: bool) -> Result<()> {

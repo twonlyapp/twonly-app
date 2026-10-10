@@ -63,7 +63,7 @@ static NOTIFICATION_RUNTIME: LazyLock<Result<tokio::runtime::Runtime, String>> =
             .map_err(|error| format!("could not create notification runtime: {error}"))
     });
 
-fn runtime() -> Result<&'static tokio::runtime::Runtime, String> {
+pub(crate) fn runtime() -> Result<&'static tokio::runtime::Runtime, String> {
     NOTIFICATION_RUNTIME.as_ref().map_err(Clone::clone)
 }
 

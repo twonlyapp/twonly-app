@@ -254,7 +254,78 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get memoryLocationSubtitle =>
-      'الموقع للذكريات وللتصدير إلى المعرض. لا يُرسل أبدًا إلى جهات الاتصال.';
+      'إحداثيات الالتقاط للذكريات وللتصدير إلى المعرض. لا تُرسل هذه الإحداثيات أبدًا إلى جهات الاتصال.';
+
+  @override
+  String get locationStickerSettingTitle => 'ملصق الموقع';
+
+  @override
+  String get locationStickerSettingSubtitle =>
+      'يعرض مدينتك أو بلدك، أو الإحداثيات إذا لم يتوفر اسم المكان. لا يُشارك موقعك إلا عند اختيار فلتر الموقع.';
+
+  @override
+  String get locationStickerLoading => 'جارٍ تحديد موقعك…';
+
+  @override
+  String get liveLocationMenu => 'الموقع';
+
+  @override
+  String get liveLocationTitle => 'الموقع المباشر';
+
+  @override
+  String get liveLocationExplanation =>
+      'شارك موقعك الحالي في هذه المحادثة. يمكن لجميع أعضاء هذه المجموعة رؤيته. يُحفظ أحدث موقع فقط.';
+
+  @override
+  String get liveLocationDuration => 'مدة المشاركة';
+
+  @override
+  String liveLocationMinutes(int count) {
+    return '$count دقائق';
+  }
+
+  @override
+  String liveLocationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ساعات',
+      one: 'ساعة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveLocationStart => 'بدء المشاركة';
+
+  @override
+  String get liveLocationStop => 'إيقاف المشاركة';
+
+  @override
+  String get liveLocationAlreadySharing =>
+      'تتم مشاركة موقعك بالفعل في هذه المحادثة.';
+
+  @override
+  String get liveLocationNotificationBody =>
+      'تتم مشاركة موقعك الحالي. اضغط على إيقاف المشاركة لإنهائها.';
+
+  @override
+  String get liveLocationStartFailed =>
+      'تعذر بدء المشاركة. اسمح بالوصول إلى الموقع والإشعارات ثم حاول مجددًا.';
+
+  @override
+  String get liveLocationStopFailed => 'تعذر إيقاف المشاركة. حاول مجددًا.';
+
+  @override
+  String get liveLocationWaiting => 'في انتظار الموقع…';
+
+  @override
+  String get liveLocationEnded => 'انتهت مشاركة الموقع';
+
+  @override
+  String liveLocationLastUpdate(String time) {
+    return 'آخر تحديث: $time';
+  }
 
   @override
   String get memoryLocationPermissionDenied =>
@@ -1267,6 +1338,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationFillerIn => 'في';
 
   @override
+  String notificationLiveLocation(Object inGroup) {
+    return 'شارك موقعه المباشر$inGroup.';
+  }
+
+  @override
   String notificationText(Object inGroup) {
     return 'رسالة جديدة$inGroup.';
   }
@@ -1661,6 +1737,21 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String memoriesXYearsAgo(Object years) {
     return 'قبل $years سنوات';
+  }
+
+  @override
+  String get memoriesAMonthAgo => 'قبل شهر';
+
+  @override
+  String memoriesXMonthsAgo(int months) {
+    String _temp0 = intl.Intl.pluralLogic(
+      months,
+      locale: localeName,
+      other: 'قبل $months شهرًا',
+      few: 'قبل $months أشهر',
+      two: 'قبل شهرين',
+    );
+    return '$_temp0';
   }
 
   @override

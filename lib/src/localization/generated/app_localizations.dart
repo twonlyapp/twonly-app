@@ -571,8 +571,116 @@ abstract class AppLocalizations {
   /// No description provided for @memoryLocationSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Location for Memories and gallery exports. Never sent to contacts.'**
+  /// **'Capture coordinates for Memories and gallery exports. These coordinates are never sent to contacts.'**
   String get memoryLocationSubtitle;
+
+  /// No description provided for @locationStickerSettingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sticker'**
+  String get locationStickerSettingTitle;
+
+  /// No description provided for @locationStickerSettingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows your city or country, or coordinates if no place name is available. Your location is shared only when you select the location filter.'**
+  String get locationStickerSettingSubtitle;
+
+  /// No description provided for @locationStickerLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding your location…'**
+  String get locationStickerLoading;
+
+  /// No description provided for @liveLocationMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get liveLocationMenu;
+
+  /// No description provided for @liveLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live location'**
+  String get liveLocationTitle;
+
+  /// No description provided for @liveLocationExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your current location in this chat. Everyone in this group can see it. Only your latest location is kept.'**
+  String get liveLocationExplanation;
+
+  /// No description provided for @liveLocationDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Share for'**
+  String get liveLocationDuration;
+
+  /// No description provided for @liveLocationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} minutes'**
+  String liveLocationMinutes(int count);
+
+  /// No description provided for @liveLocationHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hour} other{{count} hours}}'**
+  String liveLocationHours(int count);
+
+  /// No description provided for @liveLocationStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start sharing'**
+  String get liveLocationStart;
+
+  /// No description provided for @liveLocationStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing'**
+  String get liveLocationStop;
+
+  /// No description provided for @liveLocationAlreadySharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location is already being shared in this chat.'**
+  String get liveLocationAlreadySharing;
+
+  /// No description provided for @liveLocationNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current location is being shared. Tap Stop sharing to end it.'**
+  String get liveLocationNotificationBody;
+
+  /// No description provided for @liveLocationStartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start sharing. Allow location and notifications, then try again.'**
+  String get liveLocationStartFailed;
+
+  /// No description provided for @liveLocationStopFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not stop sharing. Please try again.'**
+  String get liveLocationStopFailed;
+
+  /// No description provided for @liveLocationWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for location…'**
+  String get liveLocationWaiting;
+
+  /// No description provided for @liveLocationEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sharing ended'**
+  String get liveLocationEnded;
+
+  /// No description provided for @liveLocationLastUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Last update: {time}'**
+  String liveLocationLastUpdate(String time);
 
   /// No description provided for @memoryLocationPermissionDenied.
   ///
@@ -2236,6 +2344,12 @@ abstract class AppLocalizations {
   /// **'in'**
   String get notificationFillerIn;
 
+  /// No description provided for @notificationLiveLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'shared their live location{inGroup}.'**
+  String notificationLiveLocation(Object inGroup);
+
   /// No description provided for @notificationText.
   ///
   /// In en, this message translates to:
@@ -2907,6 +3021,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{years} years ago'**
   String memoriesXYearsAgo(Object years);
+
+  /// No description provided for @memoriesAMonthAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'One month ago'**
+  String get memoriesAMonthAgo;
+
+  /// No description provided for @memoriesXMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} months ago'**
+  String memoriesXMonthsAgo(int months);
 
   /// No description provided for @migrationOfMemories.
   ///

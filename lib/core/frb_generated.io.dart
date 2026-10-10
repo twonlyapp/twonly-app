@@ -9,6 +9,7 @@ import 'bridge.dart';
 import 'bridge/api.dart';
 import 'bridge/callbacks.dart';
 import 'bridge/groups.dart';
+import 'bridge/live_location.dart';
 import 'bridge/logging.dart';
 import 'bridge/stories.dart';
 import 'bridge/user_config.dart';
@@ -130,8 +131,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InitConfig dco_decode_box_autoadd_init_config(dynamic raw);
 
   @protected
+  LiveLocationSession dco_decode_box_autoadd_live_location_session(dynamic raw);
+
+  @protected
   PasswordlessRecoveryConfig
   dco_decode_box_autoadd_passwordless_recovery_config(dynamic raw);
+
+  @protected
+  StickerLocation dco_decode_box_autoadd_sticker_location(dynamic raw);
 
   @protected
   StoryAudience dco_decode_box_autoadd_story_audience(dynamic raw);
@@ -286,6 +293,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<WebxdcUpdateEntry> dco_decode_list_webxdc_update_entry(dynamic raw);
 
   @protected
+  LiveLocationSession dco_decode_live_location_session(dynamic raw);
+
+  @protected
   LogLevel dco_decode_log_level(dynamic raw);
 
   @protected
@@ -320,8 +330,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
 
   @protected
+  LiveLocationSession? dco_decode_opt_box_autoadd_live_location_session(
+    dynamic raw,
+  );
+
+  @protected
   PasswordlessRecoveryConfig?
   dco_decode_opt_box_autoadd_passwordless_recovery_config(dynamic raw);
+
+  @protected
+  StickerLocation? dco_decode_opt_box_autoadd_sticker_location(dynamic raw);
 
   @protected
   StoryAudience? dco_decode_opt_box_autoadd_story_audience(dynamic raw);
@@ -403,6 +421,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SqlValue dco_decode_sql_value(dynamic raw);
+
+  @protected
+  StickerLocation dco_decode_sticker_location(dynamic raw);
 
   @protected
   StickerOutput dco_decode_sticker_output(dynamic raw);
@@ -564,8 +585,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InitConfig sse_decode_box_autoadd_init_config(SseDeserializer deserializer);
 
   @protected
+  LiveLocationSession sse_decode_box_autoadd_live_location_session(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PasswordlessRecoveryConfig
   sse_decode_box_autoadd_passwordless_recovery_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  StickerLocation sse_decode_box_autoadd_sticker_location(
     SseDeserializer deserializer,
   );
 
@@ -758,6 +789,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  LiveLocationSession sse_decode_live_location_session(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   LogLevel sse_decode_log_level(SseDeserializer deserializer);
 
   @protected
@@ -794,8 +830,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
+  LiveLocationSession? sse_decode_opt_box_autoadd_live_location_session(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PasswordlessRecoveryConfig?
   sse_decode_opt_box_autoadd_passwordless_recovery_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  StickerLocation? sse_decode_opt_box_autoadd_sticker_location(
     SseDeserializer deserializer,
   );
 
@@ -897,6 +943,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SqlValue sse_decode_sql_value(SseDeserializer deserializer);
+
+  @protected
+  StickerLocation sse_decode_sticker_location(SseDeserializer deserializer);
 
   @protected
   StickerOutput sse_decode_sticker_output(SseDeserializer deserializer);
@@ -1108,8 +1157,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_live_location_session(
+    LiveLocationSession self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_passwordless_recovery_config(
     PasswordlessRecoveryConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_sticker_location(
+    StickerLocation self,
     SseSerializer serializer,
   );
 
@@ -1351,6 +1412,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_live_location_session(
+    LiveLocationSession self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_log_level(LogLevel self, SseSerializer serializer);
 
   @protected
@@ -1399,8 +1466,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_live_location_session(
+    LiveLocationSession? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_passwordless_recovery_config(
     PasswordlessRecoveryConfig? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_sticker_location(
+    StickerLocation? self,
     SseSerializer serializer,
   );
 
@@ -1526,6 +1605,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_sql_value(SqlValue self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sticker_location(
+    StickerLocation self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_sticker_output(StickerOutput self, SseSerializer serializer);

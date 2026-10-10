@@ -20,6 +20,7 @@ class DraggableScrollbar extends StatefulWidget {
   State<DraggableScrollbar> createState() => _DraggableScrollbarState();
 
   static const double labelThumbPadding = 16;
+  static const double thumbWidth = 20;
 }
 
 class _DraggableScrollbarState extends State<DraggableScrollbar>
@@ -36,7 +37,6 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
   Timer? _fadeoutTimer;
 
   static const double thumbHeight = 60;
-  static const double thumbWidth = 20;
 
   @override
   void initState() {
@@ -168,7 +168,7 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
                                       ),
                                     ),
                                   Container(
-                                    width: thumbWidth,
+                                    width: DraggableScrollbar.thumbWidth,
                                     height: thumbHeight,
                                     decoration: BoxDecoration(
                                       color: handleColor,

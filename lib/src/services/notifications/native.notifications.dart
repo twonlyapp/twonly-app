@@ -37,7 +37,7 @@ class NativeNotificationService {
   /// Emits metadata for every native notification tapped while the app runs.
   static Stream<NativeNotificationTap> get taps => _taps.stream;
 
-  /// Text messages (including quoted replies, and replies and reactions to
+  /// Text messages (including location shares, quoted replies, and replies and reactions to
   /// the user's story) and the announcements an app writes into a chat open
   /// their conversation. Media and every other notification kind stay on the
   /// chat overview.
@@ -45,6 +45,7 @@ class NativeNotificationService {
       kind == 'text' ||
       kind == 'response' ||
       kind == 'sticker' ||
+      kind == 'live_location' ||
       kind == 'webxdc' ||
       kind == 'story_reply' ||
       kind == 'story_reaction';

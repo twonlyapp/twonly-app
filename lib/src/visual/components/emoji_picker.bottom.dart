@@ -8,7 +8,10 @@ import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 
 class EmojiPickerBottom extends StatefulWidget {
-  const EmojiPickerBottom({this.allowStickers = false, super.key});
+  const EmojiPickerBottom({
+    this.allowStickers = false,
+    super.key,
+  });
 
   final bool allowStickers;
 

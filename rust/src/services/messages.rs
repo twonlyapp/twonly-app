@@ -220,15 +220,10 @@ impl MessageService {
 
     /// Persists an outgoing text message and hands the delivery off.
     ///
-    /// The composer is blocked on this call, and the chat list can only render
-    /// the new bubble once its own `SELECT` gets the single SQLite connection
-    /// back. Everything the send needs -- decorating the payload, queueing a
-    /// receipt per member, establishing a session, the server round trip --
-    /// competes for exactly that connection, which is how a message could reach
-    /// the other side before showing up here. So the row the UI renders from is
-    /// committed and published on its own, in one transaction, and the send
-    /// runs on a separate task.
-    /// Sends a text message.
+    /// The composer may provide the ID and timestamp of an already visible
+    /// pending bubble. Persist those unchanged so Drift replaces that bubble
+    /// without moving or duplicating it. Delivery runs on a separate task after
+    /// the local row commits.
     ///
     /// `additional_message_data` records where the text came from when the
     /// sender did not type it -- today, the webxdc app that produced it. It is
@@ -239,13 +234,15 @@ impl MessageService {
         text: String,
         quote_message_id: Option<String>,
         additional_message_data: Option<Vec<u8>>,
+        message_id: Option<String>,
+        timestamp_ms: Option<i64>,
     ) -> Result<String> {
         if let Some(data) = additional_message_data.as_deref() {
             crate::services::stickers::validate_additional_if_sticker(data)?;
         }
         let database = self.ctx.app_db.read().await.clone();
-        let message_id = uuid::Uuid::new_v4().to_string();
-        let timestamp = chrono::Utc::now().timestamp_millis();
+        let message_id = message_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+        let timestamp = timestamp_ms.unwrap_or_else(|| chrono::Utc::now().timestamp_millis());
 
         let mut t = database.pool.begin().await?;
         sqlx::query!(
@@ -419,6 +416,7 @@ impl MessageService {
             webxdc_sync: None,
             webxdc_sync_request: None,
             sticker: None,
+            live_location: None,
         }
         .encode_to_vec();
         self.insert_and_send_additional_data(group_id, "contacts".into(), data, false)
@@ -457,6 +455,7 @@ impl MessageService {
             webxdc_sync: None,
             webxdc_sync_request: None,
             sticker: None,
+            live_location: None,
         }
         .encode_to_vec();
         self.insert_and_send_additional_data(group_id, "askAboutUser".into(), data, false)
@@ -601,5 +600,53 @@ impl MessageService {
 
     pub async fn send_receipt(&self, receipt_id: String) -> Result<()> {
         messages::send_queued_receipt(&self.ctx, &receipt_id).await
+    }
+}
+
+#[cfg(test)]
+mod pending_text_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn persists_the_pending_bubbles_identity_and_timestamp() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat')")
+            .execute(&database.pool)
+            .await?;
+        let id = uuid::Uuid::new_v4().to_string();
+        let timestamp = 1_790_000_000_000_i64;
+        let returned_id = MessageService::new(&ctx)
+            .insert_and_send_text(
+                "chat".into(),
+                "Immediate message".into(),
+                None,
+                None,
+                Some(id.clone()),
+                Some(timestamp),
+            )
+            .await?;
+        assert_eq!(returned_id, id);
+        let (stored_id, content, created_at): (String, String, i64) = sqlx::query_as(
+            "SELECT message_id, content, created_at FROM messages WHERE group_id = 'chat'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(stored_id, id);
+        assert_eq!(content, "Immediate message");
+        assert_eq!(created_at, timestamp / 1000);
+
+        // Existing callers still let Rust allocate the identity and timestamp.
+        let generated_id = MessageService::new(&ctx)
+            .insert_and_send_text("chat".into(), "Another".into(), None, None, None, None)
+            .await?;
+        assert_ne!(generated_id, id);
+        assert!(uuid::Uuid::parse_str(&generated_id).is_ok());
+        Ok(())
     }
 }

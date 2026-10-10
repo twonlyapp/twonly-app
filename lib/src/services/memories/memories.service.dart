@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 
 import 'package:blurhash_dart/blurhash_dart.dart' as bh;
 import 'package:clock/clock.dart';
@@ -10,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/memory_flashbacks.model.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
@@ -22,7 +22,7 @@ class MemoriesState {
     required this.galleryItems,
     required this.months,
     required this.orderedByMonth,
-    required this.galleryItemsLastYears,
+    required this.flashbacks,
   });
 
   final int filesToMigrate;
@@ -30,7 +30,7 @@ class MemoriesState {
   final List<MemoryItem> galleryItems;
   final List<String> months;
   final Map<String, List<int>> orderedByMonth;
-  final Map<int, List<MemoryItem>> galleryItemsLastYears;
+  final MemoryFlashbacks flashbacks;
 
   bool get isLoading => filesToMigrate > 0;
   double get migrationProgress => totalFilesToMigrate > 0
@@ -44,7 +44,7 @@ class MemoriesState {
     List<MemoryItem>? galleryItems,
     List<String>? months,
     Map<String, List<int>>? orderedByMonth,
-    Map<int, List<MemoryItem>>? galleryItemsLastYears,
+    MemoryFlashbacks? flashbacks,
   }) {
     return MemoriesState(
       filesToMigrate: filesToMigrate ?? this.filesToMigrate,
@@ -52,8 +52,7 @@ class MemoriesState {
       galleryItems: galleryItems ?? this.galleryItems,
       months: months ?? this.months,
       orderedByMonth: orderedByMonth ?? this.orderedByMonth,
-      galleryItemsLastYears:
-          galleryItemsLastYears ?? this.galleryItemsLastYears,
+      flashbacks: flashbacks ?? this.flashbacks,
     );
   }
 }
@@ -67,6 +66,39 @@ class MemoriesService {
   }
 
   static MemoriesState? _cachedState;
+
+  static Future<void> deleteMemory(
+    MediaFileService media, {
+    required bool completely,
+  }) async {
+    final file = media.mediaFile;
+    if (completely) {
+      if (file.cloudState != CloudState.none) {
+        try {
+          await RustApi.deleteMemory(mediaId: file.mediaId);
+        } catch (error) {
+          // This endpoint returns Unknown (0) when the cloud row is already
+          // absent, for example after a subscription expired. Deletion is
+          // already complete there; other failures still need to be shown.
+          if (!RegExp(r'API error code 0\b').hasMatch(error.toString())) {
+            rethrow;
+          }
+        }
+      }
+      await media.fullMediaRemoval();
+      await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
+    } else {
+      if (media.storedPath.existsSync()) {
+        await media.storedPath.delete();
+      }
+      // The gallery watches database state, so deleting a file alone leaves
+      // a stale tile behind, including when the file was already missing.
+      await twonlyDB.mediaFilesDao.updateMedia(
+        file.mediaId,
+        const MediaFilesCompanion(stored: Value(false)),
+      );
+    }
+  }
 
   /// Media this run has already asked Rust to render a preview for. Every write
   /// Rust makes re-fires the stream below, so without this the remaining items
@@ -82,7 +114,10 @@ class MemoriesService {
     galleryItems: [],
     months: [],
     orderedByMonth: {},
-    galleryItemsLastYears: {},
+    flashbacks: MemoryFlashbacks(
+      period: MemoryFlashbackPeriod.months,
+      items: {},
+    ),
   );
 
   MemoriesState get currentState => _currentState;
@@ -148,7 +183,6 @@ class MemoriesService {
   }) {
     final now = clock.now();
     final tempGalleryItems = <MemoryItem>[];
-    final tempGalleryItemsLastYears = <int, List<MemoryItem>>{};
 
     for (final mediaFile in mediaFiles) {
       final mediaService = MediaFileService(mediaFile);
@@ -162,14 +196,6 @@ class MemoriesService {
       );
 
       tempGalleryItems.add(item);
-
-      if (mediaFile.createdAt.month == now.month &&
-          mediaFile.createdAt.day == now.day) {
-        final diff = now.year - mediaFile.createdAt.year;
-        if (diff > 0) {
-          tempGalleryItemsLastYears.putIfAbsent(diff, () => []).add(item);
-        }
-      }
     }
 
     // Sort descending by creation date
@@ -195,17 +221,6 @@ class MemoriesService {
       tempOrderedByMonth.putIfAbsent(month, () => []).add(i);
     }
 
-    for (final list in tempGalleryItemsLastYears.values) {
-      list.sort(
-        (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
-          a.mediaService.mediaFile.createdAt,
-        ),
-      );
-    }
-
-    final sortedGalleryItemsLastYears =
-        SplayTreeMap<int, List<MemoryItem>>.from(tempGalleryItemsLastYears);
-
     return MemoriesState(
       filesToMigrate: filesToMigrate,
       totalFilesToMigrate:
@@ -213,7 +228,7 @@ class MemoriesService {
       galleryItems: tempGalleryItems,
       months: tempMonths,
       orderedByMonth: tempOrderedByMonth,
-      galleryItemsLastYears: sortedGalleryItemsLastYears,
+      flashbacks: MemoryFlashbacks.fromItems(tempGalleryItems, now: now),
     );
   }
 

@@ -37,6 +37,8 @@ class AdditionalMessageData_Type extends $pb.ProtobufEnum {
           8, _omitEnumNames ? '' : 'WEBXDC_SYNC_REQUEST');
   static const AdditionalMessageData_Type STICKER =
       AdditionalMessageData_Type._(9, _omitEnumNames ? '' : 'STICKER');
+  static const AdditionalMessageData_Type LIVE_LOCATION =
+      AdditionalMessageData_Type._(10, _omitEnumNames ? '' : 'LIVE_LOCATION');
 
   static const $core.List<AdditionalMessageData_Type> values =
       <AdditionalMessageData_Type>[
@@ -50,10 +52,11 @@ class AdditionalMessageData_Type extends $pb.ProtobufEnum {
     WEBXDC_SYNC,
     WEBXDC_SYNC_REQUEST,
     STICKER,
+    LIVE_LOCATION,
   ];
 
   static final $core.List<AdditionalMessageData_Type?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 9);
+      $pb.ProtobufEnum.$_initByValueList(values, 10);
   static AdditionalMessageData_Type? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

@@ -50,7 +50,6 @@ private struct NativeNotificationAddition: Decodable {
   let senderName: String
   let title: String
   let body: String
-  let textMessagesBody: String?
   let conversationName: String?
   let isGroup: Bool
   let messageId: String?
@@ -58,6 +57,7 @@ private struct NativeNotificationAddition: Decodable {
   let content: String?
   let createdAt: Int64
   let avatarPath: String?
+  let conversationAvatarPath: String?
 
   enum CodingKeys: String, CodingKey {
     case kind, content, title, body
@@ -71,12 +71,11 @@ private struct NativeNotificationAddition: Decodable {
     case messageId = "message_id"
     case createdAt = "created_at"
     case avatarPath = "avatar_path"
-    case textMessagesBody = "text_messages_body"
+    case conversationAvatarPath = "conversation_avatar_path"
   }
 
-  var textGroup: String? {
-    guard kind == "text" || kind == "response" else { return nil }
-    return "text:\(conversationId ?? ""):\(senderId)"
+  var notificationGroup: String {
+    return "chat:\(conversationId ?? ""):sender:\(senderId):kind:\(kind)"
   }
 }
 
@@ -87,10 +86,7 @@ private struct RenderedNotification {
   let replacingRequestIds: [String]
 
   var body: String {
-    guard notificationIds.count > 1, let template = addition.textMessagesBody else {
-      return addition.body
-    }
-    return template.replacingOccurrences(of: "{count}", with: String(notificationIds.count))
+    return addition.body
   }
 }
 
@@ -162,31 +158,22 @@ final class NotificationService: UNNotificationServiceExtension {
   private static func groupedAdditions(
     _ additions: [NativeNotificationAddition], delivered: [UNNotificationRequest]
   ) -> [RenderedNotification] {
-    // A single request represents each sender's text messages in a chat, even
-    // when they arrive in different wake-ups. Dismissed alerts are absent here
-    // and therefore start a fresh group on the next message.
+    // Keep one alert per sender and kind, including across separate wake-ups.
     let grouped = Dictionary(grouping: additions) {
-      $0.textGroup ?? "event:\($0.eventId)"
+      $0.notificationGroup
     }
     return grouped.values.compactMap { entries -> RenderedNotification? in
-      guard let latest = entries.last else { return nil }
+      guard let latest = entries.sorted(by: {
+        if $0.createdAt == $1.createdAt { return $0.eventId < $1.eventId }
+        return $0.createdAt < $1.createdAt
+      }).last else { return nil }
       let previous = delivered.filter {
-        guard let key = latest.textGroup else { return false }
-        return $0.content.userInfo["text_group"] as? String == key
-      }
-      var ids = Set(entries.map(\.notificationId))
-      for notification in previous {
-        let info = notification.content.userInfo
-        if let values = info["notification_ids"] as? [String] {
-          ids.formUnion(values)
-        } else if let value = info["notification_id"] as? String {
-          ids.insert(value)
-        }
+        $0.content.userInfo["notification_group"] as? String == latest.notificationGroup
       }
       return RenderedNotification(
         addition: latest,
         eventIds: entries.map(\.eventId),
-        notificationIds: ids.sorted(),
+        notificationIds: [latest.notificationId],
         replacingRequestIds: previous.map(\.identifier)
       )
     }.sorted {
@@ -223,7 +210,7 @@ final class NotificationService: UNNotificationServiceExtension {
         }
 
         let request = UNNotificationRequest(
-          identifier: rendered.addition.textGroup ?? rendered.addition.notificationId,
+          identifier: rendered.addition.notificationGroup,
           content: content,
           trigger: nil
         )
@@ -271,7 +258,7 @@ final class NotificationService: UNNotificationServiceExtension {
       ?? UNMutableNotificationContent()
     mutable.title = addition.senderName
     mutable.body = rendered.body
-    mutable.threadIdentifier = addition.textGroup ?? addition.conversationId ?? String(addition.senderId)
+    mutable.threadIdentifier = addition.notificationGroup
     mutable.badge = NSNumber(value: badgeCount)
     mutable.sound = .default
     var userInfo = mutable.userInfo
@@ -281,7 +268,8 @@ final class NotificationService: UNNotificationServiceExtension {
     userInfo["notification_kind"] = addition.kind
     userInfo["notification_id"] = addition.notificationId
     userInfo["notification_ids"] = rendered.notificationIds
-    userInfo["text_group"] = addition.textGroup
+    userInfo.removeValue(forKey: "text_group")
+    userInfo["notification_group"] = addition.notificationGroup
     mutable.userInfo = userInfo
 
     let avatar = addition.avatarPath
@@ -303,11 +291,15 @@ final class NotificationService: UNNotificationServiceExtension {
       outgoingMessageType: .outgoingMessageText,
       content: rendered.body,
       speakableGroupName: groupName,
-      conversationIdentifier: addition.conversationId ?? String(addition.senderId),
+      conversationIdentifier: addition.notificationGroup,
       serviceName: "Twonly",
       sender: sender,
       attachments: nil
     )
+    if addition.isGroup, let path = addition.conversationAvatarPath,
+      let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+      intent.setImage(INImage(imageData: data), forParameterNamed: \.speakableGroupName)
+    }
     let interaction = INInteraction(intent: intent, response: nil)
     interaction.direction = .incoming
     interaction.donate { error in

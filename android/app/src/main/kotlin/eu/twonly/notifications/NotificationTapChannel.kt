@@ -24,6 +24,10 @@ internal fun cancelNativeNotifications(context: Context, notificationIds: Collec
     val active = manager.activeNotifications
     ids.forEach { manager.cancel(nativeNotificationId(it)) }
     active.forEach { entry ->
+        if (entry.notification.extras.getString(TEXT_MESSAGE_ID) in ids) {
+            manager.cancel(entry.id)
+            return@forEach
+        }
         val style = NotificationCompat.MessagingStyle
             .extractMessagingStyleFromNotification(entry.notification) ?: return@forEach
         val remaining = style.messages.filter { it.extras.getString(TEXT_MESSAGE_ID) !in ids }

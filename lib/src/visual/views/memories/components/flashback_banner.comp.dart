@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/model/memory_flashbacks.model.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class MemoriesFlashbackBannerComp extends StatelessWidget {
   const MemoriesFlashbackBannerComp({
-    required this.lastYears,
+    required this.flashbacks,
     required this.onOpenFlashback,
     super.key,
   });
 
-  final Map<int, List<MemoryItem>> lastYears;
+  final MemoryFlashbacks flashbacks;
   final void Function(List<MemoryItem> items, int index) onOpenFlashback;
 
   @override
   Widget build(BuildContext context) {
-    if (lastYears.isEmpty) {
+    if (flashbacks.items.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
@@ -29,20 +30,26 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
-                itemCount: lastYears.length + 1,
+                itemCount: flashbacks.items.length + 1,
                 separatorBuilder: (context, _) => const SizedBox(width: 12),
                 itemBuilder: (context, idx) {
                   if (idx == 0) {
                     return const SizedBox.shrink();
                   }
                   idx -= 1;
-                  final entry = lastYears.entries.elementAt(idx);
-                  final years = entry.key;
+                  final entry = flashbacks.items.entries.elementAt(idx);
+                  final elapsed = entry.key;
                   final items = entry.value;
 
-                  var text = context.lang.memoriesAYearAgo;
-                  if (years > 1) {
-                    text = context.lang.memoriesXYearsAgo(years);
+                  final String text;
+                  if (flashbacks.period == MemoryFlashbackPeriod.months) {
+                    text = elapsed == 1
+                        ? context.lang.memoriesAMonthAgo
+                        : context.lang.memoriesXMonthsAgo(elapsed);
+                  } else {
+                    text = elapsed == 1
+                        ? context.lang.memoriesAYearAgo
+                        : context.lang.memoriesXYearsAgo(elapsed);
                   }
 
                   return GestureDetector(

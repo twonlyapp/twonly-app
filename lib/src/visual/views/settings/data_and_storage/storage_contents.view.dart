@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +5,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -346,16 +346,10 @@ class _StorageContentsViewState extends State<StorageContentsView> {
     if (deleteCompletely == null) return;
 
     try {
-      if (deleteCompletely) {
-        await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
-        unawaitedRustCall(
-          RustApi.deleteMemory(mediaId: file.mediaId),
-          'deleteMemory',
-        );
-        await MediaFileService(file).fullMediaRemoval();
-      } else {
-        MediaFileService(file).storedPath.deleteSync();
-      }
+      await MemoriesService.deleteMemory(
+        MediaFileService(file),
+        completely: deleteCompletely,
+      );
 
       if (context.mounted) {
         showSnackbar(
@@ -398,16 +392,10 @@ class _StorageContentsViewState extends State<StorageContentsView> {
 
     try {
       for (final file in selectedFiles) {
-        if (deleteCompletely) {
-          await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
-          unawaitedRustCall(
-            RustApi.deleteMemory(mediaId: file.mediaId),
-            'deleteMemory',
-          );
-          await MediaFileService(file).fullMediaRemoval();
-        } else {
-          MediaFileService(file).storedPath.deleteSync();
-        }
+        await MemoriesService.deleteMemory(
+          MediaFileService(file),
+          completely: deleteCompletely,
+        );
       }
 
       setState(_selectedMediaIds.clear);

@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twonly/globals.dart';
@@ -13,12 +13,17 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
+import 'package:twonly/src/visual/components/location_sticker.dart';
 import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_sticker.entry.dart';
 import 'package:twonly/src/visual/views/memories/sticker_source_picker.view.dart';
+
+import '../../mocks/user_config.dart';
 
 // A small valid image for exercising image widgets; protocol codec validation
 // and real transparent WebP inference are covered by the Rust sticker tests.
@@ -71,6 +76,47 @@ void main() {
   tearDown(() async {
     await database.close();
     await locator.reset();
+  });
+
+  testWidgets('editor picker excludes location even when enabled in privacy', (
+    tester,
+  ) async {
+    locator.registerSingleton<UserService>(UserService());
+    userService
+      ..isUserCreated = true
+      ..currentUser = testUserConfig(
+        userId: 1,
+        username: 'me',
+        displayName: 'Me',
+        subscriptionPlan: 'Free',
+        currentSetupPage: null,
+        appVersion: 100,
+      );
+    userService.currentUser.enableLocationSticker = true;
+    const channel = MethodChannel('eu.twonly/location_metadata');
+    final calls = <MethodCall>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      call,
+    ) async {
+      calls.add(call);
+      return null;
+    });
+    try {
+      await tester.pumpWidget(
+        _app(const EmojiPickerBottom(allowStickers: true)),
+      );
+      await _settle(tester);
+      await tester.tap(find.text('Sticker'));
+      await _settle(tester);
+      expect(find.byType(StickerPicker), findsOneWidget);
+      expect(find.byType(LocationSticker), findsNothing);
+      expect(calls, isEmpty);
+    } finally {
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel,
+        null,
+      );
+    }
   });
 
   testWidgets(

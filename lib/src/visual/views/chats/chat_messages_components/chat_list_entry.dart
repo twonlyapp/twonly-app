@@ -9,6 +9,7 @@ import 'package:twonly/src/database/tables/messages.table.dart'
     hide MessageActions;
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/services/live_location.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -19,6 +20,7 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/c
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_contacts.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_flame_restored.entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_live_location.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_media_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_sticker.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_text_entry.dart';
@@ -148,6 +150,17 @@ class _ChatListEntryState extends State<ChatListEntry> {
     BubbleInfo info,
   ) {
     if (widget.message.type == MessageType.text.name) {
+      final location = LiveLocationService.decode(
+        widget.message.additionalMessageData,
+      );
+      if (location != null) {
+        return ChatLiveLocationEntry(
+          message: widget.message,
+          location: location,
+          borderRadius: borderRadius,
+          info: info,
+        );
+      }
       final sticker = StickerService.decodeAdditional(
         widget.message.additionalMessageData,
       );

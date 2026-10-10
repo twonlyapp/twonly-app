@@ -240,6 +240,7 @@ impl GroupService {
             webxdc_sync: None,
             webxdc_sync_request: None,
             sticker: None,
+            live_location: None,
         }
         .encode_to_vec();
 

@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, LazyLock, Mutex as SyncMutex, Weak};
 use std::time::Duration;
 use stream_tungstenite::{ClientConfig, WebSocketClient};
-use tokio::sync::{broadcast, mpsc, oneshot, Mutex, RwLock};
+use tokio::sync::{Mutex, RwLock, broadcast, mpsc, oneshot};
 
 use super::auth::ApiAuthHandshaker;
 
@@ -73,6 +73,7 @@ mod tests {
             events: broadcast::channel(32).0,
             deliberately_closed: AtomicBool::new(false),
             in_background: AtomicBool::new(false),
+            requested_background: AtomicBool::new(false),
             network_available: AtomicBool::new(true),
             is_authenticated: Arc::new(AtomicBool::new(false)),
             catch_up_tx: Mutex::new(None),
@@ -181,6 +182,9 @@ pub(crate) struct ApiClient {
     pub(crate) events: broadcast::Sender<ApiEvent>,
     pub(crate) deliberately_closed: AtomicBool,
     pub(crate) in_background: AtomicBool,
+    // Preserve the app's lifecycle while location sharing temporarily keeps
+    // the transport awake. Stopping must return to that lifecycle.
+    pub(crate) requested_background: AtomicBool,
     pub(crate) network_available: AtomicBool,
     pub(crate) is_authenticated: Arc<AtomicBool>,
     /// Wakes the per-connection catch-up loop. Capacity one, sent with
@@ -210,6 +214,7 @@ impl ApiClient {
             events: API_EVENTS.clone(),
             deliberately_closed: AtomicBool::new(false),
             in_background: AtomicBool::new(in_background),
+            requested_background: AtomicBool::new(in_background),
             network_available: AtomicBool::new(true),
             is_authenticated: Arc::new(AtomicBool::new(false)),
             catch_up_tx: Mutex::const_new(None),

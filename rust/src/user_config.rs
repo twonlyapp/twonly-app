@@ -288,6 +288,11 @@ pub struct UserConfig {
     #[serde(default)]
     #[frb(non_final)]
     pub store_location_in_memories: bool,
+    /// Allows an explicitly added city sticker in the media editor. Native
+    /// reverse geocoding may send coordinates to the platform provider.
+    #[serde(default)]
+    #[frb(non_final)]
+    pub enable_location_sticker: bool,
     #[serde(default)]
     #[frb(non_final)]
     pub auto_store_all_send_unlimited_media_files: bool,
@@ -554,6 +559,8 @@ mod tests {
             TwonlyScoreVisibility::Everyone
         );
         assert!(!config.is_user_discovery_enabled);
+        assert!(!config.enable_location_sticker);
+        assert!(!config.store_location_in_memories);
         assert_eq!(config.last_server_message_at, None);
         assert_eq!(config.last_release_notes_version, None);
     }

@@ -7,6 +7,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -188,7 +189,6 @@ class _SynchronizedImageViewerScreenState
 
   Future<void> _deleteFile() async {
     final item = widget.galleryItems[_currentIndex];
-    final mediaId = item.mediaService.mediaFile.mediaId;
     final hasCloudBackup =
         item.mediaService.mediaFile.cloudState != CloudState.none;
 
@@ -200,11 +200,18 @@ class _SynchronizedImageViewerScreenState
 
     if (deleteCompletely == null) return;
 
-    if (deleteCompletely) {
-      await item.mediaService.fullMediaRemoval();
-      await RustApi.deleteMemory(mediaId: mediaId);
-      await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
+    try {
+      await MemoriesService.deleteMemory(
+        item.mediaService,
+        completely: deleteCompletely,
+      );
+    } catch (error) {
+      if (mounted) showSnackbar(context, error.toString());
+      return;
+    }
+    if (!mounted) return;
 
+    if (deleteCompletely || !hasCloudBackup) {
       widget.galleryItems.removeAt(_currentIndex);
 
       if (widget.galleryItems.isEmpty) {
@@ -222,10 +229,6 @@ class _SynchronizedImageViewerScreenState
       widget.activeMediaIdNotifier.value = newId;
 
       setState(() {});
-    } else {
-      if (item.mediaService.storedPath.existsSync()) {
-        item.mediaService.storedPath.deleteSync();
-      }
     }
   }
 
