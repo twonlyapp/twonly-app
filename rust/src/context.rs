@@ -72,6 +72,7 @@ pub struct Context {
     /// Serializes this account's media retransmission sweep, for the same
     /// reason.
     pub(crate) media_retransmission: Mutex<()>,
+    pub(crate) webxdc_visibility: crate::services::webxdc::visibility::Visibility,
 }
 
 impl Context {
@@ -154,6 +155,7 @@ impl Context {
             queued_receipt_flush: std::sync::Mutex::default(),
             media_preprocessing: Mutex::new(()),
             media_retransmission: Mutex::new(()),
+            webxdc_visibility: Default::default(),
         });
         ApiRuntime::initialize(&ctx).await?;
         ApiRuntime::connect(&ctx).await?;
@@ -341,6 +343,7 @@ impl Context {
                         queued_receipt_flush: std::sync::Mutex::default(),
                         media_preprocessing: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
+                        webxdc_visibility: Default::default(),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");
@@ -387,6 +390,7 @@ impl Context {
                         queued_receipt_flush: std::sync::Mutex::default(),
                         media_preprocessing: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
+                        webxdc_visibility: Default::default(),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");

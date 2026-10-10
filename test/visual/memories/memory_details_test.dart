@@ -34,7 +34,7 @@ Widget _app(MediaFile media) => MaterialApp(
 );
 
 void main() {
-  testWidgets('shows capture time, size, coordinates and accuracy', (
+  testWidgets('shows capture time, size and coordinates without accuracy', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -44,8 +44,8 @@ void main() {
     expect(find.textContaining('2026'), findsOneWidget);
     expect(find.text('File size'), findsOneWidget);
     expect(find.text('52.520000, 13.405000'), findsOneWidget);
-    expect(find.text('Accuracy: ±8 m'), findsOneWidget);
-    expect(find.text('Open in maps'), findsOneWidget);
+    expect(find.textContaining('Accuracy'), findsNothing);
+    expect(find.text('Open in map'), findsOneWidget);
   });
 
   testWidgets('shows pending acquisition and then the resolved location', (
@@ -53,13 +53,13 @@ void main() {
   ) async {
     await tester.pumpWidget(_app(_media(status: 'pending')));
     expect(find.text('Finding capture location…'), findsOneWidget);
-    expect(find.text('Open in maps'), findsNothing);
+    expect(find.text('Open in map'), findsNothing);
     await tester.pumpWidget(
       _app(_media(latitude: 0, longitude: 0, status: 'resolved')),
     );
     expect(find.text('Finding capture location…'), findsNothing);
     expect(find.text('0.000000, 0.000000'), findsOneWidget);
-    expect(find.text('Open in maps'), findsOneWidget);
+    expect(find.text('Open in map'), findsOneWidget);
   });
 
   testWidgets('missing or invalid location does not offer maps', (
@@ -72,7 +72,7 @@ void main() {
     ]) {
       await tester.pumpWidget(_app(media));
       expect(find.text('No location recorded'), findsOneWidget);
-      expect(find.text('Open in maps'), findsNothing);
+      expect(find.text('Open in map'), findsNothing);
     }
   });
 
@@ -90,5 +90,42 @@ void main() {
       ),
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('open in map dismisses details and returns the selected image', (
+    tester,
+  ) async {
+    final media = _media(
+      latitude: 52.52,
+      longitude: 13.405,
+      status: 'resolved',
+    );
+    MediaFile? selected;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () async {
+                selected = await showModalBottomSheet<MediaFile>(
+                  context: context,
+                  builder: (_) => MemoryDetailsSheet(media: media),
+                );
+              },
+              child: const Text('Show details'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Show details'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open in map'));
+    await tester.pumpAndSettle();
+    expect(selected, same(media));
+    expect(find.byType(MemoryDetailsSheet), findsNothing);
   });
 }

@@ -9,6 +9,7 @@ use crate::context::Context;
 use crate::database::app::{tables::MediaFile, AppDatabase};
 use crate::error::{Result, TwonlyError};
 use crate::native::transfer;
+use crate::services::media_upload::{media_lock, parse_reupload_requested_by, MediaReuploadTarget};
 use crate::services::stories::{STORY_ANNOUNCE_RECENT_EXCHANGE_SECONDS, STORY_LIFETIME_SECONDS};
 use chacha20poly1305::aead::{AeadInPlace, KeyInit};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
@@ -152,6 +153,8 @@ struct MediaRow {
     display_limit_in_milliseconds: Option<i64>,
     encryption_key: Option<Vec<u8>>,
     encryption_nonce: Option<Vec<u8>>,
+    reupload_requested_by: Option<String>,
+    reupload_targets: Option<String>,
 }
 
 #[derive(FromRow)]
@@ -174,6 +177,8 @@ struct PendingJob {
     complete_body_path: String,
     capability: Vec<u8>,
     expires_at: i64,
+    reupload_requested_by: Option<String>,
+    reupload_targets: Option<String>,
 }
 
 #[derive(FromRow)]
@@ -234,7 +239,7 @@ async fn reset_upload_namespace(
     sqlx::query(
         r#"UPDATE media_files
            SET upload_state = 'preprocessing', pre_progressing_process = NULL
-           WHERE upload_state != 'uploaded'
+           WHERE (upload_state != 'uploaded' OR reupload_requested_by IS NOT NULL OR reupload_targets IS NOT NULL)
              AND media_id IN (SELECT media_id FROM direct_media_upload_jobs)"#,
     )
     .execute(&mut *transaction)
@@ -563,7 +568,8 @@ impl DirectMediaUploadService {
 
         let jobs = sqlx::query_as::<_, PendingJob>(
             r#"SELECT j.attachment_id, j.media_id, j.multipart_path, j.manifest_path,
-                      j.complete_body_path, s.capability, j.expires_at
+                      j.complete_body_path, s.capability, j.expires_at,
+                      j.reupload_requested_by, j.reupload_targets
                FROM direct_media_upload_jobs j
                JOIN direct_media_upload_slots s ON s.attachment_id = j.attachment_id
                WHERE j.state IN ('scheduled', 'waiting_for_server')"#,
@@ -659,6 +665,8 @@ impl DirectMediaUploadService {
     /// Releases the request files and the slot, then applies the outcome to the
     /// media file. Safe to run twice: the job row is the claim.
     async fn settle(&self, job: &PendingJob, outcome: Outcome) -> Result<()> {
+        let lock = media_lock(&job.media_id);
+        let _guard = lock.lock().await;
         let database = self.ctx.app_db.read().await.clone();
         let claimed = sqlx::query(
             "DELETE FROM direct_media_upload_jobs WHERE attachment_id = ? AND state IN ('scheduled', 'waiting_for_server')",
@@ -706,6 +714,17 @@ impl DirectMediaUploadService {
             Outcome::Uploaded => {
                 let mut transaction = database.pool.begin().await?;
                 MediaFile::mark_uploaded(&mut transaction, &job.media_id).await?;
+                // A newer request may have arrived while the OS transferred
+                // this job. Only clear the request set this job carried.
+                sqlx::query(
+                    r#"UPDATE media_files SET reupload_requested_by = NULL, reupload_targets = NULL
+                       WHERE media_id = ? AND reupload_requested_by IS ? AND reupload_targets IS ?"#,
+                )
+                .bind(&job.media_id)
+                .bind(&job.reupload_requested_by)
+                .bind(&job.reupload_targets)
+                .execute(&mut *transaction)
+                .await?;
                 transaction.commit().await?;
                 self.remove_encrypted_copy(&job.media_id).await;
             }
@@ -722,7 +741,8 @@ impl DirectMediaUploadService {
             Outcome::Retry => {
                 sqlx::query(
                     r#"UPDATE media_files SET upload_state = 'preprocessing'
-                       WHERE media_id = ? AND upload_state != 'uploaded'"#,
+                       WHERE media_id = ?
+                         AND (upload_state != 'uploaded' OR reupload_requested_by IS NOT NULL OR reupload_targets IS NOT NULL)"#,
                 )
                 .bind(&job.media_id)
                 .execute(&database.pool)
@@ -883,16 +903,19 @@ impl DirectMediaUploadService {
         sqlx::query(
             r#"INSERT INTO direct_media_upload_jobs
                (attachment_id, media_id, multipart_path, manifest_path,
-                complete_body_path, native_descriptor_json, state, expires_at)
-               VALUES (?, ?, ?, ?, ?, ?, 'prepared', ?)"#,
+                complete_body_path, native_descriptor_json, state, expires_at,
+                reupload_requested_by, reupload_targets)
+               SELECT ?, media_id, ?, ?, ?, ?, 'prepared', ?,
+                      reupload_requested_by, reupload_targets
+               FROM media_files WHERE media_id = ?"#,
         )
         .bind(&slot.attachment_id)
-        .bind(media_id)
         .bind(multipart_path.to_string_lossy().as_ref())
         .bind(manifest_path.to_string_lossy().as_ref())
         .bind(complete_body_path.to_string_lossy().as_ref())
         .bind(&descriptor_json)
         .bind(slot.expires_at)
+        .bind(media_id)
         .execute(&database.pool)
         .await?;
 
@@ -914,13 +937,26 @@ impl DirectMediaUploadService {
         let database = self.ctx.app_db.read().await.clone();
         let media = sqlx::query_as::<_, MediaRow>(
             r#"SELECT type AS media_type, requires_authentication,
-                      display_limit_in_milliseconds, encryption_key, encryption_nonce
+                      display_limit_in_milliseconds, encryption_key, encryption_nonce,
+                      reupload_requested_by, reupload_targets
                FROM media_files WHERE media_id = ?"#,
         )
         .bind(media_id)
         .fetch_optional(&database.pool)
         .await?
         .ok_or_else(|| TwonlyError::Generic(format!("media {media_id} does not exist")))?;
+        let reupload_targets: Option<Vec<MediaReuploadTarget>> = media
+            .reupload_targets
+            .as_deref()
+            .map(serde_json::from_str)
+            .transpose()?;
+        // Older queued reuploads only saved contact ids. An empty or invalid
+        // saved list must never fall back to broadcasting the image.
+        let legacy_requesters = media
+            .reupload_requested_by
+            .as_deref()
+            .map(|value| parse_reupload_requested_by(Some(value)));
+        let is_reupload = reupload_targets.is_some() || legacy_requesters.is_some();
         let extension = media_extension(&media.media_type);
         let temp_path = PathBuf::from(&self.ctx.config.data_dir)
             .join("mediafiles/tmp")
@@ -998,9 +1034,21 @@ impl DirectMediaUploadService {
             .fetch_all(&database.pool)
             .await?;
             for recipient in recipients {
+                if let Some(targets) = &reupload_targets {
+                    if !targets.iter().any(|target| {
+                        target.contact_id == recipient.contact_id
+                            && target.message_id == message.message_id
+                    }) {
+                        continue;
+                    }
+                } else if let Some(requesters) = &legacy_requesters {
+                    if !requesters.contains(&recipient.contact_id) {
+                        continue;
+                    }
+                }
                 let mut download_token = vec![0_u8; 32];
                 rand::rng().fill_bytes(&mut download_token);
-                let mut wake = message.is_widget_media == 0;
+                let mut wake = !is_reupload && message.is_widget_media == 0;
                 let content = if message.is_story != 0 {
                     wake = story_wakes_recipient(
                         &database,
@@ -1221,6 +1269,278 @@ mod tests {
             .await?;
         context.inject_test_user_id(user_id).await?;
         Ok(context)
+    }
+
+    #[tokio::test]
+    async fn media_reupload_only_dispatches_requested_recipient_message_pairs() -> anyhow::Result<()>
+    {
+        let sender_dir = tempfile::tempdir()?;
+        let receiver_dirs = [tempfile::tempdir()?, tempfile::tempdir()?];
+        let sender = upload_test_context(sender_dir.path(), 42).await?;
+        let mut receivers = Vec::new();
+        let database = sender.app_db.read().await.clone();
+        for (user_id, directory) in [7, 8].into_iter().zip(&receiver_dirs) {
+            let receiver = upload_test_context(directory.path(), user_id).await?;
+            let bundle = receiver
+                .signal_engine
+                .lock()
+                .await
+                .as_ref()
+                .unwrap()
+                .generate_bundle()
+                .await?;
+            sender
+                .signal_engine
+                .lock()
+                .await
+                .as_ref()
+                .unwrap()
+                .process_prekey_bundle(user_id.to_string(), 1, bundle)
+                .await?;
+            sqlx::query("INSERT INTO contacts(user_id, username, accepted, signal_version) VALUES(?, ?, 1, 'v2')")
+                .bind(user_id).bind(format!("receiver-{user_id}"))
+                .execute(&database.pool).await?;
+            receivers.push(receiver);
+        }
+        let upload = MediaUploadService::new(&sender);
+        let media_id = upload.initialize("image".into(), None, false).await?;
+        let source = crate::services::mediafiles::MediaFileService::new(&sender)
+            .temp_path(&media_id, "image");
+        std::fs::create_dir_all(source.parent().unwrap())?;
+        std::fs::write(&source, b"old group image")?;
+        let created_at = chrono::Utc::now().timestamp() - 90 * 24 * 60 * 60;
+        for group_id in ["original-group", "other-group"] {
+            sqlx::query("INSERT INTO groups(group_id, group_name) VALUES(?, ?)")
+                .bind(group_id)
+                .bind(group_id)
+                .execute(&database.pool)
+                .await?;
+            for contact_id in [7, 8] {
+                sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES(?, ?)")
+                    .bind(group_id)
+                    .bind(contact_id)
+                    .execute(&database.pool)
+                    .await?;
+            }
+            sqlx::query("INSERT INTO messages(message_id, group_id, type, media_id, created_at) VALUES(?, ?, 'media', ?, ?)")
+                .bind(group_id).bind(group_id).bind(&media_id).bind(created_at)
+                .execute(&database.pool).await?;
+        }
+
+        let direct = DirectMediaUploadService::new(&sender);
+        let (_, _, initial) = direct.prepare_media(&media_id).await?;
+        assert_eq!(initial.dispatches.len(), 4);
+        assert!(initial
+            .dispatches
+            .iter()
+            .all(|dispatch| dispatch.push_data.is_some()));
+
+        assert!(
+            upload
+                .record_reupload_request(7, &media_id, "original-group")
+                .await?
+        );
+        let (_, _, repair) = direct.prepare_media(&media_id).await?;
+        assert_eq!(repair.dispatches.len(), 1);
+        assert_eq!(repair.dispatches[0].recipient_user_id, 7);
+        assert!(repair.dispatches[0].push_data.is_none());
+
+        // Requests survive a preparation retry and remain tied to their own
+        // messages even when both contacts belong to both chats.
+        assert!(
+            upload
+                .record_reupload_request(8, &media_id, "other-group")
+                .await?
+        );
+        assert!(
+            upload
+                .record_reupload_request(7, &media_id, "original-group")
+                .await?
+        );
+        assert!(
+            !upload
+                .record_reupload_request(99, &media_id, "original-group")
+                .await?
+        );
+        let (_, _, repair) = direct.prepare_media(&media_id).await?;
+        assert_eq!(repair.dispatches.len(), 2);
+        for dispatch in &repair.dispatches {
+            let receiver = &receivers[if dispatch.recipient_user_id == 7 {
+                0
+            } else {
+                1
+            }];
+            let envelope =
+                crate::api::proto::client::Message::decode(dispatch.encrypted_body.as_slice())?;
+            let plaintext = receiver
+                .signal_engine
+                .lock()
+                .await
+                .as_ref()
+                .unwrap()
+                .decrypt_message("42".into(), 1, envelope.encrypted_content.unwrap())
+                .await?;
+            let content = EncryptedContent::decode(plaintext.as_slice())?;
+            let expected = if dispatch.recipient_user_id == 7 {
+                "original-group"
+            } else {
+                "other-group"
+            };
+            assert_eq!(content.group_id.as_deref(), Some(expected));
+            let media = content.media.unwrap();
+            assert_eq!(media.sender_message_id, expected);
+            assert_eq!(media.timestamp, created_at * 1_000);
+        }
+
+        // Legacy queues have no message scope, but still cannot broadcast to
+        // contacts outside their saved requester list.
+        for legacy in ["[7]", "7"] {
+            sqlx::query("UPDATE media_files SET reupload_targets = NULL, reupload_requested_by = ? WHERE media_id = ?")
+                .bind(legacy).bind(&media_id).execute(&database.pool).await?;
+            let (_, _, repair) = direct.prepare_media(&media_id).await?;
+            assert_eq!(repair.dispatches.len(), 2);
+            assert!(repair
+                .dispatches
+                .iter()
+                .all(|dispatch| dispatch.recipient_user_id == 7));
+        }
+        for invalid in ["[]", "invalid"] {
+            sqlx::query("UPDATE media_files SET reupload_requested_by = ? WHERE media_id = ?")
+                .bind(invalid)
+                .bind(&media_id)
+                .execute(&database.pool)
+                .await?;
+            assert!(direct.prepare_media(&media_id).await.is_err());
+        }
+        for invalid in ["[]", "invalid"] {
+            sqlx::query("UPDATE media_files SET reupload_targets = ?, reupload_requested_by = NULL WHERE media_id = ?")
+                .bind(invalid).bind(&media_id).execute(&database.pool).await?;
+            assert!(direct.prepare_media(&media_id).await.is_err());
+        }
+        Ok(())
+    }
+
+    async fn reupload_test_job(
+        database: &AppDatabase,
+        media_id: &str,
+        attachment_id: &str,
+    ) -> anyhow::Result<PendingJob> {
+        sqlx::query(
+            r#"INSERT INTO direct_media_upload_slots
+               (attachment_id, expires_at, maximum_object_bytes, upload_url,
+                upload_fields_json, capability, state)
+               VALUES(?, 9999999999, 1000000, 'https://objects.example', '{}', x'01', 'reserved')"#,
+        )
+        .bind(attachment_id)
+        .execute(&database.pool)
+        .await?;
+        sqlx::query(
+            r#"INSERT INTO direct_media_upload_jobs
+               (attachment_id, media_id, multipart_path, manifest_path, complete_body_path,
+                native_descriptor_json, state, expires_at, reupload_requested_by, reupload_targets)
+               SELECT ?, media_id, '', '', '', '{}', 'scheduled', 9999999999,
+                      reupload_requested_by, reupload_targets FROM media_files WHERE media_id = ?"#,
+        )
+        .bind(attachment_id)
+        .bind(media_id)
+        .execute(&database.pool)
+        .await?;
+        Ok(sqlx::query_as::<_, PendingJob>(
+            r#"SELECT j.attachment_id, j.media_id, j.multipart_path, j.manifest_path,
+                      j.complete_body_path, s.capability, j.expires_at,
+                      j.reupload_requested_by, j.reupload_targets
+               FROM direct_media_upload_jobs j
+               JOIN direct_media_upload_slots s ON s.attachment_id = j.attachment_id
+               WHERE j.attachment_id = ?"#,
+        )
+        .bind(attachment_id)
+        .fetch_one(&database.pool)
+        .await?)
+    }
+
+    #[tokio::test]
+    async fn media_reupload_completion_preserves_retries_and_newer_requests() -> anyhow::Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+        let sender = upload_test_context(directory.path(), 42).await?;
+        let database = sender.app_db.read().await.clone();
+        let upload = MediaUploadService::new(&sender);
+        let media_id = upload.initialize("image".into(), None, false).await?;
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES(7, 'receiver-7'), (8, 'receiver-8')",
+            "INSERT INTO groups(group_id, group_name) VALUES('group', 'Group')",
+            "INSERT INTO group_members(group_id, contact_id) VALUES('group', 7), ('group', 8)",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+        sqlx::query("INSERT INTO messages(message_id, group_id, type, media_id) VALUES('message', 'group', 'media', ?)")
+            .bind(&media_id).execute(&database.pool).await?;
+        assert!(
+            upload
+                .record_reupload_request(7, &media_id, "message")
+                .await?
+        );
+        let direct = DirectMediaUploadService::new(&sender);
+        let retry = reupload_test_job(&database, &media_id, "retry").await?;
+        direct.settle(&retry, Outcome::Retry).await?;
+        let media = sqlx::query_as::<_, (String, Option<String>)>(
+            "SELECT upload_state, reupload_targets FROM media_files WHERE media_id = ?",
+        )
+        .bind(&media_id)
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(media.0, "preprocessing");
+        assert_eq!(media.1, retry.reupload_targets);
+
+        let older = reupload_test_job(&database, &media_id, "older").await?;
+        assert!(
+            upload
+                .record_reupload_request(8, &media_id, "message")
+                .await?
+        );
+        let newer = reupload_test_job(&database, &media_id, "newer").await?;
+        direct.settle(&older, Outcome::Uploaded).await?;
+        let pending = sqlx::query_scalar::<_, Option<String>>(
+            "SELECT reupload_targets FROM media_files WHERE media_id = ?",
+        )
+        .bind(&media_id)
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(pending, newer.reupload_targets);
+        // The older success set the shared media row to uploaded. A failed
+        // newer repair still needs to resume with its saved recipient scope.
+        direct.settle(&newer, Outcome::Retry).await?;
+        let state = sqlx::query_scalar::<_, String>(
+            "SELECT upload_state FROM media_files WHERE media_id = ?",
+        )
+        .bind(&media_id)
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(state, "preprocessing");
+        let completed = reupload_test_job(&database, &media_id, "completed").await?;
+        direct.settle(&completed, Outcome::Uploaded).await?;
+        let cleared = sqlx::query_as::<_, (Option<String>, Option<String>)>(
+            "SELECT reupload_requested_by, reupload_targets FROM media_files WHERE media_id = ?",
+        )
+        .bind(&media_id)
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(cleared, (None, None));
+
+        // A later repair must not include contacts from a completed repair.
+        assert!(
+            upload
+                .record_reupload_request(8, &media_id, "message")
+                .await?
+        );
+        let requesters = sqlx::query_scalar::<_, String>(
+            "SELECT reupload_requested_by FROM media_files WHERE media_id = ?",
+        )
+        .bind(&media_id)
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(requesters, "[8]");
+        Ok(())
     }
 
     #[tokio::test]

@@ -76,9 +76,7 @@
   "memoryDetailsLocation": "الموقع",
   "memoryDetailsLocationPending": "جارٍ تحديد موقع الالتقاط…",
   "memoryDetailsNoLocation": "لم يتم تسجيل موقع",
-  "memoryDetailsAccuracy": "الدقة: ±{meters} م",
-  "memoryDetailsOpenMap": "فتح في الخرائط",
-  "memoryDetailsMapUnavailable": "تعذر فتح الخرائط.",
+  "memoryDetailsOpenMap": "فتح في الخريطة",
   "memoryLocationTitle": "حفظ الموقع في الذكريات",
   "memoryLocationSubtitle": "الموقع للذكريات وللتصدير إلى المعرض. لا يُرسل أبدًا إلى جهات الاتصال.",
   "memoryLocationPermissionDenied": "لم يُمنح إذن الوصول إلى الموقع الدقيق. سيبقى هذا الإعداد معطّلًا.",
@@ -906,8 +904,15 @@
   "releaseNotesStoriesDescription": "شارك لحظاتك مع جهات اتصالك لمدة 24 ساعة.",
   "releaseNotesMiniGames": "ألعاب مصغّرة في المحادثات والمجموعات",
   "releaseNotesMiniGamesDescription": "العبوا ألعابًا صغيرة معًا داخل محادثاتكم مباشرة.",
+  "releaseNotesMemoriesMap": "الذكريات على الخريطة",
+  "releaseNotesMemoriesMapDescription": "احفظ المواقع مع صورك ومقاطع الفيديو في الذكريات واستكشفها على الخريطة. فعّل هذا الخيار في الإعدادات > الذكريات والتخزين.",
   "releaseNotesReliableMessages": "موثوقية أفضل للرسائل والإشعارات",
   "releaseNotesImprovedUi": "واجهة مستخدم محسّنة",
   "releaseNotesCustomAvatars": "صور رمزية مخصّصة",
-  "releaseNotesArabic": "اللغة العربية (تجريبية)"
+  "releaseNotesArabic": "اللغة العربية (تجريبية)",
+  "memoriesMapTitle": "خريطة الذكريات",
+  "memoriesMapNoLocations": "لا توجد ذكريات محفوظة ذات موقع مسجل بعد.",
+  "memoriesMapNoResults": "لا توجد ذكريات في هذه المنطقة. حرّك الخريطة أو غيّر مستوى التكبير لاستكشاف مكان آخر.",
+  "memoriesMapLoadError": "تعذّر تحميل الخريطة. تحقّق من اتصالك وحاول مجددًا.",
+  "memoriesMapVisibleCount": "{count, plural, =0 {لا توجد ذكريات في هذه المنطقة} =1 {ذكرى واحدة في هذه المنطقة} =2 {ذكريان في هذه المنطقة} few {{count} ذكريات في هذه المنطقة} many {{count} ذكرى في هذه المنطقة} other {{count} ذكرى في هذه المنطقة}}"
 }

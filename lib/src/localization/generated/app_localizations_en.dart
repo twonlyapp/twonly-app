@@ -247,15 +247,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memoryDetailsNoLocation => 'No location recorded';
 
   @override
-  String memoryDetailsAccuracy(int meters) {
-    return 'Accuracy: ±$meters m';
-  }
-
-  @override
-  String get memoryDetailsOpenMap => 'Open in maps';
-
-  @override
-  String get memoryDetailsMapUnavailable => 'Could not open maps.';
+  String get memoryDetailsOpenMap => 'Open in map';
 
   @override
   String get memoryLocationTitle => 'Store location in Memories';
@@ -3172,6 +3164,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Play small games together, right inside your conversations.';
 
   @override
+  String get releaseNotesMemoriesMap => 'Memories on the map';
+
+  @override
+  String get releaseNotesMemoriesMapDescription =>
+      'Save locations with your photos and videos in Memories and explore them on a map. Enable this in Settings > Memories & Storage.';
+
+  @override
   String get releaseNotesReliableMessages =>
       'Better message and push reliability';
 
@@ -3183,4 +3182,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get releaseNotesArabic => 'Arabic language (experimental)';
+
+  @override
+  String get memoriesMapTitle => 'Memories map';
+
+  @override
+  String get memoriesMapNoLocations =>
+      'No saved memories have a recorded location yet.';
+
+  @override
+  String get memoriesMapNoResults =>
+      'No memories in this area. Move or zoom the map to explore another place.';
+
+  @override
+  String get memoriesMapLoadError =>
+      'Could not load the map. Check your connection and try again.';
+
+  @override
+  String memoriesMapVisibleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count memories in this area',
+      one: '1 memory in this area',
+    );
+    return '$_temp0';
+  }
 }

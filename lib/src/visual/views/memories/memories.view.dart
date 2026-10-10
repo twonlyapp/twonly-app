@@ -15,6 +15,7 @@ import 'package:twonly/src/visual/views/memories/components/cloud_backup_promo.c
 import 'package:twonly/src/visual/views/memories/components/flashback_banner.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/selection_menu.comp.dart';
+import 'package:twonly/src/visual/views/memories/memories_map.view.dart';
 import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
 
 class MemoriesView extends StatefulWidget {
@@ -665,6 +666,19 @@ class MemoriesViewState extends State<MemoriesView>
                                                   !_filterFavoritesOnly;
                                             });
                                           },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.location_on_outlined,
+                                          ),
+                                          tooltip:
+                                              context.lang.memoriesMapTitle,
+                                          onPressed: () => context.navPush(
+                                            MemoriesMapView(
+                                              favoritesOnly:
+                                                  _filterFavoritesOnly,
+                                            ),
+                                          ),
                                         ),
                                       ],
                               ),

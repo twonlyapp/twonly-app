@@ -247,15 +247,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memoryDetailsNoLocation => 'لم يتم تسجيل موقع';
 
   @override
-  String memoryDetailsAccuracy(int meters) {
-    return 'الدقة: ±$meters م';
-  }
-
-  @override
-  String get memoryDetailsOpenMap => 'فتح في الخرائط';
-
-  @override
-  String get memoryDetailsMapUnavailable => 'تعذر فتح الخرائط.';
+  String get memoryDetailsOpenMap => 'فتح في الخريطة';
 
   @override
   String get memoryLocationTitle => 'حفظ الموقع في الذكريات';
@@ -3209,6 +3201,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'العبوا ألعابًا صغيرة معًا داخل محادثاتكم مباشرة.';
 
   @override
+  String get releaseNotesMemoriesMap => 'الذكريات على الخريطة';
+
+  @override
+  String get releaseNotesMemoriesMapDescription =>
+      'احفظ المواقع مع صورك ومقاطع الفيديو في الذكريات واستكشفها على الخريطة. فعّل هذا الخيار في الإعدادات > الذكريات والتخزين.';
+
+  @override
   String get releaseNotesReliableMessages => 'موثوقية أفضل للرسائل والإشعارات';
 
   @override
@@ -3219,4 +3218,34 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get releaseNotesArabic => 'اللغة العربية (تجريبية)';
+
+  @override
+  String get memoriesMapTitle => 'خريطة الذكريات';
+
+  @override
+  String get memoriesMapNoLocations =>
+      'لا توجد ذكريات محفوظة ذات موقع مسجل بعد.';
+
+  @override
+  String get memoriesMapNoResults =>
+      'لا توجد ذكريات في هذه المنطقة. حرّك الخريطة أو غيّر مستوى التكبير لاستكشاف مكان آخر.';
+
+  @override
+  String get memoriesMapLoadError =>
+      'تعذّر تحميل الخريطة. تحقّق من اتصالك وحاول مجددًا.';
+
+  @override
+  String memoriesMapVisibleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ذكرى في هذه المنطقة',
+      many: '$count ذكرى في هذه المنطقة',
+      few: '$count ذكريات في هذه المنطقة',
+      two: 'ذكريان في هذه المنطقة',
+      one: 'ذكرى واحدة في هذه المنطقة',
+      zero: 'لا توجد ذكريات في هذه المنطقة',
+    );
+    return '$_temp0';
+  }
 }

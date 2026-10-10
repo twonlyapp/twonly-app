@@ -7,6 +7,7 @@
 - New: Stories
 - New: Mini games
 - New: Custom avatars
+- New: Memory locations and map view
 - New: Arabic language (Experimental)
 - Improve: Message delivery and push notification reliability
 - Improve: Many smaller new changes

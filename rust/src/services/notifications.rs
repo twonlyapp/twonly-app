@@ -423,7 +423,22 @@ pub(crate) async fn record_incoming_event(
             message.sender_message_id.clone()
         };
         let worth_an_alert = if message.hidden {
-            announcement.is_some() && message_sender(transaction, &message_id).await?.is_some()
+            let visible_instance = crate::services::webxdc::visibility::visible_instance(
+                std::path::Path::new(&ctx.config.data_dir),
+            );
+            let is_visible = visible_instance.is_some_and(|instance_id| {
+                message
+                    .additional_message_data
+                    .as_deref()
+                    .and_then(|bytes| {
+                        <proto::AdditionalMessageData as prost::Message>::decode(bytes).ok()
+                    })
+                    .and_then(|data| data.webxdc_update)
+                    .is_some_and(|update| update.instance_id == instance_id)
+            });
+            announcement.is_some()
+                && !is_visible
+                && message_sender(transaction, &message_id).await?.is_some()
         } else {
             true
         };
@@ -470,6 +485,19 @@ pub(crate) async fn record_incoming_event(
         })
     } else if let Some(update) = content.media_update.as_ref() {
         let update_type = encrypted_content::media_update::Type::try_from(update.r#type)?;
+        // Media status updates can arrive without a group ID. Associate the
+        // alert with the original message so opening its chat clears it.
+        let conversation_id = match conversation_id {
+            Some(id) => Some(id),
+            None => {
+                sqlx::query_scalar!(
+                    "SELECT group_id FROM messages WHERE message_id = ?",
+                    update.target_message_id,
+                )
+                .fetch_optional(&mut **transaction)
+                .await?
+            }
+        };
         let story = is_own_story(transaction, &update.target_message_id).await?;
         let kind = match update_type {
             encrypted_content::media_update::Type::Stored if story => Some("stored_story"),
@@ -550,12 +578,33 @@ async fn clear_stale_opened(database: &Arc<AppDatabase>) -> Result<()> {
     Ok(())
 }
 
+/// A turn update may have been queued before the recipient opened the game.
+/// Clear only alerts belonging to the visible instance; chat rows stay intact.
+async fn clear_visible_webxdc(ctx: &Context, database: &Arc<AppDatabase>) -> Result<()> {
+    let Some(instance_id) = crate::services::webxdc::visibility::visible_instance(
+        std::path::Path::new(&ctx.config.data_dir),
+    ) else {
+        return Ok(());
+    };
+    sqlx::query(
+        "UPDATE notification_outbox SET cleared_at = ?
+         WHERE cleared_at IS NULL AND kind = 'webxdc'
+           AND notification_id IN (SELECT message_id FROM webxdc_updates WHERE instance_id = ?)",
+    )
+    .bind(current_time().timestamp())
+    .bind(instance_id)
+    .execute(&database.pool)
+    .await?;
+    Ok(())
+}
+
 /// The number of events the user has not dealt with yet. iOS has no way to
 /// derive an app icon badge from the delivered alerts, so the running app has
 /// to push this value into `UNUserNotificationCenter` itself.
 pub async fn badge_count(ctx: &Arc<Context>) -> Result<i64> {
     let database = ctx.app_db.read().await.clone();
     clear_stale_opened(&database).await?;
+    clear_visible_webxdc(ctx, &database).await?;
     let count = sqlx::query_scalar!(
         r#"SELECT COUNT(*) AS "count: i64" FROM notification_outbox WHERE cleared_at IS NULL"#
     )
@@ -567,6 +616,7 @@ pub async fn badge_count(ctx: &Arc<Context>) -> Result<i64> {
 pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<NotificationBatch> {
     let database = ctx.app_db.read().await.clone();
     clear_stale_opened(&database).await?;
+    clear_visible_webxdc(ctx, &database).await?;
     let rows = sqlx::query_as!(
         PendingRow,
         r#"
@@ -797,6 +847,20 @@ pub async fn acknowledge_batch(ctx: &Arc<Context>, event_ids: &[String]) -> Resu
 pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Result<Vec<String>> {
     let database = ctx.app_db.read().await.clone();
     let mut transaction = database.pool.begin().await?;
+    // Recover the chat association for media status alerts recorded by older
+    // versions, including alerts that have already been delivered.
+    sqlx::query!(
+        r#"
+        UPDATE notification_outbox SET conversation_id = ?
+        WHERE conversation_id IS NULL AND cleared_at IS NULL
+          AND kind IN ('reopened_media', 'stored_media', 'stored_story')
+          AND message_id IN (SELECT message_id FROM messages WHERE group_id = ?)
+        "#,
+        conversation_id,
+        conversation_id,
+    )
+    .execute(&mut *transaction)
+    .await?;
     let notification_ids = sqlx::query_scalar!(
         "SELECT notification_id FROM notification_outbox WHERE conversation_id = ? AND cleared_at IS NULL",
         conversation_id,
@@ -993,6 +1057,55 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    async fn opening_chat_clears_reopened_media_with_and_without_a_chat_id() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        for statement in [
+            "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('chat', 'Alice', 1), ('other-chat', 'Other', 1)",
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('image', 'chat', 'media'), ('other-image', 'other-chat', 'media')",
+            "INSERT INTO notification_outbox(event_id, notification_id, sender_id, message_id, kind, created_at, delivered_at) VALUES ('legacy', 'legacy-alert', 7, 'image', 'reopened_media', 1, 1), ('other', 'other-alert', 7, 'other-image', 'reopened_media', 1, 1)",
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement))
+                .execute(&mut *tx)
+                .await?;
+        }
+        let content = proto::EncryptedContent {
+            media_update: Some(encrypted_content::MediaUpdate {
+                r#type: encrypted_content::media_update::Type::Reopened as i32,
+                target_message_id: "image".into(),
+            }),
+            ..Default::default()
+        };
+        record_incoming_event(&ctx, &mut tx, 7, "new-alert", &content).await?;
+        tx.commit().await?;
+
+        let before = pending_batch(&ctx, "en").await?;
+        assert_eq!(before.badge_count, 3);
+        assert_eq!(before.additions.len(), 1);
+        assert_eq!(before.additions[0].kind, "reopened_media");
+        assert_eq!(before.additions[0].conversation_id.as_deref(), Some("chat"));
+
+        let mut removed = clear_conversation(&ctx, "chat").await?;
+        removed.sort();
+        assert_eq!(removed, vec!["legacy-alert", "new-alert"]);
+        let after = pending_batch(&ctx, "en").await?;
+        assert!(after.additions.is_empty());
+        assert_eq!(after.badge_count, 1);
+        assert!(clear_conversation(&ctx, "chat").await?.is_empty());
+        assert_eq!(
+            clear_conversation(&ctx, "other-chat").await?,
+            vec!["other-alert"]
+        );
+        assert_eq!(badge_count(&ctx).await?, 0);
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn text_notification_counts_are_localized_without_changing_event_ids() -> Result<()> {
         let directory = tempfile::tempdir()?;
         let ctx =
@@ -1071,6 +1184,106 @@ mod tests {
         data.webxdc_update.as_mut().unwrap().notify = Some(notify.to_owned());
         message.additional_message_data = Some(prost::Message::encode_to_vec(&data));
         content
+    }
+
+    #[tokio::test]
+    async fn visible_game_moves_keep_chat_info_without_alerting_and_other_games_still_alert(
+    ) -> Result<()> {
+        use crate::services::webxdc::WebxdcService;
+
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"ben","displayName":"Ben"}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        let data_dir = std::path::Path::new(&ctx.config.data_dir);
+        let mut tx = database.pool.begin().await?;
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'anna')",
+            "INSERT INTO groups(group_id, group_name) VALUES ('g', 'Games')",
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('connect4', 'g', 'webxdcApp'), ('mills', 'g', 'webxdcApp')",
+            "INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token) VALUES ('connect4', 'g', 'connect4', 1, 'connect4-origin'), ('mills', 'g', 'mills', 1, 'mills-origin')",
+        ] {
+            sqlx::query(statement).execute(&mut *tx).await?;
+        }
+
+        for (instance_id, message_id, visible) in [
+            ("connect4", "visible-move", Some("connect4")),
+            ("mills", "other-game-move", Some("connect4")),
+            ("connect4", "background-move", None),
+        ] {
+            ctx.webxdc_visibility.set(data_dir, visible)?;
+            let update = proto::WebxdcUpdate {
+                instance_id: instance_id.into(),
+                payload: "{}".into(),
+                info: Some("Anna played a move. Ben is on turn".into()),
+                notify: Some(
+                    serde_json::json!({WebxdcService::address_for(instance_id, 42): "Your turn"})
+                        .to_string(),
+                ),
+                ..Default::default()
+            };
+            WebxdcService::handle_incoming_update(&mut tx, message_id, "g", 7, &update, 1).await?;
+            let data = proto::AdditionalMessageData {
+                r#type: proto::additional_message_data::Type::WebxdcUpdate as i32,
+                webxdc_update: Some(update),
+                ..Default::default()
+            };
+            let content = proto::EncryptedContent {
+                group_id: Some("g".into()),
+                additional_data_message: Some(encrypted_content::AdditionalDataMessage {
+                    sender_message_id: message_id.into(),
+                    hidden: true,
+                    additional_message_data: Some(prost::Message::encode_to_vec(&data)),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            };
+            assert!(should_wake_receiver(&mut tx, 42, &content).await?);
+            assert!(!should_wake_receiver(&mut tx, 43, &content).await?);
+            record_incoming_event(&ctx, &mut tx, 7, message_id, &content).await?;
+            // Transport redelivery must not duplicate the announcement or alert.
+            WebxdcService::handle_incoming_update(
+                &mut tx,
+                message_id,
+                "g",
+                7,
+                data.webxdc_update.as_ref().unwrap(),
+                1,
+            )
+            .await?;
+            record_incoming_event(&ctx, &mut tx, 7, message_id, &content).await?;
+        }
+        tx.commit().await?;
+        let announcements: Vec<String> =
+            sqlx::query_scalar("SELECT content FROM messages WHERE type = 'text'")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(announcements, vec!["Anna played a move. Ben is on turn"; 3]);
+        let batch = pending_batch(&ctx, "en").await?;
+        assert_eq!(batch.additions.len(), 2);
+        assert!(batch
+            .additions
+            .iter()
+            .all(|alert| alert.body == "Your turn"));
+        assert!(batch
+            .additions
+            .iter()
+            .all(|alert| alert.event_id != "visible-move"));
+
+        // Opening this game before a worker renders its queued turn clears only
+        // that game's alert, including when both games live in the same chat.
+        ctx.webxdc_visibility.set(data_dir, Some("connect4"))?;
+        let batch = pending_batch(&ctx, "en").await?;
+        assert_eq!(batch.additions.len(), 1);
+        assert_eq!(batch.additions[0].event_id, "other-game-move");
+        assert_eq!(batch.badge_count, 1);
+        assert_eq!(badge_count(&ctx).await?, 1);
+        Ok(())
     }
 
     #[tokio::test]

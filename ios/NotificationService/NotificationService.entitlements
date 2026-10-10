@@ -4,8 +4,10 @@
 <dict>
 	<key>com.apple.developer.usernotifications.communication</key>
 	<true/>
+	<!-- Re-enable once Apple approves the notification filtering entitlement.
 	<key>com.apple.developer.usernotifications.filtering</key>
 	<true/>
+	-->
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.eu.twonly.runtime</string>

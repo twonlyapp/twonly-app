@@ -156,6 +156,35 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     return query.map((row) => row.readTable(mediaFiles)).watch();
   }
 
+  /// Locations are independent of thumbnail availability. Filter before
+  /// deduplicating so a copy without coordinates cannot hide a located Memory.
+  Stream<List<MediaFile>> watchGeotaggedMemories({
+    bool favoritesOnly = false,
+  }) {
+    final query =
+        (select(mediaFiles)..where(
+              (t) =>
+                  (t.stored.equals(true) |
+                      t.cloudState.equals(CloudState.uploaded.name)) &
+                  t.isDraftMedia.equals(false) &
+                  t.isWidgetMedia.equals(false) &
+                  t.type.equals(MediaType.audio.name).not() &
+                  t.locationLatitude.isBetweenValues(-90, 90) &
+                  t.locationLongitude.isBetweenValues(-180, 180) &
+                  (favoritesOnly
+                      ? t.isFavorite.equals(true)
+                      : const Constant(true)),
+            ))
+            .join([])
+          ..groupBy([
+            const CustomExpression<Object>(
+              'COALESCE(stored_file_hash, media_id)',
+            ),
+          ])
+          ..orderBy([OrderingTerm.desc(mediaFiles.createdAt)]);
+    return query.map((row) => row.readTable(mediaFiles)).watch();
+  }
+
   Stream<List<MediaFile>> watchMediaFilesByIds(Set<String> mediaIds) {
     if (mediaIds.isEmpty) return Stream.value(const []);
     return (select(

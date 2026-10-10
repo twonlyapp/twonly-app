@@ -13,6 +13,17 @@
 use crate::error::Result;
 use crate::services::webxdc::{bundle, store::WebxdcStore, WebxdcService};
 
+/// Marks the instance currently visible in the foreground, or clears it.
+#[flutter_rust_bridge::frb(sync)]
+pub fn set_visible_instance(instance_id: Option<String>) -> Result<()> {
+    let ctx = crate::context::Context::get_static()?;
+    ctx.webxdc_visibility.set(
+        std::path::Path::new(&ctx.config.data_dir),
+        instance_id.as_deref(),
+    )?;
+    Ok(())
+}
+
 pub struct WebxdcStoreApp {
     pub app_id: String,
     pub version: i64,

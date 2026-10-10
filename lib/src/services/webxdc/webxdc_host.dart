@@ -115,6 +115,7 @@ class WebxdcHost {
     final app = await WebxdcService.appNamed(started.appId, started.version);
     return WebxdcLaunch(
       instanceId: instanceId,
+      appId: started.appId,
       // The webview host. Unique per instance, so the browser's own origin
       // model keeps this app's stored data to itself.
       origin: instance.originToken,
@@ -142,12 +143,23 @@ class WebxdcHost {
 
   static void detach(String instanceId) {
     if (_openInstanceId != instanceId) return;
+    setVisible(instanceId, visible: false);
     unawaited(_updateSubscription?.cancel());
     _updateSubscription = null;
     _openInstanceId = null;
     _closeView = null;
     // Closing never waits for the server; downloaded code is used next time.
     unawaited(WebxdcService.cacheUpdate(instanceId));
+  }
+
+  /// Native notification workers share this state, including the iOS extension.
+  static void setVisible(String instanceId, {required bool visible}) {
+    if (_openInstanceId != instanceId) return;
+    try {
+      rust_webxdc.setVisibleInstance(instanceId: visible ? instanceId : null);
+    } catch (error) {
+      Log.warn('updating webxdc visibility failed: $error');
+    }
   }
 
   static Future<void> _clearOrigin(String origin) async {
@@ -484,16 +496,19 @@ class _Handover {
 class WebxdcLaunch {
   const WebxdcLaunch({
     required this.instanceId,
+    required this.appId,
     required this.origin,
     required this.title,
   }) : failure = null;
 
   const WebxdcLaunch.failed(this.failure)
     : instanceId = '',
+      appId = '',
       origin = '',
       title = '';
 
   final String instanceId;
+  final String appId;
   final String origin;
   final String title;
 

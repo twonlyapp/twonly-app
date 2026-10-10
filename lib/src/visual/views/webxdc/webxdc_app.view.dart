@@ -21,12 +21,16 @@ class WebxdcAppView extends StatefulWidget {
   State<WebxdcAppView> createState() => _WebxdcAppViewState();
 }
 
-class _WebxdcAppViewState extends State<WebxdcAppView> {
+class _WebxdcAppViewState extends State<WebxdcAppView>
+    with WidgetsBindingObserver {
   Animation<double>? _routeAnimation;
+  bool _closing = false;
+  bool _routeIsCurrent = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // From here until dispose, this is the one instance a page may act on.
     WebxdcHost.attach(
       widget.launch.instanceId,
@@ -39,6 +43,10 @@ class _WebxdcAppViewState extends State<WebxdcAppView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Depending on isCurrent also updates visibility when another route covers
+    // the game, such as the share-to-chat flow.
+    _routeIsCurrent = ModalRoute.isCurrentOf(context) ?? true;
+    _updateVisibility();
     final animation = ModalRoute.of(context)?.animation;
     if (identical(animation, _routeAnimation)) return;
     _routeAnimation?.removeStatusListener(_handleRouteAnimation);
@@ -48,9 +56,27 @@ class _WebxdcAppViewState extends State<WebxdcAppView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _routeAnimation?.removeStatusListener(_handleRouteAnimation);
     WebxdcHost.detach(widget.launch.instanceId);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _updateVisibility();
+  }
+
+  void _updateVisibility() {
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    WebxdcHost.setVisible(
+      widget.launch.instanceId,
+      visible:
+          const {'connect4', 'mills'}.contains(widget.launch.appId) &&
+          !_closing &&
+          (lifecycle == null || lifecycle == AppLifecycleState.resumed) &&
+          _routeIsCurrent,
+    );
   }
 
   /// Pauses the app for as long as this screen is animating away.
@@ -62,8 +88,12 @@ class _WebxdcAppViewState extends State<WebxdcAppView> {
   /// animation is over.
   void _handleRouteAnimation(AnimationStatus status) {
     if (status == AnimationStatus.reverse) {
+      _closing = true;
+      _updateVisibility();
       unawaited(WebxdcHost.setPaused(paused: true));
     } else if (status == AnimationStatus.forward) {
+      _closing = false;
+      _updateVisibility();
       // Opening, or a pop that was called off part way through.
       unawaited(WebxdcHost.setPaused(paused: false));
     }

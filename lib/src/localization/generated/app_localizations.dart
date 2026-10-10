@@ -556,23 +556,11 @@ abstract class AppLocalizations {
   /// **'No location recorded'**
   String get memoryDetailsNoLocation;
 
-  /// No description provided for @memoryDetailsAccuracy.
-  ///
-  /// In en, this message translates to:
-  /// **'Accuracy: ±{meters} m'**
-  String memoryDetailsAccuracy(int meters);
-
   /// No description provided for @memoryDetailsOpenMap.
   ///
   /// In en, this message translates to:
-  /// **'Open in maps'**
+  /// **'Open in map'**
   String get memoryDetailsOpenMap;
-
-  /// No description provided for @memoryDetailsMapUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not open maps.'**
-  String get memoryDetailsMapUnavailable;
 
   /// No description provided for @memoryLocationTitle.
   ///
@@ -5410,6 +5398,18 @@ abstract class AppLocalizations {
   /// **'Play small games together, right inside your conversations.'**
   String get releaseNotesMiniGamesDescription;
 
+  /// No description provided for @releaseNotesMemoriesMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories on the map'**
+  String get releaseNotesMemoriesMap;
+
+  /// No description provided for @releaseNotesMemoriesMapDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Save locations with your photos and videos in Memories and explore them on a map. Enable this in Settings > Memories & Storage.'**
+  String get releaseNotesMemoriesMapDescription;
+
   /// No description provided for @releaseNotesReliableMessages.
   ///
   /// In en, this message translates to:
@@ -5433,6 +5433,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Arabic language (experimental)'**
   String get releaseNotesArabic;
+
+  /// No description provided for @memoriesMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories map'**
+  String get memoriesMapTitle;
+
+  /// No description provided for @memoriesMapNoLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved memories have a recorded location yet.'**
+  String get memoriesMapNoLocations;
+
+  /// No description provided for @memoriesMapNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No memories in this area. Move or zoom the map to explore another place.'**
+  String get memoriesMapNoResults;
+
+  /// No description provided for @memoriesMapLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the map. Check your connection and try again.'**
+  String get memoriesMapLoadError;
+
+  /// No description provided for @memoriesMapVisibleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 memory in this area} other {{count} memories in this area}}'**
+  String memoriesMapVisibleCount(int count);
 }
 
 class _AppLocalizationsDelegate

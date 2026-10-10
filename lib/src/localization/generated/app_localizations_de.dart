@@ -249,16 +249,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get memoryDetailsNoLocation => 'Kein Standort gespeichert';
 
   @override
-  String memoryDetailsAccuracy(int meters) {
-    return 'Genauigkeit: ±$meters m';
-  }
-
-  @override
-  String get memoryDetailsOpenMap => 'In Karten öffnen';
-
-  @override
-  String get memoryDetailsMapUnavailable =>
-      'Karten konnten nicht geöffnet werden.';
+  String get memoryDetailsOpenMap => 'In Karte öffnen';
 
   @override
   String get memoryLocationTitle => 'Standort in Memories speichern';
@@ -3204,6 +3195,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Spielt kleine Spiele gemeinsam direkt in euren Unterhaltungen.';
 
   @override
+  String get releaseNotesMemoriesMap => 'Erinnerungen auf der Karte';
+
+  @override
+  String get releaseNotesMemoriesMapDescription =>
+      'Speichere Standorte mit deinen Fotos und Videos in Memories und entdecke sie auf einer Karte. Aktiviere dies unter Einstellungen > Memories & Speicher.';
+
+  @override
   String get releaseNotesReliableMessages =>
       'Zuverlässigere Nachrichten und Push-Benachrichtigungen';
 
@@ -3215,4 +3213,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get releaseNotesArabic => 'Arabische Sprache (experimentell)';
+
+  @override
+  String get memoriesMapTitle => 'Erinnerungskarte';
+
+  @override
+  String get memoriesMapNoLocations =>
+      'Noch keine gespeicherten Erinnerungen mit Standort vorhanden.';
+
+  @override
+  String get memoriesMapNoResults =>
+      'Keine Erinnerungen in diesem Bereich. Verschiebe oder zoome die Karte, um einen anderen Ort zu erkunden.';
+
+  @override
+  String get memoriesMapLoadError =>
+      'Die Karte konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String memoriesMapVisibleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Erinnerungen in diesem Bereich',
+      one: '1 Erinnerung in diesem Bereich',
+    );
+    return '$_temp0';
+  }
 }

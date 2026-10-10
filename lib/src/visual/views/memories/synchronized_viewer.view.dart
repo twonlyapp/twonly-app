@@ -13,9 +13,11 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_details.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/memories/components/synchronized_viewer_actions_toolbar.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/synchronized_viewer_item.comp.dart';
+import 'package:twonly/src/visual/views/memories/memories_map.view.dart';
 
 class SynchronizedImageViewerScreen extends StatefulWidget {
   const SynchronizedImageViewerScreen({
@@ -265,7 +267,7 @@ class _SynchronizedImageViewerScreenState
     final media = widget.galleryItems[_currentIndex].mediaService;
     await media.updateFromDB();
     if (!mounted) return;
-    await showModalBottomSheet<void>(
+    final mapMedia = await showModalBottomSheet<MediaFile>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
@@ -276,6 +278,12 @@ class _SynchronizedImageViewerScreenState
             MemoryDetailsSheet(media: snapshot.data ?? media.mediaFile),
       ),
     );
+    if (!mounted || mapMedia == null) return;
+    _restoreSystemUI();
+    await context.navPush(MemoriesMapView(initialMedia: mapMedia));
+    if (mounted) {
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    }
   }
 
   Future<void> _shareMediaFile() async {
@@ -394,10 +402,10 @@ class _SynchronizedImageViewerScreenState
                       duration: const Duration(milliseconds: 200),
                       child: IgnorePointer(
                         ignoring: _isZoomed,
-                        child: IconButton.filledTonal(
-                          tooltip: context.lang.memoryDetailsTitle,
+                        child: ActionButton(
+                          Icons.info_outline,
+                          tooltipText: context.lang.memoryDetailsTitle,
                           onPressed: _showDetails,
-                          icon: const Icon(Icons.info_outline),
                         ),
                       ),
                     ),

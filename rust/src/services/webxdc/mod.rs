@@ -12,6 +12,7 @@
 
 pub mod bundle;
 pub mod store;
+pub(crate) mod visibility;
 
 use crate::api::messages::outgoing::send_c2c_message_to_contact;
 use crate::api::proto::client as proto;
@@ -1220,8 +1221,9 @@ impl WebxdcService {
             .ok_or_else(|| TwonlyError::Generic("unknown webxdc instance".into()))?;
         let user = crate::user_config::UserConfig::load_required_from(&self.ctx)?;
         let database = self.ctx.app_db.read().await.clone();
-        let rows: Vec<(i64, String)> = sqlx::query_as(
-            "SELECT c.user_id, COALESCE(NULLIF(c.display_name, ''), c.username)
+        // Match getContactDisplayName: nickname, profile display name, username.
+        let rows: Vec<(i64, String, bool)> = sqlx::query_as(
+            "SELECT c.user_id, COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username), c.account_deleted
              FROM group_members m JOIN contacts c ON c.user_id = m.contact_id
              WHERE m.group_id = ? AND (m.member_state IS NULL OR m.member_state != 'leftGroup')
              ORDER BY c.user_id",
@@ -1232,8 +1234,11 @@ impl WebxdcService {
         let self_id = Self::address_for(instance_id, user.user_id);
         let mut members =
             vec![serde_json::json!({"id": self_id, "displayName": user.display_name})];
-        for (id, name) in rows {
+        for (id, mut name, account_deleted) in rows {
             if id != user.user_id {
+                if account_deleted {
+                    name = name.chars().flat_map(|c| [c, '\u{0336}']).collect();
+                }
                 members.push(serde_json::json!({"id": Self::address_for(instance_id, id), "displayName": name}));
             }
         }
@@ -1544,7 +1549,7 @@ mod tests {
         )?;
         let database = ctx.app_db.read().await.clone();
         for statement in [
-            "INSERT INTO contacts(user_id, username, display_name) VALUES (7, 'ben', 'Ben'), (8, 'clara', 'Clara'), (9, 'dan', 'Dan')",
+            "INSERT INTO contacts(user_id, username, display_name, nick_name) VALUES (7, 'ben', 'Ben', 'Benny'), (8, 'clara', 'Clara', NULL), (9, 'dan', 'Dan', NULL)",
             "INSERT INTO groups(group_id, group_name) VALUES ('g', 'Trip'), ('other', 'Other')",
             "INSERT INTO group_members(group_id, contact_id, member_state) VALUES ('g', 7, NULL), ('g', 8, 'leftGroup'), ('other', 9, NULL)",
             "INSERT INTO messages(message_id, group_id, type) VALUES ('card', 'g', 'webxdcApp')",
@@ -1556,11 +1561,34 @@ mod tests {
         let members: serde_json::Value = serde_json::from_str(&service.members("card").await?)?;
         assert_eq!(members["selfId"], WebxdcService::address_for("card", 42));
         assert_eq!(members["members"].as_array().unwrap().len(), 2);
-        assert_eq!(members["members"][1]["displayName"], "Ben");
+        assert_eq!(members["members"][0]["displayName"], "Anna");
+        assert_eq!(members["members"][1]["displayName"], "Benny");
         assert_eq!(
             members["members"][1]["id"],
             WebxdcService::address_for("card", 7)
         );
+        for (statement, expected) in [
+            (
+                "UPDATE contacts SET nick_name = '' WHERE user_id = 7",
+                "Ben",
+            ),
+            (
+                "UPDATE contacts SET display_name = NULL WHERE user_id = 7",
+                "ben",
+            ),
+            (
+                "UPDATE contacts SET account_deleted = 1 WHERE user_id = 7",
+                "b\u{0336}e\u{0336}n\u{0336}",
+            ),
+            (
+                "UPDATE contacts SET account_deleted = 0, display_name = '' WHERE user_id = 7",
+                "",
+            ),
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+            let members: serde_json::Value = serde_json::from_str(&service.members("card").await?)?;
+            assert_eq!(members["members"][1]["displayName"], expected);
+        }
         assert!(service.members("missing").await.is_err());
         assert!(service
             .send_update(

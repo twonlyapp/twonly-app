@@ -32,6 +32,11 @@ ReleaseNotesData releaseNotes060(BuildContext context) {
         title: lang.releaseNotesMiniGames,
         description: lang.releaseNotesMiniGamesDescription,
       ),
+      ReleaseNoteFeature(
+        icon: const FaIcon(FontAwesomeIcons.mapLocationDot),
+        title: lang.releaseNotesMemoriesMap,
+        description: lang.releaseNotesMemoriesMapDescription,
+      ),
     ],
     additionalChanges: [
       lang.releaseNotesReliableMessages,

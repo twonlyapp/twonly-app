@@ -76,10 +76,7 @@
   "memoryDetailsLocation": "Location",
   "memoryDetailsLocationPending": "Finding capture location…",
   "memoryDetailsNoLocation": "No location recorded",
-  "memoryDetailsAccuracy": "Accuracy: ±{meters} m",
-  "memoryDetailsOpenMap": "Open in maps",
-  "memoryDetailsMapUnavailable": "Could not open maps.",
-  "@memoryDetailsAccuracy": {"placeholders": {"meters": {"type": "int"}}},
+  "memoryDetailsOpenMap": "Open in map",
   "memoryLocationTitle": "Store location in Memories",
   "memoryLocationSubtitle": "Location for Memories and gallery exports. Never sent to contacts.",
   "memoryLocationPermissionDenied": "Precise location access was not granted. The setting remains disabled.",
@@ -1230,8 +1227,22 @@
   "releaseNotesStoriesDescription": "Share moments with your contacts for 24 hours.",
   "releaseNotesMiniGames": "Mini games in chats & groups",
   "releaseNotesMiniGamesDescription": "Play small games together, right inside your conversations.",
+  "releaseNotesMemoriesMap": "Memories on the map",
+  "releaseNotesMemoriesMapDescription": "Save locations with your photos and videos in Memories and explore them on a map. Enable this in Settings > Memories & Storage.",
   "releaseNotesReliableMessages": "Better message and push reliability",
   "releaseNotesImprovedUi": "Improved interface",
   "releaseNotesCustomAvatars": "Custom avatars",
-  "releaseNotesArabic": "Arabic language (experimental)"
+  "releaseNotesArabic": "Arabic language (experimental)",
+  "memoriesMapTitle": "Memories map",
+  "memoriesMapNoLocations": "No saved memories have a recorded location yet.",
+  "memoriesMapNoResults": "No memories in this area. Move or zoom the map to explore another place.",
+  "memoriesMapLoadError": "Could not load the map. Check your connection and try again.",
+  "memoriesMapVisibleCount": "{count, plural, =1 {1 memory in this area} other {{count} memories in this area}}",
+  "@memoriesMapVisibleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

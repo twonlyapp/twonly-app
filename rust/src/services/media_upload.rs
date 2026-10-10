@@ -56,7 +56,7 @@ static THUMBNAIL_BACKFILL: Semaphore = Semaphore::const_new(1);
 /// One media file is only ever prepared by one task. Preparation reserves a
 /// slot, encrypts, and writes request files, so a second concurrent run would
 /// burn a slot and leave orphaned jobs behind.
-fn media_lock(media_id: &str) -> Arc<Mutex<()>> {
+pub(crate) fn media_lock(media_id: &str) -> Arc<Mutex<()>> {
     let mut locks = MEDIA_LOCKS
         .lock()
         .unwrap_or_else(|error| error.into_inner());
@@ -73,10 +73,17 @@ struct MediaRow {
     is_widget_media: i64,
     display_limit_in_milliseconds: Option<i64>,
     reupload_requested_by: Option<String>,
+    reupload_targets: Option<String>,
     remove_audio: Option<i64>,
     trim_start_ms: Option<i64>,
     trim_end_ms: Option<i64>,
     created_at: i64,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+pub(crate) struct MediaReuploadTarget {
+    pub contact_id: i64,
+    pub message_id: String,
 }
 
 #[derive(FromRow)]
@@ -555,7 +562,7 @@ impl MediaUploadService {
         let database = self.ctx.app_db.read().await.clone();
         let pending = sqlx::query_as::<_, MediaRow>(
             r#"SELECT media_id, type AS media_type, upload_state, requires_authentication,
-                      is_draft_media, is_widget_media, display_limit_in_milliseconds, reupload_requested_by,
+                      is_draft_media, is_widget_media, display_limit_in_milliseconds, reupload_requested_by, reupload_targets,
                       remove_audio, trim_start_ms, trim_end_ms, created_at
                FROM media_files
                WHERE upload_state IN
@@ -586,38 +593,90 @@ impl MediaUploadService {
         let lock = media_lock(media_id);
         let _guard = lock.lock().await;
 
+        if !self
+            .record_reupload_request(contact_id, media_id, message_id)
+            .await?
+        {
+            return Ok(());
+        }
+
+        let Some(media) = self.load(media_id).await? else {
+            return Ok(());
+        };
+        // The legacy pre-built upload request would pin the old recipient set.
+        remove_file(
+            &MediaFileService::new(&self.ctx).upload_request_path(media_id, &media.media_type),
+        );
+        self.start_upload_locked(media_id).await
+    }
+
+    /// The caller holds `media_lock` while recording and preparing the request.
+    pub(crate) async fn record_reupload_request(
+        &self,
+        contact_id: i64,
+        media_id: &str,
+        message_id: &str,
+    ) -> Result<bool> {
+        let Some(media) = self.load(media_id).await? else {
+            return Ok(false);
+        };
+
         let database = self.ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+        let allowed = sqlx::query_scalar::<_, i64>(
+            r#"SELECT EXISTS(SELECT 1 FROM messages m
+               JOIN group_members gm ON gm.group_id = m.group_id
+               WHERE m.message_id = ? AND m.media_id = ? AND m.sender_id IS NULL
+                 AND gm.contact_id = ?
+                 AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup'))"#,
+        )
+        .bind(message_id)
+        .bind(media_id)
+        .bind(contact_id)
+        .fetch_one(&mut *transaction)
+        .await?;
+        if allowed == 0 {
+            return Ok(false);
+        }
         sqlx::query(
             r#"UPDATE receipts SET mark_for_retry = NULL, mark_for_retry_after_accepted = NULL
                WHERE contact_id = ? AND message_id = ?"#,
         )
         .bind(contact_id)
         .bind(message_id)
-        .execute(&database.pool)
+        .execute(&mut *transaction)
         .await?;
 
-        let Some(media) = self.load(media_id).await? else {
-            return Ok(());
+        let mut targets: Vec<MediaReuploadTarget> = media
+            .reupload_targets
+            .as_deref()
+            .map(serde_json::from_str)
+            .transpose()?
+            .unwrap_or_default();
+        let target = MediaReuploadTarget {
+            contact_id,
+            message_id: message_id.to_owned(),
         };
-        let mut requested_by = parse_reupload_requested_by(media.reupload_requested_by.as_deref());
-        if !requested_by.contains(&contact_id) {
-            requested_by.push(contact_id);
+        if !targets.contains(&target) {
+            targets.push(target);
+        }
+        let mut requested_by = Vec::new();
+        for target in &targets {
+            if !requested_by.contains(&target.contact_id) {
+                requested_by.push(target.contact_id);
+            }
         }
         sqlx::query(
-            r#"UPDATE media_files SET upload_state = 'preprocessing', reupload_requested_by = ?
+            r#"UPDATE media_files SET upload_state = 'preprocessing', reupload_requested_by = ?, reupload_targets = ?
                WHERE media_id = ?"#,
         )
         .bind(serde_json::to_string(&requested_by)?)
+        .bind(serde_json::to_string(&targets)?)
         .bind(media_id)
-        .execute(&database.pool)
+        .execute(&mut *transaction)
         .await?;
-        drop(database);
-
-        // The legacy pre-built upload request would pin the old recipient set.
-        remove_file(
-            &MediaFileService::new(&self.ctx).upload_request_path(media_id, &media.media_type),
-        );
-        self.start_upload_locked(media_id).await
+        transaction.commit().await?;
+        Ok(true)
     }
 
     /// Periodic maintenance over receipts whose media send never completed.
@@ -1224,10 +1283,10 @@ impl MediaUploadService {
         let media_id = &media.media_id;
         let database = self.ctx.app_db.read().await.clone();
 
-        if media.reupload_requested_by.is_some() {
+        if media.reupload_requested_by.is_some() || media.reupload_targets.is_some() {
             tracing::warn!(media_id, "reupload requested but the source is gone");
             sqlx::query(
-                r#"UPDATE media_files SET upload_state = 'uploaded', reupload_requested_by = NULL
+                r#"UPDATE media_files SET upload_state = 'uploaded', reupload_requested_by = NULL, reupload_targets = NULL
                    WHERE media_id = ?"#,
             )
             .bind(media_id)
@@ -1278,7 +1337,7 @@ impl MediaUploadService {
         let database = self.ctx.app_db.read().await.clone();
         Ok(sqlx::query_as::<_, MediaRow>(
             r#"SELECT media_id, type AS media_type, upload_state, requires_authentication,
-                      is_draft_media, is_widget_media, display_limit_in_milliseconds, reupload_requested_by,
+                      is_draft_media, is_widget_media, display_limit_in_milliseconds, reupload_requested_by, reupload_targets,
                       remove_audio, trim_start_ms, trim_end_ms, created_at
                FROM media_files WHERE media_id = ?"#,
         )
@@ -1797,7 +1856,7 @@ fn file_size_or_zero(path: &Path) -> u64 {
 
 /// Drift persists this column as a JSON array of contact ids. Tolerate the
 /// single-scalar form that an earlier Rust write produced.
-fn parse_reupload_requested_by(value: Option<&str>) -> Vec<i64> {
+pub(crate) fn parse_reupload_requested_by(value: Option<&str>) -> Vec<i64> {
     let Some(value) = value else {
         return Vec::new();
     };

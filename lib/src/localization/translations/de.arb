@@ -80,9 +80,7 @@
   "memoryDetailsLocation": "Standort",
   "memoryDetailsLocationPending": "Aufnahmestandort wird ermittelt…",
   "memoryDetailsNoLocation": "Kein Standort gespeichert",
-  "memoryDetailsAccuracy": "Genauigkeit: ±{meters} m",
-  "memoryDetailsOpenMap": "In Karten öffnen",
-  "memoryDetailsMapUnavailable": "Karten konnten nicht geöffnet werden.",
+  "memoryDetailsOpenMap": "In Karte öffnen",
   "memoryLocationTitle": "Standort in Memories speichern",
   "memoryLocationSubtitle": "Standort für Memories und Galerie-Exporte. Wird nicht an Kontakte gesendet.",
   "memoryLocationPermissionDenied": "Der genaue Standortzugriff wurde nicht erlaubt. Die Einstellung bleibt deaktiviert.",
@@ -1219,8 +1217,15 @@
   "releaseNotesStoriesDescription": "Teile Momente für 24 Stunden mit deinen Kontakten.",
   "releaseNotesMiniGames": "Minispiele in Chats & Gruppen",
   "releaseNotesMiniGamesDescription": "Spielt kleine Spiele gemeinsam direkt in euren Unterhaltungen.",
+  "releaseNotesMemoriesMap": "Erinnerungen auf der Karte",
+  "releaseNotesMemoriesMapDescription": "Speichere Standorte mit deinen Fotos und Videos in Memories und entdecke sie auf einer Karte. Aktiviere dies unter Einstellungen > Memories & Speicher.",
   "releaseNotesReliableMessages": "Zuverlässigere Nachrichten und Push-Benachrichtigungen",
   "releaseNotesImprovedUi": "Verbesserte Benutzeroberfläche",
   "releaseNotesCustomAvatars": "Individuelle Avatare",
-  "releaseNotesArabic": "Arabische Sprache (experimentell)"
+  "releaseNotesArabic": "Arabische Sprache (experimentell)",
+  "memoriesMapTitle": "Erinnerungskarte",
+  "memoriesMapNoLocations": "Noch keine gespeicherten Erinnerungen mit Standort vorhanden.",
+  "memoriesMapNoResults": "Keine Erinnerungen in diesem Bereich. Verschiebe oder zoome die Karte, um einen anderen Ort zu erkunden.",
+  "memoriesMapLoadError": "Die Karte konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
+  "memoriesMapVisibleCount": "{count, plural, =1 {1 Erinnerung in diesem Bereich} other {{count} Erinnerungen in diesem Bereich}}"
 }

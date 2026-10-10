@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -21,12 +22,12 @@ class AvatarPreferenceTile extends StatelessWidget {
         if (snapshot.data != true) return const SizedBox.shrink();
         final preferPhoto = contact.preferPhotoAvatar ?? true;
         return BetterListTile(
-          icon: Icons.account_circle_outlined,
+          icon: FontAwesomeIcons.circleUser,
           text: context.lang.contactAvatarTitle,
           subtitle: Text(
             preferPhoto
-                ? context.lang.contactAvatarPhoto
-                : context.lang.contactAvatarIllustrated,
+                ? context.lang.customAvatarPhotoTab
+                : context.lang.customAvatarSvgTab,
           ),
           onTap: () async {
             final selected = await showDialog<bool>(
@@ -48,8 +49,8 @@ class AvatarPreferenceTile extends StatelessWidget {
                           Expanded(
                             child: Text(
                               photo
-                                  ? context.lang.contactAvatarPhoto
-                                  : context.lang.contactAvatarIllustrated,
+                                  ? context.lang.customAvatarPhotoTab
+                                  : context.lang.customAvatarSvgTab,
                             ),
                           ),
                         ],

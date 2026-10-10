@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/snackbar.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class MemoryDetailsSheet extends StatelessWidget {
   const MemoryDetailsSheet({required this.media, super.key});
@@ -24,7 +22,6 @@ class MemoryDetailsSheet extends StatelessWidget {
         longitude <= 180;
     final material = MaterialLocalizations.of(context);
     final date = media.createdAt.toLocal();
-    final accuracy = media.locationAccuracy;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -59,44 +56,13 @@ class MemoryDetailsSheet extends StatelessWidget {
                   ? context.lang.memoryDetailsLocationPending
                   : context.lang.memoryDetailsNoLocation,
             ),
-            if (hasLocation &&
-                accuracy != null &&
-                accuracy.isFinite &&
-                accuracy >= 0)
-              Padding(
-                padding: const EdgeInsets.only(left: 40, bottom: 16),
-                child: Text(
-                  context.lang.memoryDetailsAccuracy(accuracy.round()),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
             if (hasLocation)
               Padding(
                 padding: const EdgeInsets.only(left: 40),
                 child: TextButton.icon(
                   icon: const Icon(Icons.map_outlined),
                   label: Text(context.lang.memoryDetailsOpenMap),
-                  onPressed: () async {
-                    final uri = Uri.https('maps.google.com', '/', {
-                      'q': '$latitude,$longitude',
-                    });
-                    try {
-                      if (await launchUrl(
-                        uri,
-                        mode: LaunchMode.externalApplication,
-                      )) {
-                        return;
-                      }
-                    } catch (_) {
-                      /* Show the same error for unsupported launchers. */
-                    }
-                    if (context.mounted) {
-                      showSnackbar(
-                        context,
-                        context.lang.memoryDetailsMapUnavailable,
-                      );
-                    }
-                  },
+                  onPressed: () => Navigator.pop(context, media),
                 ),
               ),
           ],

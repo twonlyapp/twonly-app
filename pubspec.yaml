@@ -3,7 +3,7 @@ description: "twonly, a privacy-friendly way to connect with friends through sec
 
 publish_to: 'none'
 
-version: 0.6.0+179
+version: 0.6.0+180
 
 environment:
   sdk: ^3.11.0
@@ -60,6 +60,7 @@ dependencies:
   drift: ^2.32.0
   drift_flutter: ^0.3.0
   get_it: ^9.2.1
+  maplibre_gl: ^0.27.1 # maplibre.org
 
 
   # Flutter Favorite 

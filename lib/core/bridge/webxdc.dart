@@ -6,6 +6,10 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+/// Marks the instance currently visible in the foreground, or clears it.
+void setVisibleInstance({String? instanceId}) => RustLib.instance.api
+    .crateBridgeWebxdcSetVisibleInstance(instanceId: instanceId);
+
 /// Refreshes the store listing. Metadata only; no bundle is fetched.
 Future<void> refreshCatalog() =>
     RustLib.instance.api.crateBridgeWebxdcRefreshCatalog();
