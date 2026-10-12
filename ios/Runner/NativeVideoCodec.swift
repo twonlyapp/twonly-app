@@ -336,7 +336,7 @@ enum NativeVideoCodec {
 
 /// C ABI called directly by Rust.
 @_cdecl("twonly_render_video")
-func twonlyRenderVideo(
+public func twonlyRenderVideo(
   _ input: UnsafePointer<CChar>?,
   _ overlay: UnsafePointer<CChar>?,
   _ output: UnsafePointer<CChar>?,
@@ -364,7 +364,7 @@ func twonlyRenderVideo(
 /// Grabs the first frame as a PNG. Only the decode needs the platform; Rust
 /// scales and encodes the thumbnail itself, exactly as it does for stills.
 @_cdecl("twonly_extract_video_frame")
-func twonlyExtractVideoFrame(
+public func twonlyExtractVideoFrame(
   _ input: UnsafePointer<CChar>?,
   _ output: UnsafePointer<CChar>?
 ) -> Bool {

@@ -15,6 +15,7 @@ use std::sync::{
     Mutex, OnceLock,
 };
 use tracing::{Event, Subscriber};
+use tracing_log::NormalizeEvent;
 use tracing_subscriber::{
     fmt::{
         format::Writer, FmtContext, FormatEvent, FormatFields, FormattedFields, Layer, MakeWriter,
@@ -31,6 +32,11 @@ static RUST_LOG_IN_BACKGROUND: AtomicBool = AtomicBool::new(false);
 
 const LOG_SIZE_CLEANUP_THRESHOLD_BYTES: usize = 5 * 1024 * 1024;
 const LOG_SIZE_CLEANUP_TARGET_BYTES: usize = 4 * 1024 * 1024;
+
+// Tract's model analysis and optimization diagnostics are too verbose for the
+// application log. Keep warnings and errors from all of its crates.
+const DEFAULT_LOG_FILTER: &str = "debug,refinery_core=warn,refinery=warn,tract=warn";
+const TEST_LOG_FILTER: &str = "info,refinery_core=warn,refinery=warn,tract=warn";
 
 struct AppLog {
     path: PathBuf,
@@ -263,7 +269,10 @@ where
         mut writer: Writer<'_>,
         event: &Event<'_>,
     ) -> fmt::Result {
-        let metadata = event.metadata();
+        let normalized_metadata = event.normalized_metadata();
+        let metadata = normalized_metadata
+            .as_ref()
+            .unwrap_or_else(|| event.metadata());
 
         let (parent, name) = match metadata.file() {
             Some(file) => {
@@ -354,7 +363,10 @@ where
         mut writer: Writer<'_>,
         event: &Event<'_>,
     ) -> fmt::Result {
-        let metadata = event.metadata();
+        let normalized_metadata = event.normalized_metadata();
+        let metadata = normalized_metadata
+            .as_ref()
+            .unwrap_or_else(|| event.metadata());
         let source = metadata
             .file()
             .map(Path::new)
@@ -431,9 +443,9 @@ pub(crate) fn init_tracing(data_dir: &Path, in_background: bool) {
             .event_format(ShortEventFormatter::plain());
 
         let default_filter = if std::env::var("FLUTTER_TEST").is_ok() {
-            "info,refinery_core=warn,refinery=warn"
+            TEST_LOG_FILTER
         } else {
-            "debug,refinery_core=warn,refinery=warn"
+            DEFAULT_LOG_FILTER
         };
 
         let file_layer = Layer::new()
@@ -569,9 +581,109 @@ pub(crate) fn clear_log_file() -> Result<bool> {
 #[cfg(test)]
 mod tests {
     use super::{
-        retain_latest_log_bytes, AppLog, LOG_SIZE_CLEANUP_TARGET_BYTES,
-        LOG_SIZE_CLEANUP_THRESHOLD_BYTES,
+        retain_latest_log_bytes, AppLog, AppLogEventFormatter, PlainFields, ShortEventFormatter,
+        DEFAULT_LOG_FILTER, LOG_SIZE_CLEANUP_TARGET_BYTES, LOG_SIZE_CLEANUP_THRESHOLD_BYTES,
+        TEST_LOG_FILTER,
     };
+    use std::sync::{Arc, Mutex};
+    use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
+
+    #[derive(Clone, Default)]
+    struct TestWriter(Arc<Mutex<Vec<u8>>>);
+
+    impl std::io::Write for TestWriter {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            self.0.lock().unwrap().extend_from_slice(bytes);
+            Ok(bytes.len())
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    fn capture_logs(filter: &str, emit: impl FnOnce()) -> (String, String) {
+        let app = TestWriter::default();
+        let console = TestWriter::default();
+        let app_writer = app.clone();
+        let console_writer = console.clone();
+        let subscriber = Registry::default()
+            .with(EnvFilter::new(filter))
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .with_writer(move || app_writer.clone())
+                    .fmt_fields(PlainFields)
+                    .event_format(AppLogEventFormatter),
+            )
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .with_writer(move || console_writer.clone())
+                    .event_format(ShortEventFormatter::plain()),
+            );
+        tracing::subscriber::with_default(subscriber, emit);
+        let app = String::from_utf8(app.0.lock().unwrap().clone()).unwrap();
+        let console = String::from_utf8(console.0.lock().unwrap().clone()).unwrap();
+        (app, console)
+    }
+
+    fn emit_bridged_log(target: &str, level: tracing::log::Level, message: &str) {
+        tracing_log::format_trace(
+            &tracing::log::Record::builder()
+                .args(format_args!("{message}"))
+                .level(level)
+                .target(target)
+                .file(Some("dependency/src/diagnostics.rs"))
+                .line(Some(42))
+                .build(),
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn bridged_logs_include_the_original_filename_in_both_sinks() {
+        let (app, console) = capture_logs(DEFAULT_LOG_FILTER, || {
+            emit_bridged_log(
+                "dependency",
+                tracing::log::Level::Warn,
+                "dependency warning",
+            );
+            tracing::info!("native tracing message");
+        });
+
+        for output in [app, console] {
+            assert!(output.contains("src/diagnostics.rs:42"), "{output}");
+            assert!(output.contains("dependency warning"), "{output}");
+            assert!(output.contains("src/log.rs:"), "{output}");
+            assert!(output.contains("native tracing message"), "{output}");
+            assert!(!output.contains("[twonly] log >"), "{output}");
+        }
+    }
+
+    #[test]
+    fn default_filters_suppress_tract_diagnostics_and_keep_warnings() {
+        for filter in [DEFAULT_LOG_FILTER, TEST_LOG_FILTER] {
+            let (app, console) = capture_logs(filter, || {
+                for target in [
+                    "tract_hir::infer::analyser",
+                    "tract_core::optim::change_axes",
+                ] {
+                    emit_bridged_log(target, tracing::log::Level::Debug, "model diagnostics");
+                    emit_bridged_log(target, tracing::log::Level::Info, "model progress");
+                    emit_bridged_log(target, tracing::log::Level::Warn, "model warning");
+                    emit_bridged_log(target, tracing::log::Level::Error, "model error");
+                }
+                tracing::info!("application message");
+            });
+
+            for output in [app, console] {
+                assert!(!output.contains("model diagnostics"), "{output}");
+                assert!(!output.contains("model progress"), "{output}");
+                assert!(output.contains("model warning"), "{output}");
+                assert!(output.contains("model error"), "{output}");
+                assert!(output.contains("application message"), "{output}");
+            }
+        }
+    }
 
     #[test]
     fn app_log_serializes_reads_and_truncation() {

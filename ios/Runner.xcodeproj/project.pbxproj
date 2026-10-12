@@ -391,6 +391,7 @@
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				32D7521D6B8F508A844DBC22 /* [CP] Embed Pods Frameworks */,
 				A7154597C13DDED7C7F2355C /* [CP] Copy Pods Resources */,
+				D3A1000B2F70000100D1A007 /* Check Rust native callbacks */,
 			);
 			buildRules = (
 			);
@@ -569,6 +570,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		D3A1000B2F70000100D1A007 /* Check Rust native callbacks */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/scripts/check_native_exports.sh",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			name = "Check Rust native callbacks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"${SRCROOT}/scripts/check_native_exports.sh\" \"${TARGET_BUILD_DIR}/${EXECUTABLE_PATH}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		2915B65131340B0D0BD69DF9 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -895,6 +914,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				STRIP_STYLE = "non-global";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -1129,6 +1149,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				STRIP_STYLE = "non-global";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;

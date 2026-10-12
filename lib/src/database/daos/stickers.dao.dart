@@ -61,6 +61,45 @@ class StickersDao extends DatabaseAccessor<TwonlyDB> with _$StickersDaoMixin {
     });
   }
 
+  /// Replaces an edited sticker atomically while preserving collection usage.
+  Future<LocalSticker> replace({
+    required String contentHash,
+    required Uint8List webp,
+    required int width,
+    required int height,
+    required String expectedHash,
+  }) {
+    return transaction(() async {
+      final original = await getByHash(contentHash);
+      if (original == null) throw StateError('sticker is no longer stored');
+      final inserted = await save(
+        webp: webp,
+        width: width,
+        height: height,
+        expectedHash: expectedHash,
+      );
+      if (expectedHash == contentHash) return original;
+      final replacement = (await getByHash(expectedHash))!;
+      await (update(
+        stickers,
+      )..where((sticker) => sticker.contentHash.equals(expectedHash))).write(
+        StickersCompanion(
+          usageCount: Value(replacement.usageCount + original.usageCount),
+          createdAt: Value(
+            inserted ? original.createdAt : replacement.createdAt,
+          ),
+          lastUsedAt: Value(
+            inserted || original.lastUsedAt.isAfter(replacement.lastUsedAt)
+                ? original.lastUsedAt
+                : replacement.lastUsedAt,
+          ),
+        ),
+      );
+      await remove(contentHash);
+      return (await getByHash(expectedHash))!;
+    });
+  }
+
   Future<void> recordUse(String contentHash) async {
     await customUpdate(
       'UPDATE stickers SET usage_count = usage_count + 1, '

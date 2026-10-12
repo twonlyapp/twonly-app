@@ -388,7 +388,7 @@ private var activeNativeLocationRequest: NativeLocationRequest?
 
 /// Synchronous C ABI used from Rust's blocking location worker.
 @_cdecl("twonly_current_location")
-func twonlyCurrentLocation(
+public func twonlyCurrentLocation(
   _ timeoutMillis: Int64,
   _ latitude: UnsafeMutablePointer<Double>?,
   _ longitude: UnsafeMutablePointer<Double>?,

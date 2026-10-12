@@ -3254,6 +3254,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteSticker => 'حذف الملصق';
 
   @override
+  String get rotateSticker => 'تدوير الملصق';
+
+  @override
+  String get stickerRotateFailed => 'تعذّر تدوير الملصق.';
+
+  @override
   String get releaseNotesTitle => 'ما الجديد؟';
 
   @override

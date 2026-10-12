@@ -209,6 +209,55 @@ fn visible_bounds(image: &RgbaImage) -> Option<(u32, u32, u32, u32)> {
     found.then_some((left, top, right, bottom))
 }
 
+/// Turns an existing sticker clockwise without running background removal again.
+pub(crate) fn rotate(webp: &[u8]) -> Result<StickerOutput> {
+    if webp.is_empty() || webp.len() > MAX_STICKER_BYTES {
+        return Err(sticker_error("sticker WebP has an invalid size"));
+    }
+    let decoder = image::codecs::webp::WebPDecoder::new(Cursor::new(webp))
+        .map_err(|error| sticker_error(format!("invalid sticker WebP: {error}")))?;
+    let (width, height) = decoder.dimensions();
+    let sticker = proto::StickerData {
+        version: STICKER_VERSION,
+        webp: webp.to_vec(),
+        sha256: Sha256::digest(webp).to_vec(),
+        width,
+        height,
+    };
+    validate_sticker(&sticker)?;
+    let rotated = DynamicImage::from_decoder(decoder)
+        .map_err(|error| sticker_error(format!("invalid sticker WebP: {error}")))?
+        .rotate90()
+        .to_rgba8();
+
+    // Prefer lossless encoding so repeated turns do not degrade the image.
+    // Detailed stickers can exceed the wire limit, so retain the usual bounded
+    // lossy fallback without changing their dimensions.
+    let mut encoded = webp::Encoder::from_rgba(rotated.as_raw(), height, width)
+        .encode_simple(true, 100.0)
+        .map_err(|error| sticker_error(format!("webp encoding failed: {error:?}")))?
+        .to_vec();
+    if encoded.len() > MAX_STICKER_BYTES {
+        let image = DynamicImage::ImageRgba8(rotated);
+        for quality in [90.0_f32, 80.0, 70.0, 60.0] {
+            encoded = media_codec::encode_webp(&image, quality)?;
+            if encoded.len() <= MAX_STICKER_BYTES {
+                break;
+            }
+        }
+    }
+    let sha256 = Sha256::digest(&encoded).to_vec();
+    let output = StickerOutput {
+        content_hash: hex::encode(&sha256),
+        sha256,
+        webp: encoded,
+        width: height,
+        height: width,
+    };
+    validate_sticker(&output.as_proto())?;
+    Ok(output)
+}
+
 impl StickerOutput {
     pub(crate) fn as_proto(&self) -> proto::StickerData {
         proto::StickerData {
@@ -332,6 +381,53 @@ mod tests {
     fn normal_additional_data_is_not_a_sticker() {
         let data = proto::AdditionalMessageData::default();
         assert!(decode_additional(&data.encode_to_vec()).unwrap().is_none());
+    }
+
+    #[test]
+    fn rotation_preserves_pixels_alpha_and_wire_validity() {
+        let original = sample_sticker();
+        let original_pixels = image::load_from_memory(&original.webp).unwrap().to_rgba8();
+        let rotated = rotate(&original.webp).unwrap();
+        assert_eq!((rotated.width, rotated.height), (24, 32));
+        assert_eq!(
+            rotated.content_hash,
+            hex::encode(Sha256::digest(&rotated.webp))
+        );
+        validate_sticker(&rotated.as_proto()).unwrap();
+        let rotated_pixels = image::load_from_memory(&rotated.webp).unwrap().to_rgba8();
+        for (x, y, pixel) in original_pixels.enumerate_pixels() {
+            let actual = rotated_pixels.get_pixel(original.height - 1 - y, x);
+            assert_eq!(actual[3], pixel[3]);
+            if pixel[3] != 0 {
+                assert_eq!(actual, pixel);
+            }
+        }
+        let mut webp = rotated.webp;
+        for _ in 0..3 {
+            webp = rotate(&webp).unwrap().webp;
+        }
+        let restored = image::load_from_memory(&webp).unwrap().to_rgba8();
+        assert_eq!(restored.dimensions(), original_pixels.dimensions());
+        for (actual, expected) in restored.pixels().zip(original_pixels.pixels()) {
+            assert_eq!(actual[3], expected[3]);
+            if expected[3] != 0 {
+                assert_eq!(actual, expected);
+            }
+        }
+    }
+
+    #[test]
+    fn rotation_rejects_invalid_or_out_of_bounds_stickers() {
+        assert!(rotate(&[]).is_err());
+        assert!(rotate(b"not a WebP").is_err());
+        assert!(rotate(&vec![0; MAX_STICKER_BYTES + 1]).is_err());
+        let oversized = DynamicImage::ImageRgba8(RgbaImage::from_pixel(
+            MAX_STICKER_EDGE + 1,
+            1,
+            Rgba([255, 0, 0, 255]),
+        ));
+        let webp = media_codec::encode_webp(&oversized, 90.0).unwrap();
+        assert!(rotate(&webp).is_err());
     }
 
     #[test]

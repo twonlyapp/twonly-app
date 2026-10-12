@@ -6,7 +6,7 @@ import UniformTypeIdentifiers
 /// for — HEIC/HEIF from the camera above all. ImageIO decodes every format the
 /// OS knows; Rust re-encodes the result to WebP itself. Flutter is not involved.
 @_cdecl("twonly_decode_image_to_png")
-func twonlyDecodeImageToPng(
+public func twonlyDecodeImageToPng(
   _ input: UnsafePointer<CChar>?,
   _ output: UnsafePointer<CChar>?
 ) -> Bool {

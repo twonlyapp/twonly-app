@@ -204,12 +204,12 @@ impl MessageService {
             receipt_ids.push(receipt_id);
         }
 
-        // We CANNOT spawn the sending here immediately because the transaction is NOT committed yet!
+        // The single-connection pool keeps each sender's first receipt lookup
+        // waiting until this transaction commits (or rolls back). No timer is
+        // needed: a committed update can be sent immediately.
         for receipt_id in receipt_ids {
             let ctx = self.ctx.clone();
             tokio::spawn(async move {
-                // Sleep slightly to let the transaction commit
-                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
                 if let Err(error) = send_queued_receipt(&ctx, &receipt_id).await {
                     tracing::warn!(receipt_id, "queued group message send failed: {error}");
                 }

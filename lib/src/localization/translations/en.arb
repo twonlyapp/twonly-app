@@ -1247,6 +1247,8 @@
   "storeSticker": "Save sticker",
   "removeSticker": "Remove from collection",
   "deleteSticker": "Delete sticker",
+  "rotateSticker": "Rotate sticker",
+  "stickerRotateFailed": "The sticker could not be rotated.",
   "releaseNotesTitle": "What's new",
   "releaseNotesIntroduction": "The biggest twonly update yet is here. Here's a quick look at what's new.",
   "releaseNotesAlsoImproved": "Also improved",

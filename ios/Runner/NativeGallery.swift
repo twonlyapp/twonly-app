@@ -8,7 +8,7 @@ import CoreLocation
 /// embeds the EXIF metadata beforehand, and owns the resulting state; this only
 /// hands the file to Photos.
 @_cdecl("twonly_save_to_gallery")
-func twonlySaveToGallery(
+public func twonlySaveToGallery(
   _ path: UnsafePointer<CChar>?,
   _ isVideo: Bool,
   _ createdAtMillis: Int64,

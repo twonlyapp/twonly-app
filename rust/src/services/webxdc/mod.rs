@@ -798,9 +798,9 @@ impl WebxdcService {
             .maybe_sender_id(sender_id)
             .additional_message_data(&origin)
             .created_at(created_at)
-            // The announcement is built locally from an update that has already
-            // arrived, so there is nothing left to wait for.
-            .ack_by_server(created_at)
+            // Incoming updates have already arrived. Outgoing announcements
+            // wait for their update's transport receipt to be acknowledged.
+            .maybe_ack_by_server(sender_id.map(|_| created_at))
             .build()
             .insert(transaction)
             .await
@@ -987,17 +987,7 @@ impl WebxdcService {
             }),
             ..Default::default()
         };
-        let message_id = crate::services::messages::MessageService::new(&self.ctx)
-            .insert_and_send_additional_data(
-                instance.group_id.clone(),
-                "webxdcUpdate".into(),
-                prost::Message::encode_to_vec(&data),
-                // App state, not a message. The log in `webxdc_updates` is the
-                // record; a chat row would only be noise, and a notification
-                // for every move would be worse.
-                true,
-            )
-            .await?;
+        let message_id = uuid::Uuid::new_v4().to_string();
 
         let mut transaction = database.pool.begin().await?;
         Self::append_update(
@@ -1037,6 +1027,30 @@ impl WebxdcService {
             .await?;
         }
 
+        // Persist the log, announcement and delivery receipts together. The
+        // transport carries the hidden update. The receipt handlers derive its
+        // announcement ID without attaching the receipt to the chat row: purging
+        // a chat announcement must not cascade-delete an undelivered game move.
+        crate::services::messages::MessageService::new(&self.ctx)
+            .send_to_group_in_transaction(
+                &mut transaction,
+                instance.group_id,
+                prost::Message::encode_to_vec(&proto::EncryptedContent {
+                    additional_data_message: Some(
+                        proto::encrypted_content::AdditionalDataMessage {
+                            sender_message_id: message_id.clone(),
+                            additional_message_data: Some(prost::Message::encode_to_vec(&data)),
+                            timestamp: now * 1000,
+                            r#type: "webxdcUpdate".into(),
+                            hidden: true,
+                        },
+                    ),
+                    ..Default::default()
+                }),
+                None,
+                false,
+            )
+            .await?;
         transaction.commit().await?;
         Ok(())
     }
@@ -1365,6 +1379,109 @@ mod tests {
     use sha2::{Digest, Sha256};
 
     #[tokio::test]
+    async fn outgoing_announcements_track_delivery_without_owning_the_game_outbox() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"anna","displayName":"Anna"}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username, signal_version) VALUES (7, 'ben', 'v2')",
+            "INSERT INTO groups(group_id, group_name, last_message_exchange) VALUES ('g', 'Games', 100)",
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('g', 7)",
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('card', 'g', 'webxdcApp')",
+            "INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token) VALUES ('card', 'g', 'connect4', 3, 'origin')",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+        let service = WebxdcService::new(&ctx);
+        let notify =
+            serde_json::json!({WebxdcService::address_for("card", 7): "Your turn"}).to_string();
+        for (info, delete_announcement) in [
+            (Some("Ben's turn"), false),
+            (Some("Ben's turn"), true),
+            (None, false),
+        ] {
+            tokio::time::timeout(
+                std::time::Duration::from_secs(1),
+                service.send_update(
+                    "card".into(),
+                    "{}".into(),
+                    info.map(str::to_owned),
+                    None,
+                    None,
+                    None,
+                    Some(notify.clone()),
+                ),
+            )
+            .await
+            .expect("queuing a game move waited for the network")?;
+            let update_id: String = sqlx::query_scalar(
+                "SELECT message_id FROM webxdc_updates WHERE instance_id = 'card' ORDER BY serial DESC LIMIT 1",
+            ).fetch_one(&database.pool).await?;
+            let info_id = WebxdcService::info_message_id(&update_id);
+            let (receipt_id, attached_id, wake, message): (String, Option<String>, i64, Vec<u8>) = sqlx::query_as(
+                "SELECT receipt_id, message_id, wake_receiver, message FROM receipts WHERE contact_id = 7",
+            ).fetch_one(&database.pool).await?;
+            assert_eq!(
+                attached_id, None,
+                "purging chat info must not delete the move"
+            );
+            assert_eq!(wake, i64::from(info.is_some()));
+            let envelope = <proto::Message as prost::Message>::decode(message.as_slice())?;
+            let content = <proto::EncryptedContent as prost::Message>::decode(
+                envelope.encrypted_content.unwrap().as_slice(),
+            )?;
+            let outgoing = content.additional_data_message.unwrap();
+            assert!(outgoing.hidden);
+            assert_eq!(outgoing.sender_message_id, update_id);
+            assert_eq!(content.group_id.as_deref(), Some("g"));
+            if info.is_some() {
+                let ack: Option<i64> =
+                    sqlx::query_scalar("SELECT ack_by_server FROM messages WHERE message_id = ?")
+                        .bind(&info_id)
+                        .fetch_one(&database.pool)
+                        .await?;
+                assert_eq!(ack, None, "a queued move is not yet acknowledged");
+            }
+            let mut tx = database.pool.begin().await?;
+            if delete_announcement {
+                sqlx::query("DELETE FROM messages WHERE message_id = ?")
+                    .bind(&info_id)
+                    .execute(&mut *tx)
+                    .await?;
+                let exists: bool = sqlx::query_scalar(
+                    "SELECT EXISTS(SELECT 1 FROM receipts WHERE receipt_id = ?)",
+                )
+                .bind(&receipt_id)
+                .fetch_one(&mut *tx)
+                .await?;
+                assert!(exists);
+            }
+            crate::api::messages::incoming::messages::handle_sender_delivery_receipt(
+                &mut tx,
+                7,
+                &receipt_id,
+            )
+            .await?;
+            let actions: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM message_actions WHERE message_id = ? AND contact_id = 7 AND type = 'ackByUserAt'")
+                .bind(&info_id).fetch_one(&mut *tx).await?;
+            assert_eq!(actions, i64::from(info.is_some() && !delete_announcement));
+            tx.commit().await?;
+        }
+        let last_exchange: i64 =
+            sqlx::query_scalar("SELECT last_message_exchange FROM groups WHERE group_id = 'g'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(last_exchange, 100);
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn sync_chunks_install_one_time_app_only_when_complete() -> Result<()> {
         let directory = tempfile::tempdir()?;
         let ctx =
@@ -1455,10 +1572,11 @@ mod tests {
             .fetch_one(&database.pool)
             .await?;
         assert_eq!(pending, 0);
-        let announcements: i64 =
-            sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE message_id = 'live-update-info'")
-                .fetch_one(&database.pool)
-                .await?;
+        let announcements: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM messages WHERE message_id = 'live-update-info'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
         assert_eq!(announcements, 1);
         Ok(())
     }

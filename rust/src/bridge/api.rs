@@ -178,6 +178,14 @@ impl RustApi {
             })?
     }
 
+    pub async fn rotate_sticker(webp: Vec<u8>) -> Result<StickerOutput> {
+        tokio::task::spawn_blocking(move || stickers::rotate(&webp))
+            .await
+            .map_err(|error| {
+                TwonlyError::Generic(format!("sticker rotation task failed: {error}"))
+            })?
+    }
+
     #[frb(sync)]
     pub fn decode_avatar_svg(avatar_svg_compressed: Vec<u8>) -> String {
         avatars::decode_avatar_svg(avatar_svg_compressed)

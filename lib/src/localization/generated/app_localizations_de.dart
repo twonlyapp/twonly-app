@@ -3242,6 +3242,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteSticker => 'Sticker löschen';
 
   @override
+  String get rotateSticker => 'Sticker drehen';
+
+  @override
+  String get stickerRotateFailed => 'Der Sticker konnte nicht gedreht werden.';
+
+  @override
   String get releaseNotesTitle => 'Was ist neu?';
 
   @override

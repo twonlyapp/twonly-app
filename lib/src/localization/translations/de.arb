@@ -1230,6 +1230,8 @@
   "storeSticker": "Sticker speichern",
   "removeSticker": "Aus Sammlung entfernen",
   "deleteSticker": "Sticker löschen",
+  "rotateSticker": "Sticker drehen",
+  "stickerRotateFailed": "Der Sticker konnte nicht gedreht werden.",
   "releaseNotesTitle": "Was ist neu?",
   "releaseNotesIntroduction": "Das bisher größte twonly-Update ist da. Hier ist ein kurzer Überblick.",
   "releaseNotesAlsoImproved": "Außerdem verbessert",

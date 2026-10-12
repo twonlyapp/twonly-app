@@ -142,6 +142,17 @@ pub(crate) async fn queue_encrypted_content(
     let wake_receiver =
         crate::services::notifications::should_wake_receiver(t, target_user_id, &content).await?;
 
+    let webxdc_update = content
+        .additional_data_message
+        .as_ref()
+        .and_then(|message| {
+            let data =
+                proto::AdditionalMessageData::decode(message.additional_message_data.as_deref()?)
+                    .ok()?;
+            data.webxdc_update
+                .map(|update| (message.sender_message_id.clone(), update.instance_id))
+        });
+
     let message = proto::Message {
         r#type: proto::message::Type::CiphertextV2 as i32,
         receipt_id: String::new(),
@@ -157,6 +168,20 @@ pub(crate) async fn queue_encrypted_content(
         .wake_receiver(wake_receiver)
         .insert(t)
         .await?;
+
+    if let Some((update_message_id, instance_id)) = webxdc_update {
+        // Hidden updates have no messages row or delivery indicator of their
+        // own. Keep enough context to distinguish a missed turn wake-up from
+        // an envelope waiting to be sent, without logging the game payload.
+        tracing::info!(
+            receipt_id,
+            update_message_id,
+            instance_id,
+            contact_id = target_user_id,
+            wake_receiver,
+            "queued webxdc update"
+        );
+    }
 
     Ok(receipt_id)
 }
@@ -436,7 +461,7 @@ async fn load_queued_receipt_row(
     pool: &sqlx::SqlitePool,
     receipt_id: &str,
 ) -> Result<Option<PreparedQueuedReceiptRow>> {
-    Ok(sqlx::query_as!(
+    let row = sqlx::query_as!(
         PreparedQueuedReceiptRow,
         r#"
         SELECT r.contact_id, r.message, r.message_id, r.contact_will_sends_receipt,
@@ -448,6 +473,46 @@ async fn load_queued_receipt_row(
         receipt_id,
     )
     .fetch_optional(pool)
+    .await?;
+    let Some(mut row) = row else {
+        return Ok(None);
+    };
+    row.message_id = tracked_message_id(pool, row.message_id, &row.message).await?;
+    Ok(Some(row))
+}
+
+/// Hidden game updates stay independent of purgeable chat rows in the outbox,
+/// but their acknowledgements belong to the announcement derived from them.
+async fn tracked_message_id<'e>(
+    executor: impl sqlx::Executor<'e, Database = Sqlite>,
+    message_id: Option<String>,
+    queued_message: &[u8],
+) -> Result<Option<String>> {
+    if message_id.is_some() {
+        return Ok(message_id);
+    }
+    let announcement_id = (|| {
+        let envelope = proto::Message::decode(queued_message).ok()?;
+        let content =
+            proto::EncryptedContent::decode(envelope.encrypted_content?.as_slice()).ok()?;
+        let message = content.additional_data_message?;
+        let data =
+            proto::AdditionalMessageData::decode(message.additional_message_data?.as_slice())
+                .ok()?;
+        (message.hidden && data.webxdc_update.is_some()).then(|| {
+            crate::services::webxdc::WebxdcService::info_message_id(&message.sender_message_id)
+        })
+    })();
+    let Some(announcement_id) = announcement_id else {
+        return Ok(None);
+    };
+    // The announcement can be absent (a silent update or an expired chat row).
+    // Only track rows that still exist, and never recreate purged announcements.
+    Ok(sqlx::query_scalar::<_, String>(
+        "SELECT message_id FROM messages WHERE message_id = ? AND sender_id IS NULL",
+    )
+    .bind(announcement_id)
+    .fetch_optional(executor)
     .await?)
 }
 
@@ -554,6 +619,7 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         return Ok(());
     }
 
+    let started = std::time::Instant::now();
     let app_db = ctx.app_db.read().await.clone();
     let Some(row) = load_queued_receipt_row(&app_db.pool, receipt_id).await? else {
         return Ok(());
@@ -640,17 +706,29 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
     #[cfg(not(debug_assertions))]
     note_sent(receipt_id);
 
+    // A peer's delivery receipt may arrive much later. Log server acceptance
+    // separately so delayed receiver wake-ups do not look like delayed sends.
+    tracing::info!(
+        receipt_id,
+        contact_id = receipt.contact_id,
+        wake_receiver = receipt.wake_receiver,
+        elapsed_ms = started.elapsed().as_millis() as u64,
+        "server accepted queued receipt"
+    );
+
     let mut t = app_db.pool.begin().await?;
     if let Some(message_id) = receipt.message_id {
         sqlx::query!(
             r#"
             INSERT INTO message_actions(message_id, contact_id, type)
-            VALUES (?, ?, 'ackByServerAt')
+            SELECT ?, ?, 'ackByServerAt'
+            WHERE EXISTS (SELECT 1 FROM messages WHERE message_id = ?)
             ON CONFLICT(message_id, contact_id, type)
             DO UPDATE SET action_at = CAST(strftime('%s', 'now') AS INTEGER)
             "#,
             message_id,
             receipt.contact_id,
+            message_id,
         )
         .execute(&mut *t)
         .await?;
@@ -804,9 +882,9 @@ pub(crate) async fn handle_sender_delivery_receipt(
     from_user_id: i64,
     receipt_id: &str,
 ) -> Result<()> {
-    let message_id = sqlx::query_scalar!(
+    let receipt = sqlx::query!(
         r#"
-        SELECT message_id
+        SELECT message_id, message
         FROM receipts
         WHERE receipt_id = ? AND contact_id = ?
         "#,
@@ -814,8 +892,14 @@ pub(crate) async fn handle_sender_delivery_receipt(
         from_user_id,
     )
     .fetch_optional(&mut **transaction)
-    .await?
-    .flatten();
+    .await?;
+
+    let message_id = match receipt {
+        Some(receipt) => {
+            tracked_message_id(&mut **transaction, receipt.message_id, &receipt.message).await?
+        }
+        None => None,
+    };
 
     if let Some(message_id) = message_id {
         sqlx::query!(
@@ -903,6 +987,63 @@ pub async fn handle_plaintext_content(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn server_acknowledgements_resolve_the_game_announcement_without_a_cascading_link(
+    ) -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let path = directory.path().join("app.sqlite");
+        let database =
+            crate::database::app::AppDatabase::new(path.to_str().unwrap(), None, false).await?;
+        database.run_migrations().await?;
+        let mut tx = database.pool.begin().await?;
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'ben')")
+            .execute(&mut *tx)
+            .await?;
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('g', 'Games')")
+            .execute(&mut *tx)
+            .await?;
+        sqlx::query("INSERT INTO messages(message_id, group_id, type, content) VALUES ('update-info', 'g', 'text', 'Your turn')").execute(&mut *tx).await?;
+        let data = proto::AdditionalMessageData {
+            webxdc_update: Some(proto::WebxdcUpdate {
+                instance_id: "card".into(),
+                payload: "{}".into(),
+                info: Some("Your turn".into()),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let receipt_id = queue_encrypted_content(
+            &mut tx,
+            7,
+            proto::EncryptedContent {
+                group_id: Some("g".into()),
+                additional_data_message: Some(proto::encrypted_content::AdditionalDataMessage {
+                    sender_message_id: "update".into(),
+                    hidden: true,
+                    additional_message_data: Some(data.encode_to_vec()),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            true,
+        )
+        .await?;
+        tx.commit().await?;
+        let row = load_queued_receipt_row(&database.pool, &receipt_id)
+            .await?
+            .unwrap();
+        assert_eq!(row.message_id.as_deref(), Some("update-info"));
+        // The actual outbox stays independent of the chat deletion timer.
+        sqlx::query("DELETE FROM messages WHERE message_id = 'update-info'")
+            .execute(&database.pool)
+            .await?;
+        let row = load_queued_receipt_row(&database.pool, &receipt_id)
+            .await?
+            .unwrap();
+        assert_eq!(row.message_id, None);
+        Ok(())
+    }
 
     #[tokio::test]
     async fn live_location_receipts_can_be_requeued_without_losing_their_outbox_link() -> Result<()>

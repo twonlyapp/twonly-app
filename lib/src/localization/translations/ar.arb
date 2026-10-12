@@ -917,6 +917,8 @@
   "storeSticker": "حفظ الملصق",
   "removeSticker": "إزالة من المجموعة",
   "deleteSticker": "حذف الملصق",
+  "rotateSticker": "تدوير الملصق",
+  "stickerRotateFailed": "تعذّر تدوير الملصق.",
   "releaseNotesTitle": "ما الجديد؟",
   "releaseNotesIntroduction": "وصل أكبر تحديث لـ twonly حتى الآن. إليك نظرة سريعة على الجديد.",
   "releaseNotesAlsoImproved": "تحسينات أخرى",

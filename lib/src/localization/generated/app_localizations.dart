@@ -5458,6 +5458,18 @@ abstract class AppLocalizations {
   /// **'Delete sticker'**
   String get deleteSticker;
 
+  /// No description provided for @rotateSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate sticker'**
+  String get rotateSticker;
+
+  /// No description provided for @stickerRotateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The sticker could not be rotated.'**
+  String get stickerRotateFailed;
+
   /// No description provided for @releaseNotesTitle.
   ///
   /// In en, this message translates to:

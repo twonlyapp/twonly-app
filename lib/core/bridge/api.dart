@@ -737,6 +737,9 @@ class RustApi {
   static Future<void> reuploadPendingMedia() =>
       RustLib.instance.api.crateBridgeApiRustApiReuploadPendingMedia();
 
+  static Future<StickerOutput> rotateSticker({required List<int> webp}) =>
+      RustLib.instance.api.crateBridgeApiRustApiRotateSticker(webp: webp);
+
   /// Exports a stored media file to the user's photo library.
   static Future<void> saveMediaToGallery({required String mediaId}) => RustLib
       .instance

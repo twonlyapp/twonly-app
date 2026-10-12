@@ -3,12 +3,36 @@
 //! The file lock is held only while an instance is on screen. The OS releases
 //! it on process death, so a crash cannot leave future turn alerts suppressed.
 
-use std::fs::{File, OpenOptions, TryLockError};
+use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, Write};
 use std::path::Path;
 use std::sync::Mutex;
 
 const FILE_NAME: &str = "webxdc-visible-instance";
+
+// std::fs::File::try_lock is unsupported on Android. Use flock directly on
+// Unix, including the host running our tests, so the lease has the same
+// cross-process and close-on-drop behavior on both mobile platforms.
+#[cfg(unix)]
+fn try_lock(file: &File) -> std::io::Result<()> {
+    use std::os::fd::AsRawFd;
+
+    loop {
+        // SAFETY: file owns a live descriptor and flock does not retain it.
+        if unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0 {
+            return Ok(());
+        }
+        let error = std::io::Error::last_os_error();
+        if error.kind() != std::io::ErrorKind::Interrupted {
+            return Err(error);
+        }
+    }
+}
+
+#[cfg(not(unix))]
+fn try_lock(file: &File) -> std::io::Result<()> {
+    file.try_lock().map_err(std::io::Error::from)
+}
 
 #[derive(Default)]
 pub(crate) struct Visibility {
@@ -37,7 +61,7 @@ impl Visibility {
                 .read(true)
                 .write(true)
                 .open(directory.join(FILE_NAME))?;
-            file.try_lock().map_err(std::io::Error::from)?;
+            try_lock(&file)?;
             file.set_len(0)?;
             file.write_all(instance_id.as_bytes())?;
             *lease = Some((instance_id.to_owned(), file));
@@ -51,7 +75,7 @@ impl Visibility {
 pub(crate) fn visible_instance(directory: &Path) -> Option<String> {
     let mut file = File::open(directory.join(FILE_NAME)).ok()?;
     // Unlocked files are old state from a closed or killed app.
-    if !matches!(file.try_lock(), Err(TryLockError::WouldBlock)) {
+    if !matches!(try_lock(&file), Err(error) if error.kind() == std::io::ErrorKind::WouldBlock) {
         return None;
     }
     let mut instance_id = String::new();

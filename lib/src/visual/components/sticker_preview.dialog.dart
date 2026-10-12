@@ -37,8 +37,9 @@ class _StickerPreviewDialog extends StatefulWidget {
 }
 
 class _StickerPreviewDialogState extends State<_StickerPreviewDialog> {
-  late final Uint8List _webp = Uint8List.fromList(widget.sticker.webp);
-  late final String _contentHash = hex.encode(widget.sticker.sha256);
+  late StickerData _sticker = widget.sticker;
+  late Uint8List _webp = Uint8List.fromList(_sticker.webp);
+  late String _contentHash = hex.encode(_sticker.sha256);
   bool _stored = false;
   bool _busy = true;
   String? _error;
@@ -89,6 +90,30 @@ class _StickerPreviewDialogState extends State<_StickerPreviewDialog> {
     }
   }
 
+  Future<void> _rotateSticker() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final rotated = await StickerService.rotate(_sticker);
+      if (!mounted) return;
+      setState(() {
+        _sticker = StickerService.fromLocal(rotated);
+        _webp = rotated.webp;
+        _contentHash = rotated.contentHash;
+        _busy = false;
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = context.lang.stickerRotateFailed;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -102,7 +127,11 @@ class _StickerPreviewDialogState extends State<_StickerPreviewDialog> {
               SizedBox(
                 width: 240,
                 height: 240,
-                child: Image.memory(_webp, fit: BoxFit.contain),
+                child: Image.memory(
+                  _webp,
+                  fit: BoxFit.contain,
+                  gaplessPlayback: true,
+                ),
               ),
               const SizedBox(height: 24),
               if (_error != null) ...[
@@ -124,9 +153,28 @@ class _StickerPreviewDialogState extends State<_StickerPreviewDialog> {
                             : context.lang.storeSticker,
                       ),
               ),
+              if (widget.collectionOnly) ...[
+                const SizedBox(height: 12),
+                MyButton(
+                  variant: MyButtonVariant.secondaryDense,
+                  onPressed: _busy ? null : _rotateSticker,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.rotate_right),
+                      const SizedBox(width: 8),
+                      Text(context.lang.rotateSticker),
+                    ],
+                  ),
+                ),
+              ],
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text(context.lang.cancel),
+                child: Text(
+                  widget.collectionOnly
+                      ? context.lang.close
+                      : context.lang.cancel,
+                ),
               ),
             ],
           ),

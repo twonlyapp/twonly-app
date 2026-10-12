@@ -168,8 +168,10 @@ final class DirectMediaTransfer: NSObject, URLSessionTaskDelegate, URLSessionDel
 
 /// C ABI called directly by Rust. Flutter and Dart never participate in
 /// scheduling or executing these background uploads.
+/// Keep this public and preserve global symbols when stripping the archive:
+/// Rust finds it with dlsym, so neither Swift nor the linker can see the caller.
 @_cdecl("twonly_schedule_direct_media_uploads")
-func twonlyScheduleDirectMediaUploads(_ descriptor: UnsafePointer<CChar>?) -> Bool {
+public func twonlyScheduleDirectMediaUploads(_ descriptor: UnsafePointer<CChar>?) -> Bool {
   guard let descriptor else { return false }
   return DirectMediaTransfer.shared.schedule(json: String(cString: descriptor))
 }

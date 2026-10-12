@@ -128,7 +128,7 @@ private func onMain<T>(_ work: @escaping () -> T) -> T {
 }
 
 @_cdecl("twonly_begin_background_task")
-func twonlyBeginBackgroundTask() -> UInt64 {
+public func twonlyBeginBackgroundTask() -> UInt64 {
   let identifier: UIBackgroundTaskIdentifier = onMain {
     var identifier = UIBackgroundTaskIdentifier.invalid
     identifier = UIApplication.shared.beginBackgroundTask(withName: "eu.twonly.media-preparation")
@@ -150,7 +150,7 @@ func twonlyBeginBackgroundTask() -> UInt64 {
 }
 
 @_cdecl("twonly_end_background_task")
-func twonlyEndBackgroundTask(_ identifier: UInt64) {
+public func twonlyEndBackgroundTask(_ identifier: UInt64) {
   guard identifier != 0, let raw = Int(exactly: identifier) else { return }
   onMain {
     UIApplication.shared.endBackgroundTask(UIBackgroundTaskIdentifier(rawValue: raw))

@@ -138,6 +138,19 @@ class StickerService {
     );
   }
 
+  static Future<LocalSticker> rotate(StickerData sticker) async {
+    final output = await RustApi.rotateSticker(
+      webp: Uint8List.fromList(sticker.webp),
+    );
+    return twonlyDB.stickersDao.replace(
+      contentHash: hex.encode(sticker.sha256),
+      webp: output.webp,
+      width: output.width,
+      height: output.height,
+      expectedHash: output.contentHash,
+    );
+  }
+
   static Future<void> send({
     required String groupId,
     required LocalSticker sticker,
