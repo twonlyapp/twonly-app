@@ -338,7 +338,9 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
   Future<List<MediaFile>> getMemoriesToBackup() async {
     return (select(mediaFiles)..where(
           (t) =>
-              t.stored.equals(true) & t.cloudState.equals(CloudState.none.name),
+              t.stored.equals(true) &
+              (t.cloudState.equals(CloudState.none.name) |
+                  t.cloudState.equals(CloudState.pending.name)),
         ))
         .get();
   }

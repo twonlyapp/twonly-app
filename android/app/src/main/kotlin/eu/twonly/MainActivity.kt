@@ -97,7 +97,9 @@ class MainActivity : FlutterFragmentActivity() {
 
 
         NotificationTapChannel.configure(flutterEngine, applicationContext)
-        WidgetRuntimeChannel.configure(flutterEngine, applicationContext)
+        if (!flutterEngine.plugins.has(WidgetRuntimeChannel::class.java)) {
+            flutterEngine.plugins.add(WidgetRuntimeChannel())
+        }
         WebxdcChannel.configure(flutterEngine, this)
 
         MethodChannel(
@@ -196,7 +198,6 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         NotificationTapChannel.detach()
-        WidgetRuntimeChannel.detach()
         WebxdcChannel.detach()
         super.cleanUpFlutterEngine(flutterEngine)
     }

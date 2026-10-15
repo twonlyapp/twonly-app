@@ -4,6 +4,8 @@ dependencies:
   audio_waveforms:
     git: https://github.com/SimformSolutionsPvtLtd/audio_waveforms.git
     tag: 2.0.2
+    custom_changes: true
+    custom_changes_description: Make Android waveform codec cleanup safe after extraction completion and repeated stops.
   avatar_maker:
     git: https://github.com/RoadTripMoustache/avatar_maker.git
     tag: 1.5.0

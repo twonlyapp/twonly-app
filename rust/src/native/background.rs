@@ -11,6 +11,7 @@
 //! storage directories rather than assuming an initialized context.
 
 use crate::bridge::InitConfig;
+use crate::context::Context;
 use crate::services::background::{self, Job, RunOutcome};
 use std::ffi::{c_char, CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -19,6 +20,24 @@ use std::sync::{LazyLock, Mutex, MutexGuard};
 /// One maintenance run at a time per process. Two concurrent runs would only
 /// contend on the same per-media locks and the same socket.
 static MAINTENANCE_WORKER: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
+
+/// A native HTTP callback is only a hint to check the server's attachment
+/// state. It must not mark a 202 response as sent or initialize a runtime when
+/// Flutter is absent; durable maintenance handles that case later.
+#[unsafe(no_mangle)]
+pub extern "C" fn twonly_direct_media_transfer_finished() -> bool {
+    catch_unwind(AssertUnwindSafe(|| {
+        let Ok(ctx) = Context::get_static() else {
+            return false;
+        };
+        if ctx.foreground_runtime().is_none() {
+            return false;
+        }
+        crate::services::direct_media_upload::watch_pending_uploads(ctx);
+        true
+    }))
+    .unwrap_or(false)
+}
 
 fn worker_lock() -> MutexGuard<'static, ()> {
     MAINTENANCE_WORKER

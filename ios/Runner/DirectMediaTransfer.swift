@@ -98,6 +98,7 @@ final class DirectMediaTransfer: NSObject, URLSessionTaskDelegate, URLSessionDel
     }
     let task = session.uploadTask(with: urlRequest, fromFile: fileURL)
     task.taskDescription = "\(attachmentId)|\(request.role)"
+    NSLog("twonly: scheduled direct-media request %@", task.taskDescription ?? "unknown")
     return task
   }
 
@@ -132,6 +133,20 @@ final class DirectMediaTransfer: NSObject, URLSessionTaskDelegate, URLSessionDel
     let expired = descriptor.expiresAt <= Int64(Date().timeIntervalSince1970)
     let success = error == nil && (200...299).contains(status)
 
+    NSLog(
+      "twonly: finished direct-media request %@ HTTP %d error %@",
+      description, status, error?.localizedDescription ?? "none"
+    )
+    // A callback only wakes Rust to read the server's durable state. A 202
+    // still means uploading; callbacks may also arrive before Flutter starts.
+    // Run after scheduling any completion/retry task below, so Rust cannot
+    // remove its body file before URLSession has taken ownership of it.
+    defer {
+      if descriptor.manifest != nil {
+        _ = twonly_direct_media_transfer_finished()
+      }
+    }
+
     if success && role == "media" {
       // A descriptor with no completion step — a queued message envelope — is
       // finished as soon as its POST is accepted.
@@ -151,6 +166,24 @@ final class DirectMediaTransfer: NSObject, URLSessionTaskDelegate, URLSessionDel
       retryTask?.earliestBeginDate = Date().addingTimeInterval(15)
       retryTask?.resume()
     }
+  }
+
+  func urlSession(
+    _ session: URLSession,
+    task: URLSessionTask,
+    didFinishCollecting metrics: URLSessionTaskMetrics
+  ) {
+    let transferSeconds = metrics.transactionMetrics.reduce(0.0) { total, transaction in
+      guard let start = transaction.requestStartDate, let end = transaction.responseEndDate else {
+        return total
+      }
+      return total + end.timeIntervalSince(start)
+    }
+    NSLog(
+      "twonly: direct-media timing %@ total %.3fs HTTP %.3fs sent %lld bytes",
+      task.taskDescription ?? "unknown", metrics.taskInterval.duration,
+      transferSeconds, task.countOfBytesSent
+    )
   }
 
   func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {

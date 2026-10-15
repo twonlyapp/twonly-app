@@ -77,6 +77,22 @@ class BackupService {
   static bool _isSuccessful(http.BaseResponse response) =>
       response.statusCode >= 200 && response.statusCode < 300;
 
+  static void _logUploadFailure(
+    String message,
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    // Losing connectivity or timing out is expected during a background upload.
+    // makeBackup persists the failure and schedules another attempt.
+    if (error is SocketException ||
+        error is http.ClientException ||
+        error is TimeoutException) {
+      Log.warn(message, error, stackTrace);
+      return;
+    }
+    Log.error(message, error: error, stackTrace: stackTrace);
+  }
+
   static Future<bool> _uploadIdentity(
     String backupId,
     List<int> encryptedBackup,
@@ -95,10 +111,10 @@ class BackupService {
         'Identity backup upload failed with status ${response.statusCode}.',
       );
     } catch (error, stackTrace) {
-      Log.error(
+      _logUploadFailure(
         'Identity backup upload failed.',
-        error: error,
-        stackTrace: stackTrace,
+        error,
+        stackTrace,
       );
     } finally {
       client.close();
@@ -138,10 +154,10 @@ class BackupService {
         'Archive backup upload failed with status ${response.statusCode}.',
       );
     } catch (error, stackTrace) {
-      Log.error(
+      _logUploadFailure(
         'Archive backup upload failed.',
-        error: error,
-        stackTrace: stackTrace,
+        error,
+        stackTrace,
       );
     } finally {
       client.close();

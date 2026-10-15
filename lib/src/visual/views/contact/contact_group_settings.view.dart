@@ -75,9 +75,12 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   late bool _shareStories;
   String? _emoji;
   bool _saving = false;
+  bool _showArchived = false;
   String _memberFilter = '';
   List<Contact> _contacts = [];
   List<Group> _groups = [];
+  Set<String> _archivedDirectChatIds = {};
+  Map<String, Set<int>> _groupMemberUserIds = {};
   Map<String, List<String>> _groupMemberNames = {};
   final Set<int> _selectedUserIds = {};
   final Set<String> _selectedGroupIds = {};
@@ -117,14 +120,22 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
         final actualGroups = groups
             .where((group) => !group.isDirectChat && !group.deletedContent)
             .toList();
-        setState(() => _groups = actualGroups);
+        setState(() {
+          _groups = actualGroups;
+          _archivedDirectChatIds = groups
+              .where((group) => group.isDirectChat && group.archived)
+              .map((group) => group.groupId)
+              .toSet();
+        });
       }),
     );
     _subscriptions.add(
       twonlyDB.groupsDao.watchAllGroupMembers().listen((members) {
         if (!mounted) return;
         final names = <String, List<String>>{};
+        final userIds = <String, Set<int>>{};
         for (final (contact, member) in members) {
+          userIds.putIfAbsent(member.groupId, () => {}).add(contact.userId);
           names
               .putIfAbsent(member.groupId, () => [])
               .add(getContactDisplayName(contact));
@@ -134,7 +145,10 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
             (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
           );
         }
-        setState(() => _groupMemberNames = names);
+        setState(() {
+          _groupMemberNames = names;
+          _groupMemberUserIds = userIds;
+        });
       }),
     );
     if (contactGroup != null) {
@@ -168,15 +182,21 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   }
 
   List<_MemberEntry> get _members {
+    final archivedUserIds = {
+      for (final groupId in _archivedDirectChatIds)
+        ...?_groupMemberUserIds[groupId],
+    };
     final entries =
         <_MemberEntry>[
           for (final contact in _contacts)
-            _MemberEntry(
-              name: getContactDisplayName(contact),
-              contact: contact,
-            ),
+            if (_showArchived || !archivedUserIds.contains(contact.userId))
+              _MemberEntry(
+                name: getContactDisplayName(contact),
+                contact: contact,
+              ),
           for (final group in _groups)
-            _MemberEntry(name: group.groupName, group: group),
+            if (_showArchived || !group.archived)
+              _MemberEntry(name: group.groupName, group: group),
         ]..sort(
           (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
         );
@@ -657,6 +677,12 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
               context.lang.contactGroupMembers,
               style: Theme.of(context).textTheme.titleMedium,
             ),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: Text(context.lang.shareImageShowArchived),
+              value: _showArchived,
+              onChanged: (value) => setState(() => _showArchived = value),
+            ),
             const SizedBox(height: 12),
             MyInput(
               controller: _memberFilterController,
@@ -696,6 +722,12 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
         ? const <String>[]
         : _groupMemberNames[group.groupId] ?? const <String>[];
     return ListTile(
+      // Filtering and sorting must keep each avatar and badge with its member.
+      key: ValueKey(
+        contact != null
+            ? 'contact:${contact.userId}'
+            : 'group:${group!.groupId}',
+      ),
       contentPadding: EdgeInsets.zero,
       leading: contact != null
           ? AvatarIcon(contactId: contact.userId, fontSize: 14)

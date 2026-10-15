@@ -3,7 +3,8 @@
  *
  */
 
-use crate::api::proto::client::encrypted_content;
+use crate::api::messages::incoming::messages::queue_encrypted_content;
+use crate::api::proto::client::{encrypted_content, EncryptedContent};
 use crate::context::Context;
 use crate::database::app::tables::Group;
 use crate::error::{Result, TwonlyError};
@@ -210,8 +211,9 @@ pub(crate) async fn handle_media(
     )
     .execute(&mut **t)
     .await?;
+    let opened_timestamp = chrono::Utc::now().timestamp_millis();
     let (opened_at, opened_by_all) = if widget_only {
-        (Some(timestamp), Some(timestamp))
+        (Some(opened_timestamp / 1000), Some(opened_timestamp / 1000))
     } else {
         (None, None)
     };
@@ -246,6 +248,26 @@ pub(crate) async fn handle_media(
     )
     .execute(&mut **t)
     .await?;
+
+    if widget_only {
+        // Widget images are opened on arrival. Tell the sender too so its
+        // chat row follows the same retention timer as other opened media.
+        queue_encrypted_content(
+            t,
+            from_user_id,
+            EncryptedContent {
+                message_update: Some(encrypted_content::MessageUpdate {
+                    r#type: encrypted_content::message_update::Type::Opened as i32,
+                    multiple_target_message_ids: vec![media.sender_message_id],
+                    timestamp: opened_timestamp,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            true,
+        )
+        .await?;
+    }
 
     // A story is not an exchange in the chat it is filed under: it neither
     // moves the chat up nor feeds its flames.
@@ -327,4 +349,68 @@ pub(crate) async fn handle_media_update(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use prost::Message as _;
+
+    #[tokio::test]
+    async fn widget_arrival_queues_one_opened_receipt_with_the_arrival_time() -> anyhow::Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let database = ctx.app_db.read().await.clone();
+        let mut t = database.pool.begin().await?;
+        sqlx::query("INSERT INTO contacts(user_id, username, widget_sharing_granted) VALUES (7, 'sender', 1)")
+            .execute(&mut *t).await?;
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat')")
+            .execute(&mut *t)
+            .await?;
+        let before_arrival = chrono::Utc::now().timestamp();
+        let media = encrypted_content::Media {
+            sender_message_id: "widget-message".into(),
+            r#type: MediaType::Image as i32,
+            widget_only: Some(true),
+            timestamp: (before_arrival - 3 * 86400) * 1000,
+            ..Default::default()
+        };
+        handle_media(&ctx, &mut t, 7, "chat", media.clone(), false).await?;
+        handle_media(&ctx, &mut t, 7, "chat", media, false).await?;
+
+        let (opened_at, opened_by_all): (i64, i64) = sqlx::query_as(
+            "SELECT opened_at, opened_by_all FROM messages WHERE message_id = 'widget-message'",
+        )
+        .fetch_one(&mut *t)
+        .await?;
+        assert!(opened_at >= before_arrival);
+        assert_eq!(opened_by_all, opened_at);
+        let receipts: Vec<(i64, Vec<u8>)> =
+            sqlx::query_as("SELECT contact_id, message FROM receipts")
+                .fetch_all(&mut *t)
+                .await?;
+        assert_eq!(receipts.len(), 1, "redelivery must not restart retention");
+        assert_eq!(receipts[0].0, 7);
+        let envelope = crate::api::proto::client::Message::decode(receipts[0].1.as_slice())?;
+        let content = EncryptedContent::decode(
+            envelope
+                .encrypted_content
+                .as_deref()
+                .expect("queued content"),
+        )?;
+        let update = content.message_update.expect("opened receipt");
+        assert_eq!(
+            update.r#type,
+            encrypted_content::message_update::Type::Opened as i32
+        );
+        assert_eq!(update.multiple_target_message_ids, vec!["widget-message"]);
+        assert_eq!(update.timestamp / 1000, opened_at);
+        t.rollback().await?;
+        Ok(())
+    }
 }

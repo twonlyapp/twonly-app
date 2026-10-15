@@ -203,7 +203,7 @@ impl MediaUploadService {
                         "stories take an unprotected image or video".into(),
                     ));
                 }
-                stories::resolve_audience(&mut transaction, audience).await?
+                stories::resolve_audience(&mut transaction, audience, now).await?
             }
             None => Vec::new(),
         };
@@ -534,6 +534,24 @@ impl MediaUploadService {
                     "media exceeds the plan's single-object limit"
                 );
                 self.set_upload_state(media_id, "fileLimitReached").await
+            }
+            Err(TwonlyError::MediaHasNoRecipients) => {
+                let database = self.ctx.app_db.read().await.clone();
+                let mut transaction = database.pool.begin().await?;
+                sqlx::query(
+                    "UPDATE media_files SET upload_state = 'storedOnly' WHERE media_id = ?",
+                )
+                .bind(media_id)
+                .execute(&mut *transaction)
+                .await?;
+                stories::release_media(
+                    &self.ctx,
+                    &mut transaction,
+                    std::collections::BTreeSet::from([media_id.to_owned()]),
+                )
+                .await?;
+                transaction.commit().await?;
+                Ok(())
             }
             Err(error) => {
                 // Staying in `preprocessing` lets the next maintenance pass or
@@ -1913,6 +1931,78 @@ mod tests {
                 .fetch_one(&database.pool)
                 .await?;
         assert_eq!(count, 2);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn all_contacts_story_sends_only_to_recent_chats_without_creating_chats(
+    ) -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
+            .await?;
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+        ctx.inject_test_user_id(42).await?;
+        let database = ctx.app_db.read().await.clone();
+        let now = chrono::Utc::now().timestamp();
+        let recent = now - 21 * 24 * 60 * 60;
+        let mut t = database.pool.begin().await?;
+        for contact_id in 7..=10 {
+            sqlx::query("INSERT INTO contacts(user_id, username, accepted) VALUES (?, ?, 1)")
+                .bind(contact_id)
+                .bind(format!("contact-{contact_id}"))
+                .execute(&mut *t)
+                .await?;
+        }
+        for (contact_id, last_exchange) in [
+            (7, Some(recent)),
+            (8, Some(now - 31 * 24 * 60 * 60)),
+            (9, None),
+        ] {
+            let group_id = stories::direct_chat(&ctx, &mut t, contact_id).await?;
+            sqlx::query("UPDATE groups SET last_text_or_media_at = ? WHERE group_id = ?")
+                .bind(last_exchange)
+                .bind(group_id)
+                .execute(&mut *t)
+                .await?;
+        }
+        // A recent story in an otherwise empty chat is not an exchange.
+        sqlx::query("INSERT INTO messages(message_id, group_id, type, is_story, created_at) VALUES ('previous-story', ?, 'media', 1, ?)")
+            .bind(Group::direct_chat_id(42, 9))
+            .bind(now)
+            .execute(&mut *t)
+            .await?;
+        t.commit().await?;
+
+        let service = MediaUploadService::new(&ctx);
+        let media_id = service.initialize("image".into(), None, false).await?;
+        service
+            .insert_into_messages(
+                media_id.clone(),
+                vec![],
+                None,
+                false,
+                Some(StoryAudience {
+                    all: true,
+                    contact_group_ids: vec![],
+                }),
+            )
+            .await?;
+        let recipients: Vec<String> =
+            sqlx::query_scalar("SELECT group_id FROM messages WHERE media_id = ? AND is_story = 1")
+                .bind(&media_id)
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(recipients, vec![Group::direct_chat_id(42, 7)]);
+        let groups: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM groups")
+            .fetch_one(&database.pool)
+            .await?;
+        assert_eq!(groups, 3, "a broadcast must not create chats");
+        let last_exchange: i64 =
+            sqlx::query_scalar("SELECT last_text_or_media_at FROM groups WHERE group_id = ?")
+                .bind(Group::direct_chat_id(42, 7))
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(last_exchange, recent, "stories must not renew eligibility");
         Ok(())
     }
 

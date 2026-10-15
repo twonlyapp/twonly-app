@@ -145,7 +145,10 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
               contacts.deletedByUser.equals(false) &
               contacts.accountDeleted.equals(false) &
               (announcedContact.userId.isNull() |
-                  announcedContact.deletedByUser.equals(true)),
+                  (announcedContact.deletedByUser.equals(true) &
+                      announcedContact.accepted.equals(false) &
+                      announcedContact.blocked.equals(false) &
+                      announcedContact.accountDeleted.equals(false))),
         );
 
     return query.watch().map((rows) {
@@ -198,7 +201,8 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
             ),
           ),
         ])..where(
-          // Filters: Has a username AND has not been shown to the user yet AND is not an existing contact
+          // Count unseen suggestions only; accepted contacts remain excluded
+          // even if they still have a deleted flag.
           userDiscoveryAnnouncedUsers.username.isNotNull() &
               userDiscoveryAnnouncedUsers.wasShownToTheUser.equals(false) &
               userDiscoveryAnnouncedUsers.isHidden.equals(false) &
@@ -207,7 +211,10 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
               contacts.deletedByUser.equals(false) &
               contacts.accountDeleted.equals(false) &
               (announcedContact.userId.isNull() |
-                  announcedContact.deletedByUser.equals(true)),
+                  (announcedContact.deletedByUser.equals(true) &
+                      announcedContact.accepted.equals(false) &
+                      announcedContact.blocked.equals(false) &
+                      announcedContact.accountDeleted.equals(false))),
         );
 
     return query.watch().map((rows) {

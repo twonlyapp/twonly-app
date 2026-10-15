@@ -7,7 +7,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart'
-    show MemoriesCloudService;
+    show memoriesCloudService;
 import 'package:twonly/src/utils/log.dart';
 
 class MediaFileService {
@@ -130,7 +130,7 @@ class MediaFileService {
     await updateFromDB();
     // Local saving is complete. Uploading this or older queued Memories must
     // not keep the save button waiting on network transfers.
-    unawaited(MemoriesCloudService().checkUploads());
+    unawaited(memoriesCloudService.checkUploads());
   }
 
   /// Recomputes the size and content hash Rust keeps for the stored file.

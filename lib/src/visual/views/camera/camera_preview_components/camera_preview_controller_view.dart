@@ -3,11 +3,8 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_android_volume_keydown/flutter_android_volume_keydown.dart';
-import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/globals.dart';
@@ -23,11 +20,13 @@ import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
+import 'package:twonly/src/visual/views/camera/camera_preview_components/android_camera_volume_control.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_bottom_controls.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_scanned_overlay.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_selfie_flash.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_top_actions.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
+import 'package:twonly/src/visual/views/camera/camera_preview_components/ios_camera_volume_control.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/permissions_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/send_to.dart';
@@ -164,7 +163,16 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
 
   MainCameraController get mc => widget.mainCameraController;
 
-  StreamSubscription<HardwareButton>? androidVolumeDownSub;
+  late final _androidVolumeControl = AndroidCameraVolumeControl(
+    onPressed: () async {
+      if (mounted && widget.isVisible) await takePicture();
+    },
+  );
+  late final _iosVolumeControl = IosCameraVolumeControl(
+    onPressed: () async {
+      if (mounted && widget.isVisible) await takePicture();
+    },
+  );
   StreamSubscription<void>? _userUpdates;
   late bool _storeLocationInMemories;
 
@@ -215,7 +223,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _prewarmMemoryLocation();
+    if (state == AppLifecycleState.resumed) {
+      _prewarmMemoryLocation();
+      if (Platform.isIOS || Platform.isAndroid) unawaited(initVolumeControl());
+    } else if (Platform.isIOS || Platform.isAndroid) {
+      unawaited(_deInitVolumeControl());
+    }
   }
 
   void _checkAndInitCamera() {
@@ -241,58 +254,21 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
   }
 
   Future<void> initVolumeControl() async {
+    if (!mounted || !widget.isVisible || mc.isSharePreviewIsShown) return;
     if (Platform.isIOS) {
-      await FlutterVolumeController.updateShowSystemUI(false);
-      double? startedVolume;
-
-      FlutterVolumeController.addListener(
-        (volume) async {
-          if (!widget.isVisible) {
-            await _deInitVolumeControl();
-            return;
-          }
-          if (startedVolume == null) {
-            startedVolume = volume;
-            return;
-          }
-          if (startedVolume == volume) {
-            return;
-          }
-          // reset the volume back to the original value
-          await FlutterVolumeController.setVolume(startedVolume!);
-          await takePicture();
-        },
-      );
+      await _iosVolumeControl.start();
     }
     if (Platform.isAndroid) {
-      if ((await DeviceInfoPlugin().androidInfo).version.release == '9') {
-        // MissingPluginException: MissingPluginException(No implementation found for method cancel on channel dart-tools.dev/flutter_…
-        // Maybe this is the reason?
-        return;
-      } else {
-        await androidVolumeDownSub?.cancel();
-        androidVolumeDownSub = FlutterAndroidVolumeKeydown.stream.listen((
-          event,
-        ) {
-          if (widget.isVisible) {
-            takePicture();
-          } else {
-            _deInitVolumeControl();
-            return;
-          }
-        });
-      }
+      await _androidVolumeControl.start();
     }
   }
 
   Future<void> _deInitVolumeControl() async {
     if (Platform.isIOS) {
-      await FlutterVolumeController.updateShowSystemUI(true);
-      FlutterVolumeController.removeListener();
+      await _iosVolumeControl.stop();
     }
     if (Platform.isAndroid) {
-      await androidVolumeDownSub?.cancel();
-      androidVolumeDownSub = null;
+      await _androidVolumeControl.stop();
     }
   }
 

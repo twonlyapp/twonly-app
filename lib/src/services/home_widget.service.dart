@@ -157,8 +157,12 @@ class HomeWidgetService {
   static Future<void> refresh() async {
     try {
       await _runtimeChannel.invokeMethod<void>('reloadWidgets');
-    } catch (error) {
-      Log.error('Could not reload the home widget: $error');
+    } catch (error, stackTrace) {
+      Log.error(
+        'Could not reload the home widget',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
 

@@ -15,6 +15,8 @@ use crate::api::proto::client::{encrypted_content, EncryptedContent};
 use crate::context::Context;
 use crate::database::app::tables::{Contact, Group};
 use crate::error::{Result, TwonlyError};
+use crate::services::direct_media_upload::DirectMediaUploadService;
+use crate::services::media_upload::media_lock;
 use crate::services::mediafiles::MediaFileService;
 use crate::services::messages::MessageService;
 use prost::Message as _;
@@ -24,6 +26,9 @@ use std::sync::Arc;
 
 /// How long a story item is visible after its sender posted it.
 pub const STORY_LIFETIME_SECONDS: i64 = 24 * 60 * 60;
+
+/// "All contacts" reaches only existing chats with an exchange in the last month.
+pub const STORY_AUDIENCE_RECENT_EXCHANGE_SECONDS: i64 = 30 * 24 * 60 * 60;
 
 /// A story is announced only between people who sent each other a text or
 /// media message within this long.
@@ -48,8 +53,8 @@ pub(crate) async fn exchanged_recently(
     .await?)
 }
 
-/// Who a story item goes to: every contact, or the members of the selected
-/// contact groups that share stories.
+/// Who a story item goes to: contacts with a recent exchange, or the members
+/// of the selected contact groups that share stories.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct StoryAudience {
     pub all: bool,
@@ -57,15 +62,26 @@ pub struct StoryAudience {
 }
 
 /// The contacts `audience` reaches, in ascending order. Blocked and deleted
-/// contacts are left out, as are group members who left.
+/// contacts are left out, as are group members who left. "All contacts" also
+/// requires an existing direct chat with a text or media exchange in 30 days.
 pub(crate) async fn resolve_audience(
     t: &mut Transaction<'_, Sqlite>,
     audience: &StoryAudience,
+    now: i64,
 ) -> Result<Vec<i64>> {
-    let reachable = sqlx::query_scalar!(
-        r#"SELECT user_id FROM contacts
-           WHERE accepted = 1 AND blocked = 0 AND deleted_by_user = 0 AND account_deleted = 0"#
+    let reachable = sqlx::query_scalar::<_, i64>(
+        r#"SELECT c.user_id FROM contacts c
+           WHERE c.accepted = 1 AND c.blocked = 0
+             AND c.deleted_by_user = 0 AND c.account_deleted = 0
+             AND (? = 0 OR EXISTS (
+                 SELECT 1 FROM groups g
+                 JOIN group_members gm ON gm.group_id = g.group_id
+                 WHERE gm.contact_id = c.user_id AND g.is_direct_chat = 1
+                   AND g.last_text_or_media_at > ?
+             ))"#,
     )
+    .bind(audience.all)
+    .bind(now - STORY_AUDIENCE_RECENT_EXCHANGE_SECONDS)
     .fetch_all(&mut **t)
     .await?
     .into_iter()
@@ -103,13 +119,14 @@ pub(crate) async fn resolve_audience(
 }
 
 /// The 1:1 chats a story sent to `audience` would go to right now, one per
-/// contact it reaches. Chats not created yet are included by the id they
-/// will get, so the list lines up with chats picked for a direct send.
+/// contact it reaches. Explicit contact groups can include chats not created
+/// yet, by the id they will get. "All contacts" only includes existing chats.
 pub async fn audience_chats(ctx: &Arc<Context>, audience: &StoryAudience) -> Result<Vec<String>> {
     let user_id = ctx.user_id().await?;
     let database = ctx.app_db.read().await.clone();
     let mut transaction = database.pool.begin().await?;
-    let contacts = resolve_audience(&mut transaction, audience).await?;
+    let contacts =
+        resolve_audience(&mut transaction, audience, chrono::Utc::now().timestamp()).await?;
     transaction.rollback().await?;
     Ok(contacts
         .into_iter()
@@ -143,7 +160,7 @@ pub(crate) async fn direct_chat(
 /// Removes story rows that are no longer a story. A row some message quotes is
 /// kept as a tombstone without media, so the quote can say the story is gone
 /// instead of pointing at nothing. Returns the media the rows let go of.
-async fn retire_rows(
+pub(crate) async fn retire_rows(
     t: &mut Transaction<'_, Sqlite>,
     message_ids: &[String],
     now: i64,
@@ -195,7 +212,7 @@ async fn retire_rows(
 }
 
 /// Deletes the media files that `retire_rows` let go of and nothing else holds.
-async fn release_media(
+pub(crate) async fn release_media(
     ctx: &Arc<Context>,
     t: &mut Transaction<'_, Sqlite>,
     media_ids: BTreeSet<String>,
@@ -250,23 +267,12 @@ pub async fn purge_expired(ctx: &Arc<Context>) -> Result<()> {
 }
 
 /// Takes one of the user's own story items down before it expires: every
-/// recipient is told to drop it, and the item goes here too. Items whose upload
-/// has not finished are refused, since a delete could overtake the media and
-/// the item would then arrive after all.
+/// recipient is told to drop it if it was dispatched. Unsent uploads are
+/// cancelled first, so nobody receives either the story or a deletion.
 pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
+    let lock = media_lock(media_id);
+    let _guard = lock.lock().await;
     let database = ctx.app_db.read().await.clone();
-    let upload_state = sqlx::query_scalar!(
-        "SELECT upload_state FROM media_files WHERE media_id = ?",
-        media_id,
-    )
-    .fetch_optional(&database.pool)
-    .await?
-    .flatten();
-    if upload_state.as_deref() != Some("uploaded") {
-        return Err(TwonlyError::Generic(
-            "a story item can only be deleted once its upload finished".into(),
-        ));
-    }
     let rows = sqlx::query!(
         r#"SELECT message_id, group_id FROM messages
            WHERE media_id = ? AND is_story = 1 AND sender_id IS NULL AND media_stored = 0"#,
@@ -274,11 +280,27 @@ pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
     )
     .fetch_all(&database.pool)
     .await?;
+    if rows.is_empty() {
+        return Ok(());
+    }
+    let uploaded = sqlx::query_scalar::<_, i64>(
+        "SELECT EXISTS(SELECT 1 FROM media_files WHERE media_id = ? AND upload_state = 'uploaded')",
+    )
+    .bind(media_id)
+    .fetch_one(&database.pool)
+    .await?
+        != 0;
+    // The media lock keeps preparation and reconciliation from racing this
+    // decision. The server arbitrates cancellation against final dispatch.
+    let dispatched = DirectMediaUploadService::new(ctx)
+        .cancel_pending_upload(media_id)
+        .await?
+        || uploaded;
     drop(database);
 
     let timestamp = chrono::Utc::now().timestamp_millis();
     let messages = MessageService::new(ctx);
-    for row in &rows {
+    for row in rows.iter().filter(|_| dispatched) {
         let content = EncryptedContent {
             message_update: Some(encrypted_content::MessageUpdate {
                 r#type: encrypted_content::message_update::Type::Delete as i32,
@@ -301,6 +323,21 @@ pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
     let mut transaction = database.pool.begin().await?;
     let released = retire_rows(&mut transaction, &message_ids, timestamp / 1_000).await?;
+    // A stored Memory may outlive the story. Stop retrying its cancelled send;
+    // if the same media was also sent in a chat, prepare that remaining send
+    // again with a fresh manifest that no longer includes story recipients.
+    if !dispatched {
+        sqlx::query(
+            r#"UPDATE media_files SET upload_state = CASE
+                 WHEN EXISTS(SELECT 1 FROM messages WHERE media_id = ?)
+                 THEN 'preprocessing' ELSE 'storedOnly' END
+               WHERE media_id = ?"#,
+        )
+        .bind(media_id)
+        .bind(media_id)
+        .execute(&mut *transaction)
+        .await?;
+    }
     release_media(ctx, &mut transaction, released).await?;
     transaction.commit().await?;
     Ok(())
@@ -368,24 +405,79 @@ mod tests {
         };
 
         assert_eq!(
-            resolve_audience(&mut t, &resolve(true, &[])).await?,
-            vec![1, 6, 7, 8]
+            resolve_audience(&mut t, &resolve(true, &[]), 1_000_000_000).await?,
+            Vec::<i64>::new()
         );
         // Blocked (2) and not accepted (4) members stay out, and so does the
         // member who left the chat group (8).
         assert_eq!(
-            resolve_audience(&mut t, &resolve(false, &[1])).await?,
+            resolve_audience(&mut t, &resolve(false, &[1]), 1_000_000_000).await?,
             vec![1, 7]
         );
         // A group that does not share stories reaches nobody.
         assert_eq!(
-            resolve_audience(&mut t, &resolve(false, &[2])).await?,
+            resolve_audience(&mut t, &resolve(false, &[2]), 1_000_000_000).await?,
             Vec::<i64>::new()
         );
         assert_eq!(
-            resolve_audience(&mut t, &resolve(false, &[1, 2])).await?,
+            resolve_audience(&mut t, &resolve(false, &[1, 2]), 1_000_000_000).await?,
             vec![1, 7]
         );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn all_contacts_requires_a_direct_exchange_within_thirty_days() -> Result<()> {
+        let (_directory, ctx) = context().await?;
+        let now = 1_000_000_000;
+        let cutoff = now - STORY_AUDIENCE_RECENT_EXCHANGE_SECONDS;
+        let database = ctx.app_db.read().await.clone();
+        let mut t = database.pool.begin().await?;
+        for contact_id in 1..=10 {
+            sqlx::query("INSERT INTO contacts(user_id, username, accepted) VALUES (?, ?, 1)")
+                .bind(contact_id)
+                .bind(format!("contact-{contact_id}"))
+                .execute(&mut *t)
+                .await?;
+        }
+        // No chat (1), no exchange (2), expired exchange (3), exact cutoff (4),
+        // just inside (5), outside the notification window (6), recent (7),
+        // recent but unreachable (8, 9), and only a shared group (10).
+        for (contact_id, last_exchange) in [
+            (2, None),
+            (3, Some(cutoff - 1)),
+            (4, Some(cutoff)),
+            (5, Some(cutoff + 1)),
+            (6, Some(now - 21 * 24 * 60 * 60)),
+            (7, Some(now - 60)),
+            (8, Some(now - 60)),
+            (9, Some(now - 60)),
+        ] {
+            let group_id = direct_chat(&ctx, &mut t, contact_id).await?;
+            sqlx::query("UPDATE groups SET last_text_or_media_at = ? WHERE group_id = ?")
+                .bind(last_exchange)
+                .bind(group_id)
+                .execute(&mut *t)
+                .await?;
+        }
+        sqlx::query("UPDATE contacts SET blocked = 1 WHERE user_id = 8")
+            .execute(&mut *t)
+            .await?;
+        sqlx::query("UPDATE contacts SET accepted = 0 WHERE user_id = 9")
+            .execute(&mut *t)
+            .await?;
+        sqlx::query("INSERT INTO groups(group_id, group_name, last_text_or_media_at) VALUES ('trip', 'Trip', ?)")
+            .bind(now)
+            .execute(&mut *t)
+            .await?;
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES ('trip', 10)")
+            .execute(&mut *t)
+            .await?;
+        let all = StoryAudience {
+            all: true,
+            contact_group_ids: vec![],
+        };
+        assert_eq!(resolve_audience(&mut t, &all, now).await?, vec![5, 6, 7]);
         Ok(())
     }
 
@@ -405,12 +497,123 @@ mod tests {
             all: true,
             contact_group_ids: vec![],
         };
-        // No chat with either exists yet; the ids are the ones they will get,
-        // so they can be compared with chats picked for a direct send.
+        // "All" never proposes a new chat, while explicit story groups may.
+        assert!(audience_chats(&ctx, &everybody).await?.is_empty());
+        execute(
+            &ctx,
+            &[
+                "INSERT INTO contact_groups(id, name, text_color, background_color, share_stories) VALUES (1, 'Close', 0, 0, 1)",
+                "INSERT INTO contact_group_members(contact_group_id, user_id) VALUES (1, 1), (1, 77)",
+            ],
+        )
+        .await?;
+        let explicit = StoryAudience {
+            all: false,
+            contact_group_ids: vec![1],
+        };
         assert_eq!(
-            audience_chats(&ctx, &everybody).await?,
+            audience_chats(&ctx, &explicit).await?,
             vec![Group::direct_chat_id(42, 1), Group::direct_chat_id(42, 77)]
         );
+        let database = ctx.app_db.read().await.clone();
+        let mut t = database.pool.begin().await?;
+        let group_id = direct_chat(&ctx, &mut t, 1).await?;
+        Group::record_text_or_media(&mut t, &group_id, chrono::Utc::now().timestamp()).await?;
+        t.commit().await?;
+        assert_eq!(audience_chats(&ctx, &everybody).await?, vec![group_id]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn deleting_unsent_story_stops_retries_without_notifying_recipients() -> Result<()> {
+        let (_directory, ctx) = context().await?;
+        execute(
+            &ctx,
+            &[
+                "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'anna', 1)",
+                "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('d', 'Anna', 1)",
+                "INSERT INTO group_members(group_id, contact_id) VALUES ('d', 7)",
+            ],
+        )
+        .await?;
+        let database = ctx.app_db.read().await.clone();
+        for state in [
+            "initialized",
+            "preprocessing",
+            "uploading",
+            "uploadLimitReached",
+            "fileLimitReached",
+        ] {
+            for stored in [false, true] {
+                sqlx::query("INSERT INTO media_files(media_id, type, upload_state, stored) VALUES ('m', 'image', ?, ?)")
+                    .bind(state).bind(stored).execute(&database.pool).await?;
+                execute(&ctx, &[
+                    "INSERT INTO messages(message_id, group_id, type, media_id, is_story) VALUES ('s', 'd', 'media', 'm', 1)",
+                    "INSERT INTO receipts(receipt_id, contact_id, message_id, message, will_be_retried_by_media_upload) VALUES ('r', 7, 's', x'00', 1)",
+                ]).await?;
+                delete_item(&ctx, "m").await?;
+                delete_item(&ctx, "m").await?;
+                let messages: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM messages")
+                    .fetch_one(&database.pool)
+                    .await?;
+                let receipts: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM receipts")
+                    .fetch_one(&database.pool)
+                    .await?;
+                assert_eq!(messages, 0);
+                assert_eq!(receipts, 0, "no deletion or upload receipt is queued");
+                let media: Option<(i64, Option<String>)> = sqlx::query_as(
+                    "SELECT stored, upload_state FROM media_files WHERE media_id = 'm'",
+                )
+                .fetch_optional(&database.pool)
+                .await?;
+                if stored {
+                    assert_eq!(media, Some((1, Some("storedOnly".into()))));
+                    sqlx::query("DELETE FROM media_files WHERE media_id = 'm'")
+                        .execute(&database.pool)
+                        .await?;
+                } else {
+                    assert!(media.is_none());
+                }
+            }
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn deleting_unsent_story_preserves_its_shared_chat_send_and_quotes() -> Result<()> {
+        let (_directory, ctx) = context().await?;
+        execute(&ctx, &[
+            "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'anna', 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('d', 'Anna', 1)",
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('d', 7)",
+            "INSERT INTO media_files(media_id, type, upload_state) VALUES ('m', 'image', 'preprocessing')",
+            "INSERT INTO messages(message_id, group_id, type, media_id, is_story) VALUES ('s', 'd', 'media', 'm', 1), ('chat', 'd', 'media', 'm', 0)",
+            "INSERT INTO messages(message_id, group_id, type, content, quotes_message_id) VALUES ('reply', 'd', 'text', 'Reply', 's')",
+            "INSERT INTO receipts(receipt_id, contact_id, message_id, message) VALUES ('rs', 7, 's', x'00'), ('rc', 7, 'chat', x'00')",
+        ]).await?;
+        delete_item(&ctx, "m").await?;
+        let database = ctx.app_db.read().await.clone();
+        let rows: Vec<(String, Option<String>)> =
+            sqlx::query_as("SELECT message_id, media_id FROM messages ORDER BY message_id")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(
+            rows,
+            vec![
+                ("chat".into(), Some("m".into())),
+                ("reply".into(), None),
+                ("s".into(), None)
+            ]
+        );
+        let state: String =
+            sqlx::query_scalar("SELECT upload_state FROM media_files WHERE media_id = 'm'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(state, "preprocessing");
+        let receipts: Vec<String> = sqlx::query_scalar("SELECT receipt_id FROM receipts")
+            .fetch_all(&database.pool)
+            .await?;
+        assert_eq!(receipts, vec!["rc"]);
         Ok(())
     }
 

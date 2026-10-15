@@ -6,9 +6,9 @@ import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -151,6 +151,10 @@ class MemoriesCloudService {
     _isProcessing = true;
 
     try {
+      // Timers and local saves can run while the connection is still coming up.
+      if (await RustApi.connectionState() != ApiConnectionState.authenticated) {
+        return;
+      }
       final memories = await twonlyDB.mediaFilesDao.getMemoriesToBackup();
       if (memories.isEmpty) {
         return;
@@ -261,14 +265,18 @@ class MemoriesCloudService {
       try {
         urls = await RustApi.requestMemoriesUpload(
           size: sizeBytes,
-          originalDate: mediaFile.createdAt.millisecondsSinceEpoch,
+          originalDate: mediaFile.createdAt.millisecondsSinceEpoch ~/ 1000,
           mediaId: mediaFile.mediaId,
         );
-      } catch (error) {
-        Log.error(
-          'Could not get upload URLs for memory ${mediaFile.mediaId}',
-          error: error,
-        );
+      } catch (error, stackTrace) {
+        final message =
+            'Could not get upload URLs for memory ${mediaFile.mediaId}';
+        if (_expectedUploadUrlFailure(error)) {
+          // The row remains queued and the periodic worker retries it.
+          Log.warn(message, error, stackTrace);
+        } else {
+          Log.error(message, error: error, stackTrace: stackTrace);
+        }
         return false;
       }
 
@@ -285,44 +293,26 @@ class MemoriesCloudService {
         addition: 'app',
       );
 
-      final tempDir = await getTemporaryDirectory();
-
       // 1. Upload thumbnail if exists
       final thumbUpload = urls.thumbnailUpload;
       if (ms.thumbnailPath.existsSync() && thumbUpload != null) {
-        final thumbFile = await _encryptFile(
+        final thumbBytes = await _encryptFile(
           ms.thumbnailPath,
           mediaKey,
           encryptedMediaKey,
-          tempDir,
-          'thumb_${mediaFile.mediaId}',
         );
-        try {
-          await _uploadToS3(thumbUpload, thumbFile, (_) {});
-        } finally {
-          if (thumbFile.existsSync()) {
-            thumbFile.deleteSync();
-          }
-        }
+        await _uploadToS3(thumbUpload, thumbBytes, (_) {});
       }
 
       // 2. Upload full media if exists
       final fullUpload = urls.fullUpload;
       if (fullUpload != null) {
-        final fullFile = await _encryptFile(
+        final fullBytes = await _encryptFile(
           ms.storedPath,
           mediaKey,
           encryptedMediaKey,
-          tempDir,
-          'full_${mediaFile.mediaId}',
         );
-        try {
-          await _uploadToS3(fullUpload, fullFile, onProgress);
-        } finally {
-          if (fullFile.existsSync()) {
-            fullFile.deleteSync();
-          }
-        }
+        await _uploadToS3(fullUpload, fullBytes, onProgress);
       }
 
       // 3. Confirm upload
@@ -343,8 +333,12 @@ class MemoriesCloudService {
       } else {
         throw Exception('Server confirmation failed: ${confirmRes.error}');
       }
-    } catch (e) {
-      Log.error('Error backing up memory ${mediaFile.mediaId}: $e');
+    } catch (error, stackTrace) {
+      Log.error(
+        'Error backing up memory ${mediaFile.mediaId}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       await twonlyDB.mediaFilesDao.updateMedia(
         mediaFile.mediaId,
         const MediaFilesCompanion(
@@ -355,9 +349,33 @@ class MemoriesCloudService {
     }
   }
 
+  static bool _expectedUploadUrlFailure(Object error) {
+    if (error is SocketException ||
+        error is TimeoutException ||
+        error is http.ClientException) {
+      return true;
+    }
+    if (error is! AnyhowException) return false;
+    // Rust transport failures can race with the authenticated state check.
+    final message = error.message;
+    if (message == 'Not connected' ||
+        message == 'API request timed out' ||
+        message == 'response channel closed' ||
+        message.startsWith('send error:')) {
+      return true;
+    }
+    final match = RegExp(r'^API error code (\d+)$').firstMatch(message);
+    if (match == null) return false;
+    final code = ErrorCode.fromValue(int.parse(match.group(1)!));
+    return code == ErrorCode.PlanNotAllowed ||
+        code == ErrorCode.PlanLimitReached ||
+        code == ErrorCode.SessionNotAuthenticated ||
+        code == ErrorCode.TooManyRequests;
+  }
+
   Future<void> _uploadToS3(
     FrbPresignedPost presignedPost,
-    File file,
+    Uint8List encryptedBytes,
     void Function(double progress) onProgress,
   ) async {
     final request = ProgressMultipartRequest(
@@ -374,9 +392,9 @@ class MemoriesCloudService {
       Map.fromEntries(presignedPost.fields.map((f) => MapEntry(f.$1, f.$2))),
     );
     request.files.add(
-      await http.MultipartFile.fromPath(
+      http.MultipartFile.fromBytes(
         'file',
-        file.path,
+        encryptedBytes,
         filename: 'file',
       ),
     );
@@ -390,12 +408,12 @@ class MemoriesCloudService {
     }
   }
 
-  Future<File> _encryptFile(
+  // Keep the payload in memory until the request finishes. Shared cache paths
+  // can be deleted by another upload or evicted while the HTTP stream reads.
+  Future<Uint8List> _encryptFile(
     File inputFile,
     Uint8List mediaKey,
     List<int> encryptedMediaKey,
-    Directory tempDir,
-    String prefix,
   ) async {
     final dataToEncrypt = await inputFile.readAsBytes();
     final chacha20 = _mediaCipher();
@@ -417,9 +435,7 @@ class MemoriesCloudService {
       ..mediaNonce = nonce
       ..mediaCiphertext = cipherTextWithMac;
 
-    final outFile = File('${tempDir.path}/$prefix.encrypted');
-    await outFile.writeAsBytes(payload.writeToBuffer());
-    return outFile;
+    return payload.writeToBuffer();
   }
 
   static Future<bool> _decryptFile(

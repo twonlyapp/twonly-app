@@ -52,6 +52,7 @@ class StoryViewer {
     required this.contact,
     required this.message,
     this.openedAt,
+    this.receivedAt,
   });
 
   final Contact contact;
@@ -59,6 +60,7 @@ class StoryViewer {
   /// The hidden story row for this recipient.
   final Message message;
   final DateTime? openedAt;
+  final DateTime? receivedAt;
 
   bool get saved => message.mediaStored;
 }
@@ -152,9 +154,11 @@ class StoriesDao extends DatabaseAccessor<TwonlyDB> with _$StoriesDaoMixin {
   }
 
   /// Everybody one of the user's story items went to. Those who opened it
-  /// come first, most recent first; the rest follow by name.
+  /// come first, then those who received it, most recent first; pending
+  /// recipients follow by name. Opening also proves receipt.
   Stream<List<StoryViewer>> watchStoryViewers(String mediaId) {
     final opened = alias(messageActions, 'opened');
+    final received = alias(messageActions, 'received');
     final query =
         select(messages).join([
           innerJoin(
@@ -164,6 +168,12 @@ class StoriesDao extends DatabaseAccessor<TwonlyDB> with _$StoriesDaoMixin {
           innerJoin(
             contacts,
             contacts.userId.equalsExp(groupMembers.contactId),
+          ),
+          leftOuterJoin(
+            received,
+            received.messageId.equalsExp(messages.messageId) &
+                received.contactId.equalsExp(groupMembers.contactId) &
+                received.type.equals(MessageActionType.ackByUserAt.name),
           ),
           leftOuterJoin(
             opened,
@@ -185,6 +195,11 @@ class StoriesDao extends DatabaseAccessor<TwonlyDB> with _$StoriesDaoMixin {
               openedAt:
                   row.readTableOrNull(opened)?.actionAt ??
                   row.readTable(messages).openedAt,
+              receivedAt:
+                  row.readTableOrNull(received)?.actionAt ??
+                  row.readTable(messages).ackByUser ??
+                  row.readTableOrNull(opened)?.actionAt ??
+                  row.readTable(messages).openedAt,
             ),
           )
           .toList()
@@ -196,6 +211,13 @@ class StoriesDao extends DatabaseAccessor<TwonlyDB> with _$StoriesDaoMixin {
           }
           if (aOpened != null) return -1;
           if (bOpened != null) return 1;
+          final aReceived = a.receivedAt;
+          final bReceived = b.receivedAt;
+          if (aReceived != null && bReceived != null) {
+            return bReceived.compareTo(aReceived);
+          }
+          if (aReceived != null) return -1;
+          if (bReceived != null) return 1;
           return a.contact.username.compareTo(b.contact.username);
         });
     });

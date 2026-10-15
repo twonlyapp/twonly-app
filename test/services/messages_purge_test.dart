@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/user.service.dart';
 
@@ -123,6 +124,100 @@ void main() {
 
       // msg_d_sender_deleted_expired should be deleted because isDeletedFromSender is true and createdAt < deletionLimit
       expect(remainingIds.contains('msg_d_sender_deleted_expired'), isFalse);
+    },
+  );
+
+  test(
+    'widget messages expire from chats while received images remain available',
+    () async {
+      final now = clock.now();
+      final expired = now.subtract(const Duration(hours: 3));
+      final recent = now.subtract(const Duration(hours: 1));
+      await twonlyDB.contactsDao.insertOnConflictUpdate(
+        ContactsCompanion.insert(userId: const Value(2), username: 'sender'),
+      );
+      await twonlyDB.groupsDao.createNewGroup(
+        GroupsCompanion.insert(
+          groupId: 'widgets',
+          groupName: 'Widgets',
+          deleteMessagesAfterMilliseconds: const Value(7200000),
+        ),
+      );
+      for (final fixture in [
+        (id: 'received-widget-expired', sender: 2, widget: true, at: expired),
+        (id: 'sent-widget-expired', sender: null, widget: true, at: expired),
+        (id: 'received-media-expired', sender: 2, widget: false, at: expired),
+        (id: 'sent-widget-recent', sender: null, widget: true, at: recent),
+        (id: 'received-widget-recent', sender: 2, widget: true, at: recent),
+      ]) {
+        await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
+          MediaFilesCompanion.insert(
+            mediaId: fixture.id,
+            type: MediaType.image,
+            isWidgetMedia: Value(fixture.widget),
+            downloadState: const Value(DownloadState.ready),
+          ),
+        );
+        await twonlyDB.messagesDao.insertMessage(
+          MessagesCompanion.insert(
+            messageId: fixture.id,
+            groupId: 'widgets',
+            senderId: Value(fixture.sender),
+            type: 'media',
+            mediaId: Value(fixture.id),
+            isWidgetMedia: Value(fixture.widget),
+            openedAt: Value(fixture.at),
+            openedByAll: Value(fixture.at),
+            createdAt: Value(fixture.at),
+          ),
+        );
+      }
+
+      final visible = await (await twonlyDB.messagesDao.watchByGroupId(
+        'widgets',
+      )).first;
+      expect(
+        visible.map((message) => message.messageId),
+        unorderedEquals(['sent-widget-recent', 'received-widget-recent']),
+      );
+      final older = await twonlyDB.messagesDao.getMessagesBefore(
+        'widgets',
+        recent,
+        beforeMessageId: 'sent-widget-recent',
+      );
+      expect(
+        older.map((message) => message.messageId),
+        isNot(contains('received-widget-expired')),
+      );
+      expect(
+        (await (await twonlyDB.messagesDao.watchLastMessage(
+          'widgets',
+        )).first)!.messageId,
+        'sent-widget-recent',
+      );
+      expect(
+        (await twonlyDB.messagesDao.watchLatestMessagesByGroup().first)
+            .single
+            .openedAt,
+        recent.copyWith(millisecond: 0, microsecond: 0),
+      );
+
+      await twonlyDB.messagesDao.purgeMessageTable();
+
+      final remaining = await twonlyDB.select(twonlyDB.messages).get();
+      expect(
+        remaining.map((message) => message.messageId),
+        unorderedEquals([
+          'received-widget-expired',
+          'sent-widget-recent',
+          'received-widget-recent',
+        ]),
+      );
+      final widgetImage = await twonlyDB.mediaFilesDao.getMediaFileById(
+        'received-widget-expired',
+      );
+      expect(widgetImage!.downloadState, DownloadState.ready);
+      expect(widgetImage.isWidgetMedia, isTrue);
     },
   );
 

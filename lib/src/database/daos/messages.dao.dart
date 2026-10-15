@@ -354,6 +354,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                     m.type.equals(MessageType.webxdcApp.name).not() &
                     // Unsaved story rows expire with the story, not the chat.
                     (m.isStory.equals(false) | m.mediaStored.equals(true)) &
+                    // Received widget rows still identify the home screen's
+                    // current image after the chat's retention timer hides
+                    // them. The widget service removes them when replaced.
+                    (m.isWidgetMedia.equals(false) | m.senderId.isNull()) &
                     ((m.mediaStored.equals(true) &
                             m.isDeletedFromSender.equals(true)) |
                         m.mediaStored.equals(false)) &

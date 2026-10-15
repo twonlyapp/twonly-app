@@ -22,10 +22,13 @@ class LocationMap extends StatefulWidget {
 }
 
 class _LocationMapState extends State<LocationMap> {
+  static const _pointSource = 'current-location';
+  static const _pointLayer = 'current-location-marker';
+
   MapLibreMapController? _map;
   Animation<double>? _routeAnimation;
   bool _closing = false;
-  Circle? _circle;
+  bool _markerReady = false;
   String? _style;
   bool _ready = false;
   bool _failed = false;
@@ -48,7 +51,7 @@ class _LocationMapState extends State<LocationMap> {
     if (style != _style) {
       _style = style;
       _map = null;
-      _circle = null;
+      _markerReady = false;
       _ready = false;
       _failed = false;
       _generation++;
@@ -117,22 +120,41 @@ class _LocationMapState extends State<LocationMap> {
         return;
       }
       try {
-        if (_circle == null) {
-          final circle = await map.addCircle(
-            CircleOptions(
-              geometry: _point,
+        final data = <String, dynamic>{
+          'type': 'FeatureCollection',
+          'features': [
+            {
+              'type': 'Feature',
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [widget.longitude, widget.latitude],
+              },
+              'properties': <String, dynamic>{},
+            },
+          ],
+        };
+        if (!_markerReady) {
+          await map.addGeoJsonSource(_pointSource, data);
+          if (!mounted || generation != _generation || map.isDisposed) {
+            return;
+          }
+          await map.addCircleLayer(
+            _pointSource,
+            _pointLayer,
+            const CircleLayerProperties(
               circleRadius: 9,
               circleColor: '#337eae',
               circleStrokeColor: '#ffffff',
               circleStrokeWidth: 3,
             ),
+            enableInteraction: false,
           );
           if (!mounted || generation != _generation || map.isDisposed) {
             return;
           }
-          _circle = circle;
+          _markerReady = true;
         } else {
-          await map.updateCircle(_circle!, CircleOptions(geometry: _point));
+          await map.setGeoJsonSource(_pointSource, data);
         }
         if (!mounted ||
             generation != _generation ||
@@ -172,7 +194,10 @@ class _LocationMapState extends State<LocationMap> {
             key: ValueKey(_generation),
             styleString: _style!,
             initialCameraPosition: CameraPosition(target: _point, zoom: 14),
-            annotationOrder: const [AnnotationType.circle],
+            // Initialize our marker inside _updatePoint's guarded operations.
+            // Plugin annotation managers initialize before this widget's style
+            // callback and can throw uncaught styleNotFound during teardown.
+            annotationOrder: const [],
             scrollGesturesEnabled: widget.interactive,
             zoomGesturesEnabled: widget.interactive,
             rotateGesturesEnabled: widget.interactive,
@@ -211,7 +236,7 @@ class _LocationMapState extends State<LocationMap> {
                         onPressed: () => setState(() {
                           _generation++;
                           _map = null;
-                          _circle = null;
+                          _markerReady = false;
                           _ready = false;
                           _failed = false;
                           _startTimeout();

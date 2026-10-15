@@ -122,11 +122,26 @@ class Log {
     }
     final message = filterLogMessage('$messageInput');
     if (AppState.allowErrorTrackingViaSentry) {
-      try {
-        throw Exception(message);
-      } catch (exception, stackTrace) {
-        Sentry.captureException(exception, stackTrace: stackTrace);
-      }
+      final cause =
+          error ??
+          (messageInput is Exception || messageInput is Error
+              ? messageInput
+              : null);
+      final causeMessage = cause == null ? null : '$cause';
+      final filteredCause = causeMessage == null
+          ? null
+          : filterLogMessage(causeMessage);
+      // Preserve the original exception type unless its text needs redaction.
+      final exception = cause == null
+          ? Exception(message)
+          : filteredCause == causeMessage
+          ? cause
+          : Exception(filteredCause);
+      Sentry.captureException(
+        exception,
+        stackTrace: stackTrace ?? StackTrace.current,
+        withScope: (scope) => scope.setContexts('log', {'message': message}),
+      );
     }
     Logger(_getCallerSourceCodeFilename()).shout(message, error, stackTrace);
   }

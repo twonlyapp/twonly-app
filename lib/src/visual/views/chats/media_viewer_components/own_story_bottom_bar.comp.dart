@@ -63,9 +63,7 @@ class OwnStoryBottomBar extends StatelessWidget {
         const SizedBox(width: 10),
         MyIconButton(
           variant: MyIconButtonVariant.secondary,
-          onPressed: canDeleteStoryItem(media)
-              ? () => _delete(context, media)
-              : null,
+          onPressed: () => _delete(context, media),
           icon: const FaIcon(FontAwesomeIcons.trash, size: 18),
         ),
       ],

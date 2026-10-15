@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -16,6 +19,9 @@ class _MapPlatform extends MapLibrePlatform {
   final renderingPaused = <bool>[];
   final cameraUpdates = <CameraUpdate>[];
   final points = <Map<String, dynamic>>[];
+  final circleLayers = <Map<String, dynamic>>[];
+  bool styleMissing = false;
+  Completer<void>? sourceAdded;
   bool created = false;
 
   @override
@@ -54,7 +60,16 @@ class _MapPlatform extends MapLibrePlatform {
     String sourceId,
     Map<String, dynamic> geojson, {
     String? promoteId,
-  }) async {}
+  }) async {
+    if (styleMissing) {
+      throw PlatformException(
+        code: 'styleNotFound',
+        message: 'Style not found',
+      );
+    }
+    points.add(geojson);
+    await sourceAdded?.future;
+  }
 
   @override
   Future<void> addCircleLayer(
@@ -67,7 +82,7 @@ class _MapPlatform extends MapLibrePlatform {
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-  }) async {}
+  }) async => circleLayers.add(properties);
 
   @override
   Future<void> setGeoJsonSource(String id, Map<String, dynamic> data) async =>
@@ -198,6 +213,71 @@ void main() {
     await tester.pumpAndSettle();
     expect(platform.cameraUpdates, hasLength(1));
   }
+
+  testWidgets('missing style shows retry and the new map loads its marker', (
+    tester,
+  ) async {
+    platform.styleMissing = true;
+    await tester.pumpWidget(
+      _app(
+        home: const Scaffold(
+          body: LocationMap(latitude: 52, longitude: 13),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(platform.points, isEmpty);
+    expect(
+      tester.widget<MapLibreMap>(find.byType(MapLibreMap)).annotationOrder,
+      isEmpty,
+    );
+    platform.onMapStyleLoadedPlatform.call(null);
+    await tester.pumpAndSettle();
+    final strings = AppLocalizations.of(
+      tester.element(find.byType(LocationMap)),
+    )!;
+    expect(find.text(strings.memoriesMapLoadError), findsOneWidget);
+    expect(platform.cameraUpdates, isEmpty);
+    expect(tester.takeException(), isNull);
+
+    platform = _MapPlatform();
+    await tester.tap(find.text(strings.manualVerificationRetry));
+    await finishLoading(tester);
+    expect(find.text(strings.memoriesMapLoadError), findsNothing);
+    expect(platform.circleLayers.single['circle-color'], '#337eae');
+    final feature = (platform.points.single['features'] as List).single as Map;
+    expect((feature['geometry'] as Map)['coordinates'], [13, 52]);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+    'disposing during marker setup skips the remaining native calls',
+    (
+      tester,
+    ) async {
+      final sourceAdded = Completer<void>();
+      platform.sourceAdded = sourceAdded;
+      await tester.pumpWidget(
+        _app(
+          home: const Scaffold(
+            body: LocationMap(latitude: 52, longitude: 13),
+          ),
+        ),
+      );
+      await tester.pump();
+      platform.onMapStyleLoadedPlatform.call(null);
+      await tester.pump();
+      expect(platform.points, hasLength(1));
+
+      await tester.pumpWidget(const SizedBox());
+      sourceAdded.complete();
+      await tester.pumpAndSettle();
+      expect(platform.circleLayers, isEmpty);
+      expect(platform.cameraUpdates, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   for (final sender in [null, 42]) {
     testWidgets(

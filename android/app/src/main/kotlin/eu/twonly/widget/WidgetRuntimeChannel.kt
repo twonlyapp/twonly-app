@@ -1,7 +1,6 @@
 package eu.twonly.widget
 
-import android.content.Context
-import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodChannel
 
 /**
@@ -15,13 +14,18 @@ import io.flutter.plugin.common.MethodChannel
  * Shares its name with the iOS channel of the same purpose, so Dart talks to
  * one channel on both platforms.
  */
-object WidgetRuntimeChannel {
-    private const val CHANNEL = "eu.twonly/runtime_storage"
+class WidgetRuntimeChannel : FlutterPlugin {
+    companion object {
+        private const val CHANNEL = "eu.twonly/runtime_storage"
+    }
 
     private var channel: MethodChannel? = null
 
-    fun configure(flutterEngine: FlutterEngine, context: Context) {
-        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+    // Refreshes can finish after the activity detaches. Keep the handler alive
+    // until its engine goes away, with a separate channel for each engine.
+    override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        val context = binding.applicationContext
+        val channel = MethodChannel(binding.binaryMessenger, CHANNEL)
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "reloadWidgets" -> {
@@ -34,7 +38,7 @@ object WidgetRuntimeChannel {
         this.channel = channel
     }
 
-    fun detach() {
+    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel?.setMethodCallHandler(null)
         channel = null
     }

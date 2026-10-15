@@ -6,7 +6,6 @@ import 'package:twonly/core/bridge/stories.dart' as stories;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/stories.dao.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -37,13 +36,7 @@ Future<bool> confirmAndDeleteStoryItem(
   }
 }
 
-/// A delete could overtake an upload still on its way and the item would then
-/// arrive after all, so it waits until the upload is done.
-bool canDeleteStoryItem(MediaFile mediaFile) =>
-    mediaFile.uploadState == UploadState.uploaded;
-
-/// Who has viewed one of the user's story items. Recipients who have not
-/// looked at it yet, and how far delivery got, are not the question here.
+/// Delivery and opened receipts for everybody a story item was sent to.
 class StoryViewersBottomSheet extends StatefulWidget {
   const StoryViewersBottomSheet({required this.mediaFile, super.key});
 
@@ -65,11 +58,7 @@ class _StoryViewersBottomSheetState extends State<StoryViewersBottomSheet> {
         .watchStoryViewers(widget.mediaFile.mediaId)
         .listen((viewers) {
           if (!mounted) return;
-          setState(
-            () => _viewers = viewers
-                .where((viewer) => viewer.openedAt != null)
-                .toList(),
-          );
+          setState(() => _viewers = viewers);
         });
   }
 
@@ -119,17 +108,32 @@ class _StoryViewersBottomSheetState extends State<StoryViewersBottomSheet> {
                 const SizedBox(width: 48),
                 Expanded(
                   child: Text(
-                    context.lang.storyViews(_viewers.length),
+                    context.lang.storyViews(
+                      _viewers
+                          .where((viewer) => viewer.openedAt != null)
+                          .length,
+                    ),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
                 IconButton(
                   tooltip: context.lang.storyDelete,
-                  onPressed: canDeleteStoryItem(widget.mediaFile)
-                      ? _delete
-                      : null,
+                  onPressed: _delete,
                   icon: const FaIcon(FontAwesomeIcons.trash, size: 16),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 8),
+            child: Row(
+              children: [
+                _statusCell(
+                  '${context.lang.received} (${_viewers.where((v) => v.receivedAt != null).length})',
+                ),
+                _statusCell(
+                  '${context.lang.opened} (${_viewers.where((v) => v.openedAt != null).length})',
                 ),
               ],
             ),
@@ -147,17 +151,27 @@ class _StoryViewersBottomSheetState extends State<StoryViewersBottomSheet> {
                         AvatarIcon(contactId: viewer.contact.userId),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(
-                            getContactDisplayName(viewer.contact),
-                            style: const TextStyle(fontSize: 17),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(
-                          friendlyDateTime(context, viewer.openedAt!),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.color.onSurface.withAlpha(150),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                getContactDisplayName(viewer.contact),
+                                style: const TextStyle(fontSize: 17),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  _statusCell(
+                                    '${context.lang.received}: ${viewer.receivedAt == null ? '—' : friendlyDateTime(context, viewer.receivedAt!)}',
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _statusCell(
+                                    '${context.lang.opened}: ${viewer.openedAt == null ? '—' : friendlyDateTime(context, viewer.openedAt!)}',
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -170,4 +184,15 @@ class _StoryViewersBottomSheetState extends State<StoryViewersBottomSheet> {
       ),
     );
   }
+
+  Widget _statusCell(String text) => Expanded(
+    child: Text(
+      text,
+      textAlign: TextAlign.start,
+      style: TextStyle(
+        fontSize: 12,
+        color: context.color.onSurface.withAlpha(150),
+      ),
+    ),
+  );
 }

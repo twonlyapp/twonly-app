@@ -2,6 +2,7 @@
 #define TWONLY_NOTIFICATIONS_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,6 +39,11 @@ char *twonly_background_run(
 );
 
 void twonly_background_string_free(char *pointer);
+
+/* Wakes foreground reconciliation after a native media request finishes.
+   Returns false when no Flutter runtime is available; durable maintenance
+   still owns recovery. HTTP success alone never acknowledges the media. */
+bool twonly_direct_media_transfer_finished(void);
 
 #ifdef __cplusplus
 }

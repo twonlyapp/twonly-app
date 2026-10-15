@@ -13,6 +13,7 @@ use crate::services::media_upload::{media_lock, parse_reupload_requested_by, Med
 use crate::services::stories::{STORY_ANNOUNCE_RECENT_EXCHANGE_SECONDS, STORY_LIFETIME_SECONDS};
 use chacha20poly1305::aead::{AeadInPlace, KeyInit};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
+use futures_util::{stream, StreamExt};
 use prost::Message;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -23,6 +24,8 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::Notify;
+use tokio::time::Instant;
 
 /// When to top the slot cache up, until the server has said otherwise.
 ///
@@ -40,13 +43,15 @@ const REFILL_THRESHOLD_KEY: &str = "direct_media_refill_threshold";
 /// so this marker prevents a build switch from reusing the other server's
 /// durable jobs.
 const API_NAMESPACE_KEY: &str = "direct_media_api_namespace";
-const WATCH_FIRST_DELAY: Duration = Duration::from_secs(2);
+const WATCH_FIRST_DELAY: Duration = Duration::from_secs(1);
+const WATCH_FAST_PERIOD: Duration = Duration::from_secs(15);
 /// The server accepts at most this many recipients for one uploaded attachment.
 pub(crate) const MAX_ATTACHMENT_DISPATCHES: usize = 300;
 const WATCH_MAX_DELAY: Duration = Duration::from_secs(120);
 const NATIVE_RECOVERY_INTERVAL_SECONDS: i64 = 60;
+const STATUS_CONCURRENCY: usize = 4;
 
-static WATCHING: AtomicBool = AtomicBool::new(false);
+static UPLOAD_WATCH: UploadWatch = UploadWatch::new();
 static API_NAMESPACE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 /// One slot request at a time.
 ///
@@ -59,47 +64,99 @@ static API_NAMESPACE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_ne
 /// them fails.
 static PRELOAD_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
-/// Bumped every time something asks to be watched. A watcher already in flight
-/// reads this as "new work arrived" and drops back to the short poll interval.
-/// Without it a send made while an earlier watch had already backed off would
-/// wait out that watch's two-minute cadence before its first look, long after
-/// the recipient has the file.
-static WATCH_REQUESTS: AtomicU64 = AtomicU64::new(0);
+/// Coalesces requests into one watcher. The notification interrupts its sleep;
+/// the generation also catches requests racing with the watcher's last pass.
+struct UploadWatch {
+    watching: AtomicBool,
+    requests: AtomicU64,
+    wake: Notify,
+}
+
+impl UploadWatch {
+    const fn new() -> Self {
+        Self {
+            watching: AtomicBool::new(false),
+            requests: AtomicU64::new(0),
+            wake: Notify::const_new(),
+        }
+    }
+
+    fn request(&self) -> u64 {
+        let generation = self.requests.fetch_add(1, Ordering::SeqCst) + 1;
+        // notify_one retains a permit if the watcher is reconciling or has not
+        // started waiting yet. A generation counter alone cannot wake a sleep.
+        self.wake.notify_one();
+        generation
+    }
+
+    async fn wait(&self, delay: Duration) -> bool {
+        tokio::select! {
+            _ = self.wake.notified() => true,
+            _ = tokio::time::sleep(delay) => false,
+        }
+    }
+}
+
+struct WatchCadence {
+    fast_until: Instant,
+    delay: Duration,
+}
+
+impl WatchCadence {
+    fn new() -> Self {
+        Self {
+            fast_until: Instant::now() + WATCH_FAST_PERIOD,
+            delay: WATCH_FIRST_DELAY,
+        }
+    }
+
+    fn advance(&mut self) {
+        if Instant::now() >= self.fast_until {
+            self.delay = (self.delay * 2).min(WATCH_MAX_DELAY);
+        }
+    }
+}
 
 /// Clears the process-wide watcher claim even when the runtime carrying the
 /// task is shut down. Background platform entry points own short-lived Tokio
 /// runtimes, so ordinary code after an `.await` is not guaranteed to run.
-struct WatchingGuard;
+struct WatchingGuard<'a>(&'a UploadWatch);
 
-impl Drop for WatchingGuard {
+impl Drop for WatchingGuard<'_> {
     fn drop(&mut self) {
-        WATCHING.store(false, Ordering::SeqCst);
+        self.0.watching.store(false, Ordering::SeqCst);
     }
 }
-/// The OS finishes a transfer without telling this process, so a send would keep
-/// showing as "sending" until the app is restarted. While the app is alive, poll
-/// the server for the attachments it is still waiting on, backing off as the
-/// wait grows, and stop as soon as everything has settled.
+/// Poll while the app is alive, and wake immediately for newly scheduled work
+/// or native completion callbacks. Polling remains the fallback when callbacks
+/// are lost or an accepted request still needs server-side finalization.
 pub fn watch_pending_uploads(ctx: &Arc<Context>) {
     let Some(runtime) = ctx.foreground_runtime() else {
         // A killed-app worker has no long-lived runtime. Its native scheduler
         // uses the `pending_uploads` result from background::run instead.
         return;
     };
-    let requested = WATCH_REQUESTS.fetch_add(1, Ordering::SeqCst) + 1;
-    if WATCHING.swap(true, Ordering::SeqCst) {
+    let requested = UPLOAD_WATCH.request();
+    if UPLOAD_WATCH.watching.swap(true, Ordering::SeqCst) {
         // A watcher is already running and will pick the request up on its next
         // pass, so this does not start a second poller against the same jobs.
         return;
     }
     let ctx = ctx.clone();
+    // Capture before spawning so cancellation before the first poll also
+    // releases the claim.
+    let guard = WatchingGuard(&UPLOAD_WATCH);
     runtime.spawn(async move {
-        let guard = WatchingGuard;
         let service = DirectMediaUploadService::new(&ctx);
         let mut seen = requested;
-        let mut delay = WATCH_FIRST_DELAY;
+        let mut cadence = WatchCadence::new();
         loop {
-            tokio::time::sleep(delay).await;
+            let woken = UPLOAD_WATCH.wait(cadence.delay).await;
+            let requests = UPLOAD_WATCH.requests.load(Ordering::SeqCst);
+            if woken || requests != seen {
+                seen = requests;
+                cadence = WatchCadence::new();
+            }
             if let Err(error) = service.reconcile().await {
                 tracing::warn!(%error, "could not reconcile direct-media uploads");
             }
@@ -114,15 +171,7 @@ pub fn watch_pending_uploads(ctx: &Arc<Context>) {
                     break;
                 }
             }
-            let requests = WATCH_REQUESTS.load(Ordering::SeqCst);
-            if requests == seen {
-                delay = (delay * 2).min(WATCH_MAX_DELAY);
-            } else {
-                // Something was handed to the OS since the last pass, so look
-                // again soon instead of on the interval an older wait grew to.
-                seen = requests;
-                delay = WATCH_FIRST_DELAY;
-            }
+            cadence.advance();
         }
         // Release the claim before checking for a request that raced the last
         // pass. `WatchingGuard` also performs this release if this future is
@@ -131,7 +180,7 @@ pub fn watch_pending_uploads(ctx: &Arc<Context>) {
         // A request that arrived between the loop stopping and the flag being
         // cleared found `WATCHING` still set and returned without starting a
         // watcher. Nothing else would poll for it, so pick it up here.
-        if WATCH_REQUESTS.load(Ordering::SeqCst) != seen {
+        if UPLOAD_WATCH.requests.load(Ordering::SeqCst) != seen {
             watch_pending_uploads(&ctx);
         }
     });
@@ -287,11 +336,17 @@ enum Outcome {
 
 pub struct DirectMediaUploadService {
     ctx: Arc<Context>,
+    // A watcher keeps this service for its lifetime, reusing the same pool
+    // across status checks. Native workers keep their own runtime-local pool.
+    client: reqwest::Client,
 }
 
 impl DirectMediaUploadService {
     pub fn new(ctx: &Arc<Context>) -> Self {
-        Self { ctx: ctx.clone() }
+        Self {
+            ctx: ctx.clone(),
+            client: reqwest::Client::new(),
+        }
     }
 
     fn api_url(path: &str) -> String {
@@ -386,10 +441,9 @@ impl DirectMediaUploadService {
             locally_known_slot_ids: known,
         };
         let request_body = request.encode_to_vec();
-        let client = reqwest::Client::new();
         let response = self
             .authenticated_request(
-                client
+                self.client
                     .post(Self::api_url("v2/media/upload-slots"))
                     .header("content-type", "application/x-protobuf")
                     // Warp's bounded-body filter requires an explicit length even
@@ -492,7 +546,10 @@ impl DirectMediaUploadService {
     async fn ensure_slots(&self) -> Result<()> {
         self.ensure_api_namespace().await?;
         let usable = self.usable_slot_count().await?;
-        if usable > self.refill_threshold().await {
+        if usable > 0 {
+            if usable <= self.refill_threshold().await {
+                self.spawn_slot_refill();
+            }
             return Ok(());
         }
         let preload_result = self.preload_slots().await;
@@ -579,49 +636,69 @@ impl DirectMediaUploadService {
         .await?;
         drop(database);
 
-        let now = chrono::Utc::now().timestamp();
-        for job in jobs {
-            let status = match self.fetch_status(&job).await {
-                Ok(status) => status,
-                Err(error) => {
-                    tracing::warn!(
-                        attachment_id = job.attachment_id,
-                        %error,
-                        "could not read direct-media attachment status"
-                    );
-                    continue;
-                }
-            };
-            let state = AttachmentState::try_from(status.state).unwrap_or(AttachmentState::Unknown);
-            tracing::info!(
-                attachment_id = job.attachment_id,
-                media_id = job.media_id,
-                ?state,
-                // The server's word on why a transfer was given up on, which is
-                // the only place a cause such as `not_in_client_cache` appears.
-                reason = status.rejection_reason,
-                "read direct-media attachment status"
-            );
-            match state {
-                AttachmentState::Ready => self.settle(&job, Outcome::Uploaded).await?,
-                AttachmentState::Rejected => self.settle(&job, Outcome::Rejected).await?,
-                AttachmentState::Expired | AttachmentState::Abandoned => {
-                    self.settle(&job, Outcome::Retry).await?;
-                    if status.rejection_reason == "not_in_client_cache" {
-                        self.purge_cached_slots().await;
-                    }
-                }
-                // Still reserved or uploading. Only give up once the slot's own
-                // capability has expired, because the native task stops then too.
-                _ if job.expires_at <= now => self.settle(&job, Outcome::Retry).await?,
-                AttachmentState::Reserved | AttachmentState::Uploading => {
-                    if let Err(error) = self.recover_native_transfer(&job).await {
-                        tracing::warn!(attachment_id = job.attachment_id, %error,
-                            "could not recover native media transfer");
-                    }
-                }
-                _ => {}
+        let mut checks = stream::iter(jobs)
+            .map(|job| async move { self.reconcile_job(&job).await })
+            .buffer_unordered(STATUS_CONCURRENCY);
+        let mut first_error = None;
+        while let Some(result) = checks.next().await {
+            if let Err(error) = result {
+                // Finish other jobs even when one fails; cancelling a settling
+                // job midway could leave its durable state incomplete.
+                first_error.get_or_insert(error);
             }
+        }
+        match first_error {
+            Some(error) => Err(error),
+            None => Ok(()),
+        }
+    }
+
+    async fn reconcile_job(&self, job: &PendingJob) -> Result<()> {
+        let status = match self.fetch_status(job).await {
+            Ok(status) => status,
+            Err(error) => {
+                tracing::warn!(
+                    attachment_id = job.attachment_id,
+                    %error,
+                    "could not read direct-media attachment status"
+                );
+                return Ok(());
+            }
+        };
+        self.apply_status(job, status).await
+    }
+
+    async fn apply_status(&self, job: &PendingJob, status: AttachmentStatus) -> Result<()> {
+        let now = chrono::Utc::now().timestamp();
+        let state = AttachmentState::try_from(status.state).unwrap_or(AttachmentState::Unknown);
+        tracing::info!(
+            attachment_id = job.attachment_id,
+            media_id = job.media_id,
+            ?state,
+            // The server's word on why a transfer was given up on, which is
+            // the only place a cause such as `not_in_client_cache` appears.
+            reason = status.rejection_reason,
+            "read direct-media attachment status"
+        );
+        match state {
+            AttachmentState::Ready => self.settle(job, Outcome::Uploaded).await?,
+            AttachmentState::Rejected => self.settle(job, Outcome::Rejected).await?,
+            AttachmentState::Expired | AttachmentState::Abandoned => {
+                self.settle(job, Outcome::Retry).await?;
+                if status.rejection_reason == "not_in_client_cache" {
+                    self.purge_cached_slots().await;
+                }
+            }
+            // Still reserved or uploading. Only give up once the slot's own
+            // capability has expired, because the native task stops then too.
+            _ if job.expires_at <= now => self.settle(job, Outcome::Retry).await?,
+            AttachmentState::Reserved | AttachmentState::Uploading => {
+                if let Err(error) = self.recover_native_transfer(job).await {
+                    tracing::warn!(attachment_id = job.attachment_id, %error,
+                            "could not recover native media transfer");
+                }
+            }
+            _ => {}
         }
         Ok(())
     }
@@ -680,7 +757,9 @@ impl DirectMediaUploadService {
     }
 
     async fn fetch_status(&self, job: &PendingJob) -> Result<AttachmentStatus> {
-        let response = reqwest::Client::new()
+        let started = Instant::now();
+        let response = self
+            .client
             .get(Self::api_url(&format!(
                 "v2/attachments/{}/status",
                 job.attachment_id
@@ -696,9 +775,114 @@ impl DirectMediaUploadService {
                 response.status()
             )));
         }
-        Ok(AttachmentStatus::decode(response.bytes().await.map_err(
-            |error| TwonlyError::Generic(error.to_string()),
-        )?)?)
+        let status = AttachmentStatus::decode(
+            response
+                .bytes()
+                .await
+                .map_err(|error| TwonlyError::Generic(error.to_string()))?,
+        )?;
+        tracing::info!(
+            attachment_id = job.attachment_id,
+            elapsed_ms = started.elapsed().as_millis() as u64,
+            "received direct-media status response"
+        );
+        Ok(status)
+    }
+
+    /// Caller holds the media lock. Abandoning on the server prevents even a
+    /// native transfer already in flight from dispatching its old manifest.
+    /// Returns true if dispatch won the race and recipients need a deletion.
+    pub(crate) async fn cancel_pending_upload(&self, media_id: &str) -> Result<bool> {
+        let database = self.ctx.app_db.read().await.clone();
+        let jobs = sqlx::query_as::<_, PendingJob>(
+            r#"SELECT j.attachment_id, j.media_id, j.multipart_path, j.manifest_path,
+                      j.complete_body_path, s.capability, j.expires_at,
+                      j.reupload_requested_by, j.reupload_targets
+               FROM direct_media_upload_jobs j
+               JOIN direct_media_upload_slots s ON s.attachment_id = j.attachment_id
+               WHERE j.media_id = ?"#,
+        )
+        .bind(media_id)
+        .fetch_all(&database.pool)
+        .await?;
+        let mut dispatched = false;
+        for job in jobs {
+            let response = self
+                .client
+                .post(Self::api_url(&format!(
+                    "v2/attachments/{}/abandon",
+                    job.attachment_id
+                )))
+                .header("x-twonly-upload-capability", hex::encode(&job.capability))
+                .timeout(Duration::from_secs(30))
+                .send()
+                .await
+                .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+            let status = if response.status() == reqwest::StatusCode::CONFLICT {
+                self.fetch_status(&job).await?
+            } else if response.status().is_success() {
+                AttachmentStatus::decode(
+                    response
+                        .bytes()
+                        .await
+                        .map_err(|error| TwonlyError::Generic(error.to_string()))?,
+                )?
+            } else {
+                return Err(TwonlyError::Generic(format!(
+                    "attachment cancellation returned HTTP {}",
+                    response.status()
+                )));
+            };
+            dispatched |= self.finish_cancellation(&job, status).await?;
+        }
+        Ok(dispatched)
+    }
+
+    async fn finish_cancellation(
+        &self,
+        job: &PendingJob,
+        status: AttachmentStatus,
+    ) -> Result<bool> {
+        let dispatched = match AttachmentState::try_from(status.state) {
+            Ok(AttachmentState::Ready) => true,
+            Ok(
+                AttachmentState::Abandoned | AttachmentState::Expired | AttachmentState::Rejected,
+            ) => false,
+            _ => {
+                return Err(TwonlyError::Generic(
+                    "attachment cancellation is not confirmed".into(),
+                ))
+            }
+        };
+        let database = self.ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+        sqlx::query("DELETE FROM direct_media_upload_jobs WHERE attachment_id = ?")
+            .bind(&job.attachment_id)
+            .execute(&mut *transaction)
+            .await?;
+        sqlx::query("UPDATE direct_media_upload_slots SET state = ? WHERE attachment_id = ?")
+            .bind(if dispatched { "consumed" } else { "abandoned" })
+            .bind(&job.attachment_id)
+            .execute(&mut *transaction)
+            .await?;
+        if dispatched {
+            MediaFile::mark_uploaded(&mut transaction, &job.media_id).await?;
+        }
+        transaction.commit().await?;
+        for path in [
+            &job.multipart_path,
+            &job.manifest_path,
+            &job.complete_body_path,
+        ] {
+            let _ = std::fs::remove_file(path);
+        }
+        let _ = std::fs::remove_dir(
+            PathBuf::from(&self.ctx.config.data_dir)
+                .join("direct-media-upload")
+                .join(&job.attachment_id),
+        );
+        self.remove_encrypted_copy(&job.media_id).await;
+        Ok(dispatched)
     }
 
     /// Releases the request files and the slot, then applies the outcome to the
@@ -1049,9 +1233,7 @@ impl DirectMediaUploadService {
         })
         .collect::<Vec<_>>();
         if messages.is_empty() {
-            return Err(TwonlyError::Generic(
-                "media has no recipient messages".into(),
-            ));
+            return Err(TwonlyError::MediaHasNoRecipients);
         }
         let media_type = match media.media_type.as_str() {
             "video" => encrypted_content::media::Type::Video,
@@ -1137,7 +1319,7 @@ impl DirectMediaUploadService {
                         ..Default::default()
                     }
                 };
-                let encrypted_body = send_c2c_message_to_contact()
+                let envelope = send_c2c_message_to_contact()
                     .ctx(&self.ctx)
                     .contact_id(recipient.contact_id)
                     .encrypted_content(content.encode_to_vec())
@@ -1145,10 +1327,13 @@ impl DirectMediaUploadService {
                     .only_return_encrypted_data(true)
                     .blocking(true)
                     .call()
+                    .await;
+                let Some(encrypted_body) = self
+                    .story_envelope(&message, recipient.contact_id, envelope)
                     .await?
-                    .ok_or_else(|| {
-                        TwonlyError::Generic("Signal engine returned no encrypted envelope".into())
-                    })?;
+                else {
+                    continue;
+                };
                 dispatches.push(AttachmentDispatch {
                     recipient_user_id: recipient.contact_id,
                     encrypted_body,
@@ -1161,7 +1346,10 @@ impl DirectMediaUploadService {
                 });
             }
         }
-        if dispatches.is_empty() || dispatches.len() > MAX_ATTACHMENT_DISPATCHES {
+        if dispatches.is_empty() {
+            return Err(TwonlyError::MediaHasNoRecipients);
+        }
+        if dispatches.len() > MAX_ATTACHMENT_DISPATCHES {
             return Err(TwonlyError::Generic(format!(
                 "direct-media fan-out has {} dispatches",
                 dispatches.len()
@@ -1175,6 +1363,49 @@ impl DirectMediaUploadService {
                 dispatches,
             },
         ))
+    }
+
+    /// A missing bundle excludes this story recipient, without changing their
+    /// contact or delaying anybody else's envelope. Other failures still retry.
+    async fn story_envelope(
+        &self,
+        message: &MessageRow,
+        contact_id: i64,
+        envelope: Result<Option<Vec<u8>>>,
+    ) -> Result<Option<Vec<u8>>> {
+        match envelope {
+            Err(TwonlyError::PeerHasNoPrekeyBundle(_)) if message.is_story != 0 => {
+                let database = self.ctx.app_db.read().await.clone();
+                let mut transaction = database.pool.begin().await?;
+                sqlx::query("DELETE FROM receipts WHERE message_id = ? AND contact_id = ?")
+                    .bind(&message.message_id)
+                    .bind(contact_id)
+                    .execute(&mut *transaction)
+                    .await?;
+                // Keep previously delivered rows when this is a reupload.
+                let unsent = sqlx::query_scalar::<_, i64>(
+                    "SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ? AND ack_by_server IS NULL AND ack_by_user IS NULL AND opened_at IS NULL)",
+                ).bind(&message.message_id).fetch_one(&mut *transaction).await? != 0;
+                if unsent {
+                    crate::services::stories::retire_rows(
+                        &mut transaction,
+                        std::slice::from_ref(&message.message_id),
+                        chrono::Utc::now().timestamp(),
+                    )
+                    .await?;
+                }
+                transaction.commit().await?;
+                tracing::info!(
+                    contact_id,
+                    message_id = message.message_id,
+                    "skipping story recipient without a prekey bundle or usable session"
+                );
+                Ok(None)
+            }
+            other => other?.map(Some).ok_or_else(|| {
+                TwonlyError::Generic("Signal engine returned no encrypted envelope".into())
+            }),
+        }
     }
 }
 
@@ -1284,6 +1515,318 @@ mod tests {
     use crate::user_config::UserConfig;
     use libsignal_protocol::IdentityKeyPair;
     use rand::SeedableRng;
+
+    #[tokio::test(start_paused = true)]
+    async fn upload_watch_interrupts_an_existing_long_sleep() {
+        let watch = Arc::new(UploadWatch::new());
+        let started = Instant::now();
+        let waiting = {
+            let watch = watch.clone();
+            tokio::spawn(async move { watch.wait(WATCH_MAX_DELAY).await })
+        };
+        tokio::task::yield_now().await;
+        tokio::time::advance(Duration::from_secs(1)).await;
+        watch.request();
+        assert!(waiting.await.unwrap());
+        assert_eq!(started.elapsed(), Duration::from_secs(1));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn upload_watch_keeps_a_completion_received_between_checks() {
+        let watch = UploadWatch::new();
+        let started = Instant::now();
+        watch.request();
+        assert!(watch.wait(WATCH_MAX_DELAY).await);
+        // A completion delivered while a status request is in flight must
+        // survive until the watcher starts waiting again.
+        let generation = watch.request();
+        assert!(watch.wait(WATCH_MAX_DELAY).await);
+        assert_eq!(watch.requests.load(Ordering::SeqCst), generation);
+        assert_eq!(started.elapsed(), Duration::ZERO);
+        // Consuming the completion hint must not leave a busy polling loop.
+        assert!(!watch.wait(WATCH_FIRST_DELAY).await);
+        assert_eq!(started.elapsed(), WATCH_FIRST_DELAY);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn upload_watch_polls_quickly_then_backs_off_and_resets() {
+        let mut cadence = WatchCadence::new();
+        for _ in 0..14 {
+            tokio::time::advance(WATCH_FIRST_DELAY).await;
+            cadence.advance();
+            assert_eq!(cadence.delay, WATCH_FIRST_DELAY);
+        }
+        tokio::time::advance(WATCH_FIRST_DELAY).await;
+        cadence.advance();
+        assert_eq!(cadence.delay, Duration::from_secs(2));
+        for _ in 0..10 {
+            cadence.advance();
+        }
+        assert_eq!(cadence.delay, WATCH_MAX_DELAY);
+        cadence = WatchCadence::new();
+        cadence.advance();
+        assert_eq!(cadence.delay, WATCH_FIRST_DELAY);
+    }
+
+    #[test]
+    fn upload_watch_releases_claim_when_cancelled_before_first_poll() {
+        let watch = UploadWatch::new();
+        watch.watching.store(true, Ordering::SeqCst);
+        let guard = WatchingGuard(&watch);
+        let future = async move {
+            std::future::pending::<()>().await;
+            drop(guard);
+        };
+        drop(future);
+        assert!(!watch.watching.load(Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn cancelled_transfers_only_notify_after_dispatch_won() -> anyhow::Result<()> {
+        for state in [
+            AttachmentState::Abandoned,
+            AttachmentState::Ready,
+            AttachmentState::Uploading,
+        ] {
+            let directory = tempfile::tempdir()?;
+            let ctx = upload_test_context(directory.path(), 42).await?;
+            let database = ctx.app_db.read().await.clone();
+            sqlx::query("INSERT INTO media_files(media_id, type, upload_state) VALUES ('m', 'image', 'backgroundUploadTaskStarted')")
+                .execute(&database.pool).await?;
+            sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('g', 'Group')")
+                .execute(&database.pool)
+                .await?;
+            sqlx::query("INSERT INTO messages(message_id, group_id, type, media_id, is_story) VALUES ('s', 'g', 'media', 'm', 1)")
+                .execute(&database.pool).await?;
+            let mut job = reupload_test_job(&database, "m", "slot").await?;
+            job.multipart_path = directory.path().join("multipart").display().to_string();
+            job.manifest_path = directory.path().join("manifest").display().to_string();
+            job.complete_body_path = directory.path().join("complete").display().to_string();
+            for path in [
+                &job.multipart_path,
+                &job.manifest_path,
+                &job.complete_body_path,
+            ] {
+                std::fs::write(path, b"request")?;
+            }
+            let service = DirectMediaUploadService::new(&ctx);
+            let result = service
+                .finish_cancellation(
+                    &job,
+                    AttachmentStatus {
+                        state: state as i32,
+                        ..Default::default()
+                    },
+                )
+                .await;
+            if state == AttachmentState::Uploading {
+                assert!(result.is_err());
+                assert_eq!(service.pending_job_count().await?, 1);
+                assert!(Path::new(&job.manifest_path).exists());
+            } else {
+                assert_eq!(result?, state == AttachmentState::Ready);
+                assert_eq!(service.pending_job_count().await?, 0);
+                assert!(!Path::new(&job.manifest_path).exists());
+                let ack: Option<i64> =
+                    sqlx::query_scalar("SELECT ack_by_server FROM messages WHERE message_id = 's'")
+                        .fetch_one(&database.pool)
+                        .await?;
+                assert_eq!(ack.is_some(), state == AttachmentState::Ready);
+                let slot: String = sqlx::query_scalar(
+                    "SELECT state FROM direct_media_upload_slots WHERE attachment_id = 'slot'",
+                )
+                .fetch_one(&database.pool)
+                .await?;
+                assert_eq!(
+                    slot,
+                    if state == AttachmentState::Ready {
+                        "consumed"
+                    } else {
+                        "abandoned"
+                    }
+                );
+            }
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn missing_bundle_skips_only_the_unsent_story_recipient() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = upload_test_context(directory.path(), 42).await?;
+        let database = ctx.app_db.read().await.clone();
+        for contact_id in [7, 8] {
+            sqlx::query("INSERT INTO contacts(user_id, username, accepted) VALUES (?, ?, 1)")
+                .bind(contact_id)
+                .bind(format!("user-{contact_id}"))
+                .execute(&database.pool)
+                .await?;
+        }
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('g', 'Group')")
+            .execute(&database.pool)
+            .await?;
+        sqlx::query("INSERT INTO media_files(media_id, type, upload_state) VALUES ('m', 'image', 'preprocessing')")
+            .execute(&database.pool).await?;
+        for (message_id, contact_id) in [("missing", 7), ("healthy", 8)] {
+            sqlx::query("INSERT INTO messages(message_id, group_id, type, media_id, is_story) VALUES (?, 'g', 'media', 'm', 1)")
+                .bind(message_id).execute(&database.pool).await?;
+            sqlx::query("INSERT INTO receipts(receipt_id, contact_id, message_id, message, will_be_retried_by_media_upload) VALUES (?, ?, ?, x'00', 1)")
+                .bind(message_id).bind(contact_id).bind(message_id)
+                .execute(&database.pool).await?;
+        }
+        let row = |id: &str| MessageRow {
+            group_id: "g".into(),
+            message_id: id.into(),
+            created_at: chrono::Utc::now().timestamp(),
+            quotes_message_id: None,
+            additional_message_data: None,
+            is_widget_media: 0,
+            is_story: 1,
+        };
+        let service = DirectMediaUploadService::new(&ctx);
+        assert!(service
+            .story_envelope(
+                &row("missing"),
+                7,
+                Err(TwonlyError::PeerHasNoPrekeyBundle(7))
+            )
+            .await?
+            .is_none());
+        assert_eq!(
+            service
+                .story_envelope(&row("healthy"), 8, Ok(Some(vec![1, 2, 3])))
+                .await?,
+            Some(vec![1, 2, 3])
+        );
+        let remaining: Vec<String> = sqlx::query_scalar("SELECT message_id FROM messages")
+            .fetch_all(&database.pool)
+            .await?;
+        assert_eq!(remaining, vec!["healthy"]);
+        let receipts: Vec<String> = sqlx::query_scalar("SELECT receipt_id FROM receipts")
+            .fetch_all(&database.pool)
+            .await?;
+        assert_eq!(receipts, vec!["healthy"]);
+        let accepted: i64 = sqlx::query_scalar("SELECT accepted FROM contacts WHERE user_id = 7")
+            .fetch_one(&database.pool)
+            .await?;
+        assert_eq!(accepted, 1, "skipping must not modify the contact");
+        assert!(service
+            .story_envelope(
+                &row("healthy"),
+                8,
+                Err(TwonlyError::Generic("network unavailable".into()))
+            )
+            .await
+            .is_err());
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM messages")
+                .fetch_one(&database.pool)
+                .await?,
+            1
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn server_ready_is_required_before_acknowledging_an_upload() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = upload_test_context(directory.path(), 42).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO media_files(media_id, type, upload_state) VALUES('pending-media', 'image', 'backgroundUploadTaskStarted')")
+            .execute(&database.pool).await?;
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES('pending-group', 'Group')")
+            .execute(&database.pool)
+            .await?;
+        sqlx::query("INSERT INTO messages(message_id, group_id, type, media_id) VALUES('pending-message', 'pending-group', 'media', 'pending-media')")
+            .execute(&database.pool).await?;
+        let mut job = reupload_test_job(&database, "pending-media", "pending-slot").await?;
+        job.multipart_path = directory
+            .path()
+            .join("media.multipart")
+            .display()
+            .to_string();
+        job.manifest_path = directory.path().join("manifest.pb").display().to_string();
+        job.complete_body_path = directory.path().join("complete.pb").display().to_string();
+        for path in [
+            &job.multipart_path,
+            &job.manifest_path,
+            &job.complete_body_path,
+        ] {
+            std::fs::write(path, b"durable request")?;
+        }
+        sqlx::query("UPDATE direct_media_upload_jobs SET multipart_path = ?, manifest_path = ?, complete_body_path = ? WHERE attachment_id = ?")
+            .bind(&job.multipart_path).bind(&job.manifest_path)
+            .bind(&job.complete_body_path).bind(&job.attachment_id)
+            .execute(&database.pool).await?;
+        let service = DirectMediaUploadService::new(&ctx);
+        for state in [
+            AttachmentState::Unknown,
+            AttachmentState::Reserved,
+            AttachmentState::Uploading,
+        ] {
+            service
+                .apply_status(
+                    &job,
+                    AttachmentStatus {
+                        state: state as i32,
+                        ..Default::default()
+                    },
+                )
+                .await?;
+            let ack: Option<i64> = sqlx::query_scalar(
+                "SELECT ack_by_server FROM messages WHERE message_id = 'pending-message'",
+            )
+            .fetch_one(&database.pool)
+            .await?;
+            assert!(ack.is_none(), "{state:?} must not acknowledge the message");
+            assert_eq!(service.pending_job_count().await?, 1);
+            for path in [
+                &job.multipart_path,
+                &job.manifest_path,
+                &job.complete_body_path,
+            ] {
+                assert!(
+                    Path::new(path).exists(),
+                    "{state:?} must keep request files"
+                );
+            }
+        }
+        for _ in 0..2 {
+            service
+                .apply_status(
+                    &job,
+                    AttachmentStatus {
+                        state: AttachmentState::Ready as i32,
+                        ..Default::default()
+                    },
+                )
+                .await?;
+        }
+        let ack: Option<i64> = sqlx::query_scalar(
+            "SELECT ack_by_server FROM messages WHERE message_id = 'pending-message'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert!(ack.is_some());
+        assert_eq!(service.pending_job_count().await?, 0);
+        let state: String = sqlx::query_scalar(
+            "SELECT upload_state FROM media_files WHERE media_id = 'pending-media'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(state, "uploaded");
+        for path in [
+            &job.multipart_path,
+            &job.manifest_path,
+            &job.complete_body_path,
+        ] {
+            assert!(
+                !Path::new(path).exists(),
+                "Ready must release request files"
+            );
+        }
+        Ok(())
+    }
 
     async fn upload_test_context(root: &Path, user_id: i64) -> anyhow::Result<Arc<Context>> {
         let data_dir = root.join("data");
@@ -1729,9 +2272,10 @@ mod tests {
 
     #[test]
     fn cancelled_watcher_releases_process_claim() {
-        WATCHING.store(true, Ordering::SeqCst);
-        drop(WatchingGuard);
-        assert!(!WATCHING.load(Ordering::SeqCst));
+        let watch = UploadWatch::new();
+        watch.watching.store(true, Ordering::SeqCst);
+        drop(WatchingGuard(&watch));
+        assert!(!watch.watching.load(Ordering::SeqCst));
     }
 
     #[tokio::test]

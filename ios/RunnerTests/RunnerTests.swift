@@ -11,6 +11,7 @@ class RunnerTests: XCTestCase {
     let process = UnsafeMutableRawPointer(bitPattern: -2) // RTLD_DEFAULT
     for symbol in [
       "twonly_schedule_direct_media_uploads",
+      "twonly_direct_media_transfer_finished",
       "twonly_begin_background_task",
       "twonly_end_background_task",
       "twonly_decode_image_to_png",
@@ -31,6 +32,16 @@ class RunnerTests: XCTestCase {
     // A nil descriptor is rejected without creating a transfer, but proves
     // that the runtime lookup reaches the actual Swift implementation.
     XCTAssertFalse(schedule(nil))
+  }
+
+  func testNativeUploadCompletionCanCallRustWithoutFlutter() throws {
+    typealias TransferFinished = @convention(c) () -> Bool
+    let pointer = try XCTUnwrap(
+      dlsym(UnsafeMutableRawPointer(bitPattern: -2), "twonly_direct_media_transfer_finished"))
+    let finished = unsafeBitCast(pointer, to: TransferFinished.self)
+    // This callback must be callable without entering a Tokio runtime. A
+    // background URLSession can deliver events before Flutter is initialized.
+    _ = finished()
   }
 
 }

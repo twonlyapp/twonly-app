@@ -68,7 +68,10 @@ impl AppLog {
             .file
             .lock()
             .map_err(|_| std::io::Error::other("app.log lock was poisoned"))?;
-        std::fs::read_to_string(&self.path)
+        // An interrupted write can leave an incomplete UTF-8 character in the
+        // log. Diagnostics and cleanup should still be able to read it.
+        let bytes = std::fs::read(&self.path)?;
+        Ok(String::from_utf8_lossy(&bytes).into_owned())
     }
 
     fn replace(&self, contents: &str) -> std::io::Result<()> {
@@ -698,6 +701,56 @@ mod tests {
         log.replace("retained\n").unwrap();
         log.append(b"new\n").unwrap();
         assert_eq!(std::fs::read_to_string(path).unwrap(), "retained\nnew\n");
+    }
+
+    #[test]
+    fn app_log_reads_invalid_utf8_without_changing_the_file() {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("app.log");
+        let bytes = b"first\ninvalid: \xff\xfe\nlast\n";
+        std::fs::write(&path, bytes).unwrap();
+        let log = AppLog::open(path.clone()).unwrap();
+
+        // Reproduce the error previously returned through the Flutter bridge.
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap_err().kind(),
+            std::io::ErrorKind::InvalidData
+        );
+        assert_eq!(
+            log.read().unwrap(),
+            "first\ninvalid: \u{fffd}\u{fffd}\nlast\n"
+        );
+        assert_eq!(std::fs::read(path).unwrap(), bytes);
+    }
+
+    #[test]
+    fn app_log_reads_an_incomplete_utf8_character_at_the_end() {
+        let temp = tempfile::tempdir().unwrap();
+        let log = AppLog::open(temp.path().join("app.log")).unwrap();
+        log.append(b"complete line\ninterrupted: \xf0\x9f\x98")
+            .unwrap();
+
+        assert_eq!(log.read().unwrap(), "complete line\ninterrupted: \u{fffd}");
+    }
+
+    #[test]
+    fn app_log_preserves_valid_unicode() {
+        let temp = tempfile::tempdir().unwrap();
+        let log = AppLog::open(temp.path().join("app.log")).unwrap();
+        let contents = "Grüße 👋\n日本語\n";
+        log.append(contents.as_bytes()).unwrap();
+
+        assert_eq!(log.read().unwrap(), contents);
+    }
+
+    #[test]
+    fn app_log_read_still_reports_file_errors() {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("app.log");
+        let log = AppLog::open(path.clone()).unwrap();
+        std::fs::remove_file(path).unwrap();
+
+        assert_eq!(log.read().unwrap_err().kind(), std::io::ErrorKind::NotFound);
     }
 
     #[test]

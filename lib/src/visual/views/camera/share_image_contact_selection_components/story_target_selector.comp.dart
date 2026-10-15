@@ -12,9 +12,9 @@ import 'package:twonly/src/visual/elements/my_chip.element.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/first_seen_order.dart';
 import 'package:twonly/src/visual/views/contact/contact_group_settings.view.dart';
 
-/// Where a send also posts the media as a story: to every contact, or to the
-/// contact groups that share stories. Kept by the editor, so the choice
-/// survives a trip back to it.
+/// Where a send also posts the media as a story: to contacts with an exchange
+/// in the last month, or to contact groups that share stories. Kept by the
+/// editor, so the choice survives a trip back to it.
 class StoryTarget {
   bool all = false;
   final Set<int> contactGroupIds = {};
@@ -35,7 +35,7 @@ class StoryTarget {
 }
 
 /// The story choice at the top of the send screen. "All" and single contact
-/// groups exclude each other: everybody already includes every group.
+/// groups exclude each other.
 class StoryTargetSelector extends StatefulWidget {
   const StoryTargetSelector({
     required this.target,

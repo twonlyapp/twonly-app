@@ -887,6 +887,8 @@ pub async fn acknowledge_batch(ctx: &Arc<Context>, event_ids: &[String]) -> Resu
     Ok(())
 }
 
+/// Opening a chat acknowledges its activity, but media notifications remain
+/// until the corresponding media is actually opened.
 pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Result<Vec<String>> {
     let database = ctx.app_db.read().await.clone();
     let mut transaction = database.pool.begin().await?;
@@ -904,19 +906,25 @@ pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Re
     )
     .execute(&mut *transaction)
     .await?;
-    let notification_ids = sqlx::query_scalar!(
-        "SELECT notification_id FROM notification_outbox WHERE conversation_id = ? AND cleared_at IS NULL",
-        conversation_id,
-    )
-    .fetch_all(&mut *transaction)
-    .await?;
     let cleared_at = current_time().timestamp();
-    sqlx::query!(
-        "UPDATE notification_outbox SET cleared_at = ? WHERE conversation_id = ? AND cleared_at IS NULL",
-        cleared_at,
-        conversation_id,
+    let notification_ids = sqlx::query_scalar::<_, String>(
+        r#"
+        UPDATE notification_outbox SET cleared_at = ?
+        WHERE conversation_id = ? AND cleared_at IS NULL
+          AND (
+              kind NOT IN ('twonly', 'image', 'video', 'audio', 'story')
+              OR EXISTS (
+                  SELECT 1 FROM messages
+                  WHERE messages.message_id = notification_outbox.message_id
+                    AND messages.opened_at IS NOT NULL
+              )
+          )
+        RETURNING notification_id
+        "#,
     )
-    .execute(&mut *transaction)
+    .bind(cleared_at)
+    .bind(conversation_id)
+    .fetch_all(&mut *transaction)
     .await?;
     transaction.commit().await?;
     Ok(notification_ids)
@@ -1240,6 +1248,130 @@ mod tests {
             .execute(&db.pool)
             .await?;
         assert!(pending_batch(&ctx, "en").await?.additions.is_empty());
+        assert_eq!(badge_count(&ctx).await?, 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn opening_chat_preserves_only_unopened_media_notifications() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        sqlx::query("INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1)")
+            .execute(&mut *tx)
+            .await?;
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('direct', 'Alice', 1), ('group', 'Friends', 0)",
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        let media_kinds = ["twonly", "image", "video", "audio", "story"];
+        let activity_kinds = [
+            "text",
+            "response",
+            "sticker",
+            "live_location",
+            "webxdc",
+            "story_reply",
+            "story_reaction",
+            "reaction",
+            "stored_media",
+            "reopened_media",
+            "stored_story",
+            "added_to_group",
+        ];
+        for chat in ["direct", "group"] {
+            for kind in media_kinds {
+                for opened in [false, true] {
+                    for delivered in [false, true] {
+                        let id = format!("{chat}-{kind}-{opened}-{delivered}");
+                        sqlx::query(
+                            "INSERT INTO messages(message_id, group_id, sender_id, type, opened_at, is_story) VALUES (?, ?, 7, 'media', ?, ?)",
+                        )
+                        .bind(&id)
+                        .bind(chat)
+                        .bind(opened.then_some(1_i64))
+                        .bind(kind == "story")
+                        .execute(&mut *tx)
+                        .await?;
+                        sqlx::query(
+                            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, message_id, kind, created_at, delivered_at) VALUES (?, ?, ?, 7, ?, ?, 1, ?)",
+                        )
+                        .bind(&id)
+                        .bind(&id)
+                        .bind(chat)
+                        .bind(&id)
+                        .bind(kind)
+                        .bind(delivered.then_some(1_i64))
+                        .execute(&mut *tx)
+                        .await?;
+                    }
+                }
+            }
+            for kind in activity_kinds {
+                let id = format!("{chat}-{kind}");
+                sqlx::query(
+                    "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, message_id, kind, created_at, delivered_at) VALUES (?, ?, ?, 7, ?, ?, 1, 1)",
+                )
+                .bind(&id)
+                .bind(&id)
+                .bind(chat)
+                // Activity referring to unopened media must still be cleared.
+                .bind(format!("{chat}-image-false-false"))
+                .bind(kind)
+                .execute(&mut *tx)
+                .await?;
+            }
+        }
+        tx.commit().await?;
+
+        for chat in ["direct", "group"] {
+            let mut expected = activity_kinds
+                .iter()
+                .map(|kind| format!("{chat}-{kind}"))
+                .collect::<Vec<_>>();
+            for kind in media_kinds {
+                for delivered in [false, true] {
+                    expected.push(format!("{chat}-{kind}-true-{delivered}"));
+                }
+            }
+            expected.sort();
+            let mut removed = clear_conversation(&ctx, chat).await?;
+            removed.sort();
+            assert_eq!(removed, expected);
+            assert!(clear_conversation(&ctx, chat).await?.is_empty());
+
+            let remaining: Vec<String> = sqlx::query_scalar(
+                "SELECT notification_id FROM notification_outbox WHERE conversation_id = ? AND cleared_at IS NULL ORDER BY notification_id",
+            )
+            .bind(chat)
+            .fetch_all(&database.pool)
+            .await?;
+            let mut unopened = media_kinds
+                .iter()
+                .flat_map(|kind| {
+                    [false, true].map(|delivered| format!("{chat}-{kind}-false-{delivered}"))
+                })
+                .collect::<Vec<_>>();
+            unopened.sort();
+            assert_eq!(remaining, unopened);
+
+            if chat == "direct" {
+                let other_uncleared: i64 = sqlx::query_scalar(
+                    "SELECT COUNT(*) FROM notification_outbox WHERE conversation_id = 'group' AND cleared_at IS NULL",
+                )
+                .fetch_one(&database.pool)
+                .await?;
+                assert_eq!(other_uncleared, 32);
+            }
+            let mut tx = database.pool.begin().await?;
+            clear_opened_messages(&mut tx, &unopened, current_time().timestamp()).await?;
+            tx.commit().await?;
+        }
         assert_eq!(badge_count(&ctx).await?, 0);
         Ok(())
     }

@@ -197,7 +197,8 @@ class MessageContextMenu extends StatelessWidget {
             },
             icon: FontAwesomeIcons.faceLaugh,
           ),
-        if (mediaFileService?.canBeOpenedAgain ?? false)
+        if ((!message.isWidgetMedia || message.senderId == null) &&
+            (mediaFileService?.canBeOpenedAgain ?? false))
           ContextMenuItem(
             title: context.lang.contextMenuViewAgain,
             onTap: () => reopenMediaFile(navigator.context),

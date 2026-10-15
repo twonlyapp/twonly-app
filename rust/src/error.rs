@@ -81,6 +81,9 @@ pub enum TwonlyError {
     #[error("a media send reaches {count} recipients but at most {limit} are allowed")]
     TooManyRecipients { count: usize, limit: usize },
 
+    #[error("media has no remaining recipients")]
+    MediaHasNoRecipients,
+
     /// The group server refused a state update because it was written against
     /// a version it no longer holds. Somebody else changed the group first, so
     /// the update has to be applied again to the version that won.

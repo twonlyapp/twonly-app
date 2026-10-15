@@ -82,6 +82,68 @@ void main() {
     expect(unopened.map((m) => m.messageId), ['chat']);
   });
 
+  test('story info distinguishes server acceptance, receipt and opening', () async {
+    await database.customStatement(
+      "INSERT INTO message_actions(message_id, contact_id, type, action_at) VALUES ('mine-anna', 7, 'ackByServerAt', $nowSeconds)",
+    );
+    var viewers = await database.storiesDao.watchStoryViewers('mine').first;
+    expect(
+      viewers.first.receivedAt,
+      DateTime.fromMillisecondsSinceEpoch(nowSeconds * 1000),
+    );
+    expect(
+      viewers.last.receivedAt,
+      isNull,
+      reason: 'Server acceptance is not delivery to a user',
+    );
+
+    final receivedSeconds = nowSeconds - 120;
+    await database.customUpdate(
+      "INSERT INTO message_actions(message_id, contact_id, type, action_at) VALUES ('mine-anna', 7, 'ackByUserAt', $receivedSeconds)",
+      updates: {database.messageActions},
+    );
+    viewers = await database.storiesDao.watchStoryViewers('mine').first;
+    final anna = viewers.singleWhere((viewer) => viewer.contact.userId == 7);
+    expect(
+      anna.receivedAt,
+      DateTime.fromMillisecondsSinceEpoch(receivedSeconds * 1000),
+    );
+    expect(anna.openedAt, isNull);
+
+    await database.customUpdate(
+      "DELETE FROM message_actions WHERE message_id = 'mine-anna'",
+      updates: {database.messageActions},
+    );
+    await database.customUpdate(
+      "UPDATE messages SET ack_by_user = $receivedSeconds WHERE message_id = 'mine-anna'",
+      updates: {database.messages},
+    );
+    viewers = await database.storiesDao.watchStoryViewers('mine').first;
+    expect(
+      viewers.last.receivedAt,
+      anna.receivedAt,
+      reason: 'Legacy message acknowledgements are still shown',
+    );
+  });
+
+  test('story delivery receipts update an already open info stream', () async {
+    final received = database.storiesDao.watchStoryViewers('mine');
+    final changed = received.firstWhere(
+      (viewers) =>
+          viewers
+              .singleWhere((viewer) => viewer.contact.userId == 7)
+              .receivedAt !=
+          null,
+    );
+    await database.customUpdate(
+      "INSERT INTO message_actions(message_id, contact_id, type, action_at) VALUES ('mine-anna', 7, 'ackByUserAt', $nowSeconds)",
+      updates: {database.messageActions},
+    );
+    final viewers = await changed;
+    expect(viewers.last.receivedAt, isNotNull);
+    expect(viewers.last.openedAt, isNull);
+  });
+
   test('a saved story shows in its chat like any stored media', () async {
     await database.customStatement(
       "UPDATE messages SET media_stored = 1 WHERE message_id = 'unseen'",

@@ -9,7 +9,10 @@ void main() {
   });
 
   test('location-sharing notifications open their conversation', () {
-    expect(NativeNotificationService.opensConversation('live_location'), isTrue);
+    expect(
+      NativeNotificationService.opensConversation('live_location'),
+      isTrue,
+    );
   });
 
   test('replies and reactions to the own story open the conversation', () {
@@ -22,11 +25,22 @@ void main() {
     }
   });
 
-  test('stories and saves of them stay on the chat overview', () {
-    for (final kind in ['story', 'stored_story']) {
+  test('stories stay on the chat overview', () {
+    expect(NativeNotificationService.opensConversation('story'), isFalse);
+  });
+
+  test('chat activity notifications open their conversation', () {
+    for (final kind in [
+      'reaction',
+      'stored_media',
+      'reopened_media',
+      'stored_story',
+      'added_to_group',
+      'webxdc',
+    ]) {
       expect(
         NativeNotificationService.opensConversation(kind),
-        isFalse,
+        isTrue,
         reason: kind,
       );
     }
@@ -43,7 +57,14 @@ void main() {
   });
 
   test('missing and non-message kinds stay on the chat overview', () {
-    expect(NativeNotificationService.opensConversation(null), isFalse);
-    expect(NativeNotificationService.opensConversation('reaction'), isFalse);
+    for (final kind in [
+      null,
+      '',
+      'unknown',
+      'contact_request',
+      'accept_request',
+    ]) {
+      expect(NativeNotificationService.opensConversation(kind), isFalse);
+    }
   });
 }

@@ -37,10 +37,8 @@ class NativeNotificationService {
   /// Emits metadata for every native notification tapped while the app runs.
   static Stream<NativeNotificationTap> get taps => _taps.stream;
 
-  /// Text messages (including location shares, quoted replies, and replies and reactions to
-  /// the user's story) and the announcements an app writes into a chat open
-  /// their conversation. Media and every other notification kind stay on the
-  /// chat overview.
+  /// Messages and activity in a chat open their conversation. Incoming media,
+  /// stories and contact requests stay on the chat overview.
   static bool opensConversation(String? kind) =>
       kind == 'text' ||
       kind == 'response' ||
@@ -48,7 +46,12 @@ class NativeNotificationService {
       kind == 'live_location' ||
       kind == 'webxdc' ||
       kind == 'story_reply' ||
-      kind == 'story_reaction';
+      kind == 'story_reaction' ||
+      kind == 'reaction' ||
+      kind == 'stored_media' ||
+      kind == 'reopened_media' ||
+      kind == 'stored_story' ||
+      kind == 'added_to_group';
 
   static void init() {
     _startBadgeSync();
@@ -97,8 +100,8 @@ class NativeNotificationService {
     }
   }
 
-  /// Acknowledges every pending notification of a conversation the user just
-  /// opened and withdraws the alerts still on screen.
+  /// Acknowledges notifications of a conversation the user just opened and
+  /// withdraws their alerts, preserving media that has not been opened yet.
   static Future<void> clearConversation(String conversationId) async {
     if (conversationId.isEmpty) return;
     try {

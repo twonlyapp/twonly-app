@@ -52,8 +52,10 @@ class _BackupViewState extends State<BackupView> {
   }
 
   Future<void> _loadBackupStatus() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     final status = await BackupService.getData();
+    if (!mounted) return;
     FrbMemoriesUsage? memoriesUsage;
     try {
       memoriesUsage = await RustApi.getMemoriesUsage();

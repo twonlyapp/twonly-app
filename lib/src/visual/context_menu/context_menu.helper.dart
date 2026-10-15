@@ -104,7 +104,8 @@ class _ContextMenuState extends State<ContextMenu>
     unawaited(HapticFeedback.heavyImpact());
     _bounce();
 
-    await showMenu(
+    final navigator = Navigator.of(context);
+    final selectedItem = await showMenu<ContextMenuItem>(
       context: context,
       menuPadding: EdgeInsetsGeometry.zero,
       elevation: 1,
@@ -116,15 +117,12 @@ class _ContextMenuState extends State<ContextMenu>
         duration: Duration.zero,
         curve: Curves.fastOutSlowIn,
       ),
-      items: <PopupMenuEntry<int>>[
+      items: <PopupMenuEntry<ContextMenuItem>>[
         ...widget.items().map(
           (item) {
             Widget child = ListTile(
               title: Text(item.title),
-              onTap: () async {
-                if (mounted) Navigator.pop(context);
-                await item.onTap();
-              },
+              onTap: () => navigator.pop(item),
               leading: _getIcon(item.icon),
             );
             if (widget.minWidth != null) {
@@ -133,7 +131,8 @@ class _ContextMenuState extends State<ContextMenu>
                 child: child,
               );
             }
-            return PopupMenuItem(
+            return PopupMenuItem<ContextMenuItem>(
+              value: item,
               padding: const EdgeInsets.only(right: 4),
               child: child,
             );
@@ -145,6 +144,11 @@ class _ContextMenuState extends State<ContextMenu>
         Offset.zero & overlay.semanticBounds.size,
       ),
     );
+
+    // The popup route can outlive its row. Only run the selection while the
+    // row's context and the contexts captured by its actions are still valid.
+    if (!mounted || selectedItem == null) return;
+    await selectedItem.onTap();
   }
 
   @override

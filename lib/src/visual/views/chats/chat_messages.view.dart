@@ -133,9 +133,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     textFieldFocus = FocusNode();
     WidgetsBinding.instance.addObserver(this);
     itemPositionsListener.itemPositions.addListener(_loadOlderWhenNeeded);
-    // Opening a conversation acknowledges everything it has pending, including
-    // the events that survive `notifyMessagesOpened` such as reactions and
-    // media status updates. Without this they keep inflating the app badge.
+    // Opening a conversation acknowledges chat activity such as reactions and
+    // media status updates, while unopened media keeps its notifications.
     unawaited(NativeNotificationService.clearConversation(widget.groupId));
     initStreams();
   }

@@ -128,6 +128,10 @@ Future<bool> authenticateUser(
       return true;
     }
   } on LocalAuthException catch (e) {
+    if (e.code == LocalAuthExceptionCode.userCanceled ||
+        e.code == LocalAuthExceptionCode.systemCanceled) {
+      return false;
+    }
     Log.error(e.toString());
     if (e.code == LocalAuthExceptionCode.noBiometricHardware ||
         e.code == LocalAuthExceptionCode.noBiometricsEnrolled ||

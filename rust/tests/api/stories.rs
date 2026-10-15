@@ -131,6 +131,18 @@ async fn test_story_lifecycle_between_clients() -> anyhow::Result<()> {
     let chat_ab = Group::direct_chat_id(tester_a.user_id, tester_b.user_id);
     let chat_ac = Group::direct_chat_id(tester_a.user_id, tester_c.user_id);
 
+    // "All" requires an exchange in the last month. Seed sender-side history
+    // outside the two-week notification window; B still has no exchange yet.
+    {
+        let database = tester_a.context.app_db.read().await.clone();
+        let mut t = database.pool.begin().await?;
+        let last_exchange = chrono::Utc::now().timestamp() - 21 * 24 * 60 * 60;
+        for chat in [&chat_ab, &chat_ac] {
+            Group::record_text_or_media(&mut t, chat, last_exchange).await?;
+        }
+        t.commit().await?;
+    }
+
     //
     // 1. The real send path: "All" becomes one hidden row per contact, and
     //    preparation encrypts one envelope per recipient.
@@ -182,10 +194,18 @@ async fn test_story_lifecycle_between_clients() -> anyhow::Result<()> {
     )
     .await?;
     tester_a.wait_for_no_pending_upload_jobs().await?;
-    // Still uploading, so it cannot be taken down yet.
-    assert!(stories::delete_item(&tester_a.context, &media_id)
-        .await
-        .is_err());
+    // This host never hands the upload to a native transfer. Cancelling it
+    // takes it down locally without sending deletion messages to anybody.
+    stories::delete_item(&tester_a.context, &media_id).await?;
+    assert_eq!(
+        scalar(
+            &tester_a,
+            "SELECT COUNT(*) FROM messages WHERE media_id = ?",
+            &media_id
+        )
+        .await?,
+        0
+    );
 
     //
     // 2. A story is announced only between people who wrote to each other
