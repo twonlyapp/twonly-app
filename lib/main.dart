@@ -101,12 +101,14 @@ void main() {
   SentryWidgetsFlutterBinding.ensureInitialized();
   // TextureView lets Flutter clip map previews and animate map routes.
   MapLibreMap.useHybridComposition = true;
-  LicenseRegistry.addLicense(() async* {
-    yield LicenseEntryWithLineBreaks(
-      ['U²-Net-P'],
-      await rootBundle.loadString('assets/licenses/u2net.txt'),
-    );
-  });
+  if (Platform.isAndroid) {
+    LicenseRegistry.addLicense(() async* {
+      yield LicenseEntryWithLineBreaks(
+        ['U²-Net-P'],
+        await rootBundle.loadString('assets/licenses/u2net.txt'),
+      );
+    });
+  }
 
   // `App` used to set this as it mounted, which was at the same moment the
   // engine started. It now mounts only once startup finishes, and the API can

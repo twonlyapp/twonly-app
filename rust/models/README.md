@@ -1,8 +1,11 @@
 # Bundled sticker segmentation model
 
 `u2netp.onnx` is the compact U²-Net portrait/object segmentation model used to
-create stickers entirely on device. It is bundled for the first release; a
-later model manager can replace the bytes after verifying the same digest.
+create stickers entirely on device on **Android only**. Its bytes and the
+`tract` ONNX inference runtime are excluded from iOS builds. iOS uses Apple
+Vision foreground instance masks (iOS 17 or later), followed by the same Rust
+WebP encoder, size limits and validation. Older iOS versions return an
+unsupported error without bundling a fallback model.
 
 - Source: <https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx>
 - Architecture/source project: <https://github.com/xuebinqin/U-2-Net>

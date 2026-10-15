@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:twonly/src/visual/helpers/memory_map.helper.dart';
+import 'package:twonly/src/visual/helpers/memory_map_countries.helper.dart';
 
 MemoryMapPoint point(
   double latitude,
@@ -8,6 +10,97 @@ MemoryMapPoint point(
 ]) => MemoryMapPoint(mediaId: id, latitude: latitude, longitude: longitude);
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  late List<MemoryMapCountry> countries;
+  setUpAll(() async => countries = await loadMemoryMapCountries());
+
+  test('starts at the country with most photos across all its cities', () {
+    final camera = mostPopulatedMemoryCamera(
+      [
+        point(48.8566, 2.3522),
+        point(48.8567, 2.3523),
+        point(52.52, 13.405),
+        point(53.5511, 9.9937),
+        point(48.1351, 11.582),
+        point(double.nan, 13),
+      ],
+      countries: countries,
+    );
+    expect(camera.target.longitude, closeTo(10.437, 0.01));
+    expect(camera.target.latitude, inInclusiveRange(50, 53));
+    expect(camera.zoom, inInclusiveRange(3, 6));
+  });
+
+  test(
+    'a single photo still frames its country and respects available space',
+    () {
+      final camera = mostPopulatedMemoryCamera(
+        [point(52.52, 13.405)],
+        countries: countries,
+      );
+      final smaller = mostPopulatedMemoryCamera(
+        [point(52.52, 13.405)],
+        countries: countries,
+        width: 250,
+        height: 200,
+      );
+      expect(camera.target.longitude, closeTo(10.437, 0.01));
+      expect(camera.zoom, lessThan(6));
+      expect(smaller.zoom, lessThan(camera.zoom));
+    },
+  );
+
+  test('country lookup handles islands and enclaves', () {
+    for (final (latitude, longitude, code) in [
+      (52.52, 13.405, 'DEU'),
+      (48.8566, 2.3522, 'FRA'),
+      (40.7812, -73.9665, 'USA'),
+      (1.3521, 103.8198, 'SGP'),
+      (-17.8, 178.1, 'FJI'),
+      (-29.31, 27.49, 'LSO'),
+      (-25.75, 28.19, 'ZAF'),
+    ]) {
+      expect(
+        countries
+            .where((c) => c.contains(latitude, longitude))
+            .map((c) => c.code),
+        [code],
+      );
+    }
+  });
+
+  test('country framing wraps the date line', () {
+    final camera = mostPopulatedMemoryCamera(
+      [point(-17.8, 178.1)],
+      countries: countries,
+    );
+    expect(camera.target.longitude.abs(), greaterThan(170));
+    expect(camera.zoom, greaterThan(3));
+    expect(camera.zoom.isFinite, isTrue);
+  });
+
+  test(
+    'country ties prefer the first photo and sea locations have a fallback',
+    () {
+      final german = point(52.52, 13.405);
+      final french = point(48.8566, 2.3522);
+      final tied = mostPopulatedMemoryCamera([
+        german,
+        french,
+      ], countries: countries);
+      final onlyGerman = mostPopulatedMemoryCamera([
+        german,
+      ], countries: countries);
+      expect(tied.target, onlyGerman.target);
+      expect(tied.zoom, onlyGerman.zoom);
+      final sea = mostPopulatedMemoryCamera([
+        point(0, 0),
+      ], countries: countries);
+      expect(sea.target, const LatLng(0, 0));
+      expect(sea.zoom, 14);
+    },
+  );
+
   test(
     'starts at the most populated area, rather than the worldwide center',
     () {

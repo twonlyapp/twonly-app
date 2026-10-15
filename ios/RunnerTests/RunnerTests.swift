@@ -15,6 +15,7 @@ class RunnerTests: XCTestCase {
       "twonly_begin_background_task",
       "twonly_end_background_task",
       "twonly_decode_image_to_png",
+      "twonly_extract_sticker_foreground",
       "twonly_render_video",
       "twonly_extract_video_frame",
       "twonly_save_to_gallery",
@@ -32,6 +33,31 @@ class RunnerTests: XCTestCase {
     // A nil descriptor is rejected without creating a transfer, but proves
     // that the runtime lookup reaches the actual Swift implementation.
     XCTAssertFalse(schedule(nil))
+  }
+
+  func testRustCanCallStickerForegroundExtraction() throws {
+    typealias ExtractForeground = @convention(c) (
+      UnsafePointer<CChar>?, UnsafePointer<CChar>?
+    ) -> Int32
+    let pointer = try XCTUnwrap(
+      dlsym(UnsafeMutableRawPointer(bitPattern: -2), "twonly_extract_sticker_foreground"))
+    let extract = unsafeBitCast(pointer, to: ExtractForeground.self)
+    XCTAssertEqual(extract(nil, nil), 0)
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let source = directory.appendingPathComponent("invalid.png")
+    let output = directory.appendingPathComponent("foreground.png")
+    try Data("not an image".utf8).write(to: source)
+    let status = source.path.withCString { input in
+      output.path.withCString { extract(input, $0) }
+    }
+    if #available(iOS 17.0, *) {
+      XCTAssertEqual(status, 0)
+    } else {
+      XCTAssertEqual(status, -1)
+    }
+    XCTAssertFalse(FileManager.default.fileExists(atPath: output.path))
   }
 
   func testNativeUploadCompletionCanCallRustWithoutFlutter() throws {

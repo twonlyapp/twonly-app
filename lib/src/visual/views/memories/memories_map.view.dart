@@ -4,15 +4,19 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/helpers/map_style.helper.dart';
 import 'package:twonly/src/visual/helpers/memory_map.helper.dart';
+import 'package:twonly/src/visual/helpers/memory_map_countries.helper.dart';
 import 'package:twonly/src/visual/views/memories/components/memories_map_gallery.comp.dart';
 import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
 
@@ -52,10 +56,13 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
   Size _mapSize = Size.zero;
   String? _style;
   bool _loadingMemories = true;
+  bool _loadingCountries = true;
+  List<MemoryMapCountry> _countries = [];
   bool _styleReady = false;
   bool _layersReady = false;
   bool _failed = false;
   bool _loadingViewport = true;
+  bool _visibleItemsLocked = false;
   int _epoch = 0;
   int _mapGeneration = 0;
   int _viewportRequest = 0;
@@ -69,7 +76,19 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
   void initState() {
     super.initState();
     _sheetController.addListener(_onSheetChanged);
+    unawaited(_loadCountries());
     _subscribe();
+  }
+
+  Future<void> _loadCountries() async {
+    try {
+      final countries = await loadMemoryMapCountries();
+      if (mounted) _countries = countries;
+    } catch (error) {
+      Log.warn('Could not load map country boundaries: $error');
+    } finally {
+      if (mounted) setState(() => _loadingCountries = false);
+    }
   }
 
   void _subscribe() {
@@ -156,6 +175,19 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
           )
           .toList();
       _points = valid.map(_point).toList();
+      if (_visibleItemsLocked) {
+        // Keep the selection while expanded, but still reflect deletions and
+        // changes to the selected memories.
+        final visibleIds = _visibleItems
+            .map((item) => item.mediaService.mediaFile.mediaId)
+            .toSet();
+        _visibleItems = _items
+            .where(
+              (item) =>
+                  visibleIds.contains(item.mediaService.mediaFile.mediaId),
+            )
+            .toList();
+      }
       if (_points.isEmpty) {
         _epoch++;
         _map = null;
@@ -165,6 +197,7 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
         _styleReady = false;
         _appliedPadding = null;
         _loadingViewport = true;
+        _visibleItemsLocked = false;
         _visibleItems = [];
         _sheetSize = MemoriesMapGallery.initialSize;
       }
@@ -371,7 +404,19 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
 
   void _onSheetChanged() {
     if (!_sheetController.isAttached || !mounted) return;
-    setState(() => _sheetSize = _sheetController.size);
+    final size = _sheetController.size;
+    if (size == _sheetSize) return;
+    setState(() {
+      // Expanding the gallery must not discard the photos being browsed as
+      // the map's visible area gets smaller. Shrinking resumes map filtering;
+      // snapping to the normal or collapsed position must leave it unlocked.
+      if (size <= MemoriesMapGallery.initialSize || size < _sheetSize) {
+        _visibleItemsLocked = false;
+      } else if (!_loadingViewport) {
+        _visibleItemsLocked = true;
+      }
+      _sheetSize = size;
+    });
     _scheduleViewport();
   }
 
@@ -401,7 +446,7 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
     final request = _viewportRequest;
     final epoch = _epoch;
     final visibleHeight = _mapSize.height * (1 - _sheetSize);
-    if (_mapSize.isEmpty || !_layersReady) return;
+    if (_mapSize.isEmpty || !_layersReady || _visibleItemsLocked) return;
     // Android's native projection takes physical pixels. UIKit and the web
     // renderer use logical points, matching Flutter's layout coordinates.
     final projectionScale =
@@ -417,7 +462,11 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
         ),
       ),
     ]);
-    if (!_current(epoch, map) || request != _viewportRequest) return;
+    if (!_current(epoch, map) ||
+        request != _viewportRequest ||
+        _visibleItemsLocked) {
+      return;
+    }
     final visibleIds = _points
         .where(
           (point) => memoryMapContains(
@@ -569,7 +618,8 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
     ),
   );
 
-  Widget _buildContent(BuildContext context) => _loadingMemories
+  Widget _buildContent(BuildContext context) =>
+      _loadingMemories || _loadingCountries
       ? const Center(child: CircularProgressIndicator())
       : _points.isEmpty
       ? Center(
@@ -590,6 +640,29 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
                   TextButton(
                     onPressed: _retry,
                     child: Text(context.lang.manualVerificationRetry),
+                  )
+                else
+                  StreamBuilder<void>(
+                    stream: userService.onUserUpdated,
+                    builder: (context, _) =>
+                        userService.currentUser.storeLocationInMemories
+                        ? const SizedBox.shrink()
+                        : Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: MyButton(
+                              variant: MyButtonVariant.primaryMiddle,
+                              onPressed: () =>
+                                  context.push<void>(Routes.settingsStorage),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.settings_outlined),
+                                  const SizedBox(width: 8),
+                                  Text(context.lang.importGalleryOpenSettings),
+                                ],
+                              ),
+                            ),
+                          ),
                   ),
               ],
             ),
@@ -610,6 +683,7 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
                 ? CameraPosition(target: initialPoint.coordinates, zoom: 14)
                 : mostPopulatedMemoryCamera(
                     _points,
+                    countries: _countries,
                     width: size.width,
                     height: size.height * (1 - MemoriesMapGallery.initialSize),
                   );

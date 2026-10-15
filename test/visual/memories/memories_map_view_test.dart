@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -13,6 +14,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/visual/helpers/memory_map_countries.helper.dart';
 import 'package:twonly/src/visual/themes/dark.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/memories/components/memories_map_gallery.comp.dart';
@@ -36,6 +38,7 @@ class _MapPlatform extends MapLibrePlatform {
   double east = 14;
   double north = 54;
   double south = 50;
+  Future<void>? projectionBarrier;
 
   @override
   Widget buildView(
@@ -151,7 +154,12 @@ class _MapPlatform extends MapLibrePlatform {
     projectedPoints.add(screenLocation);
     final x = screenLocation.x / (viewportSize.width * projectionScale);
     final y = screenLocation.y / (viewportSize.height * projectionScale);
-    return LatLng(north - (north - south) * y, west + (east - west) * x);
+    final coordinates = LatLng(
+      north - (north - south) * y,
+      west + (east - west) * x,
+    );
+    await projectionBarrier;
+    return coordinates;
   }
 }
 
@@ -163,6 +171,8 @@ class _MapRoute extends MaterialPageRoute<void> {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(loadMemoryMapCountries);
   late TwonlyDB database;
   late _MapPlatform platform;
   late Directory support;
@@ -364,6 +374,20 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('starts by framing the country with the most memories', (
+    tester,
+  ) async {
+    await database.customStatement(
+      "INSERT INTO media_files(media_id, type, stored, location_latitude, location_longitude) VALUES('hamburg', 'image', 1, 53.5511, 9.9937), ('munich', 'image', 1, 48.1351, 11.582)",
+    );
+    await load(tester);
+    final map = tester.widget<MapLibreMap>(find.byType(MapLibreMap));
+    expect(map.initialCameraPosition!.target.longitude, closeTo(10.437, 0.01));
+    expect(map.initialCameraPosition!.zoom, inInclusiveRange(3, 6));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('opening an image location centers the map on that image', (
     tester,
   ) async {
@@ -381,7 +405,7 @@ void main() {
 
   for (final target in [TargetPlatform.android, TargetPlatform.iOS]) {
     testWidgets(
-      '${target.name} filters the visible map on high-density screens',
+      '${target.name} locks gallery photos while expanding on high-density screens',
       (tester) async {
         tester.view
           ..physicalSize = const Size(1200, 2400)
@@ -414,15 +438,97 @@ void main() {
           ),
         );
 
+        // Start a viewport update that will finish after the gallery expands.
+        final pendingProjection = Completer<void>();
+        platform
+          ..projectionBarrier = pendingProjection.future
+          ..west = -75
+          ..east = -73
+          ..north = 42
+          ..south = 39;
+        platform.onCameraIdlePlatform.call(
+          const CameraPosition(target: LatLng(40.7, -74), zoom: 12),
+        );
+        await tester.pump(const Duration(milliseconds: 150));
+        await tester.pump();
+        final projectionCount = platform.projectedPoints.length;
+
         gallery.controller.jumpTo(0.60);
+        pendingProjection.complete();
+        platform.projectionBarrier = null;
+        await tester.pump(const Duration(milliseconds: 150));
+        await tester.pump();
+        expect(platform.projectedPoints, hasLength(projectionCount));
+        expect(
+          platform.padding.last.bottom,
+          closeTo(platform.viewportSize.height * 0.60, 0.001),
+        );
+        expect(
+          tester
+              .widget<MemoriesMapGallery>(find.byType(MemoriesMapGallery))
+              .items
+              .map((item) => item.mediaService.mediaFile.mediaId),
+          ['berlin'],
+        );
+
+        // Camera events caused by the new map padding must not replace the
+        // photos being browsed, even if the visible map has moved elsewhere.
+        platform.onCameraIdlePlatform.call(
+          const CameraPosition(target: LatLng(40.7, -74), zoom: 12),
+        );
+        await tester.pump(const Duration(milliseconds: 150));
+        await tester.pump();
+        expect(
+          tester
+              .widget<MemoriesMapGallery>(find.byType(MemoriesMapGallery))
+              .items
+              .map((item) => item.mediaService.mediaFile.mediaId),
+          ['berlin'],
+        );
+
+        // Reducing the gallery resumes filtering using the current map area.
+        gallery.controller.jumpTo(0.50);
         await tester.pump(const Duration(milliseconds: 150));
         await tester.pump();
         expect(
           platform.projectedPoints.last.y,
           closeTo(
-            platform.viewportSize.height * 0.40 * platform.projectionScale,
+            platform.viewportSize.height * 0.50 * platform.projectionScale,
             0.001,
           ),
+        );
+        expect(
+          tester
+              .widget<MemoriesMapGallery>(find.byType(MemoriesMapGallery))
+              .items
+              .map((item) => item.mediaService.mediaFile.mediaId),
+          ['new-york'],
+        );
+        // Putting the panel down leaves filtering active, including when it
+        // snaps upward from the collapsed position to its normal height.
+        gallery.controller.jumpTo(0.86);
+        await tester.pump(const Duration(milliseconds: 150));
+        await tester.pump();
+        gallery.controller.jumpTo(0.16);
+        await tester.pump(const Duration(milliseconds: 150));
+        await tester.pump();
+        platform
+          ..west = 12
+          ..east = 14
+          ..north = 54
+          ..south = 50;
+        gallery.controller.jumpTo(MemoriesMapGallery.initialSize);
+        platform.onCameraIdlePlatform.call(
+          const CameraPosition(target: LatLng(52, 13), zoom: 12),
+        );
+        await tester.pump(const Duration(milliseconds: 150));
+        await tester.pump();
+        expect(
+          tester
+              .widget<MemoriesMapGallery>(find.byType(MemoriesMapGallery))
+              .items
+              .map((item) => item.mediaService.mediaFile.mediaId),
+          ['berlin'],
         );
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());

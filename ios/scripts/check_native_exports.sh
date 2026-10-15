@@ -20,6 +20,7 @@ check_exports() {
   twonly_begin_background_task \
   twonly_end_background_task \
   twonly_decode_image_to_png \
+  twonly_extract_sticker_foreground \
   twonly_render_video \
   twonly_extract_video_frame \
   twonly_save_to_gallery \

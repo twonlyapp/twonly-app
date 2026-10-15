@@ -25,7 +25,6 @@ import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_scanned_overlay.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_selfie_flash.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_top_actions.dart';
-import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/ios_camera_volume_control.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/permissions_view.dart';
@@ -599,36 +598,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
     });
   }
 
-  Future<void> pressSideButtonLeft() async {
-    if (!mc.isSelectingFaceFilters) {
-      return pickImageFromGallery();
-    }
-    if (mc.currentFilterType.index == 1) {
-      mc.setFilter(FaceFilterType.none);
-      setState(() {
-        mc.isSelectingFaceFilters = false;
-      });
-      return;
-    }
-    mc.setFilter(mc.currentFilterType.goLeft());
-  }
-
-  Future<void> pressSideButtonRight() async {
-    if (!mc.isSelectingFaceFilters) {
-      setState(() {
-        mc.isSelectingFaceFilters = true;
-      });
-    }
-    if (mc.currentFilterType.index == FaceFilterType.values.length - 1) {
-      mc.setFilter(FaceFilterType.none);
-      setState(() {
-        mc.isSelectingFaceFilters = false;
-      });
-      return;
-    }
-    mc.setFilter(mc.currentFilterType.goRight());
-  }
-
   /// How long this recording may run before the file stops being uploadable
   /// on the user's plan. Frozen when the recording starts so that the ring and
   /// the cut-off cannot drift apart if the plan or the camera changes midway.
@@ -885,12 +854,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
                     mainController: mc,
                     isVideoRecording: mc.isVideoRecording,
                     videoRecordingLocked: _videoRecordingLocked,
-                    isFront: isFront,
                     keyTriggerButton: keyTriggerButton,
                     keyLockButton: keyLockButton,
                     onTakePicture: takePicture,
-                    onPressSideButtonLeft: pressSideButtonLeft,
-                    onPressSideButtonRight: pressSideButtonRight,
+                    onPickImageFromGallery: pickImageFromGallery,
                     updateScaleFactor: updateScaleFactor,
                     onStopVideoRecording: () => stopVideoRecording(force: true),
                   ),

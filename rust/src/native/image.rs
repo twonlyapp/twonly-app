@@ -3,13 +3,58 @@
  *
  */
 
-//! The one image job Rust cannot do alone: decoding container formats with no
-//! practical pure-Rust decoder — HEIC/HEIF from an iPhone camera above all.
-//! The platform decodes to PNG on disk and Rust takes it from there, so no
-//! pixel buffer has to cross the FFI boundary.
+//! Native image decoding and iOS foreground extraction. The platform writes
+//! PNG on disk and Rust takes it from there, so no pixel buffer has to cross
+//! the FFI boundary.
 
 use crate::error::{Result, TwonlyError};
 use std::path::Path;
+
+/// Apple Vision owns segmentation on iOS; no ONNX runtime or model is linked.
+#[cfg(target_os = "ios")]
+pub(crate) fn extract_foreground(input: &Path) -> Result<::image::RgbaImage> {
+    use std::ffi::CString;
+    use std::os::raw::c_char;
+
+    type ExtractForeground = unsafe extern "C" fn(*const c_char, *const c_char) -> i32;
+
+    let output = std::env::temp_dir().join(format!("sticker-{}.png", uuid::Uuid::new_v4()));
+    let input = CString::new(input.as_os_str().as_encoded_bytes())
+        .map_err(|_| TwonlyError::Generic("image path contains a NUL byte".into()))?;
+    let output_c = CString::new(output.as_os_str().as_encoded_bytes())
+        .map_err(|_| TwonlyError::Generic("image path contains a NUL byte".into()))?;
+    let callback = unsafe {
+        libc::dlsym(
+            libc::RTLD_DEFAULT,
+            c"twonly_extract_sticker_foreground".as_ptr(),
+        )
+    };
+    if callback.is_null() {
+        return Err(TwonlyError::Generic(
+            "iOS sticker foreground extraction is unavailable".into(),
+        ));
+    }
+    // SAFETY: the public Swift @_cdecl has this exact C ABI signature. Both
+    // path strings remain alive until the synchronous callback returns.
+    let callback: ExtractForeground = unsafe { std::mem::transmute(callback) };
+    let result = match unsafe { callback(input.as_ptr(), output_c.as_ptr()) } {
+        1 => ::image::open(&output)
+            .map(|image| image.to_rgba8())
+            .map_err(|error| TwonlyError::Generic(error.to_string())),
+        -1 => Err(TwonlyError::Generic(
+            "sticker creation requires iOS 17 or later".into(),
+        )),
+        -2 => Err(TwonlyError::Generic(
+            "no foreground was found in this image".into(),
+        )),
+        _ => Err(TwonlyError::Generic(
+            "iOS could not extract a sticker from this image".into(),
+        )),
+    };
+    // Clean up on decoding errors and partial native writes as well.
+    let _ = std::fs::remove_file(output);
+    result
+}
 
 #[cfg(target_os = "ios")]
 pub(crate) fn decode_to_png(input: &Path, output: &Path) -> Result<()> {

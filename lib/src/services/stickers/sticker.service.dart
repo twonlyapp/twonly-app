@@ -78,7 +78,7 @@ class StickerService {
   }
 
   /// Creates a sticker from encoded image bytes without making the caller
-  /// manage the temporary source file required by the native sticker model.
+  /// manage the temporary source file required by native foreground extraction.
   static Future<LocalSticker> createFromBytes(Uint8List imageBytes) async {
     final source = File(
       '${AppEnvironment.cacheDir}/sticker-source-'

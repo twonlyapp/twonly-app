@@ -45,14 +45,6 @@ class MainCameraPreview extends StatelessWidget {
                       child: CameraPreview(
                         key: mainCameraController.cameraPreviewKey,
                         mainCameraController.cameraController!,
-                        child: Stack(
-                          children: [
-                            if (mainCameraController.facePaint != null)
-                              Positioned.fill(
-                                child: mainCameraController.facePaint!,
-                              ),
-                          ],
-                        ),
                       ),
                     ),
                   ),

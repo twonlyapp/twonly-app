@@ -567,22 +567,33 @@ pub(crate) async fn record_incoming_event(
     Ok(())
 }
 
-/// A foreground chat can mark a message as opened before the native push
-/// worker gets around to rendering its durable outbox row. Clearing those
-/// stale rows keeps them from producing an alert or inflating the badge.
-async fn clear_stale_opened(database: &Arc<AppDatabase>) -> Result<()> {
+/// Reconcile old outbox rows and events recorded after their message was
+/// opened or deleted. Deleted messages can no longer be acknowledged in the
+/// UI, so their alerts must not keep inflating the badge.
+async fn clear_stale_messages(database: &Arc<AppDatabase>) -> Result<()> {
     let cleared_at = current_time().timestamp();
     sqlx::query(
         r#"
         UPDATE notification_outbox
         SET cleared_at = ?
         WHERE cleared_at IS NULL
-          AND kind IN ('text', 'response', 'sticker', 'live_location', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
-          AND EXISTS (
-              SELECT 1
-              FROM messages
-              WHERE messages.message_id = notification_outbox.message_id
-                AND messages.opened_at IS NOT NULL
+          AND message_id IS NOT NULL
+          AND (
+              NOT EXISTS (
+                  SELECT 1 FROM messages
+                  WHERE messages.message_id = notification_outbox.message_id
+              )
+              OR EXISTS (
+                  SELECT 1 FROM messages
+                  WHERE messages.message_id = notification_outbox.message_id
+                    AND (
+                        messages.is_deleted_from_sender = 1
+                        OR (
+                            messages.opened_at IS NOT NULL
+                            AND notification_outbox.kind IN ('text', 'response', 'sticker', 'live_location', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
+                        )
+                    )
+              )
           )
         "#,
     )
@@ -617,7 +628,7 @@ async fn clear_visible_webxdc(ctx: &Context, database: &Arc<AppDatabase>) -> Res
 /// to push this value into `UNUserNotificationCenter` itself.
 pub async fn badge_count(ctx: &Arc<Context>) -> Result<i64> {
     let database = ctx.app_db.read().await.clone();
-    clear_stale_opened(&database).await?;
+    clear_stale_messages(&database).await?;
     clear_visible_webxdc(ctx, &database).await?;
     let count = sqlx::query_scalar!(
         r#"SELECT COUNT(*) AS "count: i64" FROM notification_outbox WHERE cleared_at IS NULL"#
@@ -629,7 +640,7 @@ pub async fn badge_count(ctx: &Arc<Context>) -> Result<i64> {
 
 pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<NotificationBatch> {
     let database = ctx.app_db.read().await.clone();
-    clear_stale_opened(&database).await?;
+    clear_stale_messages(&database).await?;
     clear_visible_webxdc(ctx, &database).await?;
     let rows = sqlx::query_as!(
         PendingRow,
@@ -1107,6 +1118,149 @@ pub(crate) fn notification_avatar_path(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn deleting_messages_clears_badge_and_broadcasts_outbox_changes() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let db = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'alice');
+             INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Alice');
+             INSERT INTO messages(message_id, group_id, type)
+             VALUES ('image-1', 'chat', 'media'), ('image-2', 'chat', 'media'),
+                    ('image-3', 'chat', 'media'), ('image-4', 'chat', 'media'),
+                    ('unopened', 'chat', 'media');
+             INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, message_id, kind, created_at, delivered_at)
+             SELECT message_id, message_id, group_id, 7, message_id, 'image', 1,
+                    CASE WHEN message_id IN ('image-1', 'image-2') THEN 1 END
+             FROM messages;
+             INSERT INTO notification_outbox(event_id, notification_id, sender_id, kind, created_at)
+             VALUES ('request', 'request', 7, 'contact_request', 1);",
+        )
+        .execute(&db.pool)
+        .await?;
+        assert_eq!(badge_count(&ctx).await?, 6);
+
+        let mut changes = db.subscribe();
+        sqlx::query("DELETE FROM messages WHERE message_id LIKE 'image-%'")
+            .execute(&db.pool)
+            .await?;
+        let changed = tokio::time::timeout(std::time::Duration::from_secs(1), changes.recv())
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(changed.tables.contains("notification_outbox"));
+        // Assert the trigger worked before badge reconciliation can repair it.
+        let cleared: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM notification_outbox WHERE cleared_at IS NOT NULL",
+        )
+        .fetch_one(&db.pool)
+        .await?;
+        assert_eq!(cleared, 4);
+        assert_eq!(badge_count(&ctx).await?, 2);
+        assert!(clear_conversation(&ctx, "chat").await?.is_empty());
+        let batch = pending_batch(&ctx, "en").await?;
+        assert_eq!(batch.badge_count, 2);
+        assert_eq!(batch.additions.len(), 2);
+        assert!(batch
+            .additions
+            .iter()
+            .all(|n| n.event_id == "unopened" || n.event_id == "request"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn badge_and_batch_repair_legacy_deleted_message_notifications() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let db = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'alice');
+             INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Alice');
+             INSERT INTO messages(message_id, group_id, type, is_deleted_from_sender)
+             VALUES ('tombstone', 'chat', 'media', 1), ('unopened', 'chat', 'media', 0);
+             INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, message_id, kind, created_at)
+             VALUES ('image', 'image', 'chat', 7, 'missing-image', 'image', 1),
+                    ('text', 'text', 'chat', 7, 'missing-text', 'text', 1),
+                    ('reaction', 'reaction', 'chat', 7, 'missing-target', 'reaction', 1),
+                    ('deleted', 'deleted', 'chat', 7, 'tombstone', 'video', 1),
+                    ('unopened', 'unopened', 'chat', 7, 'unopened', 'image', 1),
+                    ('request', 'request', NULL, 7, NULL, 'contact_request', 1);",
+        )
+        .execute(&db.pool)
+        .await?;
+        // Legacy rows may already have been delivered, or may still be pending.
+        for delivered_at in [None, Some(1_i64)] {
+            sqlx::query("UPDATE notification_outbox SET cleared_at = NULL, delivered_at = ?")
+                .bind(delivered_at)
+                .execute(&db.pool)
+                .await?;
+            assert_eq!(badge_count(&ctx).await?, 2);
+
+            // The extension's batch path must also repair the rows on its own.
+            sqlx::query("UPDATE notification_outbox SET cleared_at = NULL")
+                .execute(&db.pool)
+                .await?;
+            let batch = pending_batch(&ctx, "en").await?;
+            assert_eq!(batch.badge_count, 2);
+            assert_eq!(
+                batch.additions.len(),
+                if delivered_at.is_some() { 0 } else { 2 }
+            );
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn sender_and_chat_deletion_clear_notifications_transactionally() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let db = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'alice');
+             INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Alice');
+             INSERT INTO messages(message_id, group_id, type) VALUES ('image', 'chat', 'media');
+             INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, message_id, kind, created_at)
+             VALUES ('image', 'image', 'chat', 7, 'image', 'image', 1),
+                    ('reaction', 'reaction', 'chat', 7, 'image', 'reaction', 1);",
+        )
+        .execute(&db.pool)
+        .await?;
+        for statement in [
+            "UPDATE messages SET is_deleted_from_sender = 1 WHERE message_id = 'image'",
+            "DELETE FROM groups WHERE group_id = 'chat'",
+        ] {
+            let mut changes = db.subscribe();
+            let mut tx = db.pool.begin().await?;
+            sqlx::query(sqlx::AssertSqlSafe(statement))
+                .execute(&mut *tx)
+                .await?;
+            let remaining: i64 = sqlx::query_scalar(
+                "SELECT COUNT(*) FROM notification_outbox WHERE cleared_at IS NULL",
+            )
+            .fetch_one(&mut *tx)
+            .await?;
+            assert_eq!(remaining, 0);
+            tx.rollback().await?;
+            assert_eq!(badge_count(&ctx).await?, 2);
+            assert!(matches!(
+                changes.try_recv(),
+                Err(tokio::sync::broadcast::error::TryRecvError::Empty)
+            ));
+        }
+        sqlx::query("UPDATE messages SET is_deleted_from_sender = 1 WHERE message_id = 'image'")
+            .execute(&db.pool)
+            .await?;
+        assert_eq!(badge_count(&ctx).await?, 0);
+        Ok(())
+    }
 
     #[tokio::test]
     async fn location_shares_notify_once_per_chat_and_updates_stay_silent() -> Result<()> {

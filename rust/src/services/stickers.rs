@@ -5,32 +5,27 @@
 
 //! On-device sticker creation and validation.
 //!
-//! The compact U²-Net model is compiled into the native library for now. The
-//! digest check is intentionally kept beside model loading so a future model
-//! downloader can feed these same trusted bytes without changing inference.
+//! iOS uses Apple Vision for foreground extraction. Only Android bundles the
+//! U²-Net model and inference runtime; both share the same bounded WebP encoder.
 
 use crate::api::proto::client::{self as proto, additional_message_data};
 use crate::error::{Result, TwonlyError};
 use crate::services::media_codec;
-use image::imageops::{self, FilterType};
-use image::{DynamicImage, GrayImage, ImageDecoder, Luma, Rgba, RgbaImage};
+use image::imageops;
+use image::{DynamicImage, ImageDecoder, Rgba, RgbaImage};
 use prost::Message as _;
 use sha2::{Digest, Sha256};
 use std::io::Cursor;
 use std::path::Path;
-use std::sync::OnceLock;
-use tract::prelude::*;
 
-const MODEL_BYTES: &[u8] = include_bytes!("../../models/u2netp.onnx");
-const MODEL_SHA256: &str = "309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8";
-const MODEL_EDGE: u32 = 320;
+#[cfg(target_os = "android")]
+mod android;
+
 const WORKING_EDGE: u32 = 900;
 pub(crate) const MAX_STICKER_EDGE: u32 = 300;
 pub(crate) const MAX_STICKER_BYTES: usize = 128 * 1024;
 pub(crate) const STICKER_VERSION: u32 = 1;
 const TRANSPARENT_ALPHA: u8 = 10;
-
-static MODEL: OnceLock<std::result::Result<Runnable, String>> = OnceLock::new();
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StickerOutput {
@@ -45,96 +40,33 @@ fn sticker_error(message: impl Into<String>) -> TwonlyError {
     TwonlyError::Generic(message.into())
 }
 
-fn model() -> Result<&'static Runnable> {
-    let loaded = MODEL.get_or_init(|| {
-        let digest = hex::encode(Sha256::digest(MODEL_BYTES));
-        if digest != MODEL_SHA256 {
-            return Err(format!(
-                "bundled sticker model digest mismatch: expected {MODEL_SHA256}, got {digest}"
-            ));
-        }
-        tract::onnx()
-            .and_then(|onnx| onnx.load_buffer(MODEL_BYTES))
-            .and_then(|model| model.into_model())
-            .and_then(|model| model.into_runnable())
-            .map_err(|error| format!("could not load bundled sticker model: {error}"))
-    });
-    loaded
-        .as_ref()
-        .map_err(|error| sticker_error(error.clone()))
-}
-
 /// Removes the background from `source`, trims transparent borders and returns
 /// a compact transparent WebP suitable for embedding in a text message.
 pub(crate) fn create(source: &Path) -> Result<StickerOutput> {
-    let source = media_codec::decode(source)?;
-    if source.width() == 0 || source.height() == 0 {
-        return Err(sticker_error("the sticker source image is empty"));
-    }
+    encode_foreground(remove_background(source)?)
+}
 
-    // There is no visual value in carrying a multi-megapixel source through
-    // compositing when the wire result is capped at 300 px. Keeping a 3x
-    // working image still gives the resized segmentation mask room to soften.
-    let source = source.thumbnail(WORKING_EDGE, WORKING_EDGE).to_rgba8();
-    let input_image = imageops::resize(
-        &DynamicImage::ImageRgba8(source.clone()).to_rgb8(),
-        MODEL_EDGE,
-        MODEL_EDGE,
-        FilterType::Triangle,
-    );
+#[cfg(target_os = "android")]
+fn remove_background(source: &Path) -> Result<RgbaImage> {
+    android::remove_background(source)
+}
 
-    let pixel_count = (MODEL_EDGE * MODEL_EDGE) as usize;
-    let mut input = vec![0.0_f32; pixel_count * 3];
-    const MEAN: [f32; 3] = [0.485, 0.456, 0.406];
-    const STD: [f32; 3] = [0.229, 0.224, 0.225];
-    for (index, pixel) in input_image.pixels().enumerate() {
-        for channel in 0..3 {
-            input[channel * pixel_count + index] =
-                (f32::from(pixel[channel]) / 255.0 - MEAN[channel]) / STD[channel];
-        }
-    }
+#[cfg(target_os = "ios")]
+fn remove_background(source: &Path) -> Result<RgbaImage> {
+    crate::native::image::extract_foreground(source)
+}
 
-    let tensor = Tensor::from_slice(&[1, 3, MODEL_EDGE as usize, MODEL_EDGE as usize], &input)
-        .map_err(|error| sticker_error(format!("could not create sticker input: {error}")))?;
-    let outputs = model()?
-        .run([tensor])
-        .map_err(|error| sticker_error(format!("sticker background removal failed: {error}")))?;
-    let foreground = outputs
-        .first()
-        .ok_or_else(|| sticker_error("sticker model returned no mask"))?
-        .as_slice::<f32>()
-        .map_err(|error| sticker_error(format!("sticker mask has an invalid type: {error}")))?;
-    if foreground.len() < pixel_count {
-        return Err(sticker_error("sticker model returned a truncated mask"));
-    }
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+fn remove_background(_source: &Path) -> Result<RgbaImage> {
+    Err(sticker_error(
+        "sticker creation is only available on Android and iOS",
+    ))
+}
 
-    let foreground = &foreground[..pixel_count];
-    let (mut min, mut max) = (f32::INFINITY, f32::NEG_INFINITY);
-    for value in foreground.iter().copied().filter(|value| value.is_finite()) {
-        min = min.min(value);
-        max = max.max(value);
-    }
-    if !min.is_finite() || !max.is_finite() || max - min < f32::EPSILON {
-        return Err(sticker_error("sticker model produced an empty mask"));
-    }
-
-    let mask = GrayImage::from_fn(MODEL_EDGE, MODEL_EDGE, |x, y| {
-        let value = foreground[(y * MODEL_EDGE + x) as usize];
-        let normalized = ((value - min) / (max - min)).clamp(0.0, 1.0);
-        Luma([(normalized * 255.0).round() as u8])
-    });
-    let mask = imageops::resize(
-        &mask,
-        source.width(),
-        source.height(),
-        FilterType::CatmullRom,
-    );
-
-    let mut composited = source;
-    for (pixel, alpha) in composited.pixels_mut().zip(mask.pixels()) {
-        pixel[3] = ((u16::from(pixel[3]) * u16::from(alpha[0])) / 255) as u8;
-    }
-
+fn encode_foreground(composited: RgbaImage) -> Result<StickerOutput> {
+    let composited = DynamicImage::ImageRgba8(composited)
+        .thumbnail(WORKING_EDGE, WORKING_EDGE)
+        .to_rgba8();
     let bounds = visible_bounds(&composited)
         .ok_or_else(|| sticker_error("no foreground was found in this image"))?;
     let cropped = imageops::crop_imm(
@@ -336,6 +268,34 @@ fn validate_sticker(sticker: &proto::StickerData) -> Result<()> {
 mod tests {
     use super::*;
 
+    #[test]
+    fn extracted_foreground_is_trimmed_padded_and_bounded_for_the_wire() {
+        let foreground = RgbaImage::from_fn(1200, 800, |x, y| {
+            if (200..1000).contains(&x) && (200..600).contains(&y) {
+                Rgba([240, 50, 80, 255])
+            } else {
+                Rgba([0, 0, 0, 0])
+            }
+        });
+        let output = encode_foreground(foreground).unwrap();
+        assert_eq!(output.width, MAX_STICKER_EDGE);
+        assert!(output.height > 150 && output.height < 170);
+        assert!(output.webp.len() <= MAX_STICKER_BYTES);
+        validate_sticker(&output.as_proto()).unwrap();
+        let decoded = image::load_from_memory(&output.webp).unwrap().to_rgba8();
+        assert_eq!(decoded.get_pixel(0, 0)[3], 0);
+        assert_eq!(
+            decoded.get_pixel(output.width / 2, output.height / 2)[3],
+            255
+        );
+    }
+
+    #[test]
+    fn extracted_foreground_must_contain_a_visible_subject() {
+        assert!(encode_foreground(RgbaImage::new(32, 24)).is_err());
+        assert!(encode_foreground(RgbaImage::from_pixel(32, 24, Rgba([1, 2, 3, 10]))).is_err());
+    }
+
     fn sample_sticker() -> proto::StickerData {
         let image = DynamicImage::ImageRgba8(RgbaImage::from_fn(32, 24, |x, y| {
             if x > 4 && x < 28 && y > 4 && y < 20 {
@@ -430,9 +390,12 @@ mod tests {
         assert!(rotate(&webp).is_err());
     }
 
+    #[cfg(target_os = "android")]
     #[test]
     fn bundled_model_creates_a_bounded_transparent_webp() {
-        let image = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/images/logo.png");
+        let directory = tempfile::tempdir().unwrap();
+        let image = directory.path().join("logo.png");
+        std::fs::write(&image, include_bytes!("../../../assets/images/logo.png")).unwrap();
         let sticker = create(&image).expect("bundled model must load and run");
         assert!(sticker.width <= 300 && sticker.height <= 300);
         assert!(sticker.webp.len() <= MAX_STICKER_BYTES);

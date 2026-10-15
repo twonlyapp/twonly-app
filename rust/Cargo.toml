@@ -79,7 +79,6 @@ bon = "3.9.3"
 stream-tungstenite = "0.6.1"
 image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "gif", "bmp", "webp"] }
 webp = "0.3.1"
-tract = { version = "0.23.8", default-features = false, features = ["onnx"] }
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 
@@ -87,6 +86,8 @@ libc = "0.2"
 # iOS backend: Requires the 'protected' feature for Data Protection Keychain
 apple-native-keyring-store = { version = "1", features = ["protected"] }
 [target.'cfg(target_os = "android")'.dependencies]
+# Only Android ships the sticker segmentation model and ONNX runtime.
+tract = { version = "0.23.8", default-features = false, features = ["onnx"] }
 # Android backend: Interfaces with the Android Keystore
 android-native-keyring-store = "1"
 jni = "0.21.1"
