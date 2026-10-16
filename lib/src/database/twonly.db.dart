@@ -1,33 +1,29 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart'
-    show DriftNativeOptions, driftDatabase;
-import 'package:path_provider/path_provider.dart';
-import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/daos/contact_groups.dao.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/groups.dao.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
-import 'package:twonly/src/database/daos/labels.dao.dart';
 import 'package:twonly/src/database/daos/mediafiles.dao.dart';
 import 'package:twonly/src/database/daos/messages.dao.dart';
 import 'package:twonly/src/database/daos/reactions.dao.dart';
 import 'package:twonly/src/database/daos/receipts.dao.dart';
-import 'package:twonly/src/database/daos/shortcuts.dao.dart';
+import 'package:twonly/src/database/daos/stickers.dao.dart';
+import 'package:twonly/src/database/daos/stories.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
-import 'package:twonly/src/database/drift_logging_interceptor.dart';
+import 'package:twonly/src/database/rust_change_notifier.dart';
+import 'package:twonly/src/database/rust_query_executor.dart';
+import 'package:twonly/src/database/tables/contact_groups.table.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
-import 'package:twonly/src/database/tables/labels.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/tables/reactions.table.dart';
 import 'package:twonly/src/database/tables/receipts.table.dart';
-import 'package:twonly/src/database/tables/shortcuts.table.dart';
-import 'package:twonly/src/database/tables/signal_identity_key_store.table.dart';
-import 'package:twonly/src/database/tables/signal_pre_key_store.table.dart';
-import 'package:twonly/src/database/tables/signal_sender_key_store.table.dart';
-import 'package:twonly/src/database/tables/signal_session_store.table.dart';
-import 'package:twonly/src/database/tables/signal_signed_pre_key_store.table.dart';
+import 'package:twonly/src/database/tables/stickers.table.dart';
 import 'package:twonly/src/database/tables/user_discovery.table.dart';
+import 'package:twonly/src/database/tables/webxdc.table.dart';
 import 'package:twonly/src/database/twonly.db.steps.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -45,11 +41,6 @@ part 'twonly.db.g.dart';
     GroupMembers,
     Receipts,
     ReceivedReceipts,
-    SignalIdentityKeyStores,
-    SignalPreKeyStores,
-    SignalSenderKeyStores,
-    SignalSessionStores,
-    SignalSignedPreKeyStores,
     MessageActions,
     GroupHistories,
     KeyVerifications,
@@ -59,10 +50,12 @@ part 'twonly.db.g.dart';
     UserDiscoveryOtherPromotions,
     UserDiscoveryOwnPromotions,
     UserDiscoveryShares,
-    Shortcuts,
-    ShortcutMembers,
-    Labels,
-    ContactLabels,
+    ContactGroups,
+    ContactGroupMembers,
+    WebxdcApps,
+    WebxdcInstances,
+    WebxdcUpdates,
+    Stickers,
   ],
   daos: [
     MessagesDao,
@@ -73,47 +66,40 @@ part 'twonly.db.g.dart';
     MediaFilesDao,
     UserDiscoveryDao,
     KeyVerificationDao,
-    ShortcutsDao,
-    LabelsDao,
+    ContactGroupsDao,
+    StoriesDao,
+    StickersDao,
   ],
 )
 class TwonlyDB extends _$TwonlyDB {
-  TwonlyDB([QueryExecutor? e])
-    : super(
-        e ?? _openConnection(),
-      );
+  TwonlyDB([QueryExecutor? e]) : super(e ?? openRustAppDatabase()) {
+    // Only the Rust-backed connection needs external change notifications.
+    // An explicit executor is a plain Drift-owned database (tests, and the
+    // legacy import in main.dart), where Drift already sees every write.
+    if (e == null) {
+      _rustChanges = listenToRustDatabaseChanges(this);
+    }
+  }
 
   // ignore: matching_super_parameters
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
-  @override
-  int get schemaVersion => 25;
+  StreamSubscription<List<String>>? _rustChanges;
 
-  static QueryExecutor _openConnection() {
-    final connection = driftDatabase(
-      name: 'twonly',
-      native: DriftNativeOptions(
-        databaseDirectory: getApplicationSupportDirectory,
-        shareAcrossIsolates: true,
-        setup: (rawDb) {
-          rawDb
-            ..execute('PRAGMA journal_mode=DELETE;')
-            ..execute('PRAGMA synchronous=FULL;')
-            ..execute('PRAGMA busy_timeout=5000;');
-        },
-      ),
-    );
-    try {
-      if (userService.isUserCreated &&
-          userService.currentUser.enableDatabaseLogging) {
-        return connection.interceptWith(DriftLoggingInterceptor());
-      }
-    } catch (_) {}
-    return connection;
+  @override
+  Future<void> close() async {
+    await _rustChanges?.cancel();
+    _rustChanges = null;
+    return super.close();
   }
 
   @override
+  int get schemaVersion => 25;
+
+  @override
   MigrationStrategy get migration {
+    // Frozen legacy-Drift upgrade chain used only before Rust imports schema
+    // v25. All current application schema migrations are owned by Rust.
     return MigrationStrategy(
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');

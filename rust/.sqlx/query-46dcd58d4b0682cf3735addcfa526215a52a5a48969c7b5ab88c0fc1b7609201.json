@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE messages\n               SET is_deleted_from_sender = 1, content = NULL, media_id = NULL, modified_at = ?\n               WHERE message_id = ? AND sender_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "46dcd58d4b0682cf3735addcfa526215a52a5a48969c7b5ab88c0fc1b7609201"
+}

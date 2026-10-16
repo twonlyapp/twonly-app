@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE groups\n            SET delete_messages_after_milliseconds = COALESCE(\n                ?, delete_messages_after_milliseconds\n            )\n            WHERE group_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "e9233f4bcd226a8536865b908ee9e36b6e8ebfd52fb3828c948693e9ca5c7dbb"
+}

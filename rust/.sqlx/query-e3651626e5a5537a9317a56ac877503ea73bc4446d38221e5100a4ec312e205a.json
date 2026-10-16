@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE receipts\n               SET receipt_id = ?,\n                   mark_for_retry = ?,\n                   retry_count = retry_count + 1,\n                   ack_by_server_at = NULL\n               WHERE receipt_id = ? AND contact_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "e3651626e5a5537a9317a56ac877503ea73bc4446d38221e5100a4ec312e205a"
+}

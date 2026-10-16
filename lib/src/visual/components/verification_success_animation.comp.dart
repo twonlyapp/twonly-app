@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:vector_graphics/vector_graphics.dart';
 
 /// Animated chain-link logo for the "verification success" moment.
@@ -84,9 +84,6 @@ class VerificationSuccessAnimationState
       '<svg viewBox="0 0 640 640"><path d="$_path1" fill="white"/></svg>';
   static const _svg2 =
       '<svg viewBox="0 0 640 640"><path d="$_path2" fill="white"/></svg>';
-
-  static const _grey = Color(0xFF8E9AAF);
-  static const Color _green = defaultPrimaryColor;
 
   @override
   void initState() {
@@ -196,6 +193,7 @@ class VerificationSuccessAnimationState
       animation: Listenable.merge([_ctrl, _idleCtrl]),
       builder: (context, _) {
         final scale = widget.size / 640;
+        final successColor = context.color.primary;
         final t = _flyIn.value; // 0 → 1 (fly-in progress)
         final sep = 1.0 - t; // 1 → 0 (separation)
 
@@ -209,7 +207,11 @@ class VerificationSuccessAnimationState
         final rotation = sep * 0.7;
 
         // Interpolated colour.
-        final color = Color.lerp(_grey, _green, _colorFade.value)!;
+        final color = Color.lerp(
+          context.appColor(AppColor.verificationIdle),
+          successColor,
+          _colorFade.value,
+        )!;
 
         // Pulse: 1 → 1.08 → 1 (smooth sine bump).
         final pulseScale = 1.0 + math.sin(_pulse.value * math.pi) * 0.08;
@@ -232,7 +234,9 @@ class VerificationSuccessAnimationState
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: _green.withValues(alpha: 0.3 * _glow.value),
+                          color: successColor.withValues(
+                            alpha: 0.3 * _glow.value,
+                          ),
                           blurRadius: widget.size * 0.45 * _glow.value,
                           spreadRadius: widget.size * 0.08 * _glow.value,
                         ),
@@ -247,7 +251,7 @@ class VerificationSuccessAnimationState
                   child: CustomPaint(
                     painter: _RipplePainter(
                       progress: _ripple.value,
-                      color: _green,
+                      color: successColor,
                       maxRadius: widget.size * 0.45,
                     ),
                   ),
@@ -323,7 +327,7 @@ class VerificationSuccessAnimationState
                   child: CustomPaint(
                     painter: _SparklePainter(
                       progress: _sparkle.value,
-                      color: _green,
+                      color: successColor,
                       maxRadius: widget.size * 0.4,
                     ),
                   ),

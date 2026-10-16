@@ -20,9 +20,11 @@ class GroupContextMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final navigator = Navigator.of(context);
+    // `late` so the ancestor lookup only runs if the menu is actually
+    // opened, rather than once per row on every rebuild.
+    late final navigator = Navigator.of(context);
     return ContextMenu(
-      items: [
+      items: () => [
         if (!group.archived)
           ContextMenuItem(
             title: context.lang.contextMenuArchiveUser,
@@ -43,7 +45,10 @@ class GroupContextMenu extends StatelessWidget {
           ),
         ContextMenuItem(
           title: context.lang.contextMenuOpenChat,
-          onTap: () => navigator.context.push(Routes.chatsMessages(group.groupId)),
+          onTap: () => navigator.context.push(
+            Routes.chatsMessages(group.groupId),
+            extra: group,
+          ),
           icon: FontAwesomeIcons.comments,
         ),
         if (!group.archived)
@@ -70,17 +75,6 @@ class GroupContextMenu extends StatelessWidget {
             );
             if (ok) {
               await twonlyDB.messagesDao.deleteMessagesByGroupId(group.groupId);
-              if (group.isDirectChat) {
-                await twonlyDB.groupsDao.deleteGroup(group.groupId);
-              } else {
-                await twonlyDB.groupsDao.deleteGroup(group.groupId);
-                // await twonlyDB.groupsDao.updateGroup(
-                //   group.groupId,
-                //   const GroupsCompanion(
-                //     deletedContent: Value(true),
-                //   ),
-                // );
-              }
             }
           },
         ),

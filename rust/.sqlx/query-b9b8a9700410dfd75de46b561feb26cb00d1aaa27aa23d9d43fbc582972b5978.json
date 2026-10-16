@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT cgm.user_id AS \"user_id!: i64\"\n               FROM contact_group_members cgm\n               JOIN contact_groups cg ON cg.id = cgm.contact_group_id\n               WHERE cg.id = ? AND cg.share_stories = 1 AND cgm.user_id IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "b9b8a9700410dfd75de46b561feb26cb00d1aaa27aa23d9d43fbc582972b5978"
+}

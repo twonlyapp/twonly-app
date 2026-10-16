@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/subscription.keys.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/purchasable_product.model.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -38,14 +37,21 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
       onError: _updateStreamOnError,
     );
 
-    _planSub = apiService.onPlanUpdated.listen(updatePlan);
-    _connSub = apiService.onConnectionStateUpdated.listen((_) async {
-      try {
-        if (userService.isUserCreated) {
-          updatePlan(planFromString(userService.currentUser.subscriptionPlan));
+    _apiSub = apiService.events.listen((event) async {
+      if (event.kind == ApiEventKind.planUpdated) {
+        updatePlan(planFromString(event.message ?? ''));
+      }
+
+      if (event.kind == ApiEventKind.connectionStateChanged) {
+        try {
+          if (userService.isUserCreated) {
+            updatePlan(
+              planFromString(userService.currentUser.subscriptionPlan),
+            );
+          }
+        } catch (e) {
+          Log.error(e);
         }
-      } catch (e) {
-        Log.error(e);
       }
     });
 
@@ -64,8 +70,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
   late StreamSubscription<List<PurchaseDetails>> _subscription;
   final InAppPurchase iapConnection = IAPConnection.instance;
 
-  late StreamSubscription<SubscriptionPlan> _planSub;
-  late StreamSubscription<bool> _connSub;
+  late StreamSubscription<ApiEvent> _apiSub;
   bool _userTriggeredBuyButton = false;
 
   void updatePlan(SubscriptionPlan newPlan) {
@@ -103,11 +108,14 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
           isPayingUser(
             planFromString(userService.currentUser.subscriptionPlan),
           )) {
-        globalForceIpaCheck = Timer(const Duration(seconds: 5), () async {
+        globalForceIpaCheck = Timer(const Duration(seconds: 5), () {
           Log.info(
             'Force Ipa check was not stopped. Requesting forced check...',
           );
-          await apiService.forceIpaCheck();
+          unawaitedRustCall(
+            RustApi.forceIpaCheck(),
+            'Forced IAP check',
+          );
         });
       }
 
@@ -181,10 +189,13 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
       Log.info(purchaseDetails.productID);
       Log.info(purchaseDetails.verificationData.source);
     }
-    final res = await apiService.ipaPurchase(
-      purchaseDetails.productID,
-      purchaseDetails.verificationData.source,
-      purchaseDetails.verificationData.serverVerificationData,
+    final res = await rustApiResult(
+      RustApi.ipaPurchase(
+        productId: purchaseDetails.productID,
+        source: purchaseDetails.verificationData.source,
+        verificationData:
+            purchaseDetails.verificationData.serverVerificationData,
+      ),
     );
     // plan is updated in the apiProvider, as the server updates its states and responses with
     // an ok authenticated which is processed in the apiProvider...
@@ -226,7 +237,8 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
       if (currentPlan != SubscriptionPlan.Family.name &&
           currentPlan != SubscriptionPlan.Pro.name) {
         for (var i = 0; i < 100; i++) {
-          if (apiService.isAuthenticated) {
+          if (await RustApi.connectionState() ==
+              ApiConnectionState.authenticated) {
             Log.info(
               'current user does not have a sub: ${purchaseDetails.productID}',
             );
@@ -249,8 +261,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
   @override
   void dispose() {
-    _planSub.cancel();
-    _connSub.cancel();
+    _apiSub.cancel();
     _subscription.cancel();
     super.dispose();
   }

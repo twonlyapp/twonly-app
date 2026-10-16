@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT contact_id FROM group_members\n               WHERE group_id = ? AND (member_state IS NULL OR member_state != 'leftGroup')",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2e5c2ccc9be071bcebcb9c8a7b0564e6ef21a38106bb9bc90c840ac1903b75d5"
+}

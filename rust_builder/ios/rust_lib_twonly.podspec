@@ -19,7 +19,6 @@ A new Flutter FFI plugin project.
   # `../src/*` so that the C sources can be shared among all target platforms.
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
-  s.dependency 'Flutter'
   s.platform = :ios, '11.0'
 
   # Flutter.framework does not contain a i386 slice.

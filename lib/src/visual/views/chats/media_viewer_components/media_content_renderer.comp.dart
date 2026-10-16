@@ -3,6 +3,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart'
     show MediaType;
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:video_player/video_player.dart';
 
 class MediaContentRenderer extends StatelessWidget {
@@ -47,10 +48,10 @@ class MediaContentRenderer extends StatelessWidget {
               initialScale: PhotoViewComputedScale.contained,
               minScale: PhotoViewComputedScale.contained,
               errorBuilder: (context, error, stackTrace) {
-                return const Center(
+                return Center(
                   child: Icon(
                     Icons.broken_image_outlined,
-                    color: Colors.white38,
+                    color: context.appColor(AppColor.mediaForegroundMuted),
                     size: 64,
                   ),
                 );

@@ -1,17 +1,15 @@
 import 'dart:async';
 
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pbserver.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/subscription/select_additional_users.view.dart';
@@ -19,14 +17,14 @@ import 'package:twonly/src/visual/views/settings/subscription/select_additional_
 class AdditionalUsersView extends StatefulWidget {
   const AdditionalUsersView({required this.ballance, super.key});
 
-  final Response_PlanBallance? ballance;
+  final FrbPlanBalance? ballance;
 
   @override
   State<AdditionalUsersView> createState() => _AdditionalUsersViewState();
 }
 
 class _AdditionalUsersViewState extends State<AdditionalUsersView> {
-  Response_PlanBallance? ballance;
+  FrbPlanBalance? ballance;
 
   late int _unusedAdditionalAccounts;
   int _planLimit = 0;
@@ -50,7 +48,11 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
 
   Future<void> initAsync({required bool force}) async {
     if (force) {
-      ballance = await apiService.loadPlanBalance();
+      try {
+        ballance = await RustApi.loadPlanBalance();
+      } catch (_) {
+        ballance = null;
+      }
       _unusedAdditionalAccounts =
           _planLimit - (ballance?.additionalAccounts.length ?? _planLimit);
     }
@@ -64,7 +66,7 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
                 limit: _planLimit,
                 alreadySelected:
                     ballance?.additionalAccounts
-                        .map((e) => e.userId.toInt())
+                        .map((e) => e.userId)
                         .toList() ??
                     [],
               ),
@@ -72,7 +74,9 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
             as List<int>?;
     if (selectedUserIds == null) return;
     for (final selectedUserId in selectedUserIds) {
-      final res = await apiService.addAdditionalUser(Int64(selectedUserId));
+      final res = await rustApiResult(
+        RustApi.addAdditionalUser(userId: selectedUserId),
+      );
       if (res.isError && mounted) {
         final contact = await twonlyDB.contactsDao.getContactById(
           selectedUserId,
@@ -159,7 +163,7 @@ class AdditionalAccount extends StatefulWidget {
   });
 
   final void Function() refresh;
-  final Response_AdditionalAccount account;
+  final FrbAdditionalAccount account;
   @override
   State<AdditionalAccount> createState() => _AdditionalAccountState();
 }
@@ -176,7 +180,7 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
 
   Future<void> initAsync() async {
     final contact = await twonlyDB.contactsDao
-        .getContactByUserId(widget.account.userId.toInt())
+        .getContactByUserId(widget.account.userId)
         .getSingleOrNull();
     if (contact != null) {
       username = getContactDisplayName(contact);
@@ -186,59 +190,77 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  username,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Card(
+        elevation: 0,
+        color: context.color.surfaceContainer,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              AvatarIcon(contactId: widget.account.userId, fontSize: 24),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      username,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.account.planId,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.color.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.account.planId,
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+              IconButton(
+                icon: FaIcon(
+                  FontAwesomeIcons.userXmark,
+                  size: 16,
+                  color: context.color.onSurfaceVariant,
                 ),
-              ],
-            ),
-            IconButton(
-              icon: const FaIcon(FontAwesomeIcons.userXmark, size: 16),
-              onPressed: () async {
-                final remove = await showAlertDialog(
-                  context,
-                  context.lang.additionalUserRemoveTitle,
-                  context.lang.additionalUserRemoveDesc,
-                );
-                if (remove) {
-                  final res = await apiService.removeAdditionalUser(
-                    widget.account.userId,
+                onPressed: () async {
+                  final remove = await showAlertDialog(
+                    context,
+                    context.lang.additionalUserRemoveTitle,
+                    context.lang.additionalUserRemoveDesc,
                   );
-                  if (!context.mounted) return;
-                  if (res.isSuccess) {
-                    widget.refresh();
-                  } else {
-                    showSnackbar(
-                      context,
-                      errorCodeToText(
-                        context,
-                        res.error as ErrorCode,
+                  if (remove) {
+                    final res = await rustApiResult(
+                      RustApi.removeAdditionalUser(
+                        userId: widget.account.userId,
                       ),
                     );
+                    if (!context.mounted) return;
+                    if (res.isSuccess) {
+                      widget.refresh();
+                    } else {
+                      showSnackbar(
+                        context,
+                        errorCodeToText(
+                          context,
+                          res.error!,
+                        ),
+                      );
+                    }
                   }
-                }
-              },
-            ),
-          ],
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

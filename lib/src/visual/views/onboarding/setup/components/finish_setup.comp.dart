@@ -13,13 +13,18 @@ class FinishSetupComp extends StatefulWidget {
 
 class _FinishSetupCompState extends State<FinishSetupComp> {
   Future<void> onTap() async {
-    await context.navPush(
-      SetupView(
-        onUpdate: () {
-          if (mounted) {
-            Navigator.pop(context);
-          }
-        },
+    // Captured before pushing so the callback never resolves the navigator
+    // through this widget's context, which lives below the pushed route.
+    final navigator = Navigator.of(context);
+    await navigator.push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => SetupView(
+          onUpdate: () {
+            if (mounted && navigator.canPop()) {
+              navigator.pop();
+            }
+          },
+        ),
       ),
     );
   }

@@ -7,19 +7,26 @@ import 'package:twonly/src/visual/elements/my_input.element.dart';
 class MediaViewerMessageInput extends StatelessWidget {
   const MediaViewerMessageInput({
     required this.controller,
+    required this.safeAreaBottomPadding,
     required this.onSubmitted,
     required this.onSendPressed,
     super.key,
   });
 
   final TextEditingController controller;
+  final double safeAreaBottomPadding;
   final ValueChanged<String> onSubmitted;
   final VoidCallback onSendPressed;
 
   @override
   Widget build(BuildContext context) {
+    final keyboardBottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final bottomOffset = keyboardBottomInset > safeAreaBottomPadding
+        ? keyboardBottomInset - safeAreaBottomPadding
+        : 0.0;
+
     return Positioned(
-      bottom: 0,
+      bottom: bottomOffset,
       left: 0,
       right: 0,
       child: Container(

@@ -10,8 +10,8 @@ import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 Future<bool> promptAndDisableMemoriesBackup(BuildContext context) async {
-  final cloudOnlyCount =
-      await twonlyDB.mediaFilesDao.getCloudOnlyMemoriesCount();
+  final cloudOnlyCount = await twonlyDB.mediaFilesDao
+      .getCloudOnlyMemoriesCount();
 
   if (!context.mounted) return false;
 
@@ -82,14 +82,14 @@ Future<bool> promptAndDisableMemoriesBackup(BuildContext context) async {
 
   if (confirmed == true) {
     try {
-      await apiService.disableMemoriesBackup();
+      await RustApi.disableMemoriesBackup();
       final allMedias = await (twonlyDB.select(
         twonlyDB.mediaFiles,
       )..where((t) => t.stored.equals(true))).get();
       for (final media in allMedias) {
         final ms = MediaFileService(media);
         if (!ms.storedPath.existsSync()) {
-          ms.fullMediaRemoval();
+          await ms.fullMediaRemoval();
           await twonlyDB.mediaFilesDao.deleteMediaFile(media.mediaId);
         }
       }

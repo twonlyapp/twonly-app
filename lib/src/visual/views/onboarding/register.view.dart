@@ -1,17 +1,17 @@
 // ignore_for_file: avoid_dynamic_calls
 
 import 'dart:async';
+import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/user_config.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/model/json/userdata.model.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
-import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -39,7 +39,6 @@ class RegisterView extends StatefulWidget {
 
 class _RegisterViewState extends State<RegisterView> {
   final TextEditingController usernameController = TextEditingController();
-  final TextEditingController inviteCodeController = TextEditingController();
 
   bool _registrationDisabled = false;
   bool _isTryingToRegister = false;
@@ -57,7 +56,7 @@ class _RegisterViewState extends State<RegisterView> {
     _registrationDisabled = widget.proofOfWork.$2;
   }
 
-  Future<void> createNewUser() async {
+  Future<void> createNewUser({bool retryInvalidProofOfWork = true}) async {
     if (!_isValidUserName) {
       setState(() {
         _usernameErrorText = context.lang.registerUsernameLimits;
@@ -65,7 +64,6 @@ class _RegisterViewState extends State<RegisterView> {
       return;
     }
     final username = usernameController.text;
-    final inviteCode = inviteCodeController.text;
 
     setState(() {
       _isTryingToRegister = true;
@@ -79,30 +77,38 @@ class _RegisterViewState extends State<RegisterView> {
       if (proofOfWork != null) {
         proof = await proofOfWork!;
       } else {
-        final (pow, registrationDisabled) = await apiService.getProofOfWork();
+        final proofResult = await rustApiResult(RustApi.getProofOfWork());
+        final pow = proofResult.value;
+        final registrationDisabled =
+            proofResult.error == ErrorCode.RegistrationDisabled;
         if (pow == null) {
           setState(() {
             _registrationDisabled = registrationDisabled;
             _isTryingToRegister = false;
           });
-          if (mounted) {
+          if (mounted && !registrationDisabled) {
             showNetworkIssue(context);
           }
           return;
         }
-        proof = await calculatePoW(pow.prefix, pow.difficulty.toInt());
+        proof = await calculatePoW(pow.prefix, pow.difficulty);
       }
 
       Log.info('The result of the POW is $proof');
 
-      await createIfNotExistsSignalIdentity();
-
       var userId = 0;
 
-      final res = await apiService.register(username, inviteCode, proof);
+      final res = await rustApiResult(
+        RustApi.register(
+          username: username,
+          proofOfWork: proof,
+          langCode: ui.PlatformDispatcher.instance.locale.languageCode,
+          isIos: Platform.isIOS,
+        ),
+      );
       if (res.isSuccess) {
         Log.info('Got user_id ${res.value} from server');
-        userId = res.value.userid.toInt() as int;
+        userId = res.value!;
       } else {
         proofOfWork = null;
         if (res.error == ErrorCode.RegistrationDisabled) {
@@ -122,7 +128,7 @@ class _RegisterViewState extends State<RegisterView> {
           setState(() {
             _usernameErrorText = errorCodeToText(
               context,
-              res.error as ErrorCode,
+              res.error!,
             );
             _isTryingToRegister = false;
           });
@@ -130,6 +136,13 @@ class _RegisterViewState extends State<RegisterView> {
         }
         if (res.error == ErrorCode.InvalidProofOfWork) {
           await deleteLocalUserData();
+          if (retryInvalidProofOfWork) {
+            Log.warn(
+              'Proof of work was invalid. Requesting a new challenge and '
+              'retrying registration.',
+            );
+            return await createNewUser(retryInvalidProofOfWork: false);
+          }
           setState(() {
             _showProofOfWorkError = true;
             _isTryingToRegister = false;
@@ -143,7 +156,7 @@ class _RegisterViewState extends State<RegisterView> {
           await showAlertDialog(
             context,
             'Oh no!',
-            errorCodeToText(context, res.error as ErrorCode),
+            errorCodeToText(context, res.error!),
           );
         }
         return;
@@ -153,11 +166,10 @@ class _RegisterViewState extends State<RegisterView> {
         _isTryingToRegister = false;
       });
 
-      final userData = UserData(
+      final userData = await UserConfigApi.create(
         userId: userId,
         username: username,
         displayName: username,
-        subscriptionPlan: 'Free',
         currentSetupPage: SetupPages.profile.name,
         appVersion: AppState.latestAppVersionId,
       );
@@ -166,7 +178,7 @@ class _RegisterViewState extends State<RegisterView> {
 
       unawaited(FcmNotificationService.initAfterUserLoaded());
 
-      await apiService.authenticate();
+      await RustApi.reloadConfiguration();
       widget.callbackOnSuccess();
     } catch (e, stack) {
       Log.error('Error creating new user', error: e, stackTrace: stack);
@@ -186,8 +198,6 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = isDarkMode(context);
-
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       behavior: HitTestBehavior.opaque,
@@ -211,7 +221,7 @@ class _RegisterViewState extends State<RegisterView> {
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             child: LinkLogoAnimation(
-                              color: isDark ? Colors.white : Colors.black,
+                              color: context.color.onSurface,
                             ),
                           ),
                         ),
@@ -226,9 +236,7 @@ class _RegisterViewState extends State<RegisterView> {
                               color:
                                   Theme.of(context).textTheme.bodyMedium?.color
                                       ?.withValues(alpha: 0.7) ??
-                                  (isDark
-                                      ? Colors.white.withValues(alpha: 0.7)
-                                      : Colors.black.withValues(alpha: 0.7)),
+                                  context.color.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -238,9 +246,9 @@ class _RegisterViewState extends State<RegisterView> {
                           Text(
                             context.lang.registrationClosed,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
-                              color: Colors.redAccent,
+                              color: context.color.error,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -251,7 +259,7 @@ class _RegisterViewState extends State<RegisterView> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 22,
-                              color: isDark ? Colors.white : Colors.black87,
+                              color: context.color.onSurface,
                               fontWeight: FontWeight.bold,
                               letterSpacing: -0.5,
                             ),
@@ -287,8 +295,8 @@ class _RegisterViewState extends State<RegisterView> {
                             const SizedBox(height: 10),
                             Text(
                               context.lang.registerProofOfWorkFailed,
-                              style: const TextStyle(
-                                color: Colors.redAccent,
+                              style: TextStyle(
+                                color: context.color.error,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -301,12 +309,12 @@ class _RegisterViewState extends State<RegisterView> {
                                 ? null
                                 : createNewUser,
                             child: _isTryingToRegister
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 24,
                                     height: 24,
                                     child: CircularProgressIndicator.adaptive(
                                       valueColor: AlwaysStoppedAnimation(
-                                        Colors.white,
+                                        context.color.onPrimary,
                                       ),
                                       strokeWidth: 3,
                                     ),

@@ -8,6 +8,7 @@ import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/views/settings/data_and_storage/chat_storage_overview.view.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage/storage_contents.view.dart';
 
 class ManageStorageView extends StatefulWidget {
@@ -90,7 +91,8 @@ class _ManageStorageViewState extends State<ManageStorageView> {
                       Expanded(
                         child: Text(
                           context.lang.backupFreeSpaceWithCloud,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
@@ -126,7 +128,7 @@ class _ManageStorageViewState extends State<ManageStorageView> {
             height: 24,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.2),
+              color: context.color.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
             ),
             child: ClipRRect(
@@ -143,11 +145,20 @@ class _ManageStorageViewState extends State<ManageStorageView> {
                   return Row(
                     children: [
                       if (imageBytes > 0)
-                        Container(width: imageWidth, color: Colors.blue),
+                        Container(
+                          width: imageWidth,
+                          color: context.appColor(AppColor.info),
+                        ),
                       if (videoBytes > 0)
-                        Container(width: videoWidth, color: Colors.green),
+                        Container(
+                          width: videoWidth,
+                          color: context.appColor(AppColor.success),
+                        ),
                       if (gifBytes > 0)
-                        Container(width: gifWidth, color: Colors.orange),
+                        Container(
+                          width: gifWidth,
+                          color: context.appColor(AppColor.warning),
+                        ),
                     ],
                   );
                 },
@@ -158,17 +169,17 @@ class _ManageStorageViewState extends State<ManageStorageView> {
           _StorageCategoryTile(
             title: context.lang.settingsStorageImages,
             size: formatBytes(imageBytes),
-            color: Colors.blue,
+            color: context.appColor(AppColor.info),
           ),
           _StorageCategoryTile(
             title: context.lang.settingsStorageVideos,
             size: formatBytes(videoBytes),
-            color: Colors.green,
+            color: context.appColor(AppColor.success),
           ),
           _StorageCategoryTile(
             title: context.lang.settingsStorageGifs,
             size: formatBytes(gifBytes),
-            color: Colors.orange,
+            color: context.appColor(AppColor.warning),
           ),
           const SizedBox(height: 32),
           Align(
@@ -176,6 +187,16 @@ class _ManageStorageViewState extends State<ManageStorageView> {
               variant: MyButtonVariant.primaryMiddle,
               onPressed: () => context.navPush(const StorageContentsView()),
               child: Text(context.lang.settingsStorageContents),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            child: MyButton(
+              variant: MyButtonVariant.secondaryMiddle,
+              onPressed: () => context.navPush(
+                const ChatStorageOverviewView(),
+              ),
+              child: Text(context.lang.settingsStorageByChat),
             ),
           ),
         ],
@@ -217,9 +238,9 @@ class _StorageCategoryTile extends StatelessWidget {
           ),
           Text(
             size,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
-              color: Colors.grey,
+              color: context.color.onSurfaceVariant,
             ),
           ),
         ],

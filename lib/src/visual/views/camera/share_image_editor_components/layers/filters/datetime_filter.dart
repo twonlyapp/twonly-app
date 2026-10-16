@@ -4,9 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filter.layer.dart';
 
 class DateTimeFilter extends StatelessWidget {
-  const DateTimeFilter({super.key, this.color = Colors.white});
+  const DateTimeFilter({super.key, this.color});
 
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {

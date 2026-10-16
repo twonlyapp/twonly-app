@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The Flutter themes pin the same primary in light and dark, so the
+         native widget configuration screen does too. -->
+    <color name="brand_primary">#32BE80</color>
+    <color name="brand_on_primary">#092016</color>
+    <color name="brand_primary_container">#1C6947</color>
+    <color name="brand_on_primary_container">#CFF2E2</color>
+</resources>

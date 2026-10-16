@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::error::{Result, TwonlyError};
 use crate::keys::{BackupPasswordKeys, KeyManager};
 use crate::secure_storage::SecureStorage;
@@ -13,7 +18,7 @@ impl BackupIdentity {
             return Err(TwonlyError::Generic("No backup password".into()));
         };
 
-        let serialized_bytes = postcard::to_allocvec(key_manager)?;
+        let serialized_bytes = key_manager.to_bytes()?;
 
         let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&keys.encryption_key);
         let cipher = Aes256Gcm::new(key);
@@ -50,7 +55,7 @@ impl BackupIdentity {
 
         let decrypted_bytes = cipher.decrypt(nonce, ciphertext)?;
 
-        let key_manager: KeyManager = postcard::from_bytes(&decrypted_bytes)?;
+        let key_manager = KeyManager::from_bytes(&decrypted_bytes)?;
 
         key_manager.store_to_keychain(secure_storage)?;
 
@@ -64,6 +69,7 @@ mod tests {
 
     #[test]
     fn test_backup_encryption_decryption() {
+        SecureStorage::init().unwrap();
         let secure_storage = SecureStorage::new("testing");
         let mut key_manager = KeyManager::generate().unwrap();
         let password = "my_secure_password";

@@ -9,6 +9,12 @@ class Routes {
 
   static String chatsMessages(String groupId) => '/chats/messages/$groupId';
 
+  /// A contact's story. Pass a media id as `extra` to start at that item.
+  static String chatsStory(int contactId) => '/chats/story/$contactId';
+
+  /// The user's own story. Pass a media id as `extra` to start at that item.
+  static const String chatsOwnStory = '/chats/own_story';
+
   static String groupCreateSelectMember(String? groupId) =>
       '/group/create/select_member${groupId == null ? '' : '/$groupId'}';
 
@@ -36,6 +42,8 @@ class Routes {
       '/settings/privacy/block_users';
   static const String settingsPrivacyUserDiscovery =
       '/settings/privacy/user_discovery';
+  static const String settingsPrivacyPublicProfile =
+      '/settings/privacy/public_profile';
   static const String settingsNotification = '/settings/notification';
   static const String settingsStorage = '/settings/storage_data';
   static const String settingsStorageManage = '/settings/storage_data/manage';
@@ -47,10 +55,11 @@ class Routes {
   static const String settingsHelpFaq = '/settings/help/faq';
   static const String settingsHelpFaqVerifyBadge =
       '/settings/help/faq/verifybadge';
+  static const String settingsHelpFaqManualVerification =
+      '/settings/help/faq/verifybadge/manual';
   static const String settingsHelpContactUs = '/settings/help/contact_us';
   static const String settingsHelpNews = '/settings/help/news';
   static const String settingsHelpDiagnostics = '/settings/help/diagnostics';
-  static const String settingsHelpUserStudy = '/settings/help/user_study';
   static const String settingsHelpUserStudyQuestionnaire =
       '/settings/help/user_study/questionnaire';
   static const String settingsHelpCredits = '/settings/help/credits';

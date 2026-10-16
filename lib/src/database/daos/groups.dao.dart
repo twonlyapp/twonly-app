@@ -1,12 +1,11 @@
 import 'package:clock/clock.dart' show clock;
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
+import 'package:twonly/core/bridge.dart' show FlameState;
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/flame.service.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 part 'groups.dao.g.dart';
@@ -24,14 +23,11 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   // ignore: matching_super_parameters
   GroupsDao(super.db);
 
-  Future<bool> isContactInGroup(int contactId, String groupId) async {
-    final entry =
-        await (select(groupMembers)..where(
-              (t) => t.contactId.equals(contactId) & t.groupId.equals(groupId),
-            ))
-            .getSingleOrNull();
-    return entry != null;
-  }
+  // Former members stay stored so their messages and group history remain
+  // readable. A null state is a legacy member who is still in the group.
+  Expression<bool> _isActiveMember(GroupMembers member) =>
+      member.memberState.equals(MemberState.leftGroup.name).not() |
+      member.memberState.isNull();
 
   Future<void> deleteGroup(String groupId) async {
     await (delete(groups)..where((t) => t.groupId.equals(groupId))).go();
@@ -48,10 +44,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
   Future<List<GroupMember>> getGroupNonLeftMembers(String groupId) async {
     return (select(groupMembers)..where(
-          (t) =>
-              t.groupId.equals(groupId) &
-              (t.memberState.equals(MemberState.leftGroup.name).not() |
-                  t.memberState.isNull()),
+          (t) => t.groupId.equals(groupId) & _isActiveMember(t),
         ))
         .get();
   }
@@ -60,12 +53,6 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     return (select(
       groupMembers,
     )..where((t) => t.groupId.equals(groupId))).get();
-  }
-
-  Future<GroupMember?> getGroupMemberByPublicKey(Uint8List publicKey) async {
-    return (select(
-      groupMembers,
-    )..where((t) => t.groupPublicKey.equals(publicKey))).getSingleOrNull();
   }
 
   Future<Group?> createNewGroup(GroupsCompanion group) async {
@@ -86,29 +73,20 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     await into(groupHistories).insert(insertAction);
   }
 
-  Stream<List<GroupHistory>> watchGroupActions(String groupId) {
+  Stream<List<GroupHistory>> watchGroupActions(
+    String groupId, {
+    DateTime? since,
+  }) {
     return (select(groupHistories)
-          ..where((t) => t.groupId.equals(groupId))
+          ..where(
+            (t) =>
+                t.groupId.equals(groupId) &
+                (since == null
+                    ? const Constant(true)
+                    : t.actionAt.isBiggerOrEqualValue(since)),
+          )
           ..orderBy([(t) => OrderingTerm.asc(t.actionAt)]))
         .watch();
-  }
-
-  Future<void> updateMember(
-    String groupId,
-    int contactId,
-    GroupMembersCompanion updates,
-  ) async {
-    await (update(groupMembers)..where(
-          (c) => c.groupId.equals(groupId) & c.contactId.equals(contactId),
-        ))
-        .write(updates);
-  }
-
-  Future<void> removeMember(String groupId, int contactId) async {
-    await (delete(groupMembers)..where(
-          (c) => c.groupId.equals(groupId) & c.contactId.equals(contactId),
-        ))
-        .go();
   }
 
   Future<Group?> createNewDirectChat(
@@ -156,8 +134,14 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
               useColumns: false,
             ),
           ])
-          ..orderBy([OrderingTerm.desc(groupMembers.lastMessage)])
-          ..where(groupMembers.groupId.equals(groupId)));
+          ..orderBy([
+            OrderingTerm.desc(groupMembers.lastMessage),
+            OrderingTerm.asc(contacts.userId),
+          ])
+          ..where(
+            groupMembers.groupId.equals(groupId) &
+                _isActiveMember(groupMembers),
+          ));
     return query.map((row) => row.readTable(contacts)).get();
   }
 
@@ -170,18 +154,44 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
               useColumns: false,
             ),
           ])
-          ..orderBy([OrderingTerm.desc(groupMembers.lastMessage)])
-          ..where(groupMembers.groupId.equals(groupId)));
+          ..orderBy([
+            OrderingTerm.desc(groupMembers.lastMessage),
+            OrderingTerm.asc(contacts.userId),
+          ])
+          ..where(
+            groupMembers.groupId.equals(groupId) &
+                _isActiveMember(groupMembers),
+          ));
     return query.map((row) => row.readTable(contacts)).watch();
   }
 
   Stream<List<(Contact, GroupMember)>> watchGroupMembers(String groupId) {
     final query =
-        (select(groupMembers)..where((t) => t.groupId.equals(groupId))).join([
-          leftOuterJoin(
+        (select(groupMembers)..where(
+              (t) => t.groupId.equals(groupId) & _isActiveMember(t),
+            ))
+            .join([
+              leftOuterJoin(
+                contacts,
+                contacts.userId.equalsExp(groupMembers.contactId),
+              ),
+            ]);
+    return query
+        .map((row) => (row.readTable(contacts), row.readTable(groupMembers)))
+        .watch();
+  }
+
+  Stream<List<(Contact, GroupMember)>> watchAllGroupMembers() {
+    final query =
+        (select(groupMembers)..where(_isActiveMember)).join([
+          innerJoin(
             contacts,
             contacts.userId.equalsExp(groupMembers.contactId),
           ),
+        ])..orderBy([
+          OrderingTerm.asc(groupMembers.groupId),
+          OrderingTerm.desc(groupMembers.lastMessage),
+          OrderingTerm.asc(contacts.userId),
         ]);
     return query
         .map((row) => (row.readTable(contacts), row.readTable(groupMembers)))
@@ -195,6 +205,26 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         .watch();
   }
 
+  Stream<List<Group>> watchGroupsAllowedForWidgetShare() {
+    final query =
+        select(groups).join([
+          innerJoin(
+            groupMembers,
+            groupMembers.groupId.equalsExp(groups.groupId),
+          ),
+          innerJoin(
+            contacts,
+            contacts.userId.equalsExp(groupMembers.contactId),
+          ),
+        ])..where(
+          groups.isDirectChat.equals(true) &
+              groups.leftGroup.equals(false) &
+              groups.deletedContent.equals(false) &
+              contacts.widgetSharingAllowed.equals(true),
+        );
+    return query.map((row) => row.readTable(groups)).watch();
+  }
+
   Stream<List<GroupMember>> watchContactGroupMember(int contactId) {
     return (select(groupMembers)..where(
           (g) => g.contactId.equals(contactId),
@@ -202,17 +232,17 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         .watch();
   }
 
-  Stream<Group?> watchGroup(String groupId) {
+  Stream<List<GroupMember>> watchTypingGroupMembers() {
     return (select(
-      groups,
-    )..where((t) => t.groupId.equals(groupId))).watchSingleOrNull();
+          groupMembers,
+        )..where(
+          (member) =>
+              member.lastTypeIndicator.isNotNull() & _isActiveMember(member),
+        ))
+        .watch();
   }
 
-  Stream<Group?> watchDirectChat(int contactId) {
-    final groupId = getUUIDforDirectChat(
-      contactId,
-      userService.currentUser.userId,
-    );
+  Stream<Group?> watchGroup(String groupId) {
     return (select(
       groups,
     )..where((t) => t.groupId.equals(groupId))).watchSingleOrNull();
@@ -238,7 +268,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     )..where((t) => t.groupId.equals(groupId))).getSingleOrNull();
   }
 
-  Stream<({int counter, bool isExpiring})> watchFlameCounter(String groupId) {
+  /// Drift watches the row only to learn *when* to ask again: the counter
+  /// itself is derived in Rust, because it depends on the current day as much
+  /// as on the stored columns.
+  Stream<FlameState> watchFlameCounter(String groupId) {
     return (select(groups)..where(
           (u) =>
               u.groupId.equals(groupId) &
@@ -246,7 +279,16 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
               u.lastMessageSend.isNotNull(),
         ))
         .watchSingleOrNull()
-        .map(getFlameCounterFromGroup);
+        .asyncMap((group) {
+          if (group == null) {
+            return const FlameState(
+              counter: 0,
+              isExpiring: false,
+              isBestFriend: false,
+            );
+          }
+          return rust_groups.flameState(groupId: groupId);
+        });
   }
 
   Future<List<Group>> getAllDirectChats() {
@@ -255,31 +297,6 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
   Future<List<Group>> getAllGroups() {
     return select(groups).get();
-  }
-
-  Future<List<Group>> getAllNotJoinedGroups() {
-    return (select(groups)..where(
-          (t) => t.joinedGroup.equals(false) & t.isDirectChat.equals(false),
-        ))
-        .get();
-  }
-
-  Future<List<GroupMember>> getAllGroupMemberWithoutPublicKey() async {
-    try {
-      final query =
-          ((select(groupMembers)..where((t) => t.groupPublicKey.isNull())).join(
-            [
-              leftOuterJoin(
-                groups,
-                groups.groupId.equalsExp(groupMembers.groupId),
-              ),
-            ],
-          )..where(groups.isDirectChat.equals(false)));
-      return await query.map((row) => row.readTable(groupMembers)).get();
-    } catch (e) {
-      Log.error(e);
-      return [];
-    }
   }
 
   Future<Group?> getDirectChat(int userId) async {
@@ -292,27 +309,6 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         ])..where(groupMembers.contactId.equals(userId)));
 
     return query.map((row) => row.readTable(groups)).getSingleOrNull();
-  }
-
-  Future<Group?> createOrGetDirectChat(int contactId) async {
-    var directChat = await getDirectChat(contactId);
-    if (directChat == null) {
-      final contact = await attachedDatabase.contactsDao.getContactById(
-        contactId,
-      );
-      if (contact == null) {
-        Log.error('Contact $contactId not found, cannot create direct chat');
-        return null;
-      }
-      await createNewDirectChat(
-        contactId,
-        GroupsCompanion(
-          groupName: Value(getContactDisplayName(contact)),
-        ),
-      );
-      directChat = await getDirectChat(contactId);
-    }
-    return directChat;
   }
 
   Stream<int> watchSumTotalMediaCounter() {
@@ -368,23 +364,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
           ),
         ])..where(
           groups.isDirectChat.equals(false) &
-              groupMembers.contactId.equals(contactId),
+              groupMembers.contactId.equals(contactId) &
+              _isActiveMember(groupMembers),
         );
 
     return query.map((row) => row.readTable(groups)).watch();
-  }
-
-  Future<List<Group>> getGroupsForMember(int contactId) {
-    final query =
-        select(groups).join([
-          innerJoin(
-            groupMembers,
-            groupMembers.groupId.equalsExp(groups.groupId),
-          ),
-        ])..where(
-          groupMembers.contactId.equals(contactId),
-        );
-
-    return query.map((row) => row.readTable(groups)).get();
   }
 }

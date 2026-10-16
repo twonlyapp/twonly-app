@@ -1,55 +1,97 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/log.dart';
 
 void main() {
-  late Directory dir;
+  late Completer<SentryEvent> captured;
+  late bool previousErrorTracking;
 
-  setUpAll(() {
-    dir = Directory.systemTemp.createTempSync('twonly_log_test_');
-    AppEnvironment.initTesting(
-      customCacheDir: dir.path,
-      customSupportDir: dir.path,
-    );
-    Log.init();
+  setUp(() async {
+    previousErrorTracking = AppState.allowErrorTrackingViaSentry;
+    AppState.allowErrorTrackingViaSentry = true;
+    captured = Completer<SentryEvent>();
+    await Sentry.init((options) {
+      options
+        ..dsn = 'https://public@example.com/1'
+        ..debug = false
+        ..beforeSend = (event, hint) {
+          captured.complete(event);
+          // Inspect the real Sentry event without sending it over the network.
+          return null;
+        };
+    });
   });
 
-  tearDownAll(() => dir.deleteSync(recursive: true));
+  tearDown(() async {
+    AppState.allowErrorTrackingViaSentry = previousErrorTracking;
+    await Sentry.close();
+  });
 
-  Future<List<String>> linesContaining(List<String> needles) async {
-    for (var i = 0; i < 100; i++) {
-      final lines = (await loadLogFile()).split('\n');
-      final found = [
-        for (final needle in needles)
-          lines.where((line) => line.contains(needle)).firstOrNull,
-      ];
-      if (!found.contains(null)) return found.cast<String>();
-      await Future<void>.delayed(const Duration(milliseconds: 10));
-    }
-    fail('The log file never contained all of $needles');
-  }
+  test('reports the upload cause and its original stack trace', () async {
+    final error = TimeoutException('Upload timed out');
+    final stackTrace = StackTrace.fromString(
+      '#0      uploadArchive (package:twonly/upload.dart:42:7)',
+    );
 
-  test(
-    'tags lines forwarded from Rust instead of the receiving isolate',
-    () async {
-      Log.rust('libsignal_protocol::session_management: forwarded line');
-      Log.info('line from Dart');
+    Log.error(
+      'Archive backup upload failed.',
+      error: error,
+      stackTrace: stackTrace,
+    );
 
-      final [rustLine, dartLine] = await linesContaining([
-        'forwarded line',
-        'line from Dart',
-      ]);
+    final event = await captured.future;
+    expect(event.throwable, same(error));
+    final exception = event.exceptions!.single;
+    expect(exception.type, 'TimeoutException');
+    expect(exception.value, contains('Upload timed out'));
+    expect(exception.stackTrace!.frames.single.function, 'uploadArchive');
+    expect(event.contexts['log'], {'message': 'Archive backup upload failed.'});
+  });
 
-      expect(
-        rustLine,
-        endsWith(
-          'FINE [r] [twonly] rust > '
-          'libsignal_protocol::session_management: forwarded line',
-        ),
-      );
-      expect(dartLine, contains('FINE [f] [twonly] '));
-    },
-  );
+  test('preserves exceptions passed as the log message', () async {
+    final error = StateError('Backup unavailable');
+    Log.error(error);
+
+    final event = await captured.future;
+    expect(event.throwable, same(error));
+    expect(event.exceptions!.single.type, 'StateError');
+  });
+
+  test('message-only errors retain their message and caller stack', () async {
+    Log.error('Archive backup upload failed with status 500.');
+
+    final event = await captured.future;
+    expect(
+      event.exceptions!.single.value,
+      'Exception: Archive backup upload failed with status 500.',
+    );
+    expect(event.exceptions!.single.stackTrace!.frames, isNotEmpty);
+  });
+
+  test('redacts SQLite parameters from the cause and log context', () async {
+    final error = Exception(
+      'SqliteException: write failed, parameters: [private message]',
+    );
+    Log.error('$error', error: error);
+
+    final event = await captured.future;
+    expect(event.exceptions!.single.value, isNot(contains('private message')));
+    expect('${event.contexts['log']}', isNot(contains('private message')));
+    expect(event.exceptions!.single.value, contains('write failed'));
+  });
+
+  test('does not report errors when tracking is disabled', () async {
+    AppState.allowErrorTrackingViaSentry = false;
+    Log.error(
+      'Archive backup upload failed.',
+      error: TimeoutException('Upload timed out'),
+    );
+    Log.error('Sentry only', onlyIfSentryEnabled: true);
+    await Sentry.close();
+
+    expect(captured.isCompleted, isFalse);
+  });
 }

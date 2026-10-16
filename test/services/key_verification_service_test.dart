@@ -2,15 +2,17 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.model.dart';
-import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+
+import '../mocks/user_config.dart';
 
 void main() {
   if (!Platform.isMacOS) {
@@ -18,6 +20,18 @@ void main() {
   }
 
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    final dylibPath =
+        '${Directory.current.path}/rust/target/debug/librust_lib_twonly.dylib';
+    if (File(dylibPath).existsSync()) {
+      await RustLib.init(
+        externalLibrary: ExternalLibrary.open(dylibPath),
+      );
+    } else {
+      await RustLib.init();
+    }
+  });
 
   setUp(() async {
     await locator.reset();
@@ -30,12 +44,11 @@ void main() {
           ),
         ),
       )
-      ..registerSingleton<UserService>(UserService())
-      ..registerSingleton<ApiService>(ApiService());
+      ..registerSingleton<UserService>(UserService());
 
     // isUserDiscoveryEnabled defaults to false, so no Rust bridge calls happen
     // in addKeyVerification / deleteKeyVerification.
-    userService.currentUser = UserData(
+    userService.currentUser = testUserConfig(
       userId: 1,
       username: 'me',
       displayName: 'Me',
@@ -54,7 +67,7 @@ void main() {
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
   Future<void> insertContact(int userId, {String? username}) async {
-    await twonlyDB.contactsDao.insertContact(
+    await twonlyDB.contactsDao.insertOnConflictUpdate(
       ContactsCompanion.insert(
         userId: Value(userId),
         username: username ?? 'user$userId',
@@ -144,6 +157,16 @@ void main() {
       await insertContact(10);
       await addDirectVerification(10, VerificationType.link);
 
+      expect(await twonlyDB.keyVerificationDao.isContactVerified(10), true);
+    });
+
+    test('isContactVerified returns true for manual comparison', () async {
+      await insertContact(10);
+      await addDirectVerification(10, VerificationType.manual);
+
+      final verifications = await twonlyDB.keyVerificationDao
+          .getContactVerification(10);
+      expect(verifications.single.type, VerificationType.manual);
       expect(await twonlyDB.keyVerificationDao.isContactVerified(10), true);
     });
 

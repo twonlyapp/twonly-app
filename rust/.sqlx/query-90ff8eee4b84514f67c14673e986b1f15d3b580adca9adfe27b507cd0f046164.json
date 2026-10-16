@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT version AS \"version!: i64\", bundle_sha256 AS \"bundle_sha256!: String\"\n               FROM webxdc_apps\n               WHERE app_id = ? AND published = 1\n               ORDER BY version DESC\n               LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "version!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "name": "bundle_sha256!: String",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "bundle_sha256"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "90ff8eee4b84514f67c14673e986b1f15d3b580adca9adfe27b507cd0f046164"
+}

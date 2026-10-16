@@ -17,10 +17,10 @@ class CriticalErrorView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.triangleExclamation,
                 size: 80,
-                color: Colors.redAccent,
+                color: context.color.error,
               ),
               const SizedBox(height: 24),
               Text(

@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COALESCE(MAX(kyber_pre_key_id), 0) AS \"id!: u32\" FROM signal_kyber_pre_keys",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: u32",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e5cad0116aeef8212079f07546f156eabc8050171ad47073f389df070f767815"
+}

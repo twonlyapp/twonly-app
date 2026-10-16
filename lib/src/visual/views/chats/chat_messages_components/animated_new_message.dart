@@ -5,12 +5,16 @@ class AnimatedNewMessage extends StatefulWidget {
     required this.child,
     required this.messageId,
     required this.animateIds,
+    required this.isOwnMessage,
     super.key,
   });
 
   final Widget child;
   final String messageId;
   final Set<String> animateIds;
+
+  /// Own messages grow out of the right edge, received ones out of the left.
+  final bool isOwnMessage;
 
   @override
   State<AnimatedNewMessage> createState() => _AnimatedNewMessageState();
@@ -79,7 +83,9 @@ class _AnimatedNewMessageState extends State<AnimatedNewMessage>
       alignment: Alignment.bottomLeft,
       child: ScaleTransition(
         scale: _scaleAnimation,
-        alignment: Alignment.bottomRight,
+        alignment: widget.isOwnMessage
+            ? Alignment.bottomRight
+            : Alignment.bottomLeft,
         child: FadeTransition(
           opacity: _opacityAnimation,
           child: widget.child,

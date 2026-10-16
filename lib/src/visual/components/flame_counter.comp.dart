@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge.dart' show FlameState;
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
@@ -9,11 +11,13 @@ class FlameCounterWidget extends StatefulWidget {
   const FlameCounterWidget({
     this.groupId,
     this.contactId,
+    this.group,
     this.prefix = false,
     super.key,
   });
   final String? groupId;
   final int? contactId;
+  final Group? group;
   final bool prefix;
 
   @override
@@ -25,12 +29,20 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
   bool isBestFriend = false;
   bool isExpiring = false;
 
-  StreamSubscription<({int counter, bool isExpiring})>? flameCounterSub;
+  StreamSubscription<FlameState>? flameCounterSub;
 
   @override
   void initState() {
     super.initState();
     initAsync();
+  }
+
+  @override
+  void didUpdateWidget(FlameCounterWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.group != null && widget.group != oldWidget.group) {
+      initAsync();
+    }
   }
 
   @override
@@ -41,27 +53,32 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
 
   Future<void> initAsync() async {
     var groupId = widget.groupId;
-    late Group? group;
-    if (widget.groupId == null && widget.contactId != null) {
+    var group = widget.group;
+    if (group != null) {
+      groupId = group.groupId;
+    } else if (widget.groupId == null && widget.contactId != null) {
       group = await twonlyDB.groupsDao.getDirectChat(widget.contactId!);
       groupId = group?.groupId;
     } else if (groupId != null) {
       group = await twonlyDB.groupsDao.getGroup(groupId);
     }
     if (groupId != null && group != null) {
-      isBestFriend =
-          userService.currentUser.myBestFriendGroupId == groupId &&
-          group.alsoBestFriend;
+      if (widget.group != null) {
+        _apply(await rust_groups.flameState(groupId: groupId));
+        return;
+      }
       final stream = twonlyDB.groupsDao.watchFlameCounter(groupId);
-      flameCounterSub = stream.listen((result) {
-        if (mounted) {
-          setState(() {
-            flameCounter = result.counter;
-            isExpiring = result.isExpiring;
-          });
-        }
-      });
+      flameCounterSub = stream.listen(_apply);
     }
+  }
+
+  void _apply(FlameState state) {
+    if (!mounted) return;
+    setState(() {
+      flameCounter = state.counter;
+      isExpiring = state.isExpiring;
+      isBestFriend = state.isBestFriend;
+    });
   }
 
   @override

@@ -10,6 +10,16 @@ import 'package:twonly/src/utils/log.dart';
 
 part 'mediafiles.dao.g.dart';
 
+class ChatMediaFiles {
+  const ChatMediaFiles({
+    required this.group,
+    required this.mediaFiles,
+  });
+
+  final Group group;
+  final List<MediaFile> mediaFiles;
+}
+
 @DriftAccessor(tables: [MediaFiles, Messages])
 class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     with _$MediaFilesDaoMixin {
@@ -89,19 +99,6 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     )..where((t) => t.mediaId.equals(mediaId))).watchSingleOrNull();
   }
 
-  Future<void> resetPendingDownloadState() async {
-    await (update(mediaFiles)..where(
-          (c) => c.downloadState.equals(
-            DownloadState.downloading.name,
-          ),
-        ))
-        .write(
-          const MediaFilesCompanion(
-            downloadState: Value(DownloadState.pending),
-          ),
-        );
-  }
-
   Future<List<MediaFile>> getAllMediaFilesPendingDownload() async {
     return (select(mediaFiles)..where(
           (t) =>
@@ -159,35 +156,122 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     return query.map((row) => row.readTable(mediaFiles)).watch();
   }
 
-  Stream<List<MediaFile>> watchNewestMediaFiles() {
-    return (select(mediaFiles)
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
-          ..limit(100))
-        .watch();
-  }
-
-  Stream<List<MediaFile>> watchMediaFilesForGroup(String groupId) {
-    final query = select(mediaFiles).join([
-      innerJoin(
-        db.messages,
-        db.messages.mediaId.equalsExp(mediaFiles.mediaId),
-        useColumns: false,
-      ),
-    ])..where(db.messages.groupId.equals(groupId));
+  /// Locations are independent of thumbnail availability. Filter before
+  /// deduplicating so a copy without coordinates cannot hide a located Memory.
+  Stream<List<MediaFile>> watchGeotaggedMemories({
+    bool favoritesOnly = false,
+  }) {
+    final query =
+        (select(mediaFiles)..where(
+              (t) =>
+                  (t.stored.equals(true) |
+                      t.cloudState.equals(CloudState.uploaded.name)) &
+                  t.isDraftMedia.equals(false) &
+                  t.isWidgetMedia.equals(false) &
+                  t.type.equals(MediaType.audio.name).not() &
+                  t.locationLatitude.isBetweenValues(-90, 90) &
+                  t.locationLongitude.isBetweenValues(-180, 180) &
+                  (favoritesOnly
+                      ? t.isFavorite.equals(true)
+                      : const Constant(true)),
+            ))
+            .join([])
+          ..groupBy([
+            const CustomExpression<Object>(
+              'COALESCE(stored_file_hash, media_id)',
+            ),
+          ])
+          ..orderBy([OrderingTerm.desc(mediaFiles.createdAt)]);
     return query.map((row) => row.readTable(mediaFiles)).watch();
   }
 
-  Future<void> updateAllRetransmissionUploadingState() async {
-    await (update(mediaFiles)..where(
-          (t) =>
-              t.uploadState.equals(UploadState.uploading.name) &
-              t.reuploadRequestedBy.isNotNull(),
-        ))
-        .write(
-          const MediaFilesCompanion(
-            uploadState: Value(UploadState.preprocessing),
+  Stream<List<MediaFile>> watchMediaFilesByIds(Set<String> mediaIds) {
+    if (mediaIds.isEmpty) return Stream.value(const []);
+    return (select(
+      mediaFiles,
+    )..where((file) => file.mediaId.isIn(mediaIds))).watch();
+  }
+
+  Stream<List<MediaFile>> watchMediaFilesForGroup(String groupId) {
+    final query =
+        select(mediaFiles).join([
+          innerJoin(
+            db.messages,
+            db.messages.mediaId.equalsExp(mediaFiles.mediaId),
+            useColumns: false,
           ),
+        ])..where(
+          db.messages.groupId.equals(groupId) &
+              (db.messages.isStory.equals(false) |
+                  db.messages.mediaStored.equals(true)),
         );
+    return query.map((row) => row.readTable(mediaFiles)).watch();
+  }
+
+  /// Watches all chats and their distinct referenced media records.
+  Stream<List<ChatMediaFiles>> watchMediaFilesByChat() {
+    final query = select(db.groups).join([
+      leftOuterJoin(
+        db.messages,
+        db.messages.groupId.equalsExp(db.groups.groupId),
+        useColumns: false,
+      ),
+      leftOuterJoin(
+        mediaFiles,
+        mediaFiles.mediaId.equalsExp(db.messages.mediaId),
+      ),
+    ]);
+
+    return query.watch().map((rows) {
+      final groupsById = <String, Group>{};
+      final mediaByGroupId = <String, Map<String, MediaFile>>{};
+
+      for (final row in rows) {
+        final group = row.readTable(db.groups);
+        groupsById[group.groupId] = group;
+        final mediaFile = row.readTableOrNull(mediaFiles);
+        if (mediaFile != null) {
+          (mediaByGroupId[group.groupId] ??= {})[mediaFile.mediaId] = mediaFile;
+        }
+      }
+
+      return groupsById.entries
+          .map(
+            (entry) => ChatMediaFiles(
+              group: entry.value,
+              mediaFiles:
+                  mediaByGroupId[entry.key]?.values.toList() ?? const [],
+            ),
+          )
+          .toList();
+    });
+  }
+
+  Stream<List<MediaFile>> watchChatListMediaFiles() {
+    return customSelect(
+      '''
+      WITH ranked_messages AS (
+        SELECT messages.media_id,
+               messages.opened_at,
+               ROW_NUMBER() OVER (
+                 PARTITION BY messages.group_id
+                 ORDER BY messages.created_at DESC
+               ) AS message_rank
+        FROM messages
+        WHERE messages.media_id IS NOT NULL
+          AND (messages.is_story = 0 OR messages.media_stored = 1)
+      )
+      SELECT DISTINCT media_files.*
+      FROM media_files
+      INNER JOIN ranked_messages
+        ON ranked_messages.media_id = media_files.media_id
+      WHERE ranked_messages.message_rank = 1
+         OR ranked_messages.opened_at IS NULL
+      ''',
+      readsFrom: {mediaFiles, db.messages},
+    ).watch().map(
+      (rows) => rows.map((row) => mediaFiles.map(row.data)).toList(),
+    );
   }
 
   Future<List<String>> getMessageIdsByMediaHash(
@@ -203,6 +287,8 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         ])..where(
           mediaFiles.storedFileHash.equals(hash) &
               db.messages.senderId.equals(senderId) &
+              db.messages.isWidgetMedia.equals(false) &
+              db.messages.isStory.equals(false) &
               db.messages.openedAt.isNull(),
         );
 
@@ -252,7 +338,9 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
   Future<List<MediaFile>> getMemoriesToBackup() async {
     return (select(mediaFiles)..where(
           (t) =>
-              t.stored.equals(true) & t.cloudState.equals(CloudState.none.name),
+              t.stored.equals(true) &
+              (t.cloudState.equals(CloudState.none.name) |
+                  t.cloudState.equals(CloudState.pending.name)),
         ))
         .get();
   }

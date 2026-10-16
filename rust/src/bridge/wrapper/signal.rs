@@ -1,6 +1,14 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::bridge::get_twonly_flutter;
+use crate::context::Context;
 use crate::error::{Result, TwonlyError};
+use crate::services::contacts::ContactService;
 use crate::signal::engine::{FrbPqcPreKey, FrbPreKeyBundle};
+use crate::signal::reset::SessionResetLimiter;
 
 pub struct RustSignal {}
 
@@ -8,9 +16,7 @@ impl RustSignal {
     pub async fn generate_bundle() -> Result<FrbPreKeyBundle> {
         let guard = get_twonly_flutter()?.signal_engine.lock().await;
         let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
-        engine
-            .generate_bundle()
-            .await
+        engine.generate_bundle().await
     }
 
     pub async fn generate_pqc_prekeys() -> Result<Vec<FrbPqcPreKey>> {
@@ -29,21 +35,10 @@ impl RustSignal {
         engine.process_prekey_bundle(name, device_id, bundle).await
     }
 
-    /// Removes the current v2 session for a contact. The Dart hotfix layer
-    /// immediately establishes its replacement from a freshly fetched bundle.
-    pub async fn reset_contact_session(contact_id: i64) -> Result<()> {
-        let guard = get_twonly_flutter()?.signal_engine.lock().await;
-        let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
-        engine
-            .reset_session(&contact_id.to_string(), 1, true)
-            .await?;
-        Ok(())
-    }
-
     pub async fn encrypt(name: String, device_id: u32, plaintext: Vec<u8>) -> Result<Vec<u8>> {
         let guard = get_twonly_flutter()?.signal_engine.lock().await;
         let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
-        Ok(engine.encrypt_message(name, device_id, plaintext).await?)
+        engine.encrypt_message(name, device_id, plaintext).await
     }
 
     pub async fn decrypt(name: String, device_id: u32, ciphertext: Vec<u8>) -> Result<Vec<u8>> {
@@ -52,5 +47,49 @@ impl RustSignal {
         engine
             .decrypt_message(name.clone(), device_id, ciphertext.clone())
             .await
+    }
+
+    pub async fn get_user_public_key() -> Result<Vec<u8>> {
+        let guard = get_twonly_flutter()?.signal_engine.lock().await;
+        let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
+        engine.get_identity_key().await
+    }
+
+    pub async fn get_contact_public_key(contact_id: i64) -> Result<Option<Vec<u8>>> {
+        let guard = get_twonly_flutter()?.signal_engine.lock().await;
+        let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
+        engine
+            .get_contact_identity_key(&contact_id.to_string())
+            .await
+    }
+
+    pub async fn get_safety_number(contact_id: i64) -> Result<Option<String>> {
+        let guard = get_twonly_flutter()?.signal_engine.lock().await;
+        let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
+        engine.get_safety_number(contact_id).await
+    }
+
+    /// Removes the current session with a contact and immediately establishes
+    /// a fresh one while requiring the contact's stored identity key to match.
+    pub async fn reset_contact_session(contact_id: i64) -> Result<()> {
+        let ctx = Context::get_static()?;
+        let expected_public_key = {
+            let guard = ctx.signal_engine.lock().await;
+            let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
+            let public_key = engine
+                .get_contact_identity_key(&contact_id.to_string())
+                .await?;
+            engine
+                .reset_session(&contact_id.to_string(), 1, true)
+                .await?;
+            public_key
+        };
+
+        ContactService::new(ctx)
+            .establish_signal_session(contact_id, expected_public_key)
+            .await?;
+
+        let database = ctx.rust_db.read().await.clone();
+        SessionResetLimiter::clear(&database.pool, &contact_id.to_string(), 1).await
     }
 }

@@ -77,8 +77,8 @@ class MediaViewerBottomNavigationBar extends StatelessWidget {
                     child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                   )
                 : imageSaved
-                    ? const Icon(Icons.check)
-                    : const FaIcon(FontAwesomeIcons.floppyDisk, size: 20),
+                ? const Icon(Icons.check)
+                : const FaIcon(FontAwesomeIcons.floppyDisk, size: 20),
           ),
         const SizedBox(width: 10),
         IconButton(

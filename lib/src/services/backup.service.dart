@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:background_downloader/background_downloader.dart';
 import 'package:clock/clock.dart' as clock;
 import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
@@ -12,7 +11,6 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -21,15 +19,26 @@ import 'package:twonly/src/utils/storage.dart';
 
 class BackupService {
   static final Mutex _protected = Mutex();
+  static const _retryDelay = Duration(minutes: 15);
+  static const _uploadTimeout = Duration(minutes: 10);
+  static Timer? _retryTimer;
 
   static String _getIdentityBackupUrl(String backupId) =>
-      '${apiService.apiEndpoint}/backup/identity/$backupId';
+      '${RustApi.apiBaseUrl(protocol: 'https')}backup/identity/$backupId';
 
   static String _getArchiveBackupUrl(String backupDownloadToken, int? userId) =>
-      '${apiService.apiEndpoint}/backup/archive/${userId == null ? '' : '${userId.toRadixString(16).padLeft(16, '0').toUpperCase()}/'}$backupDownloadToken';
+      '${RustApi.apiBaseUrl(protocol: 'https')}backup/archive/${userId == null ? '' : '${userId.toRadixString(16).padLeft(16, '0').toUpperCase()}/'}$backupDownloadToken';
 
   static final _backupUpdateController = StreamController<void>.broadcast();
   static Stream<void> get onBackupUpdated => _backupUpdateController.stream;
+
+  static void _scheduleRetry() {
+    if (_retryTimer?.isActive ?? false) return;
+    _retryTimer = Timer(_retryDelay, () {
+      _retryTimer = null;
+      unawaited(makeBackup());
+    });
+  }
 
   static Future<CurrentBackupStatus> getData() async {
     return CurrentBackupStatus.fromJson(
@@ -57,36 +66,103 @@ class BackupService {
     unawaited(makeBackup(force: true));
   }
 
-  static Future<void> handleBackupStatusUpdate(
-    String taskId,
-    TaskStatusUpdate update,
-  ) async {
-    var status = LastBackupUploadState.success;
+  static Future<void> _saveStatus(CurrentBackupStatus backup) async {
+    await KeyValueStore.put(
+      KeyValueKeys.currentBackupState,
+      backup.toJson(),
+    );
+    _backupUpdateController.add(null);
+  }
 
-    if (update.status == TaskStatus.failed ||
-        update.status == TaskStatus.canceled) {
-      status = LastBackupUploadState.failed;
-    } else if (update.status != TaskStatus.complete) {
-      Log.info('Backup is in state: ${update.status}');
+  static bool _isSuccessful(http.BaseResponse response) =>
+      response.statusCode >= 200 && response.statusCode < 300;
+
+  static void _logUploadFailure(
+    String message,
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    // Losing connectivity or timing out is expected during a background upload.
+    // makeBackup persists the failure and schedules another attempt.
+    if (error is SocketException ||
+        error is http.ClientException ||
+        error is TimeoutException) {
+      Log.warn(message, error, stackTrace);
       return;
     }
-    await _protected.protect(() async {
-      final backup = await getData();
-      if (taskId == 'backup_identity') {
-        backup
-          ..identityLastSuccessFull = clock.clock.now()
-          ..identityState = status;
-      } else {
-        backup
-          ..archiveLastSuccessFull = clock.clock.now()
-          ..archiveState = status;
-      }
-      await KeyValueStore.put(
-        KeyValueKeys.currentBackupState,
-        backup.toJson(),
+    Log.error(message, error: error, stackTrace: stackTrace);
+  }
+
+  static Future<bool> _uploadIdentity(
+    String backupId,
+    List<int> encryptedBackup,
+  ) async {
+    final client = http.Client();
+    try {
+      final response = await client
+          .put(
+            Uri.parse(_getIdentityBackupUrl(backupId)),
+            headers: const {'Content-Type': 'application/octet-stream'},
+            body: encryptedBackup,
+          )
+          .timeout(_uploadTimeout);
+      if (_isSuccessful(response)) return true;
+      Log.error(
+        'Identity backup upload failed with status ${response.statusCode}.',
       );
-      _backupUpdateController.add(null);
-    });
+    } catch (error, stackTrace) {
+      _logUploadFailure(
+        'Identity backup upload failed.',
+        error,
+        stackTrace,
+      );
+    } finally {
+      client.close();
+    }
+    return false;
+  }
+
+  static Future<bool> _uploadArchive(
+    String backupDownloadToken,
+    File archive,
+    Map<String, String> headers,
+  ) async {
+    final client = http.Client();
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse(_getArchiveBackupUrl(backupDownloadToken, null)),
+      )..headers.addAll(headers);
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          archive.path,
+          filename: archive.uri.pathSegments.last,
+        ),
+      );
+
+      final streamedResponse = await client
+          .send(request)
+          .timeout(
+            _uploadTimeout,
+          );
+      final response = await http.Response.fromStream(
+        streamedResponse,
+      ).timeout(_uploadTimeout);
+      if (_isSuccessful(response)) return true;
+      Log.error(
+        'Archive backup upload failed with status ${response.statusCode}.',
+      );
+    } catch (error, stackTrace) {
+      _logUploadFailure(
+        'Archive backup upload failed.',
+        error,
+        stackTrace,
+      );
+    } finally {
+      client.close();
+    }
+    return false;
   }
 
   static Future<void> makeBackup({bool force = false}) async {
@@ -97,65 +173,59 @@ class BackupService {
       final lastWeek = clock.clock.now().subtract(const Duration(days: 7));
 
       if (force ||
+          backup.identityState != LastBackupUploadState.success ||
           backup.identityLastSuccessFull == null ||
-          (backup.identityState != LastBackupUploadState.pending &&
-                  backup.identityLastSuccessFull!.isBefore(lastWeek) ||
-              backup.identityLastSuccessFull!.isBefore(
-                lastWeek.subtract(const Duration(days: 1)),
-              ))) {
+          backup.identityLastSuccessFull!.isBefore(lastWeek)) {
         final backupId = await RustBackupIdentity.getBackupId();
         if (backupId == null) {
           Log.warn('No backup password was set by the user.');
           backup.identityState = LastBackupUploadState.failed;
+          await _saveStatus(backup);
           await UserService.update((u) => u.isBackupEnabled = false);
         } else {
           Log.info('Performing a identity backup.');
-          final encryptedBackup =
-              await RustBackupIdentity.getIdentityBackupBytes();
+          List<int>? encryptedBackup;
+          try {
+            encryptedBackup = await RustBackupIdentity.getIdentityBackupBytes();
+          } catch (error, stackTrace) {
+            Log.error(
+              'Creating identity backup failed.',
+              error: error,
+              stackTrace: stackTrace,
+            );
+            backup.identityState = LastBackupUploadState.failed;
+            await _saveStatus(backup);
+            _scheduleRetry();
+          }
 
-          final backupTempFile = File(
-            '${AppEnvironment.cacheDir}/identity_backup.bin',
-          )..writeAsBytesSync(encryptedBackup);
+          if (encryptedBackup != null) {
+            Log.info(
+              'Identity backup has a size of ${encryptedBackup.length}.',
+            );
 
-          Log.info(
-            'Identity backup has a size of ${backupTempFile.statSync().size}.',
-          );
-
-          final task = UploadTask.fromFile(
-            taskId: 'backup_identity',
-            httpRequestMethod: 'PUT',
-            file: backupTempFile,
-            url: _getIdentityBackupUrl(backupId),
-            post: 'binary',
-            retries: 2,
-            headers: {
-              'Content-Type': 'application/octet-stream',
-            },
-          );
-          if (await FileDownloader().enqueue(task)) {
-            Log.info('Starting upload from backup identity.');
             backup
               ..identityState = LastBackupUploadState.pending
-              ..identityLastSuccessFull = clock.clock.now()
               ..identitySize = encryptedBackup.length;
-            await KeyValueStore.put(
-              KeyValueKeys.currentBackupState,
-              backup.toJson(),
-            );
-            _backupUpdateController.add(null);
-          } else {
-            Log.error('Error starting upload task for backup identity.');
+            await _saveStatus(backup);
+
+            if (await _uploadIdentity(backupId, encryptedBackup)) {
+              Log.info('Identity backup uploaded.');
+              backup
+                ..identityState = LastBackupUploadState.success
+                ..identityLastSuccessFull = clock.clock.now();
+            } else {
+              backup.identityState = LastBackupUploadState.failed;
+              _scheduleRetry();
+            }
+            await _saveStatus(backup);
           }
         }
       }
 
       if (force ||
+          backup.archiveState != LastBackupUploadState.success ||
           backup.archiveLastSuccessFull == null ||
-          (backup.archiveState != LastBackupUploadState.pending &&
-                  backup.archiveLastSuccessFull!.isBefore(lastDay) ||
-              backup.archiveLastSuccessFull!.isBefore(
-                lastDay.subtract(const Duration(days: 1)),
-              ))) {
+          backup.archiveLastSuccessFull!.isBefore(lastDay)) {
         Log.info('Creating a archive backup.');
         late final String backupArchive;
         late final String backupDownloadToken;
@@ -164,40 +234,42 @@ class BackupService {
               await RustBackupArchive.createBackupArchive();
         } catch (e) {
           Log.warn('Creating archive backup failed: $e');
+          backup.archiveState = LastBackupUploadState.failed;
+          await _saveStatus(backup);
+          _scheduleRetry();
           return;
         }
         Log.info(
           'Archive backup has a size of ${File(backupArchive).statSync().size}.',
         );
 
-        final headers = await getAuthenticationHeader();
-        if (headers == null) {
-          Log.error('Auth headers are empty. Returning');
+        late final Map<String, String> headers;
+        try {
+          headers = await RustApi.authenticationHeaders();
+        } catch (error) {
+          Log.error('Could not load authentication headers', error: error);
+          backup.archiveState = LastBackupUploadState.failed;
+          await _saveStatus(backup);
+          _scheduleRetry();
           return;
         }
 
-        final task = UploadTask.fromFile(
-          taskId: 'backup_archive',
-          file: File(backupArchive),
-          url: _getArchiveBackupUrl(backupDownloadToken, null),
-          priority: 0,
-          retries: 10,
-          headers: headers,
-        );
-        if (await FileDownloader().enqueue(task)) {
-          Log.info('Uploading backup archive.');
+        final archive = File(backupArchive);
+        backup
+          ..archiveState = LastBackupUploadState.pending
+          ..archiveSize = archive.statSync().size;
+        await _saveStatus(backup);
+
+        if (await _uploadArchive(backupDownloadToken, archive, headers)) {
+          Log.info('Backup archive uploaded.');
           backup
-            ..archiveState = LastBackupUploadState.pending
-            ..archiveLastSuccessFull = clock.clock.now()
-            ..archiveSize = File(backupArchive).statSync().size;
-          await KeyValueStore.put(
-            KeyValueKeys.currentBackupState,
-            backup.toJson(),
-          );
-          _backupUpdateController.add(null);
+            ..archiveState = LastBackupUploadState.success
+            ..archiveLastSuccessFull = clock.clock.now();
         } else {
-          Log.error('Error starting upload task for backup archive.');
+          backup.archiveState = LastBackupUploadState.failed;
+          _scheduleRetry();
         }
+        await _saveStatus(backup);
       }
     });
   }
@@ -208,12 +280,15 @@ class BackupService {
     return BackupRecovery.fromJson(stateJson);
   }
 
-  static Future<RecoveryError?> _nextBackupStage() async {
+  static Future<RecoveryError?> _nextBackupStage({
+    void Function(RecoveryProgress)? onProgress,
+  }) async {
     return _protected.protect(() async {
       final recoveryData = await getBackupRecoveryData();
       if (recoveryData == null) return null;
 
       if (recoveryData.state == BackupRecoveryState.identityBackupStarted) {
+        onProgress?.call(RecoveryProgress.restoringIdentity);
         // First start to download the identity to restore the KeyManager
         final backupKeys = await RustBackupIdentity.getBackupPasswordKeys(
           userId: recoveryData.userId,
@@ -248,6 +323,7 @@ class BackupService {
 
       if (recoveryData.state == BackupRecoveryState.archiveBackupStarted) {
         // The KeyManager was restored successfully, restore the archive now.
+        onProgress?.call(RecoveryProgress.downloadingArchive);
         try {
           final downloadToken =
               await RustBackupArchive.getBackupDownloadToken();
@@ -270,18 +346,23 @@ class BackupService {
             return backupArchive.$2;
           }
 
+          onProgress?.call(RecoveryProgress.extractingData);
+
           final archiveFile = File('${AppEnvironment.cacheDir}/archive.bin')
             ..writeAsBytesSync(backupArchive.$1!);
 
           await RustBackupArchive.restoreBackupArchive(
             filePath: archiveFile.path,
           );
+          Log.info('Restored the backup archive.');
           await UserService.update((u) {
             u.deviceId += 1;
           });
+          Log.info('Bumped the device id after the recovery.');
           await KeyValueStore.delete(
             KeyValueKeys.backupRecoveryState,
           );
+          Log.info('Recovery finished, restarting the app.');
         } catch (e) {
           Log.error(e);
           return RecoveryError.unkownError;
@@ -292,7 +373,9 @@ class BackupService {
     });
   }
 
-  static Future<RecoveryError?> tryToReinstallTheArchive() async {
+  static Future<RecoveryError?> tryToReinstallTheArchive({
+    void Function(RecoveryProgress)? onProgress,
+  }) async {
     final userId = await RustKeyManager.getUserId();
     if (userId == null) return null;
 
@@ -302,15 +385,20 @@ class BackupService {
       password: '',
     )..state = BackupRecoveryState.archiveBackupStarted;
     await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
-    return _nextBackupStage();
+    return _nextBackupStage(onProgress: onProgress);
   }
 
   static Future<RecoveryError?> startFullBackupRecovery(
     String username,
-    String password,
-  ) async {
-    final userId = await apiService.getUserIdFromUsername(username);
-    if (userId == null) {
+    String password, {
+    void Function(RecoveryProgress)? onProgress,
+  }) async {
+    onProgress?.call(RecoveryProgress.resolvingAccount);
+    late final int userId;
+    try {
+      userId = await RustApi.getUserIdFromUsername(username: username);
+    } catch (error) {
+      Log.error('Could not resolve backup username', error: error);
       return RecoveryError.usernameNotValid;
     }
 
@@ -320,29 +408,33 @@ class BackupService {
       password: password,
     );
 
-    await deleteLocalUserData();
+    await deleteLocalUserData(removeCredentials: true);
     await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
-    return _nextBackupStage();
+    return _nextBackupStage(onProgress: onProgress);
   }
 
   static Future<RecoveryError?> startPasswordlessBackupRecovery(
     int userId,
     String username,
-    Uint8List keyManagerBytes,
-  ) async {
+    Uint8List keyManagerBytes, {
+    void Function(RecoveryProgress)? onProgress,
+  }) async {
     final state = BackupRecovery(
       username: username,
       password: '',
       userId: userId,
     )..state = BackupRecoveryState.archiveBackupStarted;
 
-    await deleteLocalUserData();
+    onProgress?.call(RecoveryProgress.restoringIdentity);
+    await deleteLocalUserData(removeCredentials: true);
 
     // Import KeyManager keys into secure storage & in-memory key manager
     await RustKeyManager.importSerialized(serializedBytes: keyManagerBytes);
+    Log.info('Imported the recovered key manager.');
 
     await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
-    return _nextBackupStage();
+    Log.info('Stored the recovery state, entering the archive stage.');
+    return _nextBackupStage(onProgress: onProgress);
   }
 
   static Future<(Uint8List?, RecoveryError?)> _downloadBackup(
@@ -381,4 +473,13 @@ enum RecoveryError {
   tryAgainLater,
   noInternet,
   unkownError,
+}
+
+/// Granular steps of a backup recovery, reported via the `onProgress`
+/// callback so the UI can show the user what is currently happening.
+enum RecoveryProgress {
+  resolvingAccount,
+  restoringIdentity,
+  downloadingArchive,
+  extractingData,
 }

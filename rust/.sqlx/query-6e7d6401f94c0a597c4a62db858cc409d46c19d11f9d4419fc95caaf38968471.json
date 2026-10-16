@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT flame_counter FROM groups WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "flame_counter",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "flame_counter"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6e7d6401f94c0a597c4a62db858cc409d46c19d11f9d4419fc95caaf38968471"
+}

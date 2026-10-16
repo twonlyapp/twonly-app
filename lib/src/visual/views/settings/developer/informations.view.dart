@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:twonly/core/bridge/user_config.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 
 class DeveloperInformationsView extends StatefulWidget {
@@ -14,8 +13,8 @@ class DeveloperInformationsView extends StatefulWidget {
 }
 
 class _DeveloperInformationsViewState extends State<DeveloperInformationsView> {
-  String? _lastFcmTimestamp;
-  String? _lastServerTimestamp;
+  DateTime? _lastFcmTimestamp;
+  DateTime? _lastServerTimestamp;
 
   @override
   void initState() {
@@ -24,26 +23,20 @@ class _DeveloperInformationsViewState extends State<DeveloperInformationsView> {
   }
 
   Future<void> _loadInformations({bool showFeedback = false}) async {
-    const storage = FlutterSecureStorage();
     try {
-      final lastFcm = await storage.read(
-        key: SecureStorageKeys.lastFcmMessageTimestamp,
-        iOptions: const IOSOptions(
-          groupId: 'CN332ZUGRP.eu.twonly.shared',
-          accessibility: KeychainAccessibility.first_unlock,
-        ),
-      );
-      final lastServer = await storage.read(
-        key: SecureStorageKeys.lastServerMessageTimestamp,
-        iOptions: const IOSOptions(
-          groupId: 'CN332ZUGRP.eu.twonly.shared',
-          accessibility: KeychainAccessibility.first_unlock,
-        ),
-      );
+      final config = await UserConfigApi.load();
       if (mounted) {
         setState(() {
-          _lastFcmTimestamp = lastFcm;
-          _lastServerTimestamp = lastServer;
+          final lastFcmWakeup = config?.lastFcmWakeupAt;
+          final lastServerMessage = config?.lastServerMessageAt;
+          _lastFcmTimestamp = lastFcmWakeup == null
+              ? null
+              : DateTime.fromMillisecondsSinceEpoch(lastFcmWakeup * 1000);
+          _lastServerTimestamp = lastServerMessage == null
+              ? null
+              : DateTime.fromMillisecondsSinceEpoch(
+                  lastServerMessage * 1000,
+                );
         });
         if (showFeedback) {
           showSnackbar(
@@ -56,12 +49,8 @@ class _DeveloperInformationsViewState extends State<DeveloperInformationsView> {
     } catch (_) {}
   }
 
-  String _formatTimestamp(String? timestampStr) {
-    if (timestampStr == null) return 'Never';
-    final ms = int.tryParse(timestampStr);
-    if (ms == null) return 'Invalid: $timestampStr';
-    final dt = DateTime.fromMillisecondsSinceEpoch(ms);
-    return dt.toLocal().toString();
+  String _formatTimestamp(DateTime? timestamp) {
+    return timestamp?.toLocal().toString() ?? 'Never';
   }
 
   @override

@@ -1,26 +1,26 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 #![allow(unexpected_cfgs)]
+pub mod api;
 pub mod callbacks;
+pub mod groups;
+pub mod logging;
+pub mod live_location;
+pub mod stories;
+pub mod user_config;
+pub mod webxdc;
 pub mod wrapper;
 
-use std::sync::Arc;
-
-use crate::bridge::callbacks::user_discovery::{
-    UserDiscoveryStoreFlutter, UserDiscoveryUtilsFlutter,
-};
 use crate::context::Context;
-use crate::database::Database;
 use crate::error::Result;
-use crate::error::TwonlyError;
-use crate::keys::KeyManager;
-use crate::secure_storage::SecureStorage;
-use crate::signal::engine::RustSignalEngine;
-use crate::user_discovery::UserDiscovery;
-use crate::utils::Shared;
 use flutter_rust_bridge::frb;
 
-pub use crate::user_discovery::traits::AnnouncedUser;
-pub use crate::user_discovery::traits::OtherPromotion;
-use tokio::sync::Mutex;
+pub use crate::database::app::tables::FlameState;
+pub use crate::user_discovery::AnnouncedUser;
+pub use crate::user_discovery::OtherPromotion;
 
 pub struct InitConfig {
     pub database_dir: String,
@@ -44,28 +44,32 @@ pub struct _AnnouncedUser {
     pub public_id: i64,
 }
 
-pub(crate) struct TwonlyFlutter {
-    #[allow(dead_code)]
-    pub(crate) config: InitConfig,
-    pub(crate) user_discovery:
-        Shared<UserDiscovery<UserDiscoveryStoreFlutter, UserDiscoveryUtilsFlutter>>,
-    #[allow(dead_code)]
-    pub(crate) rust_db: Arc<Database>,
-    pub(crate) secure_storage: SecureStorage,
-    pub(crate) key_manager: Arc<Mutex<KeyManager>>,
-    pub(crate) signal_engine: Arc<Mutex<Option<RustSignalEngine>>>,
+#[frb(mirror(FlameState))]
+pub struct _FlameState {
+    pub counter: i64,
+    pub is_expiring: bool,
+    pub is_best_friend: bool,
 }
 
-pub(super) fn get_twonly_flutter() -> Result<&'static TwonlyFlutter> {
+pub(super) fn get_twonly_flutter() -> Result<&'static Context> {
     let ctx = Context::get_static()?;
-    if let Context::Flutter(twonly) = ctx {
-        Ok(twonly)
-    } else {
-        Err(TwonlyError::Initialization)
-    }
+    Ok(&**ctx)
 }
 
 pub async fn initialize_twonly_flutter(config: InitConfig) -> Result<()> {
     Context::init_flutter(config).await?;
     Ok(())
+}
+
+/// Initializes the complete Rust runtime without Flutter or callback setup.
+/// Background executables should call this before using `RustApi`.
+pub async fn initialize_twonly_standalone(config: InitConfig) -> Result<()> {
+    Context::init_standalone(config).await
+}
+
+/// Initializes a short-lived background runtime which authenticates without
+/// replacing an active foreground session.
+#[frb(ignore)]
+pub async fn initialize_twonly_notification(config: InitConfig) -> Result<()> {
+    Context::init_notification(config).await
 }

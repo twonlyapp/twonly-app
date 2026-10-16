@@ -173,7 +173,10 @@ class _UserDiscoveryEnabledCompState extends State<UserDiscoveryEnabledComp> {
                 context.lang.userDiscoveryEnabledYourVersion(
                   '${_version!.announcement}.${_version!.promotion}',
                 ),
-                style: const TextStyle(color: Colors.grey, fontSize: 13),
+                style: TextStyle(
+                  color: context.color.onSurfaceVariant,
+                  fontSize: 13,
+                ),
               ),
             ),
         ],

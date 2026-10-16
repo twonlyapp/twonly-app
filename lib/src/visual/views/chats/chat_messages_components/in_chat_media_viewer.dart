@@ -22,6 +22,7 @@ class InChatMediaViewer extends StatefulWidget {
     required this.canBeReopened,
     required this.borderRadius,
     required this.info,
+    this.useSharedData = false,
     super.key,
   });
 
@@ -33,6 +34,7 @@ class InChatMediaViewer extends StatefulWidget {
   final bool canBeReopened;
   final BorderRadius borderRadius;
   final BubbleInfo info;
+  final bool useSharedData;
 
   @override
   State<InChatMediaViewer> createState() => _InChatMediaViewerState();
@@ -42,7 +44,6 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   bool mirrorVideo = false;
   int? galleryItemIndex;
   StreamSubscription<Message?>? messageStream;
-  Timer? _timer;
   late final ValueNotifier<String?> _activeMediaIdNotifier = ValueNotifier(
     widget.message.mediaId,
   );
@@ -50,31 +51,21 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   @override
   void initState() {
     super.initState();
-    unawaited(loadIndexAsync());
-    unawaited(initStream());
+    loadIndex();
+    if (!widget.useSharedData) unawaited(initStream());
   }
 
   @override
   void didUpdateWidget(InChatMediaViewer oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.message.mediaId != oldWidget.message.mediaId) {
+      _activeMediaIdNotifier.value = widget.message.mediaId;
+    }
     if (widget.message.mediaStored != oldWidget.message.mediaStored ||
         widget.galleryItems != oldWidget.galleryItems) {
-      if (widget.message.mediaStored) {
-        unawaited(loadIndexAsync());
-      }
+      galleryItemIndex = null;
+      loadIndex();
     }
-  }
-
-  Future<void> loadIndexAsync() async {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
-      /// when the galleryItems are updated this widget is not reloaded
-      /// so using this timer as a workaround
-      if (loadIndex()) {
-        timer.cancel();
-        if (mounted) setState(() {});
-      }
-    });
   }
 
   bool loadIndex() {
@@ -93,7 +84,6 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   @override
   void dispose() {
     messageStream?.cancel();
-    _timer?.cancel();
     _activeMediaIdNotifier.dispose();
     super.dispose();
   }
@@ -112,7 +102,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
       if (updated != null) {
         if (updated.mediaStored) {
           await messageStream?.cancel();
-          await loadIndexAsync();
+          if (loadIndex() && mounted) setState(() {});
         }
       }
     });
@@ -147,40 +137,46 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.message.mediaStored ||
+    final awaitsStoredPreview =
+        !widget.message.isWidgetMedia &&
+        widget.message.mediaStored &&
+        !widget.mediaService.imagePreviewAvailable;
+    if (widget.message.isWidgetMedia ||
+        !widget.message.mediaStored ||
         !widget.mediaService.imagePreviewAvailable) {
-      return Container(
-        constraints: const BoxConstraints(
-          minHeight: 39,
-        ),
-        decoration: BoxDecoration(
-          color: widget.info.color.withValues(alpha: 0.3),
-          border: Border.all(
-            color: widget.info.color.withValues(alpha: 0.4),
+      final status = Row(
+        mainAxisSize: awaitsStoredPreview ? MainAxisSize.min : MainAxisSize.max,
+        children: [
+          MessageSendStateIcon(
+            [widget.message],
+            [widget.mediaService.mediaFile],
+            mainAxisAlignment: widget.message.senderId == null
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            canBeReopened: widget.canBeReopened,
           ),
+          if (widget.info.displayTime || widget.message.modifiedAt != null)
+            FriendlyMessageTime(
+              message: widget.message,
+              color: context.appColor(AppColor.chatMessageMeta),
+            ),
+        ],
+      );
+      return Container(
+        constraints: awaitsStoredPreview
+            ? const BoxConstraints.expand()
+            : const BoxConstraints(minHeight: 39),
+        decoration: BoxDecoration(
+          color: widget.info.color,
           borderRadius: widget.borderRadius,
         ),
         child: Padding(
           padding: widget.info.padding,
-          child: Row(
-            children: [
-              MessageSendStateIcon(
-                [widget.message],
-                [widget.mediaService.mediaFile],
-                mainAxisAlignment: widget.message.senderId == null
-                    ? MainAxisAlignment.end
-                    : MainAxisAlignment.start,
-                canBeReopened: widget.canBeReopened,
-              ),
-              if (widget.info.displayTime || widget.message.modifiedAt != null)
-                FriendlyMessageTime(
-                  message: widget.message,
-                  color: isDarkMode(context)
-                      ? Colors.white.withAlpha(100)
-                      : Colors.black.withAlpha(100),
-                ),
-            ],
-          ),
+          child: awaitsStoredPreview
+              ? Center(
+                  child: FittedBox(fit: BoxFit.scaleDown, child: status),
+                )
+              : status,
         ),
       );
     }

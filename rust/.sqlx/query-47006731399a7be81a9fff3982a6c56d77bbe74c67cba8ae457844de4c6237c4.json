@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE webxdc_instances SET version = ?, bundle_sha256 = ? WHERE instance_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "47006731399a7be81a9fff3982a6c56d77bbe74c67cba8ae457844de4c6237c4"
+}

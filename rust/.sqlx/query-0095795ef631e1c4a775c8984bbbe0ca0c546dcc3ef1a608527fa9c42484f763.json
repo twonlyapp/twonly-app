@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT promotion_id, public_id, from_contact_id, threshold,\n                   announcement_share, public_key_verified_timestamp\n            FROM user_discovery_other_promotions\n            WHERE public_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "promotion_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "promotion_id"
+          }
+        }
+      },
+      {
+        "name": "public_id",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "public_id"
+          }
+        }
+      },
+      {
+        "name": "from_contact_id",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "from_contact_id"
+          }
+        }
+      },
+      {
+        "name": "threshold",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "threshold"
+          }
+        }
+      },
+      {
+        "name": "announcement_share",
+        "ordinal": 4,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "announcement_share"
+          }
+        }
+      },
+      {
+        "name": "public_key_verified_timestamp",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "public_key_verified_timestamp"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "0095795ef631e1c4a775c8984bbbe0ca0c546dcc3ef1a608527fa9c42484f763"
+}

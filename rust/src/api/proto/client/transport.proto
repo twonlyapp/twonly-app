@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+message Message {
+  enum Type {
+    SENDER_DELIVERY_RECEIPT = 0;
+    PLAINTEXT_CONTENT       = 1;
+    CIPHERTEXT              = 2;
+    PREKEY_BUNDLE           = 3;
+    TEST_NOTIFICATION       = 4;
+    CIPHERTEXT_V2           = 5;
+  }
+  Type                      type              = 1;
+  string                    receipt_id        = 2;
+  optional bytes            encrypted_content = 3;
+  optional PlaintextContent plaintext_content = 4;
+}
+
+message PlaintextContent {
+  optional DecryptionErrorMessage decryption_error_message = 1;
+  optional RetryErrorMessage      retry_control_error      = 2;
+
+  message RetryErrorMessage { }
+
+  message DecryptionErrorMessage {
+    enum Type {
+      UNKNOWN        = 0;
+      PREKEY_UNKNOWN = 1;
+      // The receiver's session could not open the message and will never be
+      // able to, so it retired the session. Resending the same ciphertext is
+      // pointless: the sender has to build a new session from a fresh prekey
+      // bundle first. Older clients ignore the type and only retry, which is
+      // the previous behaviour.
+      SESSION_RESET_REQUIRED = 2;
+    }
+    Type type = 1;
+  }
+}

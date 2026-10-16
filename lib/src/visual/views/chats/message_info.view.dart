@@ -1,16 +1,17 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/recipient_status_row.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/message_history.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
@@ -35,10 +36,13 @@ class _MessageInfoViewState extends State<MessageInfoView> {
   StreamSubscription<List<(MessageAction, Contact)>>? actionsStream;
   StreamSubscription<List<MessageHistory>>? historyStream;
   StreamSubscription<List<(GroupMember, Contact)>>? groupMemberStream;
+  StreamSubscription<MediaFile?>? mediaFileStream;
 
   List<(MessageAction, Contact)> messageActions = [];
   List<MessageHistory> messageHistory = [];
   List<(GroupMember, Contact)> groupMembers = [];
+  MediaFile? mediaFile;
+  int? mediaSizeInBytes;
 
   @override
   void initState() {
@@ -51,6 +55,7 @@ class _MessageInfoViewState extends State<MessageInfoView> {
     actionsStream?.cancel();
     historyStream?.cancel();
     groupMemberStream?.cancel();
+    mediaFileStream?.cancel();
     super.dispose();
   }
 
@@ -84,6 +89,35 @@ class _MessageInfoViewState extends State<MessageInfoView> {
         messageHistory = update;
       });
     });
+
+    final mediaId = widget.message.mediaId;
+    if (mediaId != null) {
+      final streamMedia = twonlyDB.mediaFilesDao.watchMedia(mediaId);
+      mediaFileStream = streamMedia.listen((update) {
+        if (!mounted) return;
+        setState(() {
+          mediaFile = update;
+          mediaSizeInBytes = update == null ? null : mediaSize(update);
+        });
+      });
+    }
+  }
+
+  /// Rust records the size when it writes the plaintext, but media that was
+  /// sent or received before it did so only carries a size once it was stored,
+  /// so a copy that is still on disk is measured directly.
+  int? mediaSize(MediaFile media) {
+    if (media.sizeInBytes != null) return media.sizeInBytes;
+    final service = MediaFileService(media);
+    for (final file in [
+      service.storedPath,
+      service.tempPath,
+      service.originalPath,
+    ]) {
+      final stat = file.statSync();
+      if (stat.type == FileSystemEntityType.file) return stat.size;
+    }
+    return null;
   }
 
   List<Widget> getReceivedColumns(BuildContext context) {
@@ -113,7 +147,6 @@ class _MessageInfoViewState extends State<MessageInfoView> {
             t.$1.type == MessageActionType.openedAt &&
             t.$2.userId == groupMember.$2.userId,
       );
-
       var actionTypeText = context.lang.waitingForInternet;
       var actionAt = widget.message.createdAt;
       if (ackByServer != null) {
@@ -130,38 +163,11 @@ class _MessageInfoViewState extends State<MessageInfoView> {
       }
 
       columns.add(
-        Padding(
+        RecipientStatusRow(
           key: ValueKey(groupMember.$1.contactId),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: [
-              AvatarIcon(
-                contactId: groupMember.$2.userId,
-                fontSize: 15,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      getContactDisplayName(groupMember.$2),
-                      style: const TextStyle(fontSize: 17),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                children: [
-                  Text(
-                    friendlyDateTime(context, actionAt),
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  Text(actionTypeText),
-                ],
-              ),
-            ],
-          ),
+          contact: groupMember.$2,
+          status: actionTypeText,
+          at: actionAt,
         ),
       );
     }
@@ -206,6 +212,10 @@ class _MessageInfoViewState extends State<MessageInfoView> {
               Text(
                 '${context.lang.received}: ${friendlyDateTime(context, widget.message.ackByServer!)}',
               ),
+            if (mediaSizeInBytes != null)
+              Text(
+                '${context.lang.fileSize}: ${formatBytes(mediaSizeInBytes!)}',
+              ),
             if (userService.currentUser.isDeveloper)
               GestureDetector(
                 onTap: () async {
@@ -228,7 +238,7 @@ class _MessageInfoViewState extends State<MessageInfoView> {
                   // ignore: inference_failure_on_function_invocation
                   await showModalBottomSheet(
                     context: context,
-                    backgroundColor: Colors.black,
+                    backgroundColor: context.color.surface,
                     builder: (context) {
                       return MessageHistoryView(
                         message: widget.message,

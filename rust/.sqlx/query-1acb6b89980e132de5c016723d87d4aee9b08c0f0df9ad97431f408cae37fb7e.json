@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO groups(\n            group_id,\n            state_encryption_key,\n            my_group_private_key,\n            group_name,\n            joined_group\n        ) VALUES (?, ?, ?, ?, 0)\n        ON CONFLICT(group_id) DO UPDATE SET\n            state_encryption_key = excluded.state_encryption_key,\n            my_group_private_key = excluded.my_group_private_key,\n            left_group = 0,\n            deleted_content = 0\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "1acb6b89980e132de5c016723d87d4aee9b08c0f0df9ad97431f408cae37fb7e"
+}

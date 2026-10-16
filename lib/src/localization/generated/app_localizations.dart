@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_ar.dart';
 import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
 
@@ -94,9 +95,16 @@ abstract class AppLocalizations {
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
+    Locale('ar'),
     Locale('de'),
     Locale('en'),
   ];
+
+  /// No description provided for @subscriptionAllApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Access to all apps'**
+  String get subscriptionAllApps;
 
   /// No description provided for @registerSlogan.
   ///
@@ -194,6 +202,18 @@ abstract class AppLocalizations {
   /// **'Send to'**
   String get cameraPreviewSendTo;
 
+  /// No description provided for @cameraPermissionsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly needs access to the camera and microphone.'**
+  String get cameraPermissionsBody;
+
+  /// No description provided for @cameraPermissionsRequestButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Request permissions'**
+  String get cameraPermissionsRequestButton;
+
   /// No description provided for @shareImageTitle.
   ///
   /// In en, this message translates to:
@@ -277,6 +297,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show archived users'**
   String get shareImageShowArchived;
+
+  /// No description provided for @shareImageSendToWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to home-screen widget'**
+  String get shareImageSendToWidget;
+
+  /// No description provided for @shareImageWidgetExplainerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to a widget'**
+  String get shareImageWidgetExplainerTitle;
+
+  /// No description provided for @shareImageWidgetExplainerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends the photo straight to your friends\' home-screen widgets. Only friends who allow them can be selected.'**
+  String get shareImageWidgetExplainerBody;
+
+  /// No description provided for @shareImageWidgetExplainerDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get shareImageWidgetExplainerDismiss;
 
   /// No description provided for @searchUsernameInput.
   ///
@@ -392,6 +436,12 @@ abstract class AppLocalizations {
   /// **'Sent'**
   String get messageSendState_Send;
 
+  /// No description provided for @messageSendState_Delivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get messageSendState_Delivered;
+
   /// No description provided for @messageSendState_Sending.
   ///
   /// In en, this message translates to:
@@ -473,8 +523,170 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStorageData.
   ///
   /// In en, this message translates to:
-  /// **'Data and storage'**
+  /// **'Memories & Storage'**
   String get settingsStorageData;
+
+  /// No description provided for @memoryDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get memoryDetailsTitle;
+
+  /// No description provided for @memoryDetailsCapturedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Captured'**
+  String get memoryDetailsCapturedAt;
+
+  /// No description provided for @memoryDetailsLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get memoryDetailsLocation;
+
+  /// No description provided for @memoryDetailsLocationPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding capture location…'**
+  String get memoryDetailsLocationPending;
+
+  /// No description provided for @memoryDetailsNoLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'No location recorded'**
+  String get memoryDetailsNoLocation;
+
+  /// No description provided for @memoryDetailsOpenMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in map'**
+  String get memoryDetailsOpenMap;
+
+  /// No description provided for @memoryLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store location in Memories'**
+  String get memoryLocationTitle;
+
+  /// No description provided for @memoryLocationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture coordinates for Memories and gallery exports. These coordinates are never sent to contacts.'**
+  String get memoryLocationSubtitle;
+
+  /// No description provided for @locationStickerSettingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sticker'**
+  String get locationStickerSettingTitle;
+
+  /// No description provided for @locationStickerSettingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows your city or country, or coordinates if no place name is available. Your location is shared only when you select the location filter.'**
+  String get locationStickerSettingSubtitle;
+
+  /// No description provided for @locationStickerLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding your location…'**
+  String get locationStickerLoading;
+
+  /// No description provided for @liveLocationMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get liveLocationMenu;
+
+  /// No description provided for @liveLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live location'**
+  String get liveLocationTitle;
+
+  /// No description provided for @liveLocationExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your current location in this chat. Everyone in this group can see it. Only your latest location is kept.'**
+  String get liveLocationExplanation;
+
+  /// No description provided for @liveLocationDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Share for'**
+  String get liveLocationDuration;
+
+  /// No description provided for @liveLocationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} minutes'**
+  String liveLocationMinutes(int count);
+
+  /// No description provided for @liveLocationHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hour} other{{count} hours}}'**
+  String liveLocationHours(int count);
+
+  /// No description provided for @liveLocationStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start sharing'**
+  String get liveLocationStart;
+
+  /// No description provided for @liveLocationStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing'**
+  String get liveLocationStop;
+
+  /// No description provided for @liveLocationAlreadySharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location is already being shared in this chat.'**
+  String get liveLocationAlreadySharing;
+
+  /// No description provided for @liveLocationNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current location is being shared. Tap Stop sharing to end it.'**
+  String get liveLocationNotificationBody;
+
+  /// No description provided for @liveLocationStartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start sharing. Allow location and notifications, then try again.'**
+  String get liveLocationStartFailed;
+
+  /// No description provided for @liveLocationStopFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not stop sharing. Please try again.'**
+  String get liveLocationStopFailed;
+
+  /// No description provided for @liveLocationWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for location…'**
+  String get liveLocationWaiting;
+
+  /// No description provided for @liveLocationEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sharing ended'**
+  String get liveLocationEnded;
+
+  /// No description provided for @liveLocationLastUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Last update: {time}'**
+  String liveLocationLastUpdate(String time);
+
+  /// No description provided for @memoryLocationPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Precise location access was not granted. The setting remains disabled.'**
+  String get memoryLocationPermissionDenied;
 
   /// No description provided for @settingsStorageDataStoreInGTitle.
   ///
@@ -590,6 +802,72 @@ abstract class AppLocalizations {
   /// **'{len} contact(s)'**
   String settingsPrivacyBlockUsersCount(Object len);
 
+  /// No description provided for @publicProfilePrivacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Profile'**
+  String get publicProfilePrivacyTitle;
+
+  /// No description provided for @publicProfilePrivacyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose who can see information about your profile.'**
+  String get publicProfilePrivacyDescription;
+
+  /// No description provided for @publicProfileTwonlyScore.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly Score'**
+  String get publicProfileTwonlyScore;
+
+  /// No description provided for @contactTwonlyScoreDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The twonly Score reflects a person\'s activity on twonly. It is calculated from several factors, such as how many photos and videos they send and receive.'**
+  String get contactTwonlyScoreDescription;
+
+  /// No description provided for @contactJoinedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined today'**
+  String get contactJoinedToday;
+
+  /// No description provided for @contactJoinedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Joined 1 day ago} other{Joined {days} days ago}}'**
+  String contactJoinedDaysAgo(num days);
+
+  /// No description provided for @contactJoinedMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{months, plural, =1{Joined 1 month ago} other{Joined {months} months ago}}'**
+  String contactJoinedMonthsAgo(num months);
+
+  /// No description provided for @contactJoinedYearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{years, plural, =1{Joined 1 year ago} other{Joined {years} years ago}}'**
+  String contactJoinedYearsAgo(num years);
+
+  /// No description provided for @privacyVisibilityNobody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody'**
+  String get privacyVisibilityNobody;
+
+  /// No description provided for @privacyVisibilityOnlyContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Contacts'**
+  String get privacyVisibilityOnlyContacts;
+
+  /// No description provided for @privacyVisibilityEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get privacyVisibilityEveryone;
+
   /// No description provided for @settingsNotification.
   ///
   /// In en, this message translates to:
@@ -607,30 +885,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open system settings to allow push notifications.'**
   String get settingsNotifyPermissionDesc;
-
-  /// No description provided for @settingsNotifyTroubleshooting.
-  ///
-  /// In en, this message translates to:
-  /// **'Troubleshooting'**
-  String get settingsNotifyTroubleshooting;
-
-  /// No description provided for @settingsNotifyTroubleshootingDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Click here if you have problems receiving push notifications.'**
-  String get settingsNotifyTroubleshootingDesc;
-
-  /// No description provided for @settingsNotifyTroubleshootingNoProblem.
-  ///
-  /// In en, this message translates to:
-  /// **'No problem detected'**
-  String get settingsNotifyTroubleshootingNoProblem;
-
-  /// No description provided for @settingsNotifyTroubleshootingNoProblemDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Press OK to receive a test notification. If you do not receive the test notification, please click on the new menu item that appears after you click “OK”.'**
-  String get settingsNotifyTroubleshootingNoProblemDesc;
 
   /// No description provided for @settingsNotifyResetTitle.
   ///
@@ -673,12 +927,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'FAQ'**
   String get settingsHelpFAQ;
-
-  /// No description provided for @feedbackTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Give Feedback to improve twonly.'**
-  String get feedbackTooltip;
 
   /// No description provided for @settingsHelpContactUs.
   ///
@@ -824,6 +1072,12 @@ abstract class AppLocalizations {
   /// **'Theme'**
   String get settingsAppearanceTheme;
 
+  /// No description provided for @settingsAppearanceLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsAppearanceLanguage;
+
   /// No description provided for @settingsAccountDeleteAccount.
   ///
   /// In en, this message translates to:
@@ -925,6 +1179,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verified via link.'**
   String get verificationTypeLink;
+
+  /// No description provided for @verificationTypeManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety number compared manually.'**
+  String get verificationTypeManual;
 
   /// No description provided for @verificationTypeMigratedFromOldVersion.
   ///
@@ -1178,6 +1438,30 @@ abstract class AppLocalizations {
   /// **'Emoji'**
   String get addEmoji;
 
+  /// No description provided for @drawingColorPicker.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick color from image'**
+  String get drawingColorPicker;
+
+  /// No description provided for @createStickerFromImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create sticker from image'**
+  String get createStickerFromImage;
+
+  /// No description provided for @stickerSelectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Move or resize the frame around the part you want as a sticker.'**
+  String get stickerSelectionHint;
+
+  /// No description provided for @stickerCreating.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating sticker…'**
+  String get stickerCreating;
+
   /// No description provided for @toggleFlashLight.
   ///
   /// In en, this message translates to:
@@ -1256,12 +1540,6 @@ abstract class AppLocalizations {
   /// **'Upgrade to {planId}{sufix}'**
   String upgradeToPaidPlanButton(Object planId, Object sufix);
 
-  /// No description provided for @partOfPaidPlanOf.
-  ///
-  /// In en, this message translates to:
-  /// **'You are part of the paid plan of {username}!'**
-  String partOfPaidPlanOf(Object username);
-
   /// No description provided for @partOfPaidPlanFrom.
   ///
   /// In en, this message translates to:
@@ -1298,12 +1576,6 @@ abstract class AppLocalizations {
   /// **'Monthly'**
   String get monthly;
 
-  /// No description provided for @proFeature1.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlimited media file uploads'**
-  String get proFeature1;
-
   /// No description provided for @proFeature2.
   ///
   /// In en, this message translates to:
@@ -1321,12 +1593,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore flames'**
   String get proFeature4;
-
-  /// No description provided for @familyFeature1.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlimited media file uploads'**
-  String get familyFeature1;
 
   /// No description provided for @familyFeature2.
   ///
@@ -1351,12 +1617,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'10 Media file uploads per day'**
   String get freeFeature1;
-
-  /// No description provided for @plusFeature1.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlimited media file uploads'**
-  String get plusFeature1;
 
   /// No description provided for @plusFeature2.
   ///
@@ -1394,47 +1654,11 @@ abstract class AppLocalizations {
   /// **'Your additional users'**
   String get additionalUsersList;
 
-  /// No description provided for @galleryDelete.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete file'**
-  String get galleryDelete;
-
-  /// No description provided for @galleryExport.
-  ///
-  /// In en, this message translates to:
-  /// **'Export to gallery'**
-  String get galleryExport;
-
   /// No description provided for @galleryExportSuccess.
   ///
   /// In en, this message translates to:
   /// **'Successfully saved in the Gallery.'**
   String get galleryExportSuccess;
-
-  /// No description provided for @gallerySelectAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Select all'**
-  String get gallerySelectAll;
-
-  /// No description provided for @galleryDeselectAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Deselect all'**
-  String get galleryDeselectAll;
-
-  /// No description provided for @galleryFavorite.
-  ///
-  /// In en, this message translates to:
-  /// **'Favorite'**
-  String get galleryFavorite;
-
-  /// No description provided for @galleryUnfavorite.
-  ///
-  /// In en, this message translates to:
-  /// **'Unfavorite'**
-  String get galleryUnfavorite;
 
   /// No description provided for @galleryCancel.
   ///
@@ -1483,12 +1707,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure?'**
   String get deleteImageTitle;
-
-  /// No description provided for @deleteImageBody.
-  ///
-  /// In en, this message translates to:
-  /// **'The image will be irrevocably deleted.'**
-  String get deleteImageBody;
 
   /// No description provided for @deleteMemoriesBody.
   ///
@@ -1556,65 +1774,11 @@ abstract class AppLocalizations {
   /// **'Backup'**
   String get settingsBackup;
 
-  /// No description provided for @backupPending.
-  ///
-  /// In en, this message translates to:
-  /// **'Pending'**
-  String get backupPending;
-
-  /// No description provided for @backupFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed'**
-  String get backupFailed;
-
-  /// No description provided for @backupSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Success'**
-  String get backupSuccess;
-
-  /// No description provided for @backupTwonlySafeDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.'**
-  String get backupTwonlySafeDesc;
-
   /// No description provided for @backupNoPasswordRecovery.
   ///
   /// In en, this message translates to:
   /// **'Due to twonly\'s security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.'**
   String get backupNoPasswordRecovery;
-
-  /// No description provided for @backupIdentityHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Identity'**
-  String get backupIdentityHeader;
-
-  /// No description provided for @backupArchiveHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Contacts & Messages'**
-  String get backupArchiveHeader;
-
-  /// No description provided for @backupLastBackupDate.
-  ///
-  /// In en, this message translates to:
-  /// **'Last backup'**
-  String get backupLastBackupDate;
-
-  /// No description provided for @backupLastBackupSize.
-  ///
-  /// In en, this message translates to:
-  /// **'Backup size'**
-  String get backupLastBackupSize;
-
-  /// No description provided for @backupLastBackupResult.
-  ///
-  /// In en, this message translates to:
-  /// **'Result'**
-  String get backupLastBackupResult;
 
   /// No description provided for @backupInsecurePassword.
   ///
@@ -1958,6 +2122,12 @@ abstract class AppLocalizations {
   /// **'Group name'**
   String get groupNameInput;
 
+  /// No description provided for @contactGroupNamePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter name here'**
+  String get contactGroupNamePlaceholder;
+
   /// No description provided for @groupMembers.
   ///
   /// In en, this message translates to:
@@ -2174,11 +2344,23 @@ abstract class AppLocalizations {
   /// **'in'**
   String get notificationFillerIn;
 
+  /// No description provided for @notificationLiveLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'shared their live location{inGroup}.'**
+  String notificationLiveLocation(Object inGroup);
+
   /// No description provided for @notificationText.
   ///
   /// In en, this message translates to:
   /// **'sent a message{inGroup}.'**
   String notificationText(Object inGroup);
+
+  /// No description provided for @notificationTextMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'sent {count} messages{inGroup}.'**
+  String notificationTextMessages(Object count, Object inGroup);
 
   /// No description provided for @notificationTwonly.
   ///
@@ -2275,12 +2457,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages'**
   String get notificationCategoryMessageTitle;
-
-  /// No description provided for @notificationCategoryMessageDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Messages from other users.'**
-  String get notificationCategoryMessageDesc;
 
   /// No description provided for @notificationConnectionFallback.
   ///
@@ -2443,6 +2619,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discard'**
   String get avatarSaveChangesDiscard;
+
+  /// No description provided for @contactAvatarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar'**
+  String get contactAvatarTitle;
+
+  /// No description provided for @contactAvatarPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo avatar'**
+  String get contactAvatarPhoto;
+
+  /// No description provided for @contactAvatarIllustrated.
+  ///
+  /// In en, this message translates to:
+  /// **'Illustrated avatar'**
+  String get contactAvatarIllustrated;
+
+  /// No description provided for @customAvatarSvgTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Public avatar'**
+  String get customAvatarSvgTab;
+
+  /// No description provided for @customAvatarCustomize.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get customAvatarCustomize;
+
+  /// No description provided for @customAvatarPhotoTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal avatar'**
+  String get customAvatarPhotoTab;
+
+  /// No description provided for @customAvatarExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaces your public avatar for the selected audience.'**
+  String get customAvatarExplanation;
+
+  /// No description provided for @customAvatarCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get customAvatarCreate;
+
+  /// No description provided for @customAvatarReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get customAvatarReplace;
+
+  /// No description provided for @customAvatarRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get customAvatarRemove;
+
+  /// No description provided for @customAvatarAudience.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can see the photo avatar?'**
+  String get customAvatarAudience;
+
+  /// No description provided for @customAvatarAcceptedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts only'**
+  String get customAvatarAcceptedOnly;
+
+  /// No description provided for @customAvatarEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get customAvatarEveryone;
+
+  /// No description provided for @customAvatarChooseSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose avatar photo'**
+  String get customAvatarChooseSource;
+
+  /// No description provided for @customAvatarCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo avatar could not be created.'**
+  String get customAvatarCreateFailed;
 
   /// No description provided for @inProcess.
   ///
@@ -2684,6 +2950,48 @@ abstract class AppLocalizations {
   /// **'The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!'**
   String get linkPubkeyDoesNotMatch;
 
+  /// No description provided for @verificationMissingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no secure session stored for this contact yet. Exchange a message first, then ask the person to share a new verification link.'**
+  String get verificationMissingSession;
+
+  /// No description provided for @verificationLinkInvalidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid verification link'**
+  String get verificationLinkInvalidTitle;
+
+  /// No description provided for @verificationLinkInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The verification link is incomplete or invalid. Ask the person to share it again from their twonly profile.'**
+  String get verificationLinkInvalid;
+
+  /// No description provided for @verificationLinkErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification unavailable'**
+  String get verificationLinkErrorTitle;
+
+  /// No description provided for @verificationLinkError.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly could not check this verification link. Please try again.'**
+  String get verificationLinkError;
+
+  /// No description provided for @verificationOwnProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your profile'**
+  String get verificationOwnProfileTitle;
+
+  /// No description provided for @verificationOwnProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'You scanned your own verification code.'**
+  String get verificationOwnProfile;
+
   /// No description provided for @startWithCameraOpen.
   ///
   /// In en, this message translates to:
@@ -2713,6 +3021,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{years} years ago'**
   String memoriesXYearsAgo(Object years);
+
+  /// No description provided for @memoriesAMonthAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'One month ago'**
+  String get memoriesAMonthAgo;
+
+  /// No description provided for @memoriesXMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} months ago'**
+  String memoriesXMonthsAgo(int months);
 
   /// No description provided for @migrationOfMemories.
   ///
@@ -2869,6 +3189,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A contact whose identity has *not* yet been verified.'**
   String get verificationBadgeRedDesc;
+
+  /// No description provided for @manualVerificationOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety numbers'**
+  String get manualVerificationOpen;
+
+  /// No description provided for @manualVerificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare safety number'**
+  String get manualVerificationTitle;
+
+  /// No description provided for @manualVerificationMarkVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as verified'**
+  String get manualVerificationMarkVerified;
+
+  /// No description provided for @manualVerificationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare this safety number with {username}. If both devices show the same number, your end-to-end encryption is verified.'**
+  String manualVerificationDescription(String username);
+
+  /// No description provided for @manualVerificationMissingKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No safety number available'**
+  String get manualVerificationMissingKeyTitle;
+
+  /// No description provided for @manualVerificationMissingKeyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no Signal session with {username} yet. Exchange a message first, then try again.'**
+  String manualVerificationMissingKeyDescription(String username);
+
+  /// No description provided for @manualVerificationLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The safety number could not be loaded.'**
+  String get manualVerificationLoadFailed;
+
+  /// No description provided for @manualVerificationRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get manualVerificationRetry;
+
+  /// No description provided for @manualVerificationSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'You compared the safety number with {username} and confirmed their identity.'**
+  String manualVerificationSuccess(String username);
 
   /// No description provided for @scanNow.
   ///
@@ -3392,6 +3766,48 @@ abstract class AppLocalizations {
   /// **'Click here to open the app again'**
   String get recoverSuccessBody;
 
+  /// No description provided for @recoverProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring your backup'**
+  String get recoverProgressTitle;
+
+  /// No description provided for @recoverProgressSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This might take a moment, please keep the app open.'**
+  String get recoverProgressSubtitle;
+
+  /// No description provided for @recoverProgressResolvingAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying account'**
+  String get recoverProgressResolvingAccount;
+
+  /// No description provided for @recoverProgressRestoringIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring your identity'**
+  String get recoverProgressRestoringIdentity;
+
+  /// No description provided for @recoverProgressDownloadingArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading and decrypting messages and contacts'**
+  String get recoverProgressDownloadingArchive;
+
+  /// No description provided for @recoverProgressExtractingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Extracting data'**
+  String get recoverProgressExtractingData;
+
+  /// No description provided for @recoverProgressFinishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing up'**
+  String get recoverProgressFinishing;
+
   /// No description provided for @iosRecoveryWelcomeBack.
   ///
   /// In en, this message translates to:
@@ -3428,47 +3844,11 @@ abstract class AppLocalizations {
   /// **'Registering new account'**
   String get registeringNewAccount;
 
-  /// No description provided for @createShortcut.
-  ///
-  /// In en, this message translates to:
-  /// **'Create shortcut'**
-  String get createShortcut;
-
-  /// No description provided for @editShortcut.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit shortcut'**
-  String get editShortcut;
-
-  /// No description provided for @deleteShortcut.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete shortcut'**
-  String get deleteShortcut;
-
-  /// No description provided for @deleteShortcutBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete this shortcut?'**
-  String get deleteShortcutBody;
-
-  /// No description provided for @updateShortcut.
-  ///
-  /// In en, this message translates to:
-  /// **'Update shortcut'**
-  String get updateShortcut;
-
   /// No description provided for @selectEmoji.
   ///
   /// In en, this message translates to:
   /// **'Select Emoji'**
   String get selectEmoji;
-
-  /// No description provided for @errorEmojiUsedOrInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'Emoji already used or invalid'**
-  String get errorEmojiUsedOrInvalid;
 
   /// No description provided for @subscriptionPledgeSecureTitle.
   ///
@@ -4106,6 +4486,18 @@ abstract class AppLocalizations {
   /// **'Recovery share sent!'**
   String get passwordlessRecoveryShareSent;
 
+  /// No description provided for @passwordlessRecoveryAuthReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to send your recovery share'**
+  String get passwordlessRecoveryAuthReason;
+
+  /// No description provided for @passwordlessRecoveryAuthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed, the recovery share was not sent.'**
+  String get passwordlessRecoveryAuthFailed;
+
   /// No description provided for @passwordlessRecoveryNetworkError.
   ///
   /// In en, this message translates to:
@@ -4226,12 +4618,6 @@ abstract class AppLocalizations {
   /// **'Local storage'**
   String get settingsStorageLocal;
 
-  /// No description provided for @settingsStorageNoCloudBackupTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No Cloud Backup'**
-  String get settingsStorageNoCloudBackupTitle;
-
   /// No description provided for @settingsStorageNoCloudBackupCard.
   ///
   /// In en, this message translates to:
@@ -4340,6 +4726,36 @@ abstract class AppLocalizations {
   /// **'Local only'**
   String get settingsStorageLocalOnly;
 
+  /// No description provided for @settingsStorageByChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage by chat'**
+  String get settingsStorageByChat;
+
+  /// No description provided for @settingsStorageTemporaryMediaDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary media files are sent media files that have not been stored. They remain on your device until the receiver has received and opened them.'**
+  String get settingsStorageTemporaryMediaDescription;
+
+  /// No description provided for @settingsStorageNoChats.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats found.'**
+  String get settingsStorageNoChats;
+
+  /// No description provided for @settingsStorageStoredMediaCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 stored file} other {{count} stored files}}'**
+  String settingsStorageStoredMediaCount(num count);
+
+  /// No description provided for @settingsStorageTemporaryMediaCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 temporary file} other {{count} temporary files}}'**
+  String settingsStorageTemporaryMediaCount(num count);
+
   /// No description provided for @settingsStorageDisableBackupTitle.
   ///
   /// In en, this message translates to:
@@ -4388,65 +4804,125 @@ abstract class AppLocalizations {
   /// **'Show flame restore warning'**
   String get settingsShowRestoreFlameTitle;
 
-  /// No description provided for @contactLabelsTitle.
+  /// No description provided for @contactGroupsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Contact Labels'**
-  String get contactLabelsTitle;
+  /// **'Contact Groups'**
+  String get contactGroupsTitle;
 
-  /// No description provided for @contactLabelsSubtitleEmpty.
+  /// No description provided for @contactGroupsSubtitleEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No labels selected'**
-  String get contactLabelsSubtitleEmpty;
+  /// **'No visible contact groups selected'**
+  String get contactGroupsSubtitleEmpty;
 
-  /// No description provided for @contactLabelsMaxLimit.
+  /// No description provided for @createContactGroup.
   ///
   /// In en, this message translates to:
-  /// **'Maximum 3 labels per contact'**
-  String get contactLabelsMaxLimit;
+  /// **'Create contact group'**
+  String get createContactGroup;
 
-  /// No description provided for @createLabel.
+  /// No description provided for @editContactGroup.
   ///
   /// In en, this message translates to:
-  /// **'Create new label'**
-  String get createLabel;
+  /// **'Edit contact group'**
+  String get editContactGroup;
 
-  /// No description provided for @editLabel.
+  /// No description provided for @deleteContactGroup.
   ///
   /// In en, this message translates to:
-  /// **'Edit label'**
-  String get editLabel;
+  /// **'Delete contact group'**
+  String get deleteContactGroup;
 
-  /// No description provided for @deleteLabel.
+  /// No description provided for @deleteContactGroupConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'Delete label'**
-  String get deleteLabel;
+  /// **'Are you sure you want to delete this contact group? It will be removed from all contacts and groups.'**
+  String get deleteContactGroupConfirmation;
 
-  /// No description provided for @deleteLabelConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete this label? It will be removed from all contacts.'**
-  String get deleteLabelConfirmation;
-
-  /// No description provided for @labelNameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Label name'**
-  String get labelNameHint;
-
-  /// No description provided for @labelTextColor.
+  /// No description provided for @contactGroupTextColor.
   ///
   /// In en, this message translates to:
   /// **'Text color'**
-  String get labelTextColor;
+  String get contactGroupTextColor;
 
-  /// No description provided for @labelBackgroundColor.
+  /// No description provided for @contactGroupBackgroundColor.
   ///
   /// In en, this message translates to:
   /// **'Background color'**
-  String get labelBackgroundColor;
+  String get contactGroupBackgroundColor;
+
+  /// No description provided for @contactGroupNoBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'No background'**
+  String get contactGroupNoBackground;
+
+  /// No description provided for @contactGroupFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Features'**
+  String get contactGroupFeatures;
+
+  /// No description provided for @contactGroupShowAsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Show as visible label'**
+  String get contactGroupShowAsLabel;
+
+  /// No description provided for @contactGroupShowAsLabelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display this contact group next to its contacts.'**
+  String get contactGroupShowAsLabelSubtitle;
+
+  /// No description provided for @contactGroupShowAsShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Show as shortcut'**
+  String get contactGroupShowAsShortcut;
+
+  /// No description provided for @contactGroupShowAsShortcutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use its emoji to select all members when sharing.'**
+  String get contactGroupShowAsShortcutSubtitle;
+
+  /// No description provided for @contactGroupShortcutNeedsEmoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an emoji before enabling the shortcut.'**
+  String get contactGroupShortcutNeedsEmoji;
+
+  /// No description provided for @contactGroupMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get contactGroupMembers;
+
+  /// No description provided for @contactGroupLabelFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible label'**
+  String get contactGroupLabelFeature;
+
+  /// No description provided for @contactGroupShortcutFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcut'**
+  String get contactGroupShortcutFeature;
+
+  /// No description provided for @contactGroupSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit contact group'**
+  String get contactGroupSettings;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
 
   /// No description provided for @customColor.
   ///
@@ -4556,12 +5032,6 @@ abstract class AppLocalizations {
   /// **'Contacts & Messages'**
   String get backupCloudContactsMessages;
 
-  /// No description provided for @backupCloudFreeActive.
-  ///
-  /// In en, this message translates to:
-  /// **'Free Active'**
-  String get backupCloudFreeActive;
-
   /// No description provided for @backupCloudImagesMedia.
   ///
   /// In en, this message translates to:
@@ -4633,6 +5103,504 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upgrade plan'**
   String get fileLimitReachedUpgrade;
+
+  /// No description provided for @contactGroupUsedByWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen widget'**
+  String get contactGroupUsedByWidget;
+
+  /// No description provided for @contactGroupAddWidgetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a widget for this contact group.'**
+  String get contactGroupAddWidgetSubtitle;
+
+  /// No description provided for @contactGroupWidgetTutorialTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a home screen widget'**
+  String get contactGroupWidgetTutorialTitle;
+
+  /// No description provided for @contactGroupWidgetTutorialAndroidStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold an empty area on your home screen, then tap Widgets.'**
+  String get contactGroupWidgetTutorialAndroidStep1;
+
+  /// No description provided for @contactGroupWidgetTutorialAndroidStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Find twonly, then drag its widget onto your home screen.'**
+  String get contactGroupWidgetTutorialAndroidStep2;
+
+  /// No description provided for @contactGroupWidgetTutorialAndroidStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Select this contact group in the setup screen, then tap Save.'**
+  String get contactGroupWidgetTutorialAndroidStep3;
+
+  /// No description provided for @contactGroupWidgetTutorialIosStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold an empty area on your Home Screen, then tap Edit and Add Widget.'**
+  String get contactGroupWidgetTutorialIosStep1;
+
+  /// No description provided for @contactGroupWidgetTutorialIosStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Find twonly, choose a size, then tap Add Widget.'**
+  String get contactGroupWidgetTutorialIosStep2;
+
+  /// No description provided for @contactGroupWidgetTutorialIosStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold the widget, tap Edit Widget, then select this contact group.'**
+  String get contactGroupWidgetTutorialIosStep3;
+
+  /// No description provided for @contactGroupUsedByWidgetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{A widget on your home screen shows photos from this group.} other{{count} widgets on your home screen show photos from this group.}}'**
+  String contactGroupUsedByWidgetSubtitle(int count);
+
+  /// No description provided for @contactGroupDeleteBlockedByWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{This contact group is used by a widget on your home screen. Remove that widget first, then you can delete the group.} other{This contact group is used by {count} widgets on your home screen. Remove those widgets first, then you can delete the group.}}'**
+  String contactGroupDeleteBlockedByWidget(int count);
+
+  /// No description provided for @webxdcStoreMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get webxdcStoreMenu;
+
+  /// No description provided for @webxdcStoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an app'**
+  String get webxdcStoreTitle;
+
+  /// No description provided for @webxdcStoreEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No apps are available yet.'**
+  String get webxdcStoreEmpty;
+
+  /// No description provided for @webxdcStoreOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'The app list could not be loaded. Check your connection and try again.'**
+  String get webxdcStoreOffline;
+
+  /// No description provided for @webxdcStoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The app could not be added to this chat.'**
+  String get webxdcStoreFailed;
+
+  /// No description provided for @webxdcStoreAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Already added to this chat'**
+  String get webxdcStoreAlreadyAdded;
+
+  /// No description provided for @webxdcChatApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat apps'**
+  String get webxdcChatApps;
+
+  /// No description provided for @webxdcChatAppsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No one-time apps have been added to this chat yet.'**
+  String get webxdcChatAppsEmpty;
+
+  /// No description provided for @webxdcUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This app could not be loaded.'**
+  String get webxdcUnavailable;
+
+  /// No description provided for @webxdcDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything this app saved on this device is deleted. Other members keep their own copy.'**
+  String get webxdcDeleteConfirm;
+
+  /// No description provided for @webxdcExternalLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave twonly?'**
+  String get webxdcExternalLinkTitle;
+
+  /// No description provided for @webxdcExternalLinkBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This link opens outside twonly, in your browser:'**
+  String get webxdcExternalLinkBody;
+
+  /// No description provided for @notificationStory.
+  ///
+  /// In en, this message translates to:
+  /// **'posted a story.'**
+  String get notificationStory;
+
+  /// No description provided for @settingsNotifyStories.
+  ///
+  /// In en, this message translates to:
+  /// **'Story notifications'**
+  String get settingsNotifyStories;
+
+  /// No description provided for @settingsNotifyStoriesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Be notified of the first story of the day from contacts you\'ve written with in the last two weeks.'**
+  String get settingsNotifyStoriesSubtitle;
+
+  /// No description provided for @contactGroupShareStories.
+  ///
+  /// In en, this message translates to:
+  /// **'Share stories'**
+  String get contactGroupShareStories;
+
+  /// No description provided for @contactGroupShareStoriesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer this group as an audience when you post a story.'**
+  String get contactGroupShareStoriesSubtitle;
+
+  /// No description provided for @contactGroupStoriesFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories'**
+  String get contactGroupStoriesFeature;
+
+  /// No description provided for @story.
+  ///
+  /// In en, this message translates to:
+  /// **'Story'**
+  String get story;
+
+  /// No description provided for @storyExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Story expired'**
+  String get storyExpired;
+
+  /// No description provided for @storyMine.
+  ///
+  /// In en, this message translates to:
+  /// **'My story'**
+  String get storyMine;
+
+  /// No description provided for @storyDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete story?'**
+  String get storyDeleteTitle;
+
+  /// No description provided for @storyDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes it from your story.'**
+  String get storyDeleteBody;
+
+  /// No description provided for @storyDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get storyDelete;
+
+  /// No description provided for @storyDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete it. Try again in a moment.'**
+  String get storyDeleteFailed;
+
+  /// No description provided for @shareImageStory.
+  ///
+  /// In en, this message translates to:
+  /// **'Story'**
+  String get shareImageStory;
+
+  /// No description provided for @shareImageStoryAudience.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Reaches 1 contact} other{Reaches {count} contacts}}'**
+  String shareImageStoryAudience(int count);
+
+  /// No description provided for @shareImageStoryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly-protected media can\'t be posted as a story.'**
+  String get shareImageStoryUnavailable;
+
+  /// No description provided for @shareImageStoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All contacts'**
+  String get shareImageStoryAll;
+
+  /// No description provided for @shareImageStoryNewGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New story group'**
+  String get shareImageStoryNewGroup;
+
+  /// No description provided for @shareImageStoryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not post the story. One send can reach at most {max} people.'**
+  String shareImageStoryFailed(int max);
+
+  /// No description provided for @notificationStoryReply.
+  ///
+  /// In en, this message translates to:
+  /// **'has replied to your story.'**
+  String get notificationStoryReply;
+
+  /// No description provided for @notificationStoryReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted with {reaction} to your story.'**
+  String notificationStoryReaction(Object reaction);
+
+  /// No description provided for @notificationStoredStory.
+  ///
+  /// In en, this message translates to:
+  /// **'has saved your story.'**
+  String get notificationStoredStory;
+
+  /// No description provided for @storyViews.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No views yet} =1{1 view} other{{count} views}}'**
+  String storyViews(int count);
+
+  /// No description provided for @sticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Sticker'**
+  String get sticker;
+
+  /// No description provided for @stickers.
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers'**
+  String get stickers;
+
+  /// No description provided for @createSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Create sticker'**
+  String get createSticker;
+
+  /// No description provided for @stickerPickFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get stickerPickFromGallery;
+
+  /// No description provided for @noStickersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first sticker from a photo.'**
+  String get noStickersYet;
+
+  /// No description provided for @stickerAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Sticker saved'**
+  String get stickerAdded;
+
+  /// No description provided for @stickerAlreadySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'This sticker is already saved'**
+  String get stickerAlreadySaved;
+
+  /// No description provided for @stickerCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The sticker could not be created.'**
+  String get stickerCreateFailed;
+
+  /// No description provided for @stickerSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The sticker could not be saved.'**
+  String get stickerSaveFailed;
+
+  /// No description provided for @notificationSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a sticker{inGroup}.'**
+  String notificationSticker(Object inGroup);
+
+  /// No description provided for @storeSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Save sticker'**
+  String get storeSticker;
+
+  /// No description provided for @removeSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from collection'**
+  String get removeSticker;
+
+  /// No description provided for @deleteSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete sticker'**
+  String get deleteSticker;
+
+  /// No description provided for @rotateSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate sticker'**
+  String get rotateSticker;
+
+  /// No description provided for @stickerRotateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The sticker could not be rotated.'**
+  String get stickerRotateFailed;
+
+  /// No description provided for @releaseNotesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get releaseNotesTitle;
+
+  /// No description provided for @releaseNotesIntroduction.
+  ///
+  /// In en, this message translates to:
+  /// **'The biggest twonly update yet is here. Here\'s a quick look at what\'s new.'**
+  String get releaseNotesIntroduction;
+
+  /// No description provided for @releaseNotesAlsoImproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Also improved'**
+  String get releaseNotesAlsoImproved;
+
+  /// No description provided for @releaseNotesStickers.
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers'**
+  String get releaseNotesStickers;
+
+  /// No description provided for @releaseNotesStickersDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn your photos into stickers and share them in chats.'**
+  String get releaseNotesStickersDescription;
+
+  /// No description provided for @releaseNotesWidgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Widgets'**
+  String get releaseNotesWidgets;
+
+  /// No description provided for @releaseNotesWidgetsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'See fresh photos from your favorite people right on your home screen.'**
+  String get releaseNotesWidgetsDescription;
+
+  /// No description provided for @releaseNotesStories.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories'**
+  String get releaseNotesStories;
+
+  /// No description provided for @releaseNotesStoriesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Share moments with your contacts for 24 hours.'**
+  String get releaseNotesStoriesDescription;
+
+  /// No description provided for @releaseNotesMiniGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Mini games in chats & groups'**
+  String get releaseNotesMiniGames;
+
+  /// No description provided for @releaseNotesMiniGamesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Play small games together, right inside your conversations.'**
+  String get releaseNotesMiniGamesDescription;
+
+  /// No description provided for @releaseNotesMemoriesMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories on the map'**
+  String get releaseNotesMemoriesMap;
+
+  /// No description provided for @releaseNotesMemoriesMapDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Save locations with your photos and videos in Memories and explore them on a map. Enable this in Settings > Memories & Storage.'**
+  String get releaseNotesMemoriesMapDescription;
+
+  /// No description provided for @releaseNotesReliableMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Better message and push reliability'**
+  String get releaseNotesReliableMessages;
+
+  /// No description provided for @releaseNotesImprovedUi.
+  ///
+  /// In en, this message translates to:
+  /// **'Improved interface'**
+  String get releaseNotesImprovedUi;
+
+  /// No description provided for @releaseNotesCustomAvatars.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom avatars'**
+  String get releaseNotesCustomAvatars;
+
+  /// No description provided for @releaseNotesArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic language (experimental)'**
+  String get releaseNotesArabic;
+
+  /// No description provided for @memoriesMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories map'**
+  String get memoriesMapTitle;
+
+  /// No description provided for @memoriesMapNoLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved memories have a recorded location yet.'**
+  String get memoriesMapNoLocations;
+
+  /// No description provided for @memoriesMapNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No memories in this area. Move or zoom the map to explore another place.'**
+  String get memoriesMapNoResults;
+
+  /// No description provided for @memoriesMapLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the map. Check your connection and try again.'**
+  String get memoriesMapLoadError;
+
+  /// No description provided for @memoriesMapVisibleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 memory in this area} other {{count} memories in this area}}'**
+  String memoriesMapVisibleCount(int count);
 }
 
 class _AppLocalizationsDelegate
@@ -4646,7 +5614,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['de', 'en'].contains(locale.languageCode);
+      <String>['ar', 'de', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -4655,6 +5623,8 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'ar':
+      return AppLocalizationsAr();
     case 'de':
       return AppLocalizationsDe();
     case 'en':

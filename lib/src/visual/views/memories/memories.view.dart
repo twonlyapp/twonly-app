@@ -15,6 +15,7 @@ import 'package:twonly/src/visual/views/memories/components/cloud_backup_promo.c
 import 'package:twonly/src/visual/views/memories/components/flashback_banner.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/selection_menu.comp.dart';
+import 'package:twonly/src/visual/views/memories/memories_map.view.dart';
 import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
 
 class MemoriesView extends StatefulWidget {
@@ -46,7 +47,10 @@ class MemoriesViewState extends State<MemoriesView>
   }
 
   Future<void> _checkUsage() async {
-    final usage = await apiService.getMemoriesUsage();
+    FrbMemoriesUsage? usage;
+    try {
+      usage = await RustApi.getMemoriesUsage();
+    } catch (_) {}
     if (usage != null &&
         usage.maxBytes > 0 &&
         usage.currentBytes >= usage.maxBytes) {
@@ -83,7 +87,7 @@ class MemoriesViewState extends State<MemoriesView>
     if (index == -1) return;
 
     double offset = 56;
-    if (state.galleryItemsLastYears.isNotEmpty) {
+    if (state.flashbacks.items.isNotEmpty) {
       offset += 220;
     }
 
@@ -309,33 +313,32 @@ class MemoriesViewState extends State<MemoriesView>
     if (deleteCompletely == null || !mounted) return;
     final isCompletely = deleteCompletely;
 
-    await _showProgressDialog(
-      context.lang.memoriesDeletingProgress,
-      (setProgress) async {
-        for (var i = 0; i < selectedList.length; i++) {
-          final mediaId = selectedList[i];
-          final item = items
-              .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
-              .firstOrNull;
-          if (item != null) {
-            if (isCompletely) {
-              item.mediaService.fullMediaRemoval();
-              await apiService.deleteMemory(mediaId);
-              await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
-            } else {
-              if (item.mediaService.storedPath.existsSync()) {
-                item.mediaService.storedPath.deleteSync();
-              }
+    try {
+      await _showProgressDialog(
+        context.lang.memoriesDeletingProgress,
+        (setProgress) async {
+          for (var i = 0; i < selectedList.length; i++) {
+            final mediaId = selectedList[i];
+            final item = items
+                .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
+                .firstOrNull;
+            if (item != null) {
+              await MemoriesService.deleteMemory(
+                item.mediaService,
+                completely: isCompletely,
+              );
             }
+            setProgress((i + 1) / selectedList.length);
           }
-          setProgress((i + 1) / selectedList.length);
-        }
-      },
-    );
-
-    setState(_selectedMediaIds.clear);
+        },
+      );
+    } catch (error) {
+      if (mounted) showSnackbar(context, error.toString());
+      return;
+    }
 
     if (!mounted) return;
+    setState(_selectedMediaIds.clear);
     showSnackbar(
       context,
       context.lang.memoriesDeleteSnackbarSuccess(count),
@@ -358,21 +361,7 @@ class MemoriesViewState extends State<MemoriesView>
                 .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
                 .firstOrNull;
             if (item != null) {
-              final media = item.mediaService;
-              if (media.mediaFile.type == MediaType.video) {
-                await saveVideoToGallery(
-                  media.storedPath.path,
-                  name: media.mediaFile.mediaId,
-                );
-              } else if (media.mediaFile.type == MediaType.image ||
-                  media.mediaFile.type == MediaType.gif) {
-                final imageBytes = await media.storedPath.readAsBytes();
-                await saveImageToGallery(
-                  imageBytes,
-                  createdAt: media.mediaFile.createdAt,
-                  name: media.mediaFile.mediaId,
-                );
-              }
+              await item.mediaService.saveToGallery();
             }
             setProgress((i + 1) / selectedList.length);
           }
@@ -432,6 +421,18 @@ class MemoriesViewState extends State<MemoriesView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    return PopScope<Object?>(
+      canPop: !_selectionMode,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _selectionMode) {
+          setState(_selectedMediaIds.clear);
+        }
+      },
+      child: _buildScaffold(context),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -452,14 +453,14 @@ class MemoriesViewState extends State<MemoriesView>
                         Icon(
                           Icons.photo_library_outlined,
                           size: 64,
-                          color: Colors.grey.shade400,
+                          color: context.color.onSurfaceVariant,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           context.lang.memoriesEmpty,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.grey,
+                          style: TextStyle(
+                            color: context.color.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -470,7 +471,7 @@ class MemoriesViewState extends State<MemoriesView>
 
               var months = state.months;
               var orderedByMonth = state.orderedByMonth;
-              final lastYears = state.galleryItemsLastYears;
+              final flashbacks = state.flashbacks;
 
               if (_filterFavoritesOnly) {
                 final filteredOrdered = <String, List<int>>{};
@@ -500,7 +501,7 @@ class MemoriesViewState extends State<MemoriesView>
                 children: [
                   if (_isUsageLimitReached)
                     Container(
-                      color: Colors.redAccent,
+                      color: context.color.error,
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                         vertical: 8,
@@ -508,8 +509,8 @@ class MemoriesViewState extends State<MemoriesView>
                       ),
                       child: Text(
                         context.lang.memoriesBackupLimitReached,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.color.onError,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
@@ -528,7 +529,7 @@ class MemoriesViewState extends State<MemoriesView>
 
                             // Simple heuristic to find month by offset
                             double currentOffset = 56;
-                            if (state.galleryItemsLastYears.isNotEmpty) {
+                            if (state.flashbacks.items.isNotEmpty) {
                               currentOffset += 220;
                             }
 
@@ -585,6 +586,12 @@ class MemoriesViewState extends State<MemoriesView>
                                 snap: true,
                                 elevation: 0,
                                 backgroundColor: context.color.surface,
+                                // Keep toolbar tap targets clear of the
+                                // scrollbar, including while it is faded out.
+                                actionsPadding:
+                                    const EdgeInsetsDirectional.only(
+                                      end: DraggableScrollbar.thumbWidth + 8,
+                                    ),
                                 actions: _selectionMode
                                     ? [
                                         IconButton(
@@ -667,7 +674,7 @@ class MemoriesViewState extends State<MemoriesView>
                                                 ? Icons.favorite
                                                 : Icons.favorite_border,
                                             color: _filterFavoritesOnly
-                                                ? Colors.redAccent
+                                                ? context.color.error
                                                 : null,
                                           ),
                                           onPressed: () {
@@ -677,10 +684,23 @@ class MemoriesViewState extends State<MemoriesView>
                                             });
                                           },
                                         ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.location_on_outlined,
+                                          ),
+                                          tooltip:
+                                              context.lang.memoriesMapTitle,
+                                          onPressed: () => context.navPush(
+                                            MemoriesMapView(
+                                              favoritesOnly:
+                                                  _filterFavoritesOnly,
+                                            ),
+                                          ),
+                                        ),
                                       ],
                               ),
                               MemoriesFlashbackBannerComp(
-                                lastYears: lastYears,
+                                flashbacks: flashbacks,
                                 onOpenFlashback: (items, idx) =>
                                     _openViewer(items, idx, isFlashback: true),
                               ),

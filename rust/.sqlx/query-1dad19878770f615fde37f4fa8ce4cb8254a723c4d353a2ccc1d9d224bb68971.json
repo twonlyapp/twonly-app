@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT upload_state FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "upload_state",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "upload_state"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "1dad19878770f615fde37f4fa8ce4cb8254a723c4d353a2ccc1d9d224bb68971"
+}

@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM groups WHERE group_id = ? AND last_text_or_media_at > ?\n           ) AS \"recent!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "recent!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "65fc2abdab1eaba3ac336697a775215ff7a2a94f050c20630c69b384e2a59ef7"
+}

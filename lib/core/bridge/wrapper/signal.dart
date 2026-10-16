@@ -36,6 +36,21 @@ class RustSignal {
   static Future<List<FrbPqcPreKey>> generatePqcPrekeys() => RustLib.instance.api
       .crateBridgeWrapperSignalRustSignalGeneratePqcPrekeys();
 
+  static Future<Uint8List?> getContactPublicKey({
+    required PlatformInt64 contactId,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperSignalRustSignalGetContactPublicKey(
+        contactId: contactId,
+      );
+
+  static Future<String?> getSafetyNumber({required PlatformInt64 contactId}) =>
+      RustLib.instance.api.crateBridgeWrapperSignalRustSignalGetSafetyNumber(
+        contactId: contactId,
+      );
+
+  static Future<Uint8List> getUserPublicKey() =>
+      RustLib.instance.api.crateBridgeWrapperSignalRustSignalGetUserPublicKey();
+
   static Future<void> processPrekeyBundle({
     required String name,
     required int deviceId,
@@ -47,8 +62,8 @@ class RustSignal {
         bundle: bundle,
       );
 
-  /// Removes the current v2 session for a contact. The Dart hotfix layer
-  /// immediately establishes its replacement from a freshly fetched bundle.
+  /// Removes the current session with a contact and immediately establishes
+  /// a fresh one while requiring the contact's stored identity key to match.
   static Future<void> resetContactSession({required PlatformInt64 contactId}) =>
       RustLib.instance.api
           .crateBridgeWrapperSignalRustSignalResetContactSession(

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contacts SET recovery_contacts_last_heartbeat = ? WHERE user_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "2c4a9f54ba414124c446f52333a1c2dcf88c8ad4d4d96f746ce47532452ec19d"
+}

@@ -1,0 +1,72 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/src/visual/themes/colors.dart';
+import 'package:twonly/src/visual/themes/dark.dart';
+import 'package:twonly/src/visual/themes/light.dart';
+
+void main() {
+  test('light theme exposes the app palette', () {
+    final appColors = lightTheme.extension<AppColors>();
+
+    expect(appColors, isNotNull);
+    expect(
+      appColors![AppColor.chatBubbleReceived],
+      const Color(0xFFF3F4F3),
+    );
+    expect(appColors[AppColor.chatBubbleSent], const Color(0xFFE8EBE9));
+    expect(lightTheme.colorScheme.onPrimary, const Color(0xFF082117));
+    expect(
+      lightTheme.scaffoldBackgroundColor,
+      lightTheme.colorScheme.surface,
+    );
+  });
+
+  test('dark theme exposes the app palette', () {
+    final appColors = darkTheme.extension<AppColors>();
+
+    expect(appColors, isNotNull);
+    expect(
+      appColors![AppColor.chatBubbleReceived],
+      const Color(0xFF1D201E),
+    );
+    expect(appColors[AppColor.chatBubbleSent], const Color(0xFF292C2A));
+    expect(darkTheme.colorScheme.onPrimary, const Color(0xFF082117));
+    expect(darkTheme.scaffoldBackgroundColor, darkTheme.colorScheme.surface);
+  });
+
+  test('custom dark accents receive a contrasting foreground', () {
+    final theme = getDarkTheme(const Color(0xFF3A76F0));
+
+    expect(theme.colorScheme.onPrimary, const Color(0xFFFFFFFF));
+  });
+
+  test('every app color automatically participates in theme transitions', () {
+    final middle = const AppColors.light().lerp(const AppColors.dark(), 0.5);
+
+    for (final color in AppColor.values) {
+      expect(middle[color], Color.lerp(color.light, color.dark, 0.5));
+    }
+  });
+
+  test('message-kind indicators keep their original fixed colors', () {
+    const expectedColors = {
+      AppColor.messageText: Color(0xFF448AFF),
+      AppColor.messageRestore: Color(0xFFFF9800),
+      AppColor.messageWidget: Color(0xFF9B59B6),
+      AppColor.messageVideo: Color(0xFFF321D0),
+      AppColor.messageAudio: Color(0xFFFC9555),
+      AppColor.messageImage: Color(0xFFFF5252),
+    };
+
+    for (final MapEntry(key: color, value: expected)
+        in expectedColors.entries) {
+      expect(color.light, expected);
+      expect(color.dark, expected);
+    }
+  });
+
+  test('selected zoom uses yellow in both themes', () {
+    expect(AppColor.selectedZoom.light, const Color(0xFFFFEB3B));
+    expect(AppColor.selectedZoom.dark, const Color(0xFFFFEB3B));
+  });
+}

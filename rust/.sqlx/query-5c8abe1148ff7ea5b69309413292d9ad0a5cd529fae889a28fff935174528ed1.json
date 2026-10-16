@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT record_bytes FROM signal_sessions WHERE name = ? AND device_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "record_bytes",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "signal_sessions",
+            "name": "record_bytes"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5c8abe1148ff7ea5b69309413292d9ad0a5cd529fae889a28fff935174528ed1"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE received_receipts\n            SET pending_plaintext = ?\n            WHERE receipt_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "231815a391f5a44481e92b316c927f8e9e21940fb6d089fb1b8871d756577db3"
+}

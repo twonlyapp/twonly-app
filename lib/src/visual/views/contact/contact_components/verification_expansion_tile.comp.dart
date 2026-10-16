@@ -76,6 +76,7 @@ class _VerificationExpansionTileCompState
           getContactDisplayName(widget.contact),
         ),
       VerificationType.link => context.lang.verificationTypeLink,
+      VerificationType.manual => context.lang.verificationTypeManual,
       VerificationType.contactSharedByVerified =>
         verifier != null
             ? context.lang.contactVerifiedBy(getContactDisplayName(verifier))

@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT serial AS \"serial!: i64\", payload AS \"payload!: String\",\n                      info AS \"info: String\", href AS \"href: String\",\n                      sender_id AS \"sender_id: i64\"\n               FROM webxdc_updates\n               WHERE instance_id = ? AND serial > ?\n               ORDER BY serial ASC",
+  "describe": {
+    "columns": [
+      {
+        "name": "serial!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "serial"
+          }
+        }
+      },
+      {
+        "name": "payload!: String",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "payload"
+          }
+        }
+      },
+      {
+        "name": "info: String",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "info"
+          }
+        }
+      },
+      {
+        "name": "href: String",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "href"
+          }
+        }
+      },
+      {
+        "name": "sender_id: i64",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "sender_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "f436f2290486b44d631dd516159c8a0e8a8b054c1aac8ad2526694a3148fac04"
+}

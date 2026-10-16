@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT instance.instance_id AS \"instance_id!: String\",\n                  app.name AS \"name!: String\",\n                  app.name_translations AS \"name_translations!: String\",\n                  app.icon AS \"icon: Vec<u8>\",\n                  instance.summary AS \"summary: String\",\n                  instance.document AS \"document: String\"\n           FROM webxdc_instances AS instance\n           JOIN webxdc_apps AS app\n             ON app.app_id = instance.app_id AND app.version = instance.version\n           WHERE instance.group_id = ? AND app.one_time = 1\n           ORDER BY instance.last_update_at DESC, instance.created_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "name": "instance_id!: String",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "instance_id"
+          }
+        }
+      },
+      {
+        "name": "name!: String",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "name_translations!: String",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "name_translations"
+          }
+        }
+      },
+      {
+        "name": "icon: Vec<u8>",
+        "ordinal": 3,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "icon"
+          }
+        }
+      },
+      {
+        "name": "summary: String",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "summary"
+          }
+        }
+      },
+      {
+        "name": "document: String",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "document"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "7a89aa45a3186a9a4c712976e21d7a4e3c289b449bd5ce432845cbdc02b234a6"
+}

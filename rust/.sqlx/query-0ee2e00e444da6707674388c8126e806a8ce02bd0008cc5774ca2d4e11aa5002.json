@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT user_id, recovery_contacts_secret_share FROM contacts\n           WHERE recovery_contacts_secret_share IS NOT NULL\n             AND (recovery_contacts_last_heartbeat IS NULL\n                  OR recovery_contacts_last_heartbeat <= ?)",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "name": "recovery_contacts_secret_share",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "recovery_contacts_secret_share"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "0ee2e00e444da6707674388c8126e806a8ce02bd0008cc5774ca2d4e11aa5002"
+}

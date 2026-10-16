@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT blocked FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "blocked",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "blocked"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d495889cd14181159e65bedf607ec7488e8c04946936dee8eb7175a10b69e77a"
+}

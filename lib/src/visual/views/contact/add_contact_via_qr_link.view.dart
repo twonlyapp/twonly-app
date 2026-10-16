@@ -1,15 +1,7 @@
-import 'dart:convert';
-
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
@@ -18,12 +10,10 @@ import 'package:twonly/src/visual/components/snackbar.dart';
 class AddContactViaQrLinkView extends StatefulWidget {
   const AddContactViaQrLinkView({
     required this.profile,
-    this.qrCodeLink,
     super.key,
   });
 
   final PublicProfile profile;
-  final String? qrCodeLink;
 
   @override
   State<AddContactViaQrLinkView> createState() =>
@@ -39,32 +29,15 @@ class _AddContactViaQrLinkViewState extends State<AddContactViaQrLinkView> {
     });
 
     try {
-      final userData = server.Response_UserData(
-        userId: widget.profile.userId,
-        publicIdentityKey: widget.profile.publicIdentityKey,
-        signedPrekey: widget.profile.signedPrekey,
-        signedPrekeySignature: widget.profile.signedPrekeySignature,
-        signedPrekeyId: widget.profile.signedPrekeyId,
-        username: utf8.encode(widget.profile.username),
-        registrationId: widget.profile.registrationId,
-      );
-
-      final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
-        ContactsCompanion(
-          username: Value(widget.profile.username),
-          userId: Value(widget.profile.userId.toInt()),
-          requested: const Value(false),
-          blocked: const Value(false),
-          deletedByUser: const Value(false),
-        ),
-      );
-
-      if (added > 0) {
-        await importSignalContactAndCreateRequest(userData);
-        if (widget.qrCodeLink != null) {
-          // As the user does now exist he can now be marked as verified
-          await QrCodeUtils.handleQrCodeLink(widget.qrCodeLink!);
+      final success = await addNewContactFromPublicProfile(widget.profile);
+      if (!success) {
+        if (mounted) {
+          showSnackbar(
+            context,
+            context.lang.additionalUserAddError(widget.profile.username),
+          );
         }
+        return;
       }
 
       if (mounted) {

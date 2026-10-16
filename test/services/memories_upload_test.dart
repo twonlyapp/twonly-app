@@ -1,0 +1,356 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:cryptography_plus/cryptography_plus.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:drift/native.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:logging/logging.dart';
+import 'package:twonly/core/frb_generated.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/memories/memories_cloud.service.dart';
+import 'package:twonly/src/services/user.service.dart';
+
+import '../mocks/user_config.dart';
+
+class _MemoriesApi implements RustLibApi {
+  ApiConnectionState connectionState = ApiConnectionState.authenticated;
+  int? originalDate;
+  Object? error;
+  late StackTrace stackTrace;
+  int requests = 0;
+  int confirmations = 0;
+  Uint8List? mediaKey;
+  Completer<FrbMemoriesUploadUrls>? pendingRequest;
+  Completer<void>? requestStarted;
+
+  @override
+  Future<ApiConnectionState> crateBridgeApiRustApiConnectionState() async =>
+      connectionState;
+
+  @override
+  Future<FrbMemoriesUploadUrls> crateBridgeApiRustApiRequestMemoriesUpload({
+    required PlatformInt64 size,
+    required PlatformInt64 originalDate,
+    required String mediaId,
+  }) {
+    this.originalDate = originalDate;
+    requests++;
+    if (requestStarted != null && !requestStarted!.isCompleted) {
+      requestStarted!.complete();
+    }
+    if (error != null) return Future.error(error!, stackTrace);
+    if (pendingRequest != null) return pendingRequest!.future;
+    return Future.value(
+      FrbMemoriesUploadUrls(
+        mediaId: mediaId,
+        thumbnailUpload: const FrbPresignedPost(
+          url: 'https://upload.example/thumbnail',
+          fields: [('key', 'thumbnail')],
+        ),
+        fullUpload: const FrbPresignedPost(
+          url: 'https://upload.example/full',
+          fields: [('key', 'full')],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Future<Uint8List>
+  crateBridgeWrapperKeyManagerRustKeyManagerEncryptCloudMediaKey({
+    required List<int> mediaKey,
+    required String addition,
+  }) async {
+    this.mediaKey = Uint8List.fromList(mediaKey);
+    return Uint8List.fromList([8, 9, 10]);
+  }
+
+  @override
+  Future<void> crateBridgeApiRustApiConfirmMemoriesUpload({
+    required String mediaId,
+  }) async {
+    confirmations++;
+  }
+
+  @override
+  Future<void> crateBridgeApiRustApiStoreMedia({
+    required String mediaId,
+  }) async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+void main() {
+  final api = _MemoriesApi();
+  late TwonlyDB database;
+  late Directory support;
+  late MemoriesCloudService service;
+  late StreamSubscription<LogRecord> subscription;
+  late Level? previousLogLevel;
+  final records = <LogRecord>[];
+  const mediaId = 'd98369cc-0902-436a-a785-85507d1f39d2';
+
+  setUpAll(() => RustLib.initMock(api: api));
+  tearDownAll(RustLib.dispose);
+
+  setUp(() async {
+    database = TwonlyDB(NativeDatabase.memory());
+    locator
+      ..registerSingleton<TwonlyDB>(database)
+      ..registerSingleton<UserService>(UserService());
+    userService.currentUser = testUserConfig(
+      userId: 1,
+      username: 'me',
+      displayName: 'Me',
+      subscriptionPlan: 'Free',
+      currentSetupPage: null,
+      appVersion: 100,
+    )..isCloudBackupEnabled = true;
+    support = Directory.systemTemp.createTempSync('memories-upload-test-');
+    AppEnvironment.initTesting(customSupportDir: support.path);
+    service = MemoriesCloudService();
+    api
+      ..connectionState = ApiConnectionState.authenticated
+      ..originalDate = null
+      ..requests = 0
+      ..confirmations = 0
+      ..mediaKey = null
+      ..error = null
+      ..pendingRequest = null
+      ..requestStarted = null
+      ..stackTrace = StackTrace.fromString(
+        '#0      requestUpload (package:twonly/upload.dart:42:7)',
+      );
+    previousLogLevel = Logger.root.level;
+    Logger.root.level = Level.ALL;
+    records.clear();
+    subscription = Logger.root.onRecord.listen(records.add);
+
+    final media = await database.mediaFilesDao.insertOrUpdateMedia(
+      MediaFilesCompanion.insert(
+        mediaId: mediaId,
+        type: MediaType.image,
+        stored: const Value(true),
+        hasThumbnail: const Value(true),
+      ),
+    );
+    final mediaService = MediaFileService(media!);
+    mediaService.storedPath.writeAsBytesSync([1, 2, 3]);
+    mediaService.thumbnailPath.writeAsBytesSync([4, 5, 6]);
+  });
+
+  test('uploads encrypted thumbnail and media without cache files', () async {
+    final uploads = <String>[];
+    final progress = <MemoriesBackupProgress?>[];
+    final progressSubscription = service.progressStream.listen(progress.add);
+    addTearDown(progressSubscription.cancel);
+    final client = MockClient((request) async {
+      expect(request.method, 'POST');
+      uploads.add(request.url.path);
+      expect(api.confirmations, 0);
+
+      // Decode the file part of the actual multipart body sent to S3.
+      final body = latin1.decode(request.bodyBytes);
+      final fileHeader = body.indexOf('filename="file"');
+      expect(fileHeader, greaterThanOrEqualTo(0));
+      final start = body.indexOf('\r\n\r\n', fileHeader) + 4;
+      final end = body.lastIndexOf('\r\n--');
+      final payload = CloudMediaBackupEncrypted.fromBuffer(
+        request.bodyBytes.sublist(start, end),
+      );
+      expect(payload.addition, 'app');
+      expect(payload.encryptedMediaKey, [8, 9, 10]);
+      final ciphertext = payload.mediaCiphertext;
+      final bytes = await Chacha20.poly1305Aead().decrypt(
+        SecretBox(
+          ciphertext.sublist(0, ciphertext.length - 16),
+          nonce: payload.mediaNonce,
+          mac: Mac(ciphertext.sublist(ciphertext.length - 16)),
+        ),
+        secretKey: SecretKey(api.mediaKey!),
+      );
+      expect(bytes, request.url.path == '/thumbnail' ? [4, 5, 6] : [1, 2, 3]);
+      return http.Response('', 204);
+    });
+    addTearDown(client.close);
+
+    // No path_provider mock is installed: backup must not need cache files.
+    await http.runWithClient(service.checkUploads, () => client);
+
+    expect(uploads, ['/thumbnail', '/full']);
+    expect(api.confirmations, 1);
+    expect(
+      api.originalDate,
+      (await database.mediaFilesDao.getMediaFileById(
+            mediaId,
+          ))!.createdAt.millisecondsSinceEpoch ~/
+          1000,
+    );
+    expect(
+      (await database.mediaFilesDao.getMediaFileById(mediaId))!.cloudState,
+      CloudState.uploaded,
+    );
+    expect(progress.any((p) => p?.currentUploadProgress == 1), isTrue);
+    expect(service.isProcessing, isFalse);
+    expect(service.currentProgress, isNull);
+  });
+
+  test('concurrent saves use the shared backup worker', () async {
+    final pending = Completer<FrbMemoriesUploadUrls>();
+    final started = Completer<void>();
+    api
+      ..pendingRequest = pending
+      ..requestStarted = started;
+    final idle = memoriesCloudService.progressStream.firstWhere(
+      (progress) => progress == null,
+    );
+    final media = MediaFileService(
+      (await database.mediaFilesDao.getMediaFileById(mediaId))!,
+    );
+    try {
+      await media.storeMediaFile();
+      await started.future;
+      expect(memoriesCloudService.isProcessing, isTrue);
+
+      await media.storeMediaFile();
+      await memoriesCloudService.checkUploads();
+
+      expect(api.requests, 1);
+      expect(pending.isCompleted, isFalse);
+    } finally {
+      // Release the worker without a network request, then wait for cleanup.
+      pending.completeError(AnyhowException('Not connected'));
+      if (memoriesCloudService.isProcessing) await idle;
+    }
+    expect(memoriesCloudService.isProcessing, isFalse);
+  });
+
+  test(
+    'failed S3 upload preserves cause and permits a successful retry',
+    () async {
+      final client = MockClient((_) async => http.Response('', 500));
+      addTearDown(client.close);
+      await http.runWithClient(service.checkUploads, () => client);
+
+      expect(api.confirmations, 0);
+      expect(await database.mediaFilesDao.getMemoriesToBackup(), hasLength(1));
+      final record = records.singleWhere(
+        (record) => record.message == 'Error backing up memory $mediaId',
+      );
+      expect(record.error.toString(), contains('S3 upload failed: 500'));
+      expect(record.stackTrace, isNotNull);
+      expect(service.isProcessing, isFalse);
+
+      final retryClient = MockClient((_) async => http.Response('', 204));
+      addTearDown(retryClient.close);
+      await http.runWithClient(service.checkUploads, () => retryClient);
+
+      expect(api.confirmations, 1);
+      expect(await database.mediaFilesDao.getMemoriesToBackup(), isEmpty);
+    },
+  );
+
+  tearDown(() async {
+    service.dispose();
+    await subscription.cancel();
+    Logger.root.level = previousLogLevel;
+    await locator.unregister<UserService>();
+    await locator.unregister<TwonlyDB>();
+    await database.close();
+    support.deleteSync(recursive: true);
+  });
+
+  test('offline worker leaves memory queued until authentication', () async {
+    api.connectionState = ApiConnectionState.reconnecting;
+
+    await service.checkUploads();
+
+    expect(api.requests, 0);
+    expect(service.isProcessing, isFalse);
+    expect(await database.mediaFilesDao.getMemoriesToBackup(), hasLength(1));
+
+    api.connectionState = ApiConnectionState.authenticated;
+    final client = MockClient((_) async => http.Response('', 204));
+    addTearDown(client.close);
+    await http.runWithClient(service.checkUploads, () => client);
+
+    expect(api.confirmations, 1);
+    expect(await database.mediaFilesDao.getMemoriesToBackup(), isEmpty);
+  });
+
+  test('pending upload from an interrupted run is retried', () async {
+    await database.mediaFilesDao.updateMedia(
+      mediaId,
+      const MediaFilesCompanion(cloudState: Value(CloudState.pending)),
+    );
+    final client = MockClient((_) async => http.Response('', 204));
+    addTearDown(client.close);
+
+    await http.runWithClient(service.checkUploads, () => client);
+
+    expect(api.requests, 1);
+    expect(api.confirmations, 1);
+    expect(await database.mediaFilesDao.getMemoriesToBackup(), isEmpty);
+  });
+
+  for (final message in [
+    'Not connected',
+    'API request timed out',
+    'response channel closed',
+    'send error: ChannelClosed',
+    'API error code 1022',
+    'API error code 1023',
+    'API error code 1009',
+    'API error code 429',
+    'API error code 500',
+    'invalid API response',
+  ]) {
+    test(
+      '$message retains cause and stack and leaves memory retryable',
+      () async {
+        api.error = AnyhowException(message);
+
+        await service.checkUploads();
+
+        final record = records.singleWhere(
+          (record) =>
+              record.message == 'Could not get upload URLs for memory $mediaId',
+        );
+        expect(record.error, same(api.error));
+        expect(record.stackTrace, same(api.stackTrace));
+        expect(
+          record.level,
+          ['API error code 500', 'invalid API response'].contains(message)
+              ? Level.SHOUT
+              : Level.WARNING,
+        );
+        expect(service.isProcessing, isFalse);
+        expect(service.currentProgress, isNull);
+        expect(
+          (await database.mediaFilesDao.getMediaFileById(mediaId))!.cloudState,
+          CloudState.none,
+        );
+        expect(
+          await database.mediaFilesDao.getMemoriesToBackup(),
+          hasLength(1),
+        );
+
+        await service.checkUploads();
+
+        expect(api.requests, 2);
+        expect(service.isProcessing, isFalse);
+      },
+    );
+  }
+}

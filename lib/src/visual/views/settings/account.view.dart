@@ -32,12 +32,12 @@ class AccountView extends StatelessWidget {
           Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-            child: const Text(
+            child: Text(
               'Danger Zone',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20,
-                color: Colors.red,
+                color: context.color.error,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -45,7 +45,7 @@ class AccountView extends StatelessWidget {
           ListTile(
             title: Text(
               context.lang.settingsAccountDeleteAccount,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: context.color.error),
             ),
             subtitle: Text(context.lang.settingsAccountDeleteAccountNoBallance),
             onTap: () async {
@@ -56,7 +56,7 @@ class AccountView extends StatelessWidget {
                 context.lang.settingsAccountDeleteModalBody,
               );
               if (ok) {
-                final res = await apiService.deleteAccount();
+                final res = await rustApiResult(RustApi.deleteAccount());
                 if (res.isError) {
                   if (!context.mounted) return;
                   showSnackbar(
@@ -65,7 +65,7 @@ class AccountView extends StatelessWidget {
                   );
                   return;
                 }
-                await deleteLocalUserData();
+                await deleteLocalUserData(removeCredentials: true);
                 await Restart.restartApp(
                   notificationTitle: 'Account successfully deleted',
                   notificationBody: 'Click here to open the app again',

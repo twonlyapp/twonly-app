@@ -1,0 +1,12 @@
+# Read by cargokit (rust_builder/cargokit) when it invokes cargo.
+#
+# Flutter's profile configuration builds Rust with `--release`, which turns off
+# `debug_assertions`. Without this, a profile build would be indistinguishable
+# from a store build and would talk to the production API. Enabling `dev-api`
+# here keeps profile builds pointed at dev-api.twonly.eu; only `release` (debug
+# assertions off, feature off) reaches the production server.
+cargo:
+  profile:
+    extra_flags:
+      - --features
+      - dev-api

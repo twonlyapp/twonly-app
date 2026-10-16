@@ -20,7 +20,10 @@ class FriendlyMessageTime extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusIcon = _buildStatusIcon(Colors.grey.shade400);
+    final statusIcon = _buildStatusIcon(
+      context,
+      color ?? context.appColor(AppColor.chatMessageMeta),
+    );
 
     return Padding(
       padding: const EdgeInsets.only(left: 6),
@@ -34,7 +37,7 @@ class FriendlyMessageTime extends StatelessWidget {
                 height: 10,
                 child: FaIcon(
                   FontAwesomeIcons.pencil,
-                  color: color ?? Colors.white.withAlpha(150),
+                  color: color ?? context.appColor(AppColor.chatMessageMeta),
                   size: 10,
                 ),
               ),
@@ -48,7 +51,7 @@ class FriendlyMessageTime extends StatelessWidget {
             ),
             style: TextStyle(
               fontSize: 10,
-              color: color ?? Colors.white.withAlpha(150),
+              color: color ?? context.appColor(AppColor.chatMessageMeta),
               decoration: TextDecoration.none,
               fontWeight: FontWeight.normal,
             ),
@@ -59,7 +62,7 @@ class FriendlyMessageTime extends StatelessWidget {
     );
   }
 
-  Widget? _buildStatusIcon(Color iconColor) {
+  Widget? _buildStatusIcon(BuildContext context, Color iconColor) {
     if (message.type != MessageType.text.name || message.senderId != null) {
       return null;
     }
@@ -82,7 +85,14 @@ class FriendlyMessageTime extends StatelessWidget {
       );
     }
 
-    // Now check message actions for ackByUserAt
+    final sharedAckState = ChatMessageActionScope.maybeOf(context);
+    if (sharedAckState != null) {
+      return _ackIcon(
+        iconColor,
+        sharedAckState.ackedMessageIds.contains(message.messageId),
+      );
+    }
+
     return StreamBuilder<List<(MessageAction, Contact)>>(
       stream: twonlyDB.messagesDao.watchMessageActions(message.messageId),
       builder: (context, snapshot) {
@@ -91,28 +101,36 @@ class FriendlyMessageTime extends StatelessWidget {
           (t) => t.$1.type == MessageActionType.ackByUserAt,
         );
 
-        if (hasAckByUser) {
-          return Padding(
-            padding: const EdgeInsets.only(left: 4),
-            child: FaIcon(
-              FontAwesomeIcons.checkDouble,
-              size: 8,
-              color: iconColor,
-            ),
-          );
-        }
-
-        return Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: FaIcon(
-            FontAwesomeIcons.check,
-            size: 8,
-            color: iconColor,
-          ),
-        );
+        return _ackIcon(iconColor, hasAckByUser);
       },
     );
   }
+
+  Widget _ackIcon(Color iconColor, bool acknowledged) => Padding(
+    padding: const EdgeInsets.only(left: 4),
+    child: FaIcon(
+      acknowledged ? FontAwesomeIcons.checkDouble : FontAwesomeIcons.check,
+      size: 8,
+      color: iconColor,
+    ),
+  );
+}
+
+class ChatMessageActionScope extends InheritedWidget {
+  const ChatMessageActionScope({
+    required this.ackedMessageIds,
+    required super.child,
+    super.key,
+  });
+
+  final Set<String> ackedMessageIds;
+
+  static ChatMessageActionScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ChatMessageActionScope>();
+
+  @override
+  bool updateShouldNotify(ChatMessageActionScope oldWidget) =>
+      ackedMessageIds != oldWidget.ackedMessageIds;
 }
 
 String friendlyTime(BuildContext context, DateTime dt) {
@@ -128,15 +146,16 @@ String friendlyTime(BuildContext context, DateTime dt) {
   }
 
   // Determine 24h vs 12h from system/local settings
-  final use24Hour = MediaQuery.of(context).alwaysUse24HourFormat;
+  final use24Hour = MediaQuery.alwaysUse24HourFormatOf(context);
 
-  if (!use24Hour) {
-    // 12-hour format with locale-aware AM/PM
-    final format = DateFormat.jm(Localizations.localeOf(context).toString());
-    return format.format(dt);
-  } else {
-    // 24-hour HH:mm, locale-aware
-    final format = DateFormat.Hm(Localizations.localeOf(context).toString());
-    return format.format(dt);
-  }
+  final locale = Localizations.localeOf(context).toString();
+  // Building a DateFormat parses a pattern and looks up locale data, which is
+  // wasted work when every visible message asks for the same two formats.
+  final format = _timeFormats.putIfAbsent(
+    '$locale|$use24Hour',
+    () => use24Hour ? DateFormat.Hm(locale) : DateFormat.jm(locale),
+  );
+  return format.format(dt);
 }
+
+final Map<String, DateFormat> _timeFormats = {};

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -42,40 +41,75 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
               setState(() {
                 _imageSaving = true;
               });
-
-              if (widget.storeImageAsOriginal != null) {
-                await widget.storeImageAsOriginal!();
-              }
-
-              final newMediaFile = await twonlyDB.mediaFilesDao
-                  .insertOrUpdateMedia(
-                    MediaFilesCompanion(
-                      type: Value(widget.mediaService.mediaFile.type),
-                      createdAt: Value(clock.now()),
-                      stored: const Value(true),
-                    ),
-                  );
-
-              if (newMediaFile != null) {
-                final newService = MediaFileService(newMediaFile);
-
-                if (widget.mediaService.tempPath.existsSync()) {
-                  widget.mediaService.tempPath.copySync(
-                    newService.tempPath.path,
-                  );
-                } else if (widget.mediaService.originalPath.existsSync()) {
-                  widget.mediaService.originalPath.copySync(
-                    newService.originalPath.path,
-                  );
+              try {
+                if (widget.storeImageAsOriginal != null) {
+                  await widget.storeImageAsOriginal!();
                 }
-                await newService.storeMediaFile();
-              }
 
-              if (mounted) {
-                setState(() {
-                  _imageSaved = true;
-                  _imageSaving = false;
-                });
+                // Location lookup completes asynchronously after capture. Read
+                // the current row so exporting keeps that fix and capture time.
+                await widget.mediaService.updateFromDB();
+                final capture = widget.mediaService.mediaFile;
+
+                final newMediaFile = await twonlyDB.mediaFilesDao
+                    .insertOrUpdateMedia(
+                      MediaFilesCompanion(
+                        type: Value(widget.mediaService.mediaFile.type),
+                        createdAt: Value(capture.createdAt),
+                        locationLatitude: Value(capture.locationLatitude),
+                        locationLongitude: Value(capture.locationLongitude),
+                        locationAccuracy: Value(capture.locationAccuracy),
+                        locationStatus: Value(capture.locationStatus),
+                        locationDeadlineAt: Value(capture.locationDeadlineAt),
+                        removeAudio: Value(
+                          widget.mediaService.mediaFile.removeAudio,
+                        ),
+                        trimStartMs: Value(
+                          widget.mediaService.mediaFile.trimStartMs,
+                        ),
+                        trimEndMs: Value(
+                          widget.mediaService.mediaFile.trimEndMs,
+                        ),
+                        // Rust publishes the Memory as stored only after the
+                        // plaintext and its thumbnail have been written.
+                        stored: const Value(false),
+                      ),
+                    );
+
+                if (newMediaFile != null) {
+                  final newService = MediaFileService(newMediaFile);
+
+                  await RustApi.initializeMemoryLocation(
+                    mediaId: newMediaFile.mediaId,
+                  );
+
+                  if (widget.mediaService.originalPath.existsSync()) {
+                    await widget.mediaService.originalPath.copy(
+                      newService.originalPath.path,
+                    );
+                  } else if (widget.mediaService.tempPath.existsSync()) {
+                    await widget.mediaService.tempPath.copy(
+                      newService.tempPath.path,
+                    );
+                  }
+                  if (widget.mediaService.overlayImagePath.existsSync()) {
+                    await widget.mediaService.overlayImagePath.copy(
+                      newService.overlayImagePath.path,
+                    );
+                  }
+                  await newService.storeMediaFile();
+                  if (mounted) {
+                    setState(() {
+                      _imageSaved = newService.mediaFile.stored;
+                    });
+                  }
+                }
+              } finally {
+                if (mounted) {
+                  setState(() {
+                    _imageSaving = false;
+                  });
+                }
               }
             }
           : null,
@@ -83,12 +117,14 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (_imageSaving || widget.isLoading)
-            const SizedBox(
+            SizedBox(
               width: 12,
               height: 12,
               child: CircularProgressIndicator.adaptive(
                 strokeWidth: 1,
-                valueColor: AlwaysStoppedAnimation(Colors.white),
+                valueColor: AlwaysStoppedAnimation(
+                  context.appColor(AppColor.mediaForeground),
+                ),
               ),
             )
           else if (_imageSaved)

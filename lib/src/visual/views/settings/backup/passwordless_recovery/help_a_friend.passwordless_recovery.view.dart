@@ -78,6 +78,19 @@ class _HelpAFriendPasswordlessRecoveryViewState
   }
 
   Future<void> _submitShare(Contact contact) async {
+    final verified = await authenticateUser(
+      context.lang.passwordlessRecoveryAuthReason,
+      force: false,
+    );
+    if (!mounted) return;
+    if (!verified) {
+      showSnackbar(
+        context,
+        context.lang.passwordlessRecoveryAuthFailed,
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     final res = await PasswordlessRecoveryService.submitRecoveryShare(
       widget.notificationId,
@@ -104,7 +117,6 @@ class _HelpAFriendPasswordlessRecoveryViewState
 
   @override
   Widget build(BuildContext context) {
-    final isDark = isDarkMode(context);
     final query = _searchController.text.trim().toLowerCase();
 
     final filteredContacts =
@@ -132,14 +144,10 @@ class _HelpAFriendPasswordlessRecoveryViewState
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.05)
-                            : Colors.black.withValues(alpha: 0.04),
+                        color: context.color.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : Colors.black.withValues(alpha: 0.06),
+                          color: context.color.outlineVariant,
                         ),
                       ),
                       padding: const EdgeInsets.all(16),
@@ -152,7 +160,9 @@ class _HelpAFriendPasswordlessRecoveryViewState
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              context.lang.passwordlessRecoverySelectContactDesc,
+                              context
+                                  .lang
+                                  .passwordlessRecoverySelectContactDesc,
                               style: const TextStyle(
                                 fontSize: 14,
                                 height: 1.4,
@@ -174,7 +184,9 @@ class _HelpAFriendPasswordlessRecoveryViewState
                       child: filteredContacts.isEmpty
                           ? Center(
                               child: Text(
-                                context.lang.passwordlessRecoveryNoContactsFound,
+                                context
+                                    .lang
+                                    .passwordlessRecoveryNoContactsFound,
                               ),
                             )
                           : ListView.builder(
@@ -208,9 +220,13 @@ class _HelpAFriendPasswordlessRecoveryViewState
                                     subtitle: hasShare
                                         ? null
                                         : Text(
-                                            context.lang.passwordlessRecoveryCantHelpHim,
-                                            style: const TextStyle(
-                                              color: Colors.grey,
+                                            context
+                                                .lang
+                                                .passwordlessRecoveryCantHelpHim,
+                                            style: TextStyle(
+                                              color: context
+                                                  .color
+                                                  .onSurfaceVariant,
                                             ),
                                           ),
                                     onTap: () => _onContactSelected(contact),

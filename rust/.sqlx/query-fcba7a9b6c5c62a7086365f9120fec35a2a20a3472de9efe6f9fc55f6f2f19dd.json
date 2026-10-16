@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE received_receipts\n            SET created_at = CAST(strftime('%s', 'now') AS INTEGER)\n            WHERE receipt_id = ?\n              AND created_at <= CAST(strftime('%s', 'now') AS INTEGER) - 864000\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "fcba7a9b6c5c62a7086365f9120fec35a2a20a3472de9efe6f9fc55f6f2f19dd"
+}

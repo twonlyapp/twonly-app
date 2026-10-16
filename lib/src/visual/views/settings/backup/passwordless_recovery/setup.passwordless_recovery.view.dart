@@ -263,13 +263,13 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (_isLoading)
-                      const SizedBox(
+                      SizedBox(
                         height: 16,
                         width: 16,
                         child: CircularProgressIndicator.adaptive(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.black87,
+                            context.color.onPrimary,
                           ),
                         ),
                       )

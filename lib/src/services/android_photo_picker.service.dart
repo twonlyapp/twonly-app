@@ -16,7 +16,9 @@ class AndroidPhotoPickerService {
   /// Reads the raw bytes from a content URI using the Android ContentResolver.
   static Future<Uint8List?> getUriBytes(String uri) async {
     try {
-      final bytes = await _channel.invokeMethod<Uint8List>('getUriBytes', {'uri': uri});
+      final bytes = await _channel.invokeMethod<Uint8List>('getUriBytes', {
+        'uri': uri,
+      });
       return bytes;
     } catch (e) {
       return null;

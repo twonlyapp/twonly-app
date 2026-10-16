@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT record_bytes FROM signal_kyber_pre_keys WHERE kyber_pre_key_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "record_bytes",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "signal_kyber_pre_keys",
+            "name": "record_bytes"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "66b487bac770deb373505952150d939ca95add84b329bd100ef14911babe33d1"
+}

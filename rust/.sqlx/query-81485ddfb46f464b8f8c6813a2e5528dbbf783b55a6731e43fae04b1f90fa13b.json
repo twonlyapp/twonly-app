@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM signal_pre_keys WHERE pre_key_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "81485ddfb46f464b8f8c6813a2e5528dbbf783b55a6731e43fae04b1f90fa13b"
+}

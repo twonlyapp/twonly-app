@@ -12,11 +12,14 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/release_notes.comp.dart';
+import 'package:twonly/src/visual/release_notes/release_notes_0_6_0.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
@@ -41,7 +44,12 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   double _offsetFromOne = 0;
   bool _isBottomNavVisible = true;
   Timer? _disableCameraTimer;
+
+  /// Whether [_openEditor] has the editor open over this view.
+  bool _editorOpen = false;
   bool _startPreloading = false;
+  bool _startupChecksComplete = false;
+  bool _releaseNotesCheckScheduled = false;
 
   final MainCameraController _mainCameraController = MainCameraController();
   late final PageController _homeViewPageController;
@@ -50,6 +58,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   StreamSubscription<RemoteMessage>? _onMessageOpenedAppSub;
   StreamSubscription<int>? _homeViewPageIndexSub;
   StreamSubscription<NotificationResponse>? _selectNotificationSub;
+  StreamSubscription<NativeNotificationTap>? _nativeNotificationSub;
+  StreamSubscription<HomeWidgetTap>? _widgetTapSub;
   StreamSubscription<(String, MediaType)>? _sharedMediaSub;
 
   static Uri? pendingSharedLink;
@@ -63,6 +73,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    routerProvider.routerDelegate.addListener(_onRouteChanged);
     var initialPage = widget.initialPage;
     if (HomeViewState.pendingSharedLink != null) {
       initialPage = 1;
@@ -93,6 +104,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       if (index != 1) {
         unawaited(_mainCameraController.closeCamera());
       }
+      _scheduleReleaseNotesIfNeeded();
     });
 
     _selectNotificationSub = selectNotificationStream.stream.listen((
@@ -110,7 +122,19 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       message,
     ) {
       Log.info('Opened app from iOS/Remote push notification tap.');
-      streamHomeViewPageIndex.add(0);
+      _openNotification(
+        conversationId: _notificationDataValue(message, 'conversation_id'),
+        kind: _notificationDataValue(message, 'notification_kind'),
+      );
+    });
+
+    _nativeNotificationSub = NativeNotificationService.taps.listen(
+      _openNativeNotification,
+    );
+
+    _widgetTapSub = HomeWidgetService.taps.listen((tap) {
+      HomeWidgetService.consumeInitialTap();
+      unawaited(_openWidgetTap(tap));
     });
 
     _sharedLinkSub = streamSharedLink.stream.listen((uri) {
@@ -128,10 +152,12 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       final type = media.$2;
       final filePath = media.$1;
 
-      final newMediaService = await initializeMediaUpload(
-        type,
-        userService.currentUser.defaultShowTime,
+      final mediaId = await RustApi.initializeMediaUpload(
+        mediaType: type.name,
+        displayLimitInMilliseconds: userService.currentUser.defaultShowTime,
+        isDraftMedia: false,
       );
+      final newMediaService = await MediaFileService.fromMediaId(mediaId);
       if (newMediaService == null) {
         Log.error('Could not create new media file for intent shared file');
         return;
@@ -143,14 +169,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         return;
       }
       file.copySync(newMediaService.originalPath.path);
-      if (!mounted) return;
-
-      await context.navPush(
-        ShareImageEditorView(
-          mediaFileService: newMediaService,
-          sharedFromGallery: true,
-        ),
-      );
+      await _openEditor(newMediaService);
     });
 
     if (HomeViewState.pendingSharedLink != null) {
@@ -173,7 +192,12 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       });
     }
 
-    unawaited(_initAsync());
+    unawaited(
+      _initAsync().whenComplete(() {
+        _startupChecksComplete = true;
+        _scheduleReleaseNotesIfNeeded();
+      }),
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_mainCameraController.sharedLinkForPreview == null &&
@@ -192,7 +216,51 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     });
   }
 
+  void _openNativeNotification(NativeNotificationTap tap) {
+    Log.info('Opened app from a native push notification tap.');
+    _openNotification(conversationId: tap.conversationId, kind: tap.kind);
+  }
+
+  Future<void> _openWidgetTap(HomeWidgetTap tap) async {
+    try {
+      final group = tap.senderId == null
+          ? null
+          : await twonlyDB.groupsDao.getDirectChat(tap.senderId!);
+      if (!mounted) return;
+      routerProvider.go(
+        group == null ? Routes.chats : Routes.chatsMessages(group.groupId),
+      );
+      streamHomeViewPageIndex.add(0);
+    } catch (error) {
+      Log.error('Could not open the widget sender chat: $error');
+    }
+  }
+
+  void _openNotification({String? conversationId, String? kind}) {
+    if (conversationId != null &&
+        NativeNotificationService.opensConversation(kind)) {
+      routerProvider.go(Routes.chatsMessages(conversationId));
+    }
+    streamHomeViewPageIndex.add(0);
+  }
+
+  String? _notificationDataValue(RemoteMessage message, String key) {
+    final value = message.data[key];
+    return value is String && value.isNotEmpty ? value : null;
+  }
+
   Future<void> _initAsync() async {
+    final initialWidgetTap = HomeWidgetService.consumeInitialTap();
+    if (initialWidgetTap != null) {
+      await _openWidgetTap(initialWidgetTap);
+      return;
+    }
+    final initialNativeTap =
+        await NativeNotificationService.consumeInitialTap();
+    if (initialNativeTap != null) {
+      _openNativeNotification(initialNativeTap);
+    }
+
     final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin
         .getNotificationAppLaunchDetails();
 
@@ -210,7 +278,16 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             notificationAppLaunchDetails.didNotificationLaunchApp)) {
       if (initialRemoteMessage != null) {
         Log.info('App launched from iOS/Remote push notification tap.');
-        streamHomeViewPageIndex.add(0);
+        _openNotification(
+          conversationId: _notificationDataValue(
+            initialRemoteMessage,
+            'conversation_id',
+          ),
+          kind: _notificationDataValue(
+            initialRemoteMessage,
+            'notification_kind',
+          ),
+        );
       } else if (notificationAppLaunchDetails?.didNotificationLaunchApp ??
           false) {
         final payload =
@@ -226,25 +303,40 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
     final draftMedia = await twonlyDB.mediaFilesDao.getDraftMediaFile();
     if (draftMedia != null) {
-      if (!mounted) return;
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ShareImageEditorView(
-            mediaFileService: MediaFileService(draftMedia),
-            sharedFromGallery: true,
-          ),
-        ),
-      );
+      await _openEditor(MediaFileService(draftMedia));
     }
+  }
+
+  /// Opens the editor on media that did not come from the camera, such as a
+  /// restored draft. The camera may already be running, started with the
+  /// app, and would keep running underneath the editor for as long as it is
+  /// open. It is closed, and the camera page counts as hidden until the
+  /// editor is left, so nothing starts it again in the meantime; the camera
+  /// page starts it itself once it shows again.
+  Future<void> _openEditor(MediaFileService mediaFileService) async {
+    if (!mounted) return;
+    _disableCameraTimer?.cancel();
+    setState(() => _editorOpen = true);
+    await _mainCameraController.closeCamera();
+    if (!mounted) return;
+    await context.navPush(
+      ShareImageEditorView(
+        mediaFileService: mediaFileService,
+        sharedFromGallery: true,
+      ),
+    );
+    if (mounted) setState(() => _editorOpen = false);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    routerProvider.routerDelegate.removeListener(_onRouteChanged);
     _onMessageOpenedAppSub?.cancel();
     _homeViewPageIndexSub?.cancel();
     _selectNotificationSub?.cancel();
+    _nativeNotificationSub?.cancel();
+    _widgetTapSub?.cancel();
     _disableCameraTimer?.cancel();
     _mainCameraController.setState = null;
     _mainCameraController.closeCamera();
@@ -258,10 +350,29 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     return ModalRoute.of(context)?.isCurrent ?? false;
   }
 
+  void _onRouteChanged() => _scheduleReleaseNotesIfNeeded();
+
+  void _scheduleReleaseNotesIfNeeded() {
+    if (!_startupChecksComplete ||
+        _releaseNotesCheckScheduled ||
+        _activePageIdx != 0) {
+      return;
+    }
+    _releaseNotesCheckScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _releaseNotesCheckScheduled = false;
+      if (!mounted || _activePageIdx != 0 || !_isViewActive()) return;
+      unawaited(
+        ReleaseNotesPresenter.showIfNeeded(context, releaseNotes060(context)),
+      );
+    });
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
+      _scheduleReleaseNotesIfNeeded();
       if (AppState.hasCameraPermissions &&
           _offsetRatio < 1 &&
           !_mainCameraController.isSharePreviewIsShown &&
@@ -326,6 +437,9 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           _activePageIdx = pageIndex;
         }
       });
+      if (notification is ScrollEndNotification) {
+        _scheduleReleaseNotesIfNeeded();
+      }
     }
 
     if (AppState.hasCameraPermissions &&
@@ -409,7 +523,9 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               child: CameraPreviewControllerView(
                 mainController: _mainCameraController,
                 isVisible:
-                    ((1 - (_offsetRatio * 4) % 1) == 1) && _activePageIdx == 1,
+                    ((1 - (_offsetRatio * 4) % 1) == 1) &&
+                    _activePageIdx == 1 &&
+                    !_editorOpen,
               ),
             ),
           ),
@@ -451,7 +567,10 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                     duration: const Duration(milliseconds: 100),
                     curve: Curves.bounceIn,
                   );
-                  if (mounted) setState(() {});
+                  if (mounted) {
+                    setState(() {});
+                    _scheduleReleaseNotesIfNeeded();
+                  }
                 },
                 currentIndex: _activePageIdx,
               )

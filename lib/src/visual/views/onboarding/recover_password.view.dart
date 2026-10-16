@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:restart_app/restart_app.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/onboarding/components/link_logo_animation.dart';
+import 'package:twonly/src/visual/views/onboarding/recovery_progress.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_setup.comp.dart';
 
 class BackupRecoveryView extends StatefulWidget {
@@ -23,7 +22,6 @@ class BackupRecoveryView extends StatefulWidget {
 
 class _BackupRecoveryViewState extends State<BackupRecoveryView> {
   bool obscureText = true;
-  bool isLoading = false;
   final TextEditingController usernameCtrl = TextEditingController();
   final TextEditingController passwordCtrl = TextEditingController();
 
@@ -35,39 +33,33 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
   }
 
   Future<void> _recoverTwonlySafe() async {
-    setState(() {
-      isLoading = true;
-    });
+    final username = usernameCtrl.text;
+    final password = passwordCtrl.text;
 
-    final error = await BackupService.startFullBackupRecovery(
-      usernameCtrl.text,
-      passwordCtrl.text,
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => RecoveryProgressView(
+          username: username,
+          steps: const [
+            RecoveryProgress.resolvingAccount,
+            RecoveryProgress.restoringIdentity,
+            RecoveryProgress.downloadingArchive,
+            RecoveryProgress.extractingData,
+          ],
+          runRecovery: (onProgress) => BackupService.startFullBackupRecovery(
+            username,
+            password,
+            onProgress: onProgress,
+          ),
+        ),
+      ),
     );
-    if (!mounted) return;
-
-    if (error != null) {
-      setState(() {
-        isLoading = false;
-      });
-      return showSnackbar(context, error.toLocalizedString(context));
-    }
-
-    await Restart.restartApp(
-      notificationTitle: context.lang.recoverSuccessTitle,
-      notificationBody: context.lang.recoverSuccessBody,
-      forceKill: true,
-    );
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = isDarkMode(context);
-    final titleColor = isDark ? Colors.white : Colors.black87;
-    final iconColor = isDark ? Colors.white70 : Colors.black54;
+    final titleColor = context.color.onSurface;
+    final iconColor = context.color.onSurfaceVariant;
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -111,7 +103,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                           child: Padding(
                             padding: const EdgeInsets.all(20),
                             child: LinkLogoAnimation(
-                              color: isDark ? Colors.white : Colors.black,
+                              color: context.color.onSurface,
                             ),
                           ),
                         ),
@@ -159,19 +151,8 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                         ),
                         const SizedBox(height: 32),
                         MyButton(
-                          onPressed: (!isLoading) ? _recoverTwonlySafe : null,
-                          child: isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator.adaptive(
-                                    valueColor: AlwaysStoppedAnimation(
-                                      Colors.white,
-                                    ),
-                                    strokeWidth: 3,
-                                  ),
-                                )
-                              : Text(context.lang.twonlySafeRecoverBtn),
+                          onPressed: _recoverTwonlySafe,
+                          child: Text(context.lang.twonlySafeRecoverBtn),
                         ),
                         const SizedBox(height: 16),
                         MyButton(
@@ -188,6 +169,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                           },
                           child: Text(
                             context.lang.passwordlessRecoveryRecoverBtn,
+                            textAlign: TextAlign.center,
                           ),
                         ),
                         const Spacer(),

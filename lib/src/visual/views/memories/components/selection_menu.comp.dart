@@ -85,15 +85,15 @@ class MemoriesSelectionMenuComp extends StatelessWidget {
           value: 'delete',
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.delete_forever_outlined,
                 size: 20,
-                color: Colors.redAccent,
+                color: context.color.error,
               ),
               const SizedBox(width: 12),
               Text(
                 context.lang.memoriesMenuDelete,
-                style: const TextStyle(color: Colors.redAccent),
+                style: TextStyle(color: context.color.error),
               ),
             ],
           ),

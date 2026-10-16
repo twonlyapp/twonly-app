@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT avatar_svg_compressed FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "avatar_svg_compressed",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "avatar_svg_compressed"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "dbc3765b4629863c7de0c8452a0c526f11116b42f5718311d794a105548f2909"
+}

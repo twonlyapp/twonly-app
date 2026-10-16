@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(\n                SELECT 1 FROM user_discovery_own_promotions\n                WHERE contact_id = ? AND length(promotion) > 0\n            )",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(\n                SELECT 1 FROM user_discovery_own_promotions\n                WHERE contact_id = ? AND length(promotion) > 0\n            )",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1f22026fd1c3dc141303b1534b4d8fc497dc5fab1685aa8999f9ec9056b38df7"
+}

@@ -9,7 +9,9 @@ import 'package:twonly/src/database/tables/messages.table.dart'
     hide MessageActions;
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/services/live_location.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -18,9 +20,13 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/c
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_contacts.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_flame_restored.entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_live_location.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_media_entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_sticker.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_text_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_unknown.entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_webxdc.entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_webxdc_message.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_context_menu.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_reply_drag.dart';
@@ -37,6 +43,11 @@ class ChatListEntry extends StatefulWidget {
     this.nextMessage,
     this.userIdToContact,
     this.hideReactions = false,
+    this.mediaFile,
+    this.reactions,
+    this.messagesById,
+    this.mediaFilesById,
+    this.useSharedData = false,
     super.key,
   });
   final Message? prevMessage;
@@ -45,6 +56,11 @@ class ChatListEntry extends StatefulWidget {
   final Group group;
   final Map<int, Contact>? userIdToContact;
   final bool hideReactions;
+  final MediaFile? mediaFile;
+  final List<Reaction>? reactions;
+  final Map<String, Message>? messagesById;
+  final Map<String, MediaFile>? mediaFilesById;
+  final bool useSharedData;
   final List<MemoryItem> galleryItems;
   final void Function(String)? scrollToMessage;
   final void Function()? onResponseTriggered;
@@ -64,7 +80,31 @@ class _ChatListEntryState extends State<ChatListEntry> {
   @override
   void initState() {
     super.initState();
+    _applySharedData();
     initAsync();
+  }
+
+  @override
+  void didUpdateWidget(ChatListEntry oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.useSharedData) _applySharedData();
+  }
+
+  void _applySharedData() {
+    if (!widget.useSharedData) return;
+    reactions = widget.reactions ?? const [];
+    final mediaFile = widget.mediaFile;
+    if (mediaFile == null) {
+      mediaService = null;
+      return;
+    }
+    // Reuse the existing service when the row is unchanged: it memoises the
+    // media paths, and a fresh instance would also force the thumbnail below to
+    // re-resolve its image.
+    final current = mediaService;
+    if (current == null || current.mediaFile != mediaFile) {
+      mediaService = MediaFileService(mediaFile);
+    }
   }
 
   @override
@@ -75,6 +115,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
   }
 
   Future<void> initAsync() async {
+    if (widget.useSharedData) return;
     if (widget.message.mediaId != null) {
       final mediaFileStream = twonlyDB.mediaFilesDao.watchMedia(
         widget.message.mediaId!,
@@ -109,6 +150,30 @@ class _ChatListEntryState extends State<ChatListEntry> {
     BubbleInfo info,
   ) {
     if (widget.message.type == MessageType.text.name) {
+      final location = LiveLocationService.decode(
+        widget.message.additionalMessageData,
+      );
+      if (location != null) {
+        return ChatLiveLocationEntry(
+          message: widget.message,
+          location: location,
+          borderRadius: borderRadius,
+          info: info,
+        );
+      }
+      final sticker = StickerService.decodeAdditional(
+        widget.message.additionalMessageData,
+      );
+      if (sticker != null) {
+        return ChatStickerEntry(message: widget.message, sticker: sticker);
+      }
+      if (widget.message.additionalMessageData != null) {
+        return ChatWebxdcMessageEntry(
+          message: widget.message,
+          borderRadius: borderRadius,
+          info: info,
+        );
+      }
       return ChatTextEntry(
         message: widget.message,
         borderRadius: borderRadius,
@@ -131,6 +196,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
         group: widget.group,
         mediaService: mediaService!,
         galleryItems: widget.galleryItems,
+        useSharedData: widget.useSharedData,
         borderRadius: borderRadius,
         info: info,
       );
@@ -141,6 +207,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
         message: widget.message,
         borderRadius: borderRadius,
         info: info,
+        contactsById: widget.useSharedData ? widget.userIdToContact : null,
       );
     }
 
@@ -154,6 +221,15 @@ class _ChatListEntryState extends State<ChatListEntry> {
 
     if (widget.message.type == MessageType.askAboutUser.name) {
       return ChatAskAFriendEntry(
+        message: widget.message,
+        borderRadius: borderRadius,
+        info: info,
+        contactsById: widget.useSharedData ? widget.userIdToContact : null,
+      );
+    }
+
+    if (widget.message.type == MessageType.webxdcApp.name) {
+      return ChatWebxdcEntry(
         message: widget.message,
         borderRadius: borderRadius,
         info: info,
@@ -225,6 +301,15 @@ class _ChatListEntryState extends State<ChatListEntry> {
                 mediaService: mediaService,
                 borderRadius: borderRadius,
                 scrollToMessage: widget.scrollToMessage,
+                quotedMessage: widget.msgQuote(
+                  messagesById: widget.messagesById,
+                ),
+                quotedMediaFile: widget.msgQuoteMedia(
+                  messagesById: widget.messagesById,
+                  mediaFilesById: widget.mediaFilesById,
+                ),
+                contactsById: widget.userIdToContact,
+                useSharedData: widget.useSharedData,
                 child: _getChatEntry(borderRadius, reactionsForWidth, info),
               ),
               if (reactionsForWidth > 0) const SizedBox(height: 20, width: 10),
@@ -281,6 +366,10 @@ class _ChatListEntryState extends State<ChatListEntry> {
                   ),
                   child: AvatarIcon(
                     contactId: widget.message.senderId,
+                    contacts:
+                        widget.userIdToContact?[widget.message.senderId] == null
+                        ? null
+                        : [widget.userIdToContact![widget.message.senderId]!],
                     fontSize: 12,
                   ),
                 ),
@@ -289,6 +378,21 @@ class _ChatListEntryState extends State<ChatListEntry> {
         ),
       ),
     );
+  }
+}
+
+extension on ChatListEntry {
+  Message? msgQuote({Map<String, Message>? messagesById}) {
+    final quotedId = message.quotesMessageId;
+    return quotedId == null ? null : messagesById?[quotedId];
+  }
+
+  MediaFile? msgQuoteMedia({
+    Map<String, Message>? messagesById,
+    Map<String, MediaFile>? mediaFilesById,
+  }) {
+    final quoted = msgQuote(messagesById: messagesById);
+    return quoted?.mediaId == null ? null : mediaFilesById?[quoted!.mediaId];
   }
 }
 

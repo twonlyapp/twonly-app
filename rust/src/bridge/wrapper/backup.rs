@@ -1,6 +1,12 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use std::path::PathBuf;
 
 use crate::backup::backup_archive::BackupArchive;
+pub use crate::backup::backup_archive::{BackupFileSize, BackupStorageInfo, BackupTableSize};
 use crate::backup::backup_identity::BackupIdentity;
 use crate::bridge::get_twonly_flutter;
 use crate::context::Context;
@@ -68,6 +74,10 @@ impl RustBackupIdentity {
     }
 }
 impl RustBackupArchive {
+    pub async fn storage_info() -> Result<BackupStorageInfo> {
+        BackupArchive::storage_info(Context::get_static()?).await
+    }
+
     pub async fn create_backup_archive() -> Result<(String, String)> {
         let ctx = Context::get_static()?;
         let path = BackupArchive::create_backup(ctx).await?;

@@ -45,7 +45,6 @@ If you decide to give twonly a try, please keep in mind that it is still in its 
 - Importing memories from Snapchat
 - For Android: Support for [UnifiedPush] (https://unifiedpush.org/)
 - For Android: Reproducible builds
-- Implementation of [Sealed Sender](https://signal.org/blog/sealed-sender/) (or a similar protocol) to minimize metadata
 - Decentralize the server so that anyone can run their own server
 
 ## Security Issues
@@ -57,6 +56,16 @@ guarantee a bounty currently :/
 ## Contribution
 
 Currently there are still some core features and rewrites open I want to do involving a huge rewrite in Rust. Because of this, contributions are currently not wanted. You can still view the code (if you find any security issues please contact me!). Also, issues are currently closed. If you find a bug, please use the in-app option as there you can upload your debug log which helps a lot. 
+
+## Custom dependencies
+
+Vendored packages are tracked in `dependencies.yaml`. Set `custom_changes: true`
+on a dependency or an individual subpackage when it contains local modifications.
+`dependencies.py` preserves these folders during normal and `--cache-only`
+updates, and keeps their local versions and paths in the managed `pubspec.yaml`
+sections. Update these packages manually and merge upstream changes with the
+local modifications. Missing custom packages must be restored from the
+`dependencies` repository.
 
 ## Signing Keys
 

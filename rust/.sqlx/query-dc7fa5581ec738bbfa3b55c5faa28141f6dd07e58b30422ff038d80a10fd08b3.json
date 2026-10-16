@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET download_state = 'downloading'\n               WHERE media_id = ? AND download_state = 'pending'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "dc7fa5581ec738bbfa3b55c5faa28141f6dd07e58b30422ff038d80a10fd08b3"
+}

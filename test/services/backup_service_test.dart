@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:background_downloader/background_downloader.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
@@ -14,14 +13,13 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
-import 'package:twonly/src/model/json/userdata.model.dart'
-    hide LastBackupUploadState;
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 
 import '../mocks/platform_channels.dart';
+import '../mocks/user_config.dart';
 
 void main() {
   if (!Platform.isMacOS) {
@@ -34,15 +32,6 @@ void main() {
   late Map<String, dynamic> initialUserData;
 
   setUpAll(() async {
-    const channel = MethodChannel('com.bbflight.background_downloader');
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (methodCall) async {
-          if (methodCall.method == 'enqueue') {
-            return true;
-          }
-          return null;
-        });
-
     const pathProviderChannel = MethodChannel(
       'plugins.flutter.io/path_provider',
     );
@@ -90,7 +79,7 @@ void main() {
       ..registerSingleton<UserService>(UserService())
       ..registerSingleton<ApiService>(ApiService());
 
-    userService.currentUser = UserData(
+    userService.currentUser = testUserConfig(
       userId: 1,
       username: 'test_user',
       displayName: 'Test User',
@@ -130,59 +119,6 @@ void main() {
       expect(data.identityLastSuccessFull, isNull);
       expect(data.archiveLastSuccessFull, isNull);
     });
-
-    test(
-      'onBackupUpdated stream emits events when backup status changes',
-      () async {
-        var eventEmitted = false;
-        final subscription = BackupService.onBackupUpdated.listen((_) {
-          eventEmitted = true;
-        });
-
-        final dummyTask = UploadTask(url: 'http://localhost', filename: 'test');
-        await BackupService.handleBackupStatusUpdate(
-          'backup_identity',
-          TaskStatusUpdate(dummyTask, TaskStatus.complete),
-        );
-
-        await Future.delayed(Duration.zero);
-        expect(eventEmitted, isTrue);
-        await subscription.cancel();
-      },
-    );
-
-    test(
-      'handleBackupStatusUpdate updates identity and archive status correctly',
-      () async {
-        // Test success update for identity status
-        final dummyTask1 = UploadTask(
-          url: 'http://localhost',
-          filename: 'test',
-        );
-        await BackupService.handleBackupStatusUpdate(
-          'backup_identity',
-          TaskStatusUpdate(dummyTask1, TaskStatus.complete),
-        );
-
-        var data = await BackupService.getData();
-        expect(data.identityState, LastBackupUploadState.success);
-        expect(data.identityLastSuccessFull, isNotNull);
-
-        // Test failure update for archive status
-        final dummyTask2 = UploadTask(
-          url: 'http://localhost',
-          filename: 'test',
-        );
-        await BackupService.handleBackupStatusUpdate(
-          'backup_archive',
-          TaskStatusUpdate(dummyTask2, TaskStatus.failed),
-        );
-
-        data = await BackupService.getData();
-        expect(data.archiveState, LastBackupUploadState.failed);
-        expect(data.archiveLastSuccessFull, isNotNull);
-      },
-    );
 
     test(
       'startFullBackupRecovery returns usernameNotValid for offline/unknown user',

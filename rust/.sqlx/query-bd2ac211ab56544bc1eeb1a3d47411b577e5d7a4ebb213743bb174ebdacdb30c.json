@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT opened_at FROM messages WHERE message_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "opened_at",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "opened_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "bd2ac211ab56544bc1eeb1a3d47411b577e5d7a4ebb213743bb174ebdacdb30c"
+}

@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:vector_graphics/vector_graphics.dart';
 
@@ -13,6 +13,7 @@ class AvatarIcon extends StatefulWidget {
   const AvatarIcon({
     super.key,
     this.group,
+    this.contacts,
     this.contactId,
     this.myAvatar = false,
     this.fontSize = 20,
@@ -20,6 +21,7 @@ class AvatarIcon extends StatefulWidget {
     this.color,
   });
   final Group? group;
+  final List<Contact>? contacts;
   final int? contactId;
   final bool myAvatar;
   final double? fontSize;
@@ -30,8 +32,73 @@ class AvatarIcon extends StatefulWidget {
   State<AvatarIcon> createState() => _AvatarIconState();
 }
 
+/// Avatars are only ever drawn from PNG. Rasterising the stored SVG on the UI
+/// thread is what made long chat lists stutter, so a missing PNG is rendered
+/// once by Rust instead of being drawn as vector graphics every frame.
+/// Keyed by contact plus profile counter, so a changed avatar naturally lands
+/// on a fresh key.
+final Map<String, String> _avatarPngPathCache = {};
+
+/// Avatar paths already known to exist on disk. Only positive results are
+/// cached: a PNG can still appear after a miss (it is written when the avatar
+/// finishes downloading, or by the render below), so a miss stays re-checkable.
+final Set<String> _existingAvatarPngPaths = {};
+
+/// Contacts whose PNG render is already in flight, so a list that shows the
+/// same contact in several rows asks Rust to render it only once.
+final Map<String, Future<String?>> _pendingAvatarRenders = {};
+
+/// Avatars Rust could not turn into a PNG, keyed by contact plus profile
+/// counter so a broken SVG is not re-rendered on every stream tick while a
+/// later avatar still gets its own attempt.
+final Set<String> _unrenderableAvatars = {};
+
+const _avatarCacheLimit = 200;
+
+void _putBounded<T>(Map<String, T> cache, String key, T value) {
+  if (cache.length >= _avatarCacheLimit) {
+    cache.remove(cache.keys.first);
+  }
+  cache[key] = value;
+}
+
+String _avatarCacheKey(Contact contact) =>
+    '${contact.userId}:${contact.senderProfileCounter}:${contact.preferPhotoAvatar}';
+
+String _avatarPngPathFor(Contact contact) {
+  final key = _avatarCacheKey(contact);
+  final cached = _avatarPngPathCache[key];
+  if (cached != null) return cached;
+  final path = RustApi.avatarPngPath(
+    contactId: contact.userId,
+    profileCounter: contact.senderProfileCounter,
+  );
+  _putBounded(_avatarPngPathCache, key, path);
+  return path;
+}
+
 class _AvatarIconState extends State<AvatarIcon> {
+  double get _avatarSize => 2 * (widget.fontSize ?? 20);
+
+  bool _isPhotoAvatar(String? path) => path?.endsWith('.webp') ?? false;
+
+  Widget _avatarImage(String path) {
+    final image = Image.file(
+      File(path),
+      width: _avatarSize,
+      height: _avatarSize,
+      errorBuilder: errorBuilder,
+    );
+    if (!_isPhotoAvatar(path)) return image;
+    return Transform.scale(
+      scale: (_avatarSize + 10) / _avatarSize,
+      child: image,
+    );
+  }
+
   List<Contact> _avatarContacts = [];
+  Set<int> _contactsWithPngAvatar = {};
+  final Map<int, String> _resolvedAvatarPaths = {};
   String? _myAvatarPath;
 
   StreamSubscription<List<Contact>>? groupStream;
@@ -43,6 +110,73 @@ class _AvatarIconState extends State<AvatarIcon> {
   void initState() {
     super.initState();
     initAsync();
+  }
+
+  @override
+  void didUpdateWidget(AvatarIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Compare by value: callers commonly build a fresh list on every rebuild,
+    // and an identity check would restart the avatar probe every frame.
+    if (widget.contacts != null &&
+        !listEquals(widget.contacts, oldWidget.contacts)) {
+      _setAvatarContacts(widget.contacts!);
+    }
+  }
+
+  void _setAvatarContacts(List<Contact> contacts) {
+    _avatarContacts = contacts;
+    unawaited(_refreshAvatarFiles());
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _refreshAvatarFiles() async {
+    for (final contact in _avatarContacts) {
+      if (!_unrenderableAvatars.contains(_avatarCacheKey(contact))) {
+        // Rust resolves a received custom avatar before the SVG fallback. Do
+        // not trust the old profile-counter cache here: a custom-avatar update
+        // deliberately leaves that public counter unchanged.
+        unawaited(_renderAvatarPng(contact));
+      }
+    }
+  }
+
+  Future<void> _renderAvatarPng(Contact contact) async {
+    final contactId = contact.userId;
+    final cacheKey = _avatarCacheKey(contact);
+    // Every widget showing this contact awaits the same render, so each one
+    // still learns the path while Rust rasterises it only once.
+    var render = _pendingAvatarRenders[cacheKey];
+    if (render == null) {
+      // Block body on purpose: returning `remove`'s value would hand
+      // `whenComplete` the future it is completing and hang it.
+      render = RustApi.ensureAvatarPng(contactId: contactId).whenComplete(() {
+        _pendingAvatarRenders.remove(cacheKey);
+      });
+      _pendingAvatarRenders[cacheKey] = render;
+    }
+
+    String? path;
+    try {
+      path = await render;
+    } catch (e) {
+      Log.error('Failed to render avatar for $contactId: $e');
+      _unrenderableAvatars.add(_avatarCacheKey(contact));
+      return;
+    }
+    if (path == null) {
+      _unrenderableAvatars.add(_avatarCacheKey(contact));
+      return;
+    }
+    _existingAvatarPngPaths.add(path);
+    if (!mounted) return;
+    if (!_avatarContacts.any((entry) => _avatarCacheKey(entry) == cacheKey)) {
+      return;
+    }
+    if (_resolvedAvatarPaths[contactId] == path) return;
+    setState(() {
+      _resolvedAvatarPaths[contactId] = path!;
+      _contactsWithPngAvatar = {..._contactsWithPngAvatar, contactId};
+    });
   }
 
   @override
@@ -61,45 +195,33 @@ class _AvatarIconState extends State<AvatarIcon> {
   }
 
   Widget getAvatarForContact(Contact contact) {
-    final avatarFile = avatarPNGFile(contact.userId);
-    if (avatarFile.existsSync()) {
-      return Image.file(
-        avatarFile,
-        errorBuilder: errorBuilder,
+    if (_contactsWithPngAvatar.contains(contact.userId)) {
+      return _avatarImage(
+        _resolvedAvatarPaths[contact.userId] ?? _avatarPngPathFor(contact),
       );
     }
-
-    Log.warn(
-      'PNG avatar file for contact ${contact.userId} does not exist. Generating in background.',
-    );
-    unawaited(createPushAvatars(forceForUserId: contact.userId));
-
-    if (contact.avatarSvgCompressed != null) {
-      return SvgPicture.string(
-        getAvatarSvg(contact.avatarSvgCompressed!),
-        errorBuilder: errorBuilder,
-      );
-    }
+    // Deliberately no SVG fallback: the render kicked off by
+    // `_refreshAvatarFiles` swaps this placeholder for the PNG when it is done.
     return errorBuilder(null, null, null);
   }
 
   Future<void> initAsync() async {
-    if (widget.group != null) {
+    if (widget.contacts != null) {
+      _setAvatarContacts(widget.contacts!);
+    } else if (widget.group != null) {
       groupStream = twonlyDB.groupsDao
           .watchGroupContact(widget.group!.groupId)
           .listen((contacts) {
             _avatarContacts = [];
-            if (contacts.length == 1) {
-              if (contacts.first.avatarSvgCompressed != null) {
-                _avatarContacts.add(contacts.first);
-              }
-            } else {
-              for (final contact in contacts) {
-                if (contact.avatarSvgCompressed != null) {
-                  _avatarContacts.add(contact);
-                }
-              }
+            for (final contact in contacts) {
+              _unrenderableAvatars.remove(_avatarCacheKey(contact));
             }
+            if (contacts.length == 1) {
+              _avatarContacts.add(contacts.first);
+            } else {
+              _avatarContacts.addAll(contacts);
+            }
+            unawaited(_refreshAvatarFiles());
             setState(() {});
           });
     } else if (widget.myAvatar) {
@@ -111,8 +233,10 @@ class _AvatarIconState extends State<AvatarIcon> {
       contactStream = twonlyDB.contactsDao
           .watchContact(widget.contactId!)
           .listen((contact) {
-            if (contact != null && contact.avatarSvgCompressed != null) {
+            if (contact != null) {
+              _unrenderableAvatars.remove(_avatarCacheKey(contact));
               _avatarContacts = [contact];
+              unawaited(_refreshAvatarFiles());
               setState(() {});
             }
           });
@@ -121,18 +245,9 @@ class _AvatarIconState extends State<AvatarIcon> {
   }
 
   Future<void> _updateMyAvatar() async {
-    final avatarSvg = userService.currentUser.avatarSvg;
-    if (avatarSvg == null) {
-      if (mounted) {
-        setState(() {
-          _myAvatarPath = null;
-          _avatarContacts = [];
-        });
-      }
-      return;
-    }
-
-    final path = await getUserAvatar();
+    // Rust resolves photo avatars as well as public SVG avatars, including
+    // profiles that have only a photo avatar.
+    final path = await RustApi.currentUserAvatarPath();
 
     if (mounted) {
       setState(() {
@@ -143,21 +258,13 @@ class _AvatarIconState extends State<AvatarIcon> {
 
   @override
   Widget build(BuildContext context) {
-    final proSize = (widget.fontSize == null) ? 40 : (widget.fontSize! * 2);
+    final proSize = _avatarSize;
 
     Widget avatars = Container();
 
-    if (widget.svg != null) {
-      avatars = SvgPicture.string(
-        widget.svg!,
-        errorBuilder: errorBuilder,
-      );
-    } else if (widget.myAvatar) {
+    if (widget.myAvatar) {
       if (_myAvatarPath != null) {
-        avatars = Image.file(
-          File(_myAvatarPath!),
-          errorBuilder: errorBuilder,
-        );
+        avatars = _avatarImage(_myAvatarPath!);
       } else {
         avatars = const SvgPicture(
           AssetBytesLoader('assets/images/default_avatar.svg.vec'),
@@ -203,6 +310,14 @@ class _AvatarIconState extends State<AvatarIcon> {
           ],
         );
       }
+    } else if (widget.svg != null) {
+      // Last resort for callers with no contact behind the avatar (the
+      // passwordless recovery flow renders friends straight from a payload).
+      // Anything backed by a contact has already been served as PNG above.
+      avatars = SvgPicture.string(
+        widget.svg!,
+        errorBuilder: errorBuilder,
+      );
     } else {
       avatars = const SvgPicture(
         AssetBytesLoader('assets/images/default_avatar.svg.vec'),
@@ -211,16 +326,16 @@ class _AvatarIconState extends State<AvatarIcon> {
 
     return Container(
       constraints: BoxConstraints(
-        minHeight: 2 * (widget.fontSize ?? 20),
-        minWidth: 2 * (widget.fontSize ?? 20),
-        maxWidth: 2 * (widget.fontSize ?? 20),
-        maxHeight: 2 * (widget.fontSize ?? 20),
+        minHeight: proSize,
+        minWidth: proSize,
+        maxWidth: proSize,
+        maxHeight: proSize,
       ),
       child: Center(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            height: proSize as double,
+            height: proSize,
             width: proSize,
             color: widget.color,
             child: Center(child: avatars),

@@ -6,8 +6,19 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "staticlib", "rlib"]
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+[features]
+default = []
+# Points every API URL at the development server. Flutter profile builds
+# compile with `--release`, so `debug_assertions` cannot distinguish them from
+# a production release; cargokit enables this feature for the profile
+# configuration instead (see `cargokit.yaml`).
+dev-api = []
+
 [dependencies]
-flutter_rust_bridge = "=2.12.0"
+flutter_rust_bridge = { version = "=2.12.0", features = ["chrono"] }
 thiserror = "2.0.18"
 sqlx = { version = "0.9.0-alpha.1", default-features = false, features = [
     "runtime-tokio",
@@ -23,16 +34,17 @@ libsqlite3-sys = { version = "0.35.0", features = [
 ] }
 tokio = { version = "1.44", features = ["full", "macros"] }
 tracing = "0.1.44"
+tracing-log = "0.2"
 prost = "0.14.1"
 blahaj = "0.6.0"
 serde_json = "1.0"
 base64 = "0.22.1"
-hmac = "0.13.0"
+hmac = "0.12.1"
 hkdf = "0.12.4"
 sha2 = "0.10.8"
 aes-gcm = "0.10.3"
+chacha20poly1305 = "0.10.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tracing-appender = "0.2.5"
 paste = "1.0.15"
 serde = { version = "1.0", features = ["derive"] }
 zeroize = { version = "1.8", features = ["derive"] }
@@ -46,18 +58,55 @@ walkdir = "2.5.0"
 libsignal-protocol = { git = "https://github.com/signalapp/libsignal", version = "0.1.0", rev = "44a6dd8fc9f9d6903b32842b80b3894a75678418" }
 rand08 = { version = "0.8.5", package = "rand" }
 rand = "0.9.4"
+uuid = { version = "1", features = ["v4", "v7"] }
+flate2 = "1"
+resvg = { version = "0.45", default-features = false, features = ["text"] }
+reqwest = { version = "0.12", default-features = false, features = [
+    "rustls-tls",
+] }
 async-trait = "0.1.91"
+futures-util = "0.3.31"
+tokio-tungstenite = { version = "0.28.0", default-features = false, features = [
+    "connect",
+    "rustls-tls-native-roots",
+] }
+rustls = { version = "0.23.43", default-features = false, features = [
+    "ring",
+    "std",
+] }
+tokio-util = "0.7.16"
+bon = "3.9.3"
+stream-tungstenite = "0.6.1"
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "gif", "bmp", "webp"] }
+webp = "0.3.1"
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
 [target.'cfg(target_os = "ios")'.dependencies]
 # iOS backend: Requires the 'protected' feature for Data Protection Keychain
 apple-native-keyring-store = { version = "1", features = ["protected"] }
 [target.'cfg(target_os = "android")'.dependencies]
+# Only Android ships the sticker segmentation model and ONNX runtime.
+tract = { version = "0.23.8", default-features = false, features = ["onnx"] }
 # Android backend: Interfaces with the Android Keystore
 android-native-keyring-store = "1"
+jni = "0.21.1"
 
 [dev-dependencies]
+tokio = { version = "1.44", features = ["test-util"] }
+anyhow = "1.0.104"
 pretty_env_logger = "0.5.0"
 tempfile = "3.27.0"
 
 
 [build-dependencies]
 prost-build = "0.14.1"
+
+[profile.release]
+# The default release profile leaves LTO off, which for a crate this size means
+# a bigger `.so` for the dynamic linker to map and relocate before the first
+# Rust call. `thin` keeps build times reasonable; `panic = "abort"` is
+# deliberately absent because flutter_rust_bridge turns Rust panics into Dart
+# exceptions by unwinding, and stripping is left to the platform builds so
+# native crash reports keep their symbols.
+lto = "thin"

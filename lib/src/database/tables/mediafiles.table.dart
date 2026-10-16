@@ -59,6 +59,8 @@ class MediaFiles extends Table {
 
   BoolColumn get stored => boolean().withDefault(const Constant(false))();
   BoolColumn get isDraftMedia => boolean().withDefault(const Constant(false))();
+  BoolColumn get isWidgetMedia =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
   BoolColumn get hasCropAnalyzed =>
       boolean().withDefault(const Constant(false))();
@@ -71,6 +73,13 @@ class MediaFiles extends Table {
   IntColumn get displayLimitInMilliseconds => integer().nullable()();
   BoolColumn get removeAudio => boolean().nullable()();
 
+  /// Where the editor's cutter placed the two ends of a video, in milliseconds
+  /// into the recording. Null on either side means the clip keeps that end.
+  /// The recording on disk is never cut; the transcode every send performs
+  /// applies these.
+  IntColumn get trimStartMs => integer().nullable()();
+  IntColumn get trimEndMs => integer().nullable()();
+
   BlobColumn get downloadToken => blob().nullable()();
   BlobColumn get encryptionKey => blob().nullable()();
   BlobColumn get encryptionMac => blob().nullable()();
@@ -81,6 +90,14 @@ class MediaFiles extends Table {
   BoolColumn get hasThumbnail => boolean().withDefault(const Constant(false))();
 
   IntColumn get sizeInBytes => integer().nullable()();
+
+  RealColumn get locationLatitude => real().nullable()();
+  RealColumn get locationLongitude => real().nullable()();
+  RealColumn get locationAccuracy => real().nullable()();
+  TextColumn get locationStatus => text().nullable()();
+  IntColumn get locationDeadlineAt => integer().nullable()();
+  BoolColumn get galleryExportPending =>
+      boolean().withDefault(const Constant(false))();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get createdAtMonth => text().nullable()();

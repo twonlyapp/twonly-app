@@ -7,7 +7,7 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/visual/components/verification_badge_info.comp.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
 
 class VerificationBadgeComp extends StatefulWidget {
@@ -19,6 +19,8 @@ class VerificationBadgeComp extends StatefulWidget {
     this.showOnlyIfVerified = false,
     this.isVerifiedByTransferredTrust,
     this.clickable = true,
+    this.verificationStatus,
+    this.useProvidedStatus = false,
   });
   final Group? group;
   final Contact? contact;
@@ -26,6 +28,8 @@ class VerificationBadgeComp extends StatefulWidget {
 
   final bool showOnlyIfVerified;
   final bool clickable;
+  final VerificationStatus? verificationStatus;
+  final bool useProvidedStatus;
   final bool? isVerifiedByTransferredTrust;
 
   @override
@@ -52,7 +56,31 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
   @override
   void initState() {
     super.initState();
-    initAsync();
+    if (widget.useProvidedStatus) {
+      _applyVerificationStatus(
+        widget.verificationStatus ?? VerificationStatus.notTrusted,
+      );
+    } else {
+      initAsync();
+    }
+  }
+
+  @override
+  void didUpdateWidget(VerificationBadgeComp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.useProvidedStatus &&
+        widget.verificationStatus != oldWidget.verificationStatus) {
+      _applyVerificationStatus(
+        widget.verificationStatus ?? VerificationStatus.notTrusted,
+      );
+    }
+  }
+
+  void _applyVerificationStatus(VerificationStatus status) {
+    _isVerified = status == VerificationStatus.trusted;
+    _isSharedVerified = false;
+    _verifiedByTransferredTrustCount =
+        status == VerificationStatus.partialTrusted ? 10 : 0;
   }
 
   void _updateVerificationCounts() {
@@ -170,7 +198,7 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
                 ? SvgIcons.verifiedNumeric(_verifiedByTransferredTrustCount)
                 : SvgIcons.verifiedRed,
             color: (_verifiedByTransferredTrustCount > 0 && !_isVerified)
-                ? colorVerificationBadgeYellow
+                ? context.appColor(AppColor.verificationPending)
                 : null,
             size: widget.size,
           ),

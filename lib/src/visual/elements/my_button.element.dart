@@ -10,6 +10,7 @@ enum MyButtonVariant {
   primaryDense,
   secondaryDense,
   secondaryMiddle,
+  secondaryTiny,
   error,
   errorMiddle,
 }
@@ -36,20 +37,16 @@ class _MyButtonState extends State<MyButton> {
   @override
   Widget build(BuildContext context) {
     final isEnabled = widget.onPressed != null || widget.onLongPress != null;
-    final isDark = isDarkMode(context);
-    final disabledBgColor = isDark
-        ? const Color(0xFF353535)
-        : const Color(0xFFE0E0E0);
-    final disabledFgColor = isDark
-        ? const Color(0xFF757575)
-        : const Color(0xFF9E9E9E);
+    final colors = context.color;
+    final disabledBgColor = colors.surfaceContainerHighest;
+    final disabledFgColor = colors.onSurface.withValues(alpha: 0.38);
 
     late final ButtonStyle buttonStyle;
     switch (widget.variant) {
       case MyButtonVariant.primary:
         buttonStyle = FilledButton.styleFrom(
           backgroundColor: context.color.primary,
-          foregroundColor: Colors.black87,
+          foregroundColor: colors.onPrimary,
           disabledBackgroundColor: disabledBgColor,
           disabledForegroundColor: disabledFgColor,
           minimumSize: const Size.fromHeight(60),
@@ -64,8 +61,8 @@ class _MyButtonState extends State<MyButton> {
         );
       case MyButtonVariant.secondary:
         buttonStyle = FilledButton.styleFrom(
-          backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-          foregroundColor: isDark ? Colors.white : Colors.black87,
+          backgroundColor: colors.surfaceContainerHigh,
+          foregroundColor: colors.onSurface,
           disabledBackgroundColor: disabledBgColor,
           disabledForegroundColor: disabledFgColor,
           minimumSize: const Size.fromHeight(60),
@@ -81,9 +78,7 @@ class _MyButtonState extends State<MyButton> {
       case MyButtonVariant.text:
         buttonStyle = TextButton.styleFrom(
           minimumSize: const Size(0, 50),
-          foregroundColor: isDark
-              ? Colors.white.withValues(alpha: 0.7)
-              : Colors.black.withValues(alpha: 0.7),
+          foregroundColor: colors.onSurfaceVariant,
           disabledForegroundColor: disabledFgColor,
           textStyle: const TextStyle(
             fontSize: 15,
@@ -96,7 +91,7 @@ class _MyButtonState extends State<MyButton> {
       case MyButtonVariant.primaryMiddle:
         buttonStyle = FilledButton.styleFrom(
           backgroundColor: context.color.primary,
-          foregroundColor: Colors.black87,
+          foregroundColor: colors.onPrimary,
           disabledBackgroundColor: disabledBgColor,
           disabledForegroundColor: disabledFgColor,
           minimumSize: const Size(0, 48),
@@ -115,7 +110,7 @@ class _MyButtonState extends State<MyButton> {
       case MyButtonVariant.primaryDense:
         buttonStyle = FilledButton.styleFrom(
           backgroundColor: context.color.primary,
-          foregroundColor: Colors.black87,
+          foregroundColor: colors.onPrimary,
           disabledBackgroundColor: disabledBgColor,
           disabledForegroundColor: disabledFgColor,
           minimumSize: const Size(0, 40),
@@ -133,8 +128,8 @@ class _MyButtonState extends State<MyButton> {
         );
       case MyButtonVariant.secondaryDense:
         buttonStyle = FilledButton.styleFrom(
-          backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-          foregroundColor: isDark ? Colors.white : Colors.black87,
+          backgroundColor: colors.surfaceContainerHigh,
+          foregroundColor: colors.onSurface,
           disabledBackgroundColor: disabledBgColor,
           disabledForegroundColor: disabledFgColor,
           minimumSize: const Size(0, 40),
@@ -152,8 +147,8 @@ class _MyButtonState extends State<MyButton> {
         );
       case MyButtonVariant.secondaryMiddle:
         buttonStyle = FilledButton.styleFrom(
-          backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-          foregroundColor: isDark ? Colors.white : Colors.black87,
+          backgroundColor: colors.surfaceContainerHigh,
+          foregroundColor: colors.onSurface,
           disabledBackgroundColor: disabledBgColor,
           disabledForegroundColor: disabledFgColor,
           minimumSize: const Size(0, 48),
@@ -166,6 +161,25 @@ class _MyButtonState extends State<MyButton> {
           elevation: 0,
           textStyle: const TextStyle(
             fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+      case MyButtonVariant.secondaryTiny:
+        buttonStyle = FilledButton.styleFrom(
+          backgroundColor: colors.surfaceContainerHigh,
+          foregroundColor: colors.onSurface,
+          disabledBackgroundColor: disabledBgColor,
+          disabledForegroundColor: disabledFgColor,
+          minimumSize: const Size(40, 23),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          elevation: 0,
+          textStyle: const TextStyle(
+            fontSize: 10,
             fontWeight: FontWeight.bold,
           ),
         );

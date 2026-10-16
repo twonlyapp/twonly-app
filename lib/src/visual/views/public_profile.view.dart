@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/contact_request_badge.comp.dart';
 import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
@@ -31,7 +31,7 @@ class _PublicProfileViewState extends State<PublicProfileView> {
   }
 
   Future<void> initAsync() async {
-    _publicKey = await getUserPublicKey();
+    _publicKey = await RustSignal.getUserPublicKey();
     if (mounted) setState(() {});
   }
 

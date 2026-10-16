@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart';
 
-
 enum SignalVersion { v1, v2 }
 
 @DataClassName('Contact')
@@ -11,6 +10,8 @@ class Contacts extends Table {
   TextColumn get displayName => text().nullable()();
   TextColumn get nickName => text().nullable()();
   BlobColumn get avatarSvgCompressed => blob().nullable()();
+  // Null keeps the default preference for a photo avatar when available.
+  BoolColumn get preferPhotoAvatar => boolean().nullable()();
 
   IntColumn get senderProfileCounter =>
       integer().withDefault(const Constant(0))();
@@ -49,6 +50,14 @@ class Contacts extends Table {
 
   BoolColumn get askForFriendPromotions => boolean().nullable()();
 
+  BoolColumn get widgetSharingAllowed =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get widgetSharingGranted =>
+      boolean().withDefault(const Constant(false))();
+
+  IntColumn get twonlyScore => integer().nullable()();
+  DateTimeColumn get joinedAt => dateTime().nullable()();
+
   IntColumn get mediaSendCounter => integer().withDefault(const Constant(0))();
   IntColumn get mediaReceivedCounter =>
       integer().withDefault(const Constant(0))();
@@ -61,6 +70,7 @@ enum VerificationType {
   migratedFromOldVersion,
   qrScanned,
   link,
+  manual,
   secretQrToken,
   contactSharedByVerified,
 }

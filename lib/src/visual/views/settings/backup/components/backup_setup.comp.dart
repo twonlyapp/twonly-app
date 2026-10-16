@@ -34,7 +34,8 @@ class BackupPasswordTextField extends StatefulWidget {
   final bool obscureByDefault;
 
   @override
-  State<BackupPasswordTextField> createState() => _BackupPasswordTextFieldState();
+  State<BackupPasswordTextField> createState() =>
+      _BackupPasswordTextFieldState();
 }
 
 class _BackupPasswordTextFieldState extends State<BackupPasswordTextField> {
@@ -86,7 +87,7 @@ class PasswordRequirementText extends StatelessWidget {
         text,
         style: TextStyle(
           fontSize: 12,
-          color: showError ? Colors.red : Colors.transparent,
+          color: showError ? context.color.error : Colors.transparent,
         ),
       ),
     );
@@ -94,10 +95,9 @@ class PasswordRequirementText extends StatelessWidget {
 }
 
 void showBackupExplanation(BuildContext context) {
-  final isDark = isDarkMode(context);
   final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
-  final textColor = isDark ? Colors.white : Colors.black87;
-  final subtitleColor = isDark ? Colors.white70 : Colors.black54;
+  final textColor = context.color.onSurface;
+  final subtitleColor = context.color.onSurfaceVariant;
 
   showModalBottomSheet<void>(
     context: context,
@@ -121,7 +121,7 @@ void showBackupExplanation(BuildContext context) {
                   width: 40,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : Colors.black12,
+                    color: context.color.outlineVariant,
                     borderRadius: BorderRadius.circular(2.5),
                   ),
                 ),

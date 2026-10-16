@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use async_trait::async_trait;
 use libsignal_protocol::{
     Direction, GenericSignedPreKey, IdentityChange, IdentityKey, IdentityKeyPair, IdentityKeyStore,
@@ -46,7 +51,7 @@ pub struct DbIdentityKeyStore {
 #[async_trait(?Send)]
 impl IdentityKeyStore for DbIdentityKeyStore {
     async fn get_identity_key_pair(&self) -> Result<IdentityKeyPair, SignalProtocolError> {
-        Ok(self.identity_key_pair.clone())
+        Ok(self.identity_key_pair)
     }
 
     async fn get_local_registration_id(&self) -> Result<u32, SignalProtocolError> {
@@ -65,26 +70,35 @@ impl IdentityKeyStore for DbIdentityKeyStore {
             .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?
             .as_millis() as i64;
 
-        let existing: Option<(Vec<u8>,)> =
-            sqlx::query_as("SELECT identity_key FROM signal_identities WHERE name = ?")
-                .bind(name)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        let existing = sqlx::query_scalar!(
+            r#"SELECT identity_key FROM signal_identities WHERE name = ?"#,
+            name,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
 
-        let changed = if let Some(row) = existing {
-            row.0 != identity_bytes.as_ref()
+        let changed = if let Some(stored) = existing {
+            stored != identity_bytes.as_ref()
         } else {
             false
         };
 
-        sqlx::query("INSERT INTO signal_identities (name, identity_key, timestamp) VALUES (?, ?, ?) ON CONFLICT(name) DO UPDATE SET identity_key = excluded.identity_key, timestamp = excluded.timestamp")
-            .bind(name)
-            .bind(identity_bytes.as_ref())
-            .bind(timestamp)
-            .execute(&self.pool)
-            .await
-            .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        sqlx::query!(
+            r#"
+            INSERT INTO signal_identities(name, identity_key, timestamp)
+            VALUES (?, ?, ?)
+            ON CONFLICT(name) DO UPDATE SET
+                identity_key = excluded.identity_key,
+                timestamp = excluded.timestamp
+            "#,
+            name,
+            identity_bytes.as_ref(),
+            timestamp,
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
 
         Ok(IdentityChange::from_changed(changed))
     }
@@ -98,14 +112,15 @@ impl IdentityKeyStore for DbIdentityKeyStore {
         let name = address.name();
         let identity_bytes = identity.serialize();
 
-        let row: Option<(Vec<u8>,)> =
-            sqlx::query_as("SELECT identity_key FROM signal_identities WHERE name = ?")
-                .bind(name)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        let row = sqlx::query_scalar!(
+            r#"SELECT identity_key FROM signal_identities WHERE name = ?"#,
+            name
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
 
-        if let Some((stored_key,)) = row {
+        if let Some(stored_key) = row {
             Ok(stored_key == identity_bytes.as_ref())
         } else {
             Ok(true)
@@ -118,14 +133,15 @@ impl IdentityKeyStore for DbIdentityKeyStore {
     ) -> Result<Option<IdentityKey>, SignalProtocolError> {
         let name = address.name();
 
-        let row: Option<(Vec<u8>,)> =
-            sqlx::query_as("SELECT identity_key FROM signal_identities WHERE name = ?")
-                .bind(name)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        let row = sqlx::query_scalar!(
+            r#"SELECT identity_key FROM signal_identities WHERE name = ?"#,
+            name
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
 
-        if let Some((bytes,)) = row {
+        if let Some(bytes) = row {
             let key = IdentityKey::decode(&bytes)
                 .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
             Ok(Some(key))
@@ -143,14 +159,15 @@ pub struct DbPreKeyStore {
 impl PreKeyStore for DbPreKeyStore {
     async fn get_pre_key(&self, prekey_id: PreKeyId) -> Result<PreKeyRecord, SignalProtocolError> {
         let id: u32 = prekey_id.into();
-        let row: Option<(Vec<u8>,)> =
-            sqlx::query_as("SELECT record_bytes FROM signal_pre_keys WHERE pre_key_id = ?")
-                .bind(id)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(|_| SignalProtocolError::InvalidPreKeyId)?;
+        let row = sqlx::query_scalar!(
+            r#"SELECT record_bytes FROM signal_pre_keys WHERE pre_key_id = ?"#,
+            id
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|_| SignalProtocolError::InvalidPreKeyId)?;
 
-        if let Some((bytes,)) = row {
+        if let Some(bytes) = row {
             PreKeyRecord::deserialize(&bytes).map_err(|_| SignalProtocolError::InvalidPreKeyId)
         } else {
             Err(SignalProtocolError::InvalidPreKeyId)
@@ -167,19 +184,23 @@ impl PreKeyStore for DbPreKeyStore {
             .serialize()
             .map_err(|_| SignalProtocolError::InvalidPreKeyId)?;
 
-        sqlx::query("INSERT INTO signal_pre_keys (pre_key_id, record_bytes) VALUES (?, ?) ON CONFLICT(pre_key_id) DO UPDATE SET record_bytes = excluded.record_bytes")
-            .bind(id)
-            .bind(bytes)
-            .execute(&self.pool)
-            .await
-            .map_err(|_| SignalProtocolError::InvalidPreKeyId)?;
+        sqlx::query!(
+            r#"
+            INSERT INTO signal_pre_keys(pre_key_id, record_bytes) VALUES (?, ?)
+            ON CONFLICT(pre_key_id) DO UPDATE SET record_bytes = excluded.record_bytes
+            "#,
+            id,
+            bytes,
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|_| SignalProtocolError::InvalidPreKeyId)?;
         Ok(())
     }
 
     async fn remove_pre_key(&mut self, prekey_id: PreKeyId) -> Result<(), SignalProtocolError> {
         let id: u32 = prekey_id.into();
-        sqlx::query("DELETE FROM signal_pre_keys WHERE pre_key_id = ?")
-            .bind(id)
+        sqlx::query!(r#"DELETE FROM signal_pre_keys WHERE pre_key_id = ?"#, id)
             .execute(&self.pool)
             .await
             .map_err(|_| SignalProtocolError::InvalidPreKeyId)?;
@@ -198,15 +219,15 @@ impl SignedPreKeyStore for DbSignedPreKeyStore {
         signed_prekey_id: SignedPreKeyId,
     ) -> Result<SignedPreKeyRecord, SignalProtocolError> {
         let id: u32 = signed_prekey_id.into();
-        let row: Option<(Vec<u8>,)> = sqlx::query_as(
-            "SELECT record_bytes FROM signal_signed_pre_keys WHERE signed_pre_key_id = ?",
+        let row = sqlx::query_scalar!(
+            r#"SELECT record_bytes FROM signal_signed_pre_keys WHERE signed_pre_key_id = ?"#,
+            id,
         )
-        .bind(id)
         .fetch_optional(&self.pool)
         .await
         .map_err(|_| SignalProtocolError::InvalidSignedPreKeyId)?;
 
-        if let Some((bytes,)) = row {
+        if let Some(bytes) = row {
             SignedPreKeyRecord::deserialize(&bytes)
                 .map_err(|_| SignalProtocolError::InvalidSignedPreKeyId)
         } else {
@@ -224,12 +245,19 @@ impl SignedPreKeyStore for DbSignedPreKeyStore {
             .serialize()
             .map_err(|_| SignalProtocolError::InvalidSignedPreKeyId)?;
 
-        sqlx::query("INSERT INTO signal_signed_pre_keys (signed_pre_key_id, record_bytes) VALUES (?, ?) ON CONFLICT(signed_pre_key_id) DO UPDATE SET record_bytes = excluded.record_bytes")
-            .bind(id)
-            .bind(bytes)
-            .execute(&self.pool)
-            .await
-            .map_err(|_| SignalProtocolError::InvalidSignedPreKeyId)?;
+        sqlx::query!(
+            r#"
+            INSERT INTO signal_signed_pre_keys(signed_pre_key_id, record_bytes)
+            VALUES (?, ?)
+            ON CONFLICT(signed_pre_key_id)
+            DO UPDATE SET record_bytes = excluded.record_bytes
+            "#,
+            id,
+            bytes,
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|_| SignalProtocolError::InvalidSignedPreKeyId)?;
         Ok(())
     }
 }
@@ -245,15 +273,15 @@ impl KyberPreKeyStore for DbKyberPreKeyStore {
         kyber_prekey_id: KyberPreKeyId,
     ) -> Result<KyberPreKeyRecord, SignalProtocolError> {
         let id: u32 = kyber_prekey_id.into();
-        let row: Option<(Vec<u8>,)> = sqlx::query_as(
-            "SELECT record_bytes FROM signal_kyber_pre_keys WHERE kyber_pre_key_id = ?",
+        let row = sqlx::query_scalar!(
+            r#"SELECT record_bytes FROM signal_kyber_pre_keys WHERE kyber_pre_key_id = ?"#,
+            id,
         )
-        .bind(id)
         .fetch_optional(&self.pool)
         .await
         .map_err(|_| SignalProtocolError::InvalidKyberPreKeyId)?;
 
-        if let Some((bytes,)) = row {
+        if let Some(bytes) = row {
             KyberPreKeyRecord::deserialize(&bytes)
                 .map_err(|_| SignalProtocolError::InvalidKyberPreKeyId)
         } else {
@@ -271,12 +299,19 @@ impl KyberPreKeyStore for DbKyberPreKeyStore {
             .serialize()
             .map_err(|_| SignalProtocolError::InvalidKyberPreKeyId)?;
 
-        sqlx::query("INSERT INTO signal_kyber_pre_keys (kyber_pre_key_id, record_bytes) VALUES (?, ?) ON CONFLICT(kyber_pre_key_id) DO UPDATE SET record_bytes = excluded.record_bytes")
-            .bind(id)
-            .bind(bytes)
-            .execute(&self.pool)
-            .await
-            .map_err(|_| SignalProtocolError::InvalidKyberPreKeyId)?;
+        sqlx::query!(
+            r#"
+            INSERT INTO signal_kyber_pre_keys(kyber_pre_key_id, record_bytes)
+            VALUES (?, ?)
+            ON CONFLICT(kyber_pre_key_id)
+            DO UPDATE SET record_bytes = excluded.record_bytes
+            "#,
+            id,
+            bytes,
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|_| SignalProtocolError::InvalidKyberPreKeyId)?;
         Ok(())
     }
 
@@ -303,16 +338,16 @@ impl SessionStore for DbSessionStore {
         let name = address.name();
         let device_id: u32 = address.device_id().into();
 
-        let row: Option<(Vec<u8>,)> = sqlx::query_as(
-            "SELECT record_bytes FROM signal_sessions WHERE name = ? AND device_id = ?",
+        let row = sqlx::query_scalar!(
+            r#"SELECT record_bytes FROM signal_sessions WHERE name = ? AND device_id = ?"#,
+            name,
+            device_id,
         )
-        .bind(name)
-        .bind(device_id)
         .fetch_optional(&self.pool)
         .await
         .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
 
-        if let Some((bytes,)) = row {
+        if let Some(bytes) = row {
             let record = SessionRecord::deserialize(&bytes)
                 .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
             Ok(Some(record))
@@ -332,13 +367,20 @@ impl SessionStore for DbSessionStore {
             .serialize()
             .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
 
-        sqlx::query("INSERT INTO signal_sessions (name, device_id, record_bytes) VALUES (?, ?, ?) ON CONFLICT(name, device_id) DO UPDATE SET record_bytes = excluded.record_bytes")
-            .bind(name)
-            .bind(device_id)
-            .bind(bytes)
-            .execute(&self.pool)
-            .await
-            .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        sqlx::query!(
+            r#"
+            INSERT INTO signal_sessions(name, device_id, record_bytes)
+            VALUES (?, ?, ?)
+            ON CONFLICT(name, device_id)
+            DO UPDATE SET record_bytes = excluded.record_bytes
+            "#,
+            name,
+            device_id,
+            bytes,
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
         Ok(())
     }
 }

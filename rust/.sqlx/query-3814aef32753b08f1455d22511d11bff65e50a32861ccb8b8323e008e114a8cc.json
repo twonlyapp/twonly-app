@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT left_group FROM groups WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "left_group",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "left_group"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3814aef32753b08f1455d22511d11bff65e50a32861ccb8b8323e008e114a8cc"
+}

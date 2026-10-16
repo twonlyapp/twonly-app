@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE groups\n            SET last_message_exchange = MAX(last_message_exchange, ?),\n                deleted_content = 0\n            WHERE group_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "3e9671207184c4df6b3d3c96bf4201160e557039a18115c4aa1737a80ebb5153"
+}

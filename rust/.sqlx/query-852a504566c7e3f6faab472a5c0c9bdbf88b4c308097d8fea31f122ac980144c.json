@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO api_outbox(sequence_id, operation_kind, payload) VALUES(?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "852a504566c7e3f6faab472a5c0c9bdbf88b4c308097d8fea31f122ac980144c"
+}

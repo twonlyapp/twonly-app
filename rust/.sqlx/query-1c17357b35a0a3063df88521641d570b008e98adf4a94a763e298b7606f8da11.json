@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO signal_session_resets(\n                name, device_id, last_reset_at, window_started_at, resets_in_window\n            )\n            VALUES (?, ?, ?, ?, 1)\n            ON CONFLICT(name, device_id) DO UPDATE SET\n                last_reset_at = excluded.last_reset_at,\n                -- A window that has run out starts over with this reset as its\n                -- first, so a peer that broke months ago is not still blocked.\n                window_started_at = CASE\n                    WHEN signal_session_resets.window_started_at <= ?\n                    THEN excluded.last_reset_at\n                    ELSE signal_session_resets.window_started_at\n                END,\n                resets_in_window = CASE\n                    WHEN signal_session_resets.window_started_at <= ? THEN 1\n                    ELSE signal_session_resets.resets_in_window + 1\n                END\n            -- Every SET expression above reads the row as it was before the\n            -- update, and this predicate decides whether the update happens at\n            -- all: zero affected rows means the claim was refused. A first\n            -- reset for a peer takes the INSERT path and is always allowed.\n            WHERE signal_session_resets.last_reset_at <= ?\n              AND (signal_session_resets.window_started_at <= ?\n                   OR signal_session_resets.resets_in_window < ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "1c17357b35a0a3063df88521641d570b008e98adf4a94a763e298b7606f8da11"
+}

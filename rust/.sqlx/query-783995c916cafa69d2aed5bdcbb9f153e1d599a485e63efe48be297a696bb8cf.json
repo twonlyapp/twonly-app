@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO media_files(\n            media_id,\n            type,\n            download_state,\n            requires_authentication,\n            display_limit_in_milliseconds,\n            download_token,\n            encryption_key,\n            encryption_mac,\n            encryption_nonce,\n            is_widget_media,\n            created_at\n        ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 10
+    },
+    "nullable": []
+  },
+  "hash": "783995c916cafa69d2aed5bdcbb9f153e1d599a485e63efe48be297a696bb8cf"
+}

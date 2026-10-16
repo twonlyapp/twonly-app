@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                UPDATE contacts\n                SET username = 'changed contact'\n                WHERE user_id = 1\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "b109c2c02d61f15cd9b1a06b7eafce94fa1490b234db5db72a3775894eb5b771"
+}

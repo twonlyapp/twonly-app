@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
-import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -20,15 +19,20 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
 import 'package:twonly/src/visual/components/add_contact_dialog.comp.dart';
+import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/components/verification_failure_dialog.comp.dart';
 import 'package:twonly/src/visual/components/verification_success_dialog.comp.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
-import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/painters/barcode_detector_painter.dart';
-import 'package:twonly/src/visual/views/camera/camera_preview_components/painters/face_filters/beard_filter_painter.dart';
-import 'package:twonly/src/visual/views/camera/camera_preview_components/painters/face_filters/dog_filter_painter.dart';
-import 'package:twonly/src/visual/views/camera/camera_preview_components/painters/face_filters/face_filter_painter.dart';
+
+// Ordinary photos retain the rear camera's 1080p preview. Selfie previews
+// use 720p.
+ResolutionPreset cameraPreviewResolution(CameraLensDirection direction) =>
+    direction == CameraLensDirection.front
+    ? ResolutionPreset.high
+    : ResolutionPreset.veryHigh;
 
 class PreviewLink {
   const PreviewLink({
@@ -66,8 +70,14 @@ class MainCameraController {
   GlobalKey zoomButtonKey = GlobalKey();
   GlobalKey cameraPreviewKey = GlobalKey();
 
-  bool isSelectingFaceFilters = false;
-  bool isSharePreviewIsShown = false;
+  bool _isSharePreviewIsShown = false;
+  bool get isSharePreviewIsShown => _isSharePreviewIsShown;
+  set isSharePreviewIsShown(bool value) {
+    if (_isSharePreviewIsShown == value) return;
+    _isSharePreviewIsShown = value;
+    setState?.call();
+  }
+
   bool isVideoRecording = false;
   DateTime? timeSharedLinkWasSetWithQr;
 
@@ -86,24 +96,15 @@ class MainCameraController {
   }
 
   final BarcodeScanner _barcodeScanner = BarcodeScanner();
-  final FaceDetector _faceDetector = FaceDetector(
-    options: FaceDetectorOptions(
-      enableContours: true,
-      enableLandmarks: true,
-    ),
-  );
   bool _isBusy = false;
-  bool _isBusyFaces = false;
   CustomPaint? qrCodePain;
-  CustomPaint? facePaint;
+  Color? scanHighlightColor;
   Offset? focusPointOffset;
-
-  FaceFilterType _currentFilterType = FaceFilterType.none;
-  FaceFilterType get currentFilterType => _currentFilterType;
 
   Future<void>? _initializeFuture;
   Future<void>? _pendingDisposal;
   int _cameraSessionId = 0;
+  DateTime? _lastBarcodeFrame;
 
   Future<void> closeCamera() async {
     _cameraSessionId++;
@@ -184,13 +185,24 @@ class MainCameraController {
     }
 
     selectedCameraDetails.isZoomAble = false;
-
+    _lastBarcodeFrame = null;
     final currentController = cameraController;
-    if (currentController == null || !currentController.value.isInitialized) {
+    // Preserve an active recording's preset when switching lenses. Recreating
+    // its controller just to lower the selfie preview would end the video.
+    final resolution = isVideoRecording && currentController != null
+        ? currentController.resolutionPreset
+        : cameraPreviewResolution(
+            AppEnvironment.cameras[cameraId].lensDirection,
+          );
+    if (currentController == null ||
+        !currentController.value.isInitialized ||
+        currentController.resolutionPreset != resolution) {
       final controllerToDispose = cameraController;
       cameraController = null;
+      setState?.call();
       if (controllerToDispose != null) {
-        unawaited(controllerToDispose.dispose());
+        await controllerToDispose.dispose();
+        if (sessionId != _cameraSessionId) return;
       }
 
       final hasMic = await micPermissionFuture;
@@ -198,7 +210,7 @@ class MainCameraController {
 
       var controller = CameraController(
         AppEnvironment.cameras[cameraId],
-        ResolutionPreset.high,
+        resolution,
         enableAudio: hasMic,
         imageFormatGroup: Platform.isAndroid
             ? ImageFormatGroup.nv21
@@ -218,7 +230,7 @@ class MainCameraController {
           await controller.dispose();
           controller = CameraController(
             AppEnvironment.cameras[cameraId],
-            ResolutionPreset.high,
+            resolution,
             enableAudio: hasMic,
           );
           _initializeFuture = controller.initialize();
@@ -237,7 +249,9 @@ class MainCameraController {
           );
         }
 
-        await controller.startImageStream(_processCameraImage);
+        if (controller.description.lensDirection != CameraLensDirection.front) {
+          await controller.startImageStream(_processCameraImage);
+        }
         if (sessionId != _cameraSessionId) {
           unawaited(controller.dispose());
           return;
@@ -250,8 +264,20 @@ class MainCameraController {
         }
 
         if (userService.currentUser.videoStabilizationEnabled && !kDebugMode) {
+          // Stabilization buys its steadiness with a margin of sensor pixels to
+          // warp against, so it always narrows the field of view. On Android
+          // level2 maps to Camera2's PREVIEW_STABILIZATION, which narrows the
+          // preview by the same amount as the recording, so the viewfinder
+          // shows what gets sent; level1 is plain VIDEO_STABILIZATION_MODE_ON,
+          // which crops the recording alone and leaves the preview wider than
+          // the result. On iOS level2 is AVFoundation's `.cinematic`, which
+          // crops harder than the `.standard` level1 maps to without matching
+          // the preview any better, so iOS stays where it was. Both fall back
+          // down the levels, and finally to off, on a camera without the mode.
           await controller.setVideoStabilizationMode(
-            VideoStabilizationMode.level1,
+            Platform.isAndroid
+                ? VideoStabilizationMode.level2
+                : VideoStabilizationMode.level1,
           );
           if (sessionId != _cameraSessionId) {
             unawaited(controller.dispose());
@@ -281,7 +307,7 @@ class MainCameraController {
       }
     } else {
       try {
-        if (!isVideoRecording) {
+        if (!isVideoRecording && currentController.value.isStreamingImages) {
           try {
             await currentController.stopImageStream();
           } catch (e) {
@@ -300,7 +326,9 @@ class MainCameraController {
         );
         if (sessionId != _cameraSessionId) return;
 
-        if (!isVideoRecording) {
+        if (!isVideoRecording &&
+            currentController.description.lensDirection !=
+                CameraLensDirection.front) {
           await currentController.startImageStream(_processCameraImage);
         }
       } catch (e) {
@@ -347,10 +375,7 @@ class MainCameraController {
         ..cameraLoaded = true
         ..cameraId = cameraId;
 
-      facePaint = null;
       qrCodePain = null;
-      isSelectingFaceFilters = false;
-      setFilter(FaceFilterType.none);
       zoomButtonKey = GlobalKey();
       initCameraStarted = false;
       setState?.call();
@@ -406,18 +431,6 @@ class MainCameraController {
     setState?.call();
   }
 
-  void setFilter(FaceFilterType type) {
-    _currentFilterType = type;
-    if (_currentFilterType == FaceFilterType.none) {
-      faceFilterPainter = null;
-      facePaint = null;
-      _isBusyFaces = false;
-    }
-    setState?.call();
-  }
-
-  FaceFilterPainter? faceFilterPainter;
-
   final Map<DeviceOrientation, int> _orientations = {
     DeviceOrientation.portraitUp: 0,
     DeviceOrientation.landscapeLeft: 90,
@@ -429,17 +442,20 @@ class MainCameraController {
     if (isVideoRecording || isSharePreviewIsShown) {
       return;
     }
-    final inputImage = _inputImageFromCameraImage(image);
-    if (inputImage == null) return;
-    // check if front camera is selected
     if (cameraController?.description.lensDirection ==
-        CameraLensDirection.front) {
-      if (_currentFilterType != FaceFilterType.none) {
-        _processFaces(inputImage);
-      }
-    } else {
-      _processBarcode(inputImage);
+            CameraLensDirection.front ||
+        _isBusy) {
+      return;
     }
+    final now = clock.now();
+    if (_lastBarcodeFrame != null &&
+        now.difference(_lastBarcodeFrame!) <
+            const Duration(milliseconds: 150)) {
+      return;
+    }
+    _lastBarcodeFrame = now;
+    final inputImage = _inputImageFromCameraImage(image);
+    if (inputImage != null) unawaited(_processBarcode(inputImage));
   }
 
   InputImage? _inputImageFromCameraImage(CameraImage image) {
@@ -503,149 +519,127 @@ class MainCameraController {
   Future<void> _processBarcode(InputImage inputImage) async {
     if (_isBusy) return;
     _isBusy = true;
-    final barcodes = await _barcodeScanner.processImage(inputImage);
-    final controller = cameraController;
-    if (inputImage.metadata?.size != null &&
-        inputImage.metadata?.rotation != null &&
-        controller != null) {
-      final painter = BarcodeDetectorPainter(
-        barcodes,
-        inputImage.metadata!.size,
-        inputImage.metadata!.rotation,
-        controller.description.lensDirection,
-      );
-      qrCodePain = CustomPaint(painter: painter);
+    try {
+      final barcodes = await _barcodeScanner.processImage(inputImage);
+      final controller = cameraController;
+      if (inputImage.metadata?.size != null &&
+          inputImage.metadata?.rotation != null &&
+          controller != null &&
+          scanHighlightColor != null) {
+        final painter = BarcodeDetectorPainter(
+          barcodes,
+          inputImage.metadata!.size,
+          inputImage.metadata!.rotation,
+          controller.description.lensDirection,
+          scanHighlightColor!,
+        );
+        qrCodePain = CustomPaint(painter: painter);
 
-      if (barcodes.isEmpty && timeSharedLinkWasSetWithQr != null) {
-        if (timeSharedLinkWasSetWithQr!.isAfter(
-          DateTime.now().subtract(const Duration(seconds: 2)),
-        )) {
-          setSharedLinkForPreview(null);
-        }
-      }
-
-      for (final barcode in barcodes) {
-        if (barcode.displayValue == null) continue;
-        final link = barcode.displayValue!;
-
-        if (link.startsWith(PasswordlessRecoveryService.linkPrefix)) {
-          await PasswordlessRecoveryService.handleRecoveryLink(link);
-          continue;
+        if (barcodes.isEmpty && timeSharedLinkWasSetWithQr != null) {
+          if (timeSharedLinkWasSetWithQr!.isAfter(
+            DateTime.now().subtract(const Duration(seconds: 2)),
+          )) {
+            setSharedLinkForPreview(null);
+          }
         }
 
-        if (link.startsWith(QrCodeUtils.linkPrefix)) {
-          if (_handledProfileLinks.contains(link)) continue;
-          _handledProfileLinks.add(link);
+        for (final barcode in barcodes) {
+          if (barcode.displayValue == null) continue;
+          final link = barcode.displayValue!;
 
-          final res = await QrCodeUtils.handleQrCodeLink(link);
-          if (res == null) continue;
-          final (profile, contact, verificationOk) = res;
-
-          if (contact?.blocked ?? false) {
-            await twonlyDB.contactsDao.updateContact(
-              contact!.userId,
-              const ContactsCompanion(blocked: Value(false)),
-            );
+          if (link.startsWith(PasswordlessRecoveryService.linkPrefix)) {
+            await PasswordlessRecoveryService.handleRecoveryLink(link);
+            continue;
           }
 
-          if (contact == null || contact.deletedByUser) {
-            final context = cameraPreviewKey.currentContext;
-            if (context != null && context.mounted) {
-              unawaited(HapticFeedback.heavyImpact());
-              final shouldRequest = await AddContactDialog.show(
-                context,
-                profile.username,
+          if (link.startsWith(QrCodeUtils.linkPrefix)) {
+            if (_handledProfileLinks.contains(link)) continue;
+            _handledProfileLinks.add(link);
+
+            final result = await QrCodeUtils.handleQrCodeLink(link);
+            final profile = result.profile;
+            final contact = result.contact;
+
+            if (contact?.blocked ?? false) {
+              await twonlyDB.contactsDao.updateContact(
+                contact!.userId,
+                const ContactsCompanion(blocked: Value(false)),
               );
-              if (shouldRequest == true && context.mounted) {
-                showSnackbar(
+            }
+
+            if (result.status == QrCodeLinkStatus.newContact) {
+              final context = cameraPreviewKey.currentContext;
+              if (profile != null && context != null && context.mounted) {
+                unawaited(HapticFeedback.heavyImpact());
+                final shouldRequest = await AddContactDialog.show(
                   context,
-                  context.lang.requestedUserToastText(profile.username),
-                  level: SnackbarLevel.success,
+                  profile.username,
                 );
-                await addNewContactFromPublicProfile(profile);
+                if (shouldRequest == true && context.mounted) {
+                  final success = await addNewContactFromPublicProfile(profile);
+                  if (context.mounted) {
+                    if (success) {
+                      showSnackbar(
+                        context,
+                        context.lang.requestedUserToastText(profile.username),
+                        level: SnackbarLevel.success,
+                      );
+                    } else {
+                      await showAlertDialog(
+                        context,
+                        context.lang.addFriendTitle,
+                        context.lang.additionalUserAddError(profile.username),
+                        customCancel: '',
+                      );
+                    }
+                  }
+                }
+              }
+              continue;
+            }
+
+            if (result.status != QrCodeLinkStatus.verified) {
+              final context = cameraPreviewKey.currentContext;
+              if (context != null && context.mounted) {
+                unawaited(HapticFeedback.heavyImpact());
+                await showQrCodeVerificationFailure(context, result);
+              }
+              continue;
+            }
+
+            if (contact != null && contactsVerified[contact.userId] == null) {
+              contactsVerified[contact.userId] = ScannedVerifiedContact(
+                contact: contact,
+                verificationOk: true,
+              );
+
+              unawaited(HapticFeedback.heavyImpact());
+              final context = cameraPreviewKey.currentContext;
+              if (context != null && context.mounted) {
+                await VerificationSuccessDialog.show(context, contact);
+                onVerificationSuccessDismissed?.call(contact);
               }
             }
             continue;
           }
 
-          if (contactsVerified[contact.userId] == null) {
-            contactsVerified[contact.userId] = ScannedVerifiedContact(
-              contact: contact,
-              verificationOk: verificationOk,
-            );
-
-            unawaited(HapticFeedback.heavyImpact());
-            final context = cameraPreviewKey.currentContext;
-            if (verificationOk && context != null && context.mounted) {
-              await VerificationSuccessDialog.show(context, contact);
-              onVerificationSuccessDismissed?.call(contact);
+          if (link.startsWith('http://') || link.startsWith('https://')) {
+            scannedUrl = link;
+            if (sharedLinkForPreview == null) {
+              timeSharedLinkWasSetWithQr = clock.now();
+              setSharedLinkForPreview(
+                Uri.parse(scannedUrl!),
+                generatePreview: false,
+              );
             }
           }
-          continue;
-        }
-
-        if (link.startsWith('http://') || link.startsWith('https://')) {
-          scannedUrl = link;
-          if (sharedLinkForPreview == null) {
-            timeSharedLinkWasSetWithQr = clock.now();
-            setSharedLinkForPreview(
-              Uri.parse(scannedUrl!),
-              generatePreview: false,
-            );
-          }
         }
       }
+    } catch (e, stackTrace) {
+      Log.error('QR-code processing failed: $e\n$stackTrace');
+    } finally {
+      _isBusy = false;
+      setState?.call();
     }
-    _isBusy = false;
-    setState?.call();
-  }
-
-  Future<void> _processFaces(InputImage inputImage) async {
-    if (_isBusyFaces) return;
-    _isBusyFaces = true;
-    final faces = await _faceDetector.processImage(inputImage);
-    final controller = cameraController;
-    if (inputImage.metadata?.size != null &&
-        inputImage.metadata?.rotation != null &&
-        controller != null) {
-      if (faces.isNotEmpty) {
-        CustomPainter? painter;
-        switch (_currentFilterType) {
-          case FaceFilterType.dogBrown:
-            painter = DogFilterPainter(
-              faces,
-              inputImage.metadata!.size,
-              inputImage.metadata!.rotation,
-              controller.description.lensDirection,
-            );
-          case FaceFilterType.beardUpperLipGreen:
-            painter = BeardFilterPainter(
-              _currentFilterType,
-              faces,
-              inputImage.metadata!.size,
-              inputImage.metadata!.rotation,
-              controller.description.lensDirection,
-            );
-          case FaceFilterType.none:
-            break;
-        }
-
-        if (painter != null) {
-          facePaint = CustomPaint(painter: painter);
-          // Also set the correct FaceFilterPainter reference if needed for other logic,
-          // though currently facePaint is what's used for display.
-          if (painter is FaceFilterPainter) {
-            faceFilterPainter = painter;
-          }
-        } else {
-          facePaint = null;
-          faceFilterPainter = null;
-        }
-      } else {
-        facePaint = null;
-      }
-    }
-    _isBusyFaces = false;
-    setState?.call();
   }
 }

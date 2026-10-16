@@ -1,19 +1,18 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -58,8 +57,52 @@ class ProgressMultipartRequest extends http.MultipartRequest {
   }
 }
 
+/// ChaCha20 for the cloud copies, kept off the platform main thread.
+///
+/// The plugin's Android side runs the cipher inline in `onMethodCall`, which
+/// Flutter dispatches on the main thread, for every payload from 2 KB up to
+/// 20 MB — every thumbnail and every photo. One multi-megabyte media file holds
+/// that thread long enough for Android to offer to close the app, and the
+/// gallery starts one of these per tile it builds. This runs anything above
+/// 10 KB in a background isolate instead, with no upper bound: past the
+/// default one a video would fall back to the calling isolate and freeze the
+/// UI instead of the platform thread.
+Chacha20 _mediaCipher() => BackgroundChacha.poly1305Aead(
+  channelPolicy: const CryptographyChannelPolicy(
+    minLength: 10 * 1000,
+    maxLength: null,
+  ),
+);
+
 class MemoriesCloudService {
   static final Map<String, Mutex> _fileMutexes = {};
+
+  /// Cloud transfers allowed to run at once. Every gallery tile without a local
+  /// file asks for one as it scrolls into view and nothing cancels the request
+  /// when it scrolls back out, so without a ceiling a fast scroll leaves
+  /// hundreds of downloads in flight, each holding its whole payload in memory.
+  static const _maxConcurrentTransfers = 3;
+  static var _activeTransfers = 0;
+  static final Queue<Completer<void>> _waitingTransfers = Queue();
+
+  static Future<T> _transferSlot<T>(Future<T> Function() transfer) async {
+    if (_activeTransfers >= _maxConcurrentTransfers) {
+      final waiting = Completer<void>();
+      _waitingTransfers.add(waiting);
+      await waiting.future;
+    } else {
+      _activeTransfers++;
+    }
+    try {
+      return await transfer();
+    } finally {
+      if (_waitingTransfers.isEmpty) {
+        _activeTransfers--;
+      } else {
+        _waitingTransfers.removeFirst().complete();
+      }
+    }
+  }
 
   Timer? _timer;
   bool _isProcessing = false;
@@ -103,14 +146,19 @@ class MemoriesCloudService {
 
   Future<void> checkUploads() async {
     if (_isProcessing || !userService.currentUser.isCloudBackupEnabled) return;
+    // Claim the worker before the first await so simultaneous saves cannot
+    // start duplicate uploads of the same queue.
+    _isProcessing = true;
 
     try {
+      // Timers and local saves can run while the connection is still coming up.
+      if (await RustApi.connectionState() != ApiConnectionState.authenticated) {
+        return;
+      }
       final memories = await twonlyDB.mediaFilesDao.getMemoriesToBackup();
       if (memories.isEmpty) {
         return;
       }
-
-      _isProcessing = true;
 
       final total = memories.length;
       var uploaded = 0;
@@ -171,23 +219,31 @@ class MemoriesCloudService {
         return true;
       }
 
-      final urls = await apiService.getMemoriesUrl(mediaId, isThumbnail);
-      if (urls == null || !urls.hasFullDownloadUrl()) return false;
-
-      try {
-        final response = await http.get(Uri.parse(urls.fullDownloadUrl));
-
-        if (response.statusCode == 200) {
-          return await _decryptFile(response.bodyBytes, targetPath);
-        } else {
-          Log.warn(
-            'Failed to download ${isThumbnail ? 'thumbnail' : 'full media'} statuscode ${response.statusCode}',
+      return _transferSlot(() async {
+        String? downloadUrl;
+        try {
+          downloadUrl = await RustApi.getMemoriesUrl(
+            mediaId: mediaId,
+            thumbnail: isThumbnail,
           );
+        } catch (_) {}
+        if (downloadUrl == null || downloadUrl.isEmpty) return false;
+
+        try {
+          final response = await http.get(Uri.parse(downloadUrl));
+
+          if (response.statusCode == 200) {
+            return await _decryptFile(response.bodyBytes, targetPath);
+          } else {
+            Log.warn(
+              'Failed to download ${isThumbnail ? 'thumbnail' : 'full media'} statuscode ${response.statusCode}',
+            );
+          }
+        } catch (e) {
+          Log.warn(e);
         }
-      } catch (e) {
-        Log.warn(e);
-      }
-      return false;
+        return false;
+      });
     });
   }
 
@@ -205,14 +261,22 @@ class MemoriesCloudService {
       }
 
       final sizeBytes = ms.storedPath.lengthSync();
-      final urls = await apiService.requestMemoriesUpload(
-        sizeBytes,
-        mediaFile.createdAt,
-        mediaFile.mediaId,
-      );
-
-      if (urls == null) {
-        Log.error('Could not get upload URLs for memory ${mediaFile.mediaId}');
+      final FrbMemoriesUploadUrls? urls;
+      try {
+        urls = await RustApi.requestMemoriesUpload(
+          size: sizeBytes,
+          originalDate: mediaFile.createdAt.millisecondsSinceEpoch ~/ 1000,
+          mediaId: mediaFile.mediaId,
+        );
+      } catch (error, stackTrace) {
+        final message =
+            'Could not get upload URLs for memory ${mediaFile.mediaId}';
+        if (_expectedUploadUrlFailure(error)) {
+          // The row remains queued and the periodic worker retries it.
+          Log.warn(message, error, stackTrace);
+        } else {
+          Log.error(message, error: error, stackTrace: stackTrace);
+        }
         return false;
       }
 
@@ -229,47 +293,31 @@ class MemoriesCloudService {
         addition: 'app',
       );
 
-      final tempDir = await getTemporaryDirectory();
-
       // 1. Upload thumbnail if exists
-      if (ms.thumbnailPath.existsSync() && urls.hasThumbnailUpload()) {
-        final thumbFile = await _encryptFile(
+      final thumbUpload = urls.thumbnailUpload;
+      if (ms.thumbnailPath.existsSync() && thumbUpload != null) {
+        final thumbBytes = await _encryptFile(
           ms.thumbnailPath,
           mediaKey,
           encryptedMediaKey,
-          tempDir,
-          'thumb_${mediaFile.mediaId}',
         );
-        try {
-          await _uploadToS3(urls.thumbnailUpload, thumbFile, (_) {});
-        } finally {
-          if (thumbFile.existsSync()) {
-            thumbFile.deleteSync();
-          }
-        }
+        await _uploadToS3(thumbUpload, thumbBytes, (_) {});
       }
 
       // 2. Upload full media if exists
-      if (urls.hasFullUpload()) {
-        final fullFile = await _encryptFile(
+      final fullUpload = urls.fullUpload;
+      if (fullUpload != null) {
+        final fullBytes = await _encryptFile(
           ms.storedPath,
           mediaKey,
           encryptedMediaKey,
-          tempDir,
-          'full_${mediaFile.mediaId}',
         );
-        try {
-          await _uploadToS3(urls.fullUpload, fullFile, onProgress);
-        } finally {
-          if (fullFile.existsSync()) {
-            fullFile.deleteSync();
-          }
-        }
+        await _uploadToS3(fullUpload, fullBytes, onProgress);
       }
 
       // 3. Confirm upload
-      final confirmRes = await apiService.confirmMemoriesUpload(
-        mediaFile.mediaId,
+      final confirmRes = await rustApiResult(
+        RustApi.confirmMemoriesUpload(mediaId: mediaFile.mediaId),
       );
       if (confirmRes.isSuccess) {
         await twonlyDB.mediaFilesDao.updateMedia(
@@ -285,8 +333,12 @@ class MemoriesCloudService {
       } else {
         throw Exception('Server confirmation failed: ${confirmRes.error}');
       }
-    } catch (e) {
-      Log.error('Error backing up memory ${mediaFile.mediaId}: $e');
+    } catch (error, stackTrace) {
+      Log.error(
+        'Error backing up memory ${mediaFile.mediaId}',
+        error: error,
+        stackTrace: stackTrace,
+      );
       await twonlyDB.mediaFilesDao.updateMedia(
         mediaFile.mediaId,
         const MediaFilesCompanion(
@@ -297,9 +349,33 @@ class MemoriesCloudService {
     }
   }
 
+  static bool _expectedUploadUrlFailure(Object error) {
+    if (error is SocketException ||
+        error is TimeoutException ||
+        error is http.ClientException) {
+      return true;
+    }
+    if (error is! AnyhowException) return false;
+    // Rust transport failures can race with the authenticated state check.
+    final message = error.message;
+    if (message == 'Not connected' ||
+        message == 'API request timed out' ||
+        message == 'response channel closed' ||
+        message.startsWith('send error:')) {
+      return true;
+    }
+    final match = RegExp(r'^API error code (\d+)$').firstMatch(message);
+    if (match == null) return false;
+    final code = ErrorCode.fromValue(int.parse(match.group(1)!));
+    return code == ErrorCode.PlanNotAllowed ||
+        code == ErrorCode.PlanLimitReached ||
+        code == ErrorCode.SessionNotAuthenticated ||
+        code == ErrorCode.TooManyRequests;
+  }
+
   Future<void> _uploadToS3(
-    server.Response_PresignedPost presignedPost,
-    File file,
+    FrbPresignedPost presignedPost,
+    Uint8List encryptedBytes,
     void Function(double progress) onProgress,
   ) async {
     final request = ProgressMultipartRequest(
@@ -312,11 +388,13 @@ class MemoriesCloudService {
       },
     );
 
-    request.fields.addAll(presignedPost.fields);
+    request.fields.addAll(
+      Map.fromEntries(presignedPost.fields.map((f) => MapEntry(f.$1, f.$2))),
+    );
     request.files.add(
-      await http.MultipartFile.fromPath(
+      http.MultipartFile.fromBytes(
         'file',
-        file.path,
+        encryptedBytes,
         filename: 'file',
       ),
     );
@@ -330,15 +408,15 @@ class MemoriesCloudService {
     }
   }
 
-  Future<File> _encryptFile(
+  // Keep the payload in memory until the request finishes. Shared cache paths
+  // can be deleted by another upload or evicted while the HTTP stream reads.
+  Future<Uint8List> _encryptFile(
     File inputFile,
     Uint8List mediaKey,
     List<int> encryptedMediaKey,
-    Directory tempDir,
-    String prefix,
   ) async {
     final dataToEncrypt = await inputFile.readAsBytes();
-    final chacha20 = FlutterChacha20.poly1305Aead();
+    final chacha20 = _mediaCipher();
     final nonce = chacha20.newNonce();
 
     final secretBox = await chacha20.encrypt(
@@ -357,9 +435,7 @@ class MemoriesCloudService {
       ..mediaNonce = nonce
       ..mediaCiphertext = cipherTextWithMac;
 
-    final outFile = File('${tempDir.path}/$prefix.encrypted');
-    await outFile.writeAsBytes(payload.writeToBuffer());
-    return outFile;
+    return payload.writeToBuffer();
   }
 
   static Future<bool> _decryptFile(
@@ -395,7 +471,7 @@ class MemoriesCloudService {
       );
 
       // 7. Decrypt the data using the newly retrieved media key
-      final chacha20 = FlutterChacha20.poly1305Aead();
+      final chacha20 = _mediaCipher();
       final decryptedBytes = await chacha20.decrypt(
         secretBox,
         secretKey: SecretKey(mediaKey),

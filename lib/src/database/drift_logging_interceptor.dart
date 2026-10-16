@@ -86,7 +86,12 @@ class DriftLoggingInterceptor extends QueryInterceptor {
     String statement,
     List<Object?> args,
   ) {
-    return _run('INSERT', statement, args, () => executor.runInsert(statement, args));
+    return _run(
+      'INSERT',
+      statement,
+      args,
+      () => executor.runInsert(statement, args),
+    );
   }
 
   @override
@@ -95,7 +100,12 @@ class DriftLoggingInterceptor extends QueryInterceptor {
     String statement,
     List<Object?> args,
   ) {
-    return _run('UPDATE', statement, args, () => executor.runUpdate(statement, args));
+    return _run(
+      'UPDATE',
+      statement,
+      args,
+      () => executor.runUpdate(statement, args),
+    );
   }
 
   @override
@@ -104,7 +114,12 @@ class DriftLoggingInterceptor extends QueryInterceptor {
     String statement,
     List<Object?> args,
   ) {
-    return _run('DELETE', statement, args, () => executor.runDelete(statement, args));
+    return _run(
+      'DELETE',
+      statement,
+      args,
+      () => executor.runDelete(statement, args),
+    );
   }
 
   @override
@@ -113,7 +128,12 @@ class DriftLoggingInterceptor extends QueryInterceptor {
     String statement,
     List<Object?> args,
   ) {
-    return _run('CUSTOM', statement, args, () => executor.runCustom(statement, args));
+    return _run(
+      'CUSTOM',
+      statement,
+      args,
+      () => executor.runCustom(statement, args),
+    );
   }
 
   @override

@@ -10,6 +10,15 @@ part 'user_discovery.dao.g.dart';
 typedef AnnouncedUsersWithRelations =
     Map<UserDiscoveryAnnouncedUser, List<(Contact, DateTime?)>>;
 
+const _minimumUserDiscoveryThreshold = 3;
+
+int _currentUserDiscoveryThreshold() {
+  final configured = userService.currentUser.userDiscoveryThreshold;
+  return configured < _minimumUserDiscoveryThreshold
+      ? _minimumUserDiscoveryThreshold
+      : configured;
+}
+
 @DriftAccessor(
   tables: [
     UserDiscoveryAnnouncedUsers,
@@ -54,61 +63,28 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
         .toList();
   }
 
-  Future<AnnouncedUsersWithRelations>
-  getAllAnnouncedUsersWithRelations() async {
-    final query = select(userDiscoveryAnnouncedUsers).join([
-      innerJoin(
-        userDiscoveryUserRelations,
-        userDiscoveryUserRelations.announcedUserId.equalsExp(
-          userDiscoveryAnnouncedUsers.announcedUserId,
-        ),
-      ),
-      innerJoin(
-        contacts,
-        contacts.userId.equalsExp(
-          userDiscoveryUserRelations.fromContactId,
-        ),
-      ),
-    ])..where(userDiscoveryAnnouncedUsers.username.isNotNull());
-
-    final rows = await query.get();
-    // ignore: omit_local_variable_types
-    final AnnouncedUsersWithRelations results = {};
-
-    for (final row in rows) {
-      final user = row.readTable(userDiscoveryAnnouncedUsers);
-      final relation = row.readTable(userDiscoveryUserRelations);
-      final contact = row.readTable(contacts);
-
-      final relationData = (
-        contact,
-        relation.publicKeyVerifiedTimestamp,
-      );
-
-      if (!results.containsKey(user)) {
-        results[user] = [];
-      }
-      results[user]!.add(relationData);
-    }
-
-    return results;
-  }
-
   Stream<AnnouncedUsersWithRelations> watchAllAnnouncedUsersWithRelations() {
-    final query = select(userDiscoveryAnnouncedUsers).join([
-      innerJoin(
-        userDiscoveryUserRelations,
-        userDiscoveryUserRelations.announcedUserId.equalsExp(
-          userDiscoveryAnnouncedUsers.announcedUserId,
-        ),
-      ),
-      innerJoin(
-        contacts,
-        contacts.userId.equalsExp(
-          userDiscoveryUserRelations.fromContactId,
-        ),
-      ),
-    ])..where(userDiscoveryAnnouncedUsers.username.isNotNull());
+    final query =
+        select(userDiscoveryAnnouncedUsers).join([
+          innerJoin(
+            userDiscoveryUserRelations,
+            userDiscoveryUserRelations.announcedUserId.equalsExp(
+              userDiscoveryAnnouncedUsers.announcedUserId,
+            ),
+          ),
+          innerJoin(
+            contacts,
+            contacts.userId.equalsExp(
+              userDiscoveryUserRelations.fromContactId,
+            ),
+          ),
+        ])..where(
+          userDiscoveryAnnouncedUsers.username.isNotNull() &
+              contacts.accepted.equals(true) &
+              contacts.blocked.equals(false) &
+              contacts.deletedByUser.equals(false) &
+              contacts.accountDeleted.equals(false),
+        );
 
     return query.watch().map((rows) {
       // ignore: omit_local_variable_types
@@ -129,6 +105,9 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
         }
         results[user]!.add(relationData);
       }
+
+      final threshold = _currentUserDiscoveryThreshold();
+      results.removeWhere((user, relations) => relations.length < threshold);
 
       Log.info('results = ${results.length}');
 
@@ -161,8 +140,15 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
         ])..where(
           userDiscoveryAnnouncedUsers.username.isNotNull() &
               userDiscoveryAnnouncedUsers.isHidden.equals(false) &
+              contacts.accepted.equals(true) &
+              contacts.blocked.equals(false) &
+              contacts.deletedByUser.equals(false) &
+              contacts.accountDeleted.equals(false) &
               (announcedContact.userId.isNull() |
-                  announcedContact.deletedByUser.equals(true)),
+                  (announcedContact.deletedByUser.equals(true) &
+                      announcedContact.accepted.equals(false) &
+                      announcedContact.blocked.equals(false) &
+                      announcedContact.accountDeleted.equals(false))),
         );
 
     return query.watch().map((rows) {
@@ -185,7 +171,7 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
         results[user]!.add(relationData);
       }
 
-      final threshold = userService.currentUser.userDiscoveryThreshold;
+      final threshold = _currentUserDiscoveryThreshold();
       results.removeWhere((user, relations) => relations.length < threshold);
 
       return results;
@@ -202,6 +188,12 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
               userDiscoveryAnnouncedUsers.announcedUserId,
             ),
           ),
+          innerJoin(
+            contacts,
+            contacts.userId.equalsExp(
+              userDiscoveryUserRelations.fromContactId,
+            ),
+          ),
           leftOuterJoin(
             announcedContact,
             announcedContact.userId.equalsExp(
@@ -209,12 +201,20 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
             ),
           ),
         ])..where(
-          // Filters: Has a username AND has not been shown to the user yet AND is not an existing contact
+          // Count unseen suggestions only; accepted contacts remain excluded
+          // even if they still have a deleted flag.
           userDiscoveryAnnouncedUsers.username.isNotNull() &
               userDiscoveryAnnouncedUsers.wasShownToTheUser.equals(false) &
               userDiscoveryAnnouncedUsers.isHidden.equals(false) &
+              contacts.accepted.equals(true) &
+              contacts.blocked.equals(false) &
+              contacts.deletedByUser.equals(false) &
+              contacts.accountDeleted.equals(false) &
               (announcedContact.userId.isNull() |
-                  announcedContact.deletedByUser.equals(true)),
+                  (announcedContact.deletedByUser.equals(true) &
+                      announcedContact.accepted.equals(false) &
+                      announcedContact.blocked.equals(false) &
+                      announcedContact.accountDeleted.equals(false))),
         );
 
     return query.watch().map((rows) {
@@ -227,7 +227,7 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
             (relationCounts[announcedUserId] ?? 0) + 1;
       }
 
-      final threshold = userService.currentUser.userDiscoveryThreshold;
+      final threshold = _currentUserDiscoveryThreshold();
       return relationCounts.values.where((count) => count >= threshold).length;
     });
   }

@@ -1,11 +1,17 @@
+import 'dart:typed_data';
+
+import 'package:clock/clock.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/daos/stories.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 
@@ -17,6 +23,10 @@ class ResponseContainer extends StatelessWidget {
     required this.mediaService,
     required this.borderRadius,
     this.scrollToMessage,
+    this.quotedMessage,
+    this.quotedMediaFile,
+    this.contactsById,
+    this.useSharedData = false,
     super.key,
   });
 
@@ -26,6 +36,10 @@ class ResponseContainer extends StatelessWidget {
   final MediaFileService? mediaService;
   final BorderRadius borderRadius;
   final void Function(String)? scrollToMessage;
+  final Message? quotedMessage;
+  final MediaFile? quotedMediaFile;
+  final Map<int, Contact>? contactsById;
+  final bool useSharedData;
 
   @override
   Widget build(BuildContext context) {
@@ -41,10 +55,10 @@ class ResponseContainer extends StatelessWidget {
           : () => scrollToMessage!(msg.quotesMessageId!),
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
+          maxWidth: MediaQuery.sizeOf(context).width * 0.8,
         ),
         decoration: BoxDecoration(
-          color: getMessageColor(msg.senderId != null),
+          color: getMessageColor(context, msg.senderId != null),
           borderRadius: borderRadius,
         ),
         child: IntrinsicWidth(
@@ -67,6 +81,14 @@ class ResponseContainer extends StatelessWidget {
                   child: ResponsePreview(
                     group: group,
                     messageId: msg.quotesMessageId,
+                    message: quotedMessage,
+                    mediaFile: quotedMediaFile,
+                    contact: quotedMessage?.senderId == null
+                        ? null
+                        : contactsById?[quotedMessage!.senderId],
+                    // A quote the loaded page does not hold, such as a story
+                    // the chat never lists, is looked up by the preview.
+                    useSharedData: useSharedData && quotedMessage != null,
                     showBorder: false,
                     showLeftBorder: false,
                   ),
@@ -89,6 +111,9 @@ class ResponsePreview extends StatefulWidget {
     this.messageId,
     this.showLeftBorder = true,
     this.colorUsername = false,
+    this.mediaFile,
+    this.contact,
+    this.useSharedData = false,
     super.key,
   });
 
@@ -98,6 +123,9 @@ class ResponsePreview extends StatefulWidget {
   final bool showBorder;
   final bool showLeftBorder;
   final bool colorUsername;
+  final MediaFile? mediaFile;
+  final Contact? contact;
+  final bool useSharedData;
 
   @override
   State<ResponsePreview> createState() => _ResponsePreviewState();
@@ -107,22 +135,49 @@ class _ResponsePreviewState extends State<ResponsePreview> {
   Message? _message;
   MediaFileService? _mediaService;
   String _username = '';
+  Uint8List? _stickerSource;
+  Uint8List? _stickerBytes;
+
+  Uint8List? get _quotedStickerBytes {
+    final source = _message?.additionalMessageData;
+    if (!listEquals(_stickerSource, source)) {
+      _stickerSource = source;
+      final sticker = StickerService.decodeAdditional(source);
+      // MemoryImage uses byte identity as its cache key. Keep the same bytes
+      // across rebuilds so the preview does not reload or restart animations.
+      _stickerBytes = sticker == null ? null : Uint8List.fromList(sticker.webp);
+    }
+    return _stickerBytes;
+  }
 
   @override
   void initState() {
     super.initState();
     _message = widget.message;
-    initAsync();
+    if (widget.mediaFile != null) {
+      _mediaService = MediaFileService(widget.mediaFile!);
+    }
+    if (widget.contact != null) {
+      _username = getContactDisplayName(widget.contact!);
+    }
+    if (!widget.useSharedData &&
+        (widget.message == null ||
+            (widget.message?.mediaId != null && widget.mediaFile == null) ||
+            (widget.message?.senderId != null && widget.contact == null))) {
+      initAsync();
+    }
   }
 
   Future<void> initAsync() async {
-    _message ??= await twonlyDB.messagesDao
-        .getMessageById(widget.messageId!)
-        .getSingleOrNull();
-    if (_message?.mediaId != null) {
+    if (_message == null && widget.messageId != null) {
+      _message = await twonlyDB.messagesDao
+          .getMessageById(widget.messageId!)
+          .getSingleOrNull();
+    }
+    if (_message?.mediaId != null && _mediaService == null) {
       _mediaService = await MediaFileService.fromMediaId(_message!.mediaId!);
     }
-    if (_message?.senderId != null) {
+    if (_message?.senderId != null && _username.isEmpty) {
       final contact = await twonlyDB.contactsDao
           .getContactByUserId(_message!.senderId!)
           .getSingleOrNull();
@@ -136,14 +191,28 @@ class _ResponsePreviewState extends State<ResponsePreview> {
     if (mounted) setState(() {});
   }
 
+  /// Whether the quoted story can still be shown. Once it expired, or its
+  /// sender took it down, only the fact that it was a story remains.
+  bool get _storyAlive {
+    final message = _message;
+    if (message == null || !message.isStory) return false;
+    if (message.mediaStored) return true;
+    return message.mediaId != null &&
+        _mediaService != null &&
+        clock.now().isBefore(message.createdAt.add(storyLifetime));
+  }
+
   @override
   Widget build(BuildContext context) {
     String? subtitle;
-    var color = const Color.fromARGB(233, 68, 137, 255);
+    var color = context.appColor(AppColor.messageText);
+    final quotedStickerBytes = _quotedStickerBytes;
 
     if (_message != null) {
       if (_message!.type == MessageType.text.name) {
-        if (_message!.content != null) {
+        if (quotedStickerBytes != null) {
+          subtitle = context.lang.sticker;
+        } else if (_message!.content != null) {
           subtitle = truncateString(_message!.content!);
         }
       }
@@ -186,35 +255,51 @@ class _ResponsePreviewState extends State<ResponsePreview> {
         _username = context.lang.you;
       }
 
-      color = getMessageColor(_message!.senderId != null);
+      if (_message!.isStory) {
+        subtitle = _storyAlive ? context.lang.story : context.lang.storyExpired;
+      }
+
+      color = getMessageColor(context, _message!.senderId != null);
     }
 
     final hasImage =
         _message != null &&
-        _message!.mediaStored &&
+        (_message!.mediaStored || _storyAlive) &&
         _mediaService != null &&
         _mediaService!.mediaFile.type != MediaType.audio;
 
     Widget? imageWidget;
     if (hasImage) {
       final isVideo = _mediaService!.mediaFile.type == MediaType.video;
+      // A story nobody saved is still in its temporary file.
       final pathToCheck = isVideo
           ? _mediaService!.thumbnailPath
-          : _mediaService!.storedPath;
-      if (pathToCheck.existsSync() && pathToCheck.lengthSync() > 0) {
-        imageWidget = Container(
-          height: 40,
-          width: 40,
-          margin: const EdgeInsets.only(left: 8),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: Image.file(
-              pathToCheck,
-              fit: BoxFit.cover,
-            ),
+          : _message!.mediaStored
+          ? _mediaService!.storedPath
+          : _mediaService!.tempPath;
+      imageWidget = Container(
+        height: 40,
+        width: 40,
+        margin: const EdgeInsets.only(left: 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: Image.file(
+            pathToCheck,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
-        );
-      }
+        ),
+      );
+    } else if (quotedStickerBytes != null) {
+      imageWidget = Container(
+        height: 40,
+        width: 40,
+        margin: const EdgeInsets.only(left: 8),
+        child: Image.memory(
+          quotedStickerBytes,
+          fit: BoxFit.contain,
+        ),
+      );
     }
 
     return Container(
@@ -226,7 +311,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
       ),
       constraints: BoxConstraints(
         minWidth: 60,
-        maxWidth: MediaQuery.of(context).size.width * 0.7,
+        maxWidth: MediaQuery.sizeOf(context).width * 0.7,
       ),
       decoration: widget.showLeftBorder
           ? BoxDecoration(

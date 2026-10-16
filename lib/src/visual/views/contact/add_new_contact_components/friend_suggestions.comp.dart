@@ -5,9 +5,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -48,7 +45,14 @@ class FriendSuggestionsComp extends StatelessWidget {
   ) async {
     Log.info('Requesting user via friend suggestions');
 
-    final userdata = await apiService.getUserById(user.announcedUserId);
+    FrbUserData? userdata;
+    try {
+      userdata = await RustApi.getUserById(
+        userId: user.announcedUserId,
+      );
+    } catch (_) {
+      userdata = null;
+    }
 
     if (userdata == null) {
       if (context.mounted) {
@@ -60,18 +64,27 @@ class FriendSuggestionsComp extends StatelessWidget {
     final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
       ContactsCompanion(
         username: Value(user.username!),
-        userId: Value(userdata.userId.toInt()),
+        userId: Value(userdata.userId),
         requested: const Value(false),
         blocked: const Value(false),
         deletedByUser: const Value(false),
+        joinedAt: userdata.joinedAt == null
+            ? const Value.absent()
+            : Value(
+                DateTime.fromMillisecondsSinceEpoch(
+                  userdata.joinedAt! * Duration.millisecondsPerSecond,
+                  isUtc: true,
+                ),
+              ),
       ),
     );
 
-    if (added > 0) await importSignalContactAndCreateRequest(userdata);
-
-    await UserService.update(
-      (u) => u.userStudyCountNewFriendsViaSuggestion += 1,
-    );
+    if (added > 0) {
+      await RustApi.tryRequestContactById(
+        contactId: userdata.userId,
+        expectedPublicKey: userdata.publicIdentityKey,
+      );
+    }
   }
 
   Future<void> _hideAnnouncedUser(int userId) async {
@@ -110,11 +123,14 @@ class FriendSuggestionsComp extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: friends.map((f) {
                           final contact = f.$1;
-                          final isSelected =
-                              selectedFriends.contains(contact.userId);
+                          final isSelected = selectedFriends.contains(
+                            contact.userId,
+                          );
                           return CheckboxListTile.adaptive(
                             contentPadding: EdgeInsets.zero,
-                            title: Text(contact.displayName ?? contact.username),
+                            title: Text(
+                              contact.displayName ?? contact.username,
+                            ),
                             value: isSelected,
                             onChanged: (val) {
                               setState(() {
@@ -152,9 +168,12 @@ class FriendSuggestionsComp extends StatelessWidget {
 
     if (result == true && selectedFriends.isNotEmpty) {
       for (final contactId in selectedFriends) {
-        await insertAndSendAskAboutUserMessage(contactId, user.announcedUserId);
+        await RustApi.insertAndSendAskAboutUser(
+          contactId: contactId,
+          askAboutUserId: user.announcedUserId,
+        );
       }
-      
+
       await twonlyDB.userDiscoveryDao.updateAnnouncedUser(
         user.announcedUserId,
         const UserDiscoveryAnnouncedUsersCompanion(
@@ -255,7 +274,8 @@ class FriendSuggestionsComp extends StatelessWidget {
                                   left: 4,
                                 ),
                               ).merge(secondaryGreyButtonStyle(context)),
-                              onPressed: () => _askFriends(context, user, friends),
+                              onPressed: () =>
+                                  _askFriends(context, user, friends),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [

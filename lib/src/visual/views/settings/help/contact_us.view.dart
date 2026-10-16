@@ -10,8 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
+import 'package:twonly/src/model/protobuf/client/generated/http_requests.pb.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -68,14 +67,15 @@ class _ContactUsState extends State<ContactUsView> {
 
     final uploadRequestBytes = uploadRequest.writeToBuffer();
 
-    final apiUrl =
-        'http${apiService.apiSecure}://${apiService.apiHost}/api/upload';
+    final apiUrl = '${RustApi.apiBaseUrl(protocol: 'https')}upload';
 
     final requestMultipart = http.MultipartRequest('POST', Uri.parse(apiUrl));
 
-    final headers = await getAuthenticationHeader();
-    if (headers == null) {
-      Log.error('Auth headers are empty. Returning');
+    late final Map<String, String> headers;
+    try {
+      headers = await RustApi.authenticationHeaders();
+    } catch (error) {
+      Log.error('Could not load authentication headers', error: error);
       return null;
     }
 
@@ -260,8 +260,8 @@ $debugLogToken
                 onTap: () => context.push(Routes.settingsHelpFaq),
                 child: Text(
                   context.lang.contactUsFaq,
-                  style: const TextStyle(
-                    color: Colors.blue,
+                  style: TextStyle(
+                    color: context.appColor(AppColor.info),
                   ),
                 ),
               ),
@@ -285,12 +285,14 @@ $debugLogToken
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (isLoading)
-                      const SizedBox(
+                      SizedBox(
                         height: 12,
                         width: 12,
                         child: CircularProgressIndicator.adaptive(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.black87),
+                          valueColor: AlwaysStoppedAnimation(
+                            context.color.onPrimary,
+                          ),
                         ),
                       )
                     else
@@ -345,8 +347,8 @@ class _IncludeDebugLogState extends State<IncludeDebugLog> {
           ),
           child: Text(
             context.lang.contactUsWhatsThat,
-            style: const TextStyle(
-              color: Colors.blue,
+            style: TextStyle(
+              color: context.appColor(AppColor.info),
             ),
           ),
         ),
@@ -368,11 +370,11 @@ class FeedbackEmojiRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _buildEmojiButton(5, Icons.sentiment_very_satisfied),
-        _buildEmojiButton(4, Icons.sentiment_satisfied),
-        _buildEmojiButton(3, Icons.sentiment_neutral),
-        _buildEmojiButton(2, Icons.sentiment_dissatisfied),
-        _buildEmojiButton(1, Icons.sentiment_very_dissatisfied),
+        _buildEmojiButton(context, 5, Icons.sentiment_very_satisfied),
+        _buildEmojiButton(context, 4, Icons.sentiment_satisfied),
+        _buildEmojiButton(context, 3, Icons.sentiment_neutral),
+        _buildEmojiButton(context, 2, Icons.sentiment_dissatisfied),
+        _buildEmojiButton(context, 1, Icons.sentiment_very_dissatisfied),
       ],
     );
   }
@@ -395,7 +397,7 @@ class FeedbackEmojiRow extends StatelessWidget {
     }
   }
 
-  Widget _buildEmojiButton(int value, IconData icon) {
+  Widget _buildEmojiButton(BuildContext context, int value, IconData icon) {
     final isSelected = selectedFeedback == value;
 
     return GestureDetector(
@@ -405,22 +407,22 @@ class FeedbackEmojiRow extends StatelessWidget {
       child: Icon(
         icon,
         size: 40,
-        color: _getColorForValue(value, isSelected),
+        color: _getColorForValue(context, value, isSelected),
       ),
     );
   }
 
-  Color _getColorForValue(int value, bool isSelected) {
+  Color _getColorForValue(BuildContext context, int value, bool isSelected) {
     if (isSelected) {
       if (value == 5) {
-        return Colors.greenAccent;
+        return context.appColor(AppColor.success);
       } else if (value > 1) {
-        return Colors.yellow;
+        return context.appColor(AppColor.warning);
       } else {
-        return Colors.red;
+        return context.color.error;
       }
     } else {
-      return const Color.fromARGB(155, 134, 134, 134);
+      return context.color.onSurfaceVariant;
     }
   }
 }

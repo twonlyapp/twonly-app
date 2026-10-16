@@ -112,7 +112,9 @@ class SecondFactorPicker extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? context.color.primary : Colors.transparent,
+                  color: isSelected
+                      ? context.color.primary
+                      : Colors.transparent,
                   borderRadius: borderRadius,
                 ),
                 child: Column(
@@ -120,7 +122,7 @@ class SecondFactorPicker extends StatelessWidget {
                     Icon(
                       option.icon,
                       color: isSelected
-                          ? Colors.black87
+                          ? context.color.onPrimary
                           : context.color.onSurfaceVariant,
                     ),
                     const SizedBox(height: 6),
@@ -129,7 +131,7 @@ class SecondFactorPicker extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: isSelected
-                            ? Colors.black87
+                            ? context.color.onPrimary
                             : context.color.onSurfaceVariant,
                       ),
                     ),

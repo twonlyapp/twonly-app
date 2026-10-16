@@ -1,0 +1,98 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT r.contact_id, r.message, r.message_id, r.contact_will_sends_receipt,\n               r.wake_receiver, c.account_deleted, c.signal_version\n        FROM receipts r\n        JOIN contacts c ON c.user_id = r.contact_id\n        WHERE r.receipt_id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "message",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "message"
+          }
+        }
+      },
+      {
+        "name": "message_id",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "contact_will_sends_receipt",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "contact_will_sends_receipt"
+          }
+        }
+      },
+      {
+        "name": "wake_receiver",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "wake_receiver"
+          }
+        }
+      },
+      {
+        "name": "account_deleted",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "account_deleted"
+          }
+        }
+      },
+      {
+        "name": "signal_version",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "signal_version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2a923146a880d7f8684495e93324a743ae58b3f32e01e5ad1fa5a304bb535ae5"
+}

@@ -31,9 +31,7 @@ class ChatDateChip extends StatelessWidget {
     return Center(
       child: Container(
         decoration: BoxDecoration(
-          color: isDarkMode(context)
-              ? const Color.fromARGB(255, 38, 38, 38)
-              : Colors.black.withAlpha(40),
+          color: context.color.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(8),
         ),
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
@@ -43,7 +41,7 @@ class ChatDateChip extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 10,
-            color: isDarkMode(context) ? Colors.white : Colors.grey,
+            color: context.color.onSurfaceVariant,
           ),
         ),
       ),

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT OR IGNORE INTO contacts(user_id, username, signal_version, accepted, requested, deleted_by_user)\n        VALUES (?, ?, ?, 0, 0, 1)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "b81ab59ec11800f5cbd9b73c6367f80251c00070e916cf5a16d6c44145476c66"
+}

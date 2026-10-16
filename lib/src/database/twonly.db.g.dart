@@ -61,6 +61,20 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         type: DriftSqlType.blob,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _preferPhotoAvatarMeta = const VerificationMeta(
+    'preferPhotoAvatar',
+  );
+  @override
+  late final GeneratedColumn<bool> preferPhotoAvatar = GeneratedColumn<bool>(
+    'prefer_photo_avatar',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("prefer_photo_avatar" IN (0, 1))',
+    ),
+  );
   static const VerificationMeta _senderProfileCounterMeta =
       const VerificationMeta('senderProfileCounter');
   @override
@@ -309,6 +323,56 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           'CHECK ("ask_for_friend_promotions" IN (0, 1))',
         ),
       );
+  static const VerificationMeta _widgetSharingAllowedMeta =
+      const VerificationMeta('widgetSharingAllowed');
+  @override
+  late final GeneratedColumn<bool> widgetSharingAllowed = GeneratedColumn<bool>(
+    'widget_sharing_allowed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("widget_sharing_allowed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _widgetSharingGrantedMeta =
+      const VerificationMeta('widgetSharingGranted');
+  @override
+  late final GeneratedColumn<bool> widgetSharingGranted = GeneratedColumn<bool>(
+    'widget_sharing_granted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("widget_sharing_granted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _twonlyScoreMeta = const VerificationMeta(
+    'twonlyScore',
+  );
+  @override
+  late final GeneratedColumn<int> twonlyScore = GeneratedColumn<int>(
+    'twonly_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _joinedAtMeta = const VerificationMeta(
+    'joinedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> joinedAt = GeneratedColumn<DateTime>(
+    'joined_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _mediaSendCounterMeta = const VerificationMeta(
     'mediaSendCounter',
   );
@@ -339,6 +403,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     displayName,
     nickName,
     avatarSvgCompressed,
+    preferPhotoAvatar,
     senderProfileCounter,
     accepted,
     deletedByUser,
@@ -358,6 +423,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     recoveryContactsLastHeartbeat,
     recoveryContactsThreshold,
     askForFriendPromotions,
+    widgetSharingAllowed,
+    widgetSharingGranted,
+    twonlyScore,
+    joinedAt,
     mediaSendCounter,
     mediaReceivedCounter,
   ];
@@ -408,6 +477,15 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         avatarSvgCompressed.isAcceptableOrUnknown(
           data['avatar_svg_compressed']!,
           _avatarSvgCompressedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('prefer_photo_avatar')) {
+      context.handle(
+        _preferPhotoAvatarMeta,
+        preferPhotoAvatar.isAcceptableOrUnknown(
+          data['prefer_photo_avatar']!,
+          _preferPhotoAvatarMeta,
         ),
       );
     }
@@ -558,6 +636,39 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
       );
     }
+    if (data.containsKey('widget_sharing_allowed')) {
+      context.handle(
+        _widgetSharingAllowedMeta,
+        widgetSharingAllowed.isAcceptableOrUnknown(
+          data['widget_sharing_allowed']!,
+          _widgetSharingAllowedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('widget_sharing_granted')) {
+      context.handle(
+        _widgetSharingGrantedMeta,
+        widgetSharingGranted.isAcceptableOrUnknown(
+          data['widget_sharing_granted']!,
+          _widgetSharingGrantedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('twonly_score')) {
+      context.handle(
+        _twonlyScoreMeta,
+        twonlyScore.isAcceptableOrUnknown(
+          data['twonly_score']!,
+          _twonlyScoreMeta,
+        ),
+      );
+    }
+    if (data.containsKey('joined_at')) {
+      context.handle(
+        _joinedAtMeta,
+        joinedAt.isAcceptableOrUnknown(data['joined_at']!, _joinedAtMeta),
+      );
+    }
     if (data.containsKey('media_send_counter')) {
       context.handle(
         _mediaSendCounterMeta,
@@ -604,6 +715,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       avatarSvgCompressed: attachedDatabase.typeMapping.read(
         DriftSqlType.blob,
         data['${effectivePrefix}avatar_svg_compressed'],
+      ),
+      preferPhotoAvatar: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}prefer_photo_avatar'],
       ),
       senderProfileCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -683,6 +798,22 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.bool,
         data['${effectivePrefix}ask_for_friend_promotions'],
       ),
+      widgetSharingAllowed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}widget_sharing_allowed'],
+      )!,
+      widgetSharingGranted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}widget_sharing_granted'],
+      )!,
+      twonlyScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}twonly_score'],
+      ),
+      joinedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}joined_at'],
+      ),
       mediaSendCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}media_send_counter'],
@@ -711,6 +842,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final String? displayName;
   final String? nickName;
   final Uint8List? avatarSvgCompressed;
+  final bool? preferPhotoAvatar;
   final int senderProfileCounter;
   final bool accepted;
   final bool deletedByUser;
@@ -730,6 +862,10 @@ class Contact extends DataClass implements Insertable<Contact> {
   final DateTime? recoveryContactsLastHeartbeat;
   final int? recoveryContactsThreshold;
   final bool? askForFriendPromotions;
+  final bool widgetSharingAllowed;
+  final bool widgetSharingGranted;
+  final int? twonlyScore;
+  final DateTime? joinedAt;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
   const Contact({
@@ -738,6 +874,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     this.displayName,
     this.nickName,
     this.avatarSvgCompressed,
+    this.preferPhotoAvatar,
     required this.senderProfileCounter,
     required this.accepted,
     required this.deletedByUser,
@@ -757,6 +894,10 @@ class Contact extends DataClass implements Insertable<Contact> {
     this.recoveryContactsLastHeartbeat,
     this.recoveryContactsThreshold,
     this.askForFriendPromotions,
+    required this.widgetSharingAllowed,
+    required this.widgetSharingGranted,
+    this.twonlyScore,
+    this.joinedAt,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
   });
@@ -773,6 +914,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     }
     if (!nullToAbsent || avatarSvgCompressed != null) {
       map['avatar_svg_compressed'] = Variable<Uint8List>(avatarSvgCompressed);
+    }
+    if (!nullToAbsent || preferPhotoAvatar != null) {
+      map['prefer_photo_avatar'] = Variable<bool>(preferPhotoAvatar);
     }
     map['sender_profile_counter'] = Variable<int>(senderProfileCounter);
     map['accepted'] = Variable<bool>(accepted);
@@ -823,6 +967,14 @@ class Contact extends DataClass implements Insertable<Contact> {
     if (!nullToAbsent || askForFriendPromotions != null) {
       map['ask_for_friend_promotions'] = Variable<bool>(askForFriendPromotions);
     }
+    map['widget_sharing_allowed'] = Variable<bool>(widgetSharingAllowed);
+    map['widget_sharing_granted'] = Variable<bool>(widgetSharingGranted);
+    if (!nullToAbsent || twonlyScore != null) {
+      map['twonly_score'] = Variable<int>(twonlyScore);
+    }
+    if (!nullToAbsent || joinedAt != null) {
+      map['joined_at'] = Variable<DateTime>(joinedAt);
+    }
     map['media_send_counter'] = Variable<int>(mediaSendCounter);
     map['media_received_counter'] = Variable<int>(mediaReceivedCounter);
     return map;
@@ -841,6 +993,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       avatarSvgCompressed: avatarSvgCompressed == null && nullToAbsent
           ? const Value.absent()
           : Value(avatarSvgCompressed),
+      preferPhotoAvatar: preferPhotoAvatar == null && nullToAbsent
+          ? const Value.absent()
+          : Value(preferPhotoAvatar),
       senderProfileCounter: Value(senderProfileCounter),
       accepted: Value(accepted),
       deletedByUser: Value(deletedByUser),
@@ -880,6 +1035,14 @@ class Contact extends DataClass implements Insertable<Contact> {
       askForFriendPromotions: askForFriendPromotions == null && nullToAbsent
           ? const Value.absent()
           : Value(askForFriendPromotions),
+      widgetSharingAllowed: Value(widgetSharingAllowed),
+      widgetSharingGranted: Value(widgetSharingGranted),
+      twonlyScore: twonlyScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(twonlyScore),
+      joinedAt: joinedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(joinedAt),
       mediaSendCounter: Value(mediaSendCounter),
       mediaReceivedCounter: Value(mediaReceivedCounter),
     );
@@ -898,6 +1061,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       avatarSvgCompressed: serializer.fromJson<Uint8List?>(
         json['avatarSvgCompressed'],
       ),
+      preferPhotoAvatar: serializer.fromJson<bool?>(json['preferPhotoAvatar']),
       senderProfileCounter: serializer.fromJson<int>(
         json['senderProfileCounter'],
       ),
@@ -941,6 +1105,14 @@ class Contact extends DataClass implements Insertable<Contact> {
       askForFriendPromotions: serializer.fromJson<bool?>(
         json['askForFriendPromotions'],
       ),
+      widgetSharingAllowed: serializer.fromJson<bool>(
+        json['widgetSharingAllowed'],
+      ),
+      widgetSharingGranted: serializer.fromJson<bool>(
+        json['widgetSharingGranted'],
+      ),
+      twonlyScore: serializer.fromJson<int?>(json['twonlyScore']),
+      joinedAt: serializer.fromJson<DateTime?>(json['joinedAt']),
       mediaSendCounter: serializer.fromJson<int>(json['mediaSendCounter']),
       mediaReceivedCounter: serializer.fromJson<int>(
         json['mediaReceivedCounter'],
@@ -956,6 +1128,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       'displayName': serializer.toJson<String?>(displayName),
       'nickName': serializer.toJson<String?>(nickName),
       'avatarSvgCompressed': serializer.toJson<Uint8List?>(avatarSvgCompressed),
+      'preferPhotoAvatar': serializer.toJson<bool?>(preferPhotoAvatar),
       'senderProfileCounter': serializer.toJson<int>(senderProfileCounter),
       'accepted': serializer.toJson<bool>(accepted),
       'deletedByUser': serializer.toJson<bool>(deletedByUser),
@@ -993,6 +1166,10 @@ class Contact extends DataClass implements Insertable<Contact> {
       'askForFriendPromotions': serializer.toJson<bool?>(
         askForFriendPromotions,
       ),
+      'widgetSharingAllowed': serializer.toJson<bool>(widgetSharingAllowed),
+      'widgetSharingGranted': serializer.toJson<bool>(widgetSharingGranted),
+      'twonlyScore': serializer.toJson<int?>(twonlyScore),
+      'joinedAt': serializer.toJson<DateTime?>(joinedAt),
       'mediaSendCounter': serializer.toJson<int>(mediaSendCounter),
       'mediaReceivedCounter': serializer.toJson<int>(mediaReceivedCounter),
     };
@@ -1004,6 +1181,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     Value<String?> displayName = const Value.absent(),
     Value<String?> nickName = const Value.absent(),
     Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
+    Value<bool?> preferPhotoAvatar = const Value.absent(),
     int? senderProfileCounter,
     bool? accepted,
     bool? deletedByUser,
@@ -1023,6 +1201,10 @@ class Contact extends DataClass implements Insertable<Contact> {
     Value<DateTime?> recoveryContactsLastHeartbeat = const Value.absent(),
     Value<int?> recoveryContactsThreshold = const Value.absent(),
     Value<bool?> askForFriendPromotions = const Value.absent(),
+    bool? widgetSharingAllowed,
+    bool? widgetSharingGranted,
+    Value<int?> twonlyScore = const Value.absent(),
+    Value<DateTime?> joinedAt = const Value.absent(),
     int? mediaSendCounter,
     int? mediaReceivedCounter,
   }) => Contact(
@@ -1033,6 +1215,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     avatarSvgCompressed: avatarSvgCompressed.present
         ? avatarSvgCompressed.value
         : this.avatarSvgCompressed,
+    preferPhotoAvatar: preferPhotoAvatar.present
+        ? preferPhotoAvatar.value
+        : this.preferPhotoAvatar,
     senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
     accepted: accepted ?? this.accepted,
     deletedByUser: deletedByUser ?? this.deletedByUser,
@@ -1069,6 +1254,10 @@ class Contact extends DataClass implements Insertable<Contact> {
     askForFriendPromotions: askForFriendPromotions.present
         ? askForFriendPromotions.value
         : this.askForFriendPromotions,
+    widgetSharingAllowed: widgetSharingAllowed ?? this.widgetSharingAllowed,
+    widgetSharingGranted: widgetSharingGranted ?? this.widgetSharingGranted,
+    twonlyScore: twonlyScore.present ? twonlyScore.value : this.twonlyScore,
+    joinedAt: joinedAt.present ? joinedAt.value : this.joinedAt,
     mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
     mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
   );
@@ -1083,6 +1272,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       avatarSvgCompressed: data.avatarSvgCompressed.present
           ? data.avatarSvgCompressed.value
           : this.avatarSvgCompressed,
+      preferPhotoAvatar: data.preferPhotoAvatar.present
+          ? data.preferPhotoAvatar.value
+          : this.preferPhotoAvatar,
       senderProfileCounter: data.senderProfileCounter.present
           ? data.senderProfileCounter.value
           : this.senderProfileCounter,
@@ -1130,6 +1322,16 @@ class Contact extends DataClass implements Insertable<Contact> {
       askForFriendPromotions: data.askForFriendPromotions.present
           ? data.askForFriendPromotions.value
           : this.askForFriendPromotions,
+      widgetSharingAllowed: data.widgetSharingAllowed.present
+          ? data.widgetSharingAllowed.value
+          : this.widgetSharingAllowed,
+      widgetSharingGranted: data.widgetSharingGranted.present
+          ? data.widgetSharingGranted.value
+          : this.widgetSharingGranted,
+      twonlyScore: data.twonlyScore.present
+          ? data.twonlyScore.value
+          : this.twonlyScore,
+      joinedAt: data.joinedAt.present ? data.joinedAt.value : this.joinedAt,
       mediaSendCounter: data.mediaSendCounter.present
           ? data.mediaSendCounter.value
           : this.mediaSendCounter,
@@ -1147,6 +1349,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('displayName: $displayName, ')
           ..write('nickName: $nickName, ')
           ..write('avatarSvgCompressed: $avatarSvgCompressed, ')
+          ..write('preferPhotoAvatar: $preferPhotoAvatar, ')
           ..write('senderProfileCounter: $senderProfileCounter, ')
           ..write('accepted: $accepted, ')
           ..write('deletedByUser: $deletedByUser, ')
@@ -1168,6 +1371,10 @@ class Contact extends DataClass implements Insertable<Contact> {
           )
           ..write('recoveryContactsThreshold: $recoveryContactsThreshold, ')
           ..write('askForFriendPromotions: $askForFriendPromotions, ')
+          ..write('widgetSharingAllowed: $widgetSharingAllowed, ')
+          ..write('widgetSharingGranted: $widgetSharingGranted, ')
+          ..write('twonlyScore: $twonlyScore, ')
+          ..write('joinedAt: $joinedAt, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -1181,6 +1388,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     displayName,
     nickName,
     $driftBlobEquality.hash(avatarSvgCompressed),
+    preferPhotoAvatar,
     senderProfileCounter,
     accepted,
     deletedByUser,
@@ -1200,6 +1408,10 @@ class Contact extends DataClass implements Insertable<Contact> {
     recoveryContactsLastHeartbeat,
     recoveryContactsThreshold,
     askForFriendPromotions,
+    widgetSharingAllowed,
+    widgetSharingGranted,
+    twonlyScore,
+    joinedAt,
     mediaSendCounter,
     mediaReceivedCounter,
   ]);
@@ -1215,6 +1427,7 @@ class Contact extends DataClass implements Insertable<Contact> {
             other.avatarSvgCompressed,
             this.avatarSvgCompressed,
           ) &&
+          other.preferPhotoAvatar == this.preferPhotoAvatar &&
           other.senderProfileCounter == this.senderProfileCounter &&
           other.accepted == this.accepted &&
           other.deletedByUser == this.deletedByUser &&
@@ -1245,6 +1458,10 @@ class Contact extends DataClass implements Insertable<Contact> {
               this.recoveryContactsLastHeartbeat &&
           other.recoveryContactsThreshold == this.recoveryContactsThreshold &&
           other.askForFriendPromotions == this.askForFriendPromotions &&
+          other.widgetSharingAllowed == this.widgetSharingAllowed &&
+          other.widgetSharingGranted == this.widgetSharingGranted &&
+          other.twonlyScore == this.twonlyScore &&
+          other.joinedAt == this.joinedAt &&
           other.mediaSendCounter == this.mediaSendCounter &&
           other.mediaReceivedCounter == this.mediaReceivedCounter);
 }
@@ -1255,6 +1472,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<String?> displayName;
   final Value<String?> nickName;
   final Value<Uint8List?> avatarSvgCompressed;
+  final Value<bool?> preferPhotoAvatar;
   final Value<int> senderProfileCounter;
   final Value<bool> accepted;
   final Value<bool> deletedByUser;
@@ -1274,6 +1492,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<DateTime?> recoveryContactsLastHeartbeat;
   final Value<int?> recoveryContactsThreshold;
   final Value<bool?> askForFriendPromotions;
+  final Value<bool> widgetSharingAllowed;
+  final Value<bool> widgetSharingGranted;
+  final Value<int?> twonlyScore;
+  final Value<DateTime?> joinedAt;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
   const ContactsCompanion({
@@ -1282,6 +1504,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.displayName = const Value.absent(),
     this.nickName = const Value.absent(),
     this.avatarSvgCompressed = const Value.absent(),
+    this.preferPhotoAvatar = const Value.absent(),
     this.senderProfileCounter = const Value.absent(),
     this.accepted = const Value.absent(),
     this.deletedByUser = const Value.absent(),
@@ -1301,6 +1524,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.recoveryContactsLastHeartbeat = const Value.absent(),
     this.recoveryContactsThreshold = const Value.absent(),
     this.askForFriendPromotions = const Value.absent(),
+    this.widgetSharingAllowed = const Value.absent(),
+    this.widgetSharingGranted = const Value.absent(),
+    this.twonlyScore = const Value.absent(),
+    this.joinedAt = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   });
@@ -1310,6 +1537,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.displayName = const Value.absent(),
     this.nickName = const Value.absent(),
     this.avatarSvgCompressed = const Value.absent(),
+    this.preferPhotoAvatar = const Value.absent(),
     this.senderProfileCounter = const Value.absent(),
     this.accepted = const Value.absent(),
     this.deletedByUser = const Value.absent(),
@@ -1329,6 +1557,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.recoveryContactsLastHeartbeat = const Value.absent(),
     this.recoveryContactsThreshold = const Value.absent(),
     this.askForFriendPromotions = const Value.absent(),
+    this.widgetSharingAllowed = const Value.absent(),
+    this.widgetSharingGranted = const Value.absent(),
+    this.twonlyScore = const Value.absent(),
+    this.joinedAt = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   }) : username = Value(username);
@@ -1338,6 +1570,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<String>? displayName,
     Expression<String>? nickName,
     Expression<Uint8List>? avatarSvgCompressed,
+    Expression<bool>? preferPhotoAvatar,
     Expression<int>? senderProfileCounter,
     Expression<bool>? accepted,
     Expression<bool>? deletedByUser,
@@ -1357,6 +1590,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<DateTime>? recoveryContactsLastHeartbeat,
     Expression<int>? recoveryContactsThreshold,
     Expression<bool>? askForFriendPromotions,
+    Expression<bool>? widgetSharingAllowed,
+    Expression<bool>? widgetSharingGranted,
+    Expression<int>? twonlyScore,
+    Expression<DateTime>? joinedAt,
     Expression<int>? mediaSendCounter,
     Expression<int>? mediaReceivedCounter,
   }) {
@@ -1367,6 +1604,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (nickName != null) 'nick_name': nickName,
       if (avatarSvgCompressed != null)
         'avatar_svg_compressed': avatarSvgCompressed,
+      if (preferPhotoAvatar != null) 'prefer_photo_avatar': preferPhotoAvatar,
       if (senderProfileCounter != null)
         'sender_profile_counter': senderProfileCounter,
       if (accepted != null) 'accepted': accepted,
@@ -1397,6 +1635,12 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         'recovery_contacts_threshold': recoveryContactsThreshold,
       if (askForFriendPromotions != null)
         'ask_for_friend_promotions': askForFriendPromotions,
+      if (widgetSharingAllowed != null)
+        'widget_sharing_allowed': widgetSharingAllowed,
+      if (widgetSharingGranted != null)
+        'widget_sharing_granted': widgetSharingGranted,
+      if (twonlyScore != null) 'twonly_score': twonlyScore,
+      if (joinedAt != null) 'joined_at': joinedAt,
       if (mediaSendCounter != null) 'media_send_counter': mediaSendCounter,
       if (mediaReceivedCounter != null)
         'media_received_counter': mediaReceivedCounter,
@@ -1409,6 +1653,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<String?>? displayName,
     Value<String?>? nickName,
     Value<Uint8List?>? avatarSvgCompressed,
+    Value<bool?>? preferPhotoAvatar,
     Value<int>? senderProfileCounter,
     Value<bool>? accepted,
     Value<bool>? deletedByUser,
@@ -1428,6 +1673,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<DateTime?>? recoveryContactsLastHeartbeat,
     Value<int?>? recoveryContactsThreshold,
     Value<bool?>? askForFriendPromotions,
+    Value<bool>? widgetSharingAllowed,
+    Value<bool>? widgetSharingGranted,
+    Value<int?>? twonlyScore,
+    Value<DateTime?>? joinedAt,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
   }) {
@@ -1437,6 +1686,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       displayName: displayName ?? this.displayName,
       nickName: nickName ?? this.nickName,
       avatarSvgCompressed: avatarSvgCompressed ?? this.avatarSvgCompressed,
+      preferPhotoAvatar: preferPhotoAvatar ?? this.preferPhotoAvatar,
       senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
       accepted: accepted ?? this.accepted,
       deletedByUser: deletedByUser ?? this.deletedByUser,
@@ -1464,6 +1714,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           recoveryContactsThreshold ?? this.recoveryContactsThreshold,
       askForFriendPromotions:
           askForFriendPromotions ?? this.askForFriendPromotions,
+      widgetSharingAllowed: widgetSharingAllowed ?? this.widgetSharingAllowed,
+      widgetSharingGranted: widgetSharingGranted ?? this.widgetSharingGranted,
+      twonlyScore: twonlyScore ?? this.twonlyScore,
+      joinedAt: joinedAt ?? this.joinedAt,
       mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
       mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
     );
@@ -1488,6 +1742,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       map['avatar_svg_compressed'] = Variable<Uint8List>(
         avatarSvgCompressed.value,
       );
+    }
+    if (preferPhotoAvatar.present) {
+      map['prefer_photo_avatar'] = Variable<bool>(preferPhotoAvatar.value);
     }
     if (senderProfileCounter.present) {
       map['sender_profile_counter'] = Variable<int>(senderProfileCounter.value);
@@ -1568,6 +1825,22 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         askForFriendPromotions.value,
       );
     }
+    if (widgetSharingAllowed.present) {
+      map['widget_sharing_allowed'] = Variable<bool>(
+        widgetSharingAllowed.value,
+      );
+    }
+    if (widgetSharingGranted.present) {
+      map['widget_sharing_granted'] = Variable<bool>(
+        widgetSharingGranted.value,
+      );
+    }
+    if (twonlyScore.present) {
+      map['twonly_score'] = Variable<int>(twonlyScore.value);
+    }
+    if (joinedAt.present) {
+      map['joined_at'] = Variable<DateTime>(joinedAt.value);
+    }
     if (mediaSendCounter.present) {
       map['media_send_counter'] = Variable<int>(mediaSendCounter.value);
     }
@@ -1585,6 +1858,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('displayName: $displayName, ')
           ..write('nickName: $nickName, ')
           ..write('avatarSvgCompressed: $avatarSvgCompressed, ')
+          ..write('preferPhotoAvatar: $preferPhotoAvatar, ')
           ..write('senderProfileCounter: $senderProfileCounter, ')
           ..write('accepted: $accepted, ')
           ..write('deletedByUser: $deletedByUser, ')
@@ -1606,6 +1880,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           )
           ..write('recoveryContactsThreshold: $recoveryContactsThreshold, ')
           ..write('askForFriendPromotions: $askForFriendPromotions, ')
+          ..write('widgetSharingAllowed: $widgetSharingAllowed, ')
+          ..write('widgetSharingGranted: $widgetSharingGranted, ')
+          ..write('twonlyScore: $twonlyScore, ')
+          ..write('joinedAt: $joinedAt, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -3223,6 +3501,21 @@ class $MediaFilesTable extends MediaFiles
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _isWidgetMediaMeta = const VerificationMeta(
+    'isWidgetMedia',
+  );
+  @override
+  late final GeneratedColumn<bool> isWidgetMedia = GeneratedColumn<bool>(
+    'is_widget_media',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_widget_media" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _isFavoriteMeta = const VerificationMeta(
     'isFavorite',
   );
@@ -3296,6 +3589,28 @@ class $MediaFilesTable extends MediaFiles
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'CHECK ("remove_audio" IN (0, 1))',
     ),
+  );
+  static const VerificationMeta _trimStartMsMeta = const VerificationMeta(
+    'trimStartMs',
+  );
+  @override
+  late final GeneratedColumn<int> trimStartMs = GeneratedColumn<int>(
+    'trim_start_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _trimEndMsMeta = const VerificationMeta(
+    'trimEndMs',
+  );
+  @override
+  late final GeneratedColumn<int> trimEndMs = GeneratedColumn<int>(
+    'trim_end_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _downloadTokenMeta = const VerificationMeta(
     'downloadToken',
@@ -3383,6 +3698,75 @@ class $MediaFilesTable extends MediaFiles
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _locationLatitudeMeta = const VerificationMeta(
+    'locationLatitude',
+  );
+  @override
+  late final GeneratedColumn<double> locationLatitude = GeneratedColumn<double>(
+    'location_latitude',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _locationLongitudeMeta = const VerificationMeta(
+    'locationLongitude',
+  );
+  @override
+  late final GeneratedColumn<double> locationLongitude =
+      GeneratedColumn<double>(
+        'location_longitude',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _locationAccuracyMeta = const VerificationMeta(
+    'locationAccuracy',
+  );
+  @override
+  late final GeneratedColumn<double> locationAccuracy = GeneratedColumn<double>(
+    'location_accuracy',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _locationStatusMeta = const VerificationMeta(
+    'locationStatus',
+  );
+  @override
+  late final GeneratedColumn<String> locationStatus = GeneratedColumn<String>(
+    'location_status',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _locationDeadlineAtMeta =
+      const VerificationMeta('locationDeadlineAt');
+  @override
+  late final GeneratedColumn<int> locationDeadlineAt = GeneratedColumn<int>(
+    'location_deadline_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _galleryExportPendingMeta =
+      const VerificationMeta('galleryExportPending');
+  @override
+  late final GeneratedColumn<bool> galleryExportPending = GeneratedColumn<bool>(
+    'gallery_export_pending',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("gallery_export_pending" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3417,12 +3801,15 @@ class $MediaFilesTable extends MediaFiles
     requiresAuthentication,
     stored,
     isDraftMedia,
+    isWidgetMedia,
     isFavorite,
     hasCropAnalyzed,
     preProgressingProcess,
     reuploadRequestedBy,
     displayLimitInMilliseconds,
     removeAudio,
+    trimStartMs,
+    trimEndMs,
     downloadToken,
     encryptionKey,
     encryptionMac,
@@ -3430,6 +3817,12 @@ class $MediaFilesTable extends MediaFiles
     storedFileHash,
     hasThumbnail,
     sizeInBytes,
+    locationLatitude,
+    locationLongitude,
+    locationAccuracy,
+    locationStatus,
+    locationDeadlineAt,
+    galleryExportPending,
     createdAt,
     createdAtMonth,
   ];
@@ -3483,6 +3876,15 @@ class $MediaFilesTable extends MediaFiles
         ),
       );
     }
+    if (data.containsKey('is_widget_media')) {
+      context.handle(
+        _isWidgetMediaMeta,
+        isWidgetMedia.isAcceptableOrUnknown(
+          data['is_widget_media']!,
+          _isWidgetMediaMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_favorite')) {
       context.handle(
         _isFavoriteMeta,
@@ -3523,6 +3925,21 @@ class $MediaFilesTable extends MediaFiles
           data['remove_audio']!,
           _removeAudioMeta,
         ),
+      );
+    }
+    if (data.containsKey('trim_start_ms')) {
+      context.handle(
+        _trimStartMsMeta,
+        trimStartMs.isAcceptableOrUnknown(
+          data['trim_start_ms']!,
+          _trimStartMsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('trim_end_ms')) {
+      context.handle(
+        _trimEndMsMeta,
+        trimEndMs.isAcceptableOrUnknown(data['trim_end_ms']!, _trimEndMsMeta),
       );
     }
     if (data.containsKey('download_token')) {
@@ -3585,6 +4002,60 @@ class $MediaFilesTable extends MediaFiles
         sizeInBytes.isAcceptableOrUnknown(
           data['size_in_bytes']!,
           _sizeInBytesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('location_latitude')) {
+      context.handle(
+        _locationLatitudeMeta,
+        locationLatitude.isAcceptableOrUnknown(
+          data['location_latitude']!,
+          _locationLatitudeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('location_longitude')) {
+      context.handle(
+        _locationLongitudeMeta,
+        locationLongitude.isAcceptableOrUnknown(
+          data['location_longitude']!,
+          _locationLongitudeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('location_accuracy')) {
+      context.handle(
+        _locationAccuracyMeta,
+        locationAccuracy.isAcceptableOrUnknown(
+          data['location_accuracy']!,
+          _locationAccuracyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('location_status')) {
+      context.handle(
+        _locationStatusMeta,
+        locationStatus.isAcceptableOrUnknown(
+          data['location_status']!,
+          _locationStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('location_deadline_at')) {
+      context.handle(
+        _locationDeadlineAtMeta,
+        locationDeadlineAt.isAcceptableOrUnknown(
+          data['location_deadline_at']!,
+          _locationDeadlineAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('gallery_export_pending')) {
+      context.handle(
+        _galleryExportPendingMeta,
+        galleryExportPending.isAcceptableOrUnknown(
+          data['gallery_export_pending']!,
+          _galleryExportPendingMeta,
         ),
       );
     }
@@ -3656,6 +4127,10 @@ class $MediaFilesTable extends MediaFiles
         DriftSqlType.bool,
         data['${effectivePrefix}is_draft_media'],
       )!,
+      isWidgetMedia: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_widget_media'],
+      )!,
       isFavorite: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_favorite'],
@@ -3682,6 +4157,14 @@ class $MediaFilesTable extends MediaFiles
       removeAudio: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}remove_audio'],
+      ),
+      trimStartMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}trim_start_ms'],
+      ),
+      trimEndMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}trim_end_ms'],
       ),
       downloadToken: attachedDatabase.typeMapping.read(
         DriftSqlType.blob,
@@ -3711,6 +4194,30 @@ class $MediaFilesTable extends MediaFiles
         DriftSqlType.int,
         data['${effectivePrefix}size_in_bytes'],
       ),
+      locationLatitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}location_latitude'],
+      ),
+      locationLongitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}location_longitude'],
+      ),
+      locationAccuracy: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}location_accuracy'],
+      ),
+      locationStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}location_status'],
+      ),
+      locationDeadlineAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}location_deadline_at'],
+      ),
+      galleryExportPending: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}gallery_export_pending'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3759,12 +4266,20 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final bool requiresAuthentication;
   final bool stored;
   final bool isDraftMedia;
+  final bool isWidgetMedia;
   final bool isFavorite;
   final bool hasCropAnalyzed;
   final int? preProgressingProcess;
   final List<int>? reuploadRequestedBy;
   final int? displayLimitInMilliseconds;
   final bool? removeAudio;
+
+  /// Where the editor's cutter placed the two ends of a video, in milliseconds
+  /// into the recording. Null on either side means the clip keeps that end.
+  /// The recording on disk is never cut; the transcode every send performs
+  /// applies these.
+  final int? trimStartMs;
+  final int? trimEndMs;
   final Uint8List? downloadToken;
   final Uint8List? encryptionKey;
   final Uint8List? encryptionMac;
@@ -3772,6 +4287,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final Uint8List? storedFileHash;
   final bool hasThumbnail;
   final int? sizeInBytes;
+  final double? locationLatitude;
+  final double? locationLongitude;
+  final double? locationAccuracy;
+  final String? locationStatus;
+  final int? locationDeadlineAt;
+  final bool galleryExportPending;
   final DateTime createdAt;
   final String? createdAtMonth;
   const MediaFile({
@@ -3784,12 +4305,15 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     required this.requiresAuthentication,
     required this.stored,
     required this.isDraftMedia,
+    required this.isWidgetMedia,
     required this.isFavorite,
     required this.hasCropAnalyzed,
     this.preProgressingProcess,
     this.reuploadRequestedBy,
     this.displayLimitInMilliseconds,
     this.removeAudio,
+    this.trimStartMs,
+    this.trimEndMs,
     this.downloadToken,
     this.encryptionKey,
     this.encryptionMac,
@@ -3797,6 +4321,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     this.storedFileHash,
     required this.hasThumbnail,
     this.sizeInBytes,
+    this.locationLatitude,
+    this.locationLongitude,
+    this.locationAccuracy,
+    this.locationStatus,
+    this.locationDeadlineAt,
+    required this.galleryExportPending,
     required this.createdAt,
     this.createdAtMonth,
   });
@@ -3830,6 +4360,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     map['requires_authentication'] = Variable<bool>(requiresAuthentication);
     map['stored'] = Variable<bool>(stored);
     map['is_draft_media'] = Variable<bool>(isDraftMedia);
+    map['is_widget_media'] = Variable<bool>(isWidgetMedia);
     map['is_favorite'] = Variable<bool>(isFavorite);
     map['has_crop_analyzed'] = Variable<bool>(hasCropAnalyzed);
     if (!nullToAbsent || preProgressingProcess != null) {
@@ -3850,6 +4381,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     if (!nullToAbsent || removeAudio != null) {
       map['remove_audio'] = Variable<bool>(removeAudio);
     }
+    if (!nullToAbsent || trimStartMs != null) {
+      map['trim_start_ms'] = Variable<int>(trimStartMs);
+    }
+    if (!nullToAbsent || trimEndMs != null) {
+      map['trim_end_ms'] = Variable<int>(trimEndMs);
+    }
     if (!nullToAbsent || downloadToken != null) {
       map['download_token'] = Variable<Uint8List>(downloadToken);
     }
@@ -3869,6 +4406,22 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     if (!nullToAbsent || sizeInBytes != null) {
       map['size_in_bytes'] = Variable<int>(sizeInBytes);
     }
+    if (!nullToAbsent || locationLatitude != null) {
+      map['location_latitude'] = Variable<double>(locationLatitude);
+    }
+    if (!nullToAbsent || locationLongitude != null) {
+      map['location_longitude'] = Variable<double>(locationLongitude);
+    }
+    if (!nullToAbsent || locationAccuracy != null) {
+      map['location_accuracy'] = Variable<double>(locationAccuracy);
+    }
+    if (!nullToAbsent || locationStatus != null) {
+      map['location_status'] = Variable<String>(locationStatus);
+    }
+    if (!nullToAbsent || locationDeadlineAt != null) {
+      map['location_deadline_at'] = Variable<int>(locationDeadlineAt);
+    }
+    map['gallery_export_pending'] = Variable<bool>(galleryExportPending);
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || createdAtMonth != null) {
       map['created_at_month'] = Variable<String>(createdAtMonth);
@@ -3893,6 +4446,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       requiresAuthentication: Value(requiresAuthentication),
       stored: Value(stored),
       isDraftMedia: Value(isDraftMedia),
+      isWidgetMedia: Value(isWidgetMedia),
       isFavorite: Value(isFavorite),
       hasCropAnalyzed: Value(hasCropAnalyzed),
       preProgressingProcess: preProgressingProcess == null && nullToAbsent
@@ -3908,6 +4462,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       removeAudio: removeAudio == null && nullToAbsent
           ? const Value.absent()
           : Value(removeAudio),
+      trimStartMs: trimStartMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trimStartMs),
+      trimEndMs: trimEndMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trimEndMs),
       downloadToken: downloadToken == null && nullToAbsent
           ? const Value.absent()
           : Value(downloadToken),
@@ -3927,6 +4487,22 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       sizeInBytes: sizeInBytes == null && nullToAbsent
           ? const Value.absent()
           : Value(sizeInBytes),
+      locationLatitude: locationLatitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationLatitude),
+      locationLongitude: locationLongitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationLongitude),
+      locationAccuracy: locationAccuracy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationAccuracy),
+      locationStatus: locationStatus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationStatus),
+      locationDeadlineAt: locationDeadlineAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationDeadlineAt),
+      galleryExportPending: Value(galleryExportPending),
       createdAt: Value(createdAt),
       createdAtMonth: createdAtMonth == null && nullToAbsent
           ? const Value.absent()
@@ -3959,6 +4535,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       ),
       stored: serializer.fromJson<bool>(json['stored']),
       isDraftMedia: serializer.fromJson<bool>(json['isDraftMedia']),
+      isWidgetMedia: serializer.fromJson<bool>(json['isWidgetMedia']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       hasCropAnalyzed: serializer.fromJson<bool>(json['hasCropAnalyzed']),
       preProgressingProcess: serializer.fromJson<int?>(
@@ -3971,6 +4548,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         json['displayLimitInMilliseconds'],
       ),
       removeAudio: serializer.fromJson<bool?>(json['removeAudio']),
+      trimStartMs: serializer.fromJson<int?>(json['trimStartMs']),
+      trimEndMs: serializer.fromJson<int?>(json['trimEndMs']),
       downloadToken: serializer.fromJson<Uint8List?>(json['downloadToken']),
       encryptionKey: serializer.fromJson<Uint8List?>(json['encryptionKey']),
       encryptionMac: serializer.fromJson<Uint8List?>(json['encryptionMac']),
@@ -3978,6 +4557,16 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       storedFileHash: serializer.fromJson<Uint8List?>(json['storedFileHash']),
       hasThumbnail: serializer.fromJson<bool>(json['hasThumbnail']),
       sizeInBytes: serializer.fromJson<int?>(json['sizeInBytes']),
+      locationLatitude: serializer.fromJson<double?>(json['locationLatitude']),
+      locationLongitude: serializer.fromJson<double?>(
+        json['locationLongitude'],
+      ),
+      locationAccuracy: serializer.fromJson<double?>(json['locationAccuracy']),
+      locationStatus: serializer.fromJson<String?>(json['locationStatus']),
+      locationDeadlineAt: serializer.fromJson<int?>(json['locationDeadlineAt']),
+      galleryExportPending: serializer.fromJson<bool>(
+        json['galleryExportPending'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       createdAtMonth: serializer.fromJson<String?>(json['createdAtMonth']),
     );
@@ -4003,6 +4592,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'requiresAuthentication': serializer.toJson<bool>(requiresAuthentication),
       'stored': serializer.toJson<bool>(stored),
       'isDraftMedia': serializer.toJson<bool>(isDraftMedia),
+      'isWidgetMedia': serializer.toJson<bool>(isWidgetMedia),
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'hasCropAnalyzed': serializer.toJson<bool>(hasCropAnalyzed),
       'preProgressingProcess': serializer.toJson<int?>(preProgressingProcess),
@@ -4011,6 +4601,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         displayLimitInMilliseconds,
       ),
       'removeAudio': serializer.toJson<bool?>(removeAudio),
+      'trimStartMs': serializer.toJson<int?>(trimStartMs),
+      'trimEndMs': serializer.toJson<int?>(trimEndMs),
       'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
       'encryptionKey': serializer.toJson<Uint8List?>(encryptionKey),
       'encryptionMac': serializer.toJson<Uint8List?>(encryptionMac),
@@ -4018,6 +4610,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'storedFileHash': serializer.toJson<Uint8List?>(storedFileHash),
       'hasThumbnail': serializer.toJson<bool>(hasThumbnail),
       'sizeInBytes': serializer.toJson<int?>(sizeInBytes),
+      'locationLatitude': serializer.toJson<double?>(locationLatitude),
+      'locationLongitude': serializer.toJson<double?>(locationLongitude),
+      'locationAccuracy': serializer.toJson<double?>(locationAccuracy),
+      'locationStatus': serializer.toJson<String?>(locationStatus),
+      'locationDeadlineAt': serializer.toJson<int?>(locationDeadlineAt),
+      'galleryExportPending': serializer.toJson<bool>(galleryExportPending),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'createdAtMonth': serializer.toJson<String?>(createdAtMonth),
     };
@@ -4033,12 +4631,15 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     bool? requiresAuthentication,
     bool? stored,
     bool? isDraftMedia,
+    bool? isWidgetMedia,
     bool? isFavorite,
     bool? hasCropAnalyzed,
     Value<int?> preProgressingProcess = const Value.absent(),
     Value<List<int>?> reuploadRequestedBy = const Value.absent(),
     Value<int?> displayLimitInMilliseconds = const Value.absent(),
     Value<bool?> removeAudio = const Value.absent(),
+    Value<int?> trimStartMs = const Value.absent(),
+    Value<int?> trimEndMs = const Value.absent(),
     Value<Uint8List?> downloadToken = const Value.absent(),
     Value<Uint8List?> encryptionKey = const Value.absent(),
     Value<Uint8List?> encryptionMac = const Value.absent(),
@@ -4046,6 +4647,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     Value<Uint8List?> storedFileHash = const Value.absent(),
     bool? hasThumbnail,
     Value<int?> sizeInBytes = const Value.absent(),
+    Value<double?> locationLatitude = const Value.absent(),
+    Value<double?> locationLongitude = const Value.absent(),
+    Value<double?> locationAccuracy = const Value.absent(),
+    Value<String?> locationStatus = const Value.absent(),
+    Value<int?> locationDeadlineAt = const Value.absent(),
+    bool? galleryExportPending,
     DateTime? createdAt,
     Value<String?> createdAtMonth = const Value.absent(),
   }) => MediaFile(
@@ -4061,6 +4668,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         requiresAuthentication ?? this.requiresAuthentication,
     stored: stored ?? this.stored,
     isDraftMedia: isDraftMedia ?? this.isDraftMedia,
+    isWidgetMedia: isWidgetMedia ?? this.isWidgetMedia,
     isFavorite: isFavorite ?? this.isFavorite,
     hasCropAnalyzed: hasCropAnalyzed ?? this.hasCropAnalyzed,
     preProgressingProcess: preProgressingProcess.present
@@ -4073,6 +4681,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         ? displayLimitInMilliseconds.value
         : this.displayLimitInMilliseconds,
     removeAudio: removeAudio.present ? removeAudio.value : this.removeAudio,
+    trimStartMs: trimStartMs.present ? trimStartMs.value : this.trimStartMs,
+    trimEndMs: trimEndMs.present ? trimEndMs.value : this.trimEndMs,
     downloadToken: downloadToken.present
         ? downloadToken.value
         : this.downloadToken,
@@ -4090,6 +4700,22 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         : this.storedFileHash,
     hasThumbnail: hasThumbnail ?? this.hasThumbnail,
     sizeInBytes: sizeInBytes.present ? sizeInBytes.value : this.sizeInBytes,
+    locationLatitude: locationLatitude.present
+        ? locationLatitude.value
+        : this.locationLatitude,
+    locationLongitude: locationLongitude.present
+        ? locationLongitude.value
+        : this.locationLongitude,
+    locationAccuracy: locationAccuracy.present
+        ? locationAccuracy.value
+        : this.locationAccuracy,
+    locationStatus: locationStatus.present
+        ? locationStatus.value
+        : this.locationStatus,
+    locationDeadlineAt: locationDeadlineAt.present
+        ? locationDeadlineAt.value
+        : this.locationDeadlineAt,
+    galleryExportPending: galleryExportPending ?? this.galleryExportPending,
     createdAt: createdAt ?? this.createdAt,
     createdAtMonth: createdAtMonth.present
         ? createdAtMonth.value
@@ -4116,6 +4742,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       isDraftMedia: data.isDraftMedia.present
           ? data.isDraftMedia.value
           : this.isDraftMedia,
+      isWidgetMedia: data.isWidgetMedia.present
+          ? data.isWidgetMedia.value
+          : this.isWidgetMedia,
       isFavorite: data.isFavorite.present
           ? data.isFavorite.value
           : this.isFavorite,
@@ -4134,6 +4763,10 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       removeAudio: data.removeAudio.present
           ? data.removeAudio.value
           : this.removeAudio,
+      trimStartMs: data.trimStartMs.present
+          ? data.trimStartMs.value
+          : this.trimStartMs,
+      trimEndMs: data.trimEndMs.present ? data.trimEndMs.value : this.trimEndMs,
       downloadToken: data.downloadToken.present
           ? data.downloadToken.value
           : this.downloadToken,
@@ -4155,6 +4788,24 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       sizeInBytes: data.sizeInBytes.present
           ? data.sizeInBytes.value
           : this.sizeInBytes,
+      locationLatitude: data.locationLatitude.present
+          ? data.locationLatitude.value
+          : this.locationLatitude,
+      locationLongitude: data.locationLongitude.present
+          ? data.locationLongitude.value
+          : this.locationLongitude,
+      locationAccuracy: data.locationAccuracy.present
+          ? data.locationAccuracy.value
+          : this.locationAccuracy,
+      locationStatus: data.locationStatus.present
+          ? data.locationStatus.value
+          : this.locationStatus,
+      locationDeadlineAt: data.locationDeadlineAt.present
+          ? data.locationDeadlineAt.value
+          : this.locationDeadlineAt,
+      galleryExportPending: data.galleryExportPending.present
+          ? data.galleryExportPending.value
+          : this.galleryExportPending,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       createdAtMonth: data.createdAtMonth.present
           ? data.createdAtMonth.value
@@ -4174,12 +4825,15 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
+          ..write('isWidgetMedia: $isWidgetMedia, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('hasCropAnalyzed: $hasCropAnalyzed, ')
           ..write('preProgressingProcess: $preProgressingProcess, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
           ..write('removeAudio: $removeAudio, ')
+          ..write('trimStartMs: $trimStartMs, ')
+          ..write('trimEndMs: $trimEndMs, ')
           ..write('downloadToken: $downloadToken, ')
           ..write('encryptionKey: $encryptionKey, ')
           ..write('encryptionMac: $encryptionMac, ')
@@ -4187,6 +4841,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('storedFileHash: $storedFileHash, ')
           ..write('hasThumbnail: $hasThumbnail, ')
           ..write('sizeInBytes: $sizeInBytes, ')
+          ..write('locationLatitude: $locationLatitude, ')
+          ..write('locationLongitude: $locationLongitude, ')
+          ..write('locationAccuracy: $locationAccuracy, ')
+          ..write('locationStatus: $locationStatus, ')
+          ..write('locationDeadlineAt: $locationDeadlineAt, ')
+          ..write('galleryExportPending: $galleryExportPending, ')
           ..write('createdAt: $createdAt, ')
           ..write('createdAtMonth: $createdAtMonth')
           ..write(')'))
@@ -4204,12 +4864,15 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     requiresAuthentication,
     stored,
     isDraftMedia,
+    isWidgetMedia,
     isFavorite,
     hasCropAnalyzed,
     preProgressingProcess,
     reuploadRequestedBy,
     displayLimitInMilliseconds,
     removeAudio,
+    trimStartMs,
+    trimEndMs,
     $driftBlobEquality.hash(downloadToken),
     $driftBlobEquality.hash(encryptionKey),
     $driftBlobEquality.hash(encryptionMac),
@@ -4217,6 +4880,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     $driftBlobEquality.hash(storedFileHash),
     hasThumbnail,
     sizeInBytes,
+    locationLatitude,
+    locationLongitude,
+    locationAccuracy,
+    locationStatus,
+    locationDeadlineAt,
+    galleryExportPending,
     createdAt,
     createdAtMonth,
   ]);
@@ -4233,12 +4902,15 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           other.requiresAuthentication == this.requiresAuthentication &&
           other.stored == this.stored &&
           other.isDraftMedia == this.isDraftMedia &&
+          other.isWidgetMedia == this.isWidgetMedia &&
           other.isFavorite == this.isFavorite &&
           other.hasCropAnalyzed == this.hasCropAnalyzed &&
           other.preProgressingProcess == this.preProgressingProcess &&
           other.reuploadRequestedBy == this.reuploadRequestedBy &&
           other.displayLimitInMilliseconds == this.displayLimitInMilliseconds &&
           other.removeAudio == this.removeAudio &&
+          other.trimStartMs == this.trimStartMs &&
+          other.trimEndMs == this.trimEndMs &&
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
           $driftBlobEquality.equals(other.encryptionKey, this.encryptionKey) &&
           $driftBlobEquality.equals(other.encryptionMac, this.encryptionMac) &&
@@ -4252,6 +4924,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ) &&
           other.hasThumbnail == this.hasThumbnail &&
           other.sizeInBytes == this.sizeInBytes &&
+          other.locationLatitude == this.locationLatitude &&
+          other.locationLongitude == this.locationLongitude &&
+          other.locationAccuracy == this.locationAccuracy &&
+          other.locationStatus == this.locationStatus &&
+          other.locationDeadlineAt == this.locationDeadlineAt &&
+          other.galleryExportPending == this.galleryExportPending &&
           other.createdAt == this.createdAt &&
           other.createdAtMonth == this.createdAtMonth);
 }
@@ -4266,12 +4944,15 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<bool> requiresAuthentication;
   final Value<bool> stored;
   final Value<bool> isDraftMedia;
+  final Value<bool> isWidgetMedia;
   final Value<bool> isFavorite;
   final Value<bool> hasCropAnalyzed;
   final Value<int?> preProgressingProcess;
   final Value<List<int>?> reuploadRequestedBy;
   final Value<int?> displayLimitInMilliseconds;
   final Value<bool?> removeAudio;
+  final Value<int?> trimStartMs;
+  final Value<int?> trimEndMs;
   final Value<Uint8List?> downloadToken;
   final Value<Uint8List?> encryptionKey;
   final Value<Uint8List?> encryptionMac;
@@ -4279,6 +4960,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<Uint8List?> storedFileHash;
   final Value<bool> hasThumbnail;
   final Value<int?> sizeInBytes;
+  final Value<double?> locationLatitude;
+  final Value<double?> locationLongitude;
+  final Value<double?> locationAccuracy;
+  final Value<String?> locationStatus;
+  final Value<int?> locationDeadlineAt;
+  final Value<bool> galleryExportPending;
   final Value<DateTime> createdAt;
   final Value<String?> createdAtMonth;
   final Value<int> rowid;
@@ -4292,12 +4979,15 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
+    this.isWidgetMedia = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.hasCropAnalyzed = const Value.absent(),
     this.preProgressingProcess = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
     this.removeAudio = const Value.absent(),
+    this.trimStartMs = const Value.absent(),
+    this.trimEndMs = const Value.absent(),
     this.downloadToken = const Value.absent(),
     this.encryptionKey = const Value.absent(),
     this.encryptionMac = const Value.absent(),
@@ -4305,6 +4995,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.storedFileHash = const Value.absent(),
     this.hasThumbnail = const Value.absent(),
     this.sizeInBytes = const Value.absent(),
+    this.locationLatitude = const Value.absent(),
+    this.locationLongitude = const Value.absent(),
+    this.locationAccuracy = const Value.absent(),
+    this.locationStatus = const Value.absent(),
+    this.locationDeadlineAt = const Value.absent(),
+    this.galleryExportPending = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.createdAtMonth = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -4319,12 +5015,15 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
+    this.isWidgetMedia = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.hasCropAnalyzed = const Value.absent(),
     this.preProgressingProcess = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
     this.removeAudio = const Value.absent(),
+    this.trimStartMs = const Value.absent(),
+    this.trimEndMs = const Value.absent(),
     this.downloadToken = const Value.absent(),
     this.encryptionKey = const Value.absent(),
     this.encryptionMac = const Value.absent(),
@@ -4332,6 +5031,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.storedFileHash = const Value.absent(),
     this.hasThumbnail = const Value.absent(),
     this.sizeInBytes = const Value.absent(),
+    this.locationLatitude = const Value.absent(),
+    this.locationLongitude = const Value.absent(),
+    this.locationAccuracy = const Value.absent(),
+    this.locationStatus = const Value.absent(),
+    this.locationDeadlineAt = const Value.absent(),
+    this.galleryExportPending = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.createdAtMonth = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -4347,12 +5052,15 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<bool>? requiresAuthentication,
     Expression<bool>? stored,
     Expression<bool>? isDraftMedia,
+    Expression<bool>? isWidgetMedia,
     Expression<bool>? isFavorite,
     Expression<bool>? hasCropAnalyzed,
     Expression<int>? preProgressingProcess,
     Expression<String>? reuploadRequestedBy,
     Expression<int>? displayLimitInMilliseconds,
     Expression<bool>? removeAudio,
+    Expression<int>? trimStartMs,
+    Expression<int>? trimEndMs,
     Expression<Uint8List>? downloadToken,
     Expression<Uint8List>? encryptionKey,
     Expression<Uint8List>? encryptionMac,
@@ -4360,6 +5068,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<Uint8List>? storedFileHash,
     Expression<bool>? hasThumbnail,
     Expression<int>? sizeInBytes,
+    Expression<double>? locationLatitude,
+    Expression<double>? locationLongitude,
+    Expression<double>? locationAccuracy,
+    Expression<String>? locationStatus,
+    Expression<int>? locationDeadlineAt,
+    Expression<bool>? galleryExportPending,
     Expression<DateTime>? createdAt,
     Expression<String>? createdAtMonth,
     Expression<int>? rowid,
@@ -4375,6 +5089,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
         'requires_authentication': requiresAuthentication,
       if (stored != null) 'stored': stored,
       if (isDraftMedia != null) 'is_draft_media': isDraftMedia,
+      if (isWidgetMedia != null) 'is_widget_media': isWidgetMedia,
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (hasCropAnalyzed != null) 'has_crop_analyzed': hasCropAnalyzed,
       if (preProgressingProcess != null)
@@ -4384,6 +5099,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       if (displayLimitInMilliseconds != null)
         'display_limit_in_milliseconds': displayLimitInMilliseconds,
       if (removeAudio != null) 'remove_audio': removeAudio,
+      if (trimStartMs != null) 'trim_start_ms': trimStartMs,
+      if (trimEndMs != null) 'trim_end_ms': trimEndMs,
       if (downloadToken != null) 'download_token': downloadToken,
       if (encryptionKey != null) 'encryption_key': encryptionKey,
       if (encryptionMac != null) 'encryption_mac': encryptionMac,
@@ -4391,6 +5108,14 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       if (storedFileHash != null) 'stored_file_hash': storedFileHash,
       if (hasThumbnail != null) 'has_thumbnail': hasThumbnail,
       if (sizeInBytes != null) 'size_in_bytes': sizeInBytes,
+      if (locationLatitude != null) 'location_latitude': locationLatitude,
+      if (locationLongitude != null) 'location_longitude': locationLongitude,
+      if (locationAccuracy != null) 'location_accuracy': locationAccuracy,
+      if (locationStatus != null) 'location_status': locationStatus,
+      if (locationDeadlineAt != null)
+        'location_deadline_at': locationDeadlineAt,
+      if (galleryExportPending != null)
+        'gallery_export_pending': galleryExportPending,
       if (createdAt != null) 'created_at': createdAt,
       if (createdAtMonth != null) 'created_at_month': createdAtMonth,
       if (rowid != null) 'rowid': rowid,
@@ -4407,12 +5132,15 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Value<bool>? requiresAuthentication,
     Value<bool>? stored,
     Value<bool>? isDraftMedia,
+    Value<bool>? isWidgetMedia,
     Value<bool>? isFavorite,
     Value<bool>? hasCropAnalyzed,
     Value<int?>? preProgressingProcess,
     Value<List<int>?>? reuploadRequestedBy,
     Value<int?>? displayLimitInMilliseconds,
     Value<bool?>? removeAudio,
+    Value<int?>? trimStartMs,
+    Value<int?>? trimEndMs,
     Value<Uint8List?>? downloadToken,
     Value<Uint8List?>? encryptionKey,
     Value<Uint8List?>? encryptionMac,
@@ -4420,6 +5148,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Value<Uint8List?>? storedFileHash,
     Value<bool>? hasThumbnail,
     Value<int?>? sizeInBytes,
+    Value<double?>? locationLatitude,
+    Value<double?>? locationLongitude,
+    Value<double?>? locationAccuracy,
+    Value<String?>? locationStatus,
+    Value<int?>? locationDeadlineAt,
+    Value<bool>? galleryExportPending,
     Value<DateTime>? createdAt,
     Value<String?>? createdAtMonth,
     Value<int>? rowid,
@@ -4435,6 +5169,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           requiresAuthentication ?? this.requiresAuthentication,
       stored: stored ?? this.stored,
       isDraftMedia: isDraftMedia ?? this.isDraftMedia,
+      isWidgetMedia: isWidgetMedia ?? this.isWidgetMedia,
       isFavorite: isFavorite ?? this.isFavorite,
       hasCropAnalyzed: hasCropAnalyzed ?? this.hasCropAnalyzed,
       preProgressingProcess:
@@ -4443,6 +5178,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       displayLimitInMilliseconds:
           displayLimitInMilliseconds ?? this.displayLimitInMilliseconds,
       removeAudio: removeAudio ?? this.removeAudio,
+      trimStartMs: trimStartMs ?? this.trimStartMs,
+      trimEndMs: trimEndMs ?? this.trimEndMs,
       downloadToken: downloadToken ?? this.downloadToken,
       encryptionKey: encryptionKey ?? this.encryptionKey,
       encryptionMac: encryptionMac ?? this.encryptionMac,
@@ -4450,6 +5187,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       storedFileHash: storedFileHash ?? this.storedFileHash,
       hasThumbnail: hasThumbnail ?? this.hasThumbnail,
       sizeInBytes: sizeInBytes ?? this.sizeInBytes,
+      locationLatitude: locationLatitude ?? this.locationLatitude,
+      locationLongitude: locationLongitude ?? this.locationLongitude,
+      locationAccuracy: locationAccuracy ?? this.locationAccuracy,
+      locationStatus: locationStatus ?? this.locationStatus,
+      locationDeadlineAt: locationDeadlineAt ?? this.locationDeadlineAt,
+      galleryExportPending: galleryExportPending ?? this.galleryExportPending,
       createdAt: createdAt ?? this.createdAt,
       createdAtMonth: createdAtMonth ?? this.createdAtMonth,
       rowid: rowid ?? this.rowid,
@@ -4496,6 +5239,9 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     if (isDraftMedia.present) {
       map['is_draft_media'] = Variable<bool>(isDraftMedia.value);
     }
+    if (isWidgetMedia.present) {
+      map['is_widget_media'] = Variable<bool>(isWidgetMedia.value);
+    }
     if (isFavorite.present) {
       map['is_favorite'] = Variable<bool>(isFavorite.value);
     }
@@ -4522,6 +5268,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     if (removeAudio.present) {
       map['remove_audio'] = Variable<bool>(removeAudio.value);
     }
+    if (trimStartMs.present) {
+      map['trim_start_ms'] = Variable<int>(trimStartMs.value);
+    }
+    if (trimEndMs.present) {
+      map['trim_end_ms'] = Variable<int>(trimEndMs.value);
+    }
     if (downloadToken.present) {
       map['download_token'] = Variable<Uint8List>(downloadToken.value);
     }
@@ -4542,6 +5294,26 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     }
     if (sizeInBytes.present) {
       map['size_in_bytes'] = Variable<int>(sizeInBytes.value);
+    }
+    if (locationLatitude.present) {
+      map['location_latitude'] = Variable<double>(locationLatitude.value);
+    }
+    if (locationLongitude.present) {
+      map['location_longitude'] = Variable<double>(locationLongitude.value);
+    }
+    if (locationAccuracy.present) {
+      map['location_accuracy'] = Variable<double>(locationAccuracy.value);
+    }
+    if (locationStatus.present) {
+      map['location_status'] = Variable<String>(locationStatus.value);
+    }
+    if (locationDeadlineAt.present) {
+      map['location_deadline_at'] = Variable<int>(locationDeadlineAt.value);
+    }
+    if (galleryExportPending.present) {
+      map['gallery_export_pending'] = Variable<bool>(
+        galleryExportPending.value,
+      );
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -4567,12 +5339,15 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
+          ..write('isWidgetMedia: $isWidgetMedia, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('hasCropAnalyzed: $hasCropAnalyzed, ')
           ..write('preProgressingProcess: $preProgressingProcess, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
           ..write('removeAudio: $removeAudio, ')
+          ..write('trimStartMs: $trimStartMs, ')
+          ..write('trimEndMs: $trimEndMs, ')
           ..write('downloadToken: $downloadToken, ')
           ..write('encryptionKey: $encryptionKey, ')
           ..write('encryptionMac: $encryptionMac, ')
@@ -4580,6 +5355,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('storedFileHash: $storedFileHash, ')
           ..write('hasThumbnail: $hasThumbnail, ')
           ..write('sizeInBytes: $sizeInBytes, ')
+          ..write('locationLatitude: $locationLatitude, ')
+          ..write('locationLongitude: $locationLongitude, ')
+          ..write('locationAccuracy: $locationAccuracy, ')
+          ..write('locationStatus: $locationStatus, ')
+          ..write('locationDeadlineAt: $locationDeadlineAt, ')
+          ..write('galleryExportPending: $galleryExportPending, ')
           ..write('createdAt: $createdAt, ')
           ..write('createdAtMonth: $createdAtMonth, ')
           ..write('rowid: $rowid')
@@ -4744,6 +5525,36 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _isWidgetMediaMeta = const VerificationMeta(
+    'isWidgetMedia',
+  );
+  @override
+  late final GeneratedColumn<bool> isWidgetMedia = GeneratedColumn<bool>(
+    'is_widget_media',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_widget_media" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isStoryMeta = const VerificationMeta(
+    'isStory',
+  );
+  @override
+  late final GeneratedColumn<bool> isStory = GeneratedColumn<bool>(
+    'is_story',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_story" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _openedAtMeta = const VerificationMeta(
     'openedAt',
   );
@@ -4825,6 +5636,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     downloadToken,
     quotesMessageId,
     isDeletedFromSender,
+    isWidgetMedia,
+    isStory,
     openedAt,
     openedByAll,
     createdAt,
@@ -4940,6 +5753,21 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         ),
       );
     }
+    if (data.containsKey('is_widget_media')) {
+      context.handle(
+        _isWidgetMediaMeta,
+        isWidgetMedia.isAcceptableOrUnknown(
+          data['is_widget_media']!,
+          _isWidgetMediaMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_story')) {
+      context.handle(
+        _isStoryMeta,
+        isStory.isAcceptableOrUnknown(data['is_story']!, _isStoryMeta),
+      );
+    }
     if (data.containsKey('opened_at')) {
       context.handle(
         _openedAtMeta,
@@ -5039,6 +5867,14 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_deleted_from_sender'],
       )!,
+      isWidgetMedia: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_widget_media'],
+      )!,
+      isStory: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_story'],
+      )!,
       openedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}opened_at'],
@@ -5085,6 +5921,10 @@ class Message extends DataClass implements Insertable<Message> {
   final Uint8List? downloadToken;
   final String? quotesMessageId;
   final bool isDeletedFromSender;
+  final bool isWidgetMedia;
+
+  /// A story item: hidden from the chat until saved, gone 24h after sending.
+  final bool isStory;
   final DateTime? openedAt;
   final DateTime? openedByAll;
   final DateTime createdAt;
@@ -5104,6 +5944,8 @@ class Message extends DataClass implements Insertable<Message> {
     this.downloadToken,
     this.quotesMessageId,
     required this.isDeletedFromSender,
+    required this.isWidgetMedia,
+    required this.isStory,
     this.openedAt,
     this.openedByAll,
     required this.createdAt,
@@ -5140,6 +5982,8 @@ class Message extends DataClass implements Insertable<Message> {
       map['quotes_message_id'] = Variable<String>(quotesMessageId);
     }
     map['is_deleted_from_sender'] = Variable<bool>(isDeletedFromSender);
+    map['is_widget_media'] = Variable<bool>(isWidgetMedia);
+    map['is_story'] = Variable<bool>(isStory);
     if (!nullToAbsent || openedAt != null) {
       map['opened_at'] = Variable<DateTime>(openedAt);
     }
@@ -5185,6 +6029,8 @@ class Message extends DataClass implements Insertable<Message> {
           ? const Value.absent()
           : Value(quotesMessageId),
       isDeletedFromSender: Value(isDeletedFromSender),
+      isWidgetMedia: Value(isWidgetMedia),
+      isStory: Value(isStory),
       openedAt: openedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(openedAt),
@@ -5226,6 +6072,8 @@ class Message extends DataClass implements Insertable<Message> {
       isDeletedFromSender: serializer.fromJson<bool>(
         json['isDeletedFromSender'],
       ),
+      isWidgetMedia: serializer.fromJson<bool>(json['isWidgetMedia']),
+      isStory: serializer.fromJson<bool>(json['isStory']),
       openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
       openedByAll: serializer.fromJson<DateTime?>(json['openedByAll']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -5252,6 +6100,8 @@ class Message extends DataClass implements Insertable<Message> {
       'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
       'quotesMessageId': serializer.toJson<String?>(quotesMessageId),
       'isDeletedFromSender': serializer.toJson<bool>(isDeletedFromSender),
+      'isWidgetMedia': serializer.toJson<bool>(isWidgetMedia),
+      'isStory': serializer.toJson<bool>(isStory),
       'openedAt': serializer.toJson<DateTime?>(openedAt),
       'openedByAll': serializer.toJson<DateTime?>(openedByAll),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -5274,6 +6124,8 @@ class Message extends DataClass implements Insertable<Message> {
     Value<Uint8List?> downloadToken = const Value.absent(),
     Value<String?> quotesMessageId = const Value.absent(),
     bool? isDeletedFromSender,
+    bool? isWidgetMedia,
+    bool? isStory,
     Value<DateTime?> openedAt = const Value.absent(),
     Value<DateTime?> openedByAll = const Value.absent(),
     DateTime? createdAt,
@@ -5299,6 +6151,8 @@ class Message extends DataClass implements Insertable<Message> {
         ? quotesMessageId.value
         : this.quotesMessageId,
     isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
+    isWidgetMedia: isWidgetMedia ?? this.isWidgetMedia,
+    isStory: isStory ?? this.isStory,
     openedAt: openedAt.present ? openedAt.value : this.openedAt,
     openedByAll: openedByAll.present ? openedByAll.value : this.openedByAll,
     createdAt: createdAt ?? this.createdAt,
@@ -5332,6 +6186,10 @@ class Message extends DataClass implements Insertable<Message> {
       isDeletedFromSender: data.isDeletedFromSender.present
           ? data.isDeletedFromSender.value
           : this.isDeletedFromSender,
+      isWidgetMedia: data.isWidgetMedia.present
+          ? data.isWidgetMedia.value
+          : this.isWidgetMedia,
+      isStory: data.isStory.present ? data.isStory.value : this.isStory,
       openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
       openedByAll: data.openedByAll.present
           ? data.openedByAll.value
@@ -5362,6 +6220,8 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
+          ..write('isWidgetMedia: $isWidgetMedia, ')
+          ..write('isStory: $isStory, ')
           ..write('openedAt: $openedAt, ')
           ..write('openedByAll: $openedByAll, ')
           ..write('createdAt: $createdAt, ')
@@ -5386,6 +6246,8 @@ class Message extends DataClass implements Insertable<Message> {
     $driftBlobEquality.hash(downloadToken),
     quotesMessageId,
     isDeletedFromSender,
+    isWidgetMedia,
+    isStory,
     openedAt,
     openedByAll,
     createdAt,
@@ -5412,6 +6274,8 @@ class Message extends DataClass implements Insertable<Message> {
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
           other.quotesMessageId == this.quotesMessageId &&
           other.isDeletedFromSender == this.isDeletedFromSender &&
+          other.isWidgetMedia == this.isWidgetMedia &&
+          other.isStory == this.isStory &&
           other.openedAt == this.openedAt &&
           other.openedByAll == this.openedByAll &&
           other.createdAt == this.createdAt &&
@@ -5433,6 +6297,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<Uint8List?> downloadToken;
   final Value<String?> quotesMessageId;
   final Value<bool> isDeletedFromSender;
+  final Value<bool> isWidgetMedia;
+  final Value<bool> isStory;
   final Value<DateTime?> openedAt;
   final Value<DateTime?> openedByAll;
   final Value<DateTime> createdAt;
@@ -5453,6 +6319,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
+    this.isWidgetMedia = const Value.absent(),
+    this.isStory = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.openedByAll = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -5474,6 +6342,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
+    this.isWidgetMedia = const Value.absent(),
+    this.isStory = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.openedByAll = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -5497,6 +6367,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<Uint8List>? downloadToken,
     Expression<String>? quotesMessageId,
     Expression<bool>? isDeletedFromSender,
+    Expression<bool>? isWidgetMedia,
+    Expression<bool>? isStory,
     Expression<DateTime>? openedAt,
     Expression<DateTime>? openedByAll,
     Expression<DateTime>? createdAt,
@@ -5520,6 +6392,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (quotesMessageId != null) 'quotes_message_id': quotesMessageId,
       if (isDeletedFromSender != null)
         'is_deleted_from_sender': isDeletedFromSender,
+      if (isWidgetMedia != null) 'is_widget_media': isWidgetMedia,
+      if (isStory != null) 'is_story': isStory,
       if (openedAt != null) 'opened_at': openedAt,
       if (openedByAll != null) 'opened_by_all': openedByAll,
       if (createdAt != null) 'created_at': createdAt,
@@ -5543,6 +6417,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Value<Uint8List?>? downloadToken,
     Value<String?>? quotesMessageId,
     Value<bool>? isDeletedFromSender,
+    Value<bool>? isWidgetMedia,
+    Value<bool>? isStory,
     Value<DateTime?>? openedAt,
     Value<DateTime?>? openedByAll,
     Value<DateTime>? createdAt,
@@ -5565,6 +6441,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       downloadToken: downloadToken ?? this.downloadToken,
       quotesMessageId: quotesMessageId ?? this.quotesMessageId,
       isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
+      isWidgetMedia: isWidgetMedia ?? this.isWidgetMedia,
+      isStory: isStory ?? this.isStory,
       openedAt: openedAt ?? this.openedAt,
       openedByAll: openedByAll ?? this.openedByAll,
       createdAt: createdAt ?? this.createdAt,
@@ -5616,6 +6494,12 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     if (isDeletedFromSender.present) {
       map['is_deleted_from_sender'] = Variable<bool>(isDeletedFromSender.value);
     }
+    if (isWidgetMedia.present) {
+      map['is_widget_media'] = Variable<bool>(isWidgetMedia.value);
+    }
+    if (isStory.present) {
+      map['is_story'] = Variable<bool>(isStory.value);
+    }
     if (openedAt.present) {
       map['opened_at'] = Variable<DateTime>(openedAt.value);
     }
@@ -5655,6 +6539,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
+          ..write('isWidgetMedia: $isWidgetMedia, ')
+          ..write('isStory: $isStory, ')
           ..write('openedAt: $openedAt, ')
           ..write('openedByAll: $openedByAll, ')
           ..write('createdAt: $createdAt, ')
@@ -7905,1428 +8791,6 @@ class ReceivedReceiptsCompanion extends UpdateCompanion<ReceivedReceipt> {
           ..write('receiptId: $receiptId, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $SignalIdentityKeyStoresTable extends SignalIdentityKeyStores
-    with TableInfo<$SignalIdentityKeyStoresTable, SignalIdentityKeyStore> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SignalIdentityKeyStoresTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
-    'deviceId',
-  );
-  @override
-  late final GeneratedColumn<int> deviceId = GeneratedColumn<int>(
-    'device_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _identityKeyMeta = const VerificationMeta(
-    'identityKey',
-  );
-  @override
-  late final GeneratedColumn<Uint8List> identityKey =
-      GeneratedColumn<Uint8List>(
-        'identity_key',
-        aliasedName,
-        false,
-        type: DriftSqlType.blob,
-        requiredDuringInsert: true,
-      );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    deviceId,
-    name,
-    identityKey,
-    createdAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'signal_identity_key_stores';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<SignalIdentityKeyStore> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('device_id')) {
-      context.handle(
-        _deviceIdMeta,
-        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_deviceIdMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('identity_key')) {
-      context.handle(
-        _identityKeyMeta,
-        identityKey.isAcceptableOrUnknown(
-          data['identity_key']!,
-          _identityKeyMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_identityKeyMeta);
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {deviceId, name};
-  @override
-  SignalIdentityKeyStore map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SignalIdentityKeyStore(
-      deviceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}device_id'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
-      identityKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.blob,
-        data['${effectivePrefix}identity_key'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-    );
-  }
-
-  @override
-  $SignalIdentityKeyStoresTable createAlias(String alias) {
-    return $SignalIdentityKeyStoresTable(attachedDatabase, alias);
-  }
-}
-
-class SignalIdentityKeyStore extends DataClass
-    implements Insertable<SignalIdentityKeyStore> {
-  final int deviceId;
-  final String name;
-  final Uint8List identityKey;
-  final DateTime createdAt;
-  const SignalIdentityKeyStore({
-    required this.deviceId,
-    required this.name,
-    required this.identityKey,
-    required this.createdAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['device_id'] = Variable<int>(deviceId);
-    map['name'] = Variable<String>(name);
-    map['identity_key'] = Variable<Uint8List>(identityKey);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    return map;
-  }
-
-  SignalIdentityKeyStoresCompanion toCompanion(bool nullToAbsent) {
-    return SignalIdentityKeyStoresCompanion(
-      deviceId: Value(deviceId),
-      name: Value(name),
-      identityKey: Value(identityKey),
-      createdAt: Value(createdAt),
-    );
-  }
-
-  factory SignalIdentityKeyStore.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SignalIdentityKeyStore(
-      deviceId: serializer.fromJson<int>(json['deviceId']),
-      name: serializer.fromJson<String>(json['name']),
-      identityKey: serializer.fromJson<Uint8List>(json['identityKey']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'deviceId': serializer.toJson<int>(deviceId),
-      'name': serializer.toJson<String>(name),
-      'identityKey': serializer.toJson<Uint8List>(identityKey),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-    };
-  }
-
-  SignalIdentityKeyStore copyWith({
-    int? deviceId,
-    String? name,
-    Uint8List? identityKey,
-    DateTime? createdAt,
-  }) => SignalIdentityKeyStore(
-    deviceId: deviceId ?? this.deviceId,
-    name: name ?? this.name,
-    identityKey: identityKey ?? this.identityKey,
-    createdAt: createdAt ?? this.createdAt,
-  );
-  SignalIdentityKeyStore copyWithCompanion(
-    SignalIdentityKeyStoresCompanion data,
-  ) {
-    return SignalIdentityKeyStore(
-      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
-      name: data.name.present ? data.name.value : this.name,
-      identityKey: data.identityKey.present
-          ? data.identityKey.value
-          : this.identityKey,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SignalIdentityKeyStore(')
-          ..write('deviceId: $deviceId, ')
-          ..write('name: $name, ')
-          ..write('identityKey: $identityKey, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    deviceId,
-    name,
-    $driftBlobEquality.hash(identityKey),
-    createdAt,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SignalIdentityKeyStore &&
-          other.deviceId == this.deviceId &&
-          other.name == this.name &&
-          $driftBlobEquality.equals(other.identityKey, this.identityKey) &&
-          other.createdAt == this.createdAt);
-}
-
-class SignalIdentityKeyStoresCompanion
-    extends UpdateCompanion<SignalIdentityKeyStore> {
-  final Value<int> deviceId;
-  final Value<String> name;
-  final Value<Uint8List> identityKey;
-  final Value<DateTime> createdAt;
-  final Value<int> rowid;
-  const SignalIdentityKeyStoresCompanion({
-    this.deviceId = const Value.absent(),
-    this.name = const Value.absent(),
-    this.identityKey = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  SignalIdentityKeyStoresCompanion.insert({
-    required int deviceId,
-    required String name,
-    required Uint8List identityKey,
-    this.createdAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : deviceId = Value(deviceId),
-       name = Value(name),
-       identityKey = Value(identityKey);
-  static Insertable<SignalIdentityKeyStore> custom({
-    Expression<int>? deviceId,
-    Expression<String>? name,
-    Expression<Uint8List>? identityKey,
-    Expression<DateTime>? createdAt,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (deviceId != null) 'device_id': deviceId,
-      if (name != null) 'name': name,
-      if (identityKey != null) 'identity_key': identityKey,
-      if (createdAt != null) 'created_at': createdAt,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  SignalIdentityKeyStoresCompanion copyWith({
-    Value<int>? deviceId,
-    Value<String>? name,
-    Value<Uint8List>? identityKey,
-    Value<DateTime>? createdAt,
-    Value<int>? rowid,
-  }) {
-    return SignalIdentityKeyStoresCompanion(
-      deviceId: deviceId ?? this.deviceId,
-      name: name ?? this.name,
-      identityKey: identityKey ?? this.identityKey,
-      createdAt: createdAt ?? this.createdAt,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (deviceId.present) {
-      map['device_id'] = Variable<int>(deviceId.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (identityKey.present) {
-      map['identity_key'] = Variable<Uint8List>(identityKey.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SignalIdentityKeyStoresCompanion(')
-          ..write('deviceId: $deviceId, ')
-          ..write('name: $name, ')
-          ..write('identityKey: $identityKey, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $SignalPreKeyStoresTable extends SignalPreKeyStores
-    with TableInfo<$SignalPreKeyStoresTable, SignalPreKeyStore> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SignalPreKeyStoresTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _preKeyIdMeta = const VerificationMeta(
-    'preKeyId',
-  );
-  @override
-  late final GeneratedColumn<int> preKeyId = GeneratedColumn<int>(
-    'pre_key_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _preKeyMeta = const VerificationMeta('preKey');
-  @override
-  late final GeneratedColumn<Uint8List> preKey = GeneratedColumn<Uint8List>(
-    'pre_key',
-    aliasedName,
-    false,
-    type: DriftSqlType.blob,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [preKeyId, preKey, createdAt];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'signal_pre_key_stores';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<SignalPreKeyStore> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('pre_key_id')) {
-      context.handle(
-        _preKeyIdMeta,
-        preKeyId.isAcceptableOrUnknown(data['pre_key_id']!, _preKeyIdMeta),
-      );
-    }
-    if (data.containsKey('pre_key')) {
-      context.handle(
-        _preKeyMeta,
-        preKey.isAcceptableOrUnknown(data['pre_key']!, _preKeyMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_preKeyMeta);
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {preKeyId};
-  @override
-  SignalPreKeyStore map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SignalPreKeyStore(
-      preKeyId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}pre_key_id'],
-      )!,
-      preKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.blob,
-        data['${effectivePrefix}pre_key'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-    );
-  }
-
-  @override
-  $SignalPreKeyStoresTable createAlias(String alias) {
-    return $SignalPreKeyStoresTable(attachedDatabase, alias);
-  }
-}
-
-class SignalPreKeyStore extends DataClass
-    implements Insertable<SignalPreKeyStore> {
-  final int preKeyId;
-  final Uint8List preKey;
-  final DateTime createdAt;
-  const SignalPreKeyStore({
-    required this.preKeyId,
-    required this.preKey,
-    required this.createdAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['pre_key_id'] = Variable<int>(preKeyId);
-    map['pre_key'] = Variable<Uint8List>(preKey);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    return map;
-  }
-
-  SignalPreKeyStoresCompanion toCompanion(bool nullToAbsent) {
-    return SignalPreKeyStoresCompanion(
-      preKeyId: Value(preKeyId),
-      preKey: Value(preKey),
-      createdAt: Value(createdAt),
-    );
-  }
-
-  factory SignalPreKeyStore.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SignalPreKeyStore(
-      preKeyId: serializer.fromJson<int>(json['preKeyId']),
-      preKey: serializer.fromJson<Uint8List>(json['preKey']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'preKeyId': serializer.toJson<int>(preKeyId),
-      'preKey': serializer.toJson<Uint8List>(preKey),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-    };
-  }
-
-  SignalPreKeyStore copyWith({
-    int? preKeyId,
-    Uint8List? preKey,
-    DateTime? createdAt,
-  }) => SignalPreKeyStore(
-    preKeyId: preKeyId ?? this.preKeyId,
-    preKey: preKey ?? this.preKey,
-    createdAt: createdAt ?? this.createdAt,
-  );
-  SignalPreKeyStore copyWithCompanion(SignalPreKeyStoresCompanion data) {
-    return SignalPreKeyStore(
-      preKeyId: data.preKeyId.present ? data.preKeyId.value : this.preKeyId,
-      preKey: data.preKey.present ? data.preKey.value : this.preKey,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SignalPreKeyStore(')
-          ..write('preKeyId: $preKeyId, ')
-          ..write('preKey: $preKey, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(preKeyId, $driftBlobEquality.hash(preKey), createdAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SignalPreKeyStore &&
-          other.preKeyId == this.preKeyId &&
-          $driftBlobEquality.equals(other.preKey, this.preKey) &&
-          other.createdAt == this.createdAt);
-}
-
-class SignalPreKeyStoresCompanion extends UpdateCompanion<SignalPreKeyStore> {
-  final Value<int> preKeyId;
-  final Value<Uint8List> preKey;
-  final Value<DateTime> createdAt;
-  const SignalPreKeyStoresCompanion({
-    this.preKeyId = const Value.absent(),
-    this.preKey = const Value.absent(),
-    this.createdAt = const Value.absent(),
-  });
-  SignalPreKeyStoresCompanion.insert({
-    this.preKeyId = const Value.absent(),
-    required Uint8List preKey,
-    this.createdAt = const Value.absent(),
-  }) : preKey = Value(preKey);
-  static Insertable<SignalPreKeyStore> custom({
-    Expression<int>? preKeyId,
-    Expression<Uint8List>? preKey,
-    Expression<DateTime>? createdAt,
-  }) {
-    return RawValuesInsertable({
-      if (preKeyId != null) 'pre_key_id': preKeyId,
-      if (preKey != null) 'pre_key': preKey,
-      if (createdAt != null) 'created_at': createdAt,
-    });
-  }
-
-  SignalPreKeyStoresCompanion copyWith({
-    Value<int>? preKeyId,
-    Value<Uint8List>? preKey,
-    Value<DateTime>? createdAt,
-  }) {
-    return SignalPreKeyStoresCompanion(
-      preKeyId: preKeyId ?? this.preKeyId,
-      preKey: preKey ?? this.preKey,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (preKeyId.present) {
-      map['pre_key_id'] = Variable<int>(preKeyId.value);
-    }
-    if (preKey.present) {
-      map['pre_key'] = Variable<Uint8List>(preKey.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SignalPreKeyStoresCompanion(')
-          ..write('preKeyId: $preKeyId, ')
-          ..write('preKey: $preKey, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $SignalSenderKeyStoresTable extends SignalSenderKeyStores
-    with TableInfo<$SignalSenderKeyStoresTable, SignalSenderKeyStore> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SignalSenderKeyStoresTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _senderKeyNameMeta = const VerificationMeta(
-    'senderKeyName',
-  );
-  @override
-  late final GeneratedColumn<String> senderKeyName = GeneratedColumn<String>(
-    'sender_key_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _senderKeyMeta = const VerificationMeta(
-    'senderKey',
-  );
-  @override
-  late final GeneratedColumn<Uint8List> senderKey = GeneratedColumn<Uint8List>(
-    'sender_key',
-    aliasedName,
-    false,
-    type: DriftSqlType.blob,
-    requiredDuringInsert: true,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [senderKeyName, senderKey];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'signal_sender_key_stores';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<SignalSenderKeyStore> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('sender_key_name')) {
-      context.handle(
-        _senderKeyNameMeta,
-        senderKeyName.isAcceptableOrUnknown(
-          data['sender_key_name']!,
-          _senderKeyNameMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_senderKeyNameMeta);
-    }
-    if (data.containsKey('sender_key')) {
-      context.handle(
-        _senderKeyMeta,
-        senderKey.isAcceptableOrUnknown(data['sender_key']!, _senderKeyMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_senderKeyMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {senderKeyName};
-  @override
-  SignalSenderKeyStore map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SignalSenderKeyStore(
-      senderKeyName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}sender_key_name'],
-      )!,
-      senderKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.blob,
-        data['${effectivePrefix}sender_key'],
-      )!,
-    );
-  }
-
-  @override
-  $SignalSenderKeyStoresTable createAlias(String alias) {
-    return $SignalSenderKeyStoresTable(attachedDatabase, alias);
-  }
-}
-
-class SignalSenderKeyStore extends DataClass
-    implements Insertable<SignalSenderKeyStore> {
-  final String senderKeyName;
-  final Uint8List senderKey;
-  const SignalSenderKeyStore({
-    required this.senderKeyName,
-    required this.senderKey,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['sender_key_name'] = Variable<String>(senderKeyName);
-    map['sender_key'] = Variable<Uint8List>(senderKey);
-    return map;
-  }
-
-  SignalSenderKeyStoresCompanion toCompanion(bool nullToAbsent) {
-    return SignalSenderKeyStoresCompanion(
-      senderKeyName: Value(senderKeyName),
-      senderKey: Value(senderKey),
-    );
-  }
-
-  factory SignalSenderKeyStore.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SignalSenderKeyStore(
-      senderKeyName: serializer.fromJson<String>(json['senderKeyName']),
-      senderKey: serializer.fromJson<Uint8List>(json['senderKey']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'senderKeyName': serializer.toJson<String>(senderKeyName),
-      'senderKey': serializer.toJson<Uint8List>(senderKey),
-    };
-  }
-
-  SignalSenderKeyStore copyWith({
-    String? senderKeyName,
-    Uint8List? senderKey,
-  }) => SignalSenderKeyStore(
-    senderKeyName: senderKeyName ?? this.senderKeyName,
-    senderKey: senderKey ?? this.senderKey,
-  );
-  SignalSenderKeyStore copyWithCompanion(SignalSenderKeyStoresCompanion data) {
-    return SignalSenderKeyStore(
-      senderKeyName: data.senderKeyName.present
-          ? data.senderKeyName.value
-          : this.senderKeyName,
-      senderKey: data.senderKey.present ? data.senderKey.value : this.senderKey,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SignalSenderKeyStore(')
-          ..write('senderKeyName: $senderKeyName, ')
-          ..write('senderKey: $senderKey')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(senderKeyName, $driftBlobEquality.hash(senderKey));
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SignalSenderKeyStore &&
-          other.senderKeyName == this.senderKeyName &&
-          $driftBlobEquality.equals(other.senderKey, this.senderKey));
-}
-
-class SignalSenderKeyStoresCompanion
-    extends UpdateCompanion<SignalSenderKeyStore> {
-  final Value<String> senderKeyName;
-  final Value<Uint8List> senderKey;
-  final Value<int> rowid;
-  const SignalSenderKeyStoresCompanion({
-    this.senderKeyName = const Value.absent(),
-    this.senderKey = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  SignalSenderKeyStoresCompanion.insert({
-    required String senderKeyName,
-    required Uint8List senderKey,
-    this.rowid = const Value.absent(),
-  }) : senderKeyName = Value(senderKeyName),
-       senderKey = Value(senderKey);
-  static Insertable<SignalSenderKeyStore> custom({
-    Expression<String>? senderKeyName,
-    Expression<Uint8List>? senderKey,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (senderKeyName != null) 'sender_key_name': senderKeyName,
-      if (senderKey != null) 'sender_key': senderKey,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  SignalSenderKeyStoresCompanion copyWith({
-    Value<String>? senderKeyName,
-    Value<Uint8List>? senderKey,
-    Value<int>? rowid,
-  }) {
-    return SignalSenderKeyStoresCompanion(
-      senderKeyName: senderKeyName ?? this.senderKeyName,
-      senderKey: senderKey ?? this.senderKey,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (senderKeyName.present) {
-      map['sender_key_name'] = Variable<String>(senderKeyName.value);
-    }
-    if (senderKey.present) {
-      map['sender_key'] = Variable<Uint8List>(senderKey.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SignalSenderKeyStoresCompanion(')
-          ..write('senderKeyName: $senderKeyName, ')
-          ..write('senderKey: $senderKey, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $SignalSessionStoresTable extends SignalSessionStores
-    with TableInfo<$SignalSessionStoresTable, SignalSessionStore> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SignalSessionStoresTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
-    'deviceId',
-  );
-  @override
-  late final GeneratedColumn<int> deviceId = GeneratedColumn<int>(
-    'device_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _sessionRecordMeta = const VerificationMeta(
-    'sessionRecord',
-  );
-  @override
-  late final GeneratedColumn<Uint8List> sessionRecord =
-      GeneratedColumn<Uint8List>(
-        'session_record',
-        aliasedName,
-        false,
-        type: DriftSqlType.blob,
-        requiredDuringInsert: true,
-      );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    deviceId,
-    name,
-    sessionRecord,
-    createdAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'signal_session_stores';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<SignalSessionStore> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('device_id')) {
-      context.handle(
-        _deviceIdMeta,
-        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_deviceIdMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('session_record')) {
-      context.handle(
-        _sessionRecordMeta,
-        sessionRecord.isAcceptableOrUnknown(
-          data['session_record']!,
-          _sessionRecordMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_sessionRecordMeta);
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {deviceId, name};
-  @override
-  SignalSessionStore map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SignalSessionStore(
-      deviceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}device_id'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
-      sessionRecord: attachedDatabase.typeMapping.read(
-        DriftSqlType.blob,
-        data['${effectivePrefix}session_record'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-    );
-  }
-
-  @override
-  $SignalSessionStoresTable createAlias(String alias) {
-    return $SignalSessionStoresTable(attachedDatabase, alias);
-  }
-}
-
-class SignalSessionStore extends DataClass
-    implements Insertable<SignalSessionStore> {
-  final int deviceId;
-  final String name;
-  final Uint8List sessionRecord;
-  final DateTime createdAt;
-  const SignalSessionStore({
-    required this.deviceId,
-    required this.name,
-    required this.sessionRecord,
-    required this.createdAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['device_id'] = Variable<int>(deviceId);
-    map['name'] = Variable<String>(name);
-    map['session_record'] = Variable<Uint8List>(sessionRecord);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    return map;
-  }
-
-  SignalSessionStoresCompanion toCompanion(bool nullToAbsent) {
-    return SignalSessionStoresCompanion(
-      deviceId: Value(deviceId),
-      name: Value(name),
-      sessionRecord: Value(sessionRecord),
-      createdAt: Value(createdAt),
-    );
-  }
-
-  factory SignalSessionStore.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SignalSessionStore(
-      deviceId: serializer.fromJson<int>(json['deviceId']),
-      name: serializer.fromJson<String>(json['name']),
-      sessionRecord: serializer.fromJson<Uint8List>(json['sessionRecord']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'deviceId': serializer.toJson<int>(deviceId),
-      'name': serializer.toJson<String>(name),
-      'sessionRecord': serializer.toJson<Uint8List>(sessionRecord),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-    };
-  }
-
-  SignalSessionStore copyWith({
-    int? deviceId,
-    String? name,
-    Uint8List? sessionRecord,
-    DateTime? createdAt,
-  }) => SignalSessionStore(
-    deviceId: deviceId ?? this.deviceId,
-    name: name ?? this.name,
-    sessionRecord: sessionRecord ?? this.sessionRecord,
-    createdAt: createdAt ?? this.createdAt,
-  );
-  SignalSessionStore copyWithCompanion(SignalSessionStoresCompanion data) {
-    return SignalSessionStore(
-      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
-      name: data.name.present ? data.name.value : this.name,
-      sessionRecord: data.sessionRecord.present
-          ? data.sessionRecord.value
-          : this.sessionRecord,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SignalSessionStore(')
-          ..write('deviceId: $deviceId, ')
-          ..write('name: $name, ')
-          ..write('sessionRecord: $sessionRecord, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    deviceId,
-    name,
-    $driftBlobEquality.hash(sessionRecord),
-    createdAt,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SignalSessionStore &&
-          other.deviceId == this.deviceId &&
-          other.name == this.name &&
-          $driftBlobEquality.equals(other.sessionRecord, this.sessionRecord) &&
-          other.createdAt == this.createdAt);
-}
-
-class SignalSessionStoresCompanion extends UpdateCompanion<SignalSessionStore> {
-  final Value<int> deviceId;
-  final Value<String> name;
-  final Value<Uint8List> sessionRecord;
-  final Value<DateTime> createdAt;
-  final Value<int> rowid;
-  const SignalSessionStoresCompanion({
-    this.deviceId = const Value.absent(),
-    this.name = const Value.absent(),
-    this.sessionRecord = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  SignalSessionStoresCompanion.insert({
-    required int deviceId,
-    required String name,
-    required Uint8List sessionRecord,
-    this.createdAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : deviceId = Value(deviceId),
-       name = Value(name),
-       sessionRecord = Value(sessionRecord);
-  static Insertable<SignalSessionStore> custom({
-    Expression<int>? deviceId,
-    Expression<String>? name,
-    Expression<Uint8List>? sessionRecord,
-    Expression<DateTime>? createdAt,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (deviceId != null) 'device_id': deviceId,
-      if (name != null) 'name': name,
-      if (sessionRecord != null) 'session_record': sessionRecord,
-      if (createdAt != null) 'created_at': createdAt,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  SignalSessionStoresCompanion copyWith({
-    Value<int>? deviceId,
-    Value<String>? name,
-    Value<Uint8List>? sessionRecord,
-    Value<DateTime>? createdAt,
-    Value<int>? rowid,
-  }) {
-    return SignalSessionStoresCompanion(
-      deviceId: deviceId ?? this.deviceId,
-      name: name ?? this.name,
-      sessionRecord: sessionRecord ?? this.sessionRecord,
-      createdAt: createdAt ?? this.createdAt,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (deviceId.present) {
-      map['device_id'] = Variable<int>(deviceId.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (sessionRecord.present) {
-      map['session_record'] = Variable<Uint8List>(sessionRecord.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SignalSessionStoresCompanion(')
-          ..write('deviceId: $deviceId, ')
-          ..write('name: $name, ')
-          ..write('sessionRecord: $sessionRecord, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $SignalSignedPreKeyStoresTable extends SignalSignedPreKeyStores
-    with TableInfo<$SignalSignedPreKeyStoresTable, SignalSignedPreKeyStore> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SignalSignedPreKeyStoresTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _signedPreKeyIdMeta = const VerificationMeta(
-    'signedPreKeyId',
-  );
-  @override
-  late final GeneratedColumn<int> signedPreKeyId = GeneratedColumn<int>(
-    'signed_pre_key_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _signedPreKeyMeta = const VerificationMeta(
-    'signedPreKey',
-  );
-  @override
-  late final GeneratedColumn<Uint8List> signedPreKey =
-      GeneratedColumn<Uint8List>(
-        'signed_pre_key',
-        aliasedName,
-        false,
-        type: DriftSqlType.blob,
-        requiredDuringInsert: true,
-      );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    signedPreKeyId,
-    signedPreKey,
-    createdAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'signal_signed_pre_key_stores';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<SignalSignedPreKeyStore> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('signed_pre_key_id')) {
-      context.handle(
-        _signedPreKeyIdMeta,
-        signedPreKeyId.isAcceptableOrUnknown(
-          data['signed_pre_key_id']!,
-          _signedPreKeyIdMeta,
-        ),
-      );
-    }
-    if (data.containsKey('signed_pre_key')) {
-      context.handle(
-        _signedPreKeyMeta,
-        signedPreKey.isAcceptableOrUnknown(
-          data['signed_pre_key']!,
-          _signedPreKeyMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_signedPreKeyMeta);
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {signedPreKeyId};
-  @override
-  SignalSignedPreKeyStore map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SignalSignedPreKeyStore(
-      signedPreKeyId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}signed_pre_key_id'],
-      )!,
-      signedPreKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.blob,
-        data['${effectivePrefix}signed_pre_key'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-    );
-  }
-
-  @override
-  $SignalSignedPreKeyStoresTable createAlias(String alias) {
-    return $SignalSignedPreKeyStoresTable(attachedDatabase, alias);
-  }
-}
-
-class SignalSignedPreKeyStore extends DataClass
-    implements Insertable<SignalSignedPreKeyStore> {
-  final int signedPreKeyId;
-  final Uint8List signedPreKey;
-  final DateTime createdAt;
-  const SignalSignedPreKeyStore({
-    required this.signedPreKeyId,
-    required this.signedPreKey,
-    required this.createdAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['signed_pre_key_id'] = Variable<int>(signedPreKeyId);
-    map['signed_pre_key'] = Variable<Uint8List>(signedPreKey);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    return map;
-  }
-
-  SignalSignedPreKeyStoresCompanion toCompanion(bool nullToAbsent) {
-    return SignalSignedPreKeyStoresCompanion(
-      signedPreKeyId: Value(signedPreKeyId),
-      signedPreKey: Value(signedPreKey),
-      createdAt: Value(createdAt),
-    );
-  }
-
-  factory SignalSignedPreKeyStore.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SignalSignedPreKeyStore(
-      signedPreKeyId: serializer.fromJson<int>(json['signedPreKeyId']),
-      signedPreKey: serializer.fromJson<Uint8List>(json['signedPreKey']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'signedPreKeyId': serializer.toJson<int>(signedPreKeyId),
-      'signedPreKey': serializer.toJson<Uint8List>(signedPreKey),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-    };
-  }
-
-  SignalSignedPreKeyStore copyWith({
-    int? signedPreKeyId,
-    Uint8List? signedPreKey,
-    DateTime? createdAt,
-  }) => SignalSignedPreKeyStore(
-    signedPreKeyId: signedPreKeyId ?? this.signedPreKeyId,
-    signedPreKey: signedPreKey ?? this.signedPreKey,
-    createdAt: createdAt ?? this.createdAt,
-  );
-  SignalSignedPreKeyStore copyWithCompanion(
-    SignalSignedPreKeyStoresCompanion data,
-  ) {
-    return SignalSignedPreKeyStore(
-      signedPreKeyId: data.signedPreKeyId.present
-          ? data.signedPreKeyId.value
-          : this.signedPreKeyId,
-      signedPreKey: data.signedPreKey.present
-          ? data.signedPreKey.value
-          : this.signedPreKey,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SignalSignedPreKeyStore(')
-          ..write('signedPreKeyId: $signedPreKeyId, ')
-          ..write('signedPreKey: $signedPreKey, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    signedPreKeyId,
-    $driftBlobEquality.hash(signedPreKey),
-    createdAt,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SignalSignedPreKeyStore &&
-          other.signedPreKeyId == this.signedPreKeyId &&
-          $driftBlobEquality.equals(other.signedPreKey, this.signedPreKey) &&
-          other.createdAt == this.createdAt);
-}
-
-class SignalSignedPreKeyStoresCompanion
-    extends UpdateCompanion<SignalSignedPreKeyStore> {
-  final Value<int> signedPreKeyId;
-  final Value<Uint8List> signedPreKey;
-  final Value<DateTime> createdAt;
-  const SignalSignedPreKeyStoresCompanion({
-    this.signedPreKeyId = const Value.absent(),
-    this.signedPreKey = const Value.absent(),
-    this.createdAt = const Value.absent(),
-  });
-  SignalSignedPreKeyStoresCompanion.insert({
-    this.signedPreKeyId = const Value.absent(),
-    required Uint8List signedPreKey,
-    this.createdAt = const Value.absent(),
-  }) : signedPreKey = Value(signedPreKey);
-  static Insertable<SignalSignedPreKeyStore> custom({
-    Expression<int>? signedPreKeyId,
-    Expression<Uint8List>? signedPreKey,
-    Expression<DateTime>? createdAt,
-  }) {
-    return RawValuesInsertable({
-      if (signedPreKeyId != null) 'signed_pre_key_id': signedPreKeyId,
-      if (signedPreKey != null) 'signed_pre_key': signedPreKey,
-      if (createdAt != null) 'created_at': createdAt,
-    });
-  }
-
-  SignalSignedPreKeyStoresCompanion copyWith({
-    Value<int>? signedPreKeyId,
-    Value<Uint8List>? signedPreKey,
-    Value<DateTime>? createdAt,
-  }) {
-    return SignalSignedPreKeyStoresCompanion(
-      signedPreKeyId: signedPreKeyId ?? this.signedPreKeyId,
-      signedPreKey: signedPreKey ?? this.signedPreKey,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (signedPreKeyId.present) {
-      map['signed_pre_key_id'] = Variable<int>(signedPreKeyId.value);
-    }
-    if (signedPreKey.present) {
-      map['signed_pre_key'] = Variable<Uint8List>(signedPreKey.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SignalSignedPreKeyStoresCompanion(')
-          ..write('signedPreKeyId: $signedPreKeyId, ')
-          ..write('signedPreKey: $signedPreKey, ')
-          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
@@ -12741,488 +12205,12 @@ class UserDiscoverySharesCompanion extends UpdateCompanion<UserDiscoveryShare> {
   }
 }
 
-class $ShortcutsTable extends Shortcuts
-    with TableInfo<$ShortcutsTable, Shortcut> {
+class $ContactGroupsTable extends ContactGroups
+    with TableInfo<$ContactGroupsTable, ContactGroup> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $ShortcutsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
-  @override
-  late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
-    'emoji',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
-  );
-  static const VerificationMeta _usageCounterMeta = const VerificationMeta(
-    'usageCounter',
-  );
-  @override
-  late final GeneratedColumn<int> usageCounter = GeneratedColumn<int>(
-    'usage_counter',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
-  @override
-  List<GeneratedColumn> get $columns => [id, emoji, usageCounter];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'shortcuts';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<Shortcut> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('emoji')) {
-      context.handle(
-        _emojiMeta,
-        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_emojiMeta);
-    }
-    if (data.containsKey('usage_counter')) {
-      context.handle(
-        _usageCounterMeta,
-        usageCounter.isAcceptableOrUnknown(
-          data['usage_counter']!,
-          _usageCounterMeta,
-        ),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  Shortcut map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Shortcut(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      emoji: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}emoji'],
-      )!,
-      usageCounter: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}usage_counter'],
-      )!,
-    );
-  }
-
-  @override
-  $ShortcutsTable createAlias(String alias) {
-    return $ShortcutsTable(attachedDatabase, alias);
-  }
-}
-
-class Shortcut extends DataClass implements Insertable<Shortcut> {
-  final int id;
-  final String emoji;
-  final int usageCounter;
-  const Shortcut({
-    required this.id,
-    required this.emoji,
-    required this.usageCounter,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['emoji'] = Variable<String>(emoji);
-    map['usage_counter'] = Variable<int>(usageCounter);
-    return map;
-  }
-
-  ShortcutsCompanion toCompanion(bool nullToAbsent) {
-    return ShortcutsCompanion(
-      id: Value(id),
-      emoji: Value(emoji),
-      usageCounter: Value(usageCounter),
-    );
-  }
-
-  factory Shortcut.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Shortcut(
-      id: serializer.fromJson<int>(json['id']),
-      emoji: serializer.fromJson<String>(json['emoji']),
-      usageCounter: serializer.fromJson<int>(json['usageCounter']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'emoji': serializer.toJson<String>(emoji),
-      'usageCounter': serializer.toJson<int>(usageCounter),
-    };
-  }
-
-  Shortcut copyWith({int? id, String? emoji, int? usageCounter}) => Shortcut(
-    id: id ?? this.id,
-    emoji: emoji ?? this.emoji,
-    usageCounter: usageCounter ?? this.usageCounter,
-  );
-  Shortcut copyWithCompanion(ShortcutsCompanion data) {
-    return Shortcut(
-      id: data.id.present ? data.id.value : this.id,
-      emoji: data.emoji.present ? data.emoji.value : this.emoji,
-      usageCounter: data.usageCounter.present
-          ? data.usageCounter.value
-          : this.usageCounter,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('Shortcut(')
-          ..write('id: $id, ')
-          ..write('emoji: $emoji, ')
-          ..write('usageCounter: $usageCounter')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(id, emoji, usageCounter);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Shortcut &&
-          other.id == this.id &&
-          other.emoji == this.emoji &&
-          other.usageCounter == this.usageCounter);
-}
-
-class ShortcutsCompanion extends UpdateCompanion<Shortcut> {
-  final Value<int> id;
-  final Value<String> emoji;
-  final Value<int> usageCounter;
-  const ShortcutsCompanion({
-    this.id = const Value.absent(),
-    this.emoji = const Value.absent(),
-    this.usageCounter = const Value.absent(),
-  });
-  ShortcutsCompanion.insert({
-    this.id = const Value.absent(),
-    required String emoji,
-    this.usageCounter = const Value.absent(),
-  }) : emoji = Value(emoji);
-  static Insertable<Shortcut> custom({
-    Expression<int>? id,
-    Expression<String>? emoji,
-    Expression<int>? usageCounter,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (emoji != null) 'emoji': emoji,
-      if (usageCounter != null) 'usage_counter': usageCounter,
-    });
-  }
-
-  ShortcutsCompanion copyWith({
-    Value<int>? id,
-    Value<String>? emoji,
-    Value<int>? usageCounter,
-  }) {
-    return ShortcutsCompanion(
-      id: id ?? this.id,
-      emoji: emoji ?? this.emoji,
-      usageCounter: usageCounter ?? this.usageCounter,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (emoji.present) {
-      map['emoji'] = Variable<String>(emoji.value);
-    }
-    if (usageCounter.present) {
-      map['usage_counter'] = Variable<int>(usageCounter.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ShortcutsCompanion(')
-          ..write('id: $id, ')
-          ..write('emoji: $emoji, ')
-          ..write('usageCounter: $usageCounter')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $ShortcutMembersTable extends ShortcutMembers
-    with TableInfo<$ShortcutMembersTable, ShortcutMember> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $ShortcutMembersTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _shortcutIdMeta = const VerificationMeta(
-    'shortcutId',
-  );
-  @override
-  late final GeneratedColumn<int> shortcutId = GeneratedColumn<int>(
-    'shortcut_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES shortcuts (id) ON DELETE CASCADE',
-    ),
-  );
-  static const VerificationMeta _groupIdMeta = const VerificationMeta(
-    'groupId',
-  );
-  @override
-  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
-    'group_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES "groups" (group_id) ON DELETE CASCADE',
-    ),
-  );
-  @override
-  List<GeneratedColumn> get $columns => [shortcutId, groupId];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'shortcut_members';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<ShortcutMember> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('shortcut_id')) {
-      context.handle(
-        _shortcutIdMeta,
-        shortcutId.isAcceptableOrUnknown(data['shortcut_id']!, _shortcutIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_shortcutIdMeta);
-    }
-    if (data.containsKey('group_id')) {
-      context.handle(
-        _groupIdMeta,
-        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_groupIdMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {shortcutId, groupId};
-  @override
-  ShortcutMember map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ShortcutMember(
-      shortcutId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}shortcut_id'],
-      )!,
-      groupId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}group_id'],
-      )!,
-    );
-  }
-
-  @override
-  $ShortcutMembersTable createAlias(String alias) {
-    return $ShortcutMembersTable(attachedDatabase, alias);
-  }
-}
-
-class ShortcutMember extends DataClass implements Insertable<ShortcutMember> {
-  final int shortcutId;
-  final String groupId;
-  const ShortcutMember({required this.shortcutId, required this.groupId});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['shortcut_id'] = Variable<int>(shortcutId);
-    map['group_id'] = Variable<String>(groupId);
-    return map;
-  }
-
-  ShortcutMembersCompanion toCompanion(bool nullToAbsent) {
-    return ShortcutMembersCompanion(
-      shortcutId: Value(shortcutId),
-      groupId: Value(groupId),
-    );
-  }
-
-  factory ShortcutMember.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ShortcutMember(
-      shortcutId: serializer.fromJson<int>(json['shortcutId']),
-      groupId: serializer.fromJson<String>(json['groupId']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'shortcutId': serializer.toJson<int>(shortcutId),
-      'groupId': serializer.toJson<String>(groupId),
-    };
-  }
-
-  ShortcutMember copyWith({int? shortcutId, String? groupId}) => ShortcutMember(
-    shortcutId: shortcutId ?? this.shortcutId,
-    groupId: groupId ?? this.groupId,
-  );
-  ShortcutMember copyWithCompanion(ShortcutMembersCompanion data) {
-    return ShortcutMember(
-      shortcutId: data.shortcutId.present
-          ? data.shortcutId.value
-          : this.shortcutId,
-      groupId: data.groupId.present ? data.groupId.value : this.groupId,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ShortcutMember(')
-          ..write('shortcutId: $shortcutId, ')
-          ..write('groupId: $groupId')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(shortcutId, groupId);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is ShortcutMember &&
-          other.shortcutId == this.shortcutId &&
-          other.groupId == this.groupId);
-}
-
-class ShortcutMembersCompanion extends UpdateCompanion<ShortcutMember> {
-  final Value<int> shortcutId;
-  final Value<String> groupId;
-  final Value<int> rowid;
-  const ShortcutMembersCompanion({
-    this.shortcutId = const Value.absent(),
-    this.groupId = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  ShortcutMembersCompanion.insert({
-    required int shortcutId,
-    required String groupId,
-    this.rowid = const Value.absent(),
-  }) : shortcutId = Value(shortcutId),
-       groupId = Value(groupId);
-  static Insertable<ShortcutMember> custom({
-    Expression<int>? shortcutId,
-    Expression<String>? groupId,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (shortcutId != null) 'shortcut_id': shortcutId,
-      if (groupId != null) 'group_id': groupId,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  ShortcutMembersCompanion copyWith({
-    Value<int>? shortcutId,
-    Value<String>? groupId,
-    Value<int>? rowid,
-  }) {
-    return ShortcutMembersCompanion(
-      shortcutId: shortcutId ?? this.shortcutId,
-      groupId: groupId ?? this.groupId,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (shortcutId.present) {
-      map['shortcut_id'] = Variable<int>(shortcutId.value);
-    }
-    if (groupId.present) {
-      map['group_id'] = Variable<String>(groupId.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ShortcutMembersCompanion(')
-          ..write('shortcutId: $shortcutId, ')
-          ..write('groupId: $groupId, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $LabelsTable(this.attachedDatabase, [this._alias]);
+  $ContactGroupsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -13244,6 +12232,15 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
+  @override
+  late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
+    'emoji',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _textColorMeta = const VerificationMeta(
     'textColor',
@@ -13267,6 +12264,63 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _showAsShortcutMeta = const VerificationMeta(
+    'showAsShortcut',
+  );
+  @override
+  late final GeneratedColumn<bool> showAsShortcut = GeneratedColumn<bool>(
+    'show_as_shortcut',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_as_shortcut" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _showAsLabelMeta = const VerificationMeta(
+    'showAsLabel',
+  );
+  @override
+  late final GeneratedColumn<bool> showAsLabel = GeneratedColumn<bool>(
+    'show_as_label',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_as_label" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _shareStoriesMeta = const VerificationMeta(
+    'shareStories',
+  );
+  @override
+  late final GeneratedColumn<bool> shareStories = GeneratedColumn<bool>(
+    'share_stories',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("share_stories" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _usageCounterMeta = const VerificationMeta(
+    'usageCounter',
+  );
+  @override
+  late final GeneratedColumn<int> usageCounter = GeneratedColumn<int>(
+    'usage_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -13283,18 +12337,23 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
   List<GeneratedColumn> get $columns => [
     id,
     name,
+    emoji,
     textColor,
     backgroundColor,
+    showAsShortcut,
+    showAsLabel,
+    shareStories,
+    usageCounter,
     createdAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'labels';
+  static const String $name = 'contact_groups';
   @override
   VerificationContext validateIntegrity(
-    Insertable<Label> instance, {
+    Insertable<ContactGroup> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -13309,6 +12368,12 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('emoji')) {
+      context.handle(
+        _emojiMeta,
+        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
+      );
     }
     if (data.containsKey('text_color')) {
       context.handle(
@@ -13329,6 +12394,42 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
     } else if (isInserting) {
       context.missing(_backgroundColorMeta);
     }
+    if (data.containsKey('show_as_shortcut')) {
+      context.handle(
+        _showAsShortcutMeta,
+        showAsShortcut.isAcceptableOrUnknown(
+          data['show_as_shortcut']!,
+          _showAsShortcutMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_as_label')) {
+      context.handle(
+        _showAsLabelMeta,
+        showAsLabel.isAcceptableOrUnknown(
+          data['show_as_label']!,
+          _showAsLabelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('share_stories')) {
+      context.handle(
+        _shareStoriesMeta,
+        shareStories.isAcceptableOrUnknown(
+          data['share_stories']!,
+          _shareStoriesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('usage_counter')) {
+      context.handle(
+        _usageCounterMeta,
+        usageCounter.isAcceptableOrUnknown(
+          data['usage_counter']!,
+          _usageCounterMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -13341,9 +12442,9 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Label map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ContactGroup map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Label(
+    return ContactGroup(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -13352,6 +12453,10 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      emoji: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}emoji'],
+      ),
       textColor: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}text_color'],
@@ -13359,6 +12464,22 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
       backgroundColor: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}background_color'],
+      )!,
+      showAsShortcut: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_as_shortcut'],
+      )!,
+      showAsLabel: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_as_label'],
+      )!,
+      shareStories: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}share_stories'],
+      )!,
+      usageCounter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}usage_counter'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -13368,22 +12489,32 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
   }
 
   @override
-  $LabelsTable createAlias(String alias) {
-    return $LabelsTable(attachedDatabase, alias);
+  $ContactGroupsTable createAlias(String alias) {
+    return $ContactGroupsTable(attachedDatabase, alias);
   }
 }
 
-class Label extends DataClass implements Insertable<Label> {
+class ContactGroup extends DataClass implements Insertable<ContactGroup> {
   final int id;
   final String name;
+  final String? emoji;
   final int textColor;
   final int backgroundColor;
+  final bool showAsShortcut;
+  final bool showAsLabel;
+  final bool shareStories;
+  final int usageCounter;
   final DateTime createdAt;
-  const Label({
+  const ContactGroup({
     required this.id,
     required this.name,
+    this.emoji,
     required this.textColor,
     required this.backgroundColor,
+    required this.showAsShortcut,
+    required this.showAsLabel,
+    required this.shareStories,
+    required this.usageCounter,
     required this.createdAt,
   });
   @override
@@ -13391,32 +12522,51 @@ class Label extends DataClass implements Insertable<Label> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
+    if (!nullToAbsent || emoji != null) {
+      map['emoji'] = Variable<String>(emoji);
+    }
     map['text_color'] = Variable<int>(textColor);
     map['background_color'] = Variable<int>(backgroundColor);
+    map['show_as_shortcut'] = Variable<bool>(showAsShortcut);
+    map['show_as_label'] = Variable<bool>(showAsLabel);
+    map['share_stories'] = Variable<bool>(shareStories);
+    map['usage_counter'] = Variable<int>(usageCounter);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
 
-  LabelsCompanion toCompanion(bool nullToAbsent) {
-    return LabelsCompanion(
+  ContactGroupsCompanion toCompanion(bool nullToAbsent) {
+    return ContactGroupsCompanion(
       id: Value(id),
       name: Value(name),
+      emoji: emoji == null && nullToAbsent
+          ? const Value.absent()
+          : Value(emoji),
       textColor: Value(textColor),
       backgroundColor: Value(backgroundColor),
+      showAsShortcut: Value(showAsShortcut),
+      showAsLabel: Value(showAsLabel),
+      shareStories: Value(shareStories),
+      usageCounter: Value(usageCounter),
       createdAt: Value(createdAt),
     );
   }
 
-  factory Label.fromJson(
+  factory ContactGroup.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Label(
+    return ContactGroup(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      emoji: serializer.fromJson<String?>(json['emoji']),
       textColor: serializer.fromJson<int>(json['textColor']),
       backgroundColor: serializer.fromJson<int>(json['backgroundColor']),
+      showAsShortcut: serializer.fromJson<bool>(json['showAsShortcut']),
+      showAsLabel: serializer.fromJson<bool>(json['showAsLabel']),
+      shareStories: serializer.fromJson<bool>(json['shareStories']),
+      usageCounter: serializer.fromJson<int>(json['usageCounter']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -13426,113 +12576,196 @@ class Label extends DataClass implements Insertable<Label> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
+      'emoji': serializer.toJson<String?>(emoji),
       'textColor': serializer.toJson<int>(textColor),
       'backgroundColor': serializer.toJson<int>(backgroundColor),
+      'showAsShortcut': serializer.toJson<bool>(showAsShortcut),
+      'showAsLabel': serializer.toJson<bool>(showAsLabel),
+      'shareStories': serializer.toJson<bool>(shareStories),
+      'usageCounter': serializer.toJson<int>(usageCounter),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
-  Label copyWith({
+  ContactGroup copyWith({
     int? id,
     String? name,
+    Value<String?> emoji = const Value.absent(),
     int? textColor,
     int? backgroundColor,
+    bool? showAsShortcut,
+    bool? showAsLabel,
+    bool? shareStories,
+    int? usageCounter,
     DateTime? createdAt,
-  }) => Label(
+  }) => ContactGroup(
     id: id ?? this.id,
     name: name ?? this.name,
+    emoji: emoji.present ? emoji.value : this.emoji,
     textColor: textColor ?? this.textColor,
     backgroundColor: backgroundColor ?? this.backgroundColor,
+    showAsShortcut: showAsShortcut ?? this.showAsShortcut,
+    showAsLabel: showAsLabel ?? this.showAsLabel,
+    shareStories: shareStories ?? this.shareStories,
+    usageCounter: usageCounter ?? this.usageCounter,
     createdAt: createdAt ?? this.createdAt,
   );
-  Label copyWithCompanion(LabelsCompanion data) {
-    return Label(
+  ContactGroup copyWithCompanion(ContactGroupsCompanion data) {
+    return ContactGroup(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
+      emoji: data.emoji.present ? data.emoji.value : this.emoji,
       textColor: data.textColor.present ? data.textColor.value : this.textColor,
       backgroundColor: data.backgroundColor.present
           ? data.backgroundColor.value
           : this.backgroundColor,
+      showAsShortcut: data.showAsShortcut.present
+          ? data.showAsShortcut.value
+          : this.showAsShortcut,
+      showAsLabel: data.showAsLabel.present
+          ? data.showAsLabel.value
+          : this.showAsLabel,
+      shareStories: data.shareStories.present
+          ? data.shareStories.value
+          : this.shareStories,
+      usageCounter: data.usageCounter.present
+          ? data.usageCounter.value
+          : this.usageCounter,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('Label(')
+    return (StringBuffer('ContactGroup(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('emoji: $emoji, ')
           ..write('textColor: $textColor, ')
           ..write('backgroundColor: $backgroundColor, ')
+          ..write('showAsShortcut: $showAsShortcut, ')
+          ..write('showAsLabel: $showAsLabel, ')
+          ..write('shareStories: $shareStories, ')
+          ..write('usageCounter: $usageCounter, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, textColor, backgroundColor, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    emoji,
+    textColor,
+    backgroundColor,
+    showAsShortcut,
+    showAsLabel,
+    shareStories,
+    usageCounter,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Label &&
+      (other is ContactGroup &&
           other.id == this.id &&
           other.name == this.name &&
+          other.emoji == this.emoji &&
           other.textColor == this.textColor &&
           other.backgroundColor == this.backgroundColor &&
+          other.showAsShortcut == this.showAsShortcut &&
+          other.showAsLabel == this.showAsLabel &&
+          other.shareStories == this.shareStories &&
+          other.usageCounter == this.usageCounter &&
           other.createdAt == this.createdAt);
 }
 
-class LabelsCompanion extends UpdateCompanion<Label> {
+class ContactGroupsCompanion extends UpdateCompanion<ContactGroup> {
   final Value<int> id;
   final Value<String> name;
+  final Value<String?> emoji;
   final Value<int> textColor;
   final Value<int> backgroundColor;
+  final Value<bool> showAsShortcut;
+  final Value<bool> showAsLabel;
+  final Value<bool> shareStories;
+  final Value<int> usageCounter;
   final Value<DateTime> createdAt;
-  const LabelsCompanion({
+  const ContactGroupsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.emoji = const Value.absent(),
     this.textColor = const Value.absent(),
     this.backgroundColor = const Value.absent(),
+    this.showAsShortcut = const Value.absent(),
+    this.showAsLabel = const Value.absent(),
+    this.shareStories = const Value.absent(),
+    this.usageCounter = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
-  LabelsCompanion.insert({
+  ContactGroupsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
+    this.emoji = const Value.absent(),
     required int textColor,
     required int backgroundColor,
+    this.showAsShortcut = const Value.absent(),
+    this.showAsLabel = const Value.absent(),
+    this.shareStories = const Value.absent(),
+    this.usageCounter = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : name = Value(name),
        textColor = Value(textColor),
        backgroundColor = Value(backgroundColor);
-  static Insertable<Label> custom({
+  static Insertable<ContactGroup> custom({
     Expression<int>? id,
     Expression<String>? name,
+    Expression<String>? emoji,
     Expression<int>? textColor,
     Expression<int>? backgroundColor,
+    Expression<bool>? showAsShortcut,
+    Expression<bool>? showAsLabel,
+    Expression<bool>? shareStories,
+    Expression<int>? usageCounter,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
+      if (emoji != null) 'emoji': emoji,
       if (textColor != null) 'text_color': textColor,
       if (backgroundColor != null) 'background_color': backgroundColor,
+      if (showAsShortcut != null) 'show_as_shortcut': showAsShortcut,
+      if (showAsLabel != null) 'show_as_label': showAsLabel,
+      if (shareStories != null) 'share_stories': shareStories,
+      if (usageCounter != null) 'usage_counter': usageCounter,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
 
-  LabelsCompanion copyWith({
+  ContactGroupsCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
+    Value<String?>? emoji,
     Value<int>? textColor,
     Value<int>? backgroundColor,
+    Value<bool>? showAsShortcut,
+    Value<bool>? showAsLabel,
+    Value<bool>? shareStories,
+    Value<int>? usageCounter,
     Value<DateTime>? createdAt,
   }) {
-    return LabelsCompanion(
+    return ContactGroupsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      emoji: emoji ?? this.emoji,
       textColor: textColor ?? this.textColor,
       backgroundColor: backgroundColor ?? this.backgroundColor,
+      showAsShortcut: showAsShortcut ?? this.showAsShortcut,
+      showAsLabel: showAsLabel ?? this.showAsLabel,
+      shareStories: shareStories ?? this.shareStories,
+      usageCounter: usageCounter ?? this.usageCounter,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -13546,11 +12779,26 @@ class LabelsCompanion extends UpdateCompanion<Label> {
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
+    if (emoji.present) {
+      map['emoji'] = Variable<String>(emoji.value);
+    }
     if (textColor.present) {
       map['text_color'] = Variable<int>(textColor.value);
     }
     if (backgroundColor.present) {
       map['background_color'] = Variable<int>(backgroundColor.value);
+    }
+    if (showAsShortcut.present) {
+      map['show_as_shortcut'] = Variable<bool>(showAsShortcut.value);
+    }
+    if (showAsLabel.present) {
+      map['show_as_label'] = Variable<bool>(showAsLabel.value);
+    }
+    if (shareStories.present) {
+      map['share_stories'] = Variable<bool>(shareStories.value);
+    }
+    if (usageCounter.present) {
+      map['usage_counter'] = Variable<int>(usageCounter.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -13560,210 +12808,1097 @@ class LabelsCompanion extends UpdateCompanion<Label> {
 
   @override
   String toString() {
-    return (StringBuffer('LabelsCompanion(')
+    return (StringBuffer('ContactGroupsCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('emoji: $emoji, ')
           ..write('textColor: $textColor, ')
           ..write('backgroundColor: $backgroundColor, ')
+          ..write('showAsShortcut: $showAsShortcut, ')
+          ..write('showAsLabel: $showAsLabel, ')
+          ..write('shareStories: $shareStories, ')
+          ..write('usageCounter: $usageCounter, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 }
 
-class $ContactLabelsTable extends ContactLabels
-    with TableInfo<$ContactLabelsTable, ContactLabel> {
+class $ContactGroupMembersTable extends ContactGroupMembers
+    with TableInfo<$ContactGroupMembersTable, ContactGroupMember> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $ContactLabelsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _contactIdMeta = const VerificationMeta(
-    'contactId',
+  $ContactGroupMembersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _contactGroupIdMeta = const VerificationMeta(
+    'contactGroupId',
   );
   @override
-  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-    'contact_id',
+  late final GeneratedColumn<int> contactGroupId = GeneratedColumn<int>(
+    'contact_group_id',
     aliasedName,
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contact_groups (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<int> userId = GeneratedColumn<int>(
+    'user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES contacts (user_id) ON DELETE CASCADE',
     ),
   );
-  static const VerificationMeta _labelIdMeta = const VerificationMeta(
-    'labelId',
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
   );
   @override
-  late final GeneratedColumn<int> labelId = GeneratedColumn<int>(
-    'label_id',
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
     aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES labels (id) ON DELETE CASCADE',
+      'REFERENCES "groups" (group_id) ON DELETE CASCADE',
     ),
   );
   @override
-  List<GeneratedColumn> get $columns => [contactId, labelId];
+  List<GeneratedColumn> get $columns => [id, contactGroupId, userId, groupId];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'contact_labels';
+  static const String $name = 'contact_group_members';
   @override
   VerificationContext validateIntegrity(
-    Insertable<ContactLabel> instance, {
+    Insertable<ContactGroupMember> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('contact_id')) {
-      context.handle(
-        _contactIdMeta,
-        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_contactIdMeta);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('label_id')) {
+    if (data.containsKey('contact_group_id')) {
       context.handle(
-        _labelIdMeta,
-        labelId.isAcceptableOrUnknown(data['label_id']!, _labelIdMeta),
+        _contactGroupIdMeta,
+        contactGroupId.isAcceptableOrUnknown(
+          data['contact_group_id']!,
+          _contactGroupIdMeta,
+        ),
       );
     } else if (isInserting) {
-      context.missing(_labelIdMeta);
+      context.missing(_contactGroupIdMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
     }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {contactId, labelId};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  ContactLabel map(Map<String, dynamic> data, {String? tablePrefix}) {
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {contactGroupId, userId},
+    {contactGroupId, groupId},
+  ];
+  @override
+  ContactGroupMember map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ContactLabel(
-      contactId: attachedDatabase.typeMapping.read(
+    return ContactGroupMember(
+      id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}contact_id'],
+        data['${effectivePrefix}id'],
       )!,
-      labelId: attachedDatabase.typeMapping.read(
+      contactGroupId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}label_id'],
+        data['${effectivePrefix}contact_group_id'],
       )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_id'],
+      ),
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      ),
     );
   }
 
   @override
-  $ContactLabelsTable createAlias(String alias) {
-    return $ContactLabelsTable(attachedDatabase, alias);
+  $ContactGroupMembersTable createAlias(String alias) {
+    return $ContactGroupMembersTable(attachedDatabase, alias);
   }
 }
 
-class ContactLabel extends DataClass implements Insertable<ContactLabel> {
-  final int contactId;
-  final int labelId;
-  const ContactLabel({required this.contactId, required this.labelId});
+class ContactGroupMember extends DataClass
+    implements Insertable<ContactGroupMember> {
+  final int id;
+  final int contactGroupId;
+  final int? userId;
+  final String? groupId;
+  const ContactGroupMember({
+    required this.id,
+    required this.contactGroupId,
+    this.userId,
+    this.groupId,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['contact_id'] = Variable<int>(contactId);
-    map['label_id'] = Variable<int>(labelId);
+    map['id'] = Variable<int>(id);
+    map['contact_group_id'] = Variable<int>(contactGroupId);
+    if (!nullToAbsent || userId != null) {
+      map['user_id'] = Variable<int>(userId);
+    }
+    if (!nullToAbsent || groupId != null) {
+      map['group_id'] = Variable<String>(groupId);
+    }
     return map;
   }
 
-  ContactLabelsCompanion toCompanion(bool nullToAbsent) {
-    return ContactLabelsCompanion(
-      contactId: Value(contactId),
-      labelId: Value(labelId),
+  ContactGroupMembersCompanion toCompanion(bool nullToAbsent) {
+    return ContactGroupMembersCompanion(
+      id: Value(id),
+      contactGroupId: Value(contactGroupId),
+      userId: userId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userId),
+      groupId: groupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupId),
     );
   }
 
-  factory ContactLabel.fromJson(
+  factory ContactGroupMember.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ContactLabel(
-      contactId: serializer.fromJson<int>(json['contactId']),
-      labelId: serializer.fromJson<int>(json['labelId']),
+    return ContactGroupMember(
+      id: serializer.fromJson<int>(json['id']),
+      contactGroupId: serializer.fromJson<int>(json['contactGroupId']),
+      userId: serializer.fromJson<int?>(json['userId']),
+      groupId: serializer.fromJson<String?>(json['groupId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'contactId': serializer.toJson<int>(contactId),
-      'labelId': serializer.toJson<int>(labelId),
+      'id': serializer.toJson<int>(id),
+      'contactGroupId': serializer.toJson<int>(contactGroupId),
+      'userId': serializer.toJson<int?>(userId),
+      'groupId': serializer.toJson<String?>(groupId),
     };
   }
 
-  ContactLabel copyWith({int? contactId, int? labelId}) => ContactLabel(
-    contactId: contactId ?? this.contactId,
-    labelId: labelId ?? this.labelId,
+  ContactGroupMember copyWith({
+    int? id,
+    int? contactGroupId,
+    Value<int?> userId = const Value.absent(),
+    Value<String?> groupId = const Value.absent(),
+  }) => ContactGroupMember(
+    id: id ?? this.id,
+    contactGroupId: contactGroupId ?? this.contactGroupId,
+    userId: userId.present ? userId.value : this.userId,
+    groupId: groupId.present ? groupId.value : this.groupId,
   );
-  ContactLabel copyWithCompanion(ContactLabelsCompanion data) {
-    return ContactLabel(
-      contactId: data.contactId.present ? data.contactId.value : this.contactId,
-      labelId: data.labelId.present ? data.labelId.value : this.labelId,
+  ContactGroupMember copyWithCompanion(ContactGroupMembersCompanion data) {
+    return ContactGroupMember(
+      id: data.id.present ? data.id.value : this.id,
+      contactGroupId: data.contactGroupId.present
+          ? data.contactGroupId.value
+          : this.contactGroupId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('ContactLabel(')
-          ..write('contactId: $contactId, ')
-          ..write('labelId: $labelId')
+    return (StringBuffer('ContactGroupMember(')
+          ..write('id: $id, ')
+          ..write('contactGroupId: $contactGroupId, ')
+          ..write('userId: $userId, ')
+          ..write('groupId: $groupId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(contactId, labelId);
+  int get hashCode => Object.hash(id, contactGroupId, userId, groupId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is ContactLabel &&
-          other.contactId == this.contactId &&
-          other.labelId == this.labelId);
+      (other is ContactGroupMember &&
+          other.id == this.id &&
+          other.contactGroupId == this.contactGroupId &&
+          other.userId == this.userId &&
+          other.groupId == this.groupId);
 }
 
-class ContactLabelsCompanion extends UpdateCompanion<ContactLabel> {
-  final Value<int> contactId;
-  final Value<int> labelId;
+class ContactGroupMembersCompanion extends UpdateCompanion<ContactGroupMember> {
+  final Value<int> id;
+  final Value<int> contactGroupId;
+  final Value<int?> userId;
+  final Value<String?> groupId;
+  const ContactGroupMembersCompanion({
+    this.id = const Value.absent(),
+    this.contactGroupId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.groupId = const Value.absent(),
+  });
+  ContactGroupMembersCompanion.insert({
+    this.id = const Value.absent(),
+    required int contactGroupId,
+    this.userId = const Value.absent(),
+    this.groupId = const Value.absent(),
+  }) : contactGroupId = Value(contactGroupId);
+  static Insertable<ContactGroupMember> custom({
+    Expression<int>? id,
+    Expression<int>? contactGroupId,
+    Expression<int>? userId,
+    Expression<String>? groupId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (contactGroupId != null) 'contact_group_id': contactGroupId,
+      if (userId != null) 'user_id': userId,
+      if (groupId != null) 'group_id': groupId,
+    });
+  }
+
+  ContactGroupMembersCompanion copyWith({
+    Value<int>? id,
+    Value<int>? contactGroupId,
+    Value<int?>? userId,
+    Value<String?>? groupId,
+  }) {
+    return ContactGroupMembersCompanion(
+      id: id ?? this.id,
+      contactGroupId: contactGroupId ?? this.contactGroupId,
+      userId: userId ?? this.userId,
+      groupId: groupId ?? this.groupId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (contactGroupId.present) {
+      map['contact_group_id'] = Variable<int>(contactGroupId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<int>(userId.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContactGroupMembersCompanion(')
+          ..write('id: $id, ')
+          ..write('contactGroupId: $contactGroupId, ')
+          ..write('userId: $userId, ')
+          ..write('groupId: $groupId')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WebxdcAppsTable extends WebxdcApps
+    with TableInfo<$WebxdcAppsTable, WebxdcApp> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WebxdcAppsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _appIdMeta = const VerificationMeta('appId');
+  @override
+  late final GeneratedColumn<String> appId = GeneratedColumn<String>(
+    'app_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameTranslationsMeta = const VerificationMeta(
+    'nameTranslations',
+  );
+  @override
+  late final GeneratedColumn<String> nameTranslations = GeneratedColumn<String>(
+    'name_translations',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _sourceCodeUrlMeta = const VerificationMeta(
+    'sourceCodeUrl',
+  );
+  @override
+  late final GeneratedColumn<String> sourceCodeUrl = GeneratedColumn<String>(
+    'source_code_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<Uint8List> icon = GeneratedColumn<Uint8List>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _bundleSha256Meta = const VerificationMeta(
+    'bundleSha256',
+  );
+  @override
+  late final GeneratedColumn<String> bundleSha256 = GeneratedColumn<String>(
+    'bundle_sha256',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bundleBytesMeta = const VerificationMeta(
+    'bundleBytes',
+  );
+  @override
+  late final GeneratedColumn<int> bundleBytes = GeneratedColumn<int>(
+    'bundle_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _publishedMeta = const VerificationMeta(
+    'published',
+  );
+  @override
+  late final GeneratedColumn<bool> published = GeneratedColumn<bool>(
+    'published',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("published" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _cachedAtMeta = const VerificationMeta(
+    'cachedAt',
+  );
+  @override
+  late final GeneratedColumn<int> cachedAt = GeneratedColumn<int>(
+    'cached_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _proOnlyMeta = const VerificationMeta(
+    'proOnly',
+  );
+  @override
+  late final GeneratedColumn<bool> proOnly = GeneratedColumn<bool>(
+    'pro_only',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("pro_only" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _oneTimeMeta = const VerificationMeta(
+    'oneTime',
+  );
+  @override
+  late final GeneratedColumn<bool> oneTime = GeneratedColumn<bool>(
+    'one_time',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("one_time" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    appId,
+    version,
+    name,
+    nameTranslations,
+    description,
+    sourceCodeUrl,
+    icon,
+    bundleSha256,
+    bundleBytes,
+    published,
+    cachedAt,
+    proOnly,
+    sortOrder,
+    oneTime,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'webxdc_apps';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WebxdcApp> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('app_id')) {
+      context.handle(
+        _appIdMeta,
+        appId.isAcceptableOrUnknown(data['app_id']!, _appIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_appIdMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_versionMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_translations')) {
+      context.handle(
+        _nameTranslationsMeta,
+        nameTranslations.isAcceptableOrUnknown(
+          data['name_translations']!,
+          _nameTranslationsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source_code_url')) {
+      context.handle(
+        _sourceCodeUrlMeta,
+        sourceCodeUrl.isAcceptableOrUnknown(
+          data['source_code_url']!,
+          _sourceCodeUrlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    }
+    if (data.containsKey('bundle_sha256')) {
+      context.handle(
+        _bundleSha256Meta,
+        bundleSha256.isAcceptableOrUnknown(
+          data['bundle_sha256']!,
+          _bundleSha256Meta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_bundleSha256Meta);
+    }
+    if (data.containsKey('bundle_bytes')) {
+      context.handle(
+        _bundleBytesMeta,
+        bundleBytes.isAcceptableOrUnknown(
+          data['bundle_bytes']!,
+          _bundleBytesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_bundleBytesMeta);
+    }
+    if (data.containsKey('published')) {
+      context.handle(
+        _publishedMeta,
+        published.isAcceptableOrUnknown(data['published']!, _publishedMeta),
+      );
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(
+        _cachedAtMeta,
+        cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cachedAtMeta);
+    }
+    if (data.containsKey('pro_only')) {
+      context.handle(
+        _proOnlyMeta,
+        proOnly.isAcceptableOrUnknown(data['pro_only']!, _proOnlyMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('one_time')) {
+      context.handle(
+        _oneTimeMeta,
+        oneTime.isAcceptableOrUnknown(data['one_time']!, _oneTimeMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {appId, version};
+  @override
+  WebxdcApp map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WebxdcApp(
+      appId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}app_id'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      nameTranslations: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_translations'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      sourceCodeUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_code_url'],
+      ),
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}icon'],
+      ),
+      bundleSha256: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bundle_sha256'],
+      )!,
+      bundleBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}bundle_bytes'],
+      )!,
+      published: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}published'],
+      )!,
+      cachedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cached_at'],
+      )!,
+      proOnly: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pro_only'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      oneTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}one_time'],
+      )!,
+    );
+  }
+
+  @override
+  $WebxdcAppsTable createAlias(String alias) {
+    return $WebxdcAppsTable(attachedDatabase, alias);
+  }
+}
+
+class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
+  final String appId;
+  final int version;
+
+  /// What the app is called where no translation fits. Every row has one,
+  /// which is what the store orders by.
+  final String name;
+
+  /// The name per language, as a JSON object keyed by language tag, in the same
+  /// shape as [description]. The chat card picks from it; the store list is
+  /// built in Rust, which picks there.
+  final String nameTranslations;
+
+  /// One short line per language, as a JSON object keyed by language tag. Rust
+  /// picks the one to show; nothing in Dart reads inside it.
+  final String description;
+  final String? sourceCodeUrl;
+  final Uint8List? icon;
+  final String bundleSha256;
+  final int bundleBytes;
+  final bool published;
+  final int cachedAt;
+  final bool proOnly;
+  final int sortOrder;
+  final bool oneTime;
+  const WebxdcApp({
+    required this.appId,
+    required this.version,
+    required this.name,
+    required this.nameTranslations,
+    required this.description,
+    this.sourceCodeUrl,
+    this.icon,
+    required this.bundleSha256,
+    required this.bundleBytes,
+    required this.published,
+    required this.cachedAt,
+    required this.proOnly,
+    required this.sortOrder,
+    required this.oneTime,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['app_id'] = Variable<String>(appId);
+    map['version'] = Variable<int>(version);
+    map['name'] = Variable<String>(name);
+    map['name_translations'] = Variable<String>(nameTranslations);
+    map['description'] = Variable<String>(description);
+    if (!nullToAbsent || sourceCodeUrl != null) {
+      map['source_code_url'] = Variable<String>(sourceCodeUrl);
+    }
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<Uint8List>(icon);
+    }
+    map['bundle_sha256'] = Variable<String>(bundleSha256);
+    map['bundle_bytes'] = Variable<int>(bundleBytes);
+    map['published'] = Variable<bool>(published);
+    map['cached_at'] = Variable<int>(cachedAt);
+    map['pro_only'] = Variable<bool>(proOnly);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['one_time'] = Variable<bool>(oneTime);
+    return map;
+  }
+
+  WebxdcAppsCompanion toCompanion(bool nullToAbsent) {
+    return WebxdcAppsCompanion(
+      appId: Value(appId),
+      version: Value(version),
+      name: Value(name),
+      nameTranslations: Value(nameTranslations),
+      description: Value(description),
+      sourceCodeUrl: sourceCodeUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceCodeUrl),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
+      bundleSha256: Value(bundleSha256),
+      bundleBytes: Value(bundleBytes),
+      published: Value(published),
+      cachedAt: Value(cachedAt),
+      proOnly: Value(proOnly),
+      sortOrder: Value(sortOrder),
+      oneTime: Value(oneTime),
+    );
+  }
+
+  factory WebxdcApp.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WebxdcApp(
+      appId: serializer.fromJson<String>(json['appId']),
+      version: serializer.fromJson<int>(json['version']),
+      name: serializer.fromJson<String>(json['name']),
+      nameTranslations: serializer.fromJson<String>(json['nameTranslations']),
+      description: serializer.fromJson<String>(json['description']),
+      sourceCodeUrl: serializer.fromJson<String?>(json['sourceCodeUrl']),
+      icon: serializer.fromJson<Uint8List?>(json['icon']),
+      bundleSha256: serializer.fromJson<String>(json['bundleSha256']),
+      bundleBytes: serializer.fromJson<int>(json['bundleBytes']),
+      published: serializer.fromJson<bool>(json['published']),
+      cachedAt: serializer.fromJson<int>(json['cachedAt']),
+      proOnly: serializer.fromJson<bool>(json['proOnly']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      oneTime: serializer.fromJson<bool>(json['oneTime']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'appId': serializer.toJson<String>(appId),
+      'version': serializer.toJson<int>(version),
+      'name': serializer.toJson<String>(name),
+      'nameTranslations': serializer.toJson<String>(nameTranslations),
+      'description': serializer.toJson<String>(description),
+      'sourceCodeUrl': serializer.toJson<String?>(sourceCodeUrl),
+      'icon': serializer.toJson<Uint8List?>(icon),
+      'bundleSha256': serializer.toJson<String>(bundleSha256),
+      'bundleBytes': serializer.toJson<int>(bundleBytes),
+      'published': serializer.toJson<bool>(published),
+      'cachedAt': serializer.toJson<int>(cachedAt),
+      'proOnly': serializer.toJson<bool>(proOnly),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'oneTime': serializer.toJson<bool>(oneTime),
+    };
+  }
+
+  WebxdcApp copyWith({
+    String? appId,
+    int? version,
+    String? name,
+    String? nameTranslations,
+    String? description,
+    Value<String?> sourceCodeUrl = const Value.absent(),
+    Value<Uint8List?> icon = const Value.absent(),
+    String? bundleSha256,
+    int? bundleBytes,
+    bool? published,
+    int? cachedAt,
+    bool? proOnly,
+    int? sortOrder,
+    bool? oneTime,
+  }) => WebxdcApp(
+    appId: appId ?? this.appId,
+    version: version ?? this.version,
+    name: name ?? this.name,
+    nameTranslations: nameTranslations ?? this.nameTranslations,
+    description: description ?? this.description,
+    sourceCodeUrl: sourceCodeUrl.present
+        ? sourceCodeUrl.value
+        : this.sourceCodeUrl,
+    icon: icon.present ? icon.value : this.icon,
+    bundleSha256: bundleSha256 ?? this.bundleSha256,
+    bundleBytes: bundleBytes ?? this.bundleBytes,
+    published: published ?? this.published,
+    cachedAt: cachedAt ?? this.cachedAt,
+    proOnly: proOnly ?? this.proOnly,
+    sortOrder: sortOrder ?? this.sortOrder,
+    oneTime: oneTime ?? this.oneTime,
+  );
+  WebxdcApp copyWithCompanion(WebxdcAppsCompanion data) {
+    return WebxdcApp(
+      appId: data.appId.present ? data.appId.value : this.appId,
+      version: data.version.present ? data.version.value : this.version,
+      name: data.name.present ? data.name.value : this.name,
+      nameTranslations: data.nameTranslations.present
+          ? data.nameTranslations.value
+          : this.nameTranslations,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      sourceCodeUrl: data.sourceCodeUrl.present
+          ? data.sourceCodeUrl.value
+          : this.sourceCodeUrl,
+      icon: data.icon.present ? data.icon.value : this.icon,
+      bundleSha256: data.bundleSha256.present
+          ? data.bundleSha256.value
+          : this.bundleSha256,
+      bundleBytes: data.bundleBytes.present
+          ? data.bundleBytes.value
+          : this.bundleBytes,
+      published: data.published.present ? data.published.value : this.published,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+      proOnly: data.proOnly.present ? data.proOnly.value : this.proOnly,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      oneTime: data.oneTime.present ? data.oneTime.value : this.oneTime,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebxdcApp(')
+          ..write('appId: $appId, ')
+          ..write('version: $version, ')
+          ..write('name: $name, ')
+          ..write('nameTranslations: $nameTranslations, ')
+          ..write('description: $description, ')
+          ..write('sourceCodeUrl: $sourceCodeUrl, ')
+          ..write('icon: $icon, ')
+          ..write('bundleSha256: $bundleSha256, ')
+          ..write('bundleBytes: $bundleBytes, ')
+          ..write('published: $published, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('proOnly: $proOnly, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('oneTime: $oneTime')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    appId,
+    version,
+    name,
+    nameTranslations,
+    description,
+    sourceCodeUrl,
+    $driftBlobEquality.hash(icon),
+    bundleSha256,
+    bundleBytes,
+    published,
+    cachedAt,
+    proOnly,
+    sortOrder,
+    oneTime,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WebxdcApp &&
+          other.appId == this.appId &&
+          other.version == this.version &&
+          other.name == this.name &&
+          other.nameTranslations == this.nameTranslations &&
+          other.description == this.description &&
+          other.sourceCodeUrl == this.sourceCodeUrl &&
+          $driftBlobEquality.equals(other.icon, this.icon) &&
+          other.bundleSha256 == this.bundleSha256 &&
+          other.bundleBytes == this.bundleBytes &&
+          other.published == this.published &&
+          other.cachedAt == this.cachedAt &&
+          other.proOnly == this.proOnly &&
+          other.sortOrder == this.sortOrder &&
+          other.oneTime == this.oneTime);
+}
+
+class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
+  final Value<String> appId;
+  final Value<int> version;
+  final Value<String> name;
+  final Value<String> nameTranslations;
+  final Value<String> description;
+  final Value<String?> sourceCodeUrl;
+  final Value<Uint8List?> icon;
+  final Value<String> bundleSha256;
+  final Value<int> bundleBytes;
+  final Value<bool> published;
+  final Value<int> cachedAt;
+  final Value<bool> proOnly;
+  final Value<int> sortOrder;
+  final Value<bool> oneTime;
   final Value<int> rowid;
-  const ContactLabelsCompanion({
-    this.contactId = const Value.absent(),
-    this.labelId = const Value.absent(),
+  const WebxdcAppsCompanion({
+    this.appId = const Value.absent(),
+    this.version = const Value.absent(),
+    this.name = const Value.absent(),
+    this.nameTranslations = const Value.absent(),
+    this.description = const Value.absent(),
+    this.sourceCodeUrl = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.bundleSha256 = const Value.absent(),
+    this.bundleBytes = const Value.absent(),
+    this.published = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.proOnly = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.oneTime = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  ContactLabelsCompanion.insert({
-    required int contactId,
-    required int labelId,
+  WebxdcAppsCompanion.insert({
+    required String appId,
+    required int version,
+    required String name,
+    this.nameTranslations = const Value.absent(),
+    this.description = const Value.absent(),
+    this.sourceCodeUrl = const Value.absent(),
+    this.icon = const Value.absent(),
+    required String bundleSha256,
+    required int bundleBytes,
+    this.published = const Value.absent(),
+    required int cachedAt,
+    this.proOnly = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.oneTime = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : contactId = Value(contactId),
-       labelId = Value(labelId);
-  static Insertable<ContactLabel> custom({
-    Expression<int>? contactId,
-    Expression<int>? labelId,
+  }) : appId = Value(appId),
+       version = Value(version),
+       name = Value(name),
+       bundleSha256 = Value(bundleSha256),
+       bundleBytes = Value(bundleBytes),
+       cachedAt = Value(cachedAt);
+  static Insertable<WebxdcApp> custom({
+    Expression<String>? appId,
+    Expression<int>? version,
+    Expression<String>? name,
+    Expression<String>? nameTranslations,
+    Expression<String>? description,
+    Expression<String>? sourceCodeUrl,
+    Expression<Uint8List>? icon,
+    Expression<String>? bundleSha256,
+    Expression<int>? bundleBytes,
+    Expression<bool>? published,
+    Expression<int>? cachedAt,
+    Expression<bool>? proOnly,
+    Expression<int>? sortOrder,
+    Expression<bool>? oneTime,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (contactId != null) 'contact_id': contactId,
-      if (labelId != null) 'label_id': labelId,
+      if (appId != null) 'app_id': appId,
+      if (version != null) 'version': version,
+      if (name != null) 'name': name,
+      if (nameTranslations != null) 'name_translations': nameTranslations,
+      if (description != null) 'description': description,
+      if (sourceCodeUrl != null) 'source_code_url': sourceCodeUrl,
+      if (icon != null) 'icon': icon,
+      if (bundleSha256 != null) 'bundle_sha256': bundleSha256,
+      if (bundleBytes != null) 'bundle_bytes': bundleBytes,
+      if (published != null) 'published': published,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (proOnly != null) 'pro_only': proOnly,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (oneTime != null) 'one_time': oneTime,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  ContactLabelsCompanion copyWith({
-    Value<int>? contactId,
-    Value<int>? labelId,
+  WebxdcAppsCompanion copyWith({
+    Value<String>? appId,
+    Value<int>? version,
+    Value<String>? name,
+    Value<String>? nameTranslations,
+    Value<String>? description,
+    Value<String?>? sourceCodeUrl,
+    Value<Uint8List?>? icon,
+    Value<String>? bundleSha256,
+    Value<int>? bundleBytes,
+    Value<bool>? published,
+    Value<int>? cachedAt,
+    Value<bool>? proOnly,
+    Value<int>? sortOrder,
+    Value<bool>? oneTime,
     Value<int>? rowid,
   }) {
-    return ContactLabelsCompanion(
-      contactId: contactId ?? this.contactId,
-      labelId: labelId ?? this.labelId,
+    return WebxdcAppsCompanion(
+      appId: appId ?? this.appId,
+      version: version ?? this.version,
+      name: name ?? this.name,
+      nameTranslations: nameTranslations ?? this.nameTranslations,
+      description: description ?? this.description,
+      sourceCodeUrl: sourceCodeUrl ?? this.sourceCodeUrl,
+      icon: icon ?? this.icon,
+      bundleSha256: bundleSha256 ?? this.bundleSha256,
+      bundleBytes: bundleBytes ?? this.bundleBytes,
+      published: published ?? this.published,
+      cachedAt: cachedAt ?? this.cachedAt,
+      proOnly: proOnly ?? this.proOnly,
+      sortOrder: sortOrder ?? this.sortOrder,
+      oneTime: oneTime ?? this.oneTime,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -13771,11 +13906,47 @@ class ContactLabelsCompanion extends UpdateCompanion<ContactLabel> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (contactId.present) {
-      map['contact_id'] = Variable<int>(contactId.value);
+    if (appId.present) {
+      map['app_id'] = Variable<String>(appId.value);
     }
-    if (labelId.present) {
-      map['label_id'] = Variable<int>(labelId.value);
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (nameTranslations.present) {
+      map['name_translations'] = Variable<String>(nameTranslations.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (sourceCodeUrl.present) {
+      map['source_code_url'] = Variable<String>(sourceCodeUrl.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<Uint8List>(icon.value);
+    }
+    if (bundleSha256.present) {
+      map['bundle_sha256'] = Variable<String>(bundleSha256.value);
+    }
+    if (bundleBytes.present) {
+      map['bundle_bytes'] = Variable<int>(bundleBytes.value);
+    }
+    if (published.present) {
+      map['published'] = Variable<bool>(published.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<int>(cachedAt.value);
+    }
+    if (proOnly.present) {
+      map['pro_only'] = Variable<bool>(proOnly.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (oneTime.present) {
+      map['one_time'] = Variable<bool>(oneTime.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -13785,9 +13956,1648 @@ class ContactLabelsCompanion extends UpdateCompanion<ContactLabel> {
 
   @override
   String toString() {
-    return (StringBuffer('ContactLabelsCompanion(')
-          ..write('contactId: $contactId, ')
-          ..write('labelId: $labelId, ')
+    return (StringBuffer('WebxdcAppsCompanion(')
+          ..write('appId: $appId, ')
+          ..write('version: $version, ')
+          ..write('name: $name, ')
+          ..write('nameTranslations: $nameTranslations, ')
+          ..write('description: $description, ')
+          ..write('sourceCodeUrl: $sourceCodeUrl, ')
+          ..write('icon: $icon, ')
+          ..write('bundleSha256: $bundleSha256, ')
+          ..write('bundleBytes: $bundleBytes, ')
+          ..write('published: $published, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('proOnly: $proOnly, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('oneTime: $oneTime, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WebxdcInstancesTable extends WebxdcInstances
+    with TableInfo<$WebxdcInstancesTable, WebxdcInstance> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WebxdcInstancesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _instanceIdMeta = const VerificationMeta(
+    'instanceId',
+  );
+  @override
+  late final GeneratedColumn<String> instanceId = GeneratedColumn<String>(
+    'instance_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES messages (message_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES "groups" (group_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _appIdMeta = const VerificationMeta('appId');
+  @override
+  late final GeneratedColumn<String> appId = GeneratedColumn<String>(
+    'app_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bundleSha256Meta = const VerificationMeta(
+    'bundleSha256',
+  );
+  @override
+  late final GeneratedColumn<String> bundleSha256 = GeneratedColumn<String>(
+    'bundle_sha256',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _originTokenMeta = const VerificationMeta(
+    'originToken',
+  );
+  @override
+  late final GeneratedColumn<String> originToken = GeneratedColumn<String>(
+    'origin_token',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _summaryMeta = const VerificationMeta(
+    'summary',
+  );
+  @override
+  late final GeneratedColumn<String> summary = GeneratedColumn<String>(
+    'summary',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _documentMeta = const VerificationMeta(
+    'document',
+  );
+  @override
+  late final GeneratedColumn<String> document = GeneratedColumn<String>(
+    'document',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastUpdateAtMeta = const VerificationMeta(
+    'lastUpdateAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastUpdateAt = GeneratedColumn<int>(
+    'last_update_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    instanceId,
+    groupId,
+    appId,
+    version,
+    bundleSha256,
+    originToken,
+    summary,
+    document,
+    createdAt,
+    lastUpdateAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'webxdc_instances';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WebxdcInstance> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('instance_id')) {
+      context.handle(
+        _instanceIdMeta,
+        instanceId.isAcceptableOrUnknown(data['instance_id']!, _instanceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_instanceIdMeta);
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('app_id')) {
+      context.handle(
+        _appIdMeta,
+        appId.isAcceptableOrUnknown(data['app_id']!, _appIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_appIdMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_versionMeta);
+    }
+    if (data.containsKey('bundle_sha256')) {
+      context.handle(
+        _bundleSha256Meta,
+        bundleSha256.isAcceptableOrUnknown(
+          data['bundle_sha256']!,
+          _bundleSha256Meta,
+        ),
+      );
+    }
+    if (data.containsKey('origin_token')) {
+      context.handle(
+        _originTokenMeta,
+        originToken.isAcceptableOrUnknown(
+          data['origin_token']!,
+          _originTokenMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_originTokenMeta);
+    }
+    if (data.containsKey('summary')) {
+      context.handle(
+        _summaryMeta,
+        summary.isAcceptableOrUnknown(data['summary']!, _summaryMeta),
+      );
+    }
+    if (data.containsKey('document')) {
+      context.handle(
+        _documentMeta,
+        document.isAcceptableOrUnknown(data['document']!, _documentMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('last_update_at')) {
+      context.handle(
+        _lastUpdateAtMeta,
+        lastUpdateAt.isAcceptableOrUnknown(
+          data['last_update_at']!,
+          _lastUpdateAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastUpdateAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {instanceId};
+  @override
+  WebxdcInstance map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WebxdcInstance(
+      instanceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}instance_id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      appId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}app_id'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      bundleSha256: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bundle_sha256'],
+      ),
+      originToken: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}origin_token'],
+      )!,
+      summary: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}summary'],
+      ),
+      document: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      lastUpdateAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_update_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WebxdcInstancesTable createAlias(String alias) {
+    return $WebxdcInstancesTable(attachedDatabase, alias);
+  }
+}
+
+class WebxdcInstance extends DataClass implements Insertable<WebxdcInstance> {
+  final String instanceId;
+  final String groupId;
+  final String appId;
+  final int version;
+  final String? bundleSha256;
+  final String originToken;
+  final String? summary;
+  final String? document;
+  final int createdAt;
+  final int lastUpdateAt;
+  const WebxdcInstance({
+    required this.instanceId,
+    required this.groupId,
+    required this.appId,
+    required this.version,
+    this.bundleSha256,
+    required this.originToken,
+    this.summary,
+    this.document,
+    required this.createdAt,
+    required this.lastUpdateAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['instance_id'] = Variable<String>(instanceId);
+    map['group_id'] = Variable<String>(groupId);
+    map['app_id'] = Variable<String>(appId);
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || bundleSha256 != null) {
+      map['bundle_sha256'] = Variable<String>(bundleSha256);
+    }
+    map['origin_token'] = Variable<String>(originToken);
+    if (!nullToAbsent || summary != null) {
+      map['summary'] = Variable<String>(summary);
+    }
+    if (!nullToAbsent || document != null) {
+      map['document'] = Variable<String>(document);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['last_update_at'] = Variable<int>(lastUpdateAt);
+    return map;
+  }
+
+  WebxdcInstancesCompanion toCompanion(bool nullToAbsent) {
+    return WebxdcInstancesCompanion(
+      instanceId: Value(instanceId),
+      groupId: Value(groupId),
+      appId: Value(appId),
+      version: Value(version),
+      bundleSha256: bundleSha256 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bundleSha256),
+      originToken: Value(originToken),
+      summary: summary == null && nullToAbsent
+          ? const Value.absent()
+          : Value(summary),
+      document: document == null && nullToAbsent
+          ? const Value.absent()
+          : Value(document),
+      createdAt: Value(createdAt),
+      lastUpdateAt: Value(lastUpdateAt),
+    );
+  }
+
+  factory WebxdcInstance.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WebxdcInstance(
+      instanceId: serializer.fromJson<String>(json['instanceId']),
+      groupId: serializer.fromJson<String>(json['groupId']),
+      appId: serializer.fromJson<String>(json['appId']),
+      version: serializer.fromJson<int>(json['version']),
+      bundleSha256: serializer.fromJson<String?>(json['bundleSha256']),
+      originToken: serializer.fromJson<String>(json['originToken']),
+      summary: serializer.fromJson<String?>(json['summary']),
+      document: serializer.fromJson<String?>(json['document']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      lastUpdateAt: serializer.fromJson<int>(json['lastUpdateAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'instanceId': serializer.toJson<String>(instanceId),
+      'groupId': serializer.toJson<String>(groupId),
+      'appId': serializer.toJson<String>(appId),
+      'version': serializer.toJson<int>(version),
+      'bundleSha256': serializer.toJson<String?>(bundleSha256),
+      'originToken': serializer.toJson<String>(originToken),
+      'summary': serializer.toJson<String?>(summary),
+      'document': serializer.toJson<String?>(document),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'lastUpdateAt': serializer.toJson<int>(lastUpdateAt),
+    };
+  }
+
+  WebxdcInstance copyWith({
+    String? instanceId,
+    String? groupId,
+    String? appId,
+    int? version,
+    Value<String?> bundleSha256 = const Value.absent(),
+    String? originToken,
+    Value<String?> summary = const Value.absent(),
+    Value<String?> document = const Value.absent(),
+    int? createdAt,
+    int? lastUpdateAt,
+  }) => WebxdcInstance(
+    instanceId: instanceId ?? this.instanceId,
+    groupId: groupId ?? this.groupId,
+    appId: appId ?? this.appId,
+    version: version ?? this.version,
+    bundleSha256: bundleSha256.present ? bundleSha256.value : this.bundleSha256,
+    originToken: originToken ?? this.originToken,
+    summary: summary.present ? summary.value : this.summary,
+    document: document.present ? document.value : this.document,
+    createdAt: createdAt ?? this.createdAt,
+    lastUpdateAt: lastUpdateAt ?? this.lastUpdateAt,
+  );
+  WebxdcInstance copyWithCompanion(WebxdcInstancesCompanion data) {
+    return WebxdcInstance(
+      instanceId: data.instanceId.present
+          ? data.instanceId.value
+          : this.instanceId,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      appId: data.appId.present ? data.appId.value : this.appId,
+      version: data.version.present ? data.version.value : this.version,
+      bundleSha256: data.bundleSha256.present
+          ? data.bundleSha256.value
+          : this.bundleSha256,
+      originToken: data.originToken.present
+          ? data.originToken.value
+          : this.originToken,
+      summary: data.summary.present ? data.summary.value : this.summary,
+      document: data.document.present ? data.document.value : this.document,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      lastUpdateAt: data.lastUpdateAt.present
+          ? data.lastUpdateAt.value
+          : this.lastUpdateAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebxdcInstance(')
+          ..write('instanceId: $instanceId, ')
+          ..write('groupId: $groupId, ')
+          ..write('appId: $appId, ')
+          ..write('version: $version, ')
+          ..write('bundleSha256: $bundleSha256, ')
+          ..write('originToken: $originToken, ')
+          ..write('summary: $summary, ')
+          ..write('document: $document, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUpdateAt: $lastUpdateAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    instanceId,
+    groupId,
+    appId,
+    version,
+    bundleSha256,
+    originToken,
+    summary,
+    document,
+    createdAt,
+    lastUpdateAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WebxdcInstance &&
+          other.instanceId == this.instanceId &&
+          other.groupId == this.groupId &&
+          other.appId == this.appId &&
+          other.version == this.version &&
+          other.bundleSha256 == this.bundleSha256 &&
+          other.originToken == this.originToken &&
+          other.summary == this.summary &&
+          other.document == this.document &&
+          other.createdAt == this.createdAt &&
+          other.lastUpdateAt == this.lastUpdateAt);
+}
+
+class WebxdcInstancesCompanion extends UpdateCompanion<WebxdcInstance> {
+  final Value<String> instanceId;
+  final Value<String> groupId;
+  final Value<String> appId;
+  final Value<int> version;
+  final Value<String?> bundleSha256;
+  final Value<String> originToken;
+  final Value<String?> summary;
+  final Value<String?> document;
+  final Value<int> createdAt;
+  final Value<int> lastUpdateAt;
+  final Value<int> rowid;
+  const WebxdcInstancesCompanion({
+    this.instanceId = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.appId = const Value.absent(),
+    this.version = const Value.absent(),
+    this.bundleSha256 = const Value.absent(),
+    this.originToken = const Value.absent(),
+    this.summary = const Value.absent(),
+    this.document = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.lastUpdateAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WebxdcInstancesCompanion.insert({
+    required String instanceId,
+    required String groupId,
+    required String appId,
+    required int version,
+    this.bundleSha256 = const Value.absent(),
+    required String originToken,
+    this.summary = const Value.absent(),
+    this.document = const Value.absent(),
+    required int createdAt,
+    required int lastUpdateAt,
+    this.rowid = const Value.absent(),
+  }) : instanceId = Value(instanceId),
+       groupId = Value(groupId),
+       appId = Value(appId),
+       version = Value(version),
+       originToken = Value(originToken),
+       createdAt = Value(createdAt),
+       lastUpdateAt = Value(lastUpdateAt);
+  static Insertable<WebxdcInstance> custom({
+    Expression<String>? instanceId,
+    Expression<String>? groupId,
+    Expression<String>? appId,
+    Expression<int>? version,
+    Expression<String>? bundleSha256,
+    Expression<String>? originToken,
+    Expression<String>? summary,
+    Expression<String>? document,
+    Expression<int>? createdAt,
+    Expression<int>? lastUpdateAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (instanceId != null) 'instance_id': instanceId,
+      if (groupId != null) 'group_id': groupId,
+      if (appId != null) 'app_id': appId,
+      if (version != null) 'version': version,
+      if (bundleSha256 != null) 'bundle_sha256': bundleSha256,
+      if (originToken != null) 'origin_token': originToken,
+      if (summary != null) 'summary': summary,
+      if (document != null) 'document': document,
+      if (createdAt != null) 'created_at': createdAt,
+      if (lastUpdateAt != null) 'last_update_at': lastUpdateAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WebxdcInstancesCompanion copyWith({
+    Value<String>? instanceId,
+    Value<String>? groupId,
+    Value<String>? appId,
+    Value<int>? version,
+    Value<String?>? bundleSha256,
+    Value<String>? originToken,
+    Value<String?>? summary,
+    Value<String?>? document,
+    Value<int>? createdAt,
+    Value<int>? lastUpdateAt,
+    Value<int>? rowid,
+  }) {
+    return WebxdcInstancesCompanion(
+      instanceId: instanceId ?? this.instanceId,
+      groupId: groupId ?? this.groupId,
+      appId: appId ?? this.appId,
+      version: version ?? this.version,
+      bundleSha256: bundleSha256 ?? this.bundleSha256,
+      originToken: originToken ?? this.originToken,
+      summary: summary ?? this.summary,
+      document: document ?? this.document,
+      createdAt: createdAt ?? this.createdAt,
+      lastUpdateAt: lastUpdateAt ?? this.lastUpdateAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (instanceId.present) {
+      map['instance_id'] = Variable<String>(instanceId.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (appId.present) {
+      map['app_id'] = Variable<String>(appId.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (bundleSha256.present) {
+      map['bundle_sha256'] = Variable<String>(bundleSha256.value);
+    }
+    if (originToken.present) {
+      map['origin_token'] = Variable<String>(originToken.value);
+    }
+    if (summary.present) {
+      map['summary'] = Variable<String>(summary.value);
+    }
+    if (document.present) {
+      map['document'] = Variable<String>(document.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (lastUpdateAt.present) {
+      map['last_update_at'] = Variable<int>(lastUpdateAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebxdcInstancesCompanion(')
+          ..write('instanceId: $instanceId, ')
+          ..write('groupId: $groupId, ')
+          ..write('appId: $appId, ')
+          ..write('version: $version, ')
+          ..write('bundleSha256: $bundleSha256, ')
+          ..write('originToken: $originToken, ')
+          ..write('summary: $summary, ')
+          ..write('document: $document, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUpdateAt: $lastUpdateAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WebxdcUpdatesTable extends WebxdcUpdates
+    with TableInfo<$WebxdcUpdatesTable, WebxdcUpdate> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WebxdcUpdatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _instanceIdMeta = const VerificationMeta(
+    'instanceId',
+  );
+  @override
+  late final GeneratedColumn<String> instanceId = GeneratedColumn<String>(
+    'instance_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES webxdc_instances (instance_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _serialMeta = const VerificationMeta('serial');
+  @override
+  late final GeneratedColumn<int> serial = GeneratedColumn<int>(
+    'serial',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _messageIdMeta = const VerificationMeta(
+    'messageId',
+  );
+  @override
+  late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
+    'message_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _senderIdMeta = const VerificationMeta(
+    'senderId',
+  );
+  @override
+  late final GeneratedColumn<int> senderId = GeneratedColumn<int>(
+    'sender_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _infoMeta = const VerificationMeta('info');
+  @override
+  late final GeneratedColumn<String> info = GeneratedColumn<String>(
+    'info',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _hrefMeta = const VerificationMeta('href');
+  @override
+  late final GeneratedColumn<String> href = GeneratedColumn<String>(
+    'href',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _receivedAtMeta = const VerificationMeta(
+    'receivedAt',
+  );
+  @override
+  late final GeneratedColumn<int> receivedAt = GeneratedColumn<int>(
+    'received_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    instanceId,
+    serial,
+    messageId,
+    senderId,
+    payload,
+    info,
+    href,
+    receivedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'webxdc_updates';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WebxdcUpdate> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('instance_id')) {
+      context.handle(
+        _instanceIdMeta,
+        instanceId.isAcceptableOrUnknown(data['instance_id']!, _instanceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_instanceIdMeta);
+    }
+    if (data.containsKey('serial')) {
+      context.handle(
+        _serialMeta,
+        serial.isAcceptableOrUnknown(data['serial']!, _serialMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_serialMeta);
+    }
+    if (data.containsKey('message_id')) {
+      context.handle(
+        _messageIdMeta,
+        messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_messageIdMeta);
+    }
+    if (data.containsKey('sender_id')) {
+      context.handle(
+        _senderIdMeta,
+        senderId.isAcceptableOrUnknown(data['sender_id']!, _senderIdMeta),
+      );
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('info')) {
+      context.handle(
+        _infoMeta,
+        info.isAcceptableOrUnknown(data['info']!, _infoMeta),
+      );
+    }
+    if (data.containsKey('href')) {
+      context.handle(
+        _hrefMeta,
+        href.isAcceptableOrUnknown(data['href']!, _hrefMeta),
+      );
+    }
+    if (data.containsKey('received_at')) {
+      context.handle(
+        _receivedAtMeta,
+        receivedAt.isAcceptableOrUnknown(data['received_at']!, _receivedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_receivedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {instanceId, serial};
+  @override
+  WebxdcUpdate map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WebxdcUpdate(
+      instanceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}instance_id'],
+      )!,
+      serial: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}serial'],
+      )!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      )!,
+      senderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sender_id'],
+      ),
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      info: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}info'],
+      ),
+      href: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}href'],
+      ),
+      receivedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}received_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WebxdcUpdatesTable createAlias(String alias) {
+    return $WebxdcUpdatesTable(attachedDatabase, alias);
+  }
+}
+
+class WebxdcUpdate extends DataClass implements Insertable<WebxdcUpdate> {
+  final String instanceId;
+  final int serial;
+  final String messageId;
+  final int? senderId;
+  final String payload;
+  final String? info;
+  final String? href;
+  final int receivedAt;
+  const WebxdcUpdate({
+    required this.instanceId,
+    required this.serial,
+    required this.messageId,
+    this.senderId,
+    required this.payload,
+    this.info,
+    this.href,
+    required this.receivedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['instance_id'] = Variable<String>(instanceId);
+    map['serial'] = Variable<int>(serial);
+    map['message_id'] = Variable<String>(messageId);
+    if (!nullToAbsent || senderId != null) {
+      map['sender_id'] = Variable<int>(senderId);
+    }
+    map['payload'] = Variable<String>(payload);
+    if (!nullToAbsent || info != null) {
+      map['info'] = Variable<String>(info);
+    }
+    if (!nullToAbsent || href != null) {
+      map['href'] = Variable<String>(href);
+    }
+    map['received_at'] = Variable<int>(receivedAt);
+    return map;
+  }
+
+  WebxdcUpdatesCompanion toCompanion(bool nullToAbsent) {
+    return WebxdcUpdatesCompanion(
+      instanceId: Value(instanceId),
+      serial: Value(serial),
+      messageId: Value(messageId),
+      senderId: senderId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(senderId),
+      payload: Value(payload),
+      info: info == null && nullToAbsent ? const Value.absent() : Value(info),
+      href: href == null && nullToAbsent ? const Value.absent() : Value(href),
+      receivedAt: Value(receivedAt),
+    );
+  }
+
+  factory WebxdcUpdate.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WebxdcUpdate(
+      instanceId: serializer.fromJson<String>(json['instanceId']),
+      serial: serializer.fromJson<int>(json['serial']),
+      messageId: serializer.fromJson<String>(json['messageId']),
+      senderId: serializer.fromJson<int?>(json['senderId']),
+      payload: serializer.fromJson<String>(json['payload']),
+      info: serializer.fromJson<String?>(json['info']),
+      href: serializer.fromJson<String?>(json['href']),
+      receivedAt: serializer.fromJson<int>(json['receivedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'instanceId': serializer.toJson<String>(instanceId),
+      'serial': serializer.toJson<int>(serial),
+      'messageId': serializer.toJson<String>(messageId),
+      'senderId': serializer.toJson<int?>(senderId),
+      'payload': serializer.toJson<String>(payload),
+      'info': serializer.toJson<String?>(info),
+      'href': serializer.toJson<String?>(href),
+      'receivedAt': serializer.toJson<int>(receivedAt),
+    };
+  }
+
+  WebxdcUpdate copyWith({
+    String? instanceId,
+    int? serial,
+    String? messageId,
+    Value<int?> senderId = const Value.absent(),
+    String? payload,
+    Value<String?> info = const Value.absent(),
+    Value<String?> href = const Value.absent(),
+    int? receivedAt,
+  }) => WebxdcUpdate(
+    instanceId: instanceId ?? this.instanceId,
+    serial: serial ?? this.serial,
+    messageId: messageId ?? this.messageId,
+    senderId: senderId.present ? senderId.value : this.senderId,
+    payload: payload ?? this.payload,
+    info: info.present ? info.value : this.info,
+    href: href.present ? href.value : this.href,
+    receivedAt: receivedAt ?? this.receivedAt,
+  );
+  WebxdcUpdate copyWithCompanion(WebxdcUpdatesCompanion data) {
+    return WebxdcUpdate(
+      instanceId: data.instanceId.present
+          ? data.instanceId.value
+          : this.instanceId,
+      serial: data.serial.present ? data.serial.value : this.serial,
+      messageId: data.messageId.present ? data.messageId.value : this.messageId,
+      senderId: data.senderId.present ? data.senderId.value : this.senderId,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      info: data.info.present ? data.info.value : this.info,
+      href: data.href.present ? data.href.value : this.href,
+      receivedAt: data.receivedAt.present
+          ? data.receivedAt.value
+          : this.receivedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebxdcUpdate(')
+          ..write('instanceId: $instanceId, ')
+          ..write('serial: $serial, ')
+          ..write('messageId: $messageId, ')
+          ..write('senderId: $senderId, ')
+          ..write('payload: $payload, ')
+          ..write('info: $info, ')
+          ..write('href: $href, ')
+          ..write('receivedAt: $receivedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    instanceId,
+    serial,
+    messageId,
+    senderId,
+    payload,
+    info,
+    href,
+    receivedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WebxdcUpdate &&
+          other.instanceId == this.instanceId &&
+          other.serial == this.serial &&
+          other.messageId == this.messageId &&
+          other.senderId == this.senderId &&
+          other.payload == this.payload &&
+          other.info == this.info &&
+          other.href == this.href &&
+          other.receivedAt == this.receivedAt);
+}
+
+class WebxdcUpdatesCompanion extends UpdateCompanion<WebxdcUpdate> {
+  final Value<String> instanceId;
+  final Value<int> serial;
+  final Value<String> messageId;
+  final Value<int?> senderId;
+  final Value<String> payload;
+  final Value<String?> info;
+  final Value<String?> href;
+  final Value<int> receivedAt;
+  final Value<int> rowid;
+  const WebxdcUpdatesCompanion({
+    this.instanceId = const Value.absent(),
+    this.serial = const Value.absent(),
+    this.messageId = const Value.absent(),
+    this.senderId = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.info = const Value.absent(),
+    this.href = const Value.absent(),
+    this.receivedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WebxdcUpdatesCompanion.insert({
+    required String instanceId,
+    required int serial,
+    required String messageId,
+    this.senderId = const Value.absent(),
+    required String payload,
+    this.info = const Value.absent(),
+    this.href = const Value.absent(),
+    required int receivedAt,
+    this.rowid = const Value.absent(),
+  }) : instanceId = Value(instanceId),
+       serial = Value(serial),
+       messageId = Value(messageId),
+       payload = Value(payload),
+       receivedAt = Value(receivedAt);
+  static Insertable<WebxdcUpdate> custom({
+    Expression<String>? instanceId,
+    Expression<int>? serial,
+    Expression<String>? messageId,
+    Expression<int>? senderId,
+    Expression<String>? payload,
+    Expression<String>? info,
+    Expression<String>? href,
+    Expression<int>? receivedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (instanceId != null) 'instance_id': instanceId,
+      if (serial != null) 'serial': serial,
+      if (messageId != null) 'message_id': messageId,
+      if (senderId != null) 'sender_id': senderId,
+      if (payload != null) 'payload': payload,
+      if (info != null) 'info': info,
+      if (href != null) 'href': href,
+      if (receivedAt != null) 'received_at': receivedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WebxdcUpdatesCompanion copyWith({
+    Value<String>? instanceId,
+    Value<int>? serial,
+    Value<String>? messageId,
+    Value<int?>? senderId,
+    Value<String>? payload,
+    Value<String?>? info,
+    Value<String?>? href,
+    Value<int>? receivedAt,
+    Value<int>? rowid,
+  }) {
+    return WebxdcUpdatesCompanion(
+      instanceId: instanceId ?? this.instanceId,
+      serial: serial ?? this.serial,
+      messageId: messageId ?? this.messageId,
+      senderId: senderId ?? this.senderId,
+      payload: payload ?? this.payload,
+      info: info ?? this.info,
+      href: href ?? this.href,
+      receivedAt: receivedAt ?? this.receivedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (instanceId.present) {
+      map['instance_id'] = Variable<String>(instanceId.value);
+    }
+    if (serial.present) {
+      map['serial'] = Variable<int>(serial.value);
+    }
+    if (messageId.present) {
+      map['message_id'] = Variable<String>(messageId.value);
+    }
+    if (senderId.present) {
+      map['sender_id'] = Variable<int>(senderId.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (info.present) {
+      map['info'] = Variable<String>(info.value);
+    }
+    if (href.present) {
+      map['href'] = Variable<String>(href.value);
+    }
+    if (receivedAt.present) {
+      map['received_at'] = Variable<int>(receivedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WebxdcUpdatesCompanion(')
+          ..write('instanceId: $instanceId, ')
+          ..write('serial: $serial, ')
+          ..write('messageId: $messageId, ')
+          ..write('senderId: $senderId, ')
+          ..write('payload: $payload, ')
+          ..write('info: $info, ')
+          ..write('href: $href, ')
+          ..write('receivedAt: $receivedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StickersTable extends Stickers
+    with TableInfo<$StickersTable, LocalSticker> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StickersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _contentHashMeta = const VerificationMeta(
+    'contentHash',
+  );
+  @override
+  late final GeneratedColumn<String> contentHash = GeneratedColumn<String>(
+    'content_hash',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 64,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _webpMeta = const VerificationMeta('webp');
+  @override
+  late final GeneratedColumn<Uint8List> webp = GeneratedColumn<Uint8List>(
+    'webp',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _widthMeta = const VerificationMeta('width');
+  @override
+  late final GeneratedColumn<int> width = GeneratedColumn<int>(
+    'width',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _heightMeta = const VerificationMeta('height');
+  @override
+  late final GeneratedColumn<int> height = GeneratedColumn<int>(
+    'height',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _usageCountMeta = const VerificationMeta(
+    'usageCount',
+  );
+  @override
+  late final GeneratedColumn<int> usageCount = GeneratedColumn<int>(
+    'usage_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _lastUsedAtMeta = const VerificationMeta(
+    'lastUsedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastUsedAt = GeneratedColumn<DateTime>(
+    'last_used_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    contentHash,
+    webp,
+    width,
+    height,
+    usageCount,
+    createdAt,
+    lastUsedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'stickers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LocalSticker> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('content_hash')) {
+      context.handle(
+        _contentHashMeta,
+        contentHash.isAcceptableOrUnknown(
+          data['content_hash']!,
+          _contentHashMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_contentHashMeta);
+    }
+    if (data.containsKey('webp')) {
+      context.handle(
+        _webpMeta,
+        webp.isAcceptableOrUnknown(data['webp']!, _webpMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_webpMeta);
+    }
+    if (data.containsKey('width')) {
+      context.handle(
+        _widthMeta,
+        width.isAcceptableOrUnknown(data['width']!, _widthMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_widthMeta);
+    }
+    if (data.containsKey('height')) {
+      context.handle(
+        _heightMeta,
+        height.isAcceptableOrUnknown(data['height']!, _heightMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_heightMeta);
+    }
+    if (data.containsKey('usage_count')) {
+      context.handle(
+        _usageCountMeta,
+        usageCount.isAcceptableOrUnknown(data['usage_count']!, _usageCountMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('last_used_at')) {
+      context.handle(
+        _lastUsedAtMeta,
+        lastUsedAt.isAcceptableOrUnknown(
+          data['last_used_at']!,
+          _lastUsedAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {contentHash};
+  @override
+  LocalSticker map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalSticker(
+      contentHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_hash'],
+      )!,
+      webp: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}webp'],
+      )!,
+      width: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}width'],
+      )!,
+      height: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}height'],
+      )!,
+      usageCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}usage_count'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      lastUsedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_used_at'],
+      )!,
+    );
+  }
+
+  @override
+  $StickersTable createAlias(String alias) {
+    return $StickersTable(attachedDatabase, alias);
+  }
+}
+
+class LocalSticker extends DataClass implements Insertable<LocalSticker> {
+  final String contentHash;
+  final Uint8List webp;
+  final int width;
+  final int height;
+  final int usageCount;
+  final DateTime createdAt;
+  final DateTime lastUsedAt;
+  const LocalSticker({
+    required this.contentHash,
+    required this.webp,
+    required this.width,
+    required this.height,
+    required this.usageCount,
+    required this.createdAt,
+    required this.lastUsedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['content_hash'] = Variable<String>(contentHash);
+    map['webp'] = Variable<Uint8List>(webp);
+    map['width'] = Variable<int>(width);
+    map['height'] = Variable<int>(height);
+    map['usage_count'] = Variable<int>(usageCount);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['last_used_at'] = Variable<DateTime>(lastUsedAt);
+    return map;
+  }
+
+  StickersCompanion toCompanion(bool nullToAbsent) {
+    return StickersCompanion(
+      contentHash: Value(contentHash),
+      webp: Value(webp),
+      width: Value(width),
+      height: Value(height),
+      usageCount: Value(usageCount),
+      createdAt: Value(createdAt),
+      lastUsedAt: Value(lastUsedAt),
+    );
+  }
+
+  factory LocalSticker.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalSticker(
+      contentHash: serializer.fromJson<String>(json['contentHash']),
+      webp: serializer.fromJson<Uint8List>(json['webp']),
+      width: serializer.fromJson<int>(json['width']),
+      height: serializer.fromJson<int>(json['height']),
+      usageCount: serializer.fromJson<int>(json['usageCount']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      lastUsedAt: serializer.fromJson<DateTime>(json['lastUsedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'contentHash': serializer.toJson<String>(contentHash),
+      'webp': serializer.toJson<Uint8List>(webp),
+      'width': serializer.toJson<int>(width),
+      'height': serializer.toJson<int>(height),
+      'usageCount': serializer.toJson<int>(usageCount),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'lastUsedAt': serializer.toJson<DateTime>(lastUsedAt),
+    };
+  }
+
+  LocalSticker copyWith({
+    String? contentHash,
+    Uint8List? webp,
+    int? width,
+    int? height,
+    int? usageCount,
+    DateTime? createdAt,
+    DateTime? lastUsedAt,
+  }) => LocalSticker(
+    contentHash: contentHash ?? this.contentHash,
+    webp: webp ?? this.webp,
+    width: width ?? this.width,
+    height: height ?? this.height,
+    usageCount: usageCount ?? this.usageCount,
+    createdAt: createdAt ?? this.createdAt,
+    lastUsedAt: lastUsedAt ?? this.lastUsedAt,
+  );
+  LocalSticker copyWithCompanion(StickersCompanion data) {
+    return LocalSticker(
+      contentHash: data.contentHash.present
+          ? data.contentHash.value
+          : this.contentHash,
+      webp: data.webp.present ? data.webp.value : this.webp,
+      width: data.width.present ? data.width.value : this.width,
+      height: data.height.present ? data.height.value : this.height,
+      usageCount: data.usageCount.present
+          ? data.usageCount.value
+          : this.usageCount,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      lastUsedAt: data.lastUsedAt.present
+          ? data.lastUsedAt.value
+          : this.lastUsedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalSticker(')
+          ..write('contentHash: $contentHash, ')
+          ..write('webp: $webp, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('usageCount: $usageCount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUsedAt: $lastUsedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    contentHash,
+    $driftBlobEquality.hash(webp),
+    width,
+    height,
+    usageCount,
+    createdAt,
+    lastUsedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocalSticker &&
+          other.contentHash == this.contentHash &&
+          $driftBlobEquality.equals(other.webp, this.webp) &&
+          other.width == this.width &&
+          other.height == this.height &&
+          other.usageCount == this.usageCount &&
+          other.createdAt == this.createdAt &&
+          other.lastUsedAt == this.lastUsedAt);
+}
+
+class StickersCompanion extends UpdateCompanion<LocalSticker> {
+  final Value<String> contentHash;
+  final Value<Uint8List> webp;
+  final Value<int> width;
+  final Value<int> height;
+  final Value<int> usageCount;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> lastUsedAt;
+  final Value<int> rowid;
+  const StickersCompanion({
+    this.contentHash = const Value.absent(),
+    this.webp = const Value.absent(),
+    this.width = const Value.absent(),
+    this.height = const Value.absent(),
+    this.usageCount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.lastUsedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StickersCompanion.insert({
+    required String contentHash,
+    required Uint8List webp,
+    required int width,
+    required int height,
+    this.usageCount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.lastUsedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : contentHash = Value(contentHash),
+       webp = Value(webp),
+       width = Value(width),
+       height = Value(height);
+  static Insertable<LocalSticker> custom({
+    Expression<String>? contentHash,
+    Expression<Uint8List>? webp,
+    Expression<int>? width,
+    Expression<int>? height,
+    Expression<int>? usageCount,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? lastUsedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (contentHash != null) 'content_hash': contentHash,
+      if (webp != null) 'webp': webp,
+      if (width != null) 'width': width,
+      if (height != null) 'height': height,
+      if (usageCount != null) 'usage_count': usageCount,
+      if (createdAt != null) 'created_at': createdAt,
+      if (lastUsedAt != null) 'last_used_at': lastUsedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StickersCompanion copyWith({
+    Value<String>? contentHash,
+    Value<Uint8List>? webp,
+    Value<int>? width,
+    Value<int>? height,
+    Value<int>? usageCount,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? lastUsedAt,
+    Value<int>? rowid,
+  }) {
+    return StickersCompanion(
+      contentHash: contentHash ?? this.contentHash,
+      webp: webp ?? this.webp,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      usageCount: usageCount ?? this.usageCount,
+      createdAt: createdAt ?? this.createdAt,
+      lastUsedAt: lastUsedAt ?? this.lastUsedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (contentHash.present) {
+      map['content_hash'] = Variable<String>(contentHash.value);
+    }
+    if (webp.present) {
+      map['webp'] = Variable<Uint8List>(webp.value);
+    }
+    if (width.present) {
+      map['width'] = Variable<int>(width.value);
+    }
+    if (height.present) {
+      map['height'] = Variable<int>(height.value);
+    }
+    if (usageCount.present) {
+      map['usage_count'] = Variable<int>(usageCount.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (lastUsedAt.present) {
+      map['last_used_at'] = Variable<DateTime>(lastUsedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StickersCompanion(')
+          ..write('contentHash: $contentHash, ')
+          ..write('webp: $webp, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('usageCount: $usageCount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUsedAt: $lastUsedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -13810,16 +15620,6 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final $ReceivedReceiptsTable receivedReceipts = $ReceivedReceiptsTable(
     this,
   );
-  late final $SignalIdentityKeyStoresTable signalIdentityKeyStores =
-      $SignalIdentityKeyStoresTable(this);
-  late final $SignalPreKeyStoresTable signalPreKeyStores =
-      $SignalPreKeyStoresTable(this);
-  late final $SignalSenderKeyStoresTable signalSenderKeyStores =
-      $SignalSenderKeyStoresTable(this);
-  late final $SignalSessionStoresTable signalSessionStores =
-      $SignalSessionStoresTable(this);
-  late final $SignalSignedPreKeyStoresTable signalSignedPreKeyStores =
-      $SignalSignedPreKeyStoresTable(this);
   late final $MessageActionsTable messageActions = $MessageActionsTable(this);
   late final $GroupHistoriesTable groupHistories = $GroupHistoriesTable(this);
   late final $KeyVerificationsTable keyVerifications = $KeyVerificationsTable(
@@ -13837,12 +15637,15 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
       $UserDiscoveryOwnPromotionsTable(this);
   late final $UserDiscoverySharesTable userDiscoveryShares =
       $UserDiscoverySharesTable(this);
-  late final $ShortcutsTable shortcuts = $ShortcutsTable(this);
-  late final $ShortcutMembersTable shortcutMembers = $ShortcutMembersTable(
+  late final $ContactGroupsTable contactGroups = $ContactGroupsTable(this);
+  late final $ContactGroupMembersTable contactGroupMembers =
+      $ContactGroupMembersTable(this);
+  late final $WebxdcAppsTable webxdcApps = $WebxdcAppsTable(this);
+  late final $WebxdcInstancesTable webxdcInstances = $WebxdcInstancesTable(
     this,
   );
-  late final $LabelsTable labels = $LabelsTable(this);
-  late final $ContactLabelsTable contactLabels = $ContactLabelsTable(this);
+  late final $WebxdcUpdatesTable webxdcUpdates = $WebxdcUpdatesTable(this);
+  late final $StickersTable stickers = $StickersTable(this);
   late final Index idxMessagesGroupIdCreatedAt = Index(
     'idx_messages_group_id_created_at',
     'CREATE INDEX idx_messages_group_id_created_at ON messages (group_id, created_at)',
@@ -13863,8 +15666,11 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final KeyVerificationDao keyVerificationDao = KeyVerificationDao(
     this as TwonlyDB,
   );
-  late final ShortcutsDao shortcutsDao = ShortcutsDao(this as TwonlyDB);
-  late final LabelsDao labelsDao = LabelsDao(this as TwonlyDB);
+  late final ContactGroupsDao contactGroupsDao = ContactGroupsDao(
+    this as TwonlyDB,
+  );
+  late final StoriesDao storiesDao = StoriesDao(this as TwonlyDB);
+  late final StickersDao stickersDao = StickersDao(this as TwonlyDB);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -13879,11 +15685,6 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     groupMembers,
     receipts,
     receivedReceipts,
-    signalIdentityKeyStores,
-    signalPreKeyStores,
-    signalSenderKeyStores,
-    signalSessionStores,
-    signalSignedPreKeyStores,
     messageActions,
     groupHistories,
     keyVerifications,
@@ -13893,10 +15694,12 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     userDiscoveryOtherPromotions,
     userDiscoveryOwnPromotions,
     userDiscoveryShares,
-    shortcuts,
-    shortcutMembers,
-    labels,
-    contactLabels,
+    contactGroups,
+    contactGroupMembers,
+    webxdcApps,
+    webxdcInstances,
+    webxdcUpdates,
+    stickers,
     idxMessagesGroupIdCreatedAt,
     idxReceiptsMessageId,
   ];
@@ -14045,31 +15848,45 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
-        'shortcuts',
+        'contact_groups',
         limitUpdateKind: UpdateKind.delete,
       ),
-      result: [TableUpdate('shortcut_members', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'groups',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('shortcut_members', kind: UpdateKind.delete)],
+      result: [TableUpdate('contact_group_members', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'contacts',
         limitUpdateKind: UpdateKind.delete,
       ),
-      result: [TableUpdate('contact_labels', kind: UpdateKind.delete)],
+      result: [TableUpdate('contact_group_members', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
-        'labels',
+        'groups',
         limitUpdateKind: UpdateKind.delete,
       ),
-      result: [TableUpdate('contact_labels', kind: UpdateKind.delete)],
+      result: [TableUpdate('contact_group_members', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'messages',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('webxdc_instances', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'groups',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('webxdc_instances', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'webxdc_instances',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('webxdc_updates', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -14081,6 +15898,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<String?> displayName,
       Value<String?> nickName,
       Value<Uint8List?> avatarSvgCompressed,
+      Value<bool?> preferPhotoAvatar,
       Value<int> senderProfileCounter,
       Value<bool> accepted,
       Value<bool> deletedByUser,
@@ -14100,6 +15918,10 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<DateTime?> recoveryContactsLastHeartbeat,
       Value<int?> recoveryContactsThreshold,
       Value<bool?> askForFriendPromotions,
+      Value<bool> widgetSharingAllowed,
+      Value<bool> widgetSharingGranted,
+      Value<int?> twonlyScore,
+      Value<DateTime?> joinedAt,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -14110,6 +15932,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<String?> displayName,
       Value<String?> nickName,
       Value<Uint8List?> avatarSvgCompressed,
+      Value<bool?> preferPhotoAvatar,
       Value<int> senderProfileCounter,
       Value<bool> accepted,
       Value<bool> deletedByUser,
@@ -14129,6 +15952,10 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<DateTime?> recoveryContactsLastHeartbeat,
       Value<int?> recoveryContactsThreshold,
       Value<bool?> askForFriendPromotions,
+      Value<bool> widgetSharingAllowed,
+      Value<bool> widgetSharingGranted,
+      Value<int?> twonlyScore,
+      Value<DateTime?> joinedAt,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -14141,7 +15968,7 @@ final class $$ContactsTableReferences
     _$TwonlyDB db,
   ) => MultiTypedResultKey.fromTable(
     db.messages,
-    aliasName: $_aliasNameGenerator(db.contacts.userId, db.messages.senderId),
+    aliasName: 'contacts__user_id__messages__sender_id',
   );
 
   $$MessagesTableProcessedTableManager get messagesRefs {
@@ -14159,10 +15986,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$MessageHistoriesTable, List<MessageHistory>>
   _messageHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.messageHistories,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.messageHistories.contactId,
-    ),
+    aliasName: 'contacts__user_id__message_histories__contact_id',
   );
 
   $$MessageHistoriesTableProcessedTableManager get messageHistoriesRefs {
@@ -14182,7 +16006,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$ReactionsTable, List<Reaction>>
   _reactionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.reactions,
-    aliasName: $_aliasNameGenerator(db.contacts.userId, db.reactions.senderId),
+    aliasName: 'contacts__user_id__reactions__sender_id',
   );
 
   $$ReactionsTableProcessedTableManager get reactionsRefs {
@@ -14200,10 +16024,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$GroupMembersTable, List<GroupMember>>
   _groupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.groupMembers,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.groupMembers.contactId,
-    ),
+    aliasName: 'contacts__user_id__group_members__contact_id',
   );
 
   $$GroupMembersTableProcessedTableManager get groupMembersRefs {
@@ -14222,7 +16043,7 @@ final class $$ContactsTableReferences
     _$TwonlyDB db,
   ) => MultiTypedResultKey.fromTable(
     db.receipts,
-    aliasName: $_aliasNameGenerator(db.contacts.userId, db.receipts.contactId),
+    aliasName: 'contacts__user_id__receipts__contact_id',
   );
 
   $$ReceiptsTableProcessedTableManager get receiptsRefs {
@@ -14239,10 +16060,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$MessageActionsTable, List<MessageAction>>
   _messageActionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.messageActions,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.messageActions.contactId,
-    ),
+    aliasName: 'contacts__user_id__message_actions__contact_id',
   );
 
   $$MessageActionsTableProcessedTableManager get messageActionsRefs {
@@ -14260,10 +16078,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$GroupHistoriesTable, List<GroupHistory>>
   _groupHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.groupHistories,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.groupHistories.contactId,
-    ),
+    aliasName: 'contacts__user_id__group_histories__contact_id',
   );
 
   $$GroupHistoriesTableProcessedTableManager get groupHistoriesRefs {
@@ -14285,10 +16100,8 @@ final class $$ContactsTableReferences
   _userDiscoveryUserRelationsRefsTable(_$TwonlyDB db) =>
       MultiTypedResultKey.fromTable(
         db.userDiscoveryUserRelations,
-        aliasName: $_aliasNameGenerator(
-          db.contacts.userId,
-          db.userDiscoveryUserRelations.fromContactId,
-        ),
+        aliasName:
+            'contacts__user_id__user_discovery_user_relations__from_contact_id',
       );
 
   $$UserDiscoveryUserRelationsTableProcessedTableManager
@@ -14314,14 +16127,13 @@ final class $$ContactsTableReferences
     $UserDiscoveryOtherPromotionsTable,
     List<UserDiscoveryOtherPromotion>
   >
-  _userDiscoveryOtherPromotionsRefsTable(_$TwonlyDB db) =>
-      MultiTypedResultKey.fromTable(
-        db.userDiscoveryOtherPromotions,
-        aliasName: $_aliasNameGenerator(
-          db.contacts.userId,
-          db.userDiscoveryOtherPromotions.fromContactId,
-        ),
-      );
+  _userDiscoveryOtherPromotionsRefsTable(
+    _$TwonlyDB db,
+  ) => MultiTypedResultKey.fromTable(
+    db.userDiscoveryOtherPromotions,
+    aliasName:
+        'contacts__user_id__user_discovery_other_promotions__from_contact_id',
+  );
 
   $$UserDiscoveryOtherPromotionsTableProcessedTableManager
   get userDiscoveryOtherPromotionsRefs {
@@ -14349,10 +16161,8 @@ final class $$ContactsTableReferences
   _userDiscoveryOwnPromotionsRefsTable(_$TwonlyDB db) =>
       MultiTypedResultKey.fromTable(
         db.userDiscoveryOwnPromotions,
-        aliasName: $_aliasNameGenerator(
-          db.contacts.userId,
-          db.userDiscoveryOwnPromotions.contactId,
-        ),
+        aliasName:
+            'contacts__user_id__user_discovery_own_promotions__contact_id',
       );
 
   $$UserDiscoveryOwnPromotionsTableProcessedTableManager
@@ -14379,10 +16189,7 @@ final class $$ContactsTableReferences
   >
   _userDiscoverySharesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.userDiscoveryShares,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.userDiscoveryShares.contactId,
-    ),
+    aliasName: 'contacts__user_id__user_discovery_shares__contact_id',
   );
 
   $$UserDiscoverySharesTableProcessedTableManager get userDiscoverySharesRefs {
@@ -14402,22 +16209,24 @@ final class $$ContactsTableReferences
     );
   }
 
-  static MultiTypedResultKey<$ContactLabelsTable, List<ContactLabel>>
-  _contactLabelsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-    db.contactLabels,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.contactLabels.contactId,
-    ),
+  static MultiTypedResultKey<
+    $ContactGroupMembersTable,
+    List<ContactGroupMember>
+  >
+  _contactGroupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.contactGroupMembers,
+    aliasName: 'contacts__user_id__contact_group_members__user_id',
   );
 
-  $$ContactLabelsTableProcessedTableManager get contactLabelsRefs {
-    final manager = $$ContactLabelsTableTableManager($_db, $_db.contactLabels)
-        .filter(
-          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
-        );
+  $$ContactGroupMembersTableProcessedTableManager get contactGroupMembersRefs {
+    final manager = $$ContactGroupMembersTableTableManager(
+      $_db,
+      $_db.contactGroupMembers,
+    ).filter((f) => f.userId.userId.sqlEquals($_itemColumn<int>('user_id')!));
 
-    final cache = $_typedResult.readTableOrNull(_contactLabelsRefsTable($_db));
+    final cache = $_typedResult.readTableOrNull(
+      _contactGroupMembersRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -14455,6 +16264,11 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<Uint8List> get avatarSvgCompressed => $composableBuilder(
     column: $table.avatarSvgCompressed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get preferPhotoAvatar => $composableBuilder(
+    column: $table.preferPhotoAvatar,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -14553,6 +16367,26 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<bool> get askForFriendPromotions => $composableBuilder(
     column: $table.askForFriendPromotions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get widgetSharingAllowed => $composableBuilder(
+    column: $table.widgetSharingAllowed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get widgetSharingGranted => $composableBuilder(
+    column: $table.widgetSharingGranted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get twonlyScore => $composableBuilder(
+    column: $table.twonlyScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get joinedAt => $composableBuilder(
+    column: $table.joinedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -14849,22 +16683,22 @@ class $$ContactsTableFilterComposer
     return f(composer);
   }
 
-  Expression<bool> contactLabelsRefs(
-    Expression<bool> Function($$ContactLabelsTableFilterComposer f) f,
+  Expression<bool> contactGroupMembersRefs(
+    Expression<bool> Function($$ContactGroupMembersTableFilterComposer f) f,
   ) {
-    final $$ContactLabelsTableFilterComposer composer = $composerBuilder(
+    final $$ContactGroupMembersTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.userId,
-      referencedTable: $db.contactLabels,
-      getReferencedColumn: (t) => t.contactId,
+      referencedTable: $db.contactGroupMembers,
+      getReferencedColumn: (t) => t.userId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ContactLabelsTableFilterComposer(
+          }) => $$ContactGroupMembersTableFilterComposer(
             $db: $db,
-            $table: $db.contactLabels,
+            $table: $db.contactGroupMembers,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -14906,6 +16740,11 @@ class $$ContactsTableOrderingComposer
 
   ColumnOrderings<Uint8List> get avatarSvgCompressed => $composableBuilder(
     column: $table.avatarSvgCompressed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get preferPhotoAvatar => $composableBuilder(
+    column: $table.preferPhotoAvatar,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -15006,6 +16845,26 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get widgetSharingAllowed => $composableBuilder(
+    column: $table.widgetSharingAllowed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get widgetSharingGranted => $composableBuilder(
+    column: $table.widgetSharingGranted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get twonlyScore => $composableBuilder(
+    column: $table.twonlyScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get joinedAt => $composableBuilder(
+    column: $table.joinedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get mediaSendCounter => $composableBuilder(
     column: $table.mediaSendCounter,
     builder: (column) => ColumnOrderings(column),
@@ -15042,6 +16901,11 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<Uint8List> get avatarSvgCompressed => $composableBuilder(
     column: $table.avatarSvgCompressed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get preferPhotoAvatar => $composableBuilder(
+    column: $table.preferPhotoAvatar,
     builder: (column) => column,
   );
 
@@ -15132,6 +16996,24 @@ class $$ContactsTableAnnotationComposer
     column: $table.askForFriendPromotions,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get widgetSharingAllowed => $composableBuilder(
+    column: $table.widgetSharingAllowed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get widgetSharingGranted => $composableBuilder(
+    column: $table.widgetSharingGranted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get twonlyScore => $composableBuilder(
+    column: $table.twonlyScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get joinedAt =>
+      $composableBuilder(column: $table.joinedAt, builder: (column) => column);
 
   GeneratedColumn<int> get mediaSendCounter => $composableBuilder(
     column: $table.mediaSendCounter,
@@ -15431,28 +17313,29 @@ class $$ContactsTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> contactLabelsRefs<T extends Object>(
-    Expression<T> Function($$ContactLabelsTableAnnotationComposer a) f,
+  Expression<T> contactGroupMembersRefs<T extends Object>(
+    Expression<T> Function($$ContactGroupMembersTableAnnotationComposer a) f,
   ) {
-    final $$ContactLabelsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.userId,
-      referencedTable: $db.contactLabels,
-      getReferencedColumn: (t) => t.contactId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactLabelsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.contactLabels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
+    final $$ContactGroupMembersTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.userId,
+          referencedTable: $db.contactGroupMembers,
+          getReferencedColumn: (t) => t.userId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer,
-          ),
-    );
+              }) => $$ContactGroupMembersTableAnnotationComposer(
+                $db: $db,
+                $table: $db.contactGroupMembers,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -15482,7 +17365,7 @@ class $$ContactsTableTableManager
             bool userDiscoveryOtherPromotionsRefs,
             bool userDiscoveryOwnPromotionsRefs,
             bool userDiscoverySharesRefs,
-            bool contactLabelsRefs,
+            bool contactGroupMembersRefs,
           })
         > {
   $$ContactsTableTableManager(_$TwonlyDB db, $ContactsTable table)
@@ -15503,6 +17386,7 @@ class $$ContactsTableTableManager
                 Value<String?> displayName = const Value.absent(),
                 Value<String?> nickName = const Value.absent(),
                 Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
+                Value<bool?> preferPhotoAvatar = const Value.absent(),
                 Value<int> senderProfileCounter = const Value.absent(),
                 Value<bool> accepted = const Value.absent(),
                 Value<bool> deletedByUser = const Value.absent(),
@@ -15524,6 +17408,10 @@ class $$ContactsTableTableManager
                     const Value.absent(),
                 Value<int?> recoveryContactsThreshold = const Value.absent(),
                 Value<bool?> askForFriendPromotions = const Value.absent(),
+                Value<bool> widgetSharingAllowed = const Value.absent(),
+                Value<bool> widgetSharingGranted = const Value.absent(),
+                Value<int?> twonlyScore = const Value.absent(),
+                Value<DateTime?> joinedAt = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion(
@@ -15532,6 +17420,7 @@ class $$ContactsTableTableManager
                 displayName: displayName,
                 nickName: nickName,
                 avatarSvgCompressed: avatarSvgCompressed,
+                preferPhotoAvatar: preferPhotoAvatar,
                 senderProfileCounter: senderProfileCounter,
                 accepted: accepted,
                 deletedByUser: deletedByUser,
@@ -15551,6 +17440,10 @@ class $$ContactsTableTableManager
                 recoveryContactsLastHeartbeat: recoveryContactsLastHeartbeat,
                 recoveryContactsThreshold: recoveryContactsThreshold,
                 askForFriendPromotions: askForFriendPromotions,
+                widgetSharingAllowed: widgetSharingAllowed,
+                widgetSharingGranted: widgetSharingGranted,
+                twonlyScore: twonlyScore,
+                joinedAt: joinedAt,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),
@@ -15561,6 +17454,7 @@ class $$ContactsTableTableManager
                 Value<String?> displayName = const Value.absent(),
                 Value<String?> nickName = const Value.absent(),
                 Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
+                Value<bool?> preferPhotoAvatar = const Value.absent(),
                 Value<int> senderProfileCounter = const Value.absent(),
                 Value<bool> accepted = const Value.absent(),
                 Value<bool> deletedByUser = const Value.absent(),
@@ -15582,6 +17476,10 @@ class $$ContactsTableTableManager
                     const Value.absent(),
                 Value<int?> recoveryContactsThreshold = const Value.absent(),
                 Value<bool?> askForFriendPromotions = const Value.absent(),
+                Value<bool> widgetSharingAllowed = const Value.absent(),
+                Value<bool> widgetSharingGranted = const Value.absent(),
+                Value<int?> twonlyScore = const Value.absent(),
+                Value<DateTime?> joinedAt = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion.insert(
@@ -15590,6 +17488,7 @@ class $$ContactsTableTableManager
                 displayName: displayName,
                 nickName: nickName,
                 avatarSvgCompressed: avatarSvgCompressed,
+                preferPhotoAvatar: preferPhotoAvatar,
                 senderProfileCounter: senderProfileCounter,
                 accepted: accepted,
                 deletedByUser: deletedByUser,
@@ -15609,13 +17508,17 @@ class $$ContactsTableTableManager
                 recoveryContactsLastHeartbeat: recoveryContactsLastHeartbeat,
                 recoveryContactsThreshold: recoveryContactsThreshold,
                 askForFriendPromotions: askForFriendPromotions,
+                widgetSharingAllowed: widgetSharingAllowed,
+                widgetSharingGranted: widgetSharingGranted,
+                twonlyScore: twonlyScore,
+                joinedAt: joinedAt,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ContactsTable, Contact>(table),
                   $$ContactsTableReferences(db, table, e),
                 ),
               )
@@ -15633,7 +17536,7 @@ class $$ContactsTableTableManager
                 userDiscoveryOtherPromotionsRefs = false,
                 userDiscoveryOwnPromotionsRefs = false,
                 userDiscoverySharesRefs = false,
-                contactLabelsRefs = false,
+                contactGroupMembersRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -15652,7 +17555,7 @@ class $$ContactsTableTableManager
                     if (userDiscoveryOwnPromotionsRefs)
                       db.userDiscoveryOwnPromotions,
                     if (userDiscoverySharesRefs) db.userDiscoveryShares,
-                    if (contactLabelsRefs) db.contactLabels,
+                    if (contactGroupMembersRefs) db.contactGroupMembers,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -15888,24 +17791,24 @@ class $$ContactsTableTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (contactLabelsRefs)
+                      if (contactGroupMembersRefs)
                         await $_getPrefetchedData<
                           Contact,
                           $ContactsTable,
-                          ContactLabel
+                          ContactGroupMember
                         >(
                           currentTable: table,
                           referencedTable: $$ContactsTableReferences
-                              ._contactLabelsRefsTable(db),
+                              ._contactGroupMembersRefsTable(db),
                           managerFromTypedResult: (p0) =>
                               $$ContactsTableReferences(
                                 db,
                                 table,
                                 p0,
-                              ).contactLabelsRefs,
+                              ).contactGroupMembersRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
-                                (e) => e.contactId == item.userId,
+                                (e) => e.userId == item.userId,
                               ),
                           typedResults: items,
                         ),
@@ -15941,7 +17844,7 @@ typedef $$ContactsTableProcessedTableManager =
         bool userDiscoveryOtherPromotionsRefs,
         bool userDiscoveryOwnPromotionsRefs,
         bool userDiscoverySharesRefs,
-        bool contactLabelsRefs,
+        bool contactGroupMembersRefs,
       })
     >;
 typedef $$GroupsTableCreateCompanionBuilder =
@@ -16011,7 +17914,7 @@ final class $$GroupsTableReferences
     _$TwonlyDB db,
   ) => MultiTypedResultKey.fromTable(
     db.messages,
-    aliasName: $_aliasNameGenerator(db.groups.groupId, db.messages.groupId),
+    aliasName: 'groups__group_id__messages__group_id',
   );
 
   $$MessagesTableProcessedTableManager get messagesRefs {
@@ -16028,7 +17931,7 @@ final class $$GroupsTableReferences
   static MultiTypedResultKey<$GroupMembersTable, List<GroupMember>>
   _groupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.groupMembers,
-    aliasName: $_aliasNameGenerator(db.groups.groupId, db.groupMembers.groupId),
+    aliasName: 'groups__group_id__group_members__group_id',
   );
 
   $$GroupMembersTableProcessedTableManager get groupMembersRefs {
@@ -16046,10 +17949,7 @@ final class $$GroupsTableReferences
   static MultiTypedResultKey<$GroupHistoriesTable, List<GroupHistory>>
   _groupHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.groupHistories,
-    aliasName: $_aliasNameGenerator(
-      db.groups.groupId,
-      db.groupHistories.groupId,
-    ),
+    aliasName: 'groups__group_id__group_histories__group_id',
   );
 
   $$GroupHistoriesTableProcessedTableManager get groupHistoriesRefs {
@@ -16064,23 +17964,46 @@ final class $$GroupsTableReferences
     );
   }
 
-  static MultiTypedResultKey<$ShortcutMembersTable, List<ShortcutMember>>
-  _shortcutMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-    db.shortcutMembers,
-    aliasName: $_aliasNameGenerator(
-      db.groups.groupId,
-      db.shortcutMembers.groupId,
-    ),
+  static MultiTypedResultKey<
+    $ContactGroupMembersTable,
+    List<ContactGroupMember>
+  >
+  _contactGroupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.contactGroupMembers,
+    aliasName: 'groups__group_id__contact_group_members__group_id',
   );
 
-  $$ShortcutMembersTableProcessedTableManager get shortcutMembersRefs {
+  $$ContactGroupMembersTableProcessedTableManager get contactGroupMembersRefs {
     final manager =
-        $$ShortcutMembersTableTableManager($_db, $_db.shortcutMembers).filter(
+        $$ContactGroupMembersTableTableManager(
+          $_db,
+          $_db.contactGroupMembers,
+        ).filter(
           (f) => f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!),
         );
 
     final cache = $_typedResult.readTableOrNull(
-      _shortcutMembersRefsTable($_db),
+      _contactGroupMembersRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$WebxdcInstancesTable, List<WebxdcInstance>>
+  _webxdcInstancesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.webxdcInstances,
+    aliasName: 'groups__group_id__webxdc_instances__group_id',
+  );
+
+  $$WebxdcInstancesTableProcessedTableManager get webxdcInstancesRefs {
+    final manager =
+        $$WebxdcInstancesTableTableManager($_db, $_db.webxdcInstances).filter(
+          (f) => f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _webxdcInstancesRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -16296,22 +18219,47 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
     return f(composer);
   }
 
-  Expression<bool> shortcutMembersRefs(
-    Expression<bool> Function($$ShortcutMembersTableFilterComposer f) f,
+  Expression<bool> contactGroupMembersRefs(
+    Expression<bool> Function($$ContactGroupMembersTableFilterComposer f) f,
   ) {
-    final $$ShortcutMembersTableFilterComposer composer = $composerBuilder(
+    final $$ContactGroupMembersTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.groupId,
-      referencedTable: $db.shortcutMembers,
+      referencedTable: $db.contactGroupMembers,
       getReferencedColumn: (t) => t.groupId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutMembersTableFilterComposer(
+          }) => $$ContactGroupMembersTableFilterComposer(
             $db: $db,
-            $table: $db.shortcutMembers,
+            $table: $db.contactGroupMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> webxdcInstancesRefs(
+    Expression<bool> Function($$WebxdcInstancesTableFilterComposer f) f,
+  ) {
+    final $$WebxdcInstancesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.webxdcInstances,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WebxdcInstancesTableFilterComposer(
+            $db: $db,
+            $table: $db.webxdcInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -16655,22 +18603,48 @@ class $$GroupsTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> shortcutMembersRefs<T extends Object>(
-    Expression<T> Function($$ShortcutMembersTableAnnotationComposer a) f,
+  Expression<T> contactGroupMembersRefs<T extends Object>(
+    Expression<T> Function($$ContactGroupMembersTableAnnotationComposer a) f,
   ) {
-    final $$ShortcutMembersTableAnnotationComposer composer = $composerBuilder(
+    final $$ContactGroupMembersTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.groupId,
+          referencedTable: $db.contactGroupMembers,
+          getReferencedColumn: (t) => t.groupId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ContactGroupMembersTableAnnotationComposer(
+                $db: $db,
+                $table: $db.contactGroupMembers,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> webxdcInstancesRefs<T extends Object>(
+    Expression<T> Function($$WebxdcInstancesTableAnnotationComposer a) f,
+  ) {
+    final $$WebxdcInstancesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.groupId,
-      referencedTable: $db.shortcutMembers,
+      referencedTable: $db.webxdcInstances,
       getReferencedColumn: (t) => t.groupId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutMembersTableAnnotationComposer(
+          }) => $$WebxdcInstancesTableAnnotationComposer(
             $db: $db,
-            $table: $db.shortcutMembers,
+            $table: $db.webxdcInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -16698,7 +18672,8 @@ class $$GroupsTableTableManager
             bool messagesRefs,
             bool groupMembersRefs,
             bool groupHistoriesRefs,
-            bool shortcutMembersRefs,
+            bool contactGroupMembersRefs,
+            bool webxdcInstancesRefs,
           })
         > {
   $$GroupsTableTableManager(_$TwonlyDB db, $GroupsTable table)
@@ -16830,8 +18805,10 @@ class $$GroupsTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $$GroupsTableReferences(db, table, e)),
+                (e) => (
+                  e.readTable<$GroupsTable, Group>(table),
+                  $$GroupsTableReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback:
@@ -16839,7 +18816,8 @@ class $$GroupsTableTableManager
                 messagesRefs = false,
                 groupMembersRefs = false,
                 groupHistoriesRefs = false,
-                shortcutMembersRefs = false,
+                contactGroupMembersRefs = false,
+                webxdcInstancesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -16847,7 +18825,8 @@ class $$GroupsTableTableManager
                     if (messagesRefs) db.messages,
                     if (groupMembersRefs) db.groupMembers,
                     if (groupHistoriesRefs) db.groupHistories,
-                    if (shortcutMembersRefs) db.shortcutMembers,
+                    if (contactGroupMembersRefs) db.contactGroupMembers,
+                    if (webxdcInstancesRefs) db.webxdcInstances,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -16911,21 +18890,42 @@ class $$GroupsTableTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (shortcutMembersRefs)
+                      if (contactGroupMembersRefs)
                         await $_getPrefetchedData<
                           Group,
                           $GroupsTable,
-                          ShortcutMember
+                          ContactGroupMember
                         >(
                           currentTable: table,
                           referencedTable: $$GroupsTableReferences
-                              ._shortcutMembersRefsTable(db),
+                              ._contactGroupMembersRefsTable(db),
                           managerFromTypedResult: (p0) =>
                               $$GroupsTableReferences(
                                 db,
                                 table,
                                 p0,
-                              ).shortcutMembersRefs,
+                              ).contactGroupMembersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.groupId == item.groupId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (webxdcInstancesRefs)
+                        await $_getPrefetchedData<
+                          Group,
+                          $GroupsTable,
+                          WebxdcInstance
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GroupsTableReferences
+                              ._webxdcInstancesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GroupsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).webxdcInstancesRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.groupId == item.groupId,
@@ -16956,7 +18956,8 @@ typedef $$GroupsTableProcessedTableManager =
         bool messagesRefs,
         bool groupMembersRefs,
         bool groupHistoriesRefs,
-        bool shortcutMembersRefs,
+        bool contactGroupMembersRefs,
+        bool webxdcInstancesRefs,
       })
     >;
 typedef $$MediaFilesTableCreateCompanionBuilder =
@@ -16970,12 +18971,15 @@ typedef $$MediaFilesTableCreateCompanionBuilder =
       Value<bool> requiresAuthentication,
       Value<bool> stored,
       Value<bool> isDraftMedia,
+      Value<bool> isWidgetMedia,
       Value<bool> isFavorite,
       Value<bool> hasCropAnalyzed,
       Value<int?> preProgressingProcess,
       Value<List<int>?> reuploadRequestedBy,
       Value<int?> displayLimitInMilliseconds,
       Value<bool?> removeAudio,
+      Value<int?> trimStartMs,
+      Value<int?> trimEndMs,
       Value<Uint8List?> downloadToken,
       Value<Uint8List?> encryptionKey,
       Value<Uint8List?> encryptionMac,
@@ -16983,6 +18987,12 @@ typedef $$MediaFilesTableCreateCompanionBuilder =
       Value<Uint8List?> storedFileHash,
       Value<bool> hasThumbnail,
       Value<int?> sizeInBytes,
+      Value<double?> locationLatitude,
+      Value<double?> locationLongitude,
+      Value<double?> locationAccuracy,
+      Value<String?> locationStatus,
+      Value<int?> locationDeadlineAt,
+      Value<bool> galleryExportPending,
       Value<DateTime> createdAt,
       Value<String?> createdAtMonth,
       Value<int> rowid,
@@ -16998,12 +19008,15 @@ typedef $$MediaFilesTableUpdateCompanionBuilder =
       Value<bool> requiresAuthentication,
       Value<bool> stored,
       Value<bool> isDraftMedia,
+      Value<bool> isWidgetMedia,
       Value<bool> isFavorite,
       Value<bool> hasCropAnalyzed,
       Value<int?> preProgressingProcess,
       Value<List<int>?> reuploadRequestedBy,
       Value<int?> displayLimitInMilliseconds,
       Value<bool?> removeAudio,
+      Value<int?> trimStartMs,
+      Value<int?> trimEndMs,
       Value<Uint8List?> downloadToken,
       Value<Uint8List?> encryptionKey,
       Value<Uint8List?> encryptionMac,
@@ -17011,6 +19024,12 @@ typedef $$MediaFilesTableUpdateCompanionBuilder =
       Value<Uint8List?> storedFileHash,
       Value<bool> hasThumbnail,
       Value<int?> sizeInBytes,
+      Value<double?> locationLatitude,
+      Value<double?> locationLongitude,
+      Value<double?> locationAccuracy,
+      Value<String?> locationStatus,
+      Value<int?> locationDeadlineAt,
+      Value<bool> galleryExportPending,
       Value<DateTime> createdAt,
       Value<String?> createdAtMonth,
       Value<int> rowid,
@@ -17024,7 +19043,7 @@ final class $$MediaFilesTableReferences
     _$TwonlyDB db,
   ) => MultiTypedResultKey.fromTable(
     db.messages,
-    aliasName: $_aliasNameGenerator(db.mediaFiles.mediaId, db.messages.mediaId),
+    aliasName: 'media_files__media_id__messages__media_id',
   );
 
   $$MessagesTableProcessedTableManager get messagesRefs {
@@ -17097,6 +19116,11 @@ class $$MediaFilesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
     builder: (column) => ColumnFilters(column),
@@ -17125,6 +19149,16 @@ class $$MediaFilesTableFilterComposer
 
   ColumnFilters<bool> get removeAudio => $composableBuilder(
     column: $table.removeAudio,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get trimStartMs => $composableBuilder(
+    column: $table.trimStartMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get trimEndMs => $composableBuilder(
+    column: $table.trimEndMs,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -17160,6 +19194,36 @@ class $$MediaFilesTableFilterComposer
 
   ColumnFilters<int> get sizeInBytes => $composableBuilder(
     column: $table.sizeInBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get locationLatitude => $composableBuilder(
+    column: $table.locationLatitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get locationLongitude => $composableBuilder(
+    column: $table.locationLongitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get locationAccuracy => $composableBuilder(
+    column: $table.locationAccuracy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get locationStatus => $composableBuilder(
+    column: $table.locationStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get locationDeadlineAt => $composableBuilder(
+    column: $table.locationDeadlineAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get galleryExportPending => $composableBuilder(
+    column: $table.galleryExportPending,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -17253,6 +19317,11 @@ class $$MediaFilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
     builder: (column) => ColumnOrderings(column),
@@ -17280,6 +19349,16 @@ class $$MediaFilesTableOrderingComposer
 
   ColumnOrderings<bool> get removeAudio => $composableBuilder(
     column: $table.removeAudio,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get trimStartMs => $composableBuilder(
+    column: $table.trimStartMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get trimEndMs => $composableBuilder(
+    column: $table.trimEndMs,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -17315,6 +19394,36 @@ class $$MediaFilesTableOrderingComposer
 
   ColumnOrderings<int> get sizeInBytes => $composableBuilder(
     column: $table.sizeInBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get locationLatitude => $composableBuilder(
+    column: $table.locationLatitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get locationLongitude => $composableBuilder(
+    column: $table.locationLongitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get locationAccuracy => $composableBuilder(
+    column: $table.locationAccuracy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get locationStatus => $composableBuilder(
+    column: $table.locationStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get locationDeadlineAt => $composableBuilder(
+    column: $table.locationDeadlineAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get galleryExportPending => $composableBuilder(
+    column: $table.galleryExportPending,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -17378,6 +19487,11 @@ class $$MediaFilesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
     builder: (column) => column,
@@ -17408,6 +19522,14 @@ class $$MediaFilesTableAnnotationComposer
     column: $table.removeAudio,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get trimStartMs => $composableBuilder(
+    column: $table.trimStartMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get trimEndMs =>
+      $composableBuilder(column: $table.trimEndMs, builder: (column) => column);
 
   GeneratedColumn<Uint8List> get downloadToken => $composableBuilder(
     column: $table.downloadToken,
@@ -17441,6 +19563,36 @@ class $$MediaFilesTableAnnotationComposer
 
   GeneratedColumn<int> get sizeInBytes => $composableBuilder(
     column: $table.sizeInBytes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get locationLatitude => $composableBuilder(
+    column: $table.locationLatitude,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get locationLongitude => $composableBuilder(
+    column: $table.locationLongitude,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get locationAccuracy => $composableBuilder(
+    column: $table.locationAccuracy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get locationStatus => $composableBuilder(
+    column: $table.locationStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get locationDeadlineAt => $composableBuilder(
+    column: $table.locationDeadlineAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get galleryExportPending => $composableBuilder(
+    column: $table.galleryExportPending,
     builder: (column) => column,
   );
 
@@ -17515,12 +19667,15 @@ class $$MediaFilesTableTableManager
                 Value<bool> requiresAuthentication = const Value.absent(),
                 Value<bool> stored = const Value.absent(),
                 Value<bool> isDraftMedia = const Value.absent(),
+                Value<bool> isWidgetMedia = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> hasCropAnalyzed = const Value.absent(),
                 Value<int?> preProgressingProcess = const Value.absent(),
                 Value<List<int>?> reuploadRequestedBy = const Value.absent(),
                 Value<int?> displayLimitInMilliseconds = const Value.absent(),
                 Value<bool?> removeAudio = const Value.absent(),
+                Value<int?> trimStartMs = const Value.absent(),
+                Value<int?> trimEndMs = const Value.absent(),
                 Value<Uint8List?> downloadToken = const Value.absent(),
                 Value<Uint8List?> encryptionKey = const Value.absent(),
                 Value<Uint8List?> encryptionMac = const Value.absent(),
@@ -17528,6 +19683,12 @@ class $$MediaFilesTableTableManager
                 Value<Uint8List?> storedFileHash = const Value.absent(),
                 Value<bool> hasThumbnail = const Value.absent(),
                 Value<int?> sizeInBytes = const Value.absent(),
+                Value<double?> locationLatitude = const Value.absent(),
+                Value<double?> locationLongitude = const Value.absent(),
+                Value<double?> locationAccuracy = const Value.absent(),
+                Value<String?> locationStatus = const Value.absent(),
+                Value<int?> locationDeadlineAt = const Value.absent(),
+                Value<bool> galleryExportPending = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<String?> createdAtMonth = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -17541,12 +19702,15 @@ class $$MediaFilesTableTableManager
                 requiresAuthentication: requiresAuthentication,
                 stored: stored,
                 isDraftMedia: isDraftMedia,
+                isWidgetMedia: isWidgetMedia,
                 isFavorite: isFavorite,
                 hasCropAnalyzed: hasCropAnalyzed,
                 preProgressingProcess: preProgressingProcess,
                 reuploadRequestedBy: reuploadRequestedBy,
                 displayLimitInMilliseconds: displayLimitInMilliseconds,
                 removeAudio: removeAudio,
+                trimStartMs: trimStartMs,
+                trimEndMs: trimEndMs,
                 downloadToken: downloadToken,
                 encryptionKey: encryptionKey,
                 encryptionMac: encryptionMac,
@@ -17554,6 +19718,12 @@ class $$MediaFilesTableTableManager
                 storedFileHash: storedFileHash,
                 hasThumbnail: hasThumbnail,
                 sizeInBytes: sizeInBytes,
+                locationLatitude: locationLatitude,
+                locationLongitude: locationLongitude,
+                locationAccuracy: locationAccuracy,
+                locationStatus: locationStatus,
+                locationDeadlineAt: locationDeadlineAt,
+                galleryExportPending: galleryExportPending,
                 createdAt: createdAt,
                 createdAtMonth: createdAtMonth,
                 rowid: rowid,
@@ -17569,12 +19739,15 @@ class $$MediaFilesTableTableManager
                 Value<bool> requiresAuthentication = const Value.absent(),
                 Value<bool> stored = const Value.absent(),
                 Value<bool> isDraftMedia = const Value.absent(),
+                Value<bool> isWidgetMedia = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> hasCropAnalyzed = const Value.absent(),
                 Value<int?> preProgressingProcess = const Value.absent(),
                 Value<List<int>?> reuploadRequestedBy = const Value.absent(),
                 Value<int?> displayLimitInMilliseconds = const Value.absent(),
                 Value<bool?> removeAudio = const Value.absent(),
+                Value<int?> trimStartMs = const Value.absent(),
+                Value<int?> trimEndMs = const Value.absent(),
                 Value<Uint8List?> downloadToken = const Value.absent(),
                 Value<Uint8List?> encryptionKey = const Value.absent(),
                 Value<Uint8List?> encryptionMac = const Value.absent(),
@@ -17582,6 +19755,12 @@ class $$MediaFilesTableTableManager
                 Value<Uint8List?> storedFileHash = const Value.absent(),
                 Value<bool> hasThumbnail = const Value.absent(),
                 Value<int?> sizeInBytes = const Value.absent(),
+                Value<double?> locationLatitude = const Value.absent(),
+                Value<double?> locationLongitude = const Value.absent(),
+                Value<double?> locationAccuracy = const Value.absent(),
+                Value<String?> locationStatus = const Value.absent(),
+                Value<int?> locationDeadlineAt = const Value.absent(),
+                Value<bool> galleryExportPending = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<String?> createdAtMonth = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -17595,12 +19774,15 @@ class $$MediaFilesTableTableManager
                 requiresAuthentication: requiresAuthentication,
                 stored: stored,
                 isDraftMedia: isDraftMedia,
+                isWidgetMedia: isWidgetMedia,
                 isFavorite: isFavorite,
                 hasCropAnalyzed: hasCropAnalyzed,
                 preProgressingProcess: preProgressingProcess,
                 reuploadRequestedBy: reuploadRequestedBy,
                 displayLimitInMilliseconds: displayLimitInMilliseconds,
                 removeAudio: removeAudio,
+                trimStartMs: trimStartMs,
+                trimEndMs: trimEndMs,
                 downloadToken: downloadToken,
                 encryptionKey: encryptionKey,
                 encryptionMac: encryptionMac,
@@ -17608,6 +19790,12 @@ class $$MediaFilesTableTableManager
                 storedFileHash: storedFileHash,
                 hasThumbnail: hasThumbnail,
                 sizeInBytes: sizeInBytes,
+                locationLatitude: locationLatitude,
+                locationLongitude: locationLongitude,
+                locationAccuracy: locationAccuracy,
+                locationStatus: locationStatus,
+                locationDeadlineAt: locationDeadlineAt,
+                galleryExportPending: galleryExportPending,
                 createdAt: createdAt,
                 createdAtMonth: createdAtMonth,
                 rowid: rowid,
@@ -17615,7 +19803,7 @@ class $$MediaFilesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MediaFilesTable, MediaFile>(table),
                   $$MediaFilesTableReferences(db, table, e),
                 ),
               )
@@ -17684,6 +19872,8 @@ typedef $$MessagesTableCreateCompanionBuilder =
       Value<Uint8List?> downloadToken,
       Value<String?> quotesMessageId,
       Value<bool> isDeletedFromSender,
+      Value<bool> isWidgetMedia,
+      Value<bool> isStory,
       Value<DateTime?> openedAt,
       Value<DateTime?> openedByAll,
       Value<DateTime> createdAt,
@@ -17706,6 +19896,8 @@ typedef $$MessagesTableUpdateCompanionBuilder =
       Value<Uint8List?> downloadToken,
       Value<String?> quotesMessageId,
       Value<bool> isDeletedFromSender,
+      Value<bool> isWidgetMedia,
+      Value<bool> isStory,
       Value<DateTime?> openedAt,
       Value<DateTime?> openedByAll,
       Value<DateTime> createdAt,
@@ -17719,9 +19911,8 @@ final class $$MessagesTableReferences
     extends BaseReferences<_$TwonlyDB, $MessagesTable, Message> {
   $$MessagesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
-    $_aliasNameGenerator(db.messages.groupId, db.groups.groupId),
-  );
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) =>
+      db.groups.createAlias('messages__group_id__groups__group_id');
 
   $$GroupsTableProcessedTableManager get groupId {
     final $_column = $_itemColumn<String>('group_id')!;
@@ -17738,9 +19929,7 @@ final class $$MessagesTableReferences
   }
 
   static $ContactsTable _senderIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.messages.senderId, db.contacts.userId),
-      );
+      db.contacts.createAlias('messages__sender_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get senderId {
     final $_column = $_itemColumn<int>('sender_id');
@@ -17757,9 +19946,7 @@ final class $$MessagesTableReferences
   }
 
   static $MediaFilesTable _mediaIdTable(_$TwonlyDB db) =>
-      db.mediaFiles.createAlias(
-        $_aliasNameGenerator(db.messages.mediaId, db.mediaFiles.mediaId),
-      );
+      db.mediaFiles.createAlias('messages__media_id__media_files__media_id');
 
   $$MediaFilesTableProcessedTableManager? get mediaId {
     final $_column = $_itemColumn<String>('media_id');
@@ -17778,10 +19965,7 @@ final class $$MessagesTableReferences
   static MultiTypedResultKey<$MessageHistoriesTable, List<MessageHistory>>
   _messageHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.messageHistories,
-    aliasName: $_aliasNameGenerator(
-      db.messages.messageId,
-      db.messageHistories.messageId,
-    ),
+    aliasName: 'messages__message_id__message_histories__message_id',
   );
 
   $$MessageHistoriesTableProcessedTableManager get messageHistoriesRefs {
@@ -17803,10 +19987,7 @@ final class $$MessagesTableReferences
   static MultiTypedResultKey<$ReactionsTable, List<Reaction>>
   _reactionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.reactions,
-    aliasName: $_aliasNameGenerator(
-      db.messages.messageId,
-      db.reactions.messageId,
-    ),
+    aliasName: 'messages__message_id__reactions__message_id',
   );
 
   $$ReactionsTableProcessedTableManager get reactionsRefs {
@@ -17825,10 +20006,7 @@ final class $$MessagesTableReferences
     _$TwonlyDB db,
   ) => MultiTypedResultKey.fromTable(
     db.receipts,
-    aliasName: $_aliasNameGenerator(
-      db.messages.messageId,
-      db.receipts.messageId,
-    ),
+    aliasName: 'messages__message_id__receipts__message_id',
   );
 
   $$ReceiptsTableProcessedTableManager get receiptsRefs {
@@ -17846,10 +20024,7 @@ final class $$MessagesTableReferences
   static MultiTypedResultKey<$MessageActionsTable, List<MessageAction>>
   _messageActionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.messageActions,
-    aliasName: $_aliasNameGenerator(
-      db.messages.messageId,
-      db.messageActions.messageId,
-    ),
+    aliasName: 'messages__message_id__message_actions__message_id',
   );
 
   $$MessageActionsTableProcessedTableManager get messageActionsRefs {
@@ -17861,6 +20036,28 @@ final class $$MessagesTableReferences
         );
 
     final cache = $_typedResult.readTableOrNull(_messageActionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$WebxdcInstancesTable, List<WebxdcInstance>>
+  _webxdcInstancesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.webxdcInstances,
+    aliasName: 'messages__message_id__webxdc_instances__instance_id',
+  );
+
+  $$WebxdcInstancesTableProcessedTableManager get webxdcInstancesRefs {
+    final manager =
+        $$WebxdcInstancesTableTableManager($_db, $_db.webxdcInstances).filter(
+          (f) => f.instanceId.messageId.sqlEquals(
+            $_itemColumn<String>('message_id')!,
+          ),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _webxdcInstancesRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -17918,6 +20115,16 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<bool> get isDeletedFromSender => $composableBuilder(
     column: $table.isDeletedFromSender,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isStory => $composableBuilder(
+    column: $table.isStory,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -18119,6 +20326,31 @@ class $$MessagesTableFilterComposer
     );
     return f(composer);
   }
+
+  Expression<bool> webxdcInstancesRefs(
+    Expression<bool> Function($$WebxdcInstancesTableFilterComposer f) f,
+  ) {
+    final $$WebxdcInstancesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.webxdcInstances,
+      getReferencedColumn: (t) => t.instanceId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WebxdcInstancesTableFilterComposer(
+            $db: $db,
+            $table: $db.webxdcInstances,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$MessagesTableOrderingComposer
@@ -18172,6 +20404,16 @@ class $$MessagesTableOrderingComposer
 
   ColumnOrderings<bool> get isDeletedFromSender => $composableBuilder(
     column: $table.isDeletedFromSender,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isStory => $composableBuilder(
+    column: $table.isStory,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -18322,6 +20564,14 @@ class $$MessagesTableAnnotationComposer
     column: $table.isDeletedFromSender,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isStory =>
+      $composableBuilder(column: $table.isStory, builder: (column) => column);
 
   GeneratedColumn<DateTime> get openedAt =>
       $composableBuilder(column: $table.openedAt, builder: (column) => column);
@@ -18515,6 +20765,31 @@ class $$MessagesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> webxdcInstancesRefs<T extends Object>(
+    Expression<T> Function($$WebxdcInstancesTableAnnotationComposer a) f,
+  ) {
+    final $$WebxdcInstancesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.webxdcInstances,
+      getReferencedColumn: (t) => t.instanceId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WebxdcInstancesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.webxdcInstances,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$MessagesTableTableManager
@@ -18538,6 +20813,7 @@ class $$MessagesTableTableManager
             bool reactionsRefs,
             bool receiptsRefs,
             bool messageActionsRefs,
+            bool webxdcInstancesRefs,
           })
         > {
   $$MessagesTableTableManager(_$TwonlyDB db, $MessagesTable table)
@@ -18565,6 +20841,8 @@ class $$MessagesTableTableManager
                 Value<Uint8List?> downloadToken = const Value.absent(),
                 Value<String?> quotesMessageId = const Value.absent(),
                 Value<bool> isDeletedFromSender = const Value.absent(),
+                Value<bool> isWidgetMedia = const Value.absent(),
+                Value<bool> isStory = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
                 Value<DateTime?> openedByAll = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -18585,6 +20863,8 @@ class $$MessagesTableTableManager
                 downloadToken: downloadToken,
                 quotesMessageId: quotesMessageId,
                 isDeletedFromSender: isDeletedFromSender,
+                isWidgetMedia: isWidgetMedia,
+                isStory: isStory,
                 openedAt: openedAt,
                 openedByAll: openedByAll,
                 createdAt: createdAt,
@@ -18607,6 +20887,8 @@ class $$MessagesTableTableManager
                 Value<Uint8List?> downloadToken = const Value.absent(),
                 Value<String?> quotesMessageId = const Value.absent(),
                 Value<bool> isDeletedFromSender = const Value.absent(),
+                Value<bool> isWidgetMedia = const Value.absent(),
+                Value<bool> isStory = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
                 Value<DateTime?> openedByAll = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -18627,6 +20909,8 @@ class $$MessagesTableTableManager
                 downloadToken: downloadToken,
                 quotesMessageId: quotesMessageId,
                 isDeletedFromSender: isDeletedFromSender,
+                isWidgetMedia: isWidgetMedia,
+                isStory: isStory,
                 openedAt: openedAt,
                 openedByAll: openedByAll,
                 createdAt: createdAt,
@@ -18638,7 +20922,7 @@ class $$MessagesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MessagesTable, Message>(table),
                   $$MessagesTableReferences(db, table, e),
                 ),
               )
@@ -18652,6 +20936,7 @@ class $$MessagesTableTableManager
                 reactionsRefs = false,
                 receiptsRefs = false,
                 messageActionsRefs = false,
+                webxdcInstancesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -18660,6 +20945,7 @@ class $$MessagesTableTableManager
                     if (reactionsRefs) db.reactions,
                     if (receiptsRefs) db.receipts,
                     if (messageActionsRefs) db.messageActions,
+                    if (webxdcInstancesRefs) db.webxdcInstances,
                   ],
                   addJoins:
                       <
@@ -18805,6 +21091,27 @@ class $$MessagesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (webxdcInstancesRefs)
+                        await $_getPrefetchedData<
+                          Message,
+                          $MessagesTable,
+                          WebxdcInstance
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MessagesTableReferences
+                              ._webxdcInstancesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MessagesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).webxdcInstancesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.instanceId == item.messageId,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -18833,6 +21140,7 @@ typedef $$MessagesTableProcessedTableManager =
         bool reactionsRefs,
         bool receiptsRefs,
         bool messageActionsRefs,
+        bool webxdcInstancesRefs,
       })
     >;
 typedef $$MessageHistoriesTableCreateCompanionBuilder =
@@ -18860,13 +21168,8 @@ final class $$MessageHistoriesTableReferences
     super.$_typedResult,
   );
 
-  static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
-      db.messages.createAlias(
-        $_aliasNameGenerator(
-          db.messageHistories.messageId,
-          db.messages.messageId,
-        ),
-      );
+  static $MessagesTable _messageIdTable(_$TwonlyDB db) => db.messages
+      .createAlias('message_histories__message_id__messages__message_id');
 
   $$MessagesTableProcessedTableManager get messageId {
     final $_column = $_itemColumn<String>('message_id')!;
@@ -18882,10 +21185,8 @@ final class $$MessageHistoriesTableReferences
     );
   }
 
-  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.messageHistories.contactId, db.contacts.userId),
-      );
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) => db.contacts
+      .createAlias('message_histories__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get contactId {
     final $_column = $_itemColumn<int>('contact_id');
@@ -19168,7 +21469,7 @@ class $$MessageHistoriesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MessageHistoriesTable, MessageHistory>(table),
                   $$MessageHistoriesTableReferences(db, table, e),
                 ),
               )
@@ -19271,9 +21572,7 @@ final class $$ReactionsTableReferences
   $$ReactionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
-      db.messages.createAlias(
-        $_aliasNameGenerator(db.reactions.messageId, db.messages.messageId),
-      );
+      db.messages.createAlias('reactions__message_id__messages__message_id');
 
   $$MessagesTableProcessedTableManager get messageId {
     final $_column = $_itemColumn<String>('message_id')!;
@@ -19290,9 +21589,7 @@ final class $$ReactionsTableReferences
   }
 
   static $ContactsTable _senderIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.reactions.senderId, db.contacts.userId),
-      );
+      db.contacts.createAlias('reactions__sender_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get senderId {
     final $_column = $_itemColumn<int>('sender_id');
@@ -19560,7 +21857,7 @@ class $$ReactionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ReactionsTable, Reaction>(table),
                   $$ReactionsTableReferences(db, table, e),
                 ),
               )
@@ -19666,9 +21963,8 @@ final class $$GroupMembersTableReferences
     extends BaseReferences<_$TwonlyDB, $GroupMembersTable, GroupMember> {
   $$GroupMembersTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
-    $_aliasNameGenerator(db.groupMembers.groupId, db.groups.groupId),
-  );
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) =>
+      db.groups.createAlias('group_members__group_id__groups__group_id');
 
   $$GroupsTableProcessedTableManager get groupId {
     final $_column = $_itemColumn<String>('group_id')!;
@@ -19685,9 +21981,7 @@ final class $$GroupMembersTableReferences
   }
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.groupMembers.contactId, db.contacts.userId),
-      );
+      db.contacts.createAlias('group_members__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
@@ -20035,7 +22329,7 @@ class $$GroupMembersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$GroupMembersTable, GroupMember>(table),
                   $$GroupMembersTableReferences(db, table, e),
                 ),
               )
@@ -20150,9 +22444,7 @@ final class $$ReceiptsTableReferences
   $$ReceiptsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.receipts.contactId, db.contacts.userId),
-      );
+      db.contacts.createAlias('receipts__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
@@ -20169,9 +22461,7 @@ final class $$ReceiptsTableReferences
   }
 
   static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
-      db.messages.createAlias(
-        $_aliasNameGenerator(db.receipts.messageId, db.messages.messageId),
-      );
+      db.messages.createAlias('receipts__message_id__messages__message_id');
 
   $$MessagesTableProcessedTableManager? get messageId {
     final $_column = $_itemColumn<String>('message_id');
@@ -20589,7 +22879,7 @@ class $$ReceiptsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ReceiptsTable, Receipt>(table),
                   $$ReceiptsTableReferences(db, table, e),
                 ),
               )
@@ -20787,7 +23077,16 @@ class $$ReceivedReceiptsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$ReceivedReceiptsTable, ReceivedReceipt>(table),
+                  BaseReferences<
+                    _$TwonlyDB,
+                    $ReceivedReceiptsTable,
+                    ReceivedReceipt
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -20809,915 +23108,6 @@ typedef $$ReceivedReceiptsTableProcessedTableManager =
         BaseReferences<_$TwonlyDB, $ReceivedReceiptsTable, ReceivedReceipt>,
       ),
       ReceivedReceipt,
-      PrefetchHooks Function()
-    >;
-typedef $$SignalIdentityKeyStoresTableCreateCompanionBuilder =
-    SignalIdentityKeyStoresCompanion Function({
-      required int deviceId,
-      required String name,
-      required Uint8List identityKey,
-      Value<DateTime> createdAt,
-      Value<int> rowid,
-    });
-typedef $$SignalIdentityKeyStoresTableUpdateCompanionBuilder =
-    SignalIdentityKeyStoresCompanion Function({
-      Value<int> deviceId,
-      Value<String> name,
-      Value<Uint8List> identityKey,
-      Value<DateTime> createdAt,
-      Value<int> rowid,
-    });
-
-class $$SignalIdentityKeyStoresTableFilterComposer
-    extends Composer<_$TwonlyDB, $SignalIdentityKeyStoresTable> {
-  $$SignalIdentityKeyStoresTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get deviceId => $composableBuilder(
-    column: $table.deviceId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<Uint8List> get identityKey => $composableBuilder(
-    column: $table.identityKey,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$SignalIdentityKeyStoresTableOrderingComposer
-    extends Composer<_$TwonlyDB, $SignalIdentityKeyStoresTable> {
-  $$SignalIdentityKeyStoresTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get deviceId => $composableBuilder(
-    column: $table.deviceId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<Uint8List> get identityKey => $composableBuilder(
-    column: $table.identityKey,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$SignalIdentityKeyStoresTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $SignalIdentityKeyStoresTable> {
-  $$SignalIdentityKeyStoresTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get deviceId =>
-      $composableBuilder(column: $table.deviceId, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<Uint8List> get identityKey => $composableBuilder(
-    column: $table.identityKey,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-}
-
-class $$SignalIdentityKeyStoresTableTableManager
-    extends
-        RootTableManager<
-          _$TwonlyDB,
-          $SignalIdentityKeyStoresTable,
-          SignalIdentityKeyStore,
-          $$SignalIdentityKeyStoresTableFilterComposer,
-          $$SignalIdentityKeyStoresTableOrderingComposer,
-          $$SignalIdentityKeyStoresTableAnnotationComposer,
-          $$SignalIdentityKeyStoresTableCreateCompanionBuilder,
-          $$SignalIdentityKeyStoresTableUpdateCompanionBuilder,
-          (
-            SignalIdentityKeyStore,
-            BaseReferences<
-              _$TwonlyDB,
-              $SignalIdentityKeyStoresTable,
-              SignalIdentityKeyStore
-            >,
-          ),
-          SignalIdentityKeyStore,
-          PrefetchHooks Function()
-        > {
-  $$SignalIdentityKeyStoresTableTableManager(
-    _$TwonlyDB db,
-    $SignalIdentityKeyStoresTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SignalIdentityKeyStoresTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SignalIdentityKeyStoresTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SignalIdentityKeyStoresTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
-          updateCompanionCallback:
-              ({
-                Value<int> deviceId = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<Uint8List> identityKey = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => SignalIdentityKeyStoresCompanion(
-                deviceId: deviceId,
-                name: name,
-                identityKey: identityKey,
-                createdAt: createdAt,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required int deviceId,
-                required String name,
-                required Uint8List identityKey,
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => SignalIdentityKeyStoresCompanion.insert(
-                deviceId: deviceId,
-                name: name,
-                identityKey: identityKey,
-                createdAt: createdAt,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$SignalIdentityKeyStoresTableProcessedTableManager =
-    ProcessedTableManager<
-      _$TwonlyDB,
-      $SignalIdentityKeyStoresTable,
-      SignalIdentityKeyStore,
-      $$SignalIdentityKeyStoresTableFilterComposer,
-      $$SignalIdentityKeyStoresTableOrderingComposer,
-      $$SignalIdentityKeyStoresTableAnnotationComposer,
-      $$SignalIdentityKeyStoresTableCreateCompanionBuilder,
-      $$SignalIdentityKeyStoresTableUpdateCompanionBuilder,
-      (
-        SignalIdentityKeyStore,
-        BaseReferences<
-          _$TwonlyDB,
-          $SignalIdentityKeyStoresTable,
-          SignalIdentityKeyStore
-        >,
-      ),
-      SignalIdentityKeyStore,
-      PrefetchHooks Function()
-    >;
-typedef $$SignalPreKeyStoresTableCreateCompanionBuilder =
-    SignalPreKeyStoresCompanion Function({
-      Value<int> preKeyId,
-      required Uint8List preKey,
-      Value<DateTime> createdAt,
-    });
-typedef $$SignalPreKeyStoresTableUpdateCompanionBuilder =
-    SignalPreKeyStoresCompanion Function({
-      Value<int> preKeyId,
-      Value<Uint8List> preKey,
-      Value<DateTime> createdAt,
-    });
-
-class $$SignalPreKeyStoresTableFilterComposer
-    extends Composer<_$TwonlyDB, $SignalPreKeyStoresTable> {
-  $$SignalPreKeyStoresTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get preKeyId => $composableBuilder(
-    column: $table.preKeyId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<Uint8List> get preKey => $composableBuilder(
-    column: $table.preKey,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$SignalPreKeyStoresTableOrderingComposer
-    extends Composer<_$TwonlyDB, $SignalPreKeyStoresTable> {
-  $$SignalPreKeyStoresTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get preKeyId => $composableBuilder(
-    column: $table.preKeyId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<Uint8List> get preKey => $composableBuilder(
-    column: $table.preKey,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$SignalPreKeyStoresTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $SignalPreKeyStoresTable> {
-  $$SignalPreKeyStoresTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get preKeyId =>
-      $composableBuilder(column: $table.preKeyId, builder: (column) => column);
-
-  GeneratedColumn<Uint8List> get preKey =>
-      $composableBuilder(column: $table.preKey, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-}
-
-class $$SignalPreKeyStoresTableTableManager
-    extends
-        RootTableManager<
-          _$TwonlyDB,
-          $SignalPreKeyStoresTable,
-          SignalPreKeyStore,
-          $$SignalPreKeyStoresTableFilterComposer,
-          $$SignalPreKeyStoresTableOrderingComposer,
-          $$SignalPreKeyStoresTableAnnotationComposer,
-          $$SignalPreKeyStoresTableCreateCompanionBuilder,
-          $$SignalPreKeyStoresTableUpdateCompanionBuilder,
-          (
-            SignalPreKeyStore,
-            BaseReferences<
-              _$TwonlyDB,
-              $SignalPreKeyStoresTable,
-              SignalPreKeyStore
-            >,
-          ),
-          SignalPreKeyStore,
-          PrefetchHooks Function()
-        > {
-  $$SignalPreKeyStoresTableTableManager(
-    _$TwonlyDB db,
-    $SignalPreKeyStoresTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SignalPreKeyStoresTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SignalPreKeyStoresTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SignalPreKeyStoresTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
-          updateCompanionCallback:
-              ({
-                Value<int> preKeyId = const Value.absent(),
-                Value<Uint8List> preKey = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => SignalPreKeyStoresCompanion(
-                preKeyId: preKeyId,
-                preKey: preKey,
-                createdAt: createdAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> preKeyId = const Value.absent(),
-                required Uint8List preKey,
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => SignalPreKeyStoresCompanion.insert(
-                preKeyId: preKeyId,
-                preKey: preKey,
-                createdAt: createdAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$SignalPreKeyStoresTableProcessedTableManager =
-    ProcessedTableManager<
-      _$TwonlyDB,
-      $SignalPreKeyStoresTable,
-      SignalPreKeyStore,
-      $$SignalPreKeyStoresTableFilterComposer,
-      $$SignalPreKeyStoresTableOrderingComposer,
-      $$SignalPreKeyStoresTableAnnotationComposer,
-      $$SignalPreKeyStoresTableCreateCompanionBuilder,
-      $$SignalPreKeyStoresTableUpdateCompanionBuilder,
-      (
-        SignalPreKeyStore,
-        BaseReferences<_$TwonlyDB, $SignalPreKeyStoresTable, SignalPreKeyStore>,
-      ),
-      SignalPreKeyStore,
-      PrefetchHooks Function()
-    >;
-typedef $$SignalSenderKeyStoresTableCreateCompanionBuilder =
-    SignalSenderKeyStoresCompanion Function({
-      required String senderKeyName,
-      required Uint8List senderKey,
-      Value<int> rowid,
-    });
-typedef $$SignalSenderKeyStoresTableUpdateCompanionBuilder =
-    SignalSenderKeyStoresCompanion Function({
-      Value<String> senderKeyName,
-      Value<Uint8List> senderKey,
-      Value<int> rowid,
-    });
-
-class $$SignalSenderKeyStoresTableFilterComposer
-    extends Composer<_$TwonlyDB, $SignalSenderKeyStoresTable> {
-  $$SignalSenderKeyStoresTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get senderKeyName => $composableBuilder(
-    column: $table.senderKeyName,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<Uint8List> get senderKey => $composableBuilder(
-    column: $table.senderKey,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$SignalSenderKeyStoresTableOrderingComposer
-    extends Composer<_$TwonlyDB, $SignalSenderKeyStoresTable> {
-  $$SignalSenderKeyStoresTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get senderKeyName => $composableBuilder(
-    column: $table.senderKeyName,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<Uint8List> get senderKey => $composableBuilder(
-    column: $table.senderKey,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$SignalSenderKeyStoresTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $SignalSenderKeyStoresTable> {
-  $$SignalSenderKeyStoresTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get senderKeyName => $composableBuilder(
-    column: $table.senderKeyName,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<Uint8List> get senderKey =>
-      $composableBuilder(column: $table.senderKey, builder: (column) => column);
-}
-
-class $$SignalSenderKeyStoresTableTableManager
-    extends
-        RootTableManager<
-          _$TwonlyDB,
-          $SignalSenderKeyStoresTable,
-          SignalSenderKeyStore,
-          $$SignalSenderKeyStoresTableFilterComposer,
-          $$SignalSenderKeyStoresTableOrderingComposer,
-          $$SignalSenderKeyStoresTableAnnotationComposer,
-          $$SignalSenderKeyStoresTableCreateCompanionBuilder,
-          $$SignalSenderKeyStoresTableUpdateCompanionBuilder,
-          (
-            SignalSenderKeyStore,
-            BaseReferences<
-              _$TwonlyDB,
-              $SignalSenderKeyStoresTable,
-              SignalSenderKeyStore
-            >,
-          ),
-          SignalSenderKeyStore,
-          PrefetchHooks Function()
-        > {
-  $$SignalSenderKeyStoresTableTableManager(
-    _$TwonlyDB db,
-    $SignalSenderKeyStoresTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SignalSenderKeyStoresTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SignalSenderKeyStoresTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SignalSenderKeyStoresTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
-          updateCompanionCallback:
-              ({
-                Value<String> senderKeyName = const Value.absent(),
-                Value<Uint8List> senderKey = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => SignalSenderKeyStoresCompanion(
-                senderKeyName: senderKeyName,
-                senderKey: senderKey,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String senderKeyName,
-                required Uint8List senderKey,
-                Value<int> rowid = const Value.absent(),
-              }) => SignalSenderKeyStoresCompanion.insert(
-                senderKeyName: senderKeyName,
-                senderKey: senderKey,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$SignalSenderKeyStoresTableProcessedTableManager =
-    ProcessedTableManager<
-      _$TwonlyDB,
-      $SignalSenderKeyStoresTable,
-      SignalSenderKeyStore,
-      $$SignalSenderKeyStoresTableFilterComposer,
-      $$SignalSenderKeyStoresTableOrderingComposer,
-      $$SignalSenderKeyStoresTableAnnotationComposer,
-      $$SignalSenderKeyStoresTableCreateCompanionBuilder,
-      $$SignalSenderKeyStoresTableUpdateCompanionBuilder,
-      (
-        SignalSenderKeyStore,
-        BaseReferences<
-          _$TwonlyDB,
-          $SignalSenderKeyStoresTable,
-          SignalSenderKeyStore
-        >,
-      ),
-      SignalSenderKeyStore,
-      PrefetchHooks Function()
-    >;
-typedef $$SignalSessionStoresTableCreateCompanionBuilder =
-    SignalSessionStoresCompanion Function({
-      required int deviceId,
-      required String name,
-      required Uint8List sessionRecord,
-      Value<DateTime> createdAt,
-      Value<int> rowid,
-    });
-typedef $$SignalSessionStoresTableUpdateCompanionBuilder =
-    SignalSessionStoresCompanion Function({
-      Value<int> deviceId,
-      Value<String> name,
-      Value<Uint8List> sessionRecord,
-      Value<DateTime> createdAt,
-      Value<int> rowid,
-    });
-
-class $$SignalSessionStoresTableFilterComposer
-    extends Composer<_$TwonlyDB, $SignalSessionStoresTable> {
-  $$SignalSessionStoresTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get deviceId => $composableBuilder(
-    column: $table.deviceId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<Uint8List> get sessionRecord => $composableBuilder(
-    column: $table.sessionRecord,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$SignalSessionStoresTableOrderingComposer
-    extends Composer<_$TwonlyDB, $SignalSessionStoresTable> {
-  $$SignalSessionStoresTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get deviceId => $composableBuilder(
-    column: $table.deviceId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<Uint8List> get sessionRecord => $composableBuilder(
-    column: $table.sessionRecord,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$SignalSessionStoresTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $SignalSessionStoresTable> {
-  $$SignalSessionStoresTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get deviceId =>
-      $composableBuilder(column: $table.deviceId, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<Uint8List> get sessionRecord => $composableBuilder(
-    column: $table.sessionRecord,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-}
-
-class $$SignalSessionStoresTableTableManager
-    extends
-        RootTableManager<
-          _$TwonlyDB,
-          $SignalSessionStoresTable,
-          SignalSessionStore,
-          $$SignalSessionStoresTableFilterComposer,
-          $$SignalSessionStoresTableOrderingComposer,
-          $$SignalSessionStoresTableAnnotationComposer,
-          $$SignalSessionStoresTableCreateCompanionBuilder,
-          $$SignalSessionStoresTableUpdateCompanionBuilder,
-          (
-            SignalSessionStore,
-            BaseReferences<
-              _$TwonlyDB,
-              $SignalSessionStoresTable,
-              SignalSessionStore
-            >,
-          ),
-          SignalSessionStore,
-          PrefetchHooks Function()
-        > {
-  $$SignalSessionStoresTableTableManager(
-    _$TwonlyDB db,
-    $SignalSessionStoresTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SignalSessionStoresTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SignalSessionStoresTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SignalSessionStoresTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
-          updateCompanionCallback:
-              ({
-                Value<int> deviceId = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<Uint8List> sessionRecord = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => SignalSessionStoresCompanion(
-                deviceId: deviceId,
-                name: name,
-                sessionRecord: sessionRecord,
-                createdAt: createdAt,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required int deviceId,
-                required String name,
-                required Uint8List sessionRecord,
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => SignalSessionStoresCompanion.insert(
-                deviceId: deviceId,
-                name: name,
-                sessionRecord: sessionRecord,
-                createdAt: createdAt,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$SignalSessionStoresTableProcessedTableManager =
-    ProcessedTableManager<
-      _$TwonlyDB,
-      $SignalSessionStoresTable,
-      SignalSessionStore,
-      $$SignalSessionStoresTableFilterComposer,
-      $$SignalSessionStoresTableOrderingComposer,
-      $$SignalSessionStoresTableAnnotationComposer,
-      $$SignalSessionStoresTableCreateCompanionBuilder,
-      $$SignalSessionStoresTableUpdateCompanionBuilder,
-      (
-        SignalSessionStore,
-        BaseReferences<
-          _$TwonlyDB,
-          $SignalSessionStoresTable,
-          SignalSessionStore
-        >,
-      ),
-      SignalSessionStore,
-      PrefetchHooks Function()
-    >;
-typedef $$SignalSignedPreKeyStoresTableCreateCompanionBuilder =
-    SignalSignedPreKeyStoresCompanion Function({
-      Value<int> signedPreKeyId,
-      required Uint8List signedPreKey,
-      Value<DateTime> createdAt,
-    });
-typedef $$SignalSignedPreKeyStoresTableUpdateCompanionBuilder =
-    SignalSignedPreKeyStoresCompanion Function({
-      Value<int> signedPreKeyId,
-      Value<Uint8List> signedPreKey,
-      Value<DateTime> createdAt,
-    });
-
-class $$SignalSignedPreKeyStoresTableFilterComposer
-    extends Composer<_$TwonlyDB, $SignalSignedPreKeyStoresTable> {
-  $$SignalSignedPreKeyStoresTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get signedPreKeyId => $composableBuilder(
-    column: $table.signedPreKeyId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<Uint8List> get signedPreKey => $composableBuilder(
-    column: $table.signedPreKey,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$SignalSignedPreKeyStoresTableOrderingComposer
-    extends Composer<_$TwonlyDB, $SignalSignedPreKeyStoresTable> {
-  $$SignalSignedPreKeyStoresTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get signedPreKeyId => $composableBuilder(
-    column: $table.signedPreKeyId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<Uint8List> get signedPreKey => $composableBuilder(
-    column: $table.signedPreKey,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$SignalSignedPreKeyStoresTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $SignalSignedPreKeyStoresTable> {
-  $$SignalSignedPreKeyStoresTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get signedPreKeyId => $composableBuilder(
-    column: $table.signedPreKeyId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<Uint8List> get signedPreKey => $composableBuilder(
-    column: $table.signedPreKey,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-}
-
-class $$SignalSignedPreKeyStoresTableTableManager
-    extends
-        RootTableManager<
-          _$TwonlyDB,
-          $SignalSignedPreKeyStoresTable,
-          SignalSignedPreKeyStore,
-          $$SignalSignedPreKeyStoresTableFilterComposer,
-          $$SignalSignedPreKeyStoresTableOrderingComposer,
-          $$SignalSignedPreKeyStoresTableAnnotationComposer,
-          $$SignalSignedPreKeyStoresTableCreateCompanionBuilder,
-          $$SignalSignedPreKeyStoresTableUpdateCompanionBuilder,
-          (
-            SignalSignedPreKeyStore,
-            BaseReferences<
-              _$TwonlyDB,
-              $SignalSignedPreKeyStoresTable,
-              SignalSignedPreKeyStore
-            >,
-          ),
-          SignalSignedPreKeyStore,
-          PrefetchHooks Function()
-        > {
-  $$SignalSignedPreKeyStoresTableTableManager(
-    _$TwonlyDB db,
-    $SignalSignedPreKeyStoresTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SignalSignedPreKeyStoresTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SignalSignedPreKeyStoresTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SignalSignedPreKeyStoresTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
-          updateCompanionCallback:
-              ({
-                Value<int> signedPreKeyId = const Value.absent(),
-                Value<Uint8List> signedPreKey = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => SignalSignedPreKeyStoresCompanion(
-                signedPreKeyId: signedPreKeyId,
-                signedPreKey: signedPreKey,
-                createdAt: createdAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> signedPreKeyId = const Value.absent(),
-                required Uint8List signedPreKey,
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => SignalSignedPreKeyStoresCompanion.insert(
-                signedPreKeyId: signedPreKeyId,
-                signedPreKey: signedPreKey,
-                createdAt: createdAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$SignalSignedPreKeyStoresTableProcessedTableManager =
-    ProcessedTableManager<
-      _$TwonlyDB,
-      $SignalSignedPreKeyStoresTable,
-      SignalSignedPreKeyStore,
-      $$SignalSignedPreKeyStoresTableFilterComposer,
-      $$SignalSignedPreKeyStoresTableOrderingComposer,
-      $$SignalSignedPreKeyStoresTableAnnotationComposer,
-      $$SignalSignedPreKeyStoresTableCreateCompanionBuilder,
-      $$SignalSignedPreKeyStoresTableUpdateCompanionBuilder,
-      (
-        SignalSignedPreKeyStore,
-        BaseReferences<
-          _$TwonlyDB,
-          $SignalSignedPreKeyStoresTable,
-          SignalSignedPreKeyStore
-        >,
-      ),
-      SignalSignedPreKeyStore,
       PrefetchHooks Function()
     >;
 typedef $$MessageActionsTableCreateCompanionBuilder =
@@ -21745,13 +23135,8 @@ final class $$MessageActionsTableReferences
     super.$_typedResult,
   );
 
-  static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
-      db.messages.createAlias(
-        $_aliasNameGenerator(
-          db.messageActions.messageId,
-          db.messages.messageId,
-        ),
-      );
+  static $MessagesTable _messageIdTable(_$TwonlyDB db) => db.messages
+      .createAlias('message_actions__message_id__messages__message_id');
 
   $$MessagesTableProcessedTableManager get messageId {
     final $_column = $_itemColumn<String>('message_id')!;
@@ -21768,9 +23153,7 @@ final class $$MessageActionsTableReferences
   }
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.messageActions.contactId, db.contacts.userId),
-      );
+      db.contacts.createAlias('message_actions__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
@@ -22039,7 +23422,7 @@ class $$MessageActionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MessageActionsTable, MessageAction>(table),
                   $$MessageActionsTableReferences(db, table, e),
                 ),
               )
@@ -22153,9 +23536,8 @@ final class $$GroupHistoriesTableReferences
     super.$_typedResult,
   );
 
-  static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
-    $_aliasNameGenerator(db.groupHistories.groupId, db.groups.groupId),
-  );
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) =>
+      db.groups.createAlias('group_histories__group_id__groups__group_id');
 
   $$GroupsTableProcessedTableManager get groupId {
     final $_column = $_itemColumn<String>('group_id')!;
@@ -22172,9 +23554,7 @@ final class $$GroupHistoriesTableReferences
   }
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.groupHistories.contactId, db.contacts.userId),
-      );
+      db.contacts.createAlias('group_histories__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get contactId {
     final $_column = $_itemColumn<int>('contact_id');
@@ -22545,7 +23925,7 @@ class $$GroupHistoriesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$GroupHistoriesTable, GroupHistory>(table),
                   $$GroupHistoriesTableReferences(db, table, e),
                 ),
               )
@@ -22650,10 +24030,8 @@ final class $$KeyVerificationsTableReferences
     super.$_typedResult,
   );
 
-  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.keyVerifications.contactId, db.contacts.userId),
-      );
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) => db.contacts
+      .createAlias('key_verifications__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
@@ -22669,13 +24047,8 @@ final class $$KeyVerificationsTableReferences
     );
   }
 
-  static $ContactsTable _verifiedByTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(
-          db.keyVerifications.verifiedBy,
-          db.contacts.userId,
-        ),
-      );
+  static $ContactsTable _verifiedByTable(_$TwonlyDB db) => db.contacts
+      .createAlias('key_verifications__verified_by__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get verifiedBy {
     final $_column = $_itemColumn<int>('verified_by');
@@ -22961,7 +24334,7 @@ class $$KeyVerificationsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$KeyVerificationsTable, KeyVerification>(table),
                   $$KeyVerificationsTableReferences(db, table, e),
                 ),
               )
@@ -23183,7 +24556,18 @@ class $$VerificationTokensTableTableManager
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$VerificationTokensTable, VerificationToken>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$TwonlyDB,
+                    $VerificationTokensTable,
+                    VerificationToken
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -23245,14 +24629,13 @@ final class $$UserDiscoveryAnnouncedUsersTableReferences
     $UserDiscoveryUserRelationsTable,
     List<UserDiscoveryUserRelation>
   >
-  _userDiscoveryUserRelationsRefsTable(_$TwonlyDB db) =>
-      MultiTypedResultKey.fromTable(
-        db.userDiscoveryUserRelations,
-        aliasName: $_aliasNameGenerator(
-          db.userDiscoveryAnnouncedUsers.announcedUserId,
-          db.userDiscoveryUserRelations.announcedUserId,
-        ),
-      );
+  _userDiscoveryUserRelationsRefsTable(
+    _$TwonlyDB db,
+  ) => MultiTypedResultKey.fromTable(
+    db.userDiscoveryUserRelations,
+    aliasName:
+        'user_discovery_announced_users__announced_user_id__user_discovery_user_relations__announced_user_id',
+  );
 
   $$UserDiscoveryUserRelationsTableProcessedTableManager
   get userDiscoveryUserRelationsRefs {
@@ -23539,7 +24922,10 @@ class $$UserDiscoveryAnnouncedUsersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $UserDiscoveryAnnouncedUsersTable,
+                    UserDiscoveryAnnouncedUser
+                  >(table),
                   $$UserDiscoveryAnnouncedUsersTableReferences(db, table, e),
                 ),
               )
@@ -23632,10 +25018,7 @@ final class $$UserDiscoveryUserRelationsTableReferences
   static $UserDiscoveryAnnouncedUsersTable _announcedUserIdTable(
     _$TwonlyDB db,
   ) => db.userDiscoveryAnnouncedUsers.createAlias(
-    $_aliasNameGenerator(
-      db.userDiscoveryUserRelations.announcedUserId,
-      db.userDiscoveryAnnouncedUsers.announcedUserId,
-    ),
+    'user_discovery_user_relations__announced_user_id__user_discovery_announced_users__announced_user_id',
   );
 
   $$UserDiscoveryAnnouncedUsersTableProcessedTableManager get announcedUserId {
@@ -23654,10 +25037,7 @@ final class $$UserDiscoveryUserRelationsTableReferences
 
   static $ContactsTable _fromContactIdTable(_$TwonlyDB db) =>
       db.contacts.createAlias(
-        $_aliasNameGenerator(
-          db.userDiscoveryUserRelations.fromContactId,
-          db.contacts.userId,
-        ),
+        'user_discovery_user_relations__from_contact_id__contacts__user_id',
       );
 
   $$ContactsTableProcessedTableManager get fromContactId {
@@ -23932,7 +25312,10 @@ class $$UserDiscoveryUserRelationsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $UserDiscoveryUserRelationsTable,
+                    UserDiscoveryUserRelation
+                  >(table),
                   $$UserDiscoveryUserRelationsTableReferences(db, table, e),
                 ),
               )
@@ -24049,10 +25432,7 @@ final class $$UserDiscoveryOtherPromotionsTableReferences
 
   static $ContactsTable _fromContactIdTable(_$TwonlyDB db) =>
       db.contacts.createAlias(
-        $_aliasNameGenerator(
-          db.userDiscoveryOtherPromotions.fromContactId,
-          db.contacts.userId,
-        ),
+        'user_discovery_other_promotions__from_contact_id__contacts__user_id',
       );
 
   $$ContactsTableProcessedTableManager get fromContactId {
@@ -24323,7 +25703,10 @@ class $$UserDiscoveryOtherPromotionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $UserDiscoveryOtherPromotionsTable,
+                    UserDiscoveryOtherPromotion
+                  >(table),
                   $$UserDiscoveryOtherPromotionsTableReferences(db, table, e),
                 ),
               )
@@ -24420,10 +25803,7 @@ final class $$UserDiscoveryOwnPromotionsTableReferences
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
       db.contacts.createAlias(
-        $_aliasNameGenerator(
-          db.userDiscoveryOwnPromotions.contactId,
-          db.contacts.userId,
-        ),
+        'user_discovery_own_promotions__contact_id__contacts__user_id',
       );
 
   $$ContactsTableProcessedTableManager get contactId {
@@ -24629,7 +26009,10 @@ class $$UserDiscoveryOwnPromotionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $UserDiscoveryOwnPromotionsTable,
+                    UserDiscoveryOwnPromotion
+                  >(table),
                   $$UserDiscoveryOwnPromotionsTableReferences(db, table, e),
                 ),
               )
@@ -24721,13 +26104,8 @@ final class $$UserDiscoverySharesTableReferences
     super.$_typedResult,
   );
 
-  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(
-          db.userDiscoveryShares.contactId,
-          db.contacts.userId,
-        ),
-      );
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) => db.contacts
+      .createAlias('user_discovery_shares__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get contactId {
     final $_column = $_itemColumn<int>('contact_id');
@@ -24926,7 +26304,9 @@ class $$UserDiscoverySharesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$UserDiscoverySharesTable, UserDiscoveryShare>(
+                    table,
+                  ),
                   $$UserDiscoverySharesTableReferences(db, table, e),
                 ),
               )
@@ -24992,40 +26372,58 @@ typedef $$UserDiscoverySharesTableProcessedTableManager =
       UserDiscoveryShare,
       PrefetchHooks Function({bool contactId})
     >;
-typedef $$ShortcutsTableCreateCompanionBuilder =
-    ShortcutsCompanion Function({
+typedef $$ContactGroupsTableCreateCompanionBuilder =
+    ContactGroupsCompanion Function({
       Value<int> id,
-      required String emoji,
+      required String name,
+      Value<String?> emoji,
+      required int textColor,
+      required int backgroundColor,
+      Value<bool> showAsShortcut,
+      Value<bool> showAsLabel,
+      Value<bool> shareStories,
       Value<int> usageCounter,
+      Value<DateTime> createdAt,
     });
-typedef $$ShortcutsTableUpdateCompanionBuilder =
-    ShortcutsCompanion Function({
+typedef $$ContactGroupsTableUpdateCompanionBuilder =
+    ContactGroupsCompanion Function({
       Value<int> id,
-      Value<String> emoji,
+      Value<String> name,
+      Value<String?> emoji,
+      Value<int> textColor,
+      Value<int> backgroundColor,
+      Value<bool> showAsShortcut,
+      Value<bool> showAsLabel,
+      Value<bool> shareStories,
       Value<int> usageCounter,
+      Value<DateTime> createdAt,
     });
 
-final class $$ShortcutsTableReferences
-    extends BaseReferences<_$TwonlyDB, $ShortcutsTable, Shortcut> {
-  $$ShortcutsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$ShortcutMembersTable, List<ShortcutMember>>
-  _shortcutMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-    db.shortcutMembers,
-    aliasName: $_aliasNameGenerator(
-      db.shortcuts.id,
-      db.shortcutMembers.shortcutId,
-    ),
+final class $$ContactGroupsTableReferences
+    extends BaseReferences<_$TwonlyDB, $ContactGroupsTable, ContactGroup> {
+  $$ContactGroupsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
   );
 
-  $$ShortcutMembersTableProcessedTableManager get shortcutMembersRefs {
-    final manager = $$ShortcutMembersTableTableManager(
+  static MultiTypedResultKey<
+    $ContactGroupMembersTable,
+    List<ContactGroupMember>
+  >
+  _contactGroupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.contactGroupMembers,
+    aliasName: 'contact_groups__id__contact_group_members__contact_group_id',
+  );
+
+  $$ContactGroupMembersTableProcessedTableManager get contactGroupMembersRefs {
+    final manager = $$ContactGroupMembersTableTableManager(
       $_db,
-      $_db.shortcutMembers,
-    ).filter((f) => f.shortcutId.id.sqlEquals($_itemColumn<int>('id')!));
+      $_db.contactGroupMembers,
+    ).filter((f) => f.contactGroupId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(
-      _shortcutMembersRefsTable($_db),
+      _contactGroupMembersRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -25033,9 +26431,9 @@ final class $$ShortcutsTableReferences
   }
 }
 
-class $$ShortcutsTableFilterComposer
-    extends Composer<_$TwonlyDB, $ShortcutsTable> {
-  $$ShortcutsTableFilterComposer({
+class $$ContactGroupsTableFilterComposer
+    extends Composer<_$TwonlyDB, $ContactGroupsTable> {
+  $$ContactGroupsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -25047,8 +26445,38 @@ class $$ShortcutsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get emoji => $composableBuilder(
     column: $table.emoji,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get textColor => $composableBuilder(
+    column: $table.textColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get backgroundColor => $composableBuilder(
+    column: $table.backgroundColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showAsShortcut => $composableBuilder(
+    column: $table.showAsShortcut,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showAsLabel => $composableBuilder(
+    column: $table.showAsLabel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get shareStories => $composableBuilder(
+    column: $table.shareStories,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -25057,22 +26485,27 @@ class $$ShortcutsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  Expression<bool> shortcutMembersRefs(
-    Expression<bool> Function($$ShortcutMembersTableFilterComposer f) f,
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> contactGroupMembersRefs(
+    Expression<bool> Function($$ContactGroupMembersTableFilterComposer f) f,
   ) {
-    final $$ShortcutMembersTableFilterComposer composer = $composerBuilder(
+    final $$ContactGroupMembersTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.shortcutMembers,
-      getReferencedColumn: (t) => t.shortcutId,
+      referencedTable: $db.contactGroupMembers,
+      getReferencedColumn: (t) => t.contactGroupId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutMembersTableFilterComposer(
+          }) => $$ContactGroupMembersTableFilterComposer(
             $db: $db,
-            $table: $db.shortcutMembers,
+            $table: $db.contactGroupMembers,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -25083,9 +26516,9 @@ class $$ShortcutsTableFilterComposer
   }
 }
 
-class $$ShortcutsTableOrderingComposer
-    extends Composer<_$TwonlyDB, $ShortcutsTable> {
-  $$ShortcutsTableOrderingComposer({
+class $$ContactGroupsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $ContactGroupsTable> {
+  $$ContactGroupsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -25097,8 +26530,38 @@ class $$ShortcutsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get emoji => $composableBuilder(
     column: $table.emoji,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get textColor => $composableBuilder(
+    column: $table.textColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get backgroundColor => $composableBuilder(
+    column: $table.backgroundColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showAsShortcut => $composableBuilder(
+    column: $table.showAsShortcut,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showAsLabel => $composableBuilder(
+    column: $table.showAsLabel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get shareStories => $composableBuilder(
+    column: $table.shareStories,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -25106,11 +26569,16 @@ class $$ShortcutsTableOrderingComposer
     column: $table.usageCounter,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$ShortcutsTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $ShortcutsTable> {
-  $$ShortcutsTableAnnotationComposer({
+class $$ContactGroupsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $ContactGroupsTable> {
+  $$ContactGroupsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -25120,120 +26588,180 @@ class $$ShortcutsTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
   GeneratedColumn<String> get emoji =>
       $composableBuilder(column: $table.emoji, builder: (column) => column);
+
+  GeneratedColumn<int> get textColor =>
+      $composableBuilder(column: $table.textColor, builder: (column) => column);
+
+  GeneratedColumn<int> get backgroundColor => $composableBuilder(
+    column: $table.backgroundColor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showAsShortcut => $composableBuilder(
+    column: $table.showAsShortcut,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showAsLabel => $composableBuilder(
+    column: $table.showAsLabel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get shareStories => $composableBuilder(
+    column: $table.shareStories,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get usageCounter => $composableBuilder(
     column: $table.usageCounter,
     builder: (column) => column,
   );
 
-  Expression<T> shortcutMembersRefs<T extends Object>(
-    Expression<T> Function($$ShortcutMembersTableAnnotationComposer a) f,
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> contactGroupMembersRefs<T extends Object>(
+    Expression<T> Function($$ContactGroupMembersTableAnnotationComposer a) f,
   ) {
-    final $$ShortcutMembersTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.shortcutMembers,
-      getReferencedColumn: (t) => t.shortcutId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutMembersTableAnnotationComposer(
-            $db: $db,
-            $table: $db.shortcutMembers,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
+    final $$ContactGroupMembersTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.contactGroupMembers,
+          getReferencedColumn: (t) => t.contactGroupId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer,
-          ),
-    );
+              }) => $$ContactGroupMembersTableAnnotationComposer(
+                $db: $db,
+                $table: $db.contactGroupMembers,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
 
-class $$ShortcutsTableTableManager
+class $$ContactGroupsTableTableManager
     extends
         RootTableManager<
           _$TwonlyDB,
-          $ShortcutsTable,
-          Shortcut,
-          $$ShortcutsTableFilterComposer,
-          $$ShortcutsTableOrderingComposer,
-          $$ShortcutsTableAnnotationComposer,
-          $$ShortcutsTableCreateCompanionBuilder,
-          $$ShortcutsTableUpdateCompanionBuilder,
-          (Shortcut, $$ShortcutsTableReferences),
-          Shortcut,
-          PrefetchHooks Function({bool shortcutMembersRefs})
+          $ContactGroupsTable,
+          ContactGroup,
+          $$ContactGroupsTableFilterComposer,
+          $$ContactGroupsTableOrderingComposer,
+          $$ContactGroupsTableAnnotationComposer,
+          $$ContactGroupsTableCreateCompanionBuilder,
+          $$ContactGroupsTableUpdateCompanionBuilder,
+          (ContactGroup, $$ContactGroupsTableReferences),
+          ContactGroup,
+          PrefetchHooks Function({bool contactGroupMembersRefs})
         > {
-  $$ShortcutsTableTableManager(_$TwonlyDB db, $ShortcutsTable table)
+  $$ContactGroupsTableTableManager(_$TwonlyDB db, $ContactGroupsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$ShortcutsTableFilterComposer($db: db, $table: table),
+              $$ContactGroupsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$ShortcutsTableOrderingComposer($db: db, $table: table),
+              $$ContactGroupsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ShortcutsTableAnnotationComposer($db: db, $table: table),
+              $$ContactGroupsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                Value<String> emoji = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> emoji = const Value.absent(),
+                Value<int> textColor = const Value.absent(),
+                Value<int> backgroundColor = const Value.absent(),
+                Value<bool> showAsShortcut = const Value.absent(),
+                Value<bool> showAsLabel = const Value.absent(),
+                Value<bool> shareStories = const Value.absent(),
                 Value<int> usageCounter = const Value.absent(),
-              }) => ShortcutsCompanion(
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ContactGroupsCompanion(
                 id: id,
+                name: name,
                 emoji: emoji,
+                textColor: textColor,
+                backgroundColor: backgroundColor,
+                showAsShortcut: showAsShortcut,
+                showAsLabel: showAsLabel,
+                shareStories: shareStories,
                 usageCounter: usageCounter,
+                createdAt: createdAt,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                required String emoji,
+                required String name,
+                Value<String?> emoji = const Value.absent(),
+                required int textColor,
+                required int backgroundColor,
+                Value<bool> showAsShortcut = const Value.absent(),
+                Value<bool> showAsLabel = const Value.absent(),
+                Value<bool> shareStories = const Value.absent(),
                 Value<int> usageCounter = const Value.absent(),
-              }) => ShortcutsCompanion.insert(
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ContactGroupsCompanion.insert(
                 id: id,
+                name: name,
                 emoji: emoji,
+                textColor: textColor,
+                backgroundColor: backgroundColor,
+                showAsShortcut: showAsShortcut,
+                showAsLabel: showAsLabel,
+                shareStories: shareStories,
                 usageCounter: usageCounter,
+                createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
-                  $$ShortcutsTableReferences(db, table, e),
+                  e.readTable<$ContactGroupsTable, ContactGroup>(table),
+                  $$ContactGroupsTableReferences(db, table, e),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({shortcutMembersRefs = false}) {
+          prefetchHooksCallback: ({contactGroupMembersRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (shortcutMembersRefs) db.shortcutMembers,
+                if (contactGroupMembersRefs) db.contactGroupMembers,
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
-                  if (shortcutMembersRefs)
+                  if (contactGroupMembersRefs)
                     await $_getPrefetchedData<
-                      Shortcut,
-                      $ShortcutsTable,
-                      ShortcutMember
+                      ContactGroup,
+                      $ContactGroupsTable,
+                      ContactGroupMember
                     >(
                       currentTable: table,
-                      referencedTable: $$ShortcutsTableReferences
-                          ._shortcutMembersRefsTable(db),
+                      referencedTable: $$ContactGroupsTableReferences
+                          ._contactGroupMembersRefsTable(db),
                       managerFromTypedResult: (p0) =>
-                          $$ShortcutsTableReferences(
+                          $$ContactGroupsTableReferences(
                             db,
                             table,
                             p0,
-                          ).shortcutMembersRefs,
+                          ).contactGroupMembersRefs,
                       referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.shortcutId == item.id),
+                          referencedItems.where(
+                            (e) => e.contactGroupId == item.id,
+                          ),
                       typedResults: items,
                     ),
                 ];
@@ -25244,54 +26772,79 @@ class $$ShortcutsTableTableManager
       );
 }
 
-typedef $$ShortcutsTableProcessedTableManager =
+typedef $$ContactGroupsTableProcessedTableManager =
     ProcessedTableManager<
       _$TwonlyDB,
-      $ShortcutsTable,
-      Shortcut,
-      $$ShortcutsTableFilterComposer,
-      $$ShortcutsTableOrderingComposer,
-      $$ShortcutsTableAnnotationComposer,
-      $$ShortcutsTableCreateCompanionBuilder,
-      $$ShortcutsTableUpdateCompanionBuilder,
-      (Shortcut, $$ShortcutsTableReferences),
-      Shortcut,
-      PrefetchHooks Function({bool shortcutMembersRefs})
+      $ContactGroupsTable,
+      ContactGroup,
+      $$ContactGroupsTableFilterComposer,
+      $$ContactGroupsTableOrderingComposer,
+      $$ContactGroupsTableAnnotationComposer,
+      $$ContactGroupsTableCreateCompanionBuilder,
+      $$ContactGroupsTableUpdateCompanionBuilder,
+      (ContactGroup, $$ContactGroupsTableReferences),
+      ContactGroup,
+      PrefetchHooks Function({bool contactGroupMembersRefs})
     >;
-typedef $$ShortcutMembersTableCreateCompanionBuilder =
-    ShortcutMembersCompanion Function({
-      required int shortcutId,
-      required String groupId,
-      Value<int> rowid,
+typedef $$ContactGroupMembersTableCreateCompanionBuilder =
+    ContactGroupMembersCompanion Function({
+      Value<int> id,
+      required int contactGroupId,
+      Value<int?> userId,
+      Value<String?> groupId,
     });
-typedef $$ShortcutMembersTableUpdateCompanionBuilder =
-    ShortcutMembersCompanion Function({
-      Value<int> shortcutId,
-      Value<String> groupId,
-      Value<int> rowid,
+typedef $$ContactGroupMembersTableUpdateCompanionBuilder =
+    ContactGroupMembersCompanion Function({
+      Value<int> id,
+      Value<int> contactGroupId,
+      Value<int?> userId,
+      Value<String?> groupId,
     });
 
-final class $$ShortcutMembersTableReferences
-    extends BaseReferences<_$TwonlyDB, $ShortcutMembersTable, ShortcutMember> {
-  $$ShortcutMembersTableReferences(
+final class $$ContactGroupMembersTableReferences
+    extends
+        BaseReferences<
+          _$TwonlyDB,
+          $ContactGroupMembersTable,
+          ContactGroupMember
+        > {
+  $$ContactGroupMembersTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
   );
 
-  static $ShortcutsTable _shortcutIdTable(_$TwonlyDB db) =>
-      db.shortcuts.createAlias(
-        $_aliasNameGenerator(db.shortcutMembers.shortcutId, db.shortcuts.id),
+  static $ContactGroupsTable _contactGroupIdTable(_$TwonlyDB db) =>
+      db.contactGroups.createAlias(
+        'contact_group_members__contact_group_id__contact_groups__id',
       );
 
-  $$ShortcutsTableProcessedTableManager get shortcutId {
-    final $_column = $_itemColumn<int>('shortcut_id')!;
+  $$ContactGroupsTableProcessedTableManager get contactGroupId {
+    final $_column = $_itemColumn<int>('contact_group_id')!;
 
-    final manager = $$ShortcutsTableTableManager(
+    final manager = $$ContactGroupsTableTableManager(
       $_db,
-      $_db.shortcuts,
+      $_db.contactGroups,
     ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_shortcutIdTable($_db));
+    final item = $_typedResult.readTableOrNull(_contactGroupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ContactsTable _userIdTable(_$TwonlyDB db) => db.contacts.createAlias(
+    'contact_group_members__user_id__contacts__user_id',
+  );
+
+  $$ContactsTableProcessedTableManager? get userId {
+    final $_column = $_itemColumn<int>('user_id');
+    if ($_column == null) return null;
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -25299,12 +26852,12 @@ final class $$ShortcutMembersTableReferences
   }
 
   static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
-    $_aliasNameGenerator(db.shortcutMembers.groupId, db.groups.groupId),
+    'contact_group_members__group_id__groups__group_id',
   );
 
-  $$GroupsTableProcessedTableManager get groupId {
-    final $_column = $_itemColumn<String>('group_id')!;
-
+  $$GroupsTableProcessedTableManager? get groupId {
+    final $_column = $_itemColumn<String>('group_id');
+    if ($_column == null) return null;
     final manager = $$GroupsTableTableManager(
       $_db,
       $_db.groups,
@@ -25317,29 +26870,57 @@ final class $$ShortcutMembersTableReferences
   }
 }
 
-class $$ShortcutMembersTableFilterComposer
-    extends Composer<_$TwonlyDB, $ShortcutMembersTable> {
-  $$ShortcutMembersTableFilterComposer({
+class $$ContactGroupMembersTableFilterComposer
+    extends Composer<_$TwonlyDB, $ContactGroupMembersTable> {
+  $$ContactGroupMembersTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  $$ShortcutsTableFilterComposer get shortcutId {
-    final $$ShortcutsTableFilterComposer composer = $composerBuilder(
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ContactGroupsTableFilterComposer get contactGroupId {
+    final $$ContactGroupsTableFilterComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.shortcutId,
-      referencedTable: $db.shortcuts,
+      getCurrentColumn: (t) => t.contactGroupId,
+      referencedTable: $db.contactGroups,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutsTableFilterComposer(
+          }) => $$ContactGroupsTableFilterComposer(
             $db: $db,
-            $table: $db.shortcuts,
+            $table: $db.contactGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ContactsTableFilterComposer get userId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -25373,29 +26954,57 @@ class $$ShortcutMembersTableFilterComposer
   }
 }
 
-class $$ShortcutMembersTableOrderingComposer
-    extends Composer<_$TwonlyDB, $ShortcutMembersTable> {
-  $$ShortcutMembersTableOrderingComposer({
+class $$ContactGroupMembersTableOrderingComposer
+    extends Composer<_$TwonlyDB, $ContactGroupMembersTable> {
+  $$ContactGroupMembersTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  $$ShortcutsTableOrderingComposer get shortcutId {
-    final $$ShortcutsTableOrderingComposer composer = $composerBuilder(
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ContactGroupsTableOrderingComposer get contactGroupId {
+    final $$ContactGroupsTableOrderingComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.shortcutId,
-      referencedTable: $db.shortcuts,
+      getCurrentColumn: (t) => t.contactGroupId,
+      referencedTable: $db.contactGroups,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutsTableOrderingComposer(
+          }) => $$ContactGroupsTableOrderingComposer(
             $db: $db,
-            $table: $db.shortcuts,
+            $table: $db.contactGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ContactsTableOrderingComposer get userId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -25429,29 +27038,55 @@ class $$ShortcutMembersTableOrderingComposer
   }
 }
 
-class $$ShortcutMembersTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $ShortcutMembersTable> {
-  $$ShortcutMembersTableAnnotationComposer({
+class $$ContactGroupMembersTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $ContactGroupMembersTable> {
+  $$ContactGroupMembersTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  $$ShortcutsTableAnnotationComposer get shortcutId {
-    final $$ShortcutsTableAnnotationComposer composer = $composerBuilder(
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  $$ContactGroupsTableAnnotationComposer get contactGroupId {
+    final $$ContactGroupsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.shortcutId,
-      referencedTable: $db.shortcuts,
+      getCurrentColumn: (t) => t.contactGroupId,
+      referencedTable: $db.contactGroups,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutsTableAnnotationComposer(
+          }) => $$ContactGroupsTableAnnotationComposer(
             $db: $db,
-            $table: $db.shortcuts,
+            $table: $db.contactGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ContactsTableAnnotationComposer get userId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -25485,61 +27120,991 @@ class $$ShortcutMembersTableAnnotationComposer
   }
 }
 
-class $$ShortcutMembersTableTableManager
+class $$ContactGroupMembersTableTableManager
     extends
         RootTableManager<
           _$TwonlyDB,
-          $ShortcutMembersTable,
-          ShortcutMember,
-          $$ShortcutMembersTableFilterComposer,
-          $$ShortcutMembersTableOrderingComposer,
-          $$ShortcutMembersTableAnnotationComposer,
-          $$ShortcutMembersTableCreateCompanionBuilder,
-          $$ShortcutMembersTableUpdateCompanionBuilder,
-          (ShortcutMember, $$ShortcutMembersTableReferences),
-          ShortcutMember,
-          PrefetchHooks Function({bool shortcutId, bool groupId})
+          $ContactGroupMembersTable,
+          ContactGroupMember,
+          $$ContactGroupMembersTableFilterComposer,
+          $$ContactGroupMembersTableOrderingComposer,
+          $$ContactGroupMembersTableAnnotationComposer,
+          $$ContactGroupMembersTableCreateCompanionBuilder,
+          $$ContactGroupMembersTableUpdateCompanionBuilder,
+          (ContactGroupMember, $$ContactGroupMembersTableReferences),
+          ContactGroupMember,
+          PrefetchHooks Function({
+            bool contactGroupId,
+            bool userId,
+            bool groupId,
+          })
         > {
-  $$ShortcutMembersTableTableManager(_$TwonlyDB db, $ShortcutMembersTable table)
+  $$ContactGroupMembersTableTableManager(
+    _$TwonlyDB db,
+    $ContactGroupMembersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ContactGroupMembersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ContactGroupMembersTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ContactGroupMembersTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> contactGroupId = const Value.absent(),
+                Value<int?> userId = const Value.absent(),
+                Value<String?> groupId = const Value.absent(),
+              }) => ContactGroupMembersCompanion(
+                id: id,
+                contactGroupId: contactGroupId,
+                userId: userId,
+                groupId: groupId,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int contactGroupId,
+                Value<int?> userId = const Value.absent(),
+                Value<String?> groupId = const Value.absent(),
+              }) => ContactGroupMembersCompanion.insert(
+                id: id,
+                contactGroupId: contactGroupId,
+                userId: userId,
+                groupId: groupId,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ContactGroupMembersTable, ContactGroupMember>(
+                    table,
+                  ),
+                  $$ContactGroupMembersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({contactGroupId = false, userId = false, groupId = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (contactGroupId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.contactGroupId,
+                                    referencedTable:
+                                        $$ContactGroupMembersTableReferences
+                                            ._contactGroupIdTable(db),
+                                    referencedColumn:
+                                        $$ContactGroupMembersTableReferences
+                                            ._contactGroupIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (userId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.userId,
+                                    referencedTable:
+                                        $$ContactGroupMembersTableReferences
+                                            ._userIdTable(db),
+                                    referencedColumn:
+                                        $$ContactGroupMembersTableReferences
+                                            ._userIdTable(db)
+                                            .userId,
+                                  )
+                                  as T;
+                        }
+                        if (groupId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.groupId,
+                                    referencedTable:
+                                        $$ContactGroupMembersTableReferences
+                                            ._groupIdTable(db),
+                                    referencedColumn:
+                                        $$ContactGroupMembersTableReferences
+                                            ._groupIdTable(db)
+                                            .groupId,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$ContactGroupMembersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $ContactGroupMembersTable,
+      ContactGroupMember,
+      $$ContactGroupMembersTableFilterComposer,
+      $$ContactGroupMembersTableOrderingComposer,
+      $$ContactGroupMembersTableAnnotationComposer,
+      $$ContactGroupMembersTableCreateCompanionBuilder,
+      $$ContactGroupMembersTableUpdateCompanionBuilder,
+      (ContactGroupMember, $$ContactGroupMembersTableReferences),
+      ContactGroupMember,
+      PrefetchHooks Function({bool contactGroupId, bool userId, bool groupId})
+    >;
+typedef $$WebxdcAppsTableCreateCompanionBuilder =
+    WebxdcAppsCompanion Function({
+      required String appId,
+      required int version,
+      required String name,
+      Value<String> nameTranslations,
+      Value<String> description,
+      Value<String?> sourceCodeUrl,
+      Value<Uint8List?> icon,
+      required String bundleSha256,
+      required int bundleBytes,
+      Value<bool> published,
+      required int cachedAt,
+      Value<bool> proOnly,
+      Value<int> sortOrder,
+      Value<bool> oneTime,
+      Value<int> rowid,
+    });
+typedef $$WebxdcAppsTableUpdateCompanionBuilder =
+    WebxdcAppsCompanion Function({
+      Value<String> appId,
+      Value<int> version,
+      Value<String> name,
+      Value<String> nameTranslations,
+      Value<String> description,
+      Value<String?> sourceCodeUrl,
+      Value<Uint8List?> icon,
+      Value<String> bundleSha256,
+      Value<int> bundleBytes,
+      Value<bool> published,
+      Value<int> cachedAt,
+      Value<bool> proOnly,
+      Value<int> sortOrder,
+      Value<bool> oneTime,
+      Value<int> rowid,
+    });
+
+class $$WebxdcAppsTableFilterComposer
+    extends Composer<_$TwonlyDB, $WebxdcAppsTable> {
+  $$WebxdcAppsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get appId => $composableBuilder(
+    column: $table.appId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameTranslations => $composableBuilder(
+    column: $table.nameTranslations,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceCodeUrl => $composableBuilder(
+    column: $table.sourceCodeUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get bundleBytes => $composableBuilder(
+    column: $table.bundleBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get published => $composableBuilder(
+    column: $table.published,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get proOnly => $composableBuilder(
+    column: $table.proOnly,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get oneTime => $composableBuilder(
+    column: $table.oneTime,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WebxdcAppsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $WebxdcAppsTable> {
+  $$WebxdcAppsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get appId => $composableBuilder(
+    column: $table.appId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nameTranslations => $composableBuilder(
+    column: $table.nameTranslations,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceCodeUrl => $composableBuilder(
+    column: $table.sourceCodeUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get bundleBytes => $composableBuilder(
+    column: $table.bundleBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get published => $composableBuilder(
+    column: $table.published,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get proOnly => $composableBuilder(
+    column: $table.proOnly,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get oneTime => $composableBuilder(
+    column: $table.oneTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WebxdcAppsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $WebxdcAppsTable> {
+  $$WebxdcAppsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get appId =>
+      $composableBuilder(column: $table.appId, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameTranslations => $composableBuilder(
+    column: $table.nameTranslations,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceCodeUrl => $composableBuilder(
+    column: $table.sourceCodeUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<Uint8List> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
+  GeneratedColumn<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get bundleBytes => $composableBuilder(
+    column: $table.bundleBytes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get published =>
+      $composableBuilder(column: $table.published, builder: (column) => column);
+
+  GeneratedColumn<int> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get proOnly =>
+      $composableBuilder(column: $table.proOnly, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<bool> get oneTime =>
+      $composableBuilder(column: $table.oneTime, builder: (column) => column);
+}
+
+class $$WebxdcAppsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $WebxdcAppsTable,
+          WebxdcApp,
+          $$WebxdcAppsTableFilterComposer,
+          $$WebxdcAppsTableOrderingComposer,
+          $$WebxdcAppsTableAnnotationComposer,
+          $$WebxdcAppsTableCreateCompanionBuilder,
+          $$WebxdcAppsTableUpdateCompanionBuilder,
+          (WebxdcApp, BaseReferences<_$TwonlyDB, $WebxdcAppsTable, WebxdcApp>),
+          WebxdcApp,
+          PrefetchHooks Function()
+        > {
+  $$WebxdcAppsTableTableManager(_$TwonlyDB db, $WebxdcAppsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$ShortcutMembersTableFilterComposer($db: db, $table: table),
+              $$WebxdcAppsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$ShortcutMembersTableOrderingComposer($db: db, $table: table),
+              $$WebxdcAppsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ShortcutMembersTableAnnotationComposer($db: db, $table: table),
+              $$WebxdcAppsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> shortcutId = const Value.absent(),
-                Value<String> groupId = const Value.absent(),
+                Value<String> appId = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> nameTranslations = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String?> sourceCodeUrl = const Value.absent(),
+                Value<Uint8List?> icon = const Value.absent(),
+                Value<String> bundleSha256 = const Value.absent(),
+                Value<int> bundleBytes = const Value.absent(),
+                Value<bool> published = const Value.absent(),
+                Value<int> cachedAt = const Value.absent(),
+                Value<bool> proOnly = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> oneTime = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => ShortcutMembersCompanion(
-                shortcutId: shortcutId,
-                groupId: groupId,
+              }) => WebxdcAppsCompanion(
+                appId: appId,
+                version: version,
+                name: name,
+                nameTranslations: nameTranslations,
+                description: description,
+                sourceCodeUrl: sourceCodeUrl,
+                icon: icon,
+                bundleSha256: bundleSha256,
+                bundleBytes: bundleBytes,
+                published: published,
+                cachedAt: cachedAt,
+                proOnly: proOnly,
+                sortOrder: sortOrder,
+                oneTime: oneTime,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                required int shortcutId,
-                required String groupId,
+                required String appId,
+                required int version,
+                required String name,
+                Value<String> nameTranslations = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String?> sourceCodeUrl = const Value.absent(),
+                Value<Uint8List?> icon = const Value.absent(),
+                required String bundleSha256,
+                required int bundleBytes,
+                Value<bool> published = const Value.absent(),
+                required int cachedAt,
+                Value<bool> proOnly = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> oneTime = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => ShortcutMembersCompanion.insert(
-                shortcutId: shortcutId,
-                groupId: groupId,
+              }) => WebxdcAppsCompanion.insert(
+                appId: appId,
+                version: version,
+                name: name,
+                nameTranslations: nameTranslations,
+                description: description,
+                sourceCodeUrl: sourceCodeUrl,
+                icon: icon,
+                bundleSha256: bundleSha256,
+                bundleBytes: bundleBytes,
+                published: published,
+                cachedAt: cachedAt,
+                proOnly: proOnly,
+                sortOrder: sortOrder,
+                oneTime: oneTime,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
-                  $$ShortcutMembersTableReferences(db, table, e),
+                  e.readTable<$WebxdcAppsTable, WebxdcApp>(table),
+                  BaseReferences<_$TwonlyDB, $WebxdcAppsTable, WebxdcApp>(
+                    db,
+                    table,
+                    e,
+                  ),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({shortcutId = false, groupId = false}) {
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WebxdcAppsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $WebxdcAppsTable,
+      WebxdcApp,
+      $$WebxdcAppsTableFilterComposer,
+      $$WebxdcAppsTableOrderingComposer,
+      $$WebxdcAppsTableAnnotationComposer,
+      $$WebxdcAppsTableCreateCompanionBuilder,
+      $$WebxdcAppsTableUpdateCompanionBuilder,
+      (WebxdcApp, BaseReferences<_$TwonlyDB, $WebxdcAppsTable, WebxdcApp>),
+      WebxdcApp,
+      PrefetchHooks Function()
+    >;
+typedef $$WebxdcInstancesTableCreateCompanionBuilder =
+    WebxdcInstancesCompanion Function({
+      required String instanceId,
+      required String groupId,
+      required String appId,
+      required int version,
+      Value<String?> bundleSha256,
+      required String originToken,
+      Value<String?> summary,
+      Value<String?> document,
+      required int createdAt,
+      required int lastUpdateAt,
+      Value<int> rowid,
+    });
+typedef $$WebxdcInstancesTableUpdateCompanionBuilder =
+    WebxdcInstancesCompanion Function({
+      Value<String> instanceId,
+      Value<String> groupId,
+      Value<String> appId,
+      Value<int> version,
+      Value<String?> bundleSha256,
+      Value<String> originToken,
+      Value<String?> summary,
+      Value<String?> document,
+      Value<int> createdAt,
+      Value<int> lastUpdateAt,
+      Value<int> rowid,
+    });
+
+final class $$WebxdcInstancesTableReferences
+    extends BaseReferences<_$TwonlyDB, $WebxdcInstancesTable, WebxdcInstance> {
+  $$WebxdcInstancesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $MessagesTable _instanceIdTable(_$TwonlyDB db) => db.messages
+      .createAlias('webxdc_instances__instance_id__messages__message_id');
+
+  $$MessagesTableProcessedTableManager get instanceId {
+    final $_column = $_itemColumn<String>('instance_id')!;
+
+    final manager = $$MessagesTableTableManager(
+      $_db,
+      $_db.messages,
+    ).filter((f) => f.messageId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_instanceIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) =>
+      db.groups.createAlias('webxdc_instances__group_id__groups__group_id');
+
+  $$GroupsTableProcessedTableManager get groupId {
+    final $_column = $_itemColumn<String>('group_id')!;
+
+    final manager = $$GroupsTableTableManager(
+      $_db,
+      $_db.groups,
+    ).filter((f) => f.groupId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$WebxdcInstancesTableFilterComposer
+    extends Composer<_$TwonlyDB, $WebxdcInstancesTable> {
+  $$WebxdcInstancesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get appId => $composableBuilder(
+    column: $table.appId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originToken => $composableBuilder(
+    column: $table.originToken,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get summary => $composableBuilder(
+    column: $table.summary,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get document => $composableBuilder(
+    column: $table.document,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastUpdateAt => $composableBuilder(
+    column: $table.lastUpdateAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$MessagesTableFilterComposer get instanceId {
+    final $$MessagesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableFilterComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GroupsTableFilterComposer get groupId {
+    final $$GroupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WebxdcInstancesTableOrderingComposer
+    extends Composer<_$TwonlyDB, $WebxdcInstancesTable> {
+  $$WebxdcInstancesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get appId => $composableBuilder(
+    column: $table.appId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originToken => $composableBuilder(
+    column: $table.originToken,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get summary => $composableBuilder(
+    column: $table.summary,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get document => $composableBuilder(
+    column: $table.document,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastUpdateAt => $composableBuilder(
+    column: $table.lastUpdateAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$MessagesTableOrderingComposer get instanceId {
+    final $$MessagesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableOrderingComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GroupsTableOrderingComposer get groupId {
+    final $$GroupsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WebxdcInstancesTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $WebxdcInstancesTable> {
+  $$WebxdcInstancesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get appId =>
+      $composableBuilder(column: $table.appId, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get bundleSha256 => $composableBuilder(
+    column: $table.bundleSha256,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originToken => $composableBuilder(
+    column: $table.originToken,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get summary =>
+      $composableBuilder(column: $table.summary, builder: (column) => column);
+
+  GeneratedColumn<String> get document =>
+      $composableBuilder(column: $table.document, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get lastUpdateAt => $composableBuilder(
+    column: $table.lastUpdateAt,
+    builder: (column) => column,
+  );
+
+  $$MessagesTableAnnotationComposer get instanceId {
+    final $$MessagesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GroupsTableAnnotationComposer get groupId {
+    final $$GroupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WebxdcInstancesTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $WebxdcInstancesTable,
+          WebxdcInstance,
+          $$WebxdcInstancesTableFilterComposer,
+          $$WebxdcInstancesTableOrderingComposer,
+          $$WebxdcInstancesTableAnnotationComposer,
+          $$WebxdcInstancesTableCreateCompanionBuilder,
+          $$WebxdcInstancesTableUpdateCompanionBuilder,
+          (WebxdcInstance, $$WebxdcInstancesTableReferences),
+          WebxdcInstance,
+          PrefetchHooks Function({bool instanceId, bool groupId})
+        > {
+  $$WebxdcInstancesTableTableManager(_$TwonlyDB db, $WebxdcInstancesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WebxdcInstancesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WebxdcInstancesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WebxdcInstancesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> instanceId = const Value.absent(),
+                Value<String> groupId = const Value.absent(),
+                Value<String> appId = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> bundleSha256 = const Value.absent(),
+                Value<String> originToken = const Value.absent(),
+                Value<String?> summary = const Value.absent(),
+                Value<String?> document = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> lastUpdateAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WebxdcInstancesCompanion(
+                instanceId: instanceId,
+                groupId: groupId,
+                appId: appId,
+                version: version,
+                bundleSha256: bundleSha256,
+                originToken: originToken,
+                summary: summary,
+                document: document,
+                createdAt: createdAt,
+                lastUpdateAt: lastUpdateAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String instanceId,
+                required String groupId,
+                required String appId,
+                required int version,
+                Value<String?> bundleSha256 = const Value.absent(),
+                required String originToken,
+                Value<String?> summary = const Value.absent(),
+                Value<String?> document = const Value.absent(),
+                required int createdAt,
+                required int lastUpdateAt,
+                Value<int> rowid = const Value.absent(),
+              }) => WebxdcInstancesCompanion.insert(
+                instanceId: instanceId,
+                groupId: groupId,
+                appId: appId,
+                version: version,
+                bundleSha256: bundleSha256,
+                originToken: originToken,
+                summary: summary,
+                document: document,
+                createdAt: createdAt,
+                lastUpdateAt: lastUpdateAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$WebxdcInstancesTable, WebxdcInstance>(table),
+                  $$WebxdcInstancesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({instanceId = false, groupId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -25559,18 +28124,18 @@ class $$ShortcutMembersTableTableManager
                       dynamic
                     >
                   >(state) {
-                    if (shortcutId) {
+                    if (instanceId) {
                       state =
                           state.withJoin(
                                 currentTable: table,
-                                currentColumn: table.shortcutId,
+                                currentColumn: table.instanceId,
                                 referencedTable:
-                                    $$ShortcutMembersTableReferences
-                                        ._shortcutIdTable(db),
+                                    $$WebxdcInstancesTableReferences
+                                        ._instanceIdTable(db),
                                 referencedColumn:
-                                    $$ShortcutMembersTableReferences
-                                        ._shortcutIdTable(db)
-                                        .id,
+                                    $$WebxdcInstancesTableReferences
+                                        ._instanceIdTable(db)
+                                        .messageId,
                               )
                               as T;
                     }
@@ -25580,10 +28145,10 @@ class $$ShortcutMembersTableTableManager
                                 currentTable: table,
                                 currentColumn: table.groupId,
                                 referencedTable:
-                                    $$ShortcutMembersTableReferences
+                                    $$WebxdcInstancesTableReferences
                                         ._groupIdTable(db),
                                 referencedColumn:
-                                    $$ShortcutMembersTableReferences
+                                    $$WebxdcInstancesTableReferences
                                         ._groupIdTable(db)
                                         .groupId,
                               )
@@ -25601,85 +28166,329 @@ class $$ShortcutMembersTableTableManager
       );
 }
 
-typedef $$ShortcutMembersTableProcessedTableManager =
+typedef $$WebxdcInstancesTableProcessedTableManager =
     ProcessedTableManager<
       _$TwonlyDB,
-      $ShortcutMembersTable,
-      ShortcutMember,
-      $$ShortcutMembersTableFilterComposer,
-      $$ShortcutMembersTableOrderingComposer,
-      $$ShortcutMembersTableAnnotationComposer,
-      $$ShortcutMembersTableCreateCompanionBuilder,
-      $$ShortcutMembersTableUpdateCompanionBuilder,
-      (ShortcutMember, $$ShortcutMembersTableReferences),
-      ShortcutMember,
-      PrefetchHooks Function({bool shortcutId, bool groupId})
+      $WebxdcInstancesTable,
+      WebxdcInstance,
+      $$WebxdcInstancesTableFilterComposer,
+      $$WebxdcInstancesTableOrderingComposer,
+      $$WebxdcInstancesTableAnnotationComposer,
+      $$WebxdcInstancesTableCreateCompanionBuilder,
+      $$WebxdcInstancesTableUpdateCompanionBuilder,
+      (WebxdcInstance, $$WebxdcInstancesTableReferences),
+      WebxdcInstance,
+      PrefetchHooks Function({bool instanceId, bool groupId})
     >;
-typedef $$LabelsTableCreateCompanionBuilder =
-    LabelsCompanion Function({
-      Value<int> id,
-      required String name,
-      required int textColor,
-      required int backgroundColor,
-      Value<DateTime> createdAt,
+typedef $$WebxdcUpdatesTableCreateCompanionBuilder =
+    WebxdcUpdatesCompanion Function({
+      required String instanceId,
+      required int serial,
+      required String messageId,
+      Value<int?> senderId,
+      required String payload,
+      Value<String?> info,
+      Value<String?> href,
+      required int receivedAt,
+      Value<int> rowid,
     });
-typedef $$LabelsTableUpdateCompanionBuilder =
-    LabelsCompanion Function({
-      Value<int> id,
-      Value<String> name,
-      Value<int> textColor,
-      Value<int> backgroundColor,
-      Value<DateTime> createdAt,
+typedef $$WebxdcUpdatesTableUpdateCompanionBuilder =
+    WebxdcUpdatesCompanion Function({
+      Value<String> instanceId,
+      Value<int> serial,
+      Value<String> messageId,
+      Value<int?> senderId,
+      Value<String> payload,
+      Value<String?> info,
+      Value<String?> href,
+      Value<int> receivedAt,
+      Value<int> rowid,
     });
 
-final class $$LabelsTableReferences
-    extends BaseReferences<_$TwonlyDB, $LabelsTable, Label> {
-  $$LabelsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$ContactLabelsTable, List<ContactLabel>>
-  _contactLabelsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-    db.contactLabels,
-    aliasName: $_aliasNameGenerator(db.labels.id, db.contactLabels.labelId),
-  );
-
-  $$ContactLabelsTableProcessedTableManager get contactLabelsRefs {
-    final manager = $$ContactLabelsTableTableManager(
-      $_db,
-      $_db.contactLabels,
-    ).filter((f) => f.labelId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_contactLabelsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
-
-class $$LabelsTableFilterComposer extends Composer<_$TwonlyDB, $LabelsTable> {
-  $$LabelsTableFilterComposer({
+class $$WebxdcUpdatesTableFilterComposer
+    extends Composer<_$TwonlyDB, $WebxdcUpdatesTable> {
+  $$WebxdcUpdatesTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
+  ColumnFilters<int> get serial => $composableBuilder(
+    column: $table.serial,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
+  ColumnFilters<String> get messageId => $composableBuilder(
+    column: $table.messageId,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get textColor => $composableBuilder(
-    column: $table.textColor,
+  ColumnFilters<int> get senderId => $composableBuilder(
+    column: $table.senderId,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get backgroundColor => $composableBuilder(
-    column: $table.backgroundColor,
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get info => $composableBuilder(
+    column: $table.info,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get href => $composableBuilder(
+    column: $table.href,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WebxdcUpdatesTableOrderingComposer
+    extends Composer<_$TwonlyDB, $WebxdcUpdatesTable> {
+  $$WebxdcUpdatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get serial => $composableBuilder(
+    column: $table.serial,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get messageId => $composableBuilder(
+    column: $table.messageId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get senderId => $composableBuilder(
+    column: $table.senderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get info => $composableBuilder(
+    column: $table.info,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get href => $composableBuilder(
+    column: $table.href,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WebxdcUpdatesTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $WebxdcUpdatesTable> {
+  $$WebxdcUpdatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get serial =>
+      $composableBuilder(column: $table.serial, builder: (column) => column);
+
+  GeneratedColumn<String> get messageId =>
+      $composableBuilder(column: $table.messageId, builder: (column) => column);
+
+  GeneratedColumn<int> get senderId =>
+      $composableBuilder(column: $table.senderId, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<String> get info =>
+      $composableBuilder(column: $table.info, builder: (column) => column);
+
+  GeneratedColumn<String> get href =>
+      $composableBuilder(column: $table.href, builder: (column) => column);
+
+  GeneratedColumn<int> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$WebxdcUpdatesTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $WebxdcUpdatesTable,
+          WebxdcUpdate,
+          $$WebxdcUpdatesTableFilterComposer,
+          $$WebxdcUpdatesTableOrderingComposer,
+          $$WebxdcUpdatesTableAnnotationComposer,
+          $$WebxdcUpdatesTableCreateCompanionBuilder,
+          $$WebxdcUpdatesTableUpdateCompanionBuilder,
+          (
+            WebxdcUpdate,
+            BaseReferences<_$TwonlyDB, $WebxdcUpdatesTable, WebxdcUpdate>,
+          ),
+          WebxdcUpdate,
+          PrefetchHooks Function()
+        > {
+  $$WebxdcUpdatesTableTableManager(_$TwonlyDB db, $WebxdcUpdatesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WebxdcUpdatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WebxdcUpdatesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WebxdcUpdatesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> instanceId = const Value.absent(),
+                Value<int> serial = const Value.absent(),
+                Value<String> messageId = const Value.absent(),
+                Value<int?> senderId = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<String?> info = const Value.absent(),
+                Value<String?> href = const Value.absent(),
+                Value<int> receivedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WebxdcUpdatesCompanion(
+                instanceId: instanceId,
+                serial: serial,
+                messageId: messageId,
+                senderId: senderId,
+                payload: payload,
+                info: info,
+                href: href,
+                receivedAt: receivedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String instanceId,
+                required int serial,
+                required String messageId,
+                Value<int?> senderId = const Value.absent(),
+                required String payload,
+                Value<String?> info = const Value.absent(),
+                Value<String?> href = const Value.absent(),
+                required int receivedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => WebxdcUpdatesCompanion.insert(
+                instanceId: instanceId,
+                serial: serial,
+                messageId: messageId,
+                senderId: senderId,
+                payload: payload,
+                info: info,
+                href: href,
+                receivedAt: receivedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$WebxdcUpdatesTable, WebxdcUpdate>(table),
+                  BaseReferences<_$TwonlyDB, $WebxdcUpdatesTable, WebxdcUpdate>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WebxdcUpdatesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $WebxdcUpdatesTable,
+      WebxdcUpdate,
+      $$WebxdcUpdatesTableFilterComposer,
+      $$WebxdcUpdatesTableOrderingComposer,
+      $$WebxdcUpdatesTableAnnotationComposer,
+      $$WebxdcUpdatesTableCreateCompanionBuilder,
+      $$WebxdcUpdatesTableUpdateCompanionBuilder,
+      (
+        WebxdcUpdate,
+        BaseReferences<_$TwonlyDB, $WebxdcUpdatesTable, WebxdcUpdate>,
+      ),
+      WebxdcUpdate,
+      PrefetchHooks Function()
+    >;
+typedef $$StickersTableCreateCompanionBuilder =
+    StickersCompanion Function({
+      required String contentHash,
+      required Uint8List webp,
+      required int width,
+      required int height,
+      Value<int> usageCount,
+      Value<DateTime> createdAt,
+      Value<DateTime> lastUsedAt,
+      Value<int> rowid,
+    });
+typedef $$StickersTableUpdateCompanionBuilder =
+    StickersCompanion Function({
+      Value<String> contentHash,
+      Value<Uint8List> webp,
+      Value<int> width,
+      Value<int> height,
+      Value<int> usageCount,
+      Value<DateTime> createdAt,
+      Value<DateTime> lastUsedAt,
+      Value<int> rowid,
+    });
+
+class $$StickersTableFilterComposer
+    extends Composer<_$TwonlyDB, $StickersTable> {
+  $$StickersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get webp => $composableBuilder(
+    column: $table.webp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get width => $composableBuilder(
+    column: $table.width,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get usageCount => $composableBuilder(
+    column: $table.usageCount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -25688,57 +28497,43 @@ class $$LabelsTableFilterComposer extends Composer<_$TwonlyDB, $LabelsTable> {
     builder: (column) => ColumnFilters(column),
   );
 
-  Expression<bool> contactLabelsRefs(
-    Expression<bool> Function($$ContactLabelsTableFilterComposer f) f,
-  ) {
-    final $$ContactLabelsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.contactLabels,
-      getReferencedColumn: (t) => t.labelId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactLabelsTableFilterComposer(
-            $db: $db,
-            $table: $db.contactLabels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  ColumnFilters<DateTime> get lastUsedAt => $composableBuilder(
+    column: $table.lastUsedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
-class $$LabelsTableOrderingComposer extends Composer<_$TwonlyDB, $LabelsTable> {
-  $$LabelsTableOrderingComposer({
+class $$StickersTableOrderingComposer
+    extends Composer<_$TwonlyDB, $StickersTable> {
+  $$StickersTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
+  ColumnOrderings<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
+  ColumnOrderings<Uint8List> get webp => $composableBuilder(
+    column: $table.webp,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get textColor => $composableBuilder(
-    column: $table.textColor,
+  ColumnOrderings<int> get width => $composableBuilder(
+    column: $table.width,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get backgroundColor => $composableBuilder(
-    column: $table.backgroundColor,
+  ColumnOrderings<int> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get usageCount => $composableBuilder(
+    column: $table.usageCount,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -25746,521 +28541,149 @@ class $$LabelsTableOrderingComposer extends Composer<_$TwonlyDB, $LabelsTable> {
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get lastUsedAt => $composableBuilder(
+    column: $table.lastUsedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$LabelsTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $LabelsTable> {
-  $$LabelsTableAnnotationComposer({
+class $$StickersTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $StickersTable> {
+  $$StickersTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
+  GeneratedColumn<Uint8List> get webp =>
+      $composableBuilder(column: $table.webp, builder: (column) => column);
 
-  GeneratedColumn<int> get textColor =>
-      $composableBuilder(column: $table.textColor, builder: (column) => column);
+  GeneratedColumn<int> get width =>
+      $composableBuilder(column: $table.width, builder: (column) => column);
 
-  GeneratedColumn<int> get backgroundColor => $composableBuilder(
-    column: $table.backgroundColor,
+  GeneratedColumn<int> get height =>
+      $composableBuilder(column: $table.height, builder: (column) => column);
+
+  GeneratedColumn<int> get usageCount => $composableBuilder(
+    column: $table.usageCount,
     builder: (column) => column,
   );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  Expression<T> contactLabelsRefs<T extends Object>(
-    Expression<T> Function($$ContactLabelsTableAnnotationComposer a) f,
-  ) {
-    final $$ContactLabelsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.contactLabels,
-      getReferencedColumn: (t) => t.labelId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactLabelsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.contactLabels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  GeneratedColumn<DateTime> get lastUsedAt => $composableBuilder(
+    column: $table.lastUsedAt,
+    builder: (column) => column,
+  );
 }
 
-class $$LabelsTableTableManager
+class $$StickersTableTableManager
     extends
         RootTableManager<
           _$TwonlyDB,
-          $LabelsTable,
-          Label,
-          $$LabelsTableFilterComposer,
-          $$LabelsTableOrderingComposer,
-          $$LabelsTableAnnotationComposer,
-          $$LabelsTableCreateCompanionBuilder,
-          $$LabelsTableUpdateCompanionBuilder,
-          (Label, $$LabelsTableReferences),
-          Label,
-          PrefetchHooks Function({bool contactLabelsRefs})
+          $StickersTable,
+          LocalSticker,
+          $$StickersTableFilterComposer,
+          $$StickersTableOrderingComposer,
+          $$StickersTableAnnotationComposer,
+          $$StickersTableCreateCompanionBuilder,
+          $$StickersTableUpdateCompanionBuilder,
+          (
+            LocalSticker,
+            BaseReferences<_$TwonlyDB, $StickersTable, LocalSticker>,
+          ),
+          LocalSticker,
+          PrefetchHooks Function()
         > {
-  $$LabelsTableTableManager(_$TwonlyDB db, $LabelsTable table)
+  $$StickersTableTableManager(_$TwonlyDB db, $StickersTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$LabelsTableFilterComposer($db: db, $table: table),
+              $$StickersTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$LabelsTableOrderingComposer($db: db, $table: table),
+              $$StickersTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$LabelsTableAnnotationComposer($db: db, $table: table),
+              $$StickersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<int> textColor = const Value.absent(),
-                Value<int> backgroundColor = const Value.absent(),
+                Value<String> contentHash = const Value.absent(),
+                Value<Uint8List> webp = const Value.absent(),
+                Value<int> width = const Value.absent(),
+                Value<int> height = const Value.absent(),
+                Value<int> usageCount = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-              }) => LabelsCompanion(
-                id: id,
-                name: name,
-                textColor: textColor,
-                backgroundColor: backgroundColor,
-                createdAt: createdAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required String name,
-                required int textColor,
-                required int backgroundColor,
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => LabelsCompanion.insert(
-                id: id,
-                name: name,
-                textColor: textColor,
-                backgroundColor: backgroundColor,
-                createdAt: createdAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) =>
-                    (e.readTable(table), $$LabelsTableReferences(db, table, e)),
-              )
-              .toList(),
-          prefetchHooksCallback: ({contactLabelsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (contactLabelsRefs) db.contactLabels,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (contactLabelsRefs)
-                    await $_getPrefetchedData<
-                      Label,
-                      $LabelsTable,
-                      ContactLabel
-                    >(
-                      currentTable: table,
-                      referencedTable: $$LabelsTableReferences
-                          ._contactLabelsRefsTable(db),
-                      managerFromTypedResult: (p0) => $$LabelsTableReferences(
-                        db,
-                        table,
-                        p0,
-                      ).contactLabelsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.labelId == item.id),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
-        ),
-      );
-}
-
-typedef $$LabelsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$TwonlyDB,
-      $LabelsTable,
-      Label,
-      $$LabelsTableFilterComposer,
-      $$LabelsTableOrderingComposer,
-      $$LabelsTableAnnotationComposer,
-      $$LabelsTableCreateCompanionBuilder,
-      $$LabelsTableUpdateCompanionBuilder,
-      (Label, $$LabelsTableReferences),
-      Label,
-      PrefetchHooks Function({bool contactLabelsRefs})
-    >;
-typedef $$ContactLabelsTableCreateCompanionBuilder =
-    ContactLabelsCompanion Function({
-      required int contactId,
-      required int labelId,
-      Value<int> rowid,
-    });
-typedef $$ContactLabelsTableUpdateCompanionBuilder =
-    ContactLabelsCompanion Function({
-      Value<int> contactId,
-      Value<int> labelId,
-      Value<int> rowid,
-    });
-
-final class $$ContactLabelsTableReferences
-    extends BaseReferences<_$TwonlyDB, $ContactLabelsTable, ContactLabel> {
-  $$ContactLabelsTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
-
-  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.contactLabels.contactId, db.contacts.userId),
-      );
-
-  $$ContactsTableProcessedTableManager get contactId {
-    final $_column = $_itemColumn<int>('contact_id')!;
-
-    final manager = $$ContactsTableTableManager(
-      $_db,
-      $_db.contacts,
-    ).filter((f) => f.userId.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static $LabelsTable _labelIdTable(_$TwonlyDB db) => db.labels.createAlias(
-    $_aliasNameGenerator(db.contactLabels.labelId, db.labels.id),
-  );
-
-  $$LabelsTableProcessedTableManager get labelId {
-    final $_column = $_itemColumn<int>('label_id')!;
-
-    final manager = $$LabelsTableTableManager(
-      $_db,
-      $_db.labels,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_labelIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
-class $$ContactLabelsTableFilterComposer
-    extends Composer<_$TwonlyDB, $ContactLabelsTable> {
-  $$ContactLabelsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  $$ContactsTableFilterComposer get contactId {
-    final $$ContactsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.contactId,
-      referencedTable: $db.contacts,
-      getReferencedColumn: (t) => t.userId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableFilterComposer(
-            $db: $db,
-            $table: $db.contacts,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$LabelsTableFilterComposer get labelId {
-    final $$LabelsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.labelId,
-      referencedTable: $db.labels,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$LabelsTableFilterComposer(
-            $db: $db,
-            $table: $db.labels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$ContactLabelsTableOrderingComposer
-    extends Composer<_$TwonlyDB, $ContactLabelsTable> {
-  $$ContactLabelsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  $$ContactsTableOrderingComposer get contactId {
-    final $$ContactsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.contactId,
-      referencedTable: $db.contacts,
-      getReferencedColumn: (t) => t.userId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableOrderingComposer(
-            $db: $db,
-            $table: $db.contacts,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$LabelsTableOrderingComposer get labelId {
-    final $$LabelsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.labelId,
-      referencedTable: $db.labels,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$LabelsTableOrderingComposer(
-            $db: $db,
-            $table: $db.labels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$ContactLabelsTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $ContactLabelsTable> {
-  $$ContactLabelsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  $$ContactsTableAnnotationComposer get contactId {
-    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.contactId,
-      referencedTable: $db.contacts,
-      getReferencedColumn: (t) => t.userId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.contacts,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$LabelsTableAnnotationComposer get labelId {
-    final $$LabelsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.labelId,
-      referencedTable: $db.labels,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$LabelsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.labels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$ContactLabelsTableTableManager
-    extends
-        RootTableManager<
-          _$TwonlyDB,
-          $ContactLabelsTable,
-          ContactLabel,
-          $$ContactLabelsTableFilterComposer,
-          $$ContactLabelsTableOrderingComposer,
-          $$ContactLabelsTableAnnotationComposer,
-          $$ContactLabelsTableCreateCompanionBuilder,
-          $$ContactLabelsTableUpdateCompanionBuilder,
-          (ContactLabel, $$ContactLabelsTableReferences),
-          ContactLabel,
-          PrefetchHooks Function({bool contactId, bool labelId})
-        > {
-  $$ContactLabelsTableTableManager(_$TwonlyDB db, $ContactLabelsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$ContactLabelsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ContactLabelsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ContactLabelsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> contactId = const Value.absent(),
-                Value<int> labelId = const Value.absent(),
+                Value<DateTime> lastUsedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => ContactLabelsCompanion(
-                contactId: contactId,
-                labelId: labelId,
+              }) => StickersCompanion(
+                contentHash: contentHash,
+                webp: webp,
+                width: width,
+                height: height,
+                usageCount: usageCount,
+                createdAt: createdAt,
+                lastUsedAt: lastUsedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                required int contactId,
-                required int labelId,
+                required String contentHash,
+                required Uint8List webp,
+                required int width,
+                required int height,
+                Value<int> usageCount = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> lastUsedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => ContactLabelsCompanion.insert(
-                contactId: contactId,
-                labelId: labelId,
+              }) => StickersCompanion.insert(
+                contentHash: contentHash,
+                webp: webp,
+                width: width,
+                height: height,
+                usageCount: usageCount,
+                createdAt: createdAt,
+                lastUsedAt: lastUsedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
-                  $$ContactLabelsTableReferences(db, table, e),
+                  e.readTable<$StickersTable, LocalSticker>(table),
+                  BaseReferences<_$TwonlyDB, $StickersTable, LocalSticker>(
+                    db,
+                    table,
+                    e,
+                  ),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({contactId = false, labelId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (contactId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.contactId,
-                                referencedTable: $$ContactLabelsTableReferences
-                                    ._contactIdTable(db),
-                                referencedColumn: $$ContactLabelsTableReferences
-                                    ._contactIdTable(db)
-                                    .userId,
-                              )
-                              as T;
-                    }
-                    if (labelId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.labelId,
-                                referencedTable: $$ContactLabelsTableReferences
-                                    ._labelIdTable(db),
-                                referencedColumn: $$ContactLabelsTableReferences
-                                    ._labelIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
 
-typedef $$ContactLabelsTableProcessedTableManager =
+typedef $$StickersTableProcessedTableManager =
     ProcessedTableManager<
       _$TwonlyDB,
-      $ContactLabelsTable,
-      ContactLabel,
-      $$ContactLabelsTableFilterComposer,
-      $$ContactLabelsTableOrderingComposer,
-      $$ContactLabelsTableAnnotationComposer,
-      $$ContactLabelsTableCreateCompanionBuilder,
-      $$ContactLabelsTableUpdateCompanionBuilder,
-      (ContactLabel, $$ContactLabelsTableReferences),
-      ContactLabel,
-      PrefetchHooks Function({bool contactId, bool labelId})
+      $StickersTable,
+      LocalSticker,
+      $$StickersTableFilterComposer,
+      $$StickersTableOrderingComposer,
+      $$StickersTableAnnotationComposer,
+      $$StickersTableCreateCompanionBuilder,
+      $$StickersTableUpdateCompanionBuilder,
+      (LocalSticker, BaseReferences<_$TwonlyDB, $StickersTable, LocalSticker>),
+      LocalSticker,
+      PrefetchHooks Function()
     >;
 
 class $TwonlyDBManager {
@@ -26284,22 +28707,6 @@ class $TwonlyDBManager {
       $$ReceiptsTableTableManager(_db, _db.receipts);
   $$ReceivedReceiptsTableTableManager get receivedReceipts =>
       $$ReceivedReceiptsTableTableManager(_db, _db.receivedReceipts);
-  $$SignalIdentityKeyStoresTableTableManager get signalIdentityKeyStores =>
-      $$SignalIdentityKeyStoresTableTableManager(
-        _db,
-        _db.signalIdentityKeyStores,
-      );
-  $$SignalPreKeyStoresTableTableManager get signalPreKeyStores =>
-      $$SignalPreKeyStoresTableTableManager(_db, _db.signalPreKeyStores);
-  $$SignalSenderKeyStoresTableTableManager get signalSenderKeyStores =>
-      $$SignalSenderKeyStoresTableTableManager(_db, _db.signalSenderKeyStores);
-  $$SignalSessionStoresTableTableManager get signalSessionStores =>
-      $$SignalSessionStoresTableTableManager(_db, _db.signalSessionStores);
-  $$SignalSignedPreKeyStoresTableTableManager get signalSignedPreKeyStores =>
-      $$SignalSignedPreKeyStoresTableTableManager(
-        _db,
-        _db.signalSignedPreKeyStores,
-      );
   $$MessageActionsTableTableManager get messageActions =>
       $$MessageActionsTableTableManager(_db, _db.messageActions);
   $$GroupHistoriesTableTableManager get groupHistories =>
@@ -26334,12 +28741,16 @@ class $TwonlyDBManager {
       );
   $$UserDiscoverySharesTableTableManager get userDiscoveryShares =>
       $$UserDiscoverySharesTableTableManager(_db, _db.userDiscoveryShares);
-  $$ShortcutsTableTableManager get shortcuts =>
-      $$ShortcutsTableTableManager(_db, _db.shortcuts);
-  $$ShortcutMembersTableTableManager get shortcutMembers =>
-      $$ShortcutMembersTableTableManager(_db, _db.shortcutMembers);
-  $$LabelsTableTableManager get labels =>
-      $$LabelsTableTableManager(_db, _db.labels);
-  $$ContactLabelsTableTableManager get contactLabels =>
-      $$ContactLabelsTableTableManager(_db, _db.contactLabels);
+  $$ContactGroupsTableTableManager get contactGroups =>
+      $$ContactGroupsTableTableManager(_db, _db.contactGroups);
+  $$ContactGroupMembersTableTableManager get contactGroupMembers =>
+      $$ContactGroupMembersTableTableManager(_db, _db.contactGroupMembers);
+  $$WebxdcAppsTableTableManager get webxdcApps =>
+      $$WebxdcAppsTableTableManager(_db, _db.webxdcApps);
+  $$WebxdcInstancesTableTableManager get webxdcInstances =>
+      $$WebxdcInstancesTableTableManager(_db, _db.webxdcInstances);
+  $$WebxdcUpdatesTableTableManager get webxdcUpdates =>
+      $$WebxdcUpdatesTableTableManager(_db, _db.webxdcUpdates);
+  $$StickersTableTableManager get stickers =>
+      $$StickersTableTableManager(_db, _db.stickers);
 }

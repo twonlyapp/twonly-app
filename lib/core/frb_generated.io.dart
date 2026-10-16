@@ -3,10 +3,19 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/server/prekeys.dart';
+import 'backup/backup_archive.dart';
 import 'bridge.dart';
+import 'bridge/api.dart';
 import 'bridge/callbacks.dart';
-import 'bridge/callbacks/user_discovery.dart';
+import 'bridge/groups.dart';
+import 'bridge/live_location.dart';
+import 'bridge/logging.dart';
+import 'bridge/stories.dart';
+import 'bridge/user_config.dart';
+import 'bridge/webxdc.dart';
 import 'bridge/wrapper.dart';
+import 'bridge/wrapper/app_database.dart';
 import 'bridge/wrapper/backup.dart';
 import 'bridge/wrapper/key_manager.dart';
 import 'bridge/wrapper/signal.dart';
@@ -14,11 +23,16 @@ import 'bridge/wrapper/user_discovery.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
+import 'database/app.dart';
 import 'frb_generated.dart';
 import 'keys/backup_password_keys.dart';
 import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
+import 'services/avatars.dart';
+import 'services/media_upload.dart';
+import 'services/stickers.dart';
 import 'signal/engine.dart';
+import 'user_config.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustLibApiImplPlatform({
@@ -32,108 +46,83 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AnyhowException dco_decode_AnyhowException(dynamic raw);
 
   @protected
-  FutureOr<RustStreamSink<String>> Function()
-  dco_decode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
-    dynamic raw,
-  );
+  DateTime dco_decode_Chrono_Utc(dynamic raw);
 
   @protected
-  FutureOr<AnnouncedUser?> Function(PlatformInt64)
-  dco_decode_DartFn_Inputs_i_64_Output_opt_box_autoadd_announced_user_AnyhowException(
-    dynamic raw,
-  );
+  FutureOr<void> Function(PlatformInt64)
+  dco_decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(dynamic raw);
 
   @protected
-  FutureOr<List<Uint8List>?> Function(PlatformInt64)
-  dco_decode_DartFn_Inputs_i_64_Output_opt_list_list_prim_u_8_strict_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<List<OtherPromotion>?> Function(PlatformInt64)
-  dco_decode_DartFn_Inputs_i_64_Output_opt_list_other_promotion_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<Uint8List?> Function(PlatformInt64)
-  dco_decode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<bool> Function(PlatformInt64, AnnouncedUser, PlatformInt64?)
-  dco_decode_DartFn_Inputs_i_64_announced_user_opt_box_autoadd_i_64_Output_bool_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<bool> Function(PlatformInt64, PlatformInt64, Uint8List)
-  dco_decode_DartFn_Inputs_i_64_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<bool> Function(PlatformInt64, Uint8List)
-  dco_decode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<bool> Function(List<Uint8List>)
-  dco_decode_DartFn_Inputs_list_list_prim_u_8_strict_Output_bool_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<Uint8List?> Function(Uint8List)
-  dco_decode_DartFn_Inputs_list_prim_u_8_strict_Output_opt_list_prim_u_8_strict_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<bool> Function(Uint8List, Uint8List, Uint8List)
-  dco_decode_DartFn_Inputs_list_prim_u_8_strict_list_prim_u_8_strict_list_prim_u_8_strict_Output_bool_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<bool> Function(OtherPromotion)
-  dco_decode_DartFn_Inputs_other_promotion_Output_bool_AnyhowException(
-    dynamic raw,
-  );
+  FutureOr<void> Function(UserConfig)
+  dco_decode_DartFn_Inputs_user_config_Output_unit_AnyhowException(dynamic raw);
 
   @protected
   Object dco_decode_DartOpaque(dynamic raw);
 
   @protected
-  Map<PlatformInt64, Uint8List> dco_decode_Map_i_64_list_prim_u_8_strict_None(
-    dynamic raw,
-  );
+  Map<String, String> dco_decode_Map_String_String_None(dynamic raw);
 
   @protected
-  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw);
+  Map<String, FlameState> dco_decode_Map_String_flame_state_None(dynamic raw);
+
+  @protected
+  Map<String, List<String>> dco_decode_Map_String_list_String_None(dynamic raw);
+
+  @protected
+  RustStreamSink<ApiEvent> dco_decode_StreamSink_api_event_Sse(dynamic raw);
+
+  @protected
+  RustStreamSink<List<String>> dco_decode_StreamSink_list_String_Sse(
+    dynamic raw,
+  );
 
   @protected
   String dco_decode_String(dynamic raw);
 
   @protected
-  AnnouncedUser dco_decode_announced_user(dynamic raw);
+  ApiConnectionState dco_decode_api_connection_state(dynamic raw);
+
+  @protected
+  ApiEvent dco_decode_api_event(dynamic raw);
+
+  @protected
+  ApiEventKind dco_decode_api_event_kind(dynamic raw);
+
+  @protected
+  BackupFileSize dco_decode_backup_file_size(dynamic raw);
 
   @protected
   BackupPasswordKeys dco_decode_backup_password_keys(dynamic raw);
 
   @protected
+  BackupStorageInfo dco_decode_backup_storage_info(dynamic raw);
+
+  @protected
+  BackupTableSize dco_decode_backup_table_size(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
 
   @protected
-  AnnouncedUser dco_decode_box_autoadd_announced_user(dynamic raw);
+  DateTime dco_decode_box_autoadd_Chrono_Utc(dynamic raw);
+
+  @protected
+  ApiConnectionState dco_decode_box_autoadd_api_connection_state(dynamic raw);
 
   @protected
   BackupPasswordKeys dco_decode_box_autoadd_backup_password_keys(dynamic raw);
 
   @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw);
+
+  @protected
+  double dco_decode_box_autoadd_f_64(dynamic raw);
+
+  @protected
   FrbPreKeyBundle dco_decode_box_autoadd_frb_pre_key_bundle(dynamic raw);
+
+  @protected
+  FrbPresignedPost dco_decode_box_autoadd_frb_presigned_post(dynamic raw);
 
   @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
@@ -142,29 +131,75 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InitConfig dco_decode_box_autoadd_init_config(dynamic raw);
 
   @protected
-  OtherPromotion dco_decode_box_autoadd_other_promotion(dynamic raw);
+  LiveLocationSession dco_decode_box_autoadd_live_location_session(dynamic raw);
+
+  @protected
+  PasswordlessRecoveryConfig
+  dco_decode_box_autoadd_passwordless_recovery_config(dynamic raw);
+
+  @protected
+  StickerLocation dco_decode_box_autoadd_sticker_location(dynamic raw);
+
+  @protected
+  StoryAudience dco_decode_box_autoadd_story_audience(dynamic raw);
+
+  @protected
+  TwonlySafeBackup dco_decode_box_autoadd_twonly_safe_backup(dynamic raw);
 
   @protected
   int dco_decode_box_autoadd_u_32(dynamic raw);
 
   @protected
-  UserDiscoveryStoreFlutter dco_decode_box_autoadd_user_discovery_store_flutter(
-    dynamic raw,
-  );
+  UserConfig dco_decode_box_autoadd_user_config(dynamic raw);
 
   @protected
-  UserDiscoveryUtilsFlutter dco_decode_box_autoadd_user_discovery_utils_flutter(
-    dynamic raw,
-  );
+  WebxdcInstanceInfo dco_decode_box_autoadd_webxdc_instance_info(dynamic raw);
+
+  @protected
+  CustomAvatarInfo dco_decode_custom_avatar_info(dynamic raw);
+
+  @protected
+  double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FlameState dco_decode_flame_state(dynamic raw);
 
   @protected
   FlutterUserDiscovery dco_decode_flutter_user_discovery(dynamic raw);
+
+  @protected
+  FrbAdditionalAccount dco_decode_frb_additional_account(dynamic raw);
+
+  @protected
+  FrbMemoriesUploadUrls dco_decode_frb_memories_upload_urls(dynamic raw);
+
+  @protected
+  FrbMemoriesUsage dco_decode_frb_memories_usage(dynamic raw);
+
+  @protected
+  FrbPasswordlessNotificationMessage
+  dco_decode_frb_passwordless_notification_message(dynamic raw);
+
+  @protected
+  FrbPlanBalance dco_decode_frb_plan_balance(dynamic raw);
 
   @protected
   FrbPqcPreKey dco_decode_frb_pqc_pre_key(dynamic raw);
 
   @protected
   FrbPreKeyBundle dco_decode_frb_pre_key_bundle(dynamic raw);
+
+  @protected
+  FrbPresignedPost dco_decode_frb_presigned_post(dynamic raw);
+
+  @protected
+  FrbProofOfWork dco_decode_frb_proof_of_work(dynamic raw);
+
+  @protected
+  FrbUserData dco_decode_frb_user_data(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
 
   @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
@@ -176,13 +211,50 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_isize(dynamic raw);
 
   @protected
+  LastBackupUploadState dco_decode_last_backup_upload_state(dynamic raw);
+
+  @protected
+  LegacyMigrationReport dco_decode_legacy_migration_report(dynamic raw);
+
+  @protected
+  LegacyTableMigrationCount dco_decode_legacy_table_migration_count(
+    dynamic raw,
+  );
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<BackupFileSize> dco_decode_list_backup_file_size(dynamic raw);
+
+  @protected
+  List<BackupTableSize> dco_decode_list_backup_table_size(dynamic raw);
+
+  @protected
+  List<FrbAdditionalAccount> dco_decode_list_frb_additional_account(
+    dynamic raw,
+  );
+
+  @protected
+  List<FrbPasswordlessNotificationMessage>
+  dco_decode_list_frb_passwordless_notification_message(dynamic raw);
+
+  @protected
   List<FrbPqcPreKey> dco_decode_list_frb_pqc_pre_key(dynamic raw);
+
+  @protected
+  List<LegacyTableMigrationCount> dco_decode_list_legacy_table_migration_count(
+    dynamic raw,
+  );
 
   @protected
   List<Uint8List> dco_decode_list_list_prim_u_8_strict(dynamic raw);
 
   @protected
-  List<OtherPromotion> dco_decode_list_other_promotion(dynamic raw);
+  List<PqcPreKeyInput> dco_decode_list_pqc_pre_key_input(dynamic raw);
+
+  @protected
+  Int64List dco_decode_list_prim_i_64_strict(dynamic raw);
 
   @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
@@ -191,37 +263,114 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
-  List<(PlatformInt64, Uint8List)>
-  dco_decode_list_record_i_64_list_prim_u_8_strict(dynamic raw);
+  List<(String, FlameState)> dco_decode_list_record_string_flame_state(
+    dynamic raw,
+  );
+
+  @protected
+  List<(String, List<String>)> dco_decode_list_record_string_list_string(
+    dynamic raw,
+  );
+
+  @protected
+  List<(String, String)> dco_decode_list_record_string_string(dynamic raw);
+
+  @protected
+  List<SqlRow> dco_decode_list_sql_row(dynamic raw);
+
+  @protected
+  List<SqlValue> dco_decode_list_sql_value(dynamic raw);
+
+  @protected
+  List<WebxdcOneTimeInstance> dco_decode_list_webxdc_one_time_instance(
+    dynamic raw,
+  );
+
+  @protected
+  List<WebxdcStoreApp> dco_decode_list_webxdc_store_app(dynamic raw);
+
+  @protected
+  List<WebxdcUpdateEntry> dco_decode_list_webxdc_update_entry(dynamic raw);
+
+  @protected
+  LiveLocationSession dco_decode_live_location_session(dynamic raw);
+
+  @protected
+  LogLevel dco_decode_log_level(dynamic raw);
+
+  @protected
+  MediaSizeReport dco_decode_media_size_report(dynamic raw);
+
+  @protected
+  Map<String, List<String>>? dco_decode_opt_Map_String_list_String_None(
+    dynamic raw,
+  );
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
-  AnnouncedUser? dco_decode_opt_box_autoadd_announced_user(dynamic raw);
+  DateTime? dco_decode_opt_box_autoadd_Chrono_Utc(dynamic raw);
+
+  @protected
+  ApiConnectionState? dco_decode_opt_box_autoadd_api_connection_state(
+    dynamic raw,
+  );
+
+  @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
+  double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
+
+  @protected
+  FrbPresignedPost? dco_decode_opt_box_autoadd_frb_presigned_post(dynamic raw);
 
   @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
 
   @protected
+  LiveLocationSession? dco_decode_opt_box_autoadd_live_location_session(
+    dynamic raw,
+  );
+
+  @protected
+  PasswordlessRecoveryConfig?
+  dco_decode_opt_box_autoadd_passwordless_recovery_config(dynamic raw);
+
+  @protected
+  StickerLocation? dco_decode_opt_box_autoadd_sticker_location(dynamic raw);
+
+  @protected
+  StoryAudience? dco_decode_opt_box_autoadd_story_audience(dynamic raw);
+
+  @protected
+  TwonlySafeBackup? dco_decode_opt_box_autoadd_twonly_safe_backup(dynamic raw);
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
   @protected
-  List<Uint8List>? dco_decode_opt_list_list_prim_u_8_strict(dynamic raw);
+  UserConfig? dco_decode_opt_box_autoadd_user_config(dynamic raw);
 
   @protected
-  List<OtherPromotion>? dco_decode_opt_list_other_promotion(dynamic raw);
+  WebxdcInstanceInfo? dco_decode_opt_box_autoadd_webxdc_instance_info(
+    dynamic raw,
+  );
+
+  @protected
+  List<String>? dco_decode_opt_list_String(dynamic raw);
 
   @protected
   Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw);
 
   @protected
-  OtherPromotion dco_decode_other_promotion(dynamic raw);
-
-  @protected
-  (PlatformInt64, Uint8List) dco_decode_record_i_64_list_prim_u_8_strict(
+  PasswordlessRecoveryConfig dco_decode_passwordless_recovery_config(
     dynamic raw,
   );
+
+  @protected
+  PqcPreKeyInput dco_decode_pqc_pre_key_input(dynamic raw);
 
   @protected
   (Uint8List, PlatformInt64) dco_decode_record_list_prim_u_8_strict_i_64(
@@ -229,7 +378,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  (String, FlameState) dco_decode_record_string_flame_state(dynamic raw);
+
+  @protected
+  (String, List<String>) dco_decode_record_string_list_string(dynamic raw);
+
+  @protected
   (String, String) dco_decode_record_string_string(dynamic raw);
+
+  @protected
+  RustApi dco_decode_rust_api(dynamic raw);
+
+  @protected
+  RustAppDatabase dco_decode_rust_app_database(dynamic raw);
 
   @protected
   RustBackupArchive dco_decode_rust_backup_archive(dynamic raw);
@@ -247,7 +408,46 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustUtils dco_decode_rust_utils(dynamic raw);
 
   @protected
+  SetupProfile dco_decode_setup_profile(dynamic raw);
+
+  @protected
+  SqlExecutionResult dco_decode_sql_execution_result(dynamic raw);
+
+  @protected
+  SqlRow dco_decode_sql_row(dynamic raw);
+
+  @protected
+  SqlRows dco_decode_sql_rows(dynamic raw);
+
+  @protected
+  SqlValue dco_decode_sql_value(dynamic raw);
+
+  @protected
+  StickerLocation dco_decode_sticker_location(dynamic raw);
+
+  @protected
+  StickerOutput dco_decode_sticker_output(dynamic raw);
+
+  @protected
+  StoryAudience dco_decode_story_audience(dynamic raw);
+
+  @protected
+  ThemeMode dco_decode_theme_mode(dynamic raw);
+
+  @protected
+  TwonlySafeBackup dco_decode_twonly_safe_backup(dynamic raw);
+
+  @protected
+  TwonlyScoreVisibility dco_decode_twonly_score_visibility(dynamic raw);
+
+  @protected
+  int dco_decode_u_16(dynamic raw);
+
+  @protected
   int dco_decode_u_32(dynamic raw);
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
@@ -259,31 +459,60 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void dco_decode_unit(dynamic raw);
 
   @protected
-  UserDiscoveryStoreFlutter dco_decode_user_discovery_store_flutter(
-    dynamic raw,
-  );
+  UserConfig dco_decode_user_config(dynamic raw);
 
   @protected
-  UserDiscoveryUtilsFlutter dco_decode_user_discovery_utils_flutter(
-    dynamic raw,
-  );
+  UserConfigApi dco_decode_user_config_api(dynamic raw);
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
 
   @protected
+  WebxdcInstanceInfo dco_decode_webxdc_instance_info(dynamic raw);
+
+  @protected
+  WebxdcOneTimeInstance dco_decode_webxdc_one_time_instance(dynamic raw);
+
+  @protected
+  WebxdcResponse dco_decode_webxdc_response(dynamic raw);
+
+  @protected
+  WebxdcStoreApp dco_decode_webxdc_store_app(dynamic raw);
+
+  @protected
+  WebxdcUpdateEntry dco_decode_webxdc_update_entry(dynamic raw);
+
+  @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+
+  @protected
+  DateTime sse_decode_Chrono_Utc(SseDeserializer deserializer);
 
   @protected
   Object sse_decode_DartOpaque(SseDeserializer deserializer);
 
   @protected
-  Map<PlatformInt64, Uint8List> sse_decode_Map_i_64_list_prim_u_8_strict_None(
+  Map<String, String> sse_decode_Map_String_String_None(
     SseDeserializer deserializer,
   );
 
   @protected
-  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
+  Map<String, FlameState> sse_decode_Map_String_flame_state_None(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  Map<String, List<String>> sse_decode_Map_String_list_String_None(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<ApiEvent> sse_decode_StreamSink_api_event_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<List<String>> sse_decode_StreamSink_list_String_Sse(
     SseDeserializer deserializer,
   );
 
@@ -291,7 +520,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
-  AnnouncedUser sse_decode_announced_user(SseDeserializer deserializer);
+  ApiConnectionState sse_decode_api_connection_state(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ApiEvent sse_decode_api_event(SseDeserializer deserializer);
+
+  @protected
+  ApiEventKind sse_decode_api_event_kind(SseDeserializer deserializer);
+
+  @protected
+  BackupFileSize sse_decode_backup_file_size(SseDeserializer deserializer);
 
   @protected
   BackupPasswordKeys sse_decode_backup_password_keys(
@@ -299,10 +539,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  BackupStorageInfo sse_decode_backup_storage_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  BackupTableSize sse_decode_backup_table_size(SseDeserializer deserializer);
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
-  AnnouncedUser sse_decode_box_autoadd_announced_user(
+  DateTime sse_decode_box_autoadd_Chrono_Utc(SseDeserializer deserializer);
+
+  @protected
+  ApiConnectionState sse_decode_box_autoadd_api_connection_state(
     SseDeserializer deserializer,
   );
 
@@ -312,7 +563,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
   FrbPreKeyBundle sse_decode_box_autoadd_frb_pre_key_bundle(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbPresignedPost sse_decode_box_autoadd_frb_presigned_post(
     SseDeserializer deserializer,
   );
 
@@ -323,7 +585,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InitConfig sse_decode_box_autoadd_init_config(SseDeserializer deserializer);
 
   @protected
-  OtherPromotion sse_decode_box_autoadd_other_promotion(
+  LiveLocationSession sse_decode_box_autoadd_live_location_session(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PasswordlessRecoveryConfig
+  sse_decode_box_autoadd_passwordless_recovery_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  StickerLocation sse_decode_box_autoadd_sticker_location(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  StoryAudience sse_decode_box_autoadd_story_audience(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  TwonlySafeBackup sse_decode_box_autoadd_twonly_safe_backup(
     SseDeserializer deserializer,
   );
 
@@ -331,14 +614,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
-  UserDiscoveryStoreFlutter sse_decode_box_autoadd_user_discovery_store_flutter(
+  UserConfig sse_decode_box_autoadd_user_config(SseDeserializer deserializer);
+
+  @protected
+  WebxdcInstanceInfo sse_decode_box_autoadd_webxdc_instance_info(
     SseDeserializer deserializer,
   );
 
   @protected
-  UserDiscoveryUtilsFlutter sse_decode_box_autoadd_user_discovery_utils_flutter(
-    SseDeserializer deserializer,
-  );
+  CustomAvatarInfo sse_decode_custom_avatar_info(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FlameState sse_decode_flame_state(SseDeserializer deserializer);
 
   @protected
   FlutterUserDiscovery sse_decode_flutter_user_discovery(
@@ -346,10 +636,44 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FrbAdditionalAccount sse_decode_frb_additional_account(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbMemoriesUploadUrls sse_decode_frb_memories_upload_urls(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbMemoriesUsage sse_decode_frb_memories_usage(SseDeserializer deserializer);
+
+  @protected
+  FrbPasswordlessNotificationMessage
+  sse_decode_frb_passwordless_notification_message(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbPlanBalance sse_decode_frb_plan_balance(SseDeserializer deserializer);
+
+  @protected
   FrbPqcPreKey sse_decode_frb_pqc_pre_key(SseDeserializer deserializer);
 
   @protected
   FrbPreKeyBundle sse_decode_frb_pre_key_bundle(SseDeserializer deserializer);
+
+  @protected
+  FrbPresignedPost sse_decode_frb_presigned_post(SseDeserializer deserializer);
+
+  @protected
+  FrbProofOfWork sse_decode_frb_proof_of_work(SseDeserializer deserializer);
+
+  @protected
+  FrbUserData sse_decode_frb_user_data(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
@@ -361,7 +685,51 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
 
   @protected
+  LastBackupUploadState sse_decode_last_backup_upload_state(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LegacyMigrationReport sse_decode_legacy_migration_report(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LegacyTableMigrationCount sse_decode_legacy_table_migration_count(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<BackupFileSize> sse_decode_list_backup_file_size(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<BackupTableSize> sse_decode_list_backup_table_size(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbAdditionalAccount> sse_decode_list_frb_additional_account(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbPasswordlessNotificationMessage>
+  sse_decode_list_frb_passwordless_notification_message(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<FrbPqcPreKey> sse_decode_list_frb_pqc_pre_key(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<LegacyTableMigrationCount> sse_decode_list_legacy_table_migration_count(
     SseDeserializer deserializer,
   );
 
@@ -371,9 +739,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  List<OtherPromotion> sse_decode_list_other_promotion(
+  List<PqcPreKeyInput> sse_decode_list_pqc_pre_key_input(
     SseDeserializer deserializer,
   );
+
+  @protected
+  Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer);
 
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
@@ -382,8 +753,54 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
-  List<(PlatformInt64, Uint8List)>
-  sse_decode_list_record_i_64_list_prim_u_8_strict(
+  List<(String, FlameState)> sse_decode_list_record_string_flame_state(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<(String, List<String>)> sse_decode_list_record_string_list_string(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<(String, String)> sse_decode_list_record_string_string(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<SqlRow> sse_decode_list_sql_row(SseDeserializer deserializer);
+
+  @protected
+  List<SqlValue> sse_decode_list_sql_value(SseDeserializer deserializer);
+
+  @protected
+  List<WebxdcOneTimeInstance> sse_decode_list_webxdc_one_time_instance(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<WebxdcStoreApp> sse_decode_list_webxdc_store_app(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<WebxdcUpdateEntry> sse_decode_list_webxdc_update_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LiveLocationSession sse_decode_live_location_session(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LogLevel sse_decode_log_level(SseDeserializer deserializer);
+
+  @protected
+  MediaSizeReport sse_decode_media_size_report(SseDeserializer deserializer);
+
+  @protected
+  Map<String, List<String>>? sse_decode_opt_Map_String_list_String_None(
     SseDeserializer deserializer,
   );
 
@@ -391,7 +808,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
-  AnnouncedUser? sse_decode_opt_box_autoadd_announced_user(
+  DateTime? sse_decode_opt_box_autoadd_Chrono_Utc(SseDeserializer deserializer);
+
+  @protected
+  ApiConnectionState? sse_decode_opt_box_autoadd_api_connection_state(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
+  FrbPresignedPost? sse_decode_opt_box_autoadd_frb_presigned_post(
     SseDeserializer deserializer,
   );
 
@@ -399,28 +830,57 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
+  LiveLocationSession? sse_decode_opt_box_autoadd_live_location_session(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PasswordlessRecoveryConfig?
+  sse_decode_opt_box_autoadd_passwordless_recovery_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  StickerLocation? sse_decode_opt_box_autoadd_sticker_location(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  StoryAudience? sse_decode_opt_box_autoadd_story_audience(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  TwonlySafeBackup? sse_decode_opt_box_autoadd_twonly_safe_backup(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
-  List<Uint8List>? sse_decode_opt_list_list_prim_u_8_strict(
+  UserConfig? sse_decode_opt_box_autoadd_user_config(
     SseDeserializer deserializer,
   );
 
   @protected
-  List<OtherPromotion>? sse_decode_opt_list_other_promotion(
+  WebxdcInstanceInfo? sse_decode_opt_box_autoadd_webxdc_instance_info(
     SseDeserializer deserializer,
   );
+
+  @protected
+  List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
 
   @protected
   Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
-  OtherPromotion sse_decode_other_promotion(SseDeserializer deserializer);
-
-  @protected
-  (PlatformInt64, Uint8List) sse_decode_record_i_64_list_prim_u_8_strict(
+  PasswordlessRecoveryConfig sse_decode_passwordless_recovery_config(
     SseDeserializer deserializer,
   );
+
+  @protected
+  PqcPreKeyInput sse_decode_pqc_pre_key_input(SseDeserializer deserializer);
 
   @protected
   (Uint8List, PlatformInt64) sse_decode_record_list_prim_u_8_strict_i_64(
@@ -428,9 +888,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  (String, FlameState) sse_decode_record_string_flame_state(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  (String, List<String>) sse_decode_record_string_list_string(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   (String, String) sse_decode_record_string_string(
     SseDeserializer deserializer,
   );
+
+  @protected
+  RustApi sse_decode_rust_api(SseDeserializer deserializer);
+
+  @protected
+  RustAppDatabase sse_decode_rust_app_database(SseDeserializer deserializer);
 
   @protected
   RustBackupArchive sse_decode_rust_backup_archive(
@@ -452,7 +928,50 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustUtils sse_decode_rust_utils(SseDeserializer deserializer);
 
   @protected
+  SetupProfile sse_decode_setup_profile(SseDeserializer deserializer);
+
+  @protected
+  SqlExecutionResult sse_decode_sql_execution_result(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SqlRow sse_decode_sql_row(SseDeserializer deserializer);
+
+  @protected
+  SqlRows sse_decode_sql_rows(SseDeserializer deserializer);
+
+  @protected
+  SqlValue sse_decode_sql_value(SseDeserializer deserializer);
+
+  @protected
+  StickerLocation sse_decode_sticker_location(SseDeserializer deserializer);
+
+  @protected
+  StickerOutput sse_decode_sticker_output(SseDeserializer deserializer);
+
+  @protected
+  StoryAudience sse_decode_story_audience(SseDeserializer deserializer);
+
+  @protected
+  ThemeMode sse_decode_theme_mode(SseDeserializer deserializer);
+
+  @protected
+  TwonlySafeBackup sse_decode_twonly_safe_backup(SseDeserializer deserializer);
+
+  @protected
+  TwonlyScoreVisibility sse_decode_twonly_score_visibility(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  int sse_decode_u_16(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_u_32(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -464,20 +983,34 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
-  UserDiscoveryStoreFlutter sse_decode_user_discovery_store_flutter(
-    SseDeserializer deserializer,
-  );
+  UserConfig sse_decode_user_config(SseDeserializer deserializer);
 
   @protected
-  UserDiscoveryUtilsFlutter sse_decode_user_discovery_utils_flutter(
-    SseDeserializer deserializer,
-  );
+  UserConfigApi sse_decode_user_config_api(SseDeserializer deserializer);
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
+  WebxdcInstanceInfo sse_decode_webxdc_instance_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  WebxdcOneTimeInstance sse_decode_webxdc_one_time_instance(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  WebxdcResponse sse_decode_webxdc_response(SseDeserializer deserializer);
+
+  @protected
+  WebxdcStoreApp sse_decode_webxdc_store_app(SseDeserializer deserializer);
+
+  @protected
+  WebxdcUpdateEntry sse_decode_webxdc_update_entry(
+    SseDeserializer deserializer,
+  );
 
   @protected
   void sse_encode_AnyhowException(
@@ -486,84 +1019,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
-    FutureOr<RustStreamSink<String>> Function() self,
+  void sse_encode_Chrono_Utc(DateTime self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_DartFn_Inputs_i_64_Output_unit_AnyhowException(
+    FutureOr<void> Function(PlatformInt64) self,
     SseSerializer serializer,
   );
 
   @protected
-  void
-  sse_encode_DartFn_Inputs_i_64_Output_opt_box_autoadd_announced_user_AnyhowException(
-    FutureOr<AnnouncedUser?> Function(PlatformInt64) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_i_64_Output_opt_list_list_prim_u_8_strict_AnyhowException(
-    FutureOr<List<Uint8List>?> Function(PlatformInt64) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_i_64_Output_opt_list_other_promotion_AnyhowException(
-    FutureOr<List<OtherPromotion>?> Function(PlatformInt64) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(
-    FutureOr<Uint8List?> Function(PlatformInt64) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_i_64_announced_user_opt_box_autoadd_i_64_Output_bool_AnyhowException(
-    FutureOr<bool> Function(PlatformInt64, AnnouncedUser, PlatformInt64?) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_i_64_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
-    FutureOr<bool> Function(PlatformInt64, PlatformInt64, Uint8List) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
-    FutureOr<bool> Function(PlatformInt64, Uint8List) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_list_list_prim_u_8_strict_Output_bool_AnyhowException(
-    FutureOr<bool> Function(List<Uint8List>) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_list_prim_u_8_strict_Output_opt_list_prim_u_8_strict_AnyhowException(
-    FutureOr<Uint8List?> Function(Uint8List) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_list_prim_u_8_strict_list_prim_u_8_strict_list_prim_u_8_strict_Output_bool_AnyhowException(
-    FutureOr<bool> Function(Uint8List, Uint8List, Uint8List) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_DartFn_Inputs_other_promotion_Output_bool_AnyhowException(
-    FutureOr<bool> Function(OtherPromotion) self,
+  void sse_encode_DartFn_Inputs_user_config_Output_unit_AnyhowException(
+    FutureOr<void> Function(UserConfig) self,
     SseSerializer serializer,
   );
 
@@ -571,14 +1037,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_DartOpaque(Object self, SseSerializer serializer);
 
   @protected
-  void sse_encode_Map_i_64_list_prim_u_8_strict_None(
-    Map<PlatformInt64, Uint8List> self,
+  void sse_encode_Map_String_String_None(
+    Map<String, String> self,
     SseSerializer serializer,
   );
 
   @protected
-  void sse_encode_StreamSink_String_Sse(
-    RustStreamSink<String> self,
+  void sse_encode_Map_String_flame_state_None(
+    Map<String, FlameState> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_Map_String_list_String_None(
+    Map<String, List<String>> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_api_event_Sse(
+    RustStreamSink<ApiEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_list_String_Sse(
+    RustStreamSink<List<String>> self,
     SseSerializer serializer,
   );
 
@@ -586,7 +1070,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
-  void sse_encode_announced_user(AnnouncedUser self, SseSerializer serializer);
+  void sse_encode_api_connection_state(
+    ApiConnectionState self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_api_event(ApiEvent self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_api_event_kind(ApiEventKind self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_backup_file_size(
+    BackupFileSize self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_backup_password_keys(
@@ -595,11 +1094,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_backup_storage_info(
+    BackupStorageInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_backup_table_size(
+    BackupTableSize self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_announced_user(
-    AnnouncedUser self,
+  void sse_encode_box_autoadd_Chrono_Utc(
+    DateTime self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_api_connection_state(
+    ApiConnectionState self,
     SseSerializer serializer,
   );
 
@@ -610,8 +1127,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_frb_pre_key_bundle(
     FrbPreKeyBundle self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_frb_presigned_post(
+    FrbPresignedPost self,
     SseSerializer serializer,
   );
 
@@ -628,8 +1157,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_box_autoadd_other_promotion(
-    OtherPromotion self,
+  void sse_encode_box_autoadd_live_location_session(
+    LiveLocationSession self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_passwordless_recovery_config(
+    PasswordlessRecoveryConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_sticker_location(
+    StickerLocation self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_story_audience(
+    StoryAudience self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_twonly_safe_backup(
+    TwonlySafeBackup self,
     SseSerializer serializer,
   );
 
@@ -637,20 +1190,62 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_user_discovery_store_flutter(
-    UserDiscoveryStoreFlutter self,
+  void sse_encode_box_autoadd_user_config(
+    UserConfig self,
     SseSerializer serializer,
   );
 
   @protected
-  void sse_encode_box_autoadd_user_discovery_utils_flutter(
-    UserDiscoveryUtilsFlutter self,
+  void sse_encode_box_autoadd_webxdc_instance_info(
+    WebxdcInstanceInfo self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_custom_avatar_info(
+    CustomAvatarInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_flame_state(FlameState self, SseSerializer serializer);
 
   @protected
   void sse_encode_flutter_user_discovery(
     FlutterUserDiscovery self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_additional_account(
+    FrbAdditionalAccount self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_memories_upload_urls(
+    FrbMemoriesUploadUrls self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_memories_usage(
+    FrbMemoriesUsage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_passwordless_notification_message(
+    FrbPasswordlessNotificationMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_plan_balance(
+    FrbPlanBalance self,
     SseSerializer serializer,
   );
 
@@ -664,6 +1259,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_frb_presigned_post(
+    FrbPresignedPost self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_proof_of_work(
+    FrbProofOfWork self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_user_data(FrbUserData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
@@ -673,8 +1286,59 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_last_backup_upload_state(
+    LastBackupUploadState self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_legacy_migration_report(
+    LegacyMigrationReport self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_legacy_table_migration_count(
+    LegacyTableMigrationCount self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_backup_file_size(
+    List<BackupFileSize> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_backup_table_size(
+    List<BackupTableSize> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_additional_account(
+    List<FrbAdditionalAccount> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_passwordless_notification_message(
+    List<FrbPasswordlessNotificationMessage> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_frb_pqc_pre_key(
     List<FrbPqcPreKey> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_legacy_table_migration_count(
+    List<LegacyTableMigrationCount> self,
     SseSerializer serializer,
   );
 
@@ -685,8 +1349,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_list_other_promotion(
-    List<OtherPromotion> self,
+  void sse_encode_list_pqc_pre_key_input(
+    List<PqcPreKeyInput> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_prim_i_64_strict(
+    Int64List self,
     SseSerializer serializer,
   );
 
@@ -700,8 +1370,65 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_list_record_i_64_list_prim_u_8_strict(
-    List<(PlatformInt64, Uint8List)> self,
+  void sse_encode_list_record_string_flame_state(
+    List<(String, FlameState)> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_record_string_list_string(
+    List<(String, List<String>)> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_record_string_string(
+    List<(String, String)> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_sql_row(List<SqlRow> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_sql_value(List<SqlValue> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_webxdc_one_time_instance(
+    List<WebxdcOneTimeInstance> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_webxdc_store_app(
+    List<WebxdcStoreApp> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_webxdc_update_entry(
+    List<WebxdcUpdateEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_live_location_session(
+    LiveLocationSession self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_log_level(LogLevel self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_media_size_report(
+    MediaSizeReport self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_Map_String_list_String_None(
+    Map<String, List<String>>? self,
     SseSerializer serializer,
   );
 
@@ -709,8 +1436,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_announced_user(
-    AnnouncedUser? self,
+  void sse_encode_opt_box_autoadd_Chrono_Utc(
+    DateTime? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_api_connection_state(
+    ApiConnectionState? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_frb_presigned_post(
+    FrbPresignedPost? self,
     SseSerializer serializer,
   );
 
@@ -721,19 +1466,52 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_live_location_session(
+    LiveLocationSession? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_passwordless_recovery_config(
+    PasswordlessRecoveryConfig? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_sticker_location(
+    StickerLocation? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_story_audience(
+    StoryAudience? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_twonly_safe_backup(
+    TwonlySafeBackup? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_list_list_prim_u_8_strict(
-    List<Uint8List>? self,
+  void sse_encode_opt_box_autoadd_user_config(
+    UserConfig? self,
     SseSerializer serializer,
   );
 
   @protected
-  void sse_encode_opt_list_other_promotion(
-    List<OtherPromotion>? self,
+  void sse_encode_opt_box_autoadd_webxdc_instance_info(
+    WebxdcInstanceInfo? self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_list_prim_u_8_strict(
@@ -742,14 +1520,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_other_promotion(
-    OtherPromotion self,
+  void sse_encode_passwordless_recovery_config(
+    PasswordlessRecoveryConfig self,
     SseSerializer serializer,
   );
 
   @protected
-  void sse_encode_record_i_64_list_prim_u_8_strict(
-    (PlatformInt64, Uint8List) self,
+  void sse_encode_pqc_pre_key_input(
+    PqcPreKeyInput self,
     SseSerializer serializer,
   );
 
@@ -760,8 +1538,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_record_string_flame_state(
+    (String, FlameState) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_record_string_list_string(
+    (String, List<String>) self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_record_string_string(
     (String, String) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_rust_api(RustApi self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_rust_app_database(
+    RustAppDatabase self,
     SseSerializer serializer,
   );
 
@@ -790,7 +1589,58 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_rust_utils(RustUtils self, SseSerializer serializer);
 
   @protected
+  void sse_encode_setup_profile(SetupProfile self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sql_execution_result(
+    SqlExecutionResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_sql_row(SqlRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sql_rows(SqlRows self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sql_value(SqlValue self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sticker_location(
+    StickerLocation self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_sticker_output(StickerOutput self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_story_audience(StoryAudience self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_theme_mode(ThemeMode self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_twonly_safe_backup(
+    TwonlySafeBackup self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_twonly_score_visibility(
+    TwonlyScoreVisibility self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_u_16(int self, SseSerializer serializer);
+
+  @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
@@ -802,22 +1652,43 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_unit(void self, SseSerializer serializer);
 
   @protected
-  void sse_encode_user_discovery_store_flutter(
-    UserDiscoveryStoreFlutter self,
-    SseSerializer serializer,
-  );
+  void sse_encode_user_config(UserConfig self, SseSerializer serializer);
 
   @protected
-  void sse_encode_user_discovery_utils_flutter(
-    UserDiscoveryUtilsFlutter self,
-    SseSerializer serializer,
-  );
+  void sse_encode_user_config_api(UserConfigApi self, SseSerializer serializer);
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
 
   @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
+  void sse_encode_webxdc_instance_info(
+    WebxdcInstanceInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_webxdc_one_time_instance(
+    WebxdcOneTimeInstance self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_webxdc_response(
+    WebxdcResponse self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_webxdc_store_app(
+    WebxdcStoreApp self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_webxdc_update_entry(
+    WebxdcUpdateEntry self,
+    SseSerializer serializer,
+  );
 }
 
 // Section: wire_class

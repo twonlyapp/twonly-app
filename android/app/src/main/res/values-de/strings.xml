@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Fotos, die dir deine Freunde senden</string>
+    <string name="widget_choose_groups">Personen und Gruppen auswählen</string>
+    <string name="widget_choose_groups_description">Wähle Personen oder Kontaktgruppen aus, die Fotos an dieses Widget senden dürfen.</string>
+    <string name="widget_people">Personen</string>
+    <string name="widget_contact_groups">Kontaktgruppen</string>
+    <string name="widget_open_app_first">Öffne twonly einmal, um deine Kontakte und Kontaktgruppen zu laden.</string>
+    <string name="widget_save">Widget hinzufügen</string>
+    <string name="widget_image_description">Neuestes Foto in deinem Widget</string>
+</resources>

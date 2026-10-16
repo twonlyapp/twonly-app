@@ -9,6 +9,9 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get subscriptionAllApps => 'Access to all apps';
+
+  @override
   String get registerSlogan => 'Stay in touch privately.';
 
   @override
@@ -62,6 +65,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraPreviewSendTo => 'Send to';
 
   @override
+  String get cameraPermissionsBody =>
+      'twonly needs access to the camera and microphone.';
+
+  @override
+  String get cameraPermissionsRequestButton => 'Request permissions';
+
+  @override
   String get shareImageTitle => 'Share with';
 
   @override
@@ -102,6 +112,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareImageShowArchived => 'Show archived users';
+
+  @override
+  String get shareImageSendToWidget => 'Send to home-screen widget';
+
+  @override
+  String get shareImageWidgetExplainerTitle => 'Send to a widget';
+
+  @override
+  String get shareImageWidgetExplainerBody =>
+      'Sends the photo straight to your friends\' home-screen widgets. Only friends who allow them can be selected.';
+
+  @override
+  String get shareImageWidgetExplainerDismiss => 'Got it';
 
   @override
   String get searchUsernameInput => 'Username';
@@ -161,6 +184,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageSendState_Send => 'Sent';
 
   @override
+  String get messageSendState_Delivered => 'Received';
+
+  @override
   String get messageSendState_Sending => 'Sending';
 
   @override
@@ -203,7 +229,108 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsProfile => 'Profile';
 
   @override
-  String get settingsStorageData => 'Data and storage';
+  String get settingsStorageData => 'Memories & Storage';
+
+  @override
+  String get memoryDetailsTitle => 'Details';
+
+  @override
+  String get memoryDetailsCapturedAt => 'Captured';
+
+  @override
+  String get memoryDetailsLocation => 'Location';
+
+  @override
+  String get memoryDetailsLocationPending => 'Finding capture location…';
+
+  @override
+  String get memoryDetailsNoLocation => 'No location recorded';
+
+  @override
+  String get memoryDetailsOpenMap => 'Open in map';
+
+  @override
+  String get memoryLocationTitle => 'Store location in Memories';
+
+  @override
+  String get memoryLocationSubtitle =>
+      'Capture coordinates for Memories and gallery exports. These coordinates are never sent to contacts.';
+
+  @override
+  String get locationStickerSettingTitle => 'Location sticker';
+
+  @override
+  String get locationStickerSettingSubtitle =>
+      'Shows your city or country, or coordinates if no place name is available. Your location is shared only when you select the location filter.';
+
+  @override
+  String get locationStickerLoading => 'Finding your location…';
+
+  @override
+  String get liveLocationMenu => 'Location';
+
+  @override
+  String get liveLocationTitle => 'Live location';
+
+  @override
+  String get liveLocationExplanation =>
+      'Share your current location in this chat. Everyone in this group can see it. Only your latest location is kept.';
+
+  @override
+  String get liveLocationDuration => 'Share for';
+
+  @override
+  String liveLocationMinutes(int count) {
+    return '$count minutes';
+  }
+
+  @override
+  String liveLocationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveLocationStart => 'Start sharing';
+
+  @override
+  String get liveLocationStop => 'Stop sharing';
+
+  @override
+  String get liveLocationAlreadySharing =>
+      'Your location is already being shared in this chat.';
+
+  @override
+  String get liveLocationNotificationBody =>
+      'Your current location is being shared. Tap Stop sharing to end it.';
+
+  @override
+  String get liveLocationStartFailed =>
+      'Could not start sharing. Allow location and notifications, then try again.';
+
+  @override
+  String get liveLocationStopFailed =>
+      'Could not stop sharing. Please try again.';
+
+  @override
+  String get liveLocationWaiting => 'Waiting for location…';
+
+  @override
+  String get liveLocationEnded => 'Location sharing ended';
+
+  @override
+  String liveLocationLastUpdate(String time) {
+    return 'Last update: $time';
+  }
+
+  @override
+  String get memoryLocationPermissionDenied =>
+      'Precise location access was not granted. The setting remains disabled.';
 
   @override
   String get settingsStorageDataStoreInGTitle => 'Store in Gallery';
@@ -266,6 +393,65 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get publicProfilePrivacyTitle => 'Public Profile';
+
+  @override
+  String get publicProfilePrivacyDescription =>
+      'Choose who can see information about your profile.';
+
+  @override
+  String get publicProfileTwonlyScore => 'twonly Score';
+
+  @override
+  String get contactTwonlyScoreDescription =>
+      'The twonly Score reflects a person\'s activity on twonly. It is calculated from several factors, such as how many photos and videos they send and receive.';
+
+  @override
+  String get contactJoinedToday => 'Joined today';
+
+  @override
+  String contactJoinedDaysAgo(num days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Joined $days days ago',
+      one: 'Joined 1 day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactJoinedMonthsAgo(num months) {
+    String _temp0 = intl.Intl.pluralLogic(
+      months,
+      locale: localeName,
+      other: 'Joined $months months ago',
+      one: 'Joined 1 month ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactJoinedYearsAgo(num years) {
+    String _temp0 = intl.Intl.pluralLogic(
+      years,
+      locale: localeName,
+      other: 'Joined $years years ago',
+      one: 'Joined 1 year ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get privacyVisibilityNobody => 'Nobody';
+
+  @override
+  String get privacyVisibilityOnlyContacts => 'Only Contacts';
+
+  @override
+  String get privacyVisibilityEveryone => 'Everyone';
+
+  @override
   String get settingsNotification => 'Notification';
 
   @override
@@ -274,20 +460,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsNotifyPermissionDesc =>
       'Open system settings to allow push notifications.';
-
-  @override
-  String get settingsNotifyTroubleshooting => 'Troubleshooting';
-
-  @override
-  String get settingsNotifyTroubleshootingDesc =>
-      'Click here if you have problems receiving push notifications.';
-
-  @override
-  String get settingsNotifyTroubleshootingNoProblem => 'No problem detected';
-
-  @override
-  String get settingsNotifyTroubleshootingNoProblemDesc =>
-      'Press OK to receive a test notification. If you do not receive the test notification, please click on the new menu item that appears after you click “OK”.';
 
   @override
   String get settingsNotifyResetTitle => 'Reset notification tokens';
@@ -312,9 +484,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsHelpFAQ => 'FAQ';
-
-  @override
-  String get feedbackTooltip => 'Give Feedback to improve twonly.';
 
   @override
   String get settingsHelpContactUs => 'Contact us';
@@ -391,6 +560,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAppearanceTheme => 'Theme';
 
   @override
+  String get settingsAppearanceLanguage => 'Language';
+
+  @override
   String get settingsAccountDeleteAccount => 'Delete account';
 
   @override
@@ -454,6 +626,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verificationTypeLink => 'Verified via link.';
+
+  @override
+  String get verificationTypeManual => 'Safety number compared manually.';
 
   @override
   String get verificationTypeMigratedFromOldVersion =>
@@ -596,6 +771,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addEmoji => 'Emoji';
 
   @override
+  String get drawingColorPicker => 'Pick color from image';
+
+  @override
+  String get createStickerFromImage => 'Create sticker from image';
+
+  @override
+  String get stickerSelectionHint =>
+      'Move or resize the frame around the part you want as a sticker.';
+
+  @override
+  String get stickerCreating => 'Creating sticker…';
+
+  @override
   String get toggleFlashLight => 'Toggle the flash light';
 
   @override
@@ -648,11 +836,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String partOfPaidPlanOf(Object username) {
-    return 'You are part of the paid plan of $username!';
-  }
-
-  @override
   String get partOfPaidPlanFrom => 'Part of the paid plan of';
 
   @override
@@ -671,9 +854,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthly => 'Monthly';
 
   @override
-  String get proFeature1 => 'Unlimited media file uploads';
-
-  @override
   String get proFeature2 => '1 additional Plus user';
 
   @override
@@ -681,9 +861,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proFeature4 => 'Restore flames';
-
-  @override
-  String get familyFeature1 => 'Unlimited media file uploads';
 
   @override
   String get familyFeature2 => '4 additional Plus user';
@@ -696,9 +873,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get freeFeature1 => '10 Media file uploads per day';
-
-  @override
-  String get plusFeature1 => 'Unlimited media file uploads';
 
   @override
   String get plusFeature2 => 'Additional features (coming-soon)';
@@ -719,25 +893,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get additionalUsersList => 'Your additional users';
 
   @override
-  String get galleryDelete => 'Delete file';
-
-  @override
-  String get galleryExport => 'Export to gallery';
-
-  @override
   String get galleryExportSuccess => 'Successfully saved in the Gallery.';
-
-  @override
-  String get gallerySelectAll => 'Select all';
-
-  @override
-  String get galleryDeselectAll => 'Deselect all';
-
-  @override
-  String get galleryFavorite => 'Favorite';
-
-  @override
-  String get galleryUnfavorite => 'Unfavorite';
 
   @override
   String get galleryCancel => 'Cancel';
@@ -771,9 +927,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteImageTitle => 'Are you sure?';
-
-  @override
-  String get deleteImageBody => 'The image will be irrevocably deleted.';
 
   @override
   String deleteMemoriesBody(num count) {
@@ -825,36 +978,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsBackup => 'Backup';
 
   @override
-  String get backupPending => 'Pending';
-
-  @override
-  String get backupFailed => 'Failed';
-
-  @override
-  String get backupSuccess => 'Success';
-
-  @override
-  String get backupTwonlySafeDesc =>
-      'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.';
-
-  @override
   String get backupNoPasswordRecovery =>
       'Due to twonly\'s security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.';
-
-  @override
-  String get backupIdentityHeader => 'Identity';
-
-  @override
-  String get backupArchiveHeader => 'Contacts & Messages';
-
-  @override
-  String get backupLastBackupDate => 'Last backup';
-
-  @override
-  String get backupLastBackupSize => 'Backup size';
-
-  @override
-  String get backupLastBackupResult => 'Result';
 
   @override
   String get backupInsecurePassword => 'Insecure password';
@@ -1051,6 +1176,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupNameInput => 'Group name';
 
   @override
+  String get contactGroupNamePlaceholder => 'Enter name here';
+
+  @override
   String get groupMembers => 'Members';
 
   @override
@@ -1191,8 +1319,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationFillerIn => 'in';
 
   @override
+  String notificationLiveLocation(Object inGroup) {
+    return 'shared their live location$inGroup.';
+  }
+
+  @override
   String notificationText(Object inGroup) {
     return 'sent a message$inGroup.';
+  }
+
+  @override
+  String notificationTextMessages(Object count, Object inGroup) {
+    return 'sent $count messages$inGroup.';
   }
 
   @override
@@ -1262,9 +1400,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationCategoryMessageTitle => 'Messages';
-
-  @override
-  String get notificationCategoryMessageDesc => 'Messages from other users.';
 
   @override
   String get notificationConnectionFallback => 'You may have new messages.';
@@ -1356,6 +1491,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get avatarSaveChangesDiscard => 'Discard';
+
+  @override
+  String get contactAvatarTitle => 'Avatar';
+
+  @override
+  String get contactAvatarPhoto => 'Photo avatar';
+
+  @override
+  String get contactAvatarIllustrated => 'Illustrated avatar';
+
+  @override
+  String get customAvatarSvgTab => 'Public avatar';
+
+  @override
+  String get customAvatarCustomize => 'Customize';
+
+  @override
+  String get customAvatarPhotoTab => 'Personal avatar';
+
+  @override
+  String get customAvatarExplanation =>
+      'Replaces your public avatar for the selected audience.';
+
+  @override
+  String get customAvatarCreate => 'Choose photo';
+
+  @override
+  String get customAvatarReplace => 'Change photo';
+
+  @override
+  String get customAvatarRemove => 'Remove';
+
+  @override
+  String get customAvatarAudience => 'Who can see the photo avatar?';
+
+  @override
+  String get customAvatarAcceptedOnly => 'Contacts only';
+
+  @override
+  String get customAvatarEveryone => 'Everyone';
+
+  @override
+  String get customAvatarChooseSource => 'Choose avatar photo';
+
+  @override
+  String get customAvatarCreateFailed =>
+      'The photo avatar could not be created.';
 
   @override
   String get inProcess => 'In process';
@@ -1499,6 +1681,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!';
 
   @override
+  String get verificationMissingSession =>
+      'There is no secure session stored for this contact yet. Exchange a message first, then ask the person to share a new verification link.';
+
+  @override
+  String get verificationLinkInvalidTitle => 'Invalid verification link';
+
+  @override
+  String get verificationLinkInvalid =>
+      'The verification link is incomplete or invalid. Ask the person to share it again from their twonly profile.';
+
+  @override
+  String get verificationLinkErrorTitle => 'Verification unavailable';
+
+  @override
+  String get verificationLinkError =>
+      'twonly could not check this verification link. Please try again.';
+
+  @override
+  String get verificationOwnProfileTitle => 'This is your profile';
+
+  @override
+  String get verificationOwnProfile =>
+      'You scanned your own verification code.';
+
+  @override
   String get startWithCameraOpen => 'Start with camera open';
 
   @override
@@ -1516,6 +1723,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String memoriesXYearsAgo(Object years) {
     return '$years years ago';
+  }
+
+  @override
+  String get memoriesAMonthAgo => 'One month ago';
+
+  @override
+  String memoriesXMonthsAgo(int months) {
+    return '$months months ago';
   }
 
   @override
@@ -1617,6 +1832,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get verificationBadgeRedDesc =>
       'A contact whose identity has *not* yet been verified.';
+
+  @override
+  String get manualVerificationOpen => 'Safety numbers';
+
+  @override
+  String get manualVerificationTitle => 'Compare safety number';
+
+  @override
+  String get manualVerificationMarkVerified => 'Mark as verified';
+
+  @override
+  String manualVerificationDescription(String username) {
+    return 'Compare this safety number with $username. If both devices show the same number, your end-to-end encryption is verified.';
+  }
+
+  @override
+  String get manualVerificationMissingKeyTitle => 'No safety number available';
+
+  @override
+  String manualVerificationMissingKeyDescription(String username) {
+    return 'There is no Signal session with $username yet. Exchange a message first, then try again.';
+  }
+
+  @override
+  String get manualVerificationLoadFailed =>
+      'The safety number could not be loaded.';
+
+  @override
+  String get manualVerificationRetry => 'Try again';
+
+  @override
+  String manualVerificationSuccess(String username) {
+    return 'You compared the safety number with $username and confirmed their identity.';
+  }
 
   @override
   String get scanNow => 'Scan now';
@@ -1945,6 +2194,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recoverSuccessBody => 'Click here to open the app again';
 
   @override
+  String get recoverProgressTitle => 'Restoring your backup';
+
+  @override
+  String get recoverProgressSubtitle =>
+      'This might take a moment, please keep the app open.';
+
+  @override
+  String get recoverProgressResolvingAccount => 'Verifying account';
+
+  @override
+  String get recoverProgressRestoringIdentity => 'Restoring your identity';
+
+  @override
+  String get recoverProgressDownloadingArchive =>
+      'Downloading and decrypting messages and contacts';
+
+  @override
+  String get recoverProgressExtractingData => 'Extracting data';
+
+  @override
+  String get recoverProgressFinishing => 'Finishing up';
+
+  @override
   String get iosRecoveryWelcomeBack => 'Welcome Back';
 
   @override
@@ -1966,26 +2238,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registeringNewAccount => 'Registering new account';
 
   @override
-  String get createShortcut => 'Create shortcut';
-
-  @override
-  String get editShortcut => 'Edit shortcut';
-
-  @override
-  String get deleteShortcut => 'Delete shortcut';
-
-  @override
-  String get deleteShortcutBody =>
-      'Are you sure you want to delete this shortcut?';
-
-  @override
-  String get updateShortcut => 'Update shortcut';
-
-  @override
   String get selectEmoji => 'Select Emoji';
-
-  @override
-  String get errorEmojiUsedOrInvalid => 'Emoji already used or invalid';
 
   @override
   String get subscriptionPledgeSecureTitle => 'Secure by Design';
@@ -2360,6 +2613,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordlessRecoveryShareSent => 'Recovery share sent!';
 
   @override
+  String get passwordlessRecoveryAuthReason =>
+      'Authenticate to send your recovery share';
+
+  @override
+  String get passwordlessRecoveryAuthFailed =>
+      'Authentication failed, the recovery share was not sent.';
+
+  @override
   String get passwordlessRecoveryNetworkError =>
       'Network error, please ensure you have internet';
 
@@ -2432,9 +2693,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStorageLocal => 'Local storage';
 
   @override
-  String get settingsStorageNoCloudBackupTitle => 'No Cloud Backup';
-
-  @override
   String get settingsStorageNoCloudBackupCard =>
       'Back up your memories to the cloud to free up local space and ensure you never lose your pictures. All end-to-end encrypted.';
 
@@ -2490,6 +2748,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStorageLocalOnly => 'Local only';
 
   @override
+  String get settingsStorageByChat => 'Storage by chat';
+
+  @override
+  String get settingsStorageTemporaryMediaDescription =>
+      'Temporary media files are sent media files that have not been stored. They remain on your device until the receiver has received and opened them.';
+
+  @override
+  String get settingsStorageNoChats => 'No chats found.';
+
+  @override
+  String settingsStorageStoredMediaCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stored files',
+      one: '1 stored file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsStorageTemporaryMediaCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count temporary files',
+      one: '1 temporary file',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsStorageDisableBackupTitle => 'Disable Backup?';
 
   @override
@@ -2524,35 +2814,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsShowRestoreFlameTitle => 'Show flame restore warning';
 
   @override
-  String get contactLabelsTitle => 'Contact Labels';
+  String get contactGroupsTitle => 'Contact Groups';
 
   @override
-  String get contactLabelsSubtitleEmpty => 'No labels selected';
+  String get contactGroupsSubtitleEmpty => 'No visible contact groups selected';
 
   @override
-  String get contactLabelsMaxLimit => 'Maximum 3 labels per contact';
+  String get createContactGroup => 'Create contact group';
 
   @override
-  String get createLabel => 'Create new label';
+  String get editContactGroup => 'Edit contact group';
 
   @override
-  String get editLabel => 'Edit label';
+  String get deleteContactGroup => 'Delete contact group';
 
   @override
-  String get deleteLabel => 'Delete label';
+  String get deleteContactGroupConfirmation =>
+      'Are you sure you want to delete this contact group? It will be removed from all contacts and groups.';
 
   @override
-  String get deleteLabelConfirmation =>
-      'Are you sure you want to delete this label? It will be removed from all contacts.';
+  String get contactGroupTextColor => 'Text color';
 
   @override
-  String get labelNameHint => 'Label name';
+  String get contactGroupBackgroundColor => 'Background color';
 
   @override
-  String get labelTextColor => 'Text color';
+  String get contactGroupNoBackground => 'No background';
 
   @override
-  String get labelBackgroundColor => 'Background color';
+  String get contactGroupFeatures => 'Features';
+
+  @override
+  String get contactGroupShowAsLabel => 'Show as visible label';
+
+  @override
+  String get contactGroupShowAsLabelSubtitle =>
+      'Display this contact group next to its contacts.';
+
+  @override
+  String get contactGroupShowAsShortcut => 'Show as shortcut';
+
+  @override
+  String get contactGroupShowAsShortcutSubtitle =>
+      'Use its emoji to select all members when sharing.';
+
+  @override
+  String get contactGroupShortcutNeedsEmoji =>
+      'Select an emoji before enabling the shortcut.';
+
+  @override
+  String get contactGroupMembers => 'Members';
+
+  @override
+  String get contactGroupLabelFeature => 'Visible label';
+
+  @override
+  String get contactGroupShortcutFeature => 'Shortcut';
+
+  @override
+  String get contactGroupSettings => 'Edit contact group';
+
+  @override
+  String get save => 'Save';
 
   @override
   String get customColor => 'Custom Color';
@@ -2614,9 +2937,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupCloudContactsMessages => 'Contacts & Messages';
 
   @override
-  String get backupCloudFreeActive => 'Free Active';
-
-  @override
   String get backupCloudImagesMedia => 'Images & Media';
 
   @override
@@ -2657,4 +2977,326 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileLimitReachedUpgrade => 'Upgrade plan';
+
+  @override
+  String get contactGroupUsedByWidget => 'Home screen widget';
+
+  @override
+  String get contactGroupAddWidgetSubtitle =>
+      'Add a widget for this contact group.';
+
+  @override
+  String get contactGroupWidgetTutorialTitle => 'Add a home screen widget';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep1 =>
+      'Touch and hold an empty area on your home screen, then tap Widgets.';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep2 =>
+      'Find twonly, then drag its widget onto your home screen.';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep3 =>
+      'Select this contact group in the setup screen, then tap Save.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep1 =>
+      'Touch and hold an empty area on your Home Screen, then tap Edit and Add Widget.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep2 =>
+      'Find twonly, choose a size, then tap Add Widget.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep3 =>
+      'Touch and hold the widget, tap Edit Widget, then select this contact group.';
+
+  @override
+  String contactGroupUsedByWidgetSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count widgets on your home screen show photos from this group.',
+      one: 'A widget on your home screen shows photos from this group.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactGroupDeleteBlockedByWidget(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'This contact group is used by $count widgets on your home screen. Remove those widgets first, then you can delete the group.',
+      one:
+          'This contact group is used by a widget on your home screen. Remove that widget first, then you can delete the group.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get webxdcStoreMenu => 'App';
+
+  @override
+  String get webxdcStoreTitle => 'Add an app';
+
+  @override
+  String get webxdcStoreEmpty => 'No apps are available yet.';
+
+  @override
+  String get webxdcStoreOffline =>
+      'The app list could not be loaded. Check your connection and try again.';
+
+  @override
+  String get webxdcStoreFailed => 'The app could not be added to this chat.';
+
+  @override
+  String get webxdcStoreAlreadyAdded => 'Already added to this chat';
+
+  @override
+  String get webxdcChatApps => 'Chat apps';
+
+  @override
+  String get webxdcChatAppsEmpty =>
+      'No one-time apps have been added to this chat yet.';
+
+  @override
+  String get webxdcUnavailable => 'This app could not be loaded.';
+
+  @override
+  String get webxdcDeleteConfirm =>
+      'Everything this app saved on this device is deleted. Other members keep their own copy.';
+
+  @override
+  String get webxdcExternalLinkTitle => 'Leave twonly?';
+
+  @override
+  String get webxdcExternalLinkBody =>
+      'This link opens outside twonly, in your browser:';
+
+  @override
+  String get notificationStory => 'posted a story.';
+
+  @override
+  String get settingsNotifyStories => 'Story notifications';
+
+  @override
+  String get settingsNotifyStoriesSubtitle =>
+      'Be notified of the first story of the day from contacts you\'ve written with in the last two weeks.';
+
+  @override
+  String get contactGroupShareStories => 'Share stories';
+
+  @override
+  String get contactGroupShareStoriesSubtitle =>
+      'Offer this group as an audience when you post a story.';
+
+  @override
+  String get contactGroupStoriesFeature => 'Stories';
+
+  @override
+  String get story => 'Story';
+
+  @override
+  String get storyExpired => 'Story expired';
+
+  @override
+  String get storyMine => 'My story';
+
+  @override
+  String get storyDeleteTitle => 'Delete story?';
+
+  @override
+  String get storyDeleteBody => 'This removes it from your story.';
+
+  @override
+  String get storyDelete => 'Delete';
+
+  @override
+  String get storyDeleteFailed => 'Could not delete it. Try again in a moment.';
+
+  @override
+  String get shareImageStory => 'Story';
+
+  @override
+  String shareImageStoryAudience(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Reaches $count contacts',
+      one: 'Reaches 1 contact',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareImageStoryUnavailable =>
+      'twonly-protected media can\'t be posted as a story.';
+
+  @override
+  String get shareImageStoryAll => 'All contacts';
+
+  @override
+  String get shareImageStoryNewGroup => 'New story group';
+
+  @override
+  String shareImageStoryFailed(int max) {
+    return 'Could not post the story. One send can reach at most $max people.';
+  }
+
+  @override
+  String get notificationStoryReply => 'has replied to your story.';
+
+  @override
+  String notificationStoryReaction(Object reaction) {
+    return 'has reacted with $reaction to your story.';
+  }
+
+  @override
+  String get notificationStoredStory => 'has saved your story.';
+
+  @override
+  String storyViews(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count views',
+      one: '1 view',
+      zero: 'No views yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sticker => 'Sticker';
+
+  @override
+  String get stickers => 'Stickers';
+
+  @override
+  String get createSticker => 'Create sticker';
+
+  @override
+  String get stickerPickFromGallery => 'Gallery';
+
+  @override
+  String get noStickersYet => 'Create your first sticker from a photo.';
+
+  @override
+  String get stickerAdded => 'Sticker saved';
+
+  @override
+  String get stickerAlreadySaved => 'This sticker is already saved';
+
+  @override
+  String get stickerCreateFailed => 'The sticker could not be created.';
+
+  @override
+  String get stickerSaveFailed => 'The sticker could not be saved.';
+
+  @override
+  String notificationSticker(Object inGroup) {
+    return 'sent a sticker$inGroup.';
+  }
+
+  @override
+  String get storeSticker => 'Save sticker';
+
+  @override
+  String get removeSticker => 'Remove from collection';
+
+  @override
+  String get deleteSticker => 'Delete sticker';
+
+  @override
+  String get rotateSticker => 'Rotate sticker';
+
+  @override
+  String get stickerRotateFailed => 'The sticker could not be rotated.';
+
+  @override
+  String get releaseNotesTitle => 'What\'s new';
+
+  @override
+  String get releaseNotesIntroduction =>
+      'The biggest twonly update yet is here. Here\'s a quick look at what\'s new.';
+
+  @override
+  String get releaseNotesAlsoImproved => 'Also improved';
+
+  @override
+  String get releaseNotesStickers => 'Stickers';
+
+  @override
+  String get releaseNotesStickersDescription =>
+      'Turn your photos into stickers and share them in chats.';
+
+  @override
+  String get releaseNotesWidgets => 'Widgets';
+
+  @override
+  String get releaseNotesWidgetsDescription =>
+      'See fresh photos from your favorite people right on your home screen.';
+
+  @override
+  String get releaseNotesStories => 'Stories';
+
+  @override
+  String get releaseNotesStoriesDescription =>
+      'Share moments with your contacts for 24 hours.';
+
+  @override
+  String get releaseNotesMiniGames => 'Mini games in chats & groups';
+
+  @override
+  String get releaseNotesMiniGamesDescription =>
+      'Play small games together, right inside your conversations.';
+
+  @override
+  String get releaseNotesMemoriesMap => 'Memories on the map';
+
+  @override
+  String get releaseNotesMemoriesMapDescription =>
+      'Save locations with your photos and videos in Memories and explore them on a map. Enable this in Settings > Memories & Storage.';
+
+  @override
+  String get releaseNotesReliableMessages =>
+      'Better message and push reliability';
+
+  @override
+  String get releaseNotesImprovedUi => 'Improved interface';
+
+  @override
+  String get releaseNotesCustomAvatars => 'Custom avatars';
+
+  @override
+  String get releaseNotesArabic => 'Arabic language (experimental)';
+
+  @override
+  String get memoriesMapTitle => 'Memories map';
+
+  @override
+  String get memoriesMapNoLocations =>
+      'No saved memories have a recorded location yet.';
+
+  @override
+  String get memoriesMapNoResults =>
+      'No memories in this area. Move or zoom the map to explore another place.';
+
+  @override
+  String get memoriesMapLoadError =>
+      'Could not load the map. Check your connection and try again.';
+
+  @override
+  String memoriesMapVisibleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count memories in this area',
+      one: '1 memory in this area',
+    );
+    return '$_temp0';
+  }
 }

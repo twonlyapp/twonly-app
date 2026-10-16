@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO message_actions(message_id, contact_id, type, action_at)\n               VALUES (?, ?, 'openedAt', ?)\n               ON CONFLICT(message_id, contact_id, type)\n               DO UPDATE SET action_at = excluded.action_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "79a57c847e685ec171bba8db07dd9c76794b12d8cb04bf5f351636f8cd1409f8"
+}

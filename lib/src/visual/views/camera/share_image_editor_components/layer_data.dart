@@ -1,7 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:hand_signature/signature.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/image_item.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview/parser/base.dart';
+
+typedef EditorColorSampler = Color? Function(Offset position, Size editorSize);
+typedef EditorColorSamplerLoader = Future<EditorColorSampler?> Function();
 
 /// Layer class with some common properties
 class Layer {
@@ -69,6 +74,56 @@ class EmojiLayerData extends Layer {
   double size;
 }
 
+abstract class TransformableStickerLayerData extends Layer {
+  TransformableStickerLayerData({
+    required super.key,
+    this.size = 160,
+    super.offset,
+    super.opacity,
+    super.rotation,
+    super.scale,
+    super.isEditing,
+  });
+
+  double size;
+}
+
+class LocationStickerLayerData extends TransformableStickerLayerData {
+  LocationStickerLayerData({
+    required super.key,
+    required this.city,
+    super.size = 220,
+    super.offset,
+    super.opacity,
+    super.rotation,
+    super.scale,
+    super.isEditing,
+  });
+
+  final String city;
+}
+
+class StickerLayerData extends TransformableStickerLayerData {
+  StickerLayerData({
+    required super.key,
+    required this.webp,
+    required this.contentHash,
+    required this.width,
+    required this.height,
+    super.size,
+    super.offset,
+    super.opacity,
+    super.rotation,
+    super.scale,
+    super.isEditing,
+  });
+
+  final Uint8List webp;
+  final String contentHash;
+  final int width;
+  final int height;
+}
+
 class TextLayerData extends Layer {
   TextLayerData({
     required super.key,
@@ -87,6 +142,7 @@ class TextLayerData extends Layer {
 class DrawLayerData extends Layer {
   DrawLayerData({
     required super.key,
+    this.colorSamplerLoader,
     super.offset,
     super.opacity,
     super.rotation,
@@ -94,6 +150,7 @@ class DrawLayerData extends Layer {
     super.hasCustomActionButtons = true,
     super.isEditing = true,
   });
+  final EditorColorSamplerLoader? colorSamplerLoader;
   final control = HandSignatureControl(
     // ignore: prefer_const_constructors
     setup: () => SignaturePathSetup(

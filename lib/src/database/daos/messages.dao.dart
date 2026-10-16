@@ -31,6 +31,19 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   // ignore: matching_super_parameters
   MessagesDao(super.db);
 
+  /// A story row stays out of the chat until somebody saves it; from then on
+  /// it is an ordinary stored media message there.
+  Expression<bool> get _visibleInChat =>
+      messages.isStory.equals(false) | messages.mediaStored.equals(true);
+
+  /// Media rows whose file reference has already been removed cannot be
+  /// previewed or opened. Keep them out of chat summaries unless they are a
+  /// deletion tombstone, which is still useful to show in the conversation.
+  Expression<bool> get _hasPreviewableContent =>
+      messages.type.equals(MessageType.media.name).not() |
+      mediaFiles.mediaId.isNotNull() |
+      messages.isDeletedFromSender.equals(true);
+
   Stream<List<Message>> watchMessageNotOpened(String groupId) {
     final query =
         select(messages).join([
@@ -41,7 +54,34 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ])
           ..where(
             messages.openedAt.isNull() &
+                messages.isWidgetMedia.equals(false) &
+                _visibleInChat &
+                _hasPreviewableContent &
                 messages.groupId.equals(groupId) &
+                messages.isDeletedFromSender.equals(false) &
+                (messages.mediaId.isNull() |
+                    mediaFiles.downloadState.isNull() |
+                    mediaFiles.downloadState
+                        .equals(DownloadState.reuploadRequested.name)
+                        .not()),
+          )
+          ..orderBy([OrderingTerm.desc(messages.createdAt)]);
+    return query.map((row) => row.readTable(messages)).watch();
+  }
+
+  Stream<List<Message>> watchAllMessagesNotOpened() {
+    final query =
+        select(messages).join([
+            leftOuterJoin(
+              mediaFiles,
+              mediaFiles.mediaId.equalsExp(messages.mediaId),
+            ),
+          ])
+          ..where(
+            messages.openedAt.isNull() &
+                messages.isWidgetMedia.equals(false) &
+                _visibleInChat &
+                _hasPreviewableContent &
                 messages.isDeletedFromSender.equals(false) &
                 (messages.mediaId.isNull() |
                     mediaFiles.downloadState.isNull() |
@@ -68,7 +108,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                         .not()) &
                 mediaFiles.type.equals(MediaType.audio.name).not() &
                 messages.openedAt.isNull() &
+                messages.isWidgetMedia.equals(false) &
+                _visibleInChat &
                 messages.groupId.equals(groupId) &
+                messages.isDeletedFromSender.equals(false) &
                 messages.mediaId.isNotNull() &
                 messages.senderId.isNotNull() &
                 messages.type.equals(MessageType.media.name),
@@ -86,6 +129,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ),
         ])..where(
           messages.openedAt.isNull() &
+              messages.isWidgetMedia.equals(false) &
+              _visibleInChat &
               messages.mediaId.isNotNull() &
               messages.type.equals(MessageType.media.name) &
               mediaFiles.downloadState.equals(DownloadState.ready.name) &
@@ -111,23 +156,70 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ])
           ..where(
             messages.groupId.equals(groupId) &
+                _visibleInChat &
+                _hasPreviewableContent &
                 // messages in groups will only be removed in case all members have received it...
                 // so ensuring that this message is not shown in the messages anymore
                 (messages.openedAt.isBiggerThanValue(deletionTime) |
                     messages.openedAt.isNull() |
-                    messages.mediaStored.equals(true)) &
+                    messages.mediaStored.equals(true) |
+                    messages.type.equals(MessageType.webxdcApp.name)) &
                 (mediaFiles.downloadState
                         .equals(DownloadState.reuploadRequested.name)
                         .not() |
                     mediaFiles.downloadState.isNull()),
           )
-          ..orderBy([OrderingTerm.desc(messages.createdAt)])
+          ..orderBy([
+            OrderingTerm.desc(messages.createdAt),
+            OrderingTerm.desc(messages.messageId),
+          ])
           ..limit(1);
 
     return query.map((row) => row.readTable(messages)).watchSingleOrNull();
   }
 
-  Future<Stream<List<Message>>> watchByGroupId(String groupId) async {
+  Stream<List<Message>> watchLatestMessagesByGroup() {
+    return customSelect(
+      '''
+      SELECT message_rows.*
+      FROM (
+        SELECT messages.*,
+               ROW_NUMBER() OVER (
+                 PARTITION BY messages.group_id
+                 ORDER BY messages.created_at DESC
+               ) AS message_rank
+        FROM messages
+        INNER JOIN groups ON groups.group_id = messages.group_id
+        LEFT JOIN media_files ON media_files.media_id = messages.media_id
+        WHERE (messages.is_story = 0 OR messages.media_stored = 1)
+        AND (
+          messages.type != 'media' OR
+          media_files.media_id IS NOT NULL OR
+          messages.is_deleted_from_sender = 1
+        )
+        AND (
+          messages.opened_at IS NULL OR
+          messages.media_stored = 1 OR
+          messages.opened_at > CAST(strftime('%s', 'now') AS INTEGER) -
+            (groups.delete_messages_after_milliseconds / 1000)
+        )
+        AND (
+          media_files.download_state IS NULL OR
+          media_files.download_state != 'reuploadRequested'
+        )
+      ) AS message_rows
+      WHERE message_rank = 1
+      ''',
+      readsFrom: {messages, groups, mediaFiles},
+    ).watch().map(
+      (rows) => rows.map((row) => messages.map(row.data)).toList(),
+    );
+  }
+
+  Future<Stream<List<Message>>> watchByGroupId(
+    String groupId, {
+    int limit = 100,
+  }) async {
     final group = await twonlyDB.groupsDao.getGroup(groupId);
     final deletionTime = clock.now().subtract(
       Duration(
@@ -143,9 +235,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ])
           ..where(
             messages.groupId.equals(groupId) &
+                _visibleInChat &
                 (messages.openedAt.isBiggerThanValue(deletionTime) |
                     messages.openedAt.isNull() |
-                    messages.mediaStored.equals(true)) &
+                    messages.mediaStored.equals(true) |
+                    messages.type.equals(MessageType.webxdcApp.name)) &
                 (messages.isDeletedFromSender.equals(true) |
                     (messages.type.equals(MessageType.text.name).not() &
                         messages.type.equals(MessageType.media.name).not()) |
@@ -158,9 +252,66 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                                 .equals(DownloadState.reuploadRequested.name)
                                 .not()))),
           )
-          ..orderBy([OrderingTerm.asc(messages.createdAt)]);
+          ..orderBy([
+            OrderingTerm.desc(messages.createdAt),
+            OrderingTerm.desc(messages.messageId),
+          ])
+          ..limit(limit);
 
-    return query.map((row) => row.readTable(messages)).watch();
+    return query
+        .map((row) => row.readTable(messages))
+        .watch()
+        .map((items) => items.reversed.toList());
+  }
+
+  Future<List<Message>> getMessagesBefore(
+    String groupId,
+    DateTime before, {
+    required String beforeMessageId,
+    int limit = 100,
+  }) async {
+    final group = await twonlyDB.groupsDao.getGroup(groupId);
+    final deletionTime = clock.now().subtract(
+      Duration(milliseconds: group!.deleteMessagesAfterMilliseconds),
+    );
+    final query =
+        select(messages).join([
+            leftOuterJoin(
+              mediaFiles,
+              mediaFiles.mediaId.equalsExp(messages.mediaId),
+            ),
+          ])
+          ..where(
+            messages.groupId.equals(groupId) &
+                _visibleInChat &
+                (messages.createdAt.isSmallerThanValue(before) |
+                    (messages.createdAt.equals(before) &
+                        messages.messageId.isSmallerThanValue(
+                          beforeMessageId,
+                        ))) &
+                (messages.openedAt.isBiggerThanValue(deletionTime) |
+                    messages.openedAt.isNull() |
+                    messages.mediaStored.equals(true) |
+                    messages.type.equals(MessageType.webxdcApp.name)) &
+                (messages.isDeletedFromSender.equals(true) |
+                    (messages.type.equals(MessageType.text.name).not() &
+                        messages.type.equals(MessageType.media.name).not()) |
+                    (messages.type.equals(MessageType.text.name) &
+                        messages.content.isNotNull()) |
+                    (messages.type.equals(MessageType.media.name) &
+                        messages.mediaId.isNotNull() &
+                        (mediaFiles.downloadState.isNull() |
+                            mediaFiles.downloadState
+                                .equals(DownloadState.reuploadRequested.name)
+                                .not()))),
+          )
+          ..orderBy([
+            OrderingTerm.desc(messages.createdAt),
+            OrderingTerm.desc(messages.messageId),
+          ])
+          ..limit(limit);
+    final items = await query.map((row) => row.readTable(messages)).get();
+    return items.reversed.toList();
   }
 
   Stream<List<(GroupMember, Contact)>> watchMembersByGroupId(String groupId) {
@@ -173,18 +324,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     return query
         .map((row) => (row.readTable(groupMembers), row.readTable(contacts)))
         .watch();
-  }
-
-  Stream<List<MessageAction>> watchMessageActionChanges(String messageId) {
-    return (select(
-      messageActions,
-    )..where((t) => t.messageId.equals(messageId))).watch();
-  }
-
-  Stream<Message?> watchMessageById(String messageId) {
-    return (select(
-      messages,
-    )..where((t) => t.messageId.equals(messageId))).watchSingleOrNull();
   }
 
   Future<void> purgeMessageTable() async {
@@ -207,6 +346,18 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           await (delete(messages)..where(
                 (m) =>
                     m.groupId.isIn(groupIds) &
+                    // An app card owns a webxdc instance, and the instance owns
+                    // its update log by foreign key. Sweeping the card away on
+                    // the chat's timer would take an app's whole state with it
+                    // without ever clearing the storage its origin holds, so
+                    // apps leave only when somebody deletes them.
+                    m.type.equals(MessageType.webxdcApp.name).not() &
+                    // Unsaved story rows expire with the story, not the chat.
+                    (m.isStory.equals(false) | m.mediaStored.equals(true)) &
+                    // Received widget rows still identify the home screen's
+                    // current image after the chat's retention timer hides
+                    // them. The widget service removes them when replaced.
+                    (m.isWidgetMedia.equals(false) | m.senderId.isNull()) &
                     ((m.mediaStored.equals(true) &
                             m.isDeletedFromSender.equals(true)) |
                         m.mediaStored.equals(false)) &
@@ -252,7 +403,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
         final mediaService = await MediaFileService.fromMediaId(msg.mediaId!);
         if (mediaService != null) {
-          mediaService.fullMediaRemoval();
+          await mediaService.fullMediaRemoval();
         }
       } else {
         Log.info(
@@ -274,6 +425,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             isDeletedFromSender: Value(true),
             content: Value(null),
             mediaId: Value(null),
+            additionalMessageData: Value(null),
           ),
         );
   }
@@ -495,9 +647,12 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
       await twonlyDB.groupsDao.updateGroup(
         message.groupId.value,
-        const GroupsCompanion(
-          archived: Value(false),
-          deletedContent: Value(false),
+        GroupsCompanion(
+          // Sending into an archived chat preserves the user's choice.
+          archived: message.senderId.present && message.senderId.value != null
+              ? const Value(false)
+              : const Value.absent(),
+          deletedContent: const Value(false),
         ),
       );
 
@@ -525,30 +680,49 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     }
   }
 
-  Future<MessageAction?> getLastMessageAction(String messageId) async {
-    return (((select(messageActions)..where(
-              (t) => t.messageId.equals(messageId),
-            ))
-            ..orderBy([(t) => OrderingTerm.desc(t.actionAt)]))
-          ..limit(1))
-        .getSingleOrNull();
-  }
-
-  Stream<MessageAction?> watchLastMessageAction(String messageId) {
-    return (((select(messageActions)..where(
-              (t) => t.messageId.equals(messageId),
-            ))
-            ..orderBy([(t) => OrderingTerm.desc(t.actionAt)]))
-          ..limit(1))
-        .watchSingleOrNull();
-  }
-
   Future<void> deleteMessagesById(String messageId) {
     return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
   }
 
-  Future<void> deleteMessagesByGroupId(String groupId) {
-    return (delete(messages)..where((t) => t.groupId.equals(groupId))).go();
+  Future<void> deleteMessagesByGroupId(String groupId) async {
+    await transaction(() async {
+      // A one-time app is the chat's durable shared object. Keep its card (and
+      // therefore its instance and update log) while removing the visible chat
+      // history and every ordinary app. Unsaved story rows are not chat
+      // history; they leave when their story expires.
+      await customStatement(
+        '''
+           DELETE FROM messages
+           WHERE group_id = ?
+             AND (is_story = 0 OR media_stored = 1)
+             AND NOT EXISTS (
+               SELECT 1
+               FROM webxdc_instances AS instance
+               LEFT JOIN webxdc_apps AS app
+                 ON app.app_id = instance.app_id
+                AND app.version = instance.version
+               WHERE instance.instance_id = messages.message_id
+                 AND (app.one_time = 1 OR app.app_id IS NULL)
+             )''',
+        [groupId],
+      );
+      await customStatement(
+        '''
+           UPDATE groups
+           SET deleted_content = 1, archived = 0, pinned = 0, draft_message = NULL
+           WHERE group_id = ?''',
+        [groupId],
+      );
+    });
+  }
+
+  /// The rows behind [messageIds], whatever the chat shows of them. A reply
+  /// can quote a story row that the chat itself never lists.
+  Stream<List<Message>> watchMessagesByIds(Set<String> messageIds) {
+    if (messageIds.isEmpty) return Stream.value(const []);
+    return (select(
+      messages,
+    )..where((t) => t.messageId.isIn(messageIds))).watch();
   }
 
   SingleOrNullSelectable<Message> getMessageById(String messageId) {
@@ -572,6 +746,18 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     ])..where(messageActions.messageId.equals(messageId)));
     return query
         .map((row) => (row.readTable(messageActions), row.readTable(contacts)))
+        .watch();
+  }
+
+  Stream<List<MessageAction>> watchAcknowledgementsForMessages(
+    Set<String> messageIds,
+  ) {
+    if (messageIds.isEmpty) return Stream.value(const []);
+    return (select(messageActions)..where(
+          (action) =>
+              action.messageId.isIn(messageIds) &
+              action.type.equals(MessageActionType.ackByUserAt.name),
+        ))
         .watch();
   }
 

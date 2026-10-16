@@ -11,7 +11,9 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
-import 'package:twonly/src/visual/themes/colors.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/file_limit_reached.dialog.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/message_color.dart';
 
 enum MessageSendState {
   received,
@@ -94,6 +96,12 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
     var hasLoader = false;
     GestureTapCallback? onTap;
 
+    /// Only the chat view knows which of the sent messages the receivers have
+    /// acknowledged; elsewhere the set stays empty and 'sent' is the last state.
+    final ackedMessageIds =
+        ChatMessageActionScope.maybeOf(context)?.ackedMessageIds ??
+        const <String>{};
+
     for (final message in widget.messages) {
       if (icons.length == 2) break;
       if (kindsAlreadyShown.contains(message.type)) continue;
@@ -124,6 +132,13 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             }
           }
           text = context.lang.messageSendState_Received;
+          if (message.isWidgetMedia &&
+              mediaFile != null &&
+              mediaFile.downloadState == DownloadState.downloading) {
+            text = context.lang.messageSendState_Loading;
+            icon = getLoaderIcon(color);
+            hasLoader = true;
+          }
           if (widget.canBeReopened) {
             textWidget = Text(
               context.lang.doubleClickToReopen,
@@ -152,7 +167,9 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             size: 12,
             color: color,
           );
-          text = context.lang.messageSendState_Send;
+          text = ackedMessageIds.contains(message.messageId)
+              ? context.lang.messageSendState_Delivered
+              : context.lang.messageSendState_Send;
         case MessageSendState.sending:
           icon = getLoaderIcon(color);
           text = context.lang.messageSendState_Sending;
@@ -192,6 +209,12 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
           hasLoader = true;
       }
 
+      // Only the icon marks a widget media apart; the state text stays the
+      // same as for any other media so the two read alike.
+      if (message.isWidgetMedia && !hasLoader) {
+        icon = Icon(Icons.widgets_rounded, size: 12, color: color);
+      }
+
       if (message.mediaStored && message.openedAt != null) {
         icon = FaIcon(FontAwesomeIcons.floppyDisk, size: 12, color: color);
         text = context.lang.messageStoredInGallery;
@@ -225,6 +248,10 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             context.lang.fileLimitReached,
             style: const TextStyle(fontSize: 9),
           );
+          // The warning has no room for the sizes that explain it, so they are
+          // one tap away instead.
+          final mediaId = mediaFile.mediaId;
+          onTap = () => showFileLimitReachedDialog(context, mediaId);
         }
       }
 
@@ -283,7 +310,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
           widget.group!.draftMessage != null &&
           widget.group!.draftMessage != '') {
         icons = [
-          const FaIcon(FontAwesomeIcons.pen, size: 12, color: Colors.grey),
+          FaIcon(
+            FontAwesomeIcons.pen,
+            size: 12,
+            color: context.color.onSurfaceVariant,
+          ),
         ];
         textWidget = Text(
           '${context.lang.draftMessage}: ${substringBy(widget.group!.draftMessage!, 10)}',

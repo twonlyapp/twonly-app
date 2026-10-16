@@ -32,7 +32,7 @@ void main() {
     ];
 
     for (var i = 0; i < users.length; i++) {
-      await database.contactsDao.insertContact(
+      await database.contactsDao.insertOnConflictUpdate(
         ContactsCompanion(userId: Value(i), username: Value(users[i])),
       );
     }

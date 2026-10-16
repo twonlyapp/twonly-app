@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO signal_session_resets(\n                    name, device_id, last_reset_at, window_started_at, resets_in_window\n                ) VALUES('restored-peer', 1, 1, 1, 1)\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "db5192b62d8a4f9f23ad7befff1b9e8e463134a2cf90363a4a98d6b5b37fc723"
+}

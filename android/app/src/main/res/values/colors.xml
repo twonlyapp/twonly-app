@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#FF57CC99</color>
+
+    <!-- Material 3 primary roles. colorPrimary is twonly's primary color as
+         defined in lib/src/visual/themes/light.dart; the container tones are
+         derived from it. -->
+    <color name="brand_primary">#32BE80</color>
+    <color name="brand_on_primary">#092016</color>
+    <color name="brand_primary_container">#CFF2E2</color>
+    <color name="brand_on_primary_container">#092016</color>
 </resources>

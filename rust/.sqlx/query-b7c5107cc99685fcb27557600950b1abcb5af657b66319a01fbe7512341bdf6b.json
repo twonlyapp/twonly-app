@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT max_flame_counter, max_flame_counter_from FROM groups WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "max_flame_counter",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "max_flame_counter"
+          }
+        }
+      },
+      {
+        "name": "max_flame_counter_from",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "max_flame_counter_from"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "b7c5107cc99685fcb27557600950b1abcb5af657b66319a01fbe7512341bdf6b"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE notification_outbox SET cleared_at = ? WHERE conversation_id = ? AND cleared_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "5b1b9e6003bab16e21e1c38f5115c854c13749275db28bb96970e2056cf851c1"
+}

@@ -13,7 +13,10 @@ class ContextMenu extends StatefulWidget {
     super.key,
   });
 
-  final List<ContextMenuItem> items;
+  /// Built on long press rather than eagerly: a context menu exists for every
+  /// row in a list, and assembling the items can be costly (localized titles,
+  /// closures, and in the message menu a filesystem probe).
+  final List<ContextMenuItem> Function() items;
   final Widget child;
   final double? minWidth;
 
@@ -29,15 +32,12 @@ class _ContextMenuState extends State<ContextMenu>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(
-          vsync: this,
-          lowerBound: double.negativeInfinity,
-          upperBound: double.infinity,
-          value: 0,
-        )..addListener(() {
-          setState(() {});
-        });
+    _controller = AnimationController(
+      vsync: this,
+      lowerBound: double.negativeInfinity,
+      upperBound: double.infinity,
+      value: 0,
+    );
   }
 
   @override
@@ -104,7 +104,8 @@ class _ContextMenuState extends State<ContextMenu>
     unawaited(HapticFeedback.heavyImpact());
     _bounce();
 
-    await showMenu(
+    final navigator = Navigator.of(context);
+    final selectedItem = await showMenu<ContextMenuItem>(
       context: context,
       menuPadding: EdgeInsetsGeometry.zero,
       elevation: 1,
@@ -116,15 +117,12 @@ class _ContextMenuState extends State<ContextMenu>
         duration: Duration.zero,
         curve: Curves.fastOutSlowIn,
       ),
-      items: <PopupMenuEntry<int>>[
-        ...widget.items.map(
+      items: <PopupMenuEntry<ContextMenuItem>>[
+        ...widget.items().map(
           (item) {
             Widget child = ListTile(
               title: Text(item.title),
-              onTap: () async {
-                if (mounted) Navigator.pop(context);
-                await item.onTap();
-              },
+              onTap: () => navigator.pop(item),
               leading: _getIcon(item.icon),
             );
             if (widget.minWidth != null) {
@@ -133,7 +131,8 @@ class _ContextMenuState extends State<ContextMenu>
                 child: child,
               );
             }
-            return PopupMenuItem(
+            return PopupMenuItem<ContextMenuItem>(
+              value: item,
               padding: const EdgeInsets.only(right: 4),
               child: child,
             );
@@ -145,19 +144,29 @@ class _ContextMenuState extends State<ContextMenu>
         Offset.zero & overlay.semanticBounds.size,
       ),
     );
+
+    // The popup route can outlive its row. Only run the selection while the
+    // row's context and the contexts captured by its actions are still valid.
+    if (!mounted || selectedItem == null) return;
+    await selectedItem.onTap();
   }
 
   @override
   Widget build(BuildContext context) {
-    final scale = 1.0 - (_controller.value * 0.02);
     return GestureDetector(
       onLongPress: _showCustomMenu,
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
-      child: Transform.scale(
-        scale: scale,
+      // AnimatedBuilder keeps the press animation from rebuilding the wrapped
+      // row; only the Transform is re-evaluated per tick.
+      child: AnimatedBuilder(
+        animation: _controller,
         child: widget.child,
+        builder: (context, child) => Transform.scale(
+          scale: 1.0 - (_controller.value * 0.02),
+          child: child,
+        ),
       ),
     );
   }

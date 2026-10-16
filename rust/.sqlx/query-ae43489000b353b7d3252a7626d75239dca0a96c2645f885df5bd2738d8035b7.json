@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT download_state FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "download_state",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "download_state"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "ae43489000b353b7d3252a7626d75239dca0a96c2645f885df5bd2738d8035b7"
+}

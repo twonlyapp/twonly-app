@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET upload_state = 'uploaded' WHERE media_id = ? AND upload_state IS NOT 'uploaded'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "eb4724c5a03a40f301e5dd8916020032cf706cf6acf70ae69c9a17b7fbaae673"
+}

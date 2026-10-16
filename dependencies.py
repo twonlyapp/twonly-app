@@ -41,8 +41,39 @@ def get_default_branch(repo_path='.'):
         return result.stdout.strip().split('/')[-1]
     return 'main'
 
-def integrate_package(folder_name, data, cache_dir, out_dir):
-    repo_url = data['git']
+def get_package_version(package_path):
+    pubspec_path = os.path.join(package_path, "pubspec.yaml")
+    if os.path.exists(pubspec_path):
+        with open(pubspec_path, "r") as f:
+            ps = yaml.safe_load(f)
+            if ps and isinstance(ps, dict):
+                return ps.get("version", "any")
+    return "any"
+
+def preserve_custom_package(pkg_name, out_dir):
+    out_path = os.path.join(out_dir, pkg_name)
+    if not os.path.isfile(os.path.join(out_path, "pubspec.yaml")):
+        raise FileNotFoundError(
+            f"Custom package not found: {out_path}. "
+            "Restore it from the dependencies repository; automatic updates are disabled."
+        )
+    print_yellow(f"Preserving {pkg_name}: custom_changes is enabled.")
+    return (pkg_name, get_package_version(out_path))
+
+def integrate_package(folder_name, data, cache_dir, out_dir, cache_only=False):
+    packages_to_extract = data.get(
+        "subpackages", [{"name": folder_name, "path": data.get("path", "")}]
+    )
+    # Keep custom packages intact, including when copying from the cache.
+    # Read their local versions so managed pubspec entries are retained.
+    if data.get("custom_changes") or all(
+        pkg.get("custom_changes") for pkg in packages_to_extract
+    ):
+        return [
+            preserve_custom_package(pkg["name"], out_dir)
+            for pkg in packages_to_extract
+        ]
+
     keep_list = ["lib", "LICENSE", "pubspec.yaml", "android", "ios", "darwin"]
     if "keep" in data:
         keep_list += [item.rstrip('/') for item in data['keep']]
@@ -50,46 +81,57 @@ def integrate_package(folder_name, data, cache_dir, out_dir):
     print(f"Processing {folder_name}...")
 
     cache_path = os.path.join(cache_dir, folder_name)
-    if not os.path.exists(cache_path):
-        subprocess.run(["git", "clone", repo_url, cache_path], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if cache_only:
+        if not os.path.isdir(cache_path):
+            raise FileNotFoundError(
+                f"Cached repository not found: {cache_path}. "
+                "Run without --cache-only first to populate the cache."
+            )
+        print_blue(f"Copying {folder_name} from the existing cache only.")
     else:
-        result = subprocess.run(["git", "fetch", "--all"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cache_path)
-        if result.returncode != 0:
-            print_yellow(f"Warning: Could not fetch updates for {folder_name}. You might be offline.")
-    
-    if "commit" in data:
-        commit_hash = data["commit"]
-        subprocess.run(["git", "checkout", commit_hash], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cache_path)
-    elif "tag" in data:
-        tag_name = data["tag"]
-        subprocess.run(["git", "checkout", tag_name], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cache_path)
-    else:
-        print_yellow(f"Warning: No commit or tag specified for {folder_name}. Using default branch.")
-        default_branch = get_default_branch(cache_path)
-        subprocess.run(["git", "checkout", default_branch], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cache_path)
-        subprocess.run(["git", "pull"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cache_path)
-        last_commit_hash = get_git_head(cache_path)
-        data["commit"] = last_commit_hash
-        print_blue(f"Recorded commit {last_commit_hash} for {folder_name}")
+        repo_url = data['git']
+        if not os.path.exists(cache_path):
+            subprocess.run(["git", "clone", repo_url, cache_path], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            result = subprocess.run(["git", "fetch", "--all"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cache_path)
+            if result.returncode != 0:
+                print_yellow(f"Warning: Could not fetch updates for {folder_name}. You might be offline.")
+
+        if "commit" in data:
+            commit_hash = data["commit"]
+            subprocess.run(["git", "checkout", commit_hash], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cache_path)
+        elif "tag" in data:
+            tag_name = data["tag"]
+            subprocess.run(["git", "checkout", tag_name], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cache_path)
+        else:
+            print_yellow(f"Warning: No commit or tag specified for {folder_name}. Using default branch.")
+            default_branch = get_default_branch(cache_path)
+            subprocess.run(["git", "checkout", default_branch], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cache_path)
+            subprocess.run(["git", "pull"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cache_path)
+            last_commit_hash = get_git_head(cache_path)
+            data["commit"] = last_commit_hash
+            print_blue(f"Recorded commit {last_commit_hash} for {folder_name}")
 
     results = [] # List of (pkg_name, version)
     
-    if "subpackages" in data:
-        packages_to_extract = data["subpackages"]
-    else:
-        packages_to_extract = [{"name": folder_name, "path": data.get("path", "")}]
-
     for pkg in packages_to_extract:
         pkg_name = pkg["name"]
+        if pkg.get("custom_changes"):
+            results.append(preserve_custom_package(pkg_name, out_dir))
+            continue
         subpath = pkg.get("path", "")
-        
+
+        package_src_path = os.path.join(cache_path, subpath) if subpath else cache_path
+        if not os.path.isdir(package_src_path):
+            raise FileNotFoundError(
+                f"Cached package source not found: {package_src_path}"
+            )
+
         out_path = os.path.join(out_dir, pkg_name)
         if os.path.exists(out_path):
             shutil.rmtree(out_path)
         os.makedirs(out_path)
-        
-        package_src_path = os.path.join(cache_path, subpath) if subpath else cache_path
-    
+
         for item in keep_list:
             src_item = os.path.join(package_src_path, item)
             dst_item = os.path.join(out_path, item)
@@ -103,12 +145,7 @@ def integrate_package(folder_name, data, cache_dir, out_dir):
                     
         version = "any"
         try:
-            pubspec_path = os.path.join(package_src_path, "pubspec.yaml")
-            if os.path.exists(pubspec_path):
-                with open(pubspec_path, "r") as f:
-                    ps = yaml.safe_load(f)
-                    if ps and isinstance(ps, dict):
-                        version = ps.get("version", "any")
+            version = get_package_version(package_src_path)
         except Exception as e:
             print_yellow(f"Warning: Could not read version from {pkg_name}/pubspec.yaml")
             
@@ -119,6 +156,11 @@ def integrate_package(folder_name, data, cache_dir, out_dir):
 def main():
     parser = argparse.ArgumentParser(description="Update specific or all repositories.")
     parser.add_argument('repo_name', nargs='?', default=None, help="Name of the repository to update (optional)")
+    parser.add_argument(
+        '--cache-only',
+        action='store_true',
+        help='Copy from the existing cache without any Git or network operations',
+    )
     args = parser.parse_args()
 
     with open("dependencies.yaml", "r") as f:
@@ -141,7 +183,13 @@ def main():
     def process_deps_recursive(deps_dict, to_update=None):
         for name, data in deps_dict.items():
             if to_update is None or name in to_update:
-                extracted_packages = integrate_package(name, data, cache_dir, out_dir)
+                extracted_packages = integrate_package(
+                    name,
+                    data,
+                    cache_dir,
+                    out_dir,
+                    cache_only=args.cache_only,
+                )
                 for pkg_name, version in extracted_packages:
                     pubspec_overrides.append(f"  {pkg_name}:\n    path: {out_dir}/{pkg_name}\n")
                     if version and version != "any":
@@ -153,7 +201,13 @@ def main():
                 # Actually, the original logic updated children automatically if parent is updated.
                 process_deps_recursive(data["dependencies"], None if (to_update is None or name in to_update) else [])
 
-    process_deps_recursive(deps, repos_to_update if args.repo_name else None)
+    try:
+        process_deps_recursive(deps, repos_to_update if args.repo_name else None)
+    except FileNotFoundError as error:
+        parser.error(str(error))
+
+    if args.cache_only:
+        return
 
     def sort_dependencies(d):
         sorted_d = {k: d[k] for k in sorted(d.keys())}

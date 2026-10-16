@@ -14,60 +14,6 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-class Message_Type extends $pb.ProtobufEnum {
-  static const Message_Type SENDER_DELIVERY_RECEIPT =
-      Message_Type._(0, _omitEnumNames ? '' : 'SENDER_DELIVERY_RECEIPT');
-  static const Message_Type PLAINTEXT_CONTENT =
-      Message_Type._(1, _omitEnumNames ? '' : 'PLAINTEXT_CONTENT');
-  static const Message_Type CIPHERTEXT =
-      Message_Type._(2, _omitEnumNames ? '' : 'CIPHERTEXT');
-  static const Message_Type PREKEY_BUNDLE =
-      Message_Type._(3, _omitEnumNames ? '' : 'PREKEY_BUNDLE');
-  static const Message_Type TEST_NOTIFICATION =
-      Message_Type._(4, _omitEnumNames ? '' : 'TEST_NOTIFICATION');
-  static const Message_Type CIPHERTEXT_V2 =
-      Message_Type._(5, _omitEnumNames ? '' : 'CIPHERTEXT_V2');
-
-  static const $core.List<Message_Type> values = <Message_Type>[
-    SENDER_DELIVERY_RECEIPT,
-    PLAINTEXT_CONTENT,
-    CIPHERTEXT,
-    PREKEY_BUNDLE,
-    TEST_NOTIFICATION,
-    CIPHERTEXT_V2,
-  ];
-
-  static final $core.List<Message_Type?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 5);
-  static Message_Type? valueOf($core.int value) =>
-      value < 0 || value >= _byValue.length ? null : _byValue[value];
-
-  const Message_Type._(super.value, super.name);
-}
-
-class PlaintextContent_DecryptionErrorMessage_Type extends $pb.ProtobufEnum {
-  static const PlaintextContent_DecryptionErrorMessage_Type UNKNOWN =
-      PlaintextContent_DecryptionErrorMessage_Type._(
-          0, _omitEnumNames ? '' : 'UNKNOWN');
-  static const PlaintextContent_DecryptionErrorMessage_Type PREKEY_UNKNOWN =
-      PlaintextContent_DecryptionErrorMessage_Type._(
-          1, _omitEnumNames ? '' : 'PREKEY_UNKNOWN');
-
-  static const $core.List<PlaintextContent_DecryptionErrorMessage_Type> values =
-      <PlaintextContent_DecryptionErrorMessage_Type>[
-    UNKNOWN,
-    PREKEY_UNKNOWN,
-  ];
-
-  static final $core.List<PlaintextContent_DecryptionErrorMessage_Type?>
-      _byValue = $pb.ProtobufEnum.$_initByValueList(values, 1);
-  static PlaintextContent_DecryptionErrorMessage_Type? valueOf(
-          $core.int value) =>
-      value < 0 || value >= _byValue.length ? null : _byValue[value];
-
-  const PlaintextContent_DecryptionErrorMessage_Type._(super.value, super.name);
-}
-
 class EncryptedContent_ErrorMessages_Type extends $pb.ProtobufEnum {
   static const EncryptedContent_ErrorMessages_Type
       ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD =
@@ -223,24 +169,25 @@ class EncryptedContent_ContactUpdate_Type extends $pb.ProtobufEnum {
   const EncryptedContent_ContactUpdate_Type._(super.value, super.name);
 }
 
-class EncryptedContent_PushKeys_Type extends $pb.ProtobufEnum {
-  static const EncryptedContent_PushKeys_Type REQUEST =
-      EncryptedContent_PushKeys_Type._(0, _omitEnumNames ? '' : 'REQUEST');
-  static const EncryptedContent_PushKeys_Type UPDATE =
-      EncryptedContent_PushKeys_Type._(1, _omitEnumNames ? '' : 'UPDATE');
+class EncryptedContent_CustomAvatar_State extends $pb.ProtobufEnum {
+  static const EncryptedContent_CustomAvatar_State SVG_ONLY =
+      EncryptedContent_CustomAvatar_State._(
+          0, _omitEnumNames ? '' : 'SVG_ONLY');
+  static const EncryptedContent_CustomAvatar_State PHOTO =
+      EncryptedContent_CustomAvatar_State._(1, _omitEnumNames ? '' : 'PHOTO');
 
-  static const $core.List<EncryptedContent_PushKeys_Type> values =
-      <EncryptedContent_PushKeys_Type>[
-    REQUEST,
-    UPDATE,
+  static const $core.List<EncryptedContent_CustomAvatar_State> values =
+      <EncryptedContent_CustomAvatar_State>[
+    SVG_ONLY,
+    PHOTO,
   ];
 
-  static final $core.List<EncryptedContent_PushKeys_Type?> _byValue =
+  static final $core.List<EncryptedContent_CustomAvatar_State?> _byValue =
       $pb.ProtobufEnum.$_initByValueList(values, 1);
-  static EncryptedContent_PushKeys_Type? valueOf($core.int value) =>
+  static EncryptedContent_CustomAvatar_State? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
-  const EncryptedContent_PushKeys_Type._(super.value, super.name);
+  const EncryptedContent_CustomAvatar_State._(super.value, super.name);
 }
 
 const $core.bool _omitEnumNames =

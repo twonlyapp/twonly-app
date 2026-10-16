@@ -8,13 +8,13 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
-import 'package:twonly/src/services/signal/identity.signal.dart';
+import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
@@ -55,6 +55,9 @@ class _SearchUsernameView extends State<AddNewUserView> {
   @override
   void initState() {
     super.initState();
+    // Contact requests belong to no conversation, so this list is the only
+    // place they can be acknowledged and taken off the app badge.
+    unawaited(NativeNotificationService.clearContactRequests());
     _contactsStream = twonlyDB.contactsDao.watchNotAcceptedContacts().listen(
       (update) {
         if (mounted) {
@@ -94,7 +97,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
   }
 
   Future<void> _shareProfile() async {
-    final pubKey = await getUserPublicKey();
+    final pubKey = await RustSignal.getUserPublicKey();
     final params = ShareParams(
       text:
           'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(pubKey)}',
@@ -117,7 +120,12 @@ class _SearchUsernameView extends State<AddNewUserView> {
       _isLoading = true;
     });
 
-    final userdata = await apiService.getUserData(username);
+    FrbUserData? userdata;
+    try {
+      userdata = await RustApi.getUserData(username: username);
+    } catch (_) {
+      userdata = null;
+    }
     if (!mounted) return;
 
     setState(() {
@@ -146,10 +154,18 @@ class _SearchUsernameView extends State<AddNewUserView> {
     final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
       ContactsCompanion(
         username: Value(username),
-        userId: Value(userdata.userId.toInt()),
+        userId: Value(userdata.userId),
         requested: const Value(false),
         blocked: const Value(false),
         deletedByUser: const Value(false),
+        joinedAt: userdata.joinedAt == null
+            ? const Value.absent()
+            : Value(
+                DateTime.fromMillisecondsSinceEpoch(
+                  userdata.joinedAt! * Duration.millisecondsPerSecond,
+                  isUtc: true,
+                ),
+              ),
       ),
     );
 
@@ -164,13 +180,18 @@ class _SearchUsernameView extends State<AddNewUserView> {
       );
       if (markAsVerified) {
         await twonlyDB.keyVerificationDao.addKeyVerification(
-          userdata.userId.toInt(),
+          userdata.userId,
           VerificationType.link,
         );
       }
     }
 
-    if (added > 0) await importSignalContactAndCreateRequest(userdata);
+    if (added > 0) {
+      await RustApi.tryRequestContactById(
+        contactId: userdata.userId,
+        expectedPublicKey: userdata.publicIdentityKey,
+      );
+    }
   }
 
   @override

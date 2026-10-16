@@ -42,14 +42,14 @@ class CameraTopActions extends StatelessWidget {
                     : Icons.flash_off_rounded,
                 tooltipText: context.lang.toggleFlashLight,
                 color: selectedCameraDetails.isFlashOn
-                    ? Colors.white
-                    : Colors.white.withAlpha(160),
+                    ? context.appColor(AppColor.mediaForeground)
+                    : context.appColor(AppColor.mediaForegroundMuted),
                 onPressed: onToggleFlash,
               ),
               if (!hasAudioPermission)
                 ActionButton(
                   Icons.mic_off_rounded,
-                  color: Colors.white.withAlpha(160),
+                  color: context.appColor(AppColor.mediaForegroundMuted),
                   tooltipText: 'Allow microphone access for video recording.',
                   onPressed: onRequestMicrophone,
                 ),

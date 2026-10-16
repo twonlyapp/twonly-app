@@ -12,12 +12,12 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/contact_labels.comp.dart';
+import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/group.context_menu.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
-import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
+import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 
 class StartNewChatView extends StatefulWidget {
@@ -65,6 +65,7 @@ class _StartNewChatView extends State<StartNewChatView> {
   void dispose() {
     allNonDirectGroupsSub.cancel();
     contactSub.cancel();
+    searchUserName.dispose();
     super.dispose();
   }
 
@@ -142,22 +143,19 @@ class _StartNewChatView extends State<StartNewChatView> {
           padding: const EdgeInsets.only(
             bottom: 40,
             left: 10,
-            top: 20,
             right: 10,
           ),
           child: Column(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: TextField(
-                  onChanged: (_) async {
-                    await filterUsers();
-                  },
+                child: MyInput(
                   controller: searchUserName,
-                  decoration: getInputDecoration(
-                    context,
-                    context.lang.startNewChatSearchHint,
-                  ),
+                  dense: true,
+                  fontWeight: FontWeight.normal,
+                  hintText: context.lang.startNewChatSearchHint,
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  onChanged: (_) => unawaited(filterUsers()),
                 ),
               ),
               const SizedBox(height: 10),
@@ -171,10 +169,13 @@ class _StartNewChatView extends State<StartNewChatView> {
                       if (i == 0) {
                         return ListTile(
                           title: Text(context.lang.newGroup),
-                          leading: const CircleAvatar(
-                            child: FaIcon(
-                              FontAwesomeIcons.userGroup,
-                              size: 13,
+                          leading: const SizedBox.square(
+                            dimension: 26,
+                            child: Center(
+                              child: FaIcon(
+                                FontAwesomeIcons.userGroup,
+                                size: 13,
+                              ),
                             ),
                           ),
                           onTap: () => context.push(
@@ -185,10 +186,13 @@ class _StartNewChatView extends State<StartNewChatView> {
                       if (i == 1) {
                         return ListTile(
                           title: Text(context.lang.startNewChatNewContact),
-                          leading: const CircleAvatar(
-                            child: FaIcon(
-                              FontAwesomeIcons.userPlus,
-                              size: 13,
+                          leading: const SizedBox.square(
+                            dimension: 26,
+                            child: Center(
+                              child: FaIcon(
+                                FontAwesomeIcons.userPlus,
+                                size: 13,
+                              ),
                             ),
                           ),
                           onTap: () => context.push(Routes.chatsAddNewUser),
@@ -221,8 +225,8 @@ class _StartNewChatView extends State<StartNewChatView> {
                       return UserContextMenu(
                         key: ValueKey(contact.userId),
                         contact: contact,
-                        child: ContactLabelsSubtitleBuilder(
-                          contactId: contact.userId,
+                        child: ContactGroupsSubtitleBuilder(
+                          userId: contact.userId,
                           builder: (context, subtitleWidget) {
                             return ListTile(
                               title: Row(

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET download_state = 'ready', stored_file_hash = ?,\n                      size_in_bytes = ?\n               WHERE media_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "b579b1074dec0274fa72658bcb0843bc98cc0adb75add13334576af560cbfb64"
+}

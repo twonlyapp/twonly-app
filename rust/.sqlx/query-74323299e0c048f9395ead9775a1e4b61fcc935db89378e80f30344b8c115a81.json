@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO signal_sessions(name, device_id, record_bytes)\n                VALUES('restored-peer', 1, x'010203')\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "74323299e0c048f9395ead9775a1e4b61fcc935db89378e80f30344b8c115a81"
+}

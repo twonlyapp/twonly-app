@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COUNT(DISTINCT from_contact_id) FROM user_discovery_user_relations WHERE announced_user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "COUNT(DISTINCT from_contact_id)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c4845dbfc70e136ed2ccbb9efa78a9bdba7773c4f5ab2276da9b9ac1e74693dd"
+}

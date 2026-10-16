@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO group_histories(group_history_id, group_id, contact_id, type)\n           VALUES (?, ?, ?, 'addMember')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "291bf3c6dfb80861e3a250243693beff0798bc51759ea525dae477bff2096585"
+}

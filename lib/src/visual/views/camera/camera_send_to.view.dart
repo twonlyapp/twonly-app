@@ -63,17 +63,19 @@ class CameraSendToViewState extends State<CameraSendToView> {
               isVisible: true,
             ),
           ),
-          // Always-visible back button so the user can exit regardless of
-          // camera state (e.g. during init or after init failure).
-          Positioned(
-            left: 5,
-            top: MediaQuery.paddingOf(context).top + 10,
-            child: ActionButton(
-              FontAwesomeIcons.xmark,
-              tooltipText: context.lang.close,
-              onPressed: () => Navigator.pop(context),
+          // Keep this route's close button available during camera startup and
+          // failures, but hide it beneath the transparent editor, which has
+          // its own close action.
+          if (!_mainCameraController.isSharePreviewIsShown)
+            Positioned(
+              left: 5,
+              top: MediaQuery.paddingOf(context).top + 10,
+              child: ActionButton(
+                FontAwesomeIcons.xmark,
+                tooltipText: context.lang.close,
+                onPressed: () => Navigator.pop(context),
+              ),
             ),
-          ),
         ],
       ),
     );

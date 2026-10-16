@@ -8,6 +8,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/selectable_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_transition_painter.dart';
 
@@ -41,6 +42,12 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
   ImageStream? _imageStream;
   ImageInfo? _imageInfo;
   int _retries = 0;
+  bool _hasStoredFile = false;
+
+  /// A tile asks for a missing thumbnail once. Retrying whenever the attempt
+  /// finishes would spin forever for media whose thumbnail cannot be produced,
+  /// and every one of those turns is a database round trip on the UI isolate.
+  bool _recoveryRequested = false;
   late final ImageStreamListener _listener;
 
   @override
@@ -68,14 +75,19 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
     _resolveImage();
   }
 
+  /// Whether a file is there and has content, in a single stat call. This runs
+  /// synchronously for every tile the grid builds, so the probe stays cheap.
+  static bool _isReadable(File file) {
+    final stat = file.statSync();
+    return stat.type != FileSystemEntityType.notFound && stat.size > 0;
+  }
+
   void _resolveImage() {
     if (_retries > 3) return;
     final media = widget.galleryItem.mediaService;
-    final hasThumbnail =
-        media.thumbnailPath.existsSync() &&
-        media.thumbnailPath.lengthSync() > 0;
-    final hasStored =
-        media.storedPath.existsSync() && media.storedPath.lengthSync() > 0;
+    final hasThumbnail = _isReadable(media.thumbnailPath);
+    final hasStored = _isReadable(media.storedPath);
+    _hasStoredFile = hasStored;
     final isImageOrGif =
         media.mediaFile.type == MediaType.image ||
         media.mediaFile.type == MediaType.gif;
@@ -90,52 +102,60 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
       _selectedImageFile = media.storedPath;
     }
 
-    if (!hasThumbnail) {
-      if (hasStored) {
-        unawaited(
-          media.createThumbnail().then((_) {
-            // Only a written thumbnail is worth resolving again. A video whose
-            // thumbnail cannot be created would otherwise retry forever.
-            if (mounted && media.thumbnailPath.existsSync()) {
-              _resolveImage();
-            }
-          }),
-        );
-      } else {
-        unawaited(
-          MemoriesCloudService.downloadFromCloud(media, isThumbnail: true).then(
-            (success) {
-              if (mounted && success) {
-                _resolveImage();
-              }
-            },
-          ),
-        );
-      }
+    if (!hasThumbnail && !_recoveryRequested) {
+      _recoveryRequested = true;
+      // Either source may come back without having written anything, so the
+      // result is judged by the file itself and the tile falls back to the
+      // blurhash rather than asking again.
+      final recovery = hasStored
+          ? media.createThumbnail()
+          : MemoriesCloudService.downloadFromCloud(media, isThumbnail: true);
+      unawaited(
+        recovery.then((_) {
+          if (mounted && _isReadable(media.thumbnailPath)) {
+            _resolveImage();
+          }
+        }),
+      );
     }
 
     if (_imageProvider != null) {
-      _imageStream?.removeListener(_listener);
-      _imageStream = null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final config = createLocalImageConfiguration(context);
-        _imageStream = _imageProvider?.resolve(config);
-        _imageStream!.addListener(_listener);
+        final provider = _imageProvider;
+        if (provider == null) return;
+        final stream = provider.resolve(createLocalImageConfiguration(context));
+        // Swapping only on a different key keeps the listener count at one:
+        // dropping the old stream before the new one is resolved would leave
+        // the listener attached to a completer nothing removes it from, and a
+        // completer with listeners keeps its decoded image alive.
+        if (stream.key == _imageStream?.key) return;
+        _imageStream?.removeListener(_listener);
+        _imageStream = stream;
+        stream.addListener(_listener);
       });
+      // A post-frame callback only runs once a frame is coming, and a preview
+      // that arrived late resolves while the app is sitting idle.
+      WidgetsBinding.instance.ensureVisualUpdate();
     }
   }
 
   @override
   void didUpdateWidget(covariant MemoriesThumbnailComp oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.galleryItem.mediaService.mediaFile.mediaId !=
-        widget.galleryItem.mediaService.mediaFile.mediaId) {
+    final oldMedia = oldWidget.galleryItem.mediaService.mediaFile;
+    final media = widget.galleryItem.mediaService.mediaFile;
+    final changedMedia = oldMedia.mediaId != media.mediaId;
+    final sourceBecameAvailable =
+        !oldMedia.stored && media.stored ||
+        !oldMedia.hasThumbnail && media.hasThumbnail;
+    if (changedMedia || sourceBecameAvailable) {
       _imageStream?.removeListener(_listener);
       _imageStream = null;
       _imageProvider = null;
       _imageInfo = null;
       _retries = 0;
+      _recoveryRequested = false;
       _selectedImageFile = null;
       _resolveImage();
     }
@@ -205,6 +225,9 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                           } catch (_) {}
                           if (_retries < 3) {
                             _retries++;
+                            // The broken file is gone, so fetching it again is
+                            // a new attempt rather than the one already made.
+                            _recoveryRequested = false;
                             _resolveImage();
                           }
                         });
@@ -212,11 +235,11 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                     }
                     Log.warn(error);
                     return ColoredBox(
-                      color: Colors.grey.shade200,
-                      child: const Center(
+                      color: context.color.surfaceContainerHigh,
+                      child: Center(
                         child: FaIcon(
                           FontAwesomeIcons.image,
-                          color: Colors.black26,
+                          color: context.color.onSurfaceVariant,
                         ),
                       ),
                     );
@@ -229,62 +252,66 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                 )
               else
                 ColoredBox(
-                  color: Colors.grey.shade200,
-                  child: const Center(
+                  color: context.color.surfaceContainerHigh,
+                  child: Center(
                     child: FaIcon(
                       FontAwesomeIcons.image,
-                      color: Colors.black26,
+                      color: context.color.onSurfaceVariant,
                     ),
                   ),
                 ),
               if (isVideo)
-                const Positioned.fill(
+                Positioned.fill(
                   child: Center(
                     child: FaIcon(
                       FontAwesomeIcons.circlePlay,
-                      color: Colors.white,
+                      color: context.appColor(AppColor.mediaForeground),
                       size: 32,
                       shadows: [
-                        Shadow(color: Colors.black54, blurRadius: 6),
+                        Shadow(
+                          color: context.appColor(AppColor.mediaScrim),
+                          blurRadius: 6,
+                        ),
                       ],
                     ),
                   ),
                 ),
               if (media.mediaFile.isFavorite)
-                const Positioned(
+                Positioned(
                   bottom: 6,
                   left: 6,
                   child: Icon(
                     Icons.favorite,
-                    color: Colors.redAccent,
+                    color: context.color.error,
                     size: 16,
                     shadows: [
-                      Shadow(color: Colors.black54, blurRadius: 4),
+                      Shadow(
+                        color: context.appColor(AppColor.mediaScrim),
+                        blurRadius: 4,
+                      ),
                     ],
                   ),
                 ),
               Builder(
                 builder: (context) {
-                  final hasStored =
-                      media.storedPath.existsSync() &&
-                      media.storedPath.lengthSync() > 0;
+                  final hasStored = _hasStoredFile;
                   final IconData iconData;
                   final Color color;
 
                   switch (media.mediaFile.cloudState) {
                     case CloudState.none:
                       iconData = Icons.cloud_off_outlined;
-                      color = Colors.white54;
+                      color = context.appColor(AppColor.mediaForegroundMuted);
                     case CloudState.pending:
                       iconData = Icons.cloud_upload_outlined;
-                      color = Colors.white70;
+                      color = context.appColor(AppColor.mediaForegroundMuted);
                     case CloudState.uploaded:
                       if (hasStored) {
                         iconData = Icons.cloud_done_outlined;
-                        color = Colors.white;
+                        color = context.appColor(AppColor.mediaForeground);
                       } else {
                         iconData = Icons.cloud_outlined;
-                        color = Colors.white;
+                        color = context.appColor(AppColor.mediaForeground);
                       }
                   }
 
@@ -295,8 +322,11 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                       iconData,
                       color: color,
                       size: 16,
-                      shadows: const [
-                        Shadow(color: Colors.black54, blurRadius: 4),
+                      shadows: [
+                        Shadow(
+                          color: context.appColor(AppColor.mediaScrim),
+                          blurRadius: 4,
+                        ),
                       ],
                     ),
                   );

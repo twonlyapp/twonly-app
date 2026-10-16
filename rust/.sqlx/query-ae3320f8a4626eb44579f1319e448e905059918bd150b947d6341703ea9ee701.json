@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COALESCE(MAX(pre_key_id), 0) AS \"id!: u32\" FROM signal_pre_keys",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: u32",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ae3320f8a4626eb44579f1319e448e905059918bd150b947d6341703ea9ee701"
+}

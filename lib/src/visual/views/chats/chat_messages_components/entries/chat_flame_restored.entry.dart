@@ -39,7 +39,7 @@ class ChatFlameRestoredEntry extends StatelessWidget {
 
     return Container(
       constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.8,
+        maxWidth: MediaQuery.sizeOf(context).width * 0.8,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -60,7 +60,7 @@ class ChatFlameRestoredEntry extends StatelessWidget {
               text: context.lang.chatEntryFlameRestored(
                 data.restoredFlameCounter.toInt(),
               ),
-              textColor: isDarkMode(context) ? Colors.black : Colors.black,
+              textColor: info.textColor,
             ),
           ),
         ],

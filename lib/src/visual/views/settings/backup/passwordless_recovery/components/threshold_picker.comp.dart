@@ -102,7 +102,9 @@ class ThresholdPicker extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: isSelected ? context.color.primary : Colors.transparent,
+                      color: isSelected
+                          ? context.color.primary
+                          : Colors.transparent,
                       borderRadius: borderRadius,
                     ),
                     child: Center(
@@ -111,7 +113,7 @@ class ThresholdPicker extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: isSelected
-                              ? Colors.black87
+                              ? context.color.onPrimary
                               : context.color.onSurfaceVariant,
                         ),
                       ),

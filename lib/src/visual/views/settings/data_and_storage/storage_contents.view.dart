@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +5,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -104,9 +104,12 @@ class _StorageContentsViewState extends State<StorageContentsView> {
               ? Center(
                   child: Text(
                     context.lang.settingsStorageNoContents,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.copyWith(color: Colors.grey),
+                    style:
+                        Theme.of(
+                          context,
+                        ).textTheme.bodyLarge?.copyWith(
+                          color: context.color.onSurfaceVariant,
+                        ),
                   ),
                 )
               : Column(
@@ -236,21 +239,31 @@ class _StorageContentsViewState extends State<StorageContentsView> {
         children: [
           Text(
             file.type.name.toUpperCase(),
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
+            style: TextStyle(
+              color: context.color.onSurfaceVariant,
+              fontSize: 12,
+            ),
           ),
           const SizedBox(width: 8),
-          Icon(statusIcon, size: 14, color: Colors.grey),
+          Icon(
+            statusIcon,
+            size: 14,
+            color: context.color.onSurfaceVariant,
+          ),
           const SizedBox(width: 4),
           Text(
             statusText,
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
+            style: TextStyle(
+              color: context.color.onSurfaceVariant,
+              fontSize: 12,
+            ),
           ),
         ],
       ),
       trailing: isSelecting
           ? null
           : IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              icon: Icon(Icons.delete_outline, color: context.color.error),
               onPressed: () => _deleteMemory(context, file),
             ),
     );
@@ -276,7 +289,7 @@ class _StorageContentsViewState extends State<StorageContentsView> {
       child: Container(
         width: 60,
         height: 60,
-        color: Colors.grey.withValues(alpha: 0.1),
+        color: context.color.surfaceContainerHigh,
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -285,10 +298,10 @@ class _StorageContentsViewState extends State<StorageContentsView> {
                   ? Image.file(
                       imgFile,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
+                      errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.broken_image_outlined,
                         size: 24,
-                        color: Colors.grey,
+                        color: context.color.onSurfaceVariant,
                       ),
                     )
                   : file.blurhash != null
@@ -296,23 +309,23 @@ class _StorageContentsViewState extends State<StorageContentsView> {
                       hash: file.blurhash!,
                       optimizationMode: BlurHashOptimizationMode.approximation,
                     )
-                  : const Icon(
+                  : Icon(
                       Icons.image_outlined,
                       size: 24,
-                      color: Colors.grey,
+                      color: context.color.onSurfaceVariant,
                     ),
             ),
             if (isVideo)
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
+                  color: context.appColor(AppColor.mediaScrim),
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(4),
-                child: const Icon(
+                child: Icon(
                   Icons.play_arrow,
                   size: 16,
-                  color: Colors.white,
+                  color: context.appColor(AppColor.mediaForeground),
                 ),
               ),
           ],
@@ -333,13 +346,10 @@ class _StorageContentsViewState extends State<StorageContentsView> {
     if (deleteCompletely == null) return;
 
     try {
-      if (deleteCompletely) {
-        await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
-        unawaited(apiService.deleteMemory(file.mediaId));
-        MediaFileService(file).fullMediaRemoval();
-      } else {
-        MediaFileService(file).storedPath.deleteSync();
-      }
+      await MemoriesService.deleteMemory(
+        MediaFileService(file),
+        completely: deleteCompletely,
+      );
 
       if (context.mounted) {
         showSnackbar(
@@ -382,13 +392,10 @@ class _StorageContentsViewState extends State<StorageContentsView> {
 
     try {
       for (final file in selectedFiles) {
-        if (deleteCompletely) {
-          await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
-          unawaited(apiService.deleteMemory(file.mediaId));
-          MediaFileService(file).fullMediaRemoval();
-        } else {
-          MediaFileService(file).storedPath.deleteSync();
-        }
+        await MemoriesService.deleteMemory(
+          MediaFileService(file),
+          completely: deleteCompletely,
+        );
       }
 
       setState(_selectedMediaIds.clear);

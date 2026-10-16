@@ -112,16 +112,19 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
         const SizedBox(height: 10),
         Row(
           children: [
-            const FaIcon(
+            FaIcon(
               FontAwesomeIcons.circleInfo,
               size: 14,
-              color: Colors.grey,
+              color: context.color.onSurfaceVariant,
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 context.lang.backupNoPasswordRecovery,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.color.onSurfaceVariant,
+                ),
               ),
             ),
           ],

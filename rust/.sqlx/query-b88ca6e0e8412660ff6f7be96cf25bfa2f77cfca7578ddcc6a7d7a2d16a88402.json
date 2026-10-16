@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM key_verifications WHERE contact_id = ? AND type = 'contactSharedByVerified' AND verified_by = ?)",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM key_verifications WHERE contact_id = ? AND type = 'contactSharedByVerified' AND verified_by = ?)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b88ca6e0e8412660ff6f7be96cf25bfa2f77cfca7578ddcc6a7d7a2d16a88402"
+}

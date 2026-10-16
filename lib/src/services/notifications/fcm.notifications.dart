@@ -4,13 +4,8 @@ import 'dart:io' show Platform;
 import 'package:firebase_app_installations/firebase_app_installations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/core/bridge/user_config.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
-import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
-import 'package:twonly/src/services/notifications/background.notifications.dart';
-import 'package:twonly/src/services/notifications/fcm.background.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -19,14 +14,14 @@ import '../../../firebase_options.dart';
 // see more here: https://firebase.google.com/docs/cloud-messaging/flutter/receive?hl=de
 
 class FcmNotificationService {
+  /// FCM is only an opaque wake-up transport now. Delivery is owned natively by
+  /// the iOS Notification Service Extension and by
+  /// `TwonlyFirebaseMessagingService` on Android, both of which call Rust
+  /// directly, so no Dart isolate or message listener is registered here.
   static Future<void> initStartup() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-    FirebaseMessaging.onMessage.listen(handleRemoteMessage);
   }
 
   static Future<void> initAfterUserLoaded() async {
@@ -35,23 +30,21 @@ class FcmNotificationService {
   }
 
   static Future<void> initFCMAfterAuthenticated({bool force = false}) async {
+    // Reading `currentUser` before a config is loaded throws a
+    // LateInitializationError, which an authenticated socket can trigger
+    // during a recovery.
+    if (!userService.isUserCreated) return;
     final fcmToken = userService.currentUser.fcmToken;
-    if (userService.currentUser.updateFCMToken || force) {
+    if (userService.currentUser.updateFcmToken || force) {
       if (fcmToken == null) {
         Log.error('FCM token could not be updated as it is empty');
         await _checkForTokenUpdates();
         return;
       }
-      final res = await apiService.updateFCMToken(
-        fcmToken,
-      );
-      if (res.isSuccess) {
-        Log.info('Uploaded new FCM token!');
+      if (await _uploadFcmToken(fcmToken)) {
         await UserService.update((u) {
-          u.updateFCMToken = false;
+          u.updateFcmToken = false;
         });
-      } else {
-        Log.error('Could not update FCM token!');
       }
     }
   }
@@ -100,18 +93,15 @@ class FcmNotificationService {
         Log.info('Got new FCM token.');
         await UserService.update((u) {
           u
-            ..updateFCMToken = true
+            ..updateFcmToken = true
             ..fcmToken = fcmToken;
         });
-        if (apiService.isAuthenticated) {
-          final res = await apiService.updateFCMToken(fcmToken);
-          if (res.isSuccess) {
-            Log.info('Uploaded new FCM token!');
+        if (await RustApi.connectionState() ==
+            ApiConnectionState.authenticated) {
+          if (await _uploadFcmToken(fcmToken)) {
             await UserService.update((u) {
-              u.updateFCMToken = false;
+              u.updateFcmToken = false;
             });
-          } else {
-            Log.error('Could not update FCM token!');
           }
         }
       }
@@ -121,18 +111,15 @@ class FcmNotificationService {
           .listen((String fcmToken) async {
             await UserService.update((u) {
               u
-                ..updateFCMToken = true
+                ..updateFcmToken = true
                 ..fcmToken = fcmToken;
             });
-            if (apiService.isAuthenticated) {
-              final res = await apiService.updateFCMToken(fcmToken);
-              if (res.isSuccess) {
-                Log.info('Uploaded new FCM token!');
+            if (await RustApi.connectionState() ==
+                ApiConnectionState.authenticated) {
+              if (await _uploadFcmToken(fcmToken)) {
                 await UserService.update((u) {
-                  u.updateFCMToken = false;
+                  u.updateFcmToken = false;
                 });
-              } else {
-                Log.error('Could not update FCM token!');
               }
             }
           })
@@ -144,79 +131,14 @@ class FcmNotificationService {
     }
   }
 
-  static Future<void> handleRemoteMessage(RemoteMessage message) async {
-    Log.info('handleRemoteMessage received message: ${message.messageId}');
-    await _updateLastFcmMessageTimestamp();
-    if (!Platform.isAndroid) {
-      Log.error('Got message in Dart while on iOS');
-    }
-    if (message.notification != null && AppState.isAppInBackground) {
-      Log.error(
-        'Got notification but app is in background, so the SDK already have shown the message.',
-      );
-      return;
-    }
-
-    // In scenarios like Android Doze Mode or aggressive background restrictions, the OS may kill
-    // or heavily restrict network access, preventing the WebSocket from connecting in time.
-    // By parsing the FCM data payload offline, we can instantly display the notification, which also
-    // prevents FCM from penalizing/downgrading the app's data message priority for failing to show a notification.
-    // This is just a workarround until the new Rust decryption is enrolled fully.
-    final pushDataString = message.data['push_data'] as String?;
-    if (pushDataString != null) {
-      if (apiService.isConnected) {
-        Log.info('Got FCM message, but API is connected...');
-      } else {
-        Log.info('Trying to connect to the API in the background.');
-
-        if (await backgroundFetch()) {
-          return;
-        }
-      }
-    }
-
-    if (message.notification != null || message.data['title'] != null) {
-      final title =
-          message.notification?.title ?? message.data['title'] as String? ?? '';
-      final body =
-          message.notification?.body ?? message.data['body'] as String? ?? '';
-      await customLocalPushNotification(title, body);
-    }
-  }
-
-  static Future<void> _updateLastFcmMessageTimestamp() async {
-    const storage = FlutterSecureStorage();
-    final nowMs = DateTime.now().millisecondsSinceEpoch.toString();
+  static Future<bool> _uploadFcmToken(String token) async {
     try {
-      await storage.write(
-        key: SecureStorageKeys.lastFcmMessageTimestamp,
-        value: nowMs,
-        iOptions: const IOSOptions(
-          groupId: 'CN332ZUGRP.eu.twonly.shared',
-          accessibility: KeychainAccessibility.first_unlock,
-        ),
-      );
-      Log.info('Updated last FCM message timestamp to $nowMs');
-    } catch (e) {
-      Log.error('Could not write last FCM message timestamp: $e');
-    }
-  }
-
-  static Future<void> updateLastServerMessageTimestamp() async {
-    const storage = FlutterSecureStorage();
-    final nowMs = DateTime.now().millisecondsSinceEpoch.toString();
-    try {
-      await storage.write(
-        key: SecureStorageKeys.lastServerMessageTimestamp,
-        value: nowMs,
-        iOptions: const IOSOptions(
-          groupId: 'CN332ZUGRP.eu.twonly.shared',
-          accessibility: KeychainAccessibility.first_unlock,
-        ),
-      );
-      Log.info('Updated last server message timestamp to $nowMs');
-    } catch (e) {
-      Log.error('Could not write last server message timestamp: $e');
+      await RustApi.updateFcmToken(token: token);
+      Log.info('Uploaded new FCM token!');
+      return true;
+    } catch (error) {
+      Log.error('Could not update FCM token!', error: error);
+      return false;
     }
   }
 
@@ -225,33 +147,22 @@ class FcmNotificationService {
       Log.info('FCM health check skipped: user is not yet created.');
       return;
     }
-    const storage = FlutterSecureStorage();
     try {
-      final lastFcmStr = await storage.read(
-        key: SecureStorageKeys.lastFcmMessageTimestamp,
-        iOptions: const IOSOptions(
-          groupId: 'CN332ZUGRP.eu.twonly.shared',
-          accessibility: KeychainAccessibility.first_unlock,
-        ),
-      );
-      final lastServerStr = await storage.read(
-        key: SecureStorageKeys.lastServerMessageTimestamp,
-        iOptions: const IOSOptions(
-          groupId: 'CN332ZUGRP.eu.twonly.shared',
-          accessibility: KeychainAccessibility.first_unlock,
-        ),
-      );
+      final config = await UserConfigApi.load();
+      if (config == null) {
+        Log.warn('FCM health check skipped: user configuration is missing.');
+        return;
+      }
 
       final now = DateTime.now();
       final threeDaysAgo = now.subtract(const Duration(days: 3));
 
-      DateTime? lastFcmTime;
-      if (lastFcmStr != null) {
-        final ms = int.tryParse(lastFcmStr);
-        if (ms != null) {
-          lastFcmTime = DateTime.fromMillisecondsSinceEpoch(ms);
-        }
-      }
+      // Recorded by the Rust notification worker, because neither platform
+      // starts Flutter for a background wake-up any more.
+      final lastFcmWakeup = config.lastFcmWakeupAt;
+      final lastFcmTime = lastFcmWakeup == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(lastFcmWakeup * 1000);
 
       if (lastFcmTime != null) {
         Log.info(
@@ -261,13 +172,10 @@ class FcmNotificationService {
         Log.info('No record of a message received via FCM messaging system.');
       }
 
-      DateTime? lastServerTime;
-      if (lastServerStr != null) {
-        final ms = int.tryParse(lastServerStr);
-        if (ms != null) {
-          lastServerTime = DateTime.fromMillisecondsSinceEpoch(ms);
-        }
-      }
+      final lastServerMessage = config.lastServerMessageAt;
+      final lastServerTime = lastServerMessage == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(lastServerMessage * 1000);
 
       final fcmInactive =
           lastFcmTime == null || lastFcmTime.isBefore(threeDaysAgo);

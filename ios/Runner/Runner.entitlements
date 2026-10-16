@@ -8,9 +8,12 @@
 	<array>
 		<string>applinks:me.twonly.eu</string>
 	</array>
+	<key>com.apple.developer.usernotifications.communication</key>
+	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.eu.twonly.shareIntent</string>
+		<string>group.eu.twonly.runtime</string>
 	</array>
 	<key>keychain-access-groups</key>
 	<array>

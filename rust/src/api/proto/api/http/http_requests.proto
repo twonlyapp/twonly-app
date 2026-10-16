@@ -1,0 +1,145 @@
+syntax = "proto3";
+package http_requests;
+
+message RequestUploadSlots {
+  repeated string locally_known_slot_ids = 1;
+}
+
+message PresignedPostV2 {
+  string url = 1;
+  map<string, string> fields = 2;
+}
+
+message UploadSlot {
+  string attachment_id = 1;
+  int64 expires_at_unix_seconds = 2;
+  int64 maximum_object_bytes = 3;
+  PresignedPostV2 media_upload = 4;
+  bytes background_capability = 5;
+}
+
+message UploadSlots {
+  repeated UploadSlot slots = 1;
+  int32 maximum_active_slots = 2;
+  int32 refill_threshold = 3;
+}
+
+message AttachmentDispatch {
+  int64 recipient_user_id = 1;
+  bytes encrypted_body = 2;
+  optional bytes push_data = 3;
+  bytes download_token = 4;
+}
+
+// A message envelope handed to a background transfer instead of the websocket.
+//
+// The socket only exists while the app runs, so an envelope queued offline
+// would otherwise wait for the next app launch rather than the next network.
+message OutboxDispatch {
+  string dispatch_id = 1;
+  int64 recipient_user_id = 2;
+  bytes encrypted_body = 3;
+  bool wake_receiver = 4;
+}
+
+message OutboxDispatchBatch {
+  repeated OutboxDispatch dispatches = 1;
+}
+
+message OutboxDispatchResult {
+  // Envelopes the server has accepted, whether just now or on an earlier
+  // delivery of the same request.
+  int32 accepted = 1;
+  // Envelopes it will never accept, so the transfer must not be retried.
+  int32 rejected = 2;
+}
+
+message AttachmentManifest {
+  int64 encrypted_object_size = 1;
+  repeated AttachmentDispatch dispatches = 2;
+}
+
+enum AttachmentState {
+  ATTACHMENT_STATE_UNKNOWN = 0;
+  ATTACHMENT_STATE_RESERVED = 1;
+  ATTACHMENT_STATE_UPLOADING = 2;
+  ATTACHMENT_STATE_READY = 3;
+  ATTACHMENT_STATE_REJECTED = 4;
+  ATTACHMENT_STATE_EXPIRED = 5;
+  ATTACHMENT_STATE_ABANDONED = 6;
+}
+
+message AttachmentStatus {
+  AttachmentState state = 1;
+  string rejection_reason = 2;
+}
+
+message UpdateGroupState {
+  message UpdateTBS {
+    uint64 version_id = 1;
+    bytes encrypted_group_state = 3;
+    bytes public_key = 4;
+    optional bytes remove_admin = 5;
+    optional bytes add_admin = 6;
+    bytes nonce = 7;
+  }
+  UpdateTBS update = 1;
+  bytes signature = 2;
+}
+
+message NewGroupState {
+  string group_id = 1;
+  uint64 version_id = 2;
+  bytes encrypted_group_state = 3;
+  bytes public_key = 4;
+}
+
+message AppendGroupState {
+  message AppendTBS {
+    bytes encrypted_group_state_append = 1;
+    bytes public_key = 2;
+    string group_id = 3;
+    bytes nonce = 4;
+  }
+  bytes signature = 1;
+  AppendTBS append_tbs = 2;
+  uint64 version_id = 3;
+}
+
+message GroupState {
+  uint64 version_id = 1;
+  bytes encrypted_group_state = 2;
+  repeated AppendGroupState appended_group_states = 3;
+}
+
+// One published webxdc app, as the store advertises it. `bundle_sha256` is the
+// hash of the .xdc the blob endpoint serves; the client verifies it before the
+// zip is opened, and pins it per instance until the app is next started.
+//
+// An app that is unpublished simply stops appearing here. Clients keep the
+// bundles they already downloaded, so an absence is not a signal to stop.
+message WebxdcCatalogEntry {
+  string          app_id          = 1;
+  int64           version         = 2;
+  string          name            = 3;
+  optional string source_code_url = 4;
+  string          bundle_sha256   = 5;
+  int64           bundle_bytes    = 6;
+  bytes           icon            = 8;
+  // One short line per language, keyed by language tag (`en`, `de`, `pt-br`).
+  // Every client gets every translation and picks its own, so asking for the
+  // catalog says nothing about what language a user reads.
+  map<string, string> description = 9;
+  // The name in every language the bundle carries it in, keyed the same way.
+  // `name` is what a client shows when none of them is a language it reads.
+  map<string, string> name_translations = 10;
+  bool pro_only = 11;
+  // Only one instance of this app may be placed into a chat.
+  bool one_time = 12;
+}
+
+message WebxdcCatalog {
+  // Admin-defined app order, with versions of each app grouped newest first.
+  // Clients retain this order when caching and displaying the drawer.
+  repeated WebxdcCatalogEntry entries = 1;
+}

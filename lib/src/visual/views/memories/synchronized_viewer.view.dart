@@ -6,14 +6,19 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/memories/memories.service.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
+import 'package:twonly/src/visual/views/memories/components/memory_details.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/memories/components/synchronized_viewer_actions_toolbar.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/synchronized_viewer_item.comp.dart';
+import 'package:twonly/src/visual/views/memories/memories_map.view.dart';
 
 class SynchronizedImageViewerScreen extends StatefulWidget {
   const SynchronizedImageViewerScreen({
@@ -41,6 +46,7 @@ class _SynchronizedImageViewerScreenState
 
   final Set<String> _favoritedMediaIds = {};
   bool _isSaving = false;
+  bool _isCreatingSticker = false;
   final Set<String> _storedMediaIds = {};
   final Set<String> _precachedMediaIds = {};
 
@@ -92,6 +98,26 @@ class _SynchronizedImageViewerScreenState
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _createSticker() async {
+    if (_isCreatingSticker) return;
+    final media = widget.galleryItems[_currentIndex].mediaService;
+    setState(() => _isCreatingSticker = true);
+    try {
+      await StickerService.createFromMedia(media);
+      if (!mounted) return;
+      showSnackbar(
+        context,
+        context.lang.stickerAdded,
+        level: SnackbarLevel.success,
+      );
+    } on Object {
+      if (!mounted) return;
+      showSnackbar(context, context.lang.stickerCreateFailed);
+    } finally {
+      if (mounted) setState(() => _isCreatingSticker = false);
     }
   }
 
@@ -163,7 +189,6 @@ class _SynchronizedImageViewerScreenState
 
   Future<void> _deleteFile() async {
     final item = widget.galleryItems[_currentIndex];
-    final mediaId = item.mediaService.mediaFile.mediaId;
     final hasCloudBackup =
         item.mediaService.mediaFile.cloudState != CloudState.none;
 
@@ -175,11 +200,18 @@ class _SynchronizedImageViewerScreenState
 
     if (deleteCompletely == null) return;
 
-    if (deleteCompletely) {
-      item.mediaService.fullMediaRemoval();
-      await apiService.deleteMemory(mediaId);
-      await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
+    try {
+      await MemoriesService.deleteMemory(
+        item.mediaService,
+        completely: deleteCompletely,
+      );
+    } catch (error) {
+      if (mounted) showSnackbar(context, error.toString());
+      return;
+    }
+    if (!mounted) return;
 
+    if (deleteCompletely || !hasCloudBackup) {
       widget.galleryItems.removeAt(_currentIndex);
 
       if (widget.galleryItems.isEmpty) {
@@ -197,10 +229,6 @@ class _SynchronizedImageViewerScreenState
       widget.activeMediaIdNotifier.value = newId;
 
       setState(() {});
-    } else {
-      if (item.mediaService.storedPath.existsSync()) {
-        item.mediaService.storedPath.deleteSync();
-      }
     }
   }
 
@@ -221,20 +249,7 @@ class _SynchronizedImageViewerScreenState
     }
 
     try {
-      if (item.mediaFile.type == MediaType.video) {
-        await saveVideoToGallery(
-          item.storedPath.path,
-          name: item.mediaFile.mediaId,
-        );
-      } else if (item.mediaFile.type == MediaType.image ||
-          item.mediaFile.type == MediaType.gif) {
-        final imageBytes = await item.storedPath.readAsBytes();
-        await saveImageToGallery(
-          imageBytes,
-          createdAt: item.mediaFile.createdAt,
-          name: item.mediaFile.mediaId,
-        );
-      }
+      await item.saveToGallery();
       if (!mounted) return;
       showSnackbar(
         context,
@@ -251,13 +266,38 @@ class _SynchronizedImageViewerScreenState
     }
   }
 
+  Future<void> _showDetails() async {
+    final media = widget.galleryItems[_currentIndex].mediaService;
+    await media.updateFromDB();
+    if (!mounted) return;
+    final mapMedia = await showModalBottomSheet<MediaFile>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => StreamBuilder<MediaFile?>(
+        stream: twonlyDB.mediaFilesDao.watchMedia(media.mediaFile.mediaId),
+        initialData: media.mediaFile,
+        builder: (_, snapshot) =>
+            MemoryDetailsSheet(media: snapshot.data ?? media.mediaFile),
+      ),
+    );
+    if (!mounted || mapMedia == null) return;
+    _restoreSystemUI();
+    await context.navPush(MemoriesMapView(initialMedia: mapMedia));
+    if (mounted) {
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    }
+  }
+
   Future<void> _shareMediaFile() async {
     final orgMediaService = widget.galleryItems[_currentIndex].mediaService;
 
-    final newMediaService = await initializeMediaUpload(
-      orgMediaService.mediaFile.type,
-      userService.currentUser.defaultShowTime,
+    final mediaId = await RustApi.initializeMediaUpload(
+      mediaType: orgMediaService.mediaFile.type.name,
+      displayLimitInMilliseconds: userService.currentUser.defaultShowTime,
+      isDraftMedia: false,
     );
+    final newMediaService = await MediaFileService.fromMediaId(mediaId);
     if (newMediaService == null) {
       Log.error('Could not create new mediaFile');
       return;
@@ -298,7 +338,11 @@ class _SynchronizedImageViewerScreenState
           valueListenable: _backdropOpacityNotifier,
           builder: (context, opacity, child) {
             return ColoredBox(
-              color: Colors.black.withValues(alpha: opacity),
+              color: context
+                  .appColor(AppColor.mediaBackground)
+                  .withValues(
+                    alpha: opacity,
+                  ),
               child: child,
             );
           },
@@ -354,6 +398,22 @@ class _SynchronizedImageViewerScreenState
                   ),
 
                   Positioned(
+                    top: MediaQuery.paddingOf(context).top + 16,
+                    right: 16,
+                    child: AnimatedOpacity(
+                      opacity: _isZoomed ? 0 : 1,
+                      duration: const Duration(milliseconds: 200),
+                      child: IgnorePointer(
+                        ignoring: _isZoomed,
+                        child: ActionButton(
+                          Icons.info_outline,
+                          tooltipText: context.lang.memoryDetailsTitle,
+                          onPressed: _showDetails,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
                     bottom: MediaQuery.paddingOf(context).bottom + 16,
                     left: 0,
                     right: 0,
@@ -372,6 +432,11 @@ class _SynchronizedImageViewerScreenState
                             onExport: _exportFile,
                             onToggleFavorite: () =>
                                 _toggleFavorite(currentMediaId),
+                            showCreateStickerButton:
+                                orgMediaService.mediaFile.type ==
+                                MediaType.image,
+                            onCreateSticker: _createSticker,
+                            isCreatingSticker: _isCreatingSticker,
                             onDelete: _deleteFile,
                             showStoreButton: !_storedMediaIds.contains(
                               currentMediaId,

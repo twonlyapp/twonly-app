@@ -21,8 +21,7 @@ protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "passwordless_reco
 mkdir "$GENERATED_DIR/user_discovery/" &>/dev/null
 protoc --proto_path="./rust/src/user_discovery/" --dart_out="$GENERATED_DIR/user_discovery/" "types.proto"
 
-protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "push_notification.proto"
-protoc --proto_path="$CLIENT_DIR" --swift_out="./ios/NotificationService/" "push_notification.proto"
+protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "http_requests.proto"
 
 
 # Definitions for the Server API

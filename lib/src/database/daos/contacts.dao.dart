@@ -2,7 +2,6 @@ import 'package:drift/drift.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 
 part 'contacts.dao.g.dart';
@@ -13,16 +12,6 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   // of this object.
   // ignore: matching_super_parameters
   ContactsDao(super.db);
-
-  Future<int?> insertContact(ContactsCompanion contact) async {
-    try {
-      return await into(contacts).insert(contact);
-    } catch (e) {
-      Log.error(e);
-      return null;
-    }
-  }
-
   Future<int> insertOnConflictUpdate(ContactsCompanion contact) async {
     try {
       return await into(contacts).insertOnConflictUpdate(contact);
@@ -35,6 +24,18 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   SingleOrNullSelectable<Contact> getContactByUserId(int userId) {
     return select(contacts)..where((t) => t.userId.equals(userId));
   }
+
+  Stream<List<Contact>> watchContactsByIds(Set<int> userIds) {
+    if (userIds.isEmpty) return Stream.value(const []);
+    return (select(contacts)..where((t) => t.userId.isIn(userIds))).watch();
+  }
+
+  Stream<bool> watchHasPhotoAvatar(int userId) => customSelect(
+    'SELECT EXISTS(SELECT 1 FROM received_custom_avatars WHERE contact_id = ? AND webp IS NOT NULL) AS has_photo',
+    variables: [Variable.withInt(userId)],
+    // Receiving/removing a photo also touches contacts to refresh its avatars.
+    readsFrom: {contacts},
+  ).watchSingle().map((row) => row.read<bool>('has_photo'));
 
   Future<Contact?> getContactById(int userId) async {
     return (select(
@@ -81,7 +82,6 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
         updatedValues.username.present) {
       final contact = await getContactByUserId(userId).getSingleOrNull();
       if (contact != null) {
-        await updatePushUser(contact);
         final group = await twonlyDB.groupsDao.getDirectChat(userId);
         if (group != null) {
           await twonlyDB.groupsDao.updateGroup(
@@ -170,25 +170,6 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
           return expr;
         }))
         .watch();
-  }
-
-  Future<List<Contact>> getContactsAnnouncedViaUserDiscovery() async {
-    return (select(contacts)..where((t) {
-          var expr =
-              t.userDiscoveryVersion.isNotNull() &
-              t.userDiscoveryExcluded.equals(false) &
-              t.accountDeleted.equals(false) &
-              t.mediaSendCounter.isBiggerOrEqualValue(
-                userService.currentUser.requiredSendImages,
-              );
-
-          if (userService.currentUser.userDiscoveryRequiresManualApproval) {
-            expr = expr & t.userDiscoveryManualApproved.equals(true);
-          }
-
-          return expr;
-        }))
-        .get();
   }
 
   Stream<List<Contact>> watchAllContacts() {

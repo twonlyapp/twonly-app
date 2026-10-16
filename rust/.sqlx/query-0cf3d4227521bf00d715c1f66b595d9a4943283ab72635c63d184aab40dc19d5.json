@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM reactions WHERE message_id = ? AND sender_id = ? AND emoji = ?)",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM reactions WHERE message_id = ? AND sender_id = ? AND emoji = ?)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0cf3d4227521bf00d715c1f66b595d9a4943283ab72635c63d184aab40dc19d5"
+}

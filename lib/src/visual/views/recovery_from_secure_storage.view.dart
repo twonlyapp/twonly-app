@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:restart_app/restart_app.dart';
-import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/backup.service.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
@@ -55,12 +53,7 @@ class _RecoveryViewState extends State<RecoveryView> {
   }
 
   Future<void> _registerNewAccount() async {
-    try {
-      await RustKeyManager.removeKeyManager();
-    } catch (e) {
-      Log.error('Could not remove KeyManager during account reset: $e');
-    }
-    await deleteLocalUserData();
+    await deleteLocalUserData(removeCredentials: true);
     if (!mounted) return;
     await Restart.restartApp(
       notificationTitle: 'twonly',
@@ -114,7 +107,9 @@ class _RecoveryViewState extends State<RecoveryView> {
                       ? const SizedBox(
                           height: 16,
                           width: 16,
-                          child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                          child: CircularProgressIndicator.adaptive(
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Icon(Icons.restore_rounded),
                   style: FilledButton.styleFrom(
@@ -138,7 +133,8 @@ class _RecoveryViewState extends State<RecoveryView> {
                   onPressed: _registerNewAccount,
                   icon: const Icon(Icons.person_add_rounded),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: context.color.error,
+                    foregroundColor: context.color.onError,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 32,
                       vertical: 12,

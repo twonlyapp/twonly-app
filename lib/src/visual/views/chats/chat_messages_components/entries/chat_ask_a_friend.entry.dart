@@ -8,7 +8,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -20,12 +19,14 @@ class ChatAskAFriendEntry extends StatefulWidget {
     required this.message,
     required this.borderRadius,
     required this.info,
+    this.contactsById,
     super.key,
   });
 
   final Message message;
   final BorderRadiusGeometry borderRadius;
   final BubbleInfo info;
+  final Map<int, Contact>? contactsById;
 
   @override
   State<ChatAskAFriendEntry> createState() => _ChatAskAFriendEntryState();
@@ -56,6 +57,11 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
   Future<void> _loadUser() async {
     if (_data == null || !_data!.hasAskAboutUserId()) return;
     final userId = _data!.askAboutUserId.toInt();
+    final sharedContact = widget.contactsById?[userId];
+    if (sharedContact != null) {
+      _username = sharedContact.displayName ?? sharedContact.username;
+      return;
+    }
     setState(() {
       _isLoading = true;
     });
@@ -81,7 +87,10 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
           _username = contact.displayName ?? contact.username;
         } else {
           // Fetch from API
-          final userdata = await apiService.getUserById(userId);
+          FrbUserData? userdata;
+          try {
+            userdata = await RustApi.getUserById(userId: userId);
+          } catch (_) {}
           if (userdata != null) {
             _username = utf8.decode(userdata.username);
           }
@@ -115,18 +124,32 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
     });
     try {
       final userId = _data!.askAboutUserId.toInt();
-      final userdata = await apiService.getUserById(userId);
+      FrbUserData? userdata;
+      try {
+        userdata = await RustApi.getUserById(userId: userId);
+      } catch (_) {}
       if (userdata != null) {
         await twonlyDB.contactsDao.insertOnConflictUpdate(
           ContactsCompanion(
             username: Value(utf8.decode(userdata.username)),
-            userId: Value(userdata.userId.toInt()),
+            userId: Value(userdata.userId),
             requested: const Value(false),
             blocked: const Value(false),
             deletedByUser: const Value(false),
+            joinedAt: userdata.joinedAt == null
+                ? const Value.absent()
+                : Value(
+                    DateTime.fromMillisecondsSinceEpoch(
+                      userdata.joinedAt! * Duration.millisecondsPerSecond,
+                      isUtc: true,
+                    ),
+                  ),
           ),
         );
-        await importSignalContactAndCreateRequest(userdata);
+        await RustApi.tryRequestContactById(
+          contactId: userdata.userId,
+          expectedPublicKey: userdata.publicIdentityKey,
+        );
       }
     } catch (e) {
       Log.error(e);
@@ -149,7 +172,7 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
 
     return Container(
       constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.8,
+        maxWidth: MediaQuery.sizeOf(context).width * 0.8,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -162,7 +185,9 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
           mainAxisSize: MainAxisSize.min,
           children: [
             StreamBuilder<Contact?>(
-              stream: twonlyDB.contactsDao.watchContact(userId),
+              stream: widget.contactsById == null
+                  ? twonlyDB.contactsDao.watchContact(userId)
+                  : Stream.value(widget.contactsById![userId]),
               builder: (context, snapshot) {
                 final contactInDb = snapshot.data;
                 return GestureDetector(
@@ -181,6 +206,9 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
                       children: [
                         AvatarIcon(
                           contactId: userId,
+                          contacts: widget.contactsById?[userId] == null
+                              ? null
+                              : [widget.contactsById![userId]!],
                           fontSize: 12,
                         ),
                         const SizedBox(width: 8),
@@ -255,7 +283,9 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
               ),
             ] else ...[
               StreamBuilder<Contact?>(
-                stream: twonlyDB.contactsDao.watchContact(userId),
+                stream: widget.contactsById == null
+                    ? twonlyDB.contactsDao.watchContact(userId)
+                    : Stream.value(widget.contactsById![userId]),
                 builder: (context, contactSnapshot) {
                   final contactInDb = contactSnapshot.data;
                   if (contactInDb != null) {
@@ -269,8 +299,9 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
                   }
 
                   return StreamBuilder<UserDiscoveryAnnouncedUser?>(
-                    stream:
-                        twonlyDB.userDiscoveryDao.watchAnnouncedUser(userId),
+                    stream: twonlyDB.userDiscoveryDao.watchAnnouncedUser(
+                      userId,
+                    ),
                     builder: (context, userSnapshot) {
                       final announcedUser = userSnapshot.data;
                       if (announcedUser != null && announcedUser.isHidden) {

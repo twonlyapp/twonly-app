@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT contact_id FROM group_members WHERE group_id = ? AND group_public_key = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "29bd81e76831e95b2a26531cbcf59139c1954d23158600ace4b314fcd4626992"
+}

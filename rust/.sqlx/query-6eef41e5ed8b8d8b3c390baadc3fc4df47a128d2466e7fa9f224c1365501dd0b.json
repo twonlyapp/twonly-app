@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT pending_plaintext\n            FROM received_receipts\n            WHERE receipt_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "pending_plaintext",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "received_receipts",
+            "name": "pending_plaintext"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "6eef41e5ed8b8d8b3c390baadc3fc4df47a128d2466e7fa9f224c1365501dd0b"
+}

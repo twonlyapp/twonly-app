@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/model/memory_flashbacks.model.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class MemoriesFlashbackBannerComp extends StatelessWidget {
   const MemoriesFlashbackBannerComp({
-    required this.lastYears,
+    required this.flashbacks,
     required this.onOpenFlashback,
     super.key,
   });
 
-  final Map<int, List<MemoryItem>> lastYears;
+  final MemoryFlashbacks flashbacks;
   final void Function(List<MemoryItem> items, int index) onOpenFlashback;
 
   @override
   Widget build(BuildContext context) {
-    if (lastYears.isEmpty) {
+    if (flashbacks.items.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
@@ -29,20 +30,26 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
-                itemCount: lastYears.length + 1,
+                itemCount: flashbacks.items.length + 1,
                 separatorBuilder: (context, _) => const SizedBox(width: 12),
                 itemBuilder: (context, idx) {
                   if (idx == 0) {
                     return const SizedBox.shrink();
                   }
                   idx -= 1;
-                  final entry = lastYears.entries.elementAt(idx);
-                  final years = entry.key;
+                  final entry = flashbacks.items.entries.elementAt(idx);
+                  final elapsed = entry.key;
                   final items = entry.value;
 
-                  var text = context.lang.memoriesAYearAgo;
-                  if (years > 1) {
-                    text = context.lang.memoriesXYearsAgo(years);
+                  final String text;
+                  if (flashbacks.period == MemoryFlashbackPeriod.months) {
+                    text = elapsed == 1
+                        ? context.lang.memoriesAMonthAgo
+                        : context.lang.memoriesXMonthsAgo(elapsed);
+                  } else {
+                    text = elapsed == 1
+                        ? context.lang.memoriesAYearAgo
+                        : context.lang.memoriesXYearsAgo(elapsed);
                   }
 
                   return GestureDetector(
@@ -51,11 +58,11 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
                       width: 120,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
-                            color: Colors.black12,
+                            color: context.color.shadow.withValues(alpha: 0.12),
                             blurRadius: 6,
-                            offset: Offset(0, 2),
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -68,11 +75,15 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return ColoredBox(
-                                color: Colors.grey.shade800,
-                                child: const Center(
+                                color: context.appColor(
+                                  AppColor.mediaBackground,
+                                ),
+                                child: Center(
                                   child: Icon(
                                     Icons.broken_image_outlined,
-                                    color: Colors.white30,
+                                    color: context.appColor(
+                                      AppColor.mediaForegroundMuted,
+                                    ),
                                     size: 32,
                                   ),
                                 ),
@@ -86,7 +97,7 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.center,
                                   colors: [
-                                    Colors.black.withValues(alpha: 0.7),
+                                    context.appColor(AppColor.mediaScrim),
                                     Colors.transparent,
                                   ],
                                 ),
@@ -100,8 +111,10 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
                             child: Text(
                               text,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: context.appColor(
+                                  AppColor.mediaForeground,
+                                ),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                               ),

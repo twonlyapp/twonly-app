@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT members.group_id, members.contact_id\n            FROM group_members AS members\n            JOIN groups ON groups.group_id = members.group_id\n            WHERE members.group_public_key IS NULL\n              AND (members.member_state IS NULL OR members.member_state != 'leftGroup')\n              AND groups.is_direct_chat = 0\n              AND groups.left_group = 0\n              AND (? IS NULL OR members.group_id = ?)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "e15b811d31ca59847e3d4ee2eff71410100258a0a5fe894233d63b6ac770368f"
+}

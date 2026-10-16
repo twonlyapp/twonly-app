@@ -3,19 +3,16 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_android_volume_keydown/flutter_android_volume_keydown.dart';
-import 'package:flutter_volume_controller/flutter_volume_controller.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -23,20 +20,19 @@ import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
+import 'package:twonly/src/visual/views/camera/camera_preview_components/android_camera_volume_control.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_bottom_controls.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_scanned_overlay.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_selfie_flash.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_top_actions.dart';
-import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
+import 'package:twonly/src/visual/views/camera/camera_preview_components/ios_camera_volume_control.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/permissions_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/send_to.dart';
+import 'package:twonly/src/visual/views/camera/camera_preview_components/video_recording_budget.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/video_recording_time.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
-import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
 import 'package:twonly/src/visual/views/home.view.dart';
-
-int maxVideoRecordingTime = 60;
 
 class SelectedCameraDetails {
   double maxAvailableZoom = 1;
@@ -86,6 +82,9 @@ class _CameraPreviewControllerViewState
 
   @override
   Widget build(BuildContext context) {
+    widget.mainController.scanHighlightColor = context.appColor(
+      AppColor.scanHighlight,
+    );
     if (AppState.hasCameraPermissions) {
       return CameraPreviewView(
         sendToGroup: widget.sendToGroup,
@@ -144,7 +143,8 @@ class CameraPreviewView extends StatefulWidget {
   State<CameraPreviewView> createState() => _CameraPreviewViewState();
 }
 
-class _CameraPreviewViewState extends State<CameraPreviewView> {
+class _CameraPreviewViewState extends State<CameraPreviewView>
+    with WidgetsBindingObserver {
   bool _galleryLoadedImageIsShown = false;
   bool _showSelfieFlash = false;
   double _basePanY = 0;
@@ -153,6 +153,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   DateTime? _videoRecordingStarted;
   Timer? _videoRecordingTimer;
   bool _videoRecordingLocked = false;
+  Duration _currentMaxRecordingTime = Duration.zero;
 
   DateTime _currentTime = clock.now();
   final GlobalKey keyTriggerButton = GlobalKey();
@@ -161,14 +162,37 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   MainCameraController get mc => widget.mainCameraController;
 
-  StreamSubscription<HardwareButton>? androidVolumeDownSub;
+  late final _androidVolumeControl = AndroidCameraVolumeControl(
+    onPressed: () async {
+      if (mounted && widget.isVisible) await takePicture();
+    },
+  );
+  late final _iosVolumeControl = IosCameraVolumeControl(
+    onPressed: () async {
+      if (mounted && widget.isVisible) await takePicture();
+    },
+  );
+  StreamSubscription<void>? _userUpdates;
+  late bool _storeLocationInMemories;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _storeLocationInMemories = userService.currentUser.storeLocationInMemories;
+    _userUpdates = userService.onUserUpdated.listen((_) {
+      final enabled = userService.currentUser.storeLocationInMemories;
+      final wasEnabled = _storeLocationInMemories;
+      _storeLocationInMemories = enabled;
+      // The camera can remain mounted while settings are open, so enabling
+      // location does not necessarily cause a visibility change.
+      if (enabled && !wasEnabled) _prewarmMemoryLocation();
+    });
+    unawaited(VideoRecordingBudget.ensureLoaded());
     initVolumeControl();
     initAsync();
     _checkAndInitCamera();
+    _prewarmMemoryLocation();
   }
 
   @override
@@ -178,9 +202,31 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       if (widget.isVisible) {
         initVolumeControl();
         _checkAndInitCamera();
+        _prewarmMemoryLocation();
       } else {
         _deInitVolumeControl();
       }
+    }
+  }
+
+  void _prewarmMemoryLocation() {
+    // QR scanning deliberately does not touch location. A normal camera view
+    // has controllers and can create a Memory, so start looking as soon as it
+    // becomes visible instead of waiting for the shutter.
+    if (!widget.isVisible || widget.hideControllers) return;
+    unawaitedRustCall(
+      RustApi.prewarmMemoryLocation(),
+      'prewarmMemoryLocation',
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _prewarmMemoryLocation();
+      if (Platform.isIOS || Platform.isAndroid) unawaited(initVolumeControl());
+    } else if (Platform.isIOS || Platform.isAndroid) {
+      unawaited(_deInitVolumeControl());
     }
   }
 
@@ -199,64 +245,29 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_userUpdates?.cancel());
     _videoRecordingTimer?.cancel();
     _deInitVolumeControl();
     super.dispose();
   }
 
   Future<void> initVolumeControl() async {
+    if (!mounted || !widget.isVisible || mc.isSharePreviewIsShown) return;
     if (Platform.isIOS) {
-      await FlutterVolumeController.updateShowSystemUI(false);
-      double? startedVolume;
-
-      FlutterVolumeController.addListener(
-        (volume) async {
-          if (!widget.isVisible) {
-            await _deInitVolumeControl();
-            return;
-          }
-          if (startedVolume == null) {
-            startedVolume = volume;
-            return;
-          }
-          if (startedVolume == volume) {
-            return;
-          }
-          // reset the volume back to the original value
-          await FlutterVolumeController.setVolume(startedVolume!);
-          await takePicture();
-        },
-      );
+      await _iosVolumeControl.start();
     }
     if (Platform.isAndroid) {
-      if ((await DeviceInfoPlugin().androidInfo).version.release == '9') {
-        // MissingPluginException: MissingPluginException(No implementation found for method cancel on channel dart-tools.dev/flutter_…
-        // Maybe this is the reason?
-        return;
-      } else {
-        await androidVolumeDownSub?.cancel();
-        androidVolumeDownSub = FlutterAndroidVolumeKeydown.stream.listen((
-          event,
-        ) {
-          if (widget.isVisible) {
-            takePicture();
-          } else {
-            _deInitVolumeControl();
-            return;
-          }
-        });
-      }
+      await _androidVolumeControl.start();
     }
   }
 
   Future<void> _deInitVolumeControl() async {
     if (Platform.isIOS) {
-      await FlutterVolumeController.updateShowSystemUI(true);
-      FlutterVolumeController.removeListener();
+      await _iosVolumeControl.stop();
     }
     if (Platform.isAndroid) {
-      await androidVolumeDownSub?.cancel();
-      androidVolumeDownSub = null;
+      await _androidVolumeControl.stop();
     }
   }
 
@@ -393,11 +404,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     final type =
         mediaType ??
         ((videoFilePath != null) ? MediaType.video : MediaType.image);
-    final mediaFileService = await initializeMediaUpload(
-      type,
-      userService.currentUser.defaultShowTime,
+    final mediaId = await RustApi.initializeMediaUpload(
+      mediaType: type.name,
+      displayLimitInMilliseconds: userService.currentUser.defaultShowTime,
       isDraftMedia: true,
     );
+    final mediaFileService = await MediaFileService.fromMediaId(mediaId);
     if (!mounted) return true;
 
     if (mediaFileService == null) {
@@ -410,8 +422,14 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         ..copySync(mediaFileService.originalPath.path)
         ..deleteSync();
 
-      // Start with compressing the video, to speed up the process in case the video is not changed.
-      // unawaited(mediaFileService.compressMedia());
+      // Transcode while the user is still editing. A send then only has to
+      // encrypt and hand over, which is short enough to survive the app being
+      // closed straight after; the render is discarded if the editor ends up
+      // drawing something on the clip.
+      unawaitedRustCall(
+        RustApi.prerenderMedia(mediaId: mediaId),
+        'prerenderMedia',
+      );
     }
 
     await _deInitVolumeControl();
@@ -580,35 +598,14 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     });
   }
 
-  Future<void> pressSideButtonLeft() async {
-    if (!mc.isSelectingFaceFilters) {
-      return pickImageFromGallery();
-    }
-    if (mc.currentFilterType.index == 1) {
-      mc.setFilter(FaceFilterType.none);
-      setState(() {
-        mc.isSelectingFaceFilters = false;
-      });
-      return;
-    }
-    mc.setFilter(mc.currentFilterType.goLeft());
-  }
-
-  Future<void> pressSideButtonRight() async {
-    if (!mc.isSelectingFaceFilters) {
-      setState(() {
-        mc.isSelectingFaceFilters = true;
-      });
-    }
-    if (mc.currentFilterType.index == FaceFilterType.values.length - 1) {
-      mc.setFilter(FaceFilterType.none);
-      setState(() {
-        mc.isSelectingFaceFilters = false;
-      });
-      return;
-    }
-    mc.setFilter(mc.currentFilterType.goRight());
-  }
+  /// How long this recording may run before the file stops being uploadable
+  /// on the user's plan. Frozen when the recording starts so that the ring and
+  /// the cut-off cannot drift apart if the plan or the camera changes midway.
+  Duration get _maxVideoRecordingTime => VideoRecordingBudget.maxRecordingTime(
+    plan: planFromString(userService.currentUser.subscriptionPlan),
+    recordingSize: mc.cameraController?.value.previewSize,
+    hasAudio: _hasAudioPermission,
+  );
 
   Future<void> startVideoRecording() async {
     if (mc.cameraController != null &&
@@ -625,23 +622,30 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
     try {
       await mc.cameraController?.startVideoRecording();
-      _videoRecordingTimer = Timer.periodic(const Duration(milliseconds: 15), (
+      final maxRecordingTime = _maxVideoRecordingTime;
+      setState(() {
+        _currentTime = clock.now();
+        _videoRecordingStarted = _currentTime;
+        _currentMaxRecordingTime = maxRecordingTime;
+        mc.isVideoRecording = true;
+      });
+      _videoRecordingTimer = Timer.periodic(const Duration(milliseconds: 50), (
         timer,
       ) {
+        final startedAt = _videoRecordingStarted;
+        if (startedAt == null) {
+          timer.cancel();
+          _videoRecordingTimer = null;
+          return;
+        }
         setState(() {
           _currentTime = clock.now();
         });
-        if (_videoRecordingStarted != null &&
-            _currentTime.difference(_videoRecordingStarted!).inSeconds >=
-                maxVideoRecordingTime) {
-          timer.cancel();
-          _videoRecordingTimer = null;
-          stopVideoRecording();
+        if (_currentTime.difference(startedAt) >= maxRecordingTime) {
+          // The budget is spent, so this stop is not the user letting go of
+          // the button: it has to go through even while recording is locked.
+          unawaited(stopVideoRecording(force: true));
         }
-      });
-      setState(() {
-        _videoRecordingStarted = clock.now();
-        mc.isVideoRecording = true;
       });
     } on CameraException catch (e) {
       setState(() {
@@ -661,6 +665,15 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       _videoRecordingTimer?.cancel();
       _videoRecordingTimer = null;
     }
+
+    final startedAt = _videoRecordingStarted;
+    // Taken here rather than after the recorder has been asked to stop: the
+    // tail it flushes would otherwise read as recorded time and talk the
+    // measured write rate down.
+    final recordedFor = startedAt == null
+        ? null
+        : clock.now().difference(startedAt);
+    final recordingSize = mc.cameraController?.value.previewSize;
 
     await mc.cameraController?.setFlashMode(FlashMode.off);
 
@@ -683,7 +696,24 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       final videoPath = await mc.cameraController?.stopVideoRecording();
       if (videoPath == null) return;
       await mc.cameraController?.pausePreview();
-      if (await pushMediaEditor(null, File(videoPath.path))) {
+      final videoFile = File(videoPath.path);
+      // Read before the editor takes the file over, and tell the budget what
+      // this device really writes so the next recording is measured, not
+      // estimated.
+      if (recordedFor != null) {
+        try {
+          unawaited(
+            VideoRecordingBudget.recordMeasurement(
+              fileSizeInBytes: videoFile.statSync().size,
+              duration: recordedFor,
+              recordingSize: recordingSize,
+            ),
+          );
+        } catch (e) {
+          Log.warn('Could not measure the recorded video: $e');
+        }
+      }
+      if (await pushMediaEditor(null, videoFile)) {
         return;
       }
     } on CameraException catch (e) {
@@ -713,10 +743,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     return StreamBuilder(
       stream: userService.onUserUpdated,
       builder: (context, asyncSnapshot) {
-        return MediaViewSizingHelper(
-          requiredHeight: 0,
-          additionalPadding: 59,
-          bottomNavigation: Container(),
+        return MediaViewSizingHelper.cameraEditor(
+          bottomNavigation: const SizedBox.shrink(),
           child: GestureDetector(
             onPanStart: (details) async {
               setState(() {
@@ -826,32 +854,18 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                     mainController: mc,
                     isVideoRecording: mc.isVideoRecording,
                     videoRecordingLocked: _videoRecordingLocked,
-                    isFront: isFront,
                     keyTriggerButton: keyTriggerButton,
                     keyLockButton: keyLockButton,
                     onTakePicture: takePicture,
-                    onPressSideButtonLeft: pressSideButtonLeft,
-                    onPressSideButtonRight: pressSideButtonRight,
+                    onPickImageFromGallery: pickImageFromGallery,
                     updateScaleFactor: updateScaleFactor,
                     onStopVideoRecording: () => stopVideoRecording(force: true),
                   ),
                 VideoRecordingTimer(
                   videoRecordingStarted: _videoRecordingStarted,
-                  maxVideoRecordingTime: maxVideoRecordingTime,
+                  currentTime: _currentTime,
+                  maxRecordingTime: _currentMaxRecordingTime,
                 ),
-                if (!mc.isSharePreviewIsShown && widget.sendToGroup != null ||
-                    widget.hideControllers)
-                  Positioned(
-                    left: 5,
-                    top: 10,
-                    child: ActionButton(
-                      FontAwesomeIcons.xmark,
-                      tooltipText: context.lang.close,
-                      onPressed: () async {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
                 if (_showSelfieFlash) const CameraSelfieFlash(),
                 CameraScannedOverlay(mainController: mc),
               ],

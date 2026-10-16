@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE groups SET\n                   total_media_counter = total_media_counter + 1,\n                   last_flame_counter_change = ?,\n                   last_message_received = ?,\n                   last_message_send = ?,\n                   flame_counter = ?,\n                   max_flame_counter = ?,\n                   max_flame_counter_from = ?\n               WHERE group_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "8b9b84ef9e2621d83b53aec4798ce90d7c817188bf715c183a9fd291912ee351"
+}

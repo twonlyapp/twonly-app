@@ -1,41 +1,50 @@
-// ignore_for_file: inference_failure_on_function_invocation
-
 import 'dart:async';
 import 'dart:collection';
-import 'dart:typed_data';
+import 'dart:math' as math;
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
-import 'package:twonly/src/visual/components/notification_badge.comp.dart';
-import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
-import 'package:twonly/src/visual/views/camera/camera_preview_components/save_to_gallery.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection.view.dart';
-import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/select_show_time.dart';
-import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
+import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/story_target_selector.comp.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/discard_media_dialog.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/display_time_picker.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_bottom_bar.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_canvas.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_image_tools.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_layer_stack.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_media_writer.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_side_toolbar.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_top_toolbar.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/image_item.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
-import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers_viewer.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/video_trimmer.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/widget_share_explainer.dart';
 import 'package:video_player/video_player.dart';
 
-List<Layer> layers = [];
-List<Layer> undoLayers = [];
-List<Layer> removedLayers = [];
-
+/// Lets the user edit a just taken (or shared) photo/video/gif and send it.
+///
+/// The screen is built out of four parts:
+/// * [EditorCanvas] shows the media with all edits stacked on top of it
+/// * [EditorTopToolbar] holds close/undo/redo
+/// * [EditorSideToolbar] holds the editing tools
+/// * [EditorBottomBar] holds save to gallery and send
+///
+/// The edits themselves live in an [EditorLayerStack], writing them to disk is
+/// done by an [EditorMediaWriter].
 class ShareImageEditorView extends StatefulWidget {
   const ShareImageEditorView({
     required this.sharedFromGallery,
@@ -57,18 +66,55 @@ class ShareImageEditorView extends StatefulWidget {
 }
 
 class _ShareImageEditorView extends State<ShareImageEditorView> {
+  final layerStack = EditorLayerStack();
+  late final EditorMediaWriter mediaWriter;
+
   double tabDownPosition = 0;
   bool sendingOrLoadingImage = true;
   bool loadingImage = true;
   bool isDisposed = false;
   HashSet<String> selectedGroupIds = HashSet();
-  double widthRatio = 1;
-  double heightRatio = 1;
+  final StoryTarget storyTarget = StoryTarget();
   double pixelRatio = 1;
   VideoPlayerController? videoController;
+
+  /// The cut the trimmer is showing. Held here as well as in the media row so
+  /// dragging a handle repaints immediately instead of waiting on a write, and
+  /// so the send path and the preview always agree on the same bounds.
+  Duration _trimStart = Duration.zero;
+
+  /// Null until the trimmer is dragged or a stored cut is loaded; it then means
+  /// "the clip ends here" while null keeps the recording's own end.
+  Duration? _trimEnd;
+
+  /// The cutter lies over the video, so it can be put away to see the frame
+  /// underneath it. Open to begin with, otherwise nothing says it is there.
+  bool _trimmerVisible = true;
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
   Timer? _imageLoadingTimer;
+  late final StreamSubscription<List<Group>> _widgetGroupsSubscription;
+  final GlobalKey _editorStackKey = GlobalKey();
+  final GlobalKey _widgetActionKey = GlobalKey();
+  Offset? _widgetActionCenter;
+  bool _widgetActionMeasurementScheduled = false;
+
+  bool _widgetRecipientAvailable = false;
+  bool _sendToWidget = false;
+  bool _updatingWidgetMode = false;
+  bool _widgetExplainerPreferenceLoaded = false;
+  bool _widgetExplainerDismissed =
+      userService.currentUser.hideWidgetShareExplainer;
+  bool _previousMediaSettingsCaptured = false;
+  int? _displayLimitBeforeWidget;
+  bool _requiresAuthBeforeWidget = false;
+  bool _selectingSticker = false;
+  bool _creatingSticker = false;
+
+  bool get _showWidgetExplainer =>
+      _widgetRecipientAvailable &&
+      _widgetExplainerPreferenceLoaded &&
+      !_widgetExplainerDismissed;
 
   MediaFileService get mediaService => widget.mediaFileService;
   MediaFile get media => widget.mediaFileService.mediaFile;
@@ -77,63 +123,46 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   void initState() {
     super.initState();
 
+    mediaWriter = EditorMediaWriter(
+      mediaService: mediaService,
+      layerStack: layerStack,
+      screenshotController: screenshotController,
+      gifSource: widget.screenshotImage,
+      requestRebuild: () {
+        if (mounted) setState(() {});
+      },
+    );
+
     if (media.type != MediaType.gif) {
-      layers.add(FilterLayerData(key: GlobalKey()));
+      layerStack.addFilterLayer();
     }
 
-    if (widget.previewLink != null &&
-        widget.previewLink!.shouldGeneratePreview) {
-      layers.add(
-        LinkPreviewLayerData(key: GlobalKey(), link: widget.previewLink!.url),
-      );
+    final previewLink = widget.previewLink;
+    if (previewLink != null && previewLink.shouldGeneratePreview) {
+      layerStack.addLinkPreviewLayer(previewLink.url);
     }
 
     if (widget.sendToGroup != null) {
       selectedGroupIds.add(widget.sendToGroup!.groupId);
     }
 
-    if (widget.mediaFileService.mediaFile.type == MediaType.image ||
-        widget.mediaFileService.mediaFile.type == MediaType.gif) {
-      if (widget.screenshotImage != null) {
-        loadImage(widget.screenshotImage!);
-      } else {
-        if (widget.mediaFileService.tempPath.existsSync()) {
-          loadImage(
-            ScreenshotImageHelper(file: widget.mediaFileService.tempPath),
-          );
-        } else if (widget.mediaFileService.originalPath.existsSync()) {
-          loadImage(
-            ScreenshotImageHelper(file: widget.mediaFileService.originalPath),
-          );
-        }
-      }
+    _widgetGroupsSubscription = twonlyDB.groupsDao
+        .watchGroupsAllowedForWidgetShare()
+        .listen(_updateWidgetRecipientAvailability);
+    unawaited(_loadWidgetExplainerPreference());
+    if (media.type == MediaType.image || media.type == MediaType.gif) {
+      _loadInitialImage();
     }
 
     if (media.type == MediaType.video) {
-      setState(() {
-        sendingOrLoadingImage = false;
-        loadingImage = false;
-      });
-      videoController = VideoPlayerController.file(
-        mediaService.originalPath,
-        videoPlayerOptions: VideoPlayerOptions(),
-      );
-      videoController?.setLooping(true);
-      videoController
-          ?.initialize()
-          .then((_) async {
-            await videoController!.play();
-            setState(() {});
-          })
-          // ignore: argument_type_not_assignable_to_error_handler
-          .catchError(Log.error);
+      _initVideoController();
     }
   }
 
   @override
   void dispose() {
     isDisposed = true;
-    layers.clear();
+    layerStack.clear();
     videoController?.dispose();
     twonlyDB.mediaFilesDao.updateAllMediaFiles(
       const MediaFilesCompanion(
@@ -141,427 +170,141 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ),
     );
     _imageLoadingTimer?.cancel();
+    unawaited(_widgetGroupsSubscription.cancel());
     super.dispose();
   }
 
-  void updateSelectedGroupIds(String groupId, bool checked) {
-    if (checked) {
-      if (media.requiresAuthentication) {
-        selectedGroupIds.clear();
-      }
-      selectedGroupIds.add(groupId);
-    } else {
-      selectedGroupIds.remove(groupId);
-    }
-    setState(() {});
-  }
-
-  Future<void> _setMaxShowTime(int? maxShowTime, bool storeAsDefault) async {
-    await mediaService.setDisplayLimit(maxShowTime);
+  Future<void> _loadWidgetExplainerPreference() async {
+    final preference = await KeyValueStore.get(
+      KeyValueKeys.shareImageWidgetExplainer,
+    );
     if (!mounted) return;
-    setState(() {});
-    if (storeAsDefault) {
-      await UserService.update((user) {
-        user.defaultShowTime = maxShowTime;
-      });
+    setState(() {
+      _widgetExplainerDismissed =
+          _widgetExplainerDismissed || preference?['dismissed'] == true;
+      _widgetExplainerPreferenceLoaded = true;
+    });
+  }
+
+  Future<void> _dismissWidgetExplainer() async {
+    setState(() => _widgetExplainerDismissed = true);
+    await Future.wait([
+      KeyValueStore.put(
+        KeyValueKeys.shareImageWidgetExplainer,
+        const {'dismissed': true},
+      ),
+      UserService.update((u) => u.hideWidgetShareExplainer = true),
+    ]);
+  }
+
+  void _updateWidgetRecipientAvailability(List<Group> widgetGroups) {
+    final fixedGroupId = widget.sendToGroup?.groupId;
+    final recipientAvailable =
+        media.type == MediaType.image &&
+        (fixedGroupId == null
+            ? widgetGroups.isNotEmpty
+            : widgetGroups.any((group) => group.groupId == fixedGroupId));
+
+    if (mounted && recipientAvailable != _widgetRecipientAvailable) {
+      setState(() => _widgetRecipientAvailable = recipientAvailable);
+    }
+    if (!recipientAvailable && _sendToWidget && !_updatingWidgetMode) {
+      unawaited(_setSendToWidget(false));
     }
   }
 
-  Future<void> _setImageDisplayTime() async {
-    if (media.type == MediaType.video) {
-      await mediaService.setDisplayLimit(
-        (media.displayLimitInMilliseconds == null) ? 0 : null,
+  void _scheduleWidgetActionMeasurement() {
+    if (_widgetActionMeasurementScheduled) return;
+    _widgetActionMeasurementScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _widgetActionMeasurementScheduled = false;
+      if (!mounted || !_showWidgetExplainer) return;
+
+      final actionBox =
+          _widgetActionKey.currentContext?.findRenderObject() as RenderBox?;
+      final stackBox =
+          _editorStackKey.currentContext?.findRenderObject() as RenderBox?;
+      if (actionBox == null || stackBox == null || !actionBox.hasSize) return;
+
+      final topLeft = actionBox.localToGlobal(
+        Offset.zero,
+        ancestor: stackBox,
       );
-      if (!mounted) return;
-      setState(() {});
+      final center = topLeft + actionBox.size.center(Offset.zero);
+      if (_widgetActionCenter != center) {
+        setState(() => _widgetActionCenter = center);
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // loading the media
+  // ---------------------------------------------------------------------------
+
+  void _loadInitialImage() {
+    if (widget.screenshotImage != null) {
+      loadImage(widget.screenshotImage!);
       return;
     }
-
-    final options = [
-      1000,
-      2000,
-      3000,
-      4000,
-      5000,
-      6000,
-      7000,
-      8000,
-      9000,
-      10000,
-      15000,
-      20000,
-      null,
-    ];
-
-    var initialItem = options.length - 1;
-    if (media.displayLimitInMilliseconds != null) {
-      initialItem = options.indexOf(media.displayLimitInMilliseconds);
-      if (initialItem == -1) {
-        initialItem = options.length - 1;
-      }
-    }
-    await showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.black,
-      builder: (context) {
-        return SelectShowTime(
-          initialItem: initialItem,
-          setMaxShowTime: _setMaxShowTime,
-          options: options,
-        );
-      },
-    );
-  }
-
-  List<Widget> get actionsAtTheRight {
-    if (layers.isNotEmpty &&
-        (layers.first.isEditing ||
-            (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
-      return [];
-    }
-    return <Widget>[
-      if (media.type != MediaType.gif)
-        ActionButton(
-          Icons.text_fields_rounded,
-          tooltipText: context.lang.addTextItem,
-          onPressed: () async {
-            layers = layers.where((x) => !x.isDeleted).toList();
-            if (layers.any((x) => x.isEditing)) return;
-            undoLayers.clear();
-            removedLayers.clear();
-            layers.add(
-              TextLayerData(
-                key: GlobalKey(),
-                textLayersBefore: layers.whereType<TextLayerData>().length,
-              ),
-            );
-            setState(() {});
-          },
-        ),
-      const SizedBox(height: 8),
-      if (media.type != MediaType.gif)
-        ActionButton(
-          Icons.draw_rounded,
-          tooltipText: context.lang.addDrawing,
-          onPressed: () async {
-            undoLayers.clear();
-            removedLayers.clear();
-            layers.add(DrawLayerData(key: GlobalKey()));
-            setState(() {});
-          },
-        ),
-      const SizedBox(height: 8),
-      if (media.type != MediaType.gif)
-        ActionButton(
-          Icons.add_reaction_outlined,
-          tooltipText: context.lang.addEmoji,
-          onPressed: () async {
-            final layer =
-                await showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.black,
-                      builder: (context) {
-                        return const EmojiPickerBottom();
-                      },
-                    )
-                    as Layer?;
-            if (layer == null) return;
-            undoLayers.clear();
-            removedLayers.clear();
-            layers.add(layer);
-            setState(() {});
-          },
-        ),
-      const SizedBox(height: 8),
-      NotificationBadgeComp(
-        count: (media.type == MediaType.video)
-            ? '0'
-            : media.displayLimitInMilliseconds == null
-            ? '∞'
-            : (media.displayLimitInMilliseconds! ~/ 1000).toString(),
-        child: ActionButton(
-          (media.type == MediaType.video)
-              ? media.displayLimitInMilliseconds == null
-                    ? Icons.repeat_rounded
-                    : Icons.repeat_one_rounded
-              : Icons.timer_outlined,
-          tooltipText: context.lang.protectAsARealTwonly,
-          onPressed: _setImageDisplayTime,
-        ),
-      ),
-      if (media.type == MediaType.video) ...[
-        const SizedBox(height: 8),
-        ActionButton(
-          (mediaService.removeAudio)
-              ? Icons.volume_off_rounded
-              : Icons.volume_up_rounded,
-          tooltipText: 'Enable Audio in Video',
-          color: (mediaService.removeAudio)
-              ? Colors.white.withAlpha(160)
-              : Colors.white,
-          onPressed: () async {
-            await mediaService.toggleRemoveAudio();
-            if (mediaService.removeAudio) {
-              await videoController?.setVolume(0);
-            } else {
-              await videoController?.setVolume(100);
-            }
-            if (mounted) setState(() {});
-          },
-        ),
-      ],
-      if (media.type == MediaType.image) ...[
-        const SizedBox(height: 8),
-        ActionButton(
-          Icons.crop_rotate_outlined,
-          tooltipText: 'Crop or rotate image',
-          color: Colors.white,
-          onPressed: () async {
-            final first = layers.first;
-            if (first is BackgroundLayerData) {
-              first.isEditing = !first.isEditing;
-            }
-            setState(() {});
-            // await mediaService.toggleRemoveAudio();
-            // if (mediaService.removeAudio) {
-            //   await videoController?.setVolume(0);
-            // } else {
-            //   await videoController?.setVolume(100);
-            // }
-            // if (mounted) setState(() {});
-          },
-        ),
-      ],
-      const SizedBox(height: 8),
-      ActionButton(
-        FontAwesomeIcons.shieldHeart,
-        tooltipText: context.lang.protectAsARealTwonly,
-        color: media.requiresAuthentication
-            ? Theme.of(context).colorScheme.primary
-            : Colors.white,
-        onPressed: () async {
-          await mediaService.setRequiresAuth(!media.requiresAuthentication);
-          selectedGroupIds = HashSet();
-          setState(() {});
-        },
-      ),
-    ];
-  }
-
-  Future<bool?> _showBackDialog() {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            context.lang.dialogAskDeleteMediaFilePopTitle,
-          ),
-          actions: [
-            MyButton(
-              variant: MyButtonVariant.primaryMiddle,
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
-              child: Text(context.lang.dialogAskDeleteMediaFilePopDelete),
-            ),
-            TextButton(
-              child: Text(context.lang.cancel),
-              onPressed: () {
-                Navigator.pop(context, false);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> askToCloseThenClose() async {
-    final shouldPop = await _showBackDialog() ?? false;
-    if (mounted && shouldPop) {
-      Navigator.pop(context);
-    }
-  }
-
-  List<Widget> get actionsAtTheTop {
-    if (layers.isNotEmpty &&
-        (layers.first.isEditing ||
-            (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
-      return [];
-    }
-    return [
-      ActionButton(
-        FontAwesomeIcons.xmark,
-        tooltipText: context.lang.close,
-        onPressed: () async {
-          final nonImageFilterLayer = layers.where(
-            (x) => x is! BackgroundLayerData && x is! FilterLayerData,
-          );
-          if (nonImageFilterLayer.isEmpty) {
-            Navigator.pop(context, false);
-          } else {
-            await askToCloseThenClose();
-          }
-        },
-      ),
-      Expanded(child: Container()),
-      const SizedBox(width: 8),
-      ActionButton(
-        FontAwesomeIcons.rotateLeft,
-        tooltipText: context.lang.undo,
-        disable: layers.where((x) => !x.isDeleted).length <= 2,
-        onPressed: () {
-          if (removedLayers.isNotEmpty) {
-            final lastLayer = removedLayers.removeLast()
-              ..isDeleted = false
-              ..isEditing = false;
-            layers.add(lastLayer);
-            setState(() {});
-            return;
-          }
-          layers = layers.where((x) => !x.isDeleted).toList();
-          if (layers.length <= 2) {
-            // do not remove image layer and filter layer
-            return;
-          }
-          undoLayers.add(layers.removeLast());
-          setState(() {});
-        },
-      ),
-      const SizedBox(width: 8),
-      ActionButton(
-        FontAwesomeIcons.rotateRight,
-        tooltipText: context.lang.redo,
-        disable: undoLayers.isEmpty,
-        onPressed: () {
-          if (undoLayers.isEmpty) return;
-          layers.add(undoLayers.removeLast());
-          setState(() {});
-        },
-      ),
-      const SizedBox(width: 70),
-    ];
-  }
-
-  Future<void> pushShareImageView() async {
-    final mediaStoreFuture = storeImageAsOriginal();
-
-    await videoController?.pause();
-    if (isDisposed || !mounted) return;
-    final wasSend =
-        await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ShareImageView(
-                  selectedGroupIds: selectedGroupIds,
-                  updateSelectedGroupIds: updateSelectedGroupIds,
-                  mediaStoreFuture: mediaStoreFuture,
-                  mediaFileService: mediaService,
-                  additionalData: getAdditionalData(),
-                ),
-              ),
-            )
-            as bool?;
-    if (wasSend != null && wasSend && mounted) {
-      widget.mainCameraController?.onImageSend();
-      Navigator.pop(context, true);
-    } else {
-      await videoController?.play();
-    }
-  }
-
-  Future<ScreenshotImageHelper?> getEditedImageBytes() async {
-    if (layers.length == 1) {
-      if (layers.first is BackgroundLayerData) {
-        return (layers.first as BackgroundLayerData).image.image;
-      }
-    }
-    if (layers.length == 2) {
-      final filterLayer = layers[1];
-      if (layers.first is BackgroundLayerData &&
-          filterLayer is FilterLayerData) {
-        if (filterLayer.page == 1) {
-          return (layers.first as BackgroundLayerData).image.image;
-        }
-      }
-    }
-
-    for (final x in layers) {
-      x.showCustomButtons = false;
-    }
-    setState(() {});
-
-    // Make a short delay, so the setState does have its effect...
-    await Future.delayed(const Duration(milliseconds: 80));
-
-    final image = await screenshotController.capture(
-      pixelRatio: pixelRatio,
-    );
-    if (image == null) {
-      Log.warn('screenshotController did not return image bytes');
-      return null;
-    }
-
-    for (final x in layers) {
-      x.showCustomButtons = true;
-    }
-    if (mounted) {
-      setState(() {});
-    }
-    return image;
-  }
-
-  Future<ScreenshotImageHelper?> storeImageAsOriginal() async {
-    Uint8List? gifBytes;
-    ScreenshotImageHelper? image;
-    if (media.type == MediaType.gif) {
-      gifBytes = await widget.screenshotImage?.getBytes();
-    } else {
-      image = await getEditedImageBytes();
-      if (image != null) {
-        await image.getBytes();
-      }
-    }
-
-    if (mediaService.overlayImagePath.existsSync()) {
-      mediaService.overlayImagePath.deleteSync();
-    }
     if (mediaService.tempPath.existsSync()) {
-      mediaService.tempPath.deleteSync();
+      loadImage(ScreenshotImageHelper(file: mediaService.tempPath));
+    } else if (mediaService.originalPath.existsSync()) {
+      loadImage(ScreenshotImageHelper(file: mediaService.originalPath));
     }
-    if (mediaService.originalPath.existsSync()) {
-      if (media.type == MediaType.image) {
-        mediaService.originalPath.deleteSync();
-      }
-    }
-
-    if (media.type == MediaType.gif) {
-      if (gifBytes != null) {
-        mediaService.originalPath.writeAsBytesSync(gifBytes.toList());
-      }
-    } else {
-      if (image == null) return null;
-      final bytes = await image.getBytes();
-      if (bytes == null) {
-        Log.warn('imageBytes are empty');
-        return null;
-      }
-      if (media.type == MediaType.image || media.type == MediaType.gif) {
-        mediaService.originalPath.writeAsBytesSync(bytes);
-      } else if (media.type == MediaType.video) {
-        mediaService.overlayImagePath.writeAsBytesSync(bytes);
-      } else {
-        Log.error('MediaType not supported: ${media.type}');
-      }
-    }
-    return image;
   }
 
-  Future<void> storeIoImageAsDraft(
-    ScreenshotImageHelper screenshotImage,
-  ) async {
-    final imageBytes = await screenshotImage.getBytes();
-    mediaService.originalPath.writeAsBytesSync(imageBytes!.toList());
+  void _initVideoController() {
+    setState(() {
+      sendingOrLoadingImage = false;
+      loadingImage = false;
+    });
+    videoController = VideoPlayerController.file(
+      mediaService.originalPath,
+      videoPlayerOptions: VideoPlayerOptions(),
+    );
+    videoController?.setLooping(true);
+    videoController
+        ?.initialize()
+        .then((_) async {
+          _loadStoredTrim();
+          if (_trimStart > Duration.zero) {
+            await videoController!.seekTo(_trimStart);
+          }
+          await videoController!.play();
+          setState(() {});
+        })
+        // ignore: argument_type_not_assignable_to_error_handler
+        .catchError(Log.error);
+  }
+
+  /// Restores a cut made before the editor was closed and reopened on the same
+  /// draft. Bounds that no longer fit the recording are dropped rather than
+  /// clamped, because a mismatch means they belong to a different clip.
+  void _loadStoredTrim() {
+    final duration = videoController?.value.duration ?? Duration.zero;
+    final start = mediaService.trimStart;
+    final end = mediaService.trimEnd;
+    if (start != null && start > Duration.zero && start < duration) {
+      _trimStart = start;
+    }
+    if (end != null && end > _trimStart && end < duration) {
+      _trimEnd = end;
+    }
+  }
+
+  /// Where the clip ends, with "not cut" resolved to the end of the recording.
+  Duration get _effectiveTrimEnd =>
+      _trimEnd ?? videoController?.value.duration ?? Duration.zero;
+
+  /// Stores the cut once the finger lifts. An end on the last frame is stored
+  /// as "not cut" so a clip nobody shortened never carries a bound that a
+  /// re-encode could round past its own duration.
+  Future<void> _persistTrim(Duration start, Duration end) async {
+    final duration = videoController?.value.duration ?? Duration.zero;
+    await mediaService.setTrim(
+      start > Duration.zero ? start : null,
+      end < duration ? end : null,
+    );
   }
 
   Future<void> loadImage(ScreenshotImageHelper screenshotImage) async {
@@ -569,10 +312,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         screenshotImage.imageBytes == null &&
         screenshotImage.imageBytesFuture != null) {
       // this ensures that the imageBytes are defined
-      await storeIoImageAsDraft(screenshotImage);
+      await mediaWriter.storeAsDraft(screenshotImage);
     } else {
       // store this image so it can be used as a draft in case the app is restarted
-      unawaited(storeIoImageAsDraft(screenshotImage));
+      unawaited(mediaWriter.storeAsDraft(screenshotImage));
     }
 
     if (screenshotImage.image == null) {
@@ -599,46 +342,250 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     });
 
     setState(() {
-      layers.insert(
-        0,
-        BackgroundLayerData(
-          key: GlobalKey(),
-          image: currentImage,
-        ),
-      );
+      layerStack.insertBackgroundLayer(currentImage);
     });
-    // It is important that the user can sending the image only when the image is fully loaded otherwise if the user
-    // will click on send before the image is painted the screenshot will be transparent..
+
+    _waitUntilBackgroundIsPainted();
+  }
+
+  /// The user may only send the image once it is fully painted, otherwise the
+  /// screenshot taken for the export would be transparent.
+  void _waitUntilBackgroundIsPainted() {
     _imageLoadingTimer = Timer.periodic(const Duration(milliseconds: 10), (
       timer,
     ) {
-      final imageLayer = layers.first;
-      if (imageLayer is BackgroundLayerData) {
-        if (imageLayer.imageLoaded) {
-          timer.cancel();
-          Future.delayed(const Duration(milliseconds: 50), () {
-            if (context.mounted) {
-              setState(() {
-                sendingOrLoadingImage = false;
-                loadingImage = false;
-              });
-            }
+      if (!layerStack.isBackgroundLoaded) return;
+      timer.cancel();
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (context.mounted) {
+          setState(() {
+            sendingOrLoadingImage = false;
+            loadingImage = false;
           });
         }
-      }
+      });
     });
   }
 
-  AdditionalMessageData? getAdditionalData() {
-    AdditionalMessageData? additionalData;
+  // ---------------------------------------------------------------------------
+  // toolbar actions
+  // ---------------------------------------------------------------------------
 
-    if (widget.previewLink != null) {
-      additionalData = AdditionalMessageData(
-        type: AdditionalMessageData_Type.LINK,
-        link: widget.previewLink!.url.toString(),
+  Future<void> _toggleAudio() async {
+    await mediaService.toggleRemoveAudio();
+    if (mediaService.removeAudio) {
+      await videoController?.setVolume(0);
+    } else {
+      await videoController?.setVolume(100);
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _toggleRequiresAuth() async {
+    await mediaService.setRequiresAuth(!media.requiresAuthentication);
+    selectedGroupIds = HashSet();
+    storyTarget.clear();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _setSendToWidget(bool enabled) async {
+    if (_updatingWidgetMode || (enabled && !_widgetRecipientAvailable)) return;
+
+    if (widget.sendToGroup == null) {
+      selectedGroupIds.clear();
+    }
+    storyTarget.clear();
+
+    if (enabled) {
+      _displayLimitBeforeWidget = media.displayLimitInMilliseconds;
+      _requiresAuthBeforeWidget = media.requiresAuthentication;
+      _previousMediaSettingsCaptured = true;
+    }
+
+    setState(() {
+      _sendToWidget = enabled;
+      _updatingWidgetMode = true;
+    });
+
+    try {
+      if (enabled) {
+        if (media.displayLimitInMilliseconds != null) {
+          await mediaService.setDisplayLimit(null);
+        }
+        if (media.requiresAuthentication) {
+          await mediaService.setRequiresAuth(false);
+        }
+      } else if (_previousMediaSettingsCaptured) {
+        if (media.displayLimitInMilliseconds != _displayLimitBeforeWidget) {
+          await mediaService.setDisplayLimit(_displayLimitBeforeWidget);
+        }
+        if (media.requiresAuthentication != _requiresAuthBeforeWidget) {
+          await mediaService.setRequiresAuth(_requiresAuthBeforeWidget);
+        }
+        _previousMediaSettingsCaptured = false;
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _updatingWidgetMode = false);
+        if (_sendToWidget && !_widgetRecipientAvailable) {
+          unawaited(_setSendToWidget(false));
+        }
+      }
+    }
+  }
+
+  Future<void> _editDisplayTime() async {
+    await showDisplayTimePicker(
+      context,
+      mediaService: mediaService,
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    );
+  }
+
+  Future<EditorColorSampler?> _loadEditorColorSampler() async {
+    final screenshot = await mediaWriter.captureCanvasImage(pixelRatio);
+    final image = screenshot?.image;
+    if (image == null) return null;
+    final sampler = await EditorImageColorSampler.fromImage(image);
+    return sampler?.sample;
+  }
+
+  void _startStickerSelection() {
+    if (_selectingSticker || _creatingSticker) return;
+    setState(() => _selectingSticker = true);
+  }
+
+  void _cancelStickerSelection() {
+    if (_creatingSticker) return;
+    setState(() => _selectingSticker = false);
+  }
+
+  Future<void> _createStickerFromSelection(
+    Rect selection,
+    Size editorSize,
+  ) async {
+    if (_creatingSticker) return;
+    setState(() => _creatingSticker = true);
+    try {
+      final screenshot = await mediaWriter.captureCanvasImage(pixelRatio);
+      final screenshotBytes = await screenshot?.getBytes();
+      if (screenshotBytes == null) {
+        throw StateError('Could not capture the editor for a sticker.');
+      }
+      final croppedBytes = cropEditorImage(
+        encodedImage: screenshotBytes,
+        selection: selection,
+        editorSize: editorSize,
+      );
+      final sticker = await StickerService.createFromBytes(croppedBytes);
+      if (!mounted) return;
+
+      final stickerSize = selection.longestSide.clamp(80.0, 240.0);
+      final aspect = sticker.width / sticker.height;
+      final displayedWidth = aspect >= 1 ? stickerSize : stickerSize * aspect;
+      final displayedHeight = aspect >= 1 ? stickerSize / aspect : stickerSize;
+      layerStack.add(
+        StickerLayerData(
+          key: GlobalKey(),
+          webp: sticker.webp,
+          contentHash: sticker.contentHash,
+          width: sticker.width,
+          height: sticker.height,
+          size: stickerSize,
+          offset: centeredStickerLayerOffset(
+            editorSize: editorSize,
+            displayedStickerSize: Size(displayedWidth, displayedHeight),
+          ),
+        ),
+      );
+      unawaitedRustCall(
+        twonlyDB.stickersDao.recordUse(sticker.contentHash),
+        'recordEditorStickerUse',
+      );
+      setState(() {
+        _creatingSticker = false;
+        _selectingSticker = false;
+      });
+    } on Object catch (error) {
+      Log.warn('Could not create sticker from editor selection: $error');
+      if (!mounted) return;
+      setState(() => _creatingSticker = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.lang.stickerCreateFailed)),
       );
     }
-    return additionalData;
+  }
+
+  Future<void> _onClosePressed() async {
+    if (!layerStack.hasUserAddedLayers) {
+      Navigator.pop(context, false);
+      return;
+    }
+    await askToCloseThenClose();
+  }
+
+  Future<void> askToCloseThenClose() async {
+    final shouldPop = await askToDiscardMedia(context);
+    if (mounted && shouldPop) {
+      Navigator.pop(context);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // sending
+  // ---------------------------------------------------------------------------
+
+  void updateSelectedGroupIds(String groupId, bool checked) {
+    // ShareImageView rebuilds its own controls. Rebuilding this editor while it
+    // is covered by that route needlessly redraws the full media composition.
+    if (checked) {
+      if (media.requiresAuthentication) {
+        selectedGroupIds.clear();
+      }
+      selectedGroupIds.add(groupId);
+    } else {
+      selectedGroupIds.remove(groupId);
+    }
+  }
+
+  Future<ScreenshotImageHelper?> storeImageAsOriginal() =>
+      mediaWriter.storeImageAsOriginal(pixelRatio);
+
+  AdditionalMessageData? getAdditionalData() {
+    if (widget.previewLink == null) return null;
+    return AdditionalMessageData(
+      type: AdditionalMessageData_Type.LINK,
+      link: widget.previewLink!.url.toString(),
+    );
+  }
+
+  Future<void> pushShareImageView() async {
+    final mediaStoreFuture = storeImageAsOriginal();
+
+    await videoController?.pause();
+    if (isDisposed || !mounted) return;
+    final wasSend = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ShareImageView(
+          selectedGroupIds: selectedGroupIds,
+          updateSelectedGroupIds: updateSelectedGroupIds,
+          mediaStoreFuture: mediaStoreFuture,
+          mediaFileService: mediaService,
+          additionalData: getAdditionalData(),
+          sendToWidget: _sendToWidget,
+          storyTarget: storyTarget,
+        ),
+      ),
+    );
+    if (wasSend != null && wasSend && mounted) {
+      widget.mainCameraController?.onImageSend();
+      Navigator.pop(context, true);
+    } else {
+      await videoController?.play();
+    }
   }
 
   Future<void> sendImageToSinglePerson() async {
@@ -655,10 +602,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     await storeImageAsOriginal();
 
     // Insert media file into the messages database and start uploading process in the background
-    await insertMediaFileInMessagesTable(
-      mediaService,
-      [widget.sendToGroup!.groupId],
-      additionalData: getAdditionalData(),
+    await RustApi.sendMediaToGroups(
+      mediaId: mediaService.mediaFile.mediaId,
+      groupIds: [widget.sendToGroup!.groupId],
+      additionalMessageData: getAdditionalData()?.writeToBuffer(),
+      widgetOnly: _sendToWidget,
     );
 
     if (mounted) {
@@ -666,41 +614,51 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
   }
 
-  Widget _buildScreenshotViewer() {
-    return Screenshot(
-      controller: screenshotController,
-      child: LayersViewer(
-        layers: layers.where((x) => !x.isDeleted).toList(),
-        onUpdate: () {
-          for (final layer in layers) {
-            layer.isEditing = false;
-            if (layer.isDeleted) {
-              removedLayers.add(layer);
-            }
-          }
-          layers = layers.where((x) => !x.isDeleted).toList();
-          setState(() {});
-        },
-      ),
-    );
+  // ---------------------------------------------------------------------------
+  // layout
+  // ---------------------------------------------------------------------------
+
+  /// The cutter only makes sense once the player knows how long the recording
+  /// is, and only for a video that is still being edited.
+  bool get _canTrim =>
+      media.type == MediaType.video &&
+      videoController != null &&
+      videoController!.value.isInitialized &&
+      videoController!.value.duration > Duration.zero;
+
+  /// Tapping anywhere on the media adds a text layer at that position.
+  void _onCanvasTap() {
+    layerStack.addTextLayer(offset: Offset(0, tabDownPosition));
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    if (_showWidgetExplainer) _scheduleWidgetActionMeasurement();
+
+    final double widgetExplainerWidth = math.min(
+      340,
+      MediaQuery.sizeOf(context).width - 82,
+    );
+    final widgetActionCenter = _widgetActionCenter;
 
     return PopScope<bool?>(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+        if (_creatingSticker) return;
+        if (_selectingSticker) {
+          _cancelStickerSelection();
+          return;
+        }
         await askToCloseThenClose();
       },
       child: Scaffold(
-        backgroundColor: widget.sharedFromGallery
-            ? null
-            : Colors.white.withAlpha(0),
+        backgroundColor: widget.sharedFromGallery ? null : Colors.transparent,
         resizeToAvoidBottomInset: false,
         body: Stack(
+          key: _editorStackKey,
           fit: StackFit.expand,
           children: [
             GestureDetector(
@@ -711,147 +669,117 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   tabDownPosition = details.globalPosition.dy;
                 }
               },
-              onTap: () {
-                if (layers.any((x) => x.isEditing)) {
-                  return;
-                }
-                layers = layers.where((x) => !x.isDeleted).toList();
-                undoLayers.clear();
-                removedLayers.clear();
-                layers.add(
-                  TextLayerData(
-                    key: GlobalKey(),
-                    offset: Offset(0, tabDownPosition),
-                    textLayersBefore: layers.whereType<TextLayerData>().length,
-                  ),
-                );
-                setState(() {});
-              },
-              child: MediaViewSizingHelper(
-                requiredHeight: 59,
-                bottomNavigation: ColoredBox(
-                  color: Theme.of(context).colorScheme.surface,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SaveToGalleryButton(
-                        storeImageAsOriginal: storeImageAsOriginal,
-                        mediaService: mediaService,
-                        displayButtonLabel: widget.sendToGroup == null,
-                        isLoading: loadingImage,
-                      ),
-                      if (widget.sendToGroup != null) const SizedBox(width: 10),
-                      if (widget.sendToGroup != null)
-                        MyButton(
-                          variant: MyButtonVariant.secondaryMiddle,
-                          onPressed: pushShareImageView,
-                          child: const FaIcon(
-                            FontAwesomeIcons.userPlus,
-                            size: 14,
-                          ),
-                        ),
-                      SizedBox(width: widget.sendToGroup == null ? 20 : 10),
-                      IntrinsicWidth(
-                        child: MyButton(
-                          variant: MyButtonVariant.primaryMiddle,
-                          onPressed: sendingOrLoadingImage
-                              ? null
-                              : () async {
-                                  if (widget.sendToGroup == null) {
-                                    return pushShareImageView();
-                                  }
-                                  await sendImageToSinglePerson();
-                                },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (sendingOrLoadingImage)
-                                const SizedBox(
-                                  height: 12,
-                                  width: 12,
-                                  child: CircularProgressIndicator.adaptive(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation(
-                                      Colors.black87,
-                                    ),
-                                  ),
-                                )
-                              else
-                                const FaIcon(
-                                  FontAwesomeIcons.solidPaperPlane,
-                                  size: 14,
-                                ),
-                              const SizedBox(width: 8),
-                              Text(
-                                (widget.sendToGroup == null)
-                                    ? context.lang.shareImagedEditorShareWith
-                                    : substringBy(
-                                        widget.sendToGroup!.groupName,
-                                        15,
-                                      ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+              onTap: _selectingSticker ? null : _onCanvasTap,
+              child: MediaViewSizingHelper.cameraEditor(
+                bottomNavigation: IgnorePointer(
+                  ignoring: _selectingSticker,
+                  child: EditorBottomBar(
+                    mediaService: mediaService,
+                    sendToGroup: widget.sendToGroup,
+                    isLoadingImage: loadingImage,
+                    isSending: sendingOrLoadingImage || _updatingWidgetMode,
+                    storeImageAsOriginal: storeImageAsOriginal,
+                    onAddMoreRecipients: pushShareImageView,
+                    onSend: () async {
+                      if (widget.sendToGroup == null) {
+                        return pushShareImageView();
+                      }
+                      await sendImageToSinglePerson();
+                    },
                   ),
                 ),
-                child: SizedBox(
-                  height: currentImage.height / pixelRatio,
-                  width: currentImage.width / pixelRatio,
-                  child: Stack(
-                    children: [
-                      if (videoController != null &&
-                          videoController!.value.isInitialized)
-                        Positioned.fill(
-                          child: Center(
-                            child: AspectRatio(
-                              aspectRatio: videoController!.value.aspectRatio,
-                              child: Stack(
-                                children: [
-                                  Positioned.fill(
-                                    child: VideoPlayer(videoController!),
-                                  ),
-                                  Positioned.fill(
-                                    child: _buildScreenshotViewer(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                child: EditorCanvas(
+                  layerStack: layerStack,
+                  screenshotController: screenshotController,
+                  image: currentImage,
+                  pixelRatio: pixelRatio,
+                  videoController: videoController,
+                  onLayersUpdated: () => setState(() {}),
+                  bottomOverlay: (_canTrim && _trimmerVisible)
+                      ? VideoTrimmer(
+                          controller: videoController!,
+                          start: _trimStart,
+                          end: _effectiveTrimEnd,
+                          onChanged: (start, end) {
+                            setState(() {
+                              _trimStart = start;
+                              _trimEnd = end;
+                            });
+                          },
+                          onChangeEnd: _persistTrim,
                         )
-                      else
-                        _buildScreenshotViewer(),
-                    ],
-                  ),
+                      : null,
+                  stickerSelectionActive: _selectingSticker,
+                  stickerSelectionBusy: _creatingSticker,
+                  onCancelStickerSelection: _cancelStickerSelection,
+                  onConfirmStickerSelection: _createStickerFromSelection,
                 ),
               ),
             ),
-            Positioned(
-              top: 10,
-              left: 5,
-              right: 0,
-              child: SafeArea(
-                child: Row(
-                  children: actionsAtTheTop,
-                ),
-              ),
-            ),
-            Positioned(
-              right: 6,
-              top: 100,
-              child: Container(
-                alignment: Alignment.bottomCenter,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+            if (!_selectingSticker)
+              Positioned(
+                top: 10,
+                left: 5,
+                right: 0,
                 child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: actionsAtTheRight,
+                  child: EditorTopToolbar(
+                    layerStack: layerStack,
+                    onClose: _onClosePressed,
+                    onChanged: () => setState(() {}),
                   ),
                 ),
               ),
-            ),
+            if (!_selectingSticker &&
+                _showWidgetExplainer &&
+                widgetActionCenter != null)
+              Positioned(
+                left: math.max(
+                  12,
+                  widgetActionCenter.dx + 24 - widgetExplainerWidth,
+                ),
+                top: widgetActionCenter.dy,
+                width: widgetExplainerWidth,
+                child: FractionalTranslation(
+                  translation: const Offset(0, -0.5),
+                  child: WidgetShareExplainer(
+                    onDismiss: _dismissWidgetExplainer,
+                  ),
+                ),
+              ),
+            if (!_selectingSticker)
+              Positioned(
+                right: 6,
+                top: 100,
+                child: Container(
+                  alignment: Alignment.bottomCenter,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: SafeArea(
+                    child: EditorSideToolbar(
+                      layerStack: layerStack,
+                      mediaService: mediaService,
+                      onChanged: () => setState(() {}),
+                      onEditDisplayTime: _editDisplayTime,
+                      onToggleAudio: _toggleAudio,
+                      onToggleRequiresAuth: _toggleRequiresAuth,
+                      sendToWidget: _sendToWidget,
+                      showWidgetOption: _widgetRecipientAvailable,
+                      highlightWidgetOption: _showWidgetExplainer,
+                      isUpdatingWidgetMode: _updatingWidgetMode,
+                      widgetActionKey: _widgetActionKey,
+                      onToggleSendToWidget: () =>
+                          _setSendToWidget(!_sendToWidget),
+                      colorSamplerLoader: media.type == MediaType.image
+                          ? _loadEditorColorSampler
+                          : null,
+                      onCreateStickerFromImage: _startStickerSelection,
+                      canTrim: _canTrim,
+                      trimmerVisible: _trimmerVisible,
+                      onToggleTrimmer: () =>
+                          setState(() => _trimmerVisible = !_trimmerVisible),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

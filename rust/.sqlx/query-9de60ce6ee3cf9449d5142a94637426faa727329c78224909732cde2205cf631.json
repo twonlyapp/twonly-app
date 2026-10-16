@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE group_members SET group_public_key = ? WHERE group_id = ? AND contact_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "9de60ce6ee3cf9449d5142a94637426faa727329c78224909732cde2205cf631"
+}

@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart' show SharedFile;
 import 'package:provider/provider.dart';
+import 'package:twonly/core/bridge/api.dart' as rust_api;
+import 'package:twonly/core/bridge/stories.dart' as stories;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
@@ -15,7 +17,9 @@ import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/intent/links.intent.dart';
+import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
@@ -43,33 +47,70 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> with WidgetsBindingObserver {
-  bool _wasPaused = false;
+  StreamSubscription<Uri>? _widgetLinkSub;
 
   @override
   void initState() {
     super.initState();
     AppState.isAppInBackground = false;
     WidgetsBinding.instance.addObserver(this);
+    // This stays subscribed on routes that do not contain a home view, such
+    // as settings. The home view consumes the sender after navigation/unlock.
+    _widgetLinkSub = AppLinks().uriLinkStream.listen((uri) {
+      if (!HomeWidgetService.handleLink(uri)) return;
+      if (widget.storageError || widget.recoveryPossible) return;
+      if (!HomeWidgetService.hasTapListener) routerProvider.go(Routes.chats);
+    });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      if (_wasPaused) {
-        AppState.isAppInBackground = false;
-        twonlyDB.markUpdated();
-        unawaited(apiService.connect());
+      AppState.isAppInBackground = false;
+      twonlyDB.markUpdated();
+      // Serialize pause/resume updates and refresh reachability after a real
+      // background transition before Rust replaces its suspended socket.
+      unawaited(
+        apiService.setBackground(false),
+      );
+      // The notification service extension wrote to the outbox while the app
+      // was suspended, and its Rust change broadcast never reached this
+      // process, so the badge has to be re-read on the way back in.
+      unawaited(NativeNotificationService.refreshBadgeCount());
+      // Home-screen configuration may have changed while the app was away.
+      if (userService.isUserCreated) {
+        unawaited(HomeWidgetService.syncPermissions());
       }
+      // A story may have expired while the app was away.
+      unawaitedRustCall(stories.purgeExpiredStories(), 'purgeExpiredStories');
     } else if (state == AppLifecycleState.paused) {
-      _wasPaused = true;
       AppState.isAppInBackground = true;
+      unawaited(
+        apiService.setBackground(true),
+      );
+      // Anything this session downloaded rewrote the widget manifest, but
+      // WidgetKit still shows the timeline it built earlier. Leaving the app is
+      // the moment the home screen becomes visible again.
+      // Republish names and selectable people changed during this session.
+      if (userService.isUserCreated) {
+        unawaited(HomeWidgetService.refreshManifest());
+      }
+    } else if (state == AppLifecycleState.detached) {
+      // Last chance before the engine goes away: hand anything still unsent to
+      // the OS, which delivers it once there is a network again whether or not
+      // this process is ever started back up. A no-op when `paused` already
+      // did it.
+      unawaited(
+        rust_api.RustApi.handOutboxToOs(),
+      );
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _widgetLinkSub?.cancel();
     super.dispose();
   }
 
@@ -85,11 +126,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           GlobalCupertinoLocalizations.delegate,
         ];
 
-        const supportedLocales = [
-          Locale('en', ''),
-          Locale('de', ''),
-        ];
-
         final settings = context.watch<SettingsChangeProvider>();
 
         if (widget.storageError) {
@@ -97,6 +133,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             localizationsDelegates: localizationsDelegates,
             debugShowCheckedModeBanner: false,
             supportedLocales: supportedLocales,
+            locale: settings.locale,
             title: 'twonly',
             theme: getLightTheme(settings.primaryColor),
             darkTheme: getDarkTheme(settings.primaryColor),
@@ -110,6 +147,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             localizationsDelegates: localizationsDelegates,
             debugShowCheckedModeBanner: false,
             supportedLocales: supportedLocales,
+            locale: settings.locale,
             title: 'twonly',
             theme: getLightTheme(settings.primaryColor),
             darkTheme: getDarkTheme(settings.primaryColor),
@@ -123,6 +161,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           localizationsDelegates: localizationsDelegates,
           debugShowCheckedModeBanner: false,
           supportedLocales: supportedLocales,
+          locale: settings.locale,
           title: 'twonly',
           theme: getLightTheme(settings.primaryColor),
           darkTheme: getDarkTheme(settings.primaryColor),
@@ -170,16 +209,18 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       HomeViewState.streamSharedLink.add(uri);
     }
 
-    // Subscribe to all events (initial link and further)
-    _deepLinkSub = AppLinks().uriLinkStream.listen((uri) async {
+    Future<void> handleIncomingUrl(Uri uri) async {
       if (!mounted) return;
-      Log.info('Got link via app links: ${uri.scheme}');
+      Log.info('Handling incoming link: ${uri.scheme}://${uri.host}');
       if (!await handleIntentUrl(context, uri)) {
         if (uri.scheme.startsWith('http')) {
           handleShareLink(uri);
         }
       }
-    });
+    }
+
+    // Subscribe to all events (initial link and further)
+    _deepLinkSub = AppLinks().uriLinkStream.listen(handleIncomingUrl);
 
     void handleShareMedia(String path, MediaType type) {
       HomeViewState.pendingSharedMedia = (path, type);
@@ -190,7 +231,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
     _intentStreamSub = initIntentStreams(
       context,
-      handleShareLink,
+      handleIncomingUrl,
       handleShareMedia,
     );
   }
@@ -220,11 +261,13 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     } else {
       // This means the user is in the onboarding screen, so start with the Proof of Work.
 
-      final (proof, disabled) = await apiService.getProofOfWork();
+      final proofResult = await rustApiResult(RustApi.getProofOfWork());
+      final proof = proofResult.value;
+      final disabled = proofResult.error == ErrorCode.RegistrationDisabled;
       if (proof != null) {
         Log.info('Starting with proof of work calculation.');
         _proofOfWork = (
-          calculatePoW(proof.prefix, proof.difficulty.toInt()),
+          calculatePoW(proof.prefix, proof.difficulty),
           false,
         );
       } else {

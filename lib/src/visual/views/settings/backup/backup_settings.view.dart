@@ -7,8 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
@@ -17,6 +15,8 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/elements/pro_badge.element.dart';
+import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/settings/backup/backup_utils.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/recovery_card.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/memories_backup_detail.view.dart';
@@ -33,7 +33,7 @@ class BackupView extends StatefulWidget {
 class _BackupViewState extends State<BackupView> {
   bool _isLoading = false;
   CurrentBackupStatus? _backupStatus;
-  server.Response_MemoriesUsage? _memoriesUsage;
+  FrbMemoriesUsage? _memoriesUsage;
   StreamSubscription<void>? _backupUpdateSub;
 
   @override
@@ -52,9 +52,14 @@ class _BackupViewState extends State<BackupView> {
   }
 
   Future<void> _loadBackupStatus() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     final status = await BackupService.getData();
-    final memoriesUsage = await apiService.getMemoriesUsage();
+    if (!mounted) return;
+    FrbMemoriesUsage? memoriesUsage;
+    try {
+      memoriesUsage = await RustApi.getMemoriesUsage();
+    } catch (_) {}
     if (!mounted) return;
     setState(() {
       _backupStatus = status;
@@ -184,7 +189,10 @@ class _BackupViewState extends State<BackupView> {
                       _backupStatus?.archiveSize,
                     ),
                   ),
-                  trailing: const Icon(Icons.check_circle, color: Colors.green),
+                  trailing: const Icon(
+                    Icons.check_circle,
+                    color: defaultPrimaryColor,
+                  ),
                 ),
 
                 // Bilder & Medien
@@ -197,43 +205,16 @@ class _BackupViewState extends State<BackupView> {
                         : (!userService.currentUser.isCloudBackupEnabled
                               ? context.lang.backupMemoriesNotEnabled
                               : (_memoriesUsage != null
-                                    ? '${formatBytes(_memoriesUsage!.currentBytes.toInt())} / ${formatBytes(_memoriesUsage!.maxBytes.toInt())}'
+                                    ? '${formatBytes(_memoriesUsage!.currentBytes)} / ${formatBytes(_memoriesUsage!.maxBytes)}'
                                     : '-')),
                   ),
                   trailing: isFreePlan
-                      ? Row(
+                      ? const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.amber.shade700,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Row(
-                                children: [
-                                  const FaIcon(
-                                    FontAwesomeIcons.star,
-                                    size: 10,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    context.lang.backupCloudProBadge,
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Switch(
+                            ProBadge(),
+                            SizedBox(width: 8),
+                            Switch(
                               value: false,
                               onChanged: null,
                             ),

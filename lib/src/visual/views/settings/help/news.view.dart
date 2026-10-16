@@ -49,7 +49,7 @@ class _NewsViewState extends State<NewsView> {
                   child: Text(
                     'No news articles found.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey,
+                      color: context.color.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -60,15 +60,13 @@ class _NewsViewState extends State<NewsView> {
                 itemCount: entries.length,
                 itemBuilder: (context, index) {
                   final entry = entries[index];
-                  final isDark = isDarkMode(context);
-
                   return ReactiveTapFeedback(
                     onTap: () => launchUrl(
                       Uri.parse(entry.link),
                       mode: LaunchMode.externalApplication,
                     ),
                     child: Card(
-                      color: isDark ? Colors.grey[800] : Colors.grey[200],
+                      color: context.color.surfaceContainerHigh,
                       clipBehavior: Clip.antiAlias,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -88,15 +86,15 @@ class _NewsViewState extends State<NewsView> {
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
                                 height: 180,
-                                color: Colors.grey.withValues(alpha: 0.1),
+                                color: context.color.surfaceContainerHighest,
                               ),
                               errorWidget: (context, url, error) => Container(
                                 height: 180,
-                                color: Colors.grey.withValues(alpha: 0.1),
-                                child: const Icon(
+                                color: context.color.surfaceContainerHighest,
+                                child: Icon(
                                   Icons.broken_image,
                                   size: 50,
-                                  color: Colors.grey,
+                                  color: context.color.onSurfaceVariant,
                                 ),
                               ),
                             ),
@@ -114,7 +112,7 @@ class _NewsViewState extends State<NewsView> {
                                     ).format(entry.pubDate!),
                                     style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
-                                          color: Colors.grey,
+                                          color: context.color.onSurfaceVariant,
                                         ),
                                   ),
                                   const SizedBox(height: 8),

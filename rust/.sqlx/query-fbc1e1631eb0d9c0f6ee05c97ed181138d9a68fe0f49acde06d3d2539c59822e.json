@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT encryption_mac FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "encryption_mac",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "encryption_mac"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "fbc1e1631eb0d9c0f6ee05c97ed181138d9a68fe0f49acde06d3d2539c59822e"
+}

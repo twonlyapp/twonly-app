@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contacts SET signal_version = 'v2' WHERE user_id = ? AND signal_version != 'v2'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "7b99510fb5ac60158de57314bba961e1f332c51556ea52543937224fd5f96426"
+}

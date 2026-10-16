@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE signal_session_resets\n            SET last_reset_at = last_reset_at - ?, window_started_at = window_started_at - ?\n            WHERE name = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "44772267c7aef1f2c6c453dc25adc52fbe79d66f075bc47b0fd1c21a70fe04a5"
+}

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,6 +14,7 @@
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
+		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
@@ -21,9 +22,18 @@
 		D21FCEAB2D9F2B750088701D /* NotificationService.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D21FCEA42D9F2B750088701D /* NotificationService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D25D4D1E2EF626E30029F805 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D25D4D1D2EF626E30029F805 /* StoreKit.framework */; };
 		D25D4D7A2EFF41DB0029F805 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D25D4D702EFF41DB0029F805 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		D2B2E0FF2F63819600E729C1 /* VideoCompressionChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B2E0FE2F63819600E729C1 /* VideoCompressionChannel.swift */; };
+		D4A100022F81000100A10002 /* TwonlyWidgetShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A100012F81000100A10001 /* TwonlyWidgetShared.swift */; };
+		D4A100032F81000100A10003 /* TwonlyWidgetShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A100012F81000100A10001 /* TwonlyWidgetShared.swift */; };
+		D4A0000C2F80000100A0000C /* TwonlyWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D4A000012F80000100A00001 /* TwonlyWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D4A000102F80000100A00010 /* logo.png in Resources */ = {isa = PBXBuildFile; fileRef = D4A0000F2F80000100A0000F /* logo.png */; };
+		D3A100022F70000100D1A001 /* DirectMediaTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A100012F70000100D1A001 /* DirectMediaTransfer.swift */; };
+		D3A100062F70000100D1A006 /* BackgroundWork.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A100052F70000100D1A005 /* BackgroundWork.swift */; };
+		D3A100032F70000100D1A002 /* NativeImageCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A100042F70000100D1A002 /* NativeImageCodec.swift */; };
+		D3A100052F70000100D1A003 /* NativeVideoCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A100062F70000100D1A003 /* NativeVideoCodec.swift */; };
+		D3A100072F70000100D1A004 /* NativeGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A100082F70000100D1A004 /* NativeGallery.swift */; };
+		D3A100092F70000100D1A005 /* NativeLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A1000A2F70000100D1A005 /* NativeLocation.swift */; };
+		D3A1000B2F70000100D1A0FE /* WebxdcHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A1000C2F70000100D1A0FE /* WebxdcHost.swift */; };
 		F3C66D726A2EB28484DF0B10 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 16FBC6F5B58E1C6646F5D447 /* GoogleService-Info.plist */; };
-		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +58,13 @@
 			remoteGlobalIDString = D25D4D6F2EFF41DB0029F805;
 			remoteInfo = ShareExtension;
 		};
+		D4A0000D2F80000100A0000D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D4A000042F80000100A00004;
+			remoteInfo = TwonlyWidget;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -67,6 +84,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+				D4A0000C2F80000100A0000C /* TwonlyWidget.appex in Embed Foundation Extensions */,
 				D25D4D7A2EFF41DB0029F805 /* ShareExtension.appex in Embed Foundation Extensions */,
 				D21FCEAB2D9F2B750088701D /* NotificationService.appex in Embed Foundation Extensions */,
 			);
@@ -91,6 +109,7 @@
 		70E8A5E1DA4031C0E3F86C77 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		7FC59147CD9A45BFAC98EA05 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
@@ -108,14 +127,22 @@
 		D24E27CC2F38ABC10055D9D1 /* RunnerRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerRelease.entitlements; sourceTree = "<group>"; };
 		D25D4D1D2EF626E30029F805 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		D25D4D702EFF41DB0029F805 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4A100012F81000100A10001 /* TwonlyWidgetShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwonlyWidgetShared.swift; sourceTree = "<group>"; };
+		D4A000012F80000100A00001 /* TwonlyWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TwonlyWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4A0000F2F80000100A0000F /* logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = logo.png; path = ../assets/images/logo.png; sourceTree = SOURCE_ROOT; };
 		D25D4D802EFF437F0029F805 /* RunnerDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerDebug.entitlements; sourceTree = "<group>"; };
-		D2B2E0FE2F63819600E729C1 /* VideoCompressionChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCompressionChannel.swift; sourceTree = "<group>"; };
+		D3A100012F70000100D1A001 /* DirectMediaTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectMediaTransfer.swift; sourceTree = "<group>"; };
+		D3A100052F70000100D1A005 /* BackgroundWork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundWork.swift; sourceTree = "<group>"; };
+		D3A100042F70000100D1A002 /* NativeImageCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeImageCodec.swift; sourceTree = "<group>"; };
+		D3A100062F70000100D1A003 /* NativeVideoCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeVideoCodec.swift; sourceTree = "<group>"; };
+		D3A100082F70000100D1A004 /* NativeGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGallery.swift; sourceTree = "<group>"; };
+		D3A1000A2F70000100D1A005 /* NativeLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeLocation.swift; sourceTree = "<group>"; };
+		D3A1000C2F70000100D1A0FE /* WebxdcHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebxdcHost.swift; sourceTree = "<group>"; };
 		DC1EE71614E1B4F84D6FDC2D /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E190E82D9973B318A389650B /* Pods_ShareExtension.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ShareExtension.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E96A5ACA32A7118204F050A5 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		EE2CCFEE4ABECF33852F7735 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F02F7A1D63544AA9F23A1085 /* Pods-NotificationService.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NotificationService.profile.xcconfig"; path = "Target Support Files/Pods-NotificationService/Pods-NotificationService.profile.xcconfig"; sourceTree = "<group>"; };
-		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -132,6 +159,13 @@
 				Info.plist,
 			);
 			target = D25D4D6F2EFF41DB0029F805 /* ShareExtension */;
+		};
+		D4A000032F80000100A00003 /* Exceptions for "TwonlyWidget" folder in "TwonlyWidget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4A000042F80000100A00004 /* TwonlyWidget */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -150,6 +184,22 @@
 				D25D4D7E2EFF41DB0029F805 /* Exceptions for "ShareExtension" folder in "ShareExtension" target */,
 			);
 			path = ShareExtension;
+			sourceTree = "<group>";
+		};
+		D4A100042F81000100A10004 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				D4A100012F81000100A10001 /* TwonlyWidgetShared.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		D4A000022F80000100A00002 /* TwonlyWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D4A000032F80000100A00003 /* Exceptions for "TwonlyWidget" folder in "TwonlyWidget" target */,
+			);
+			path = TwonlyWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -189,6 +239,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D4A000062F80000100A00006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -219,6 +276,9 @@
 				97C146F01CF9000F007C117D /* Runner */,
 				D21FCEA52D9F2B750088701D /* NotificationService */,
 				D25D4D712EFF41DB0029F805 /* ShareExtension */,
+				D4A100042F81000100A10004 /* Shared */,
+				D4A000022F80000100A00002 /* TwonlyWidget */,
+				D4A0000F2F80000100A0000F /* logo.png */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
 				16FBC6F5B58E1C6646F5D447 /* GoogleService-Info.plist */,
@@ -234,6 +294,7 @@
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
 				D21FCEA42D9F2B750088701D /* NotificationService.appex */,
 				D25D4D702EFF41DB0029F805 /* ShareExtension.appex */,
+				D4A000012F80000100A00001 /* TwonlyWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -241,7 +302,13 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
-				D2B2E0FE2F63819600E729C1 /* VideoCompressionChannel.swift */,
+				D3A100012F70000100D1A001 /* DirectMediaTransfer.swift */,
+				D3A100052F70000100D1A005 /* BackgroundWork.swift */,
+				D3A100042F70000100D1A002 /* NativeImageCodec.swift */,
+				D3A100062F70000100D1A003 /* NativeVideoCodec.swift */,
+				D3A100082F70000100D1A004 /* NativeGallery.swift */,
+				D3A1000A2F70000100D1A005 /* NativeLocation.swift */,
+				D3A1000C2F70000100D1A0FE /* WebxdcHost.swift */,
 				D24E27CC2F38ABC10055D9D1 /* RunnerRelease.entitlements */,
 				D25D4D802EFF437F0029F805 /* RunnerDebug.entitlements */,
 				D2265DD42D920142000D99BB /* Runner.entitlements */,
@@ -311,9 +378,6 @@
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		97C146ED1CF9000F007C117D /* Runner */ = {
-			packageProductDependencies = (
-				78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */,
-			);
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
@@ -327,14 +391,19 @@
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				32D7521D6B8F508A844DBC22 /* [CP] Embed Pods Frameworks */,
 				A7154597C13DDED7C7F2355C /* [CP] Copy Pods Resources */,
+				D3A1000B2F70000100D1A007 /* Check Rust native callbacks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				D21FCEAA2D9F2B750088701D /* PBXTargetDependency */,
 				D25D4D792EFF41DB0029F805 /* PBXTargetDependency */,
+				D4A0000E2F80000100A0000E /* PBXTargetDependency */,
 			);
 			name = Runner;
+			packageProductDependencies = (
+				78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */,
+			);
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
@@ -381,13 +450,30 @@
 			productReference = D25D4D702EFF41DB0029F805 /* ShareExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		D4A000042F80000100A00004 /* TwonlyWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4A000082F80000100A00008 /* Build configuration list for PBXNativeTarget "TwonlyWidget" */;
+			buildPhases = (
+				D4A000052F80000100A00005 /* Sources */,
+				D4A000062F80000100A00006 /* Frameworks */,
+				D4A000072F80000100A00007 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4A000022F80000100A00002 /* TwonlyWidget */,
+			);
+			name = TwonlyWidget;
+			productName = TwonlyWidget;
+			productReference = D4A000012F80000100A00001 /* TwonlyWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		97C146E61CF9000F007C117D /* Project object */ = {
-			packageReferences = (
-				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */,
-			);
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
@@ -409,6 +495,9 @@
 					D25D4D6F2EFF41DB0029F805 = {
 						CreatedOnToolsVersion = 26.1.1;
 					};
+					D4A000042F80000100A00004 = {
+						CreatedOnToolsVersion = 16.2;
+					};
 				};
 			};
 			buildConfigurationList = 97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */;
@@ -419,6 +508,9 @@
 				Base,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
+			packageReferences = (
+				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
@@ -428,6 +520,7 @@
 				331C8080294A63A400263BE5 /* RunnerTests */,
 				D21FCEA32D9F2B750088701D /* NotificationService */,
 				D25D4D6F2EFF41DB0029F805 /* ShareExtension */,
+				D4A000042F80000100A00004 /* TwonlyWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -466,9 +559,35 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D4A000072F80000100A00007 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4A000102F80000100A00010 /* logo.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		D3A1000B2F70000100D1A007 /* Check Rust native callbacks */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/scripts/check_native_exports.sh",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			name = "Check Rust native callbacks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"${SRCROOT}/scripts/check_native_exports.sh\" \"${TARGET_BUILD_DIR}/${EXECUTABLE_PATH}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		2915B65131340B0D0BD69DF9 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -637,7 +756,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D2B2E0FF2F63819600E729C1 /* VideoCompressionChannel.swift in Sources */,
+				D3A100022F70000100D1A001 /* DirectMediaTransfer.swift in Sources */,
+				D3A100062F70000100D1A006 /* BackgroundWork.swift in Sources */,
+				D3A100032F70000100D1A002 /* NativeImageCodec.swift in Sources */,
+				D3A100052F70000100D1A003 /* NativeVideoCodec.swift in Sources */,
+				D3A100072F70000100D1A004 /* NativeGallery.swift in Sources */,
+				D3A100092F70000100D1A005 /* NativeLocation.swift in Sources */,
+				D3A1000B2F70000100D1A0FE /* WebxdcHost.swift in Sources */,
+				D4A100022F81000100A10002 /* TwonlyWidgetShared.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
@@ -654,6 +780,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4A000052F80000100A00005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4A100032F81000100A10003 /* TwonlyWidgetShared.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -674,6 +808,11 @@
 			isa = PBXTargetDependency;
 			target = D25D4D6F2EFF41DB0029F805 /* ShareExtension */;
 			targetProxy = D25D4D782EFF41DB0029F805 /* PBXContainerItemProxy */;
+		};
+		D4A0000E2F80000100A0000E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D4A000042F80000100A00004 /* TwonlyWidget */;
+			targetProxy = D4A0000D2F80000100A0000D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -764,7 +903,7 @@
 				DEVELOPMENT_TEAM = CN332ZUGRP;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = twonly;
+				INFOPLIST_KEY_CFBundleDisplayName = "twonly [profile]";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -775,6 +914,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				STRIP_STYLE = "non-global";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -794,7 +934,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.connect.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -812,7 +952,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.connect.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -828,7 +968,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.connect.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -963,7 +1103,7 @@
 				DEVELOPMENT_TEAM = CN332ZUGRP;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = twonly;
+				INFOPLIST_KEY_CFBundleDisplayName = "twonly [dev]";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1009,6 +1149,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				STRIP_STYLE = "non-global";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -1265,6 +1406,92 @@
 			};
 			name = Profile;
 		};
+		D4A000092F80000100A00009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = TwonlyWidget/TwonlyWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = CN332ZUGRP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TwonlyWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = twonly;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.TwonlyWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D4A0000A2F80000100A0000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = TwonlyWidget/TwonlyWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = CN332ZUGRP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TwonlyWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = twonly;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.TwonlyWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D4A0000B2F80000100A0000B /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = TwonlyWidget/TwonlyWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = CN332ZUGRP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TwonlyWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = twonly;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.TwonlyWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Profile;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1318,13 +1545,25 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		D4A000082F80000100A00008 /* Build configuration list for PBXNativeTarget "TwonlyWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4A000092F80000100A00009 /* Debug */,
+				D4A0000A2F80000100A0000A /* Release */,
+				D4A0000B2F80000100A0000B /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
 /* Begin XCLocalSwiftPackageReference section */
-		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */ = {
+		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage;
 		};
 /* End XCLocalSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */ = {
 			isa = XCSwiftPackageProductDependency;

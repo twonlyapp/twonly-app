@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -61,12 +60,6 @@ class _HelpViewState extends State<HelpView> {
                 onTap: () => context.push(Routes.settingsHelpDiagnostics),
               ),
               const Divider(),
-              if (userService.currentUser.userStudyParticipantsToken == null ||
-                  kDebugMode)
-                ListTile(
-                  title: const Text('Teilnahme an Nutzerstudie'),
-                  onTap: () => context.push(Routes.settingsHelpUserStudy),
-                ),
               FutureBuilder(
                 future: PackageInfo.fromPlatform(),
                 builder: (context, snap) {
@@ -136,9 +129,12 @@ class _HelpViewState extends State<HelpView> {
                     await UserService.update((u) => u.isDeveloper = true);
                   }
                 },
-                title: const Text(
+                title: Text(
                   'Copyright twonly',
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(
+                    color: context.color.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],

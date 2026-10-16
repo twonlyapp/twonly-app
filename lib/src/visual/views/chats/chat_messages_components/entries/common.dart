@@ -28,8 +28,10 @@ BubbleInfo getBubbleInfo(
 ) {
   final info = BubbleInfo()
     ..text = message.content ?? ''
-    ..textColor = Colors.white
-    ..color = getMessageColor(message.senderId != null)
+    ..textColor = message.senderId != null
+        ? context.appColor(AppColor.onChatBubbleReceived)
+        : context.appColor(AppColor.onChatBubbleSent)
+    ..color = getMessageColor(context, message.senderId != null)
     ..displayTime = !combineTextMessageWithNext(message, nextMessage)
     ..displayUserName = ''
     ..minWidth = minWidth
@@ -53,42 +55,66 @@ BubbleInfo getBubbleInfo(
     }
   }
 
-  info.spacerWidth = minWidth - measureTextWidth(info.text) - 53;
+  final textWidth = measureTextWidth(info.text);
+  info.spacerWidth = minWidth - textWidth - 53;
   if (info.spacerWidth < 0) info.spacerWidth = 0;
 
   info
     ..expanded = false
     ..color = message.quotesMessageId != null
         ? Colors.transparent
-        : getMessageColor(message.senderId != null);
+        : getMessageColor(context, message.senderId != null);
   if (message.isDeletedFromSender) {
     info
       ..color = context.color.surfaceBright
       ..displayTime = false;
-  } else if (measureTextWidth(info.text) > 270) {
+  } else if (textWidth > 270) {
     info.expanded = true;
   }
 
   if (message.isDeletedFromSender) {
     info
       ..text = context.lang.messageWasDeleted
-      ..color = isDarkMode(context) ? Colors.black : Colors.grey;
-    if (isDarkMode(context)) {
-      info.textColor = const Color.fromARGB(255, 99, 99, 99);
-    }
+      ..color = context.appColor(AppColor.chatBubbleDeleted)
+      ..textColor = context.appColor(AppColor.onChatBubbleDeleted);
   }
   return info;
 }
 
+/// The languages the reader prefers, most preferred first, for the parts of a
+/// message that arrive translated -- a webxdc app's name, say. What the reader
+/// asked for is decided from the resolved locale and never sent anywhere: every
+/// translation is already on the device.
+List<String> readerLanguages(BuildContext context) => [
+  Localizations.localeOf(context).toLanguageTag(),
+];
+
+/// Laying text out is expensive and `getBubbleInfo` runs for every visible
+/// bubble on every rebuild, while the same message content is measured over and
+/// over. Keep the last few hundred results around, in insertion order, so the
+/// cache stays bounded as the user scrolls through a long conversation.
+const _measuredTextCacheLimit = 500;
+final Map<String, double> _measuredTextCache = <String, double>{};
+
 double measureTextWidth(
   String text,
 ) {
+  final cached = _measuredTextCache[text];
+  if (cached != null) return cached;
+
   final tp = TextPainter(
     text: TextSpan(text: text, style: const TextStyle(fontSize: 17)),
     textDirection: TextDirection.ltr,
     maxLines: 1,
   )..layout();
-  return tp.size.width;
+  final width = tp.size.width;
+  tp.dispose();
+
+  if (_measuredTextCache.length >= _measuredTextCacheLimit) {
+    _measuredTextCache.remove(_measuredTextCache.keys.first);
+  }
+  _measuredTextCache[text] = width;
+  return width;
 }
 
 bool combineTextMessageWithNext(Message message, Message? nextMessage) {

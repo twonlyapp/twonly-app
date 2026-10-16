@@ -28,7 +28,7 @@ class _SelectShowTimeState extends State<SelectShowTime> {
       height: 350,
       padding: const EdgeInsets.only(top: 6),
       margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      color: CupertinoColors.systemBackground.resolveFrom(context),
+      color: Theme.of(context).colorScheme.surface,
       child: SafeArea(
         top: false,
         child: Column(
@@ -37,7 +37,7 @@ class _SelectShowTimeState extends State<SelectShowTime> {
               margin: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
-                color: Colors.grey,
+                color: Theme.of(context).colorScheme.outline,
               ),
               height: 3,
               width: 60,

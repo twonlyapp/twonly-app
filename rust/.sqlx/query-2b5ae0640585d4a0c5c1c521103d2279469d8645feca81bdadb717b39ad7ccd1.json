@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE notification_outbox SET cleared_at = ?\n        WHERE kind IN ('contact_request', 'accept_request') AND cleared_at IS NULL\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "2b5ae0640585d4a0c5c1c521103d2279469d8645feca81bdadb717b39ad7ccd1"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE receipts SET message_id = ?, will_be_retried_by_media_upload = ?,\n           retry_count = ?, last_retry = ?,\n           wake_receiver = CASE WHEN ? THEN 0 ELSE wake_receiver END\n           WHERE receipt_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "e1154392dd25c96e3ac0e5dd3c5a2805fd8ebaaf5400b87b73b4439e43080c19"
+}

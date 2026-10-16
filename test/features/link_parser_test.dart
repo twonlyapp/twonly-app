@@ -81,9 +81,7 @@ void main() {
         url: 'https://x.com/netzpolitik_org/status/1162346968124968960',
         siteName: 'X (formerly Twitter)',
         desc:
-            'Weil unsere Datenanalyse zum Twitter-Account von Maaßen rechte Millieus und ihre Verbindungen offengelegt hat, haben wir einen rechten Shitstorm an der Backe. Klar ist: Wir lassen uns nicht einschüchtern und freuen uns auf Unterstützung! \n'
-            '\n'
-            'https://t.co/MQZ7ulHakF',
+            'Weil unsere Datenanalyse zum Twitter-Account von Maaßen rechte Millieus und ihre Verbindungen offengelegt hat, haben wir einen rechten Shitstorm an der Backe. Klar ist: Wir lassen uns nicht einsch…',
         image: 'https://pbs.twimg.com/media/ECF8Z5KWwAIBZ6o.jpg:large',
         vendor: Vendor.twitterPosting,
       ),

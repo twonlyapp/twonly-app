@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    UPDATE contacts\n                    SET user_discovery_excluded = ?, user_discovery_version = NULL\n                    WHERE user_id = ?\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "856ba1dc64d80914973128cefd776a9442a6a73ba94145c85245780a86b241e8"
+}

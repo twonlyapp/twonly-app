@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
-import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
 
@@ -28,7 +28,9 @@ class ProfileQrCodeComp extends StatefulWidget {
     StreamSubscription<void>? subscription;
 
     if (openToVerify) {
-      subscription = KeyVerificationService.onVerificationSuccessClose.listen((_) {
+      subscription = KeyVerificationService.onVerificationSuccessClose.listen((
+        _,
+      ) {
         if (context.mounted) {
           KeyVerificationService.closeVerificationFlows(context);
         }
@@ -65,15 +67,15 @@ class ProfileQrCodeComp extends StatefulWidget {
                 Text(
                   openToVerify
                       ? (contact != null
-                          ? context.lang.letUserScanQrCode(
-                              getContactDisplayName(contact),
-                            )
-                          : context.lang.letFriendScanQrToVerify)
+                            ? context.lang.letUserScanQrCode(
+                                getContactDisplayName(contact),
+                              )
+                            : context.lang.letFriendScanQrToVerify)
                       : (contact != null
-                          ? context.lang.letUserScanQrCode(
-                              getContactDisplayName(contact),
-                            )
-                          : context.lang.addContactQrSheetSubtext),
+                            ? context.lang.letUserScanQrCode(
+                                getContactDisplayName(contact),
+                              )
+                            : context.lang.addContactQrSheetSubtext),
                   style: TextStyle(
                     fontSize: 14,
                     color: context.color.onSurface.withValues(alpha: 0.6),
@@ -112,7 +114,7 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
     final qr = await QrCodeUtils.publicProfileLink();
     Uint8List? avatarBytes;
     if (widget.showAvatar) {
-      final avatarPath = await getUserAvatar();
+      final avatarPath = await RustApi.currentUserAvatarPath();
       if (avatarPath != null) {
         avatarBytes = await File(avatarPath).readAsBytes();
       } else {
@@ -141,13 +143,13 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
             ? Container(
                 key: const ValueKey('qr_code_container'),
                 decoration: BoxDecoration(
-                  color: context.color.primary,
+                  color: context.appColor(AppColor.qrBackground),
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Colors.black26,
+                      color: context.color.shadow.withValues(alpha: 0.2),
                       blurRadius: 3,
-                      offset: Offset(0, 2),
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -157,11 +159,11 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
                     errorCorrectLevel: QrErrorCorrectLevel.M,
                   ),
                   eyeStyle: QrEyeStyle(
-                    color: isDarkMode(context) ? Colors.black : Colors.white,
+                    color: context.appColor(AppColor.qrForeground),
                     borderRadius: 2,
                   ),
                   dataModuleStyle: QrDataModuleStyle(
-                    color: isDarkMode(context) ? Colors.black : Colors.white,
+                    color: context.appColor(AppColor.qrForeground),
                     borderRadius: 2,
                   ),
                   gapless: false,
@@ -171,7 +173,7 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
                   embeddedImageStyle: QrEmbeddedImageStyle(
                     size: const Size(60, 66),
                     embeddedImageShape: EmbeddedImageShape.square,
-                    shapeColor: context.color.primary,
+                    shapeColor: context.appColor(AppColor.qrBackground),
                     safeArea: true,
                   ),
                   size: widget.size,

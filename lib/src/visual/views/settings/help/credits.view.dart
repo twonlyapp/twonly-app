@@ -85,6 +85,11 @@ class _CreditsViewState extends State<CreditsView> {
             title: 'Avatar Icons',
             url: 'https://github.com/RoadTripMoustache/avatar_maker',
           ),
+          const UrlListTitle(
+            title: 'Sticker background removal: U²-Net-P',
+            subtitle: 'Apache-2.0 · Xuebin Qin and contributors',
+            url: 'https://github.com/xuebinqin/U-2-Net',
+          ),
           const Divider(),
           const ListTile(
             title: Center(

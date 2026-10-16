@@ -9,6 +9,9 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get subscriptionAllApps => 'Zugriff auf alle Apps';
+
+  @override
   String get registerSlogan => 'Privat in Kontakt bleiben.';
 
   @override
@@ -63,6 +66,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cameraPreviewSendTo => 'Senden an';
 
   @override
+  String get cameraPermissionsBody =>
+      'twonly benötigt Zugriff auf die Kamera und das Mikrofon.';
+
+  @override
+  String get cameraPermissionsRequestButton => 'Berechtigungen anfragen';
+
+  @override
   String get shareImageTitle => 'Teilen mit';
 
   @override
@@ -103,6 +113,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get shareImageShowArchived => 'Archivierte Benutzer anzeigen';
+
+  @override
+  String get shareImageSendToWidget => 'An Startbildschirm-Widget senden';
+
+  @override
+  String get shareImageWidgetExplainerTitle => 'An ein Widget senden';
+
+  @override
+  String get shareImageWidgetExplainerBody =>
+      'Sendet das Foto direkt an die Startbildschirm-Widgets deiner Freunde. Nur Freunde, die das erlauben, sind auswählbar.';
+
+  @override
+  String get shareImageWidgetExplainerDismiss => 'Alles klar';
 
   @override
   String get searchUsernameInput => 'Benutzername';
@@ -163,6 +186,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get messageSendState_Send => 'Gesendet';
 
   @override
+  String get messageSendState_Delivered => 'Empfangen';
+
+  @override
   String get messageSendState_Sending => 'Wird gesendet';
 
   @override
@@ -205,7 +231,108 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsProfile => 'Profil';
 
   @override
-  String get settingsStorageData => 'Daten und Speicher';
+  String get settingsStorageData => 'Memories & Speicher';
+
+  @override
+  String get memoryDetailsTitle => 'Details';
+
+  @override
+  String get memoryDetailsCapturedAt => 'Aufgenommen';
+
+  @override
+  String get memoryDetailsLocation => 'Standort';
+
+  @override
+  String get memoryDetailsLocationPending => 'Aufnahmestandort wird ermittelt…';
+
+  @override
+  String get memoryDetailsNoLocation => 'Kein Standort gespeichert';
+
+  @override
+  String get memoryDetailsOpenMap => 'In Karte öffnen';
+
+  @override
+  String get memoryLocationTitle => 'Standort in Memories speichern';
+
+  @override
+  String get memoryLocationSubtitle =>
+      'Aufnahmekoordinaten für Memories und Galerie-Exporte. Diese Koordinaten werden nie an Kontakte gesendet.';
+
+  @override
+  String get locationStickerSettingTitle => 'Standort-Sticker';
+
+  @override
+  String get locationStickerSettingSubtitle =>
+      'Zeigt deine Stadt oder dein Land, oder Koordinaten, wenn kein Ortsname verfügbar ist. Dein Standort wird nur geteilt, wenn du den Standortfilter auswählst.';
+
+  @override
+  String get locationStickerLoading => 'Dein Standort wird ermittelt…';
+
+  @override
+  String get liveLocationMenu => 'Standort';
+
+  @override
+  String get liveLocationTitle => 'Live-Standort';
+
+  @override
+  String get liveLocationExplanation =>
+      'Teile deinen aktuellen Standort in diesem Chat. Alle Mitglieder dieser Gruppe können ihn sehen. Nur dein letzter Standort wird gespeichert.';
+
+  @override
+  String get liveLocationDuration => 'Teilen für';
+
+  @override
+  String liveLocationMinutes(int count) {
+    return '$count Minuten';
+  }
+
+  @override
+  String liveLocationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Stunden',
+      one: '1 Stunde',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveLocationStart => 'Teilen starten';
+
+  @override
+  String get liveLocationStop => 'Teilen beenden';
+
+  @override
+  String get liveLocationAlreadySharing =>
+      'Dein Standort wird bereits in diesem Chat geteilt.';
+
+  @override
+  String get liveLocationNotificationBody =>
+      'Dein aktueller Standort wird geteilt. Tippe auf Teilen beenden, um es zu stoppen.';
+
+  @override
+  String get liveLocationStartFailed =>
+      'Teilen konnte nicht gestartet werden. Erlaube Standort und Mitteilungen und versuche es erneut.';
+
+  @override
+  String get liveLocationStopFailed =>
+      'Teilen konnte nicht beendet werden. Bitte versuche es erneut.';
+
+  @override
+  String get liveLocationWaiting => 'Standort wird ermittelt…';
+
+  @override
+  String get liveLocationEnded => 'Standortfreigabe beendet';
+
+  @override
+  String liveLocationLastUpdate(String time) {
+    return 'Letzte Aktualisierung: $time';
+  }
+
+  @override
+  String get memoryLocationPermissionDenied =>
+      'Der genaue Standortzugriff wurde nicht erlaubt. Die Einstellung bleibt deaktiviert.';
 
   @override
   String get settingsStorageDataStoreInGTitle => 'In der Galerie speichern';
@@ -269,6 +396,65 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get publicProfilePrivacyTitle => 'Öffentliches Profil';
+
+  @override
+  String get publicProfilePrivacyDescription =>
+      'Wähle aus, wer Informationen über dein Profil sehen kann.';
+
+  @override
+  String get publicProfileTwonlyScore => 'twonly Score';
+
+  @override
+  String get contactTwonlyScoreDescription =>
+      'Der twonly Score spiegelt die Aktivität einer Person auf twonly wider. Er wird aus verschiedenen Faktoren berechnet, zum Beispiel daraus, wie viele Fotos und Videos sie sendet und empfängt.';
+
+  @override
+  String get contactJoinedToday => 'Heute beigetreten';
+
+  @override
+  String contactJoinedDaysAgo(num days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Vor $days Tagen beigetreten',
+      one: 'Vor 1 Tag beigetreten',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactJoinedMonthsAgo(num months) {
+    String _temp0 = intl.Intl.pluralLogic(
+      months,
+      locale: localeName,
+      other: 'Vor $months Monaten beigetreten',
+      one: 'Vor 1 Monat beigetreten',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactJoinedYearsAgo(num years) {
+    String _temp0 = intl.Intl.pluralLogic(
+      years,
+      locale: localeName,
+      other: 'Vor $years Jahren beigetreten',
+      one: 'Vor 1 Jahr beigetreten',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get privacyVisibilityNobody => 'Niemand';
+
+  @override
+  String get privacyVisibilityOnlyContacts => 'Nur Kontakte';
+
+  @override
+  String get privacyVisibilityEveryone => 'Alle';
+
+  @override
   String get settingsNotification => 'Benachrichtigung';
 
   @override
@@ -277,21 +463,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsNotifyPermissionDesc =>
       'Systemeinstellungen öffnen, um Push-Benachrichtigungen zu erlauben.';
-
-  @override
-  String get settingsNotifyTroubleshooting => 'Fehlersuche';
-
-  @override
-  String get settingsNotifyTroubleshootingDesc =>
-      'Hier klicken, wenn Probleme beim Empfang von Push-Benachrichtigungen auftreten.';
-
-  @override
-  String get settingsNotifyTroubleshootingNoProblem =>
-      'Kein Problem festgestellt';
-
-  @override
-  String get settingsNotifyTroubleshootingNoProblemDesc =>
-      'Um eine Testbenachrichtigung zu erhalten, klicke auf OK. Falls du die Testbenachrichtigung nicht erhältst, klicke bitte auf den neuen Menüpunkt, der nach dem Klicken auf „OK“ angezeigt wird.';
 
   @override
   String get settingsNotifyResetTitle => 'Benachrichtigungstoken zurücksetzen';
@@ -316,9 +487,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsHelpFAQ => 'FAQ';
-
-  @override
-  String get feedbackTooltip => 'Feedback zur Verbesserung von twonly geben.';
 
   @override
   String get settingsHelpContactUs => 'Kontaktiere uns';
@@ -395,6 +563,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsAppearanceTheme => 'Theme';
 
   @override
+  String get settingsAppearanceLanguage => 'Sprache';
+
+  @override
   String get settingsAccountDeleteAccount => 'Konto löschen';
 
   @override
@@ -458,6 +629,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get verificationTypeLink => 'Per Link verifiziert.';
+
+  @override
+  String get verificationTypeManual => 'Sicherheitsnummer manuell verglichen.';
 
   @override
   String get verificationTypeMigratedFromOldVersion =>
@@ -600,6 +774,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get addEmoji => 'Emoji';
 
   @override
+  String get drawingColorPicker => 'Farbe aus dem Bild aufnehmen';
+
+  @override
+  String get createStickerFromImage => 'Sticker aus Bild erstellen';
+
+  @override
+  String get stickerSelectionHint =>
+      'Verschiebe oder vergrößere den Rahmen um den Bereich, der zum Sticker werden soll.';
+
+  @override
+  String get stickerCreating => 'Sticker wird erstellt…';
+
+  @override
   String get toggleFlashLight => 'Taschenlampe umschalten';
 
   @override
@@ -653,11 +840,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String partOfPaidPlanOf(Object username) {
-    return 'Du bist Teil des bezahlten Plans von $username!';
-  }
-
-  @override
   String get partOfPaidPlanFrom => 'Teil des bezahlten Plans von';
 
   @override
@@ -676,9 +858,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get monthly => 'Monatlich';
 
   @override
-  String get proFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
-
-  @override
   String get proFeature2 => '1 zusätzlicher Plus Benutzer';
 
   @override
@@ -686,9 +865,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get proFeature4 => 'Flammen wiederherstellen';
-
-  @override
-  String get familyFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
 
   @override
   String get familyFeature2 => '4 zusätzliche Plus Benutzer';
@@ -701,9 +877,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get freeFeature1 => '10 Medien-Datei-Uploads pro Tag';
-
-  @override
-  String get plusFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
 
   @override
   String get plusFeature2 => 'Zusatzfunktionen (coming-soon)';
@@ -724,25 +897,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get additionalUsersList => 'Deine zusätzlichen Benutzer';
 
   @override
-  String get galleryDelete => 'Datei löschen';
-
-  @override
-  String get galleryExport => 'In Galerie exportieren';
-
-  @override
   String get galleryExportSuccess => 'Erfolgreich in der Gallery gespeichert.';
-
-  @override
-  String get gallerySelectAll => 'Alle auswählen';
-
-  @override
-  String get galleryDeselectAll => 'Auswahl aufheben';
-
-  @override
-  String get galleryFavorite => 'Als Favorit markieren';
-
-  @override
-  String get galleryUnfavorite => 'Favorit entfernen';
 
   @override
   String get galleryCancel => 'Abbrechen';
@@ -776,9 +931,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deleteImageTitle => 'Bist du dir sicher?';
-
-  @override
-  String get deleteImageBody => 'Das Bild wird unwiderruflich gelöscht.';
 
   @override
   String deleteMemoriesBody(num count) {
@@ -830,36 +982,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsBackup => 'Backup';
 
   @override
-  String get backupPending => 'Ausstehend';
-
-  @override
-  String get backupFailed => 'Fehlgeschlagen';
-
-  @override
-  String get backupSuccess => 'Erfolgreich';
-
-  @override
-  String get backupTwonlySafeDesc =>
-      'Sichere deine twonly-Identität, da dies die einzige Möglichkeit ist, dein Konto wiederherzustellen, wenn du die App deinstallierst oder dein Handy verlierst.';
-
-  @override
   String get backupNoPasswordRecovery =>
       'Aufgrund des Sicherheitssystems von twonly gibt es (derzeit) keine Funktion zur Wiederherstellung des Passworts. Daher musst du dir dein Passwort merken oder, besser noch, aufschreiben.';
-
-  @override
-  String get backupIdentityHeader => 'Identität';
-
-  @override
-  String get backupArchiveHeader => 'Kontakte & Nachrichten';
-
-  @override
-  String get backupLastBackupDate => 'Letztes Backup';
-
-  @override
-  String get backupLastBackupSize => 'Backup-Größe';
-
-  @override
-  String get backupLastBackupResult => 'Ergebnis';
 
   @override
   String get backupInsecurePassword => 'Unsicheres Passwort';
@@ -1058,6 +1182,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get groupNameInput => 'Gruppennamen';
 
   @override
+  String get contactGroupNamePlaceholder => 'Namen hier eingeben';
+
+  @override
   String get groupMembers => 'Mitglieder';
 
   @override
@@ -1198,8 +1325,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notificationFillerIn => 'in';
 
   @override
+  String notificationLiveLocation(Object inGroup) {
+    return 'hat den Live-Standort$inGroup geteilt.';
+  }
+
+  @override
   String notificationText(Object inGroup) {
     return 'hat eine Nachricht$inGroup gesendet.';
+  }
+
+  @override
+  String notificationTextMessages(Object count, Object inGroup) {
+    return 'hat $count Nachrichten$inGroup gesendet.';
   }
 
   @override
@@ -1269,10 +1406,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notificationCategoryMessageTitle => 'Nachrichten';
-
-  @override
-  String get notificationCategoryMessageDesc =>
-      'Nachrichten von anderen Benutzern.';
 
   @override
   String get notificationConnectionFallback =>
@@ -1366,6 +1499,53 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get avatarSaveChangesDiscard => 'Verwerfen';
+
+  @override
+  String get contactAvatarTitle => 'Avatar';
+
+  @override
+  String get contactAvatarPhoto => 'Foto-Avatar';
+
+  @override
+  String get contactAvatarIllustrated => 'Gezeichneter Avatar';
+
+  @override
+  String get customAvatarSvgTab => 'Öffentlicher Avatar';
+
+  @override
+  String get customAvatarCustomize => 'Anpassen';
+
+  @override
+  String get customAvatarPhotoTab => 'Persönlicher Avatar';
+
+  @override
+  String get customAvatarExplanation =>
+      'Ersetzt deinen öffentlichen Avatar für den ausgewählten Personenkreis.';
+
+  @override
+  String get customAvatarCreate => 'Foto auswählen';
+
+  @override
+  String get customAvatarReplace => 'Foto ändern';
+
+  @override
+  String get customAvatarRemove => 'Entfernen';
+
+  @override
+  String get customAvatarAudience => 'Wer darf den Foto-Avatar sehen?';
+
+  @override
+  String get customAvatarAcceptedOnly => 'Nur Kontakte';
+
+  @override
+  String get customAvatarEveryone => 'Alle';
+
+  @override
+  String get customAvatarChooseSource => 'Avatar-Foto auswählen';
+
+  @override
+  String get customAvatarCreateFailed =>
+      'Der Foto-Avatar konnte nicht erstellt werden.';
 
   @override
   String get inProcess => 'Wird verarbeitet';
@@ -1512,6 +1692,31 @@ class AppLocalizationsDe extends AppLocalizations {
       'Der öffentliche Schlüssel im Link stimmt nicht mit dem für diesen Kontakt gespeicherten öffentlichen Schlüssel überein. Triff die Person persönlich und scanne den QR-Code direkt!';
 
   @override
+  String get verificationMissingSession =>
+      'Für diesen Kontakt ist noch keine sichere Sitzung gespeichert. Tauscht zuerst eine Nachricht aus und lass dir danach einen neuen Verifizierungslink senden.';
+
+  @override
+  String get verificationLinkInvalidTitle => 'Ungültiger Verifizierungslink';
+
+  @override
+  String get verificationLinkInvalid =>
+      'Der Verifizierungslink ist unvollständig oder ungültig. Bitte die Person, ihn erneut aus ihrem twonly-Profil zu teilen.';
+
+  @override
+  String get verificationLinkErrorTitle => 'Verifizierung nicht möglich';
+
+  @override
+  String get verificationLinkError =>
+      'twonly konnte diesen Verifizierungslink nicht prüfen. Versuche es bitte erneut.';
+
+  @override
+  String get verificationOwnProfileTitle => 'Das ist dein Profil';
+
+  @override
+  String get verificationOwnProfile =>
+      'Du hast deinen eigenen Verifizierungscode gescannt.';
+
+  @override
   String get startWithCameraOpen => 'Mit geöffneter Kamera starten';
 
   @override
@@ -1529,6 +1734,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String memoriesXYearsAgo(Object years) {
     return 'Vor $years Jahren';
+  }
+
+  @override
+  String get memoriesAMonthAgo => 'Vor einem Monat';
+
+  @override
+  String memoriesXMonthsAgo(int months) {
+    return 'Vor $months Monaten';
   }
 
   @override
@@ -1632,6 +1845,41 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get verificationBadgeRedDesc =>
       'Ein Kontakt, dessen Identität noch *nicht überprüft* wurde.';
+
+  @override
+  String get manualVerificationOpen => 'Sicherheitsnummern';
+
+  @override
+  String get manualVerificationTitle => 'Sicherheitsnummer vergleichen';
+
+  @override
+  String get manualVerificationMarkVerified => 'Als verifiziert markieren';
+
+  @override
+  String manualVerificationDescription(String username) {
+    return 'Vergleiche diese Sicherheitsnummer mit $username. Wenn auf beiden Geräten dieselbe Nummer angezeigt wird, ist eure Ende-zu-Ende-Verschlüsselung verifiziert.';
+  }
+
+  @override
+  String get manualVerificationMissingKeyTitle =>
+      'Keine Sicherheitsnummer verfügbar';
+
+  @override
+  String manualVerificationMissingKeyDescription(String username) {
+    return 'Mit $username besteht noch keine Signal-Sitzung. Tauscht zuerst eine Nachricht aus und versucht es danach erneut.';
+  }
+
+  @override
+  String get manualVerificationLoadFailed =>
+      'Die Sicherheitsnummer konnte nicht geladen werden.';
+
+  @override
+  String get manualVerificationRetry => 'Erneut versuchen';
+
+  @override
+  String manualVerificationSuccess(String username) {
+    return 'Du hast die Sicherheitsnummer mit $username verglichen und die Identität bestätigt.';
+  }
 
   @override
   String get scanNow => 'Jetzt scannen';
@@ -1960,6 +2208,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String get recoverSuccessBody => 'Klicke hier, um die App wieder zu öffnen';
 
   @override
+  String get recoverProgressTitle => 'Backup wird wiederhergestellt';
+
+  @override
+  String get recoverProgressSubtitle =>
+      'Dies kann einen Moment dauern, bitte lasse die App geöffnet.';
+
+  @override
+  String get recoverProgressResolvingAccount => 'Konto wird überprüft';
+
+  @override
+  String get recoverProgressRestoringIdentity =>
+      'Identität wird wiederhergestellt';
+
+  @override
+  String get recoverProgressDownloadingArchive =>
+      'Nachrichten und Kontakte werden heruntergeladen und entschlüsselt';
+
+  @override
+  String get recoverProgressExtractingData => 'Daten werden extrahiert';
+
+  @override
+  String get recoverProgressFinishing => 'Wird abgeschlossen';
+
+  @override
   String get iosRecoveryWelcomeBack => 'Willkommen zurück';
 
   @override
@@ -1981,27 +2253,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get registeringNewAccount => 'Neues Konto wird registriert';
 
   @override
-  String get createShortcut => 'Shortcut erstellen';
-
-  @override
-  String get editShortcut => 'Shortcut bearbeiten';
-
-  @override
-  String get deleteShortcut => 'Shortcut löschen';
-
-  @override
-  String get deleteShortcutBody =>
-      'Bist du sicher, dass du diesen Shortcut löschen möchtest?';
-
-  @override
-  String get updateShortcut => 'Shortcut aktualisieren';
-
-  @override
   String get selectEmoji => 'Emoji auswählen';
-
-  @override
-  String get errorEmojiUsedOrInvalid =>
-      'Emoji wird bereits verwendet oder ist ungültig';
 
   @override
   String get subscriptionPledgeSecureTitle => 'Secure by Design';
@@ -2260,8 +2512,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get passwordlessRecoveryEnableBtn => 'Vertraute Freunde aktivieren';
 
   @override
-  String get passwordlessRecoveryRecoverBtn =>
-      'Mithilfe von vertrauten Freunden wiederherstellen';
+  String get passwordlessRecoveryRecoverBtn => 'Über Freunde wiederherstellen';
 
   @override
   String get passwordlessRecoveryModifyBtn => 'Vertraute Freunde bearbeiten';
@@ -2383,6 +2634,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wiederherstellungs-Teil gesendet!';
 
   @override
+  String get passwordlessRecoveryAuthReason =>
+      'Authentifiziere dich, um deinen Wiederherstellungs-Teil zu senden';
+
+  @override
+  String get passwordlessRecoveryAuthFailed =>
+      'Authentifizierung fehlgeschlagen, der Wiederherstellungs-Teil wurde nicht gesendet.';
+
+  @override
   String get passwordlessRecoveryNetworkError =>
       'Netzwerkfehler, bitte stelle sicher, dass du Internet hast';
 
@@ -2456,9 +2715,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStorageLocal => 'Lokaler Speicherplatz';
 
   @override
-  String get settingsStorageNoCloudBackupTitle => 'Kein Cloud-Backup';
-
-  @override
   String get settingsStorageNoCloudBackupCard =>
       'Sichere deine Erinnerungen in der Cloud, um lokalen Speicherplatz freizugeben und deine Bilder nicht zu verlieren. Alles Ende-zu-Ende verschlüsselt.';
 
@@ -2514,6 +2770,38 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStorageLocalOnly => 'Nur lokal';
 
   @override
+  String get settingsStorageByChat => 'Speicherplatz pro Chat';
+
+  @override
+  String get settingsStorageTemporaryMediaDescription =>
+      'Temporäre Mediendateien sind gesendete Medien, die nicht gespeichert wurden. Sie bleiben auf deinem Gerät, bis der Empfänger sie erhalten und geöffnet hat.';
+
+  @override
+  String get settingsStorageNoChats => 'Keine Chats gefunden.';
+
+  @override
+  String settingsStorageStoredMediaCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gespeicherte Dateien',
+      one: '1 gespeicherte Datei',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsStorageTemporaryMediaCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count temporäre Dateien',
+      one: '1 temporäre Datei',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsStorageDisableBackupTitle => 'Backup deaktivieren?';
 
   @override
@@ -2550,35 +2838,69 @@ class AppLocalizationsDe extends AppLocalizations {
       'Hinweis zur Flammen-Wiederherstellung anzeigen';
 
   @override
-  String get contactLabelsTitle => 'Kontaktlabels';
+  String get contactGroupsTitle => 'Kontaktgruppen';
 
   @override
-  String get contactLabelsSubtitleEmpty => 'Keine Labels ausgewählt';
+  String get contactGroupsSubtitleEmpty =>
+      'Keine sichtbaren Kontaktgruppen ausgewählt';
 
   @override
-  String get contactLabelsMaxLimit => 'Maximal 3 Labels pro Kontakt';
+  String get createContactGroup => 'Kontaktgruppe erstellen';
 
   @override
-  String get createLabel => 'Neues Label erstellen';
+  String get editContactGroup => 'Kontaktgruppe anpassen';
 
   @override
-  String get editLabel => 'Label bearbeiten';
+  String get deleteContactGroup => 'Kontaktgruppe löschen';
 
   @override
-  String get deleteLabel => 'Label löschen';
+  String get deleteContactGroupConfirmation =>
+      'Möchtest du diese Kontaktgruppe wirklich löschen? Sie wird von allen Kontakten und Gruppen entfernt.';
 
   @override
-  String get deleteLabelConfirmation =>
-      'Möchtest du dieses Label wirklich löschen? Es wird von allen Kontakten entfernt.';
+  String get contactGroupTextColor => 'Textfarbe';
 
   @override
-  String get labelNameHint => 'Label-Name';
+  String get contactGroupBackgroundColor => 'Hintergrundfarbe';
 
   @override
-  String get labelTextColor => 'Textfarbe';
+  String get contactGroupNoBackground => 'Kein Hintergrund';
 
   @override
-  String get labelBackgroundColor => 'Hintergrundfarbe';
+  String get contactGroupFeatures => 'Funktionen';
+
+  @override
+  String get contactGroupShowAsLabel => 'Als sichtbares Label anzeigen';
+
+  @override
+  String get contactGroupShowAsLabelSubtitle =>
+      'Zeigt diese Kontaktgruppe neben den zugehörigen Kontakten an.';
+
+  @override
+  String get contactGroupShowAsShortcut => 'Als Shortcut anzeigen';
+
+  @override
+  String get contactGroupShowAsShortcutSubtitle =>
+      'Wählt beim Teilen über das Emoji alle Mitglieder aus.';
+
+  @override
+  String get contactGroupShortcutNeedsEmoji =>
+      'Wähle ein Emoji aus, bevor du den Shortcut aktivierst.';
+
+  @override
+  String get contactGroupMembers => 'Mitglieder';
+
+  @override
+  String get contactGroupLabelFeature => 'Sichtbares Label';
+
+  @override
+  String get contactGroupShortcutFeature => 'Shortcut';
+
+  @override
+  String get contactGroupSettings => 'Kontaktgruppe anpassen';
+
+  @override
+  String get save => 'Speichern';
 
   @override
   String get customColor => 'Eigene Farbe';
@@ -2640,9 +2962,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupCloudContactsMessages => 'Kontakte & Nachrichten';
 
   @override
-  String get backupCloudFreeActive => 'Kostenlos aktiv';
-
-  @override
   String get backupCloudImagesMedia => 'Bilder & Medien';
 
   @override
@@ -2683,4 +3002,332 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileLimitReachedUpgrade => 'Tarif wechseln';
+
+  @override
+  String get contactGroupUsedByWidget => 'Homebildschirm-Widget';
+
+  @override
+  String get contactGroupAddWidgetSubtitle =>
+      'Füge ein Widget für diese Kontaktgruppe hinzu.';
+
+  @override
+  String get contactGroupWidgetTutorialTitle =>
+      'Homebildschirm-Widget hinzufügen';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep1 =>
+      'Halte eine freie Stelle auf deinem Homebildschirm gedrückt und tippe dann auf „Widgets“.';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep2 =>
+      'Suche nach twonly und ziehe das Widget auf deinen Homebildschirm.';
+
+  @override
+  String get contactGroupWidgetTutorialAndroidStep3 =>
+      'Wähle diese Kontaktgruppe in der Einrichtung aus und tippe dann auf „Speichern“.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep1 =>
+      'Halte eine freie Stelle auf deinem Homebildschirm gedrückt und tippe dann auf „Bearbeiten“ und „Widget hinzufügen“.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep2 =>
+      'Suche nach twonly, wähle eine Größe und tippe dann auf „Widget hinzufügen“.';
+
+  @override
+  String get contactGroupWidgetTutorialIosStep3 =>
+      'Halte das Widget gedrückt, tippe auf „Widget bearbeiten“ und wähle dann diese Kontaktgruppe aus.';
+
+  @override
+  String contactGroupUsedByWidgetSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Widgets auf deinem Homebildschirm zeigen Fotos aus dieser Gruppe.',
+      one:
+          'Ein Widget auf deinem Homebildschirm zeigt Fotos aus dieser Gruppe.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactGroupDeleteBlockedByWidget(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Diese Kontaktgruppe wird von $count Widgets auf deinem Homebildschirm verwendet. Entferne zuerst diese Widgets, danach kannst du die Gruppe löschen.',
+      one:
+          'Diese Kontaktgruppe wird von einem Widget auf deinem Homebildschirm verwendet. Entferne zuerst dieses Widget, danach kannst du die Gruppe löschen.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get webxdcStoreMenu => 'App';
+
+  @override
+  String get webxdcStoreTitle => 'App hinzufügen';
+
+  @override
+  String get webxdcStoreEmpty => 'Es sind noch keine Apps verfügbar.';
+
+  @override
+  String get webxdcStoreOffline =>
+      'Die App-Liste konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String get webxdcStoreFailed =>
+      'Die App konnte diesem Chat nicht hinzugefügt werden.';
+
+  @override
+  String get webxdcStoreAlreadyAdded => 'Bereits zu diesem Chat hinzugefügt';
+
+  @override
+  String get webxdcChatApps => 'Chat-Apps';
+
+  @override
+  String get webxdcChatAppsEmpty =>
+      'Diesem Chat wurden noch keine einmaligen Apps hinzugefügt.';
+
+  @override
+  String get webxdcUnavailable => 'Diese App konnte nicht geladen werden.';
+
+  @override
+  String get webxdcDeleteConfirm =>
+      'Alles, was diese App auf diesem Gerät gespeichert hat, wird gelöscht. Andere Mitglieder behalten ihre eigene Kopie.';
+
+  @override
+  String get webxdcExternalLinkTitle => 'twonly verlassen?';
+
+  @override
+  String get webxdcExternalLinkBody =>
+      'Dieser Link öffnet sich außerhalb von twonly in deinem Browser:';
+
+  @override
+  String get notificationStory => 'hat eine Story gepostet.';
+
+  @override
+  String get settingsNotifyStories => 'Story-Benachrichtigungen';
+
+  @override
+  String get settingsNotifyStoriesSubtitle =>
+      'Werde über die erste Story des Tages von Kontakten benachrichtigt, mit denen du in den letzten zwei Wochen geschrieben hast.';
+
+  @override
+  String get contactGroupShareStories => 'Stories teilen';
+
+  @override
+  String get contactGroupShareStoriesSubtitle =>
+      'Biete diese Gruppe als Publikum an, wenn du eine Story postest.';
+
+  @override
+  String get contactGroupStoriesFeature => 'Stories';
+
+  @override
+  String get story => 'Story';
+
+  @override
+  String get storyExpired => 'Story abgelaufen';
+
+  @override
+  String get storyMine => 'Meine Story';
+
+  @override
+  String get storyDeleteTitle => 'Story löschen?';
+
+  @override
+  String get storyDeleteBody => 'Dadurch wird sie aus deiner Story entfernt.';
+
+  @override
+  String get storyDelete => 'Löschen';
+
+  @override
+  String get storyDeleteFailed =>
+      'Konnte nicht gelöscht werden. Versuche es gleich noch einmal.';
+
+  @override
+  String get shareImageStory => 'Story';
+
+  @override
+  String shareImageStoryAudience(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Erreicht $count Kontakte',
+      one: 'Erreicht 1 Kontakt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shareImageStoryUnavailable =>
+      'Mit twonly geschützte Medien können nicht als Story gepostet werden.';
+
+  @override
+  String get shareImageStoryAll => 'Alle Kontakte';
+
+  @override
+  String get shareImageStoryNewGroup => 'Neue Story-Gruppe';
+
+  @override
+  String shareImageStoryFailed(int max) {
+    return 'Die Story konnte nicht gepostet werden. Ein Versand erreicht höchstens $max Personen.';
+  }
+
+  @override
+  String get notificationStoryReply => 'hat auf deine Story geantwortet.';
+
+  @override
+  String notificationStoryReaction(Object reaction) {
+    return 'hat mit $reaction auf deine Story reagiert.';
+  }
+
+  @override
+  String get notificationStoredStory => 'hat deine Story gespeichert.';
+
+  @override
+  String storyViews(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufrufe',
+      one: '1 Aufruf',
+      zero: 'Noch keine Aufrufe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sticker => 'Sticker';
+
+  @override
+  String get stickers => 'Sticker';
+
+  @override
+  String get createSticker => 'Sticker erstellen';
+
+  @override
+  String get stickerPickFromGallery => 'Galerie';
+
+  @override
+  String get noStickersYet => 'Erstelle deinen ersten Sticker aus einem Foto.';
+
+  @override
+  String get stickerAdded => 'Sticker gespeichert';
+
+  @override
+  String get stickerAlreadySaved => 'Dieser Sticker ist bereits gespeichert';
+
+  @override
+  String get stickerCreateFailed => 'Der Sticker konnte nicht erstellt werden.';
+
+  @override
+  String get stickerSaveFailed =>
+      'Der Sticker konnte nicht gespeichert werden.';
+
+  @override
+  String notificationSticker(Object inGroup) {
+    return 'hat einen Sticker gesendet$inGroup.';
+  }
+
+  @override
+  String get storeSticker => 'Sticker speichern';
+
+  @override
+  String get removeSticker => 'Aus Sammlung entfernen';
+
+  @override
+  String get deleteSticker => 'Sticker löschen';
+
+  @override
+  String get rotateSticker => 'Sticker drehen';
+
+  @override
+  String get stickerRotateFailed => 'Der Sticker konnte nicht gedreht werden.';
+
+  @override
+  String get releaseNotesTitle => 'Was ist neu?';
+
+  @override
+  String get releaseNotesIntroduction =>
+      'Das bisher größte twonly-Update ist da. Hier ist ein kurzer Überblick.';
+
+  @override
+  String get releaseNotesAlsoImproved => 'Außerdem verbessert';
+
+  @override
+  String get releaseNotesStickers => 'Sticker';
+
+  @override
+  String get releaseNotesStickersDescription =>
+      'Erstelle Sticker aus deinen Fotos und teile sie in Chats.';
+
+  @override
+  String get releaseNotesWidgets => 'Widgets';
+
+  @override
+  String get releaseNotesWidgetsDescription =>
+      'Sieh neue Fotos deiner Lieblingsmenschen direkt auf dem Homescreen.';
+
+  @override
+  String get releaseNotesStories => 'Storys';
+
+  @override
+  String get releaseNotesStoriesDescription =>
+      'Teile Momente für 24 Stunden mit deinen Kontakten.';
+
+  @override
+  String get releaseNotesMiniGames => 'Minispiele in Chats & Gruppen';
+
+  @override
+  String get releaseNotesMiniGamesDescription =>
+      'Spielt kleine Spiele gemeinsam direkt in euren Unterhaltungen.';
+
+  @override
+  String get releaseNotesMemoriesMap => 'Erinnerungen auf der Karte';
+
+  @override
+  String get releaseNotesMemoriesMapDescription =>
+      'Speichere Standorte mit deinen Fotos und Videos in Memories und entdecke sie auf einer Karte. Aktiviere dies unter Einstellungen > Memories & Speicher.';
+
+  @override
+  String get releaseNotesReliableMessages =>
+      'Zuverlässigere Nachrichten und Push-Benachrichtigungen';
+
+  @override
+  String get releaseNotesImprovedUi => 'Verbesserte Benutzeroberfläche';
+
+  @override
+  String get releaseNotesCustomAvatars => 'Individuelle Avatare';
+
+  @override
+  String get releaseNotesArabic => 'Arabische Sprache (experimentell)';
+
+  @override
+  String get memoriesMapTitle => 'Erinnerungskarte';
+
+  @override
+  String get memoriesMapNoLocations =>
+      'Noch keine gespeicherten Erinnerungen mit Standort vorhanden.';
+
+  @override
+  String get memoriesMapNoResults =>
+      'Keine Erinnerungen in diesem Bereich. Verschiebe oder zoome die Karte, um einen anderen Ort zu erkunden.';
+
+  @override
+  String get memoriesMapLoadError =>
+      'Die Karte konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String memoriesMapVisibleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Erinnerungen in diesem Bereich',
+      one: '1 Erinnerung in diesem Bereich',
+    );
+    return '$_temp0';
+  }
 }

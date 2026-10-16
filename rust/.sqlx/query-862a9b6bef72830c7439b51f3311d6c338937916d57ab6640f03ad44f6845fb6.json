@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO group_members(group_id, contact_id, group_public_key)\n        VALUES (?, ?, ?)\n        ON CONFLICT(group_id, contact_id)\n        DO UPDATE SET group_public_key = excluded.group_public_key\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "862a9b6bef72830c7439b51f3311d6c338937916d57ab6640f03ad44f6845fb6"
+}

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package http_requests;
+
+message TextMessage {
+  int64 user_id = 1;
+  bytes body = 2;
+  reserved 3;  // was: bytes push_data
+  bool wake_receiver = 4;
+}
+
+message UploadRequest {
+  bytes encrypted_data = 1;
+  repeated bytes download_tokens = 2;
+  repeated TextMessage messages_on_success = 3;
+}

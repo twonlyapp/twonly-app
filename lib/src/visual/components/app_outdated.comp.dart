@@ -19,36 +19,34 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
   bool appIsOutdated = false;
   bool newDeviceRegistered = false;
 
-  late StreamSubscription<void> _subOutdated;
-  late StreamSubscription<void> _subNewDevice;
+  late StreamSubscription<ApiEvent> _apiEventSubscription;
 
   @override
   void dispose() {
-    _subOutdated.cancel();
-    _subNewDevice.cancel();
+    _apiEventSubscription.cancel();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    _subOutdated = apiService.onAppOutdated.listen((_) async {
-      if (mounted) {
+    // The rejection is sent during the API handshake, which regularly completes
+    // before this widget is mounted, so start from the last one the service saw.
+    _showRejection(apiService.permanentRejection);
+    _apiEventSubscription = apiService.events.listen((event) async {
+      if (!mounted) return;
+      if (event.kind == ApiEventKind.appOutdated ||
+          event.kind == ApiEventKind.newDeviceRegistered) {
         await context.read<CustomChangeProvider>().updateConnectionState(false);
-        setState(() {
-          appIsOutdated = true;
-        });
+        if (!mounted) return;
+        setState(() => _showRejection(event.kind));
       }
     });
+  }
 
-    _subNewDevice = apiService.onNewDeviceRegistered.listen((_) async {
-      if (mounted) {
-        await context.read<CustomChangeProvider>().updateConnectionState(false);
-        setState(() {
-          newDeviceRegistered = true;
-        });
-      }
-    });
+  void _showRejection(ApiEventKind? kind) {
+    appIsOutdated = kind == ApiEventKind.appOutdated;
+    newDeviceRegistered = kind == ApiEventKind.newDeviceRegistered;
   }
 
   @override
@@ -62,7 +60,7 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
             decoration: BoxDecoration(
-              color: Colors.red.withAlpha(100),
+              color: context.color.errorContainer,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
@@ -73,7 +71,7 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
                   textAlign: TextAlign.center,
                   softWrap: true,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
+                    color: context.color.onErrorContainer,
                     fontSize: 16,
                   ),
                 ),
@@ -92,7 +90,7 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
             decoration: BoxDecoration(
-              color: Colors.red,
+              color: context.color.error,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
@@ -103,7 +101,7 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
                   textAlign: TextAlign.center,
                   softWrap: true,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
+                    color: context.color.onError,
                     fontSize: 16,
                   ),
                 ),
@@ -125,7 +123,7 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
                     child: Text(
                       context.lang.appOutdatedBtn,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white,
+                        color: context.color.onSurface,
                         fontSize: 16,
                       ),
                     ),

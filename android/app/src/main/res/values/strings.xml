@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Photos your friends send you</string>
+    <string name="widget_choose_groups">Choose people and groups</string>
+    <string name="widget_choose_groups_description">Choose people or contact groups who may send photos to this widget.</string>
+    <string name="widget_people">People</string>
+    <string name="widget_contact_groups">Contact groups</string>
+    <string name="widget_open_app_first">Open twonly once to load your contacts and contact groups.</string>
+    <string name="widget_save">Add widget</string>
+    <string name="widget_image_description">Latest photo in your widget</string>
+</resources>

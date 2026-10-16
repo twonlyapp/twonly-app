@@ -7,20 +7,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mutex/mutex.dart';
 import 'package:screen_protector/screen_protector.dart';
-import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/daos/stories.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart'
     show DownloadState, MediaType;
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
-import 'package:twonly/src/services/api/mediafiles/download.api.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
+import 'package:twonly/src/services/mediafiles/media_download_policy.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
-import 'package:twonly/src/services/notifications/background.notifications.dart';
+import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
@@ -31,15 +29,40 @@ import 'package:twonly/src/visual/views/chats/media_viewer_components/keyboard_d
 import 'package:twonly/src/visual/views/chats/media_viewer_components/media_content_renderer.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/media_viewer_bottom_navigation.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/media_viewer_message_input.comp.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/own_story_bottom_bar.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/reaction_buttons.comp.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expiry_timer.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/twonly_present_overlay.comp.dart';
 import 'package:video_player/video_player.dart';
 
+/// What a story viewer plays: one contact's active story, or the user's own.
+class StorySource {
+  const StorySource.contact(int this.contactId, {this.initialMediaId})
+    : own = false;
+  const StorySource.own({this.initialMediaId}) : contactId = null, own = true;
+
+  final int? contactId;
+  final bool own;
+
+  /// The item to start at. Without one a contact's story starts at the first
+  /// item not seen yet, and the user's own story at its oldest item.
+  final String? initialMediaId;
+}
+
 class MediaViewerView extends StatefulWidget {
-  const MediaViewerView(this.group, {super.key, this.initialMessage});
-  final Group group;
+  const MediaViewerView(Group this.group, {super.key, this.initialMessage})
+    : story = null;
+
+  /// Plays a story instead of a chat's unopened media. Items replay until
+  /// they expire, so nothing here is removed after it was shown.
+  const MediaViewerView.story(StorySource this.story, {super.key})
+    : group = null,
+      initialMessage = null;
+
+  final Group? group;
 
   final Message? initialMessage;
+  final StorySource? story;
   @override
   State<MediaViewerView> createState() => _MediaViewerViewState();
 }
@@ -47,6 +70,7 @@ class MediaViewerView extends StatefulWidget {
 class _MediaViewerViewState extends State<MediaViewerView> {
   Timer? nextMediaTimer;
   Timer? progressTimer;
+  final StoryExpiryTimer _storyExpiryTimer = StoryExpiryTimer();
 
   bool showShortReactions = false;
   double mediaViewerDistanceFromBottom = 0;
@@ -82,12 +106,26 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   bool _isTransitioning = false;
 
+  /// The chat replies go to. For a contact's story it is the direct chat the
+  /// story rows are filed under, looked up once the story is loaded.
+  Group? _group;
+
+  bool get _isStory => widget.story != null;
+  bool get _isOwnStory => widget.story?.own ?? false;
+
   @override
   void initState() {
     super.initState();
-    _currentMediaSender = widget.group.groupName;
+    _group = widget.group;
+    _currentMediaSender = widget.group?.groupName ?? '';
 
-    if (widget.initialMessage != null) {
+    if (_isStory) {
+      unawaited(_loadStory());
+      return;
+    }
+
+    if (widget.initialMessage != null &&
+        !widget.initialMessage!.isWidgetMedia) {
       allMediaFiles = [widget.initialMessage!];
     }
 
@@ -98,6 +136,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   void dispose() {
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
+    _storyExpiryTimer.cancel();
     _subscription?.cancel();
     downloadStateListener?.cancel();
     progress.dispose();
@@ -108,14 +147,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
     // Persist draft message on close
     final draftText = textMessageController.text;
-    unawaited(
-      twonlyDB.groupsDao.updateGroup(
-        widget.group.groupId,
-        GroupsCompanion(
-          draftMessage: Value(draftText.isEmpty ? null : draftText),
+    if (!_isStory) {
+      unawaited(
+        twonlyDB.groupsDao.updateGroup(
+          widget.group!.groupId,
+          GroupsCompanion(
+            draftMessage: Value(draftText.isEmpty ? null : draftText),
+          ),
         ),
-      ),
-    );
+      );
+    }
     textMessageController.dispose();
 
     super.dispose();
@@ -134,18 +175,60 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   final Mutex _messageUpdateLock = Mutex();
 
-  bool _isViewActive() {
-    if (!mounted) return false;
-    return !AppState.isAppInBackground &&
-        (ModalRoute.of(context)?.isCurrent ?? false);
+  /// A story is a fixed playlist: its items are all there when it is opened,
+  /// and new ones show up the next time it is.
+  Future<void> _loadStory() async {
+    final story = widget.story!;
+    final now = clock.now();
+    var playlist = <Message>[];
+    var start = 0;
+    if (story.own) {
+      final items = await twonlyDB.storiesDao.watchOwnStoryItems().first;
+      for (final item in items.where((item) => item.isActiveAt(now))) {
+        final rows = await twonlyDB.messagesDao.getMessagesByMediaId(
+          item.mediaFile.mediaId,
+        );
+        final row = rows
+            .where((row) => row.isStory && row.senderId == null)
+            .firstOrNull;
+        if (row != null) playlist.add(row);
+      }
+      if (mounted) _currentMediaSender = context.lang.storyMine;
+    } else {
+      final contactId = story.contactId!;
+      playlist = (await twonlyDB.storiesDao.getReceivedStoryItems(contactId))
+          .where((item) => item.isActiveAt(now))
+          .map((item) => item.message)
+          .toList();
+      start = playlist.indexWhere((message) => message.openedAt == null);
+      if (start < 0) start = 0;
+      final contact = await twonlyDB.contactsDao.getContactById(contactId);
+      if (contact != null) _currentMediaSender = getContactDisplayName(contact);
+      if (playlist.isNotEmpty) {
+        _group = await twonlyDB.groupsDao.getGroup(playlist.first.groupId);
+      }
+    }
+    final initial = story.initialMediaId;
+    if (initial != null) {
+      final index = playlist.indexWhere((m) => m.mediaId == initial);
+      if (index >= 0) start = index;
+    }
+    if (!mounted) return;
+    setState(() {
+      allMediaFiles = playlist.isEmpty ? [] : playlist.sublist(start);
+    });
+    await loadAndDownloadCurrentMedia();
   }
 
   Future<void> listenForUnopenedMedia(bool firstRun) async {
     _subscription = twonlyDB.messagesDao
-        .watchMediaNotOpened(widget.group.groupId)
+        .watchMediaNotOpened(widget.group!.groupId)
         .listen((messages) async {
           await _messageUpdateLock.protect(() async {
             for (final msg in messages) {
+              if (msg.isWidgetMedia) {
+                continue;
+              }
               if (_alreadyOpenedMediaIds.contains(msg.mediaId)) {
                 continue;
               }
@@ -198,11 +281,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     _isTransitioning = true;
 
     try {
-      /// Remove the current media file in case it is not set to unlimited
-      if (currentMedia != null) {
+      /// Remove the current media file in case it is not set to unlimited.
+      /// A story replays until it expires, whatever the file says.
+      if (currentMedia != null && !_isStory) {
         if (!imageSaved &&
             currentMedia!.mediaFile.displayLimitInMilliseconds != null) {
-          currentMedia!.fullMediaRemoval();
+          await currentMedia!.fullMediaRemoval();
         }
       }
 
@@ -212,14 +296,20 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
       nextMediaTimer?.cancel();
       progressTimer?.cancel();
+      _storyExpiryTimer.cancel();
 
-      if (allMediaFiles.isEmpty) {
-        final group = await twonlyDB.groupsDao.getGroup(widget.group.groupId);
+      if (allMediaFiles.isEmpty && _isStory) {
+        if (mounted) Navigator.pop(context);
+      } else if (allMediaFiles.isEmpty) {
+        final group = await twonlyDB.groupsDao.getGroup(widget.group!.groupId);
         if (mounted) {
           if (group != null &&
               group.draftMessage != null &&
               group.draftMessage != '') {
-            context.replace(Routes.chatsMessages(group.groupId));
+            context.replace(
+              Routes.chatsMessages(group.groupId),
+              extra: group,
+            );
           } else {
             Navigator.pop(context);
           }
@@ -234,6 +324,24 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   Future<void> loadAndDownloadCurrentMedia({bool showTwonly = false}) async {
     if (!mounted || !context.mounted) return;
+    if (_isStory) {
+      final now = clock.now();
+      while (allMediaFiles.isNotEmpty &&
+          !allMediaFiles.first.createdAt.add(storyLifetime).isAfter(now)) {
+        allMediaFiles.removeAt(0);
+      }
+      if (allMediaFiles.isEmpty) {
+        Navigator.pop(context);
+        return;
+      }
+      _storyExpiryTimer.schedule(
+        postedAt: allMediaFiles.first.createdAt,
+        now: now,
+        onExpired: () {
+          if (mounted) unawaited(advanceToNextMediaOrExit());
+        },
+      );
+    }
     if (allMediaFiles.isEmpty || allMediaFiles.first.mediaId == null) {
       return advanceToNextMediaOrExit();
     }
@@ -257,10 +365,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       showSendTextMessageInput = false;
     });
 
-    if (_isViewActive()) {
-      unawaited(flutterLocalNotificationsPlugin.cancelAll());
-    }
-
     final stream = twonlyDB.mediaFilesDao.watchMedia(
       allMediaFiles.first.mediaId!,
     );
@@ -276,7 +380,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         await advanceToNextMediaOrExit();
         return;
       }
-      if (updated.downloadState != DownloadState.ready) {
+      // The user's own story plays from the file they sent; there is
+      // nothing to download.
+      if (!_isOwnStory && updated.downloadState != DownloadState.ready) {
         setState(() {
           _showDownloadingLoader = true;
         });
@@ -360,17 +466,25 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       Log.warn(
         'Temp media file not found for media ID: ${currentMediaLocal.mediaFile.mediaId}',
       );
-      await handleMediaError(currentMediaLocal.mediaFile);
+      if (!_isOwnStory) {
+        await RustApi.requestMediaReupload(
+          mediaId: currentMediaLocal.mediaFile.mediaId,
+        );
+      }
       return advanceToNextMediaOrExit();
     }
 
     // The server can now delete the encrypted bytes, as the user has successfully opened it.
-    Log.info(
-      'Calling downloadDone for media ID: ${currentMediaLocal.mediaFile.mediaId}',
-    );
-    unawaited(
-      apiService.downloadDone(currentMediaLocal.mediaFile.downloadToken!),
-    );
+    final downloadToken = currentMediaLocal.mediaFile.downloadToken;
+    if (downloadToken != null) {
+      Log.info(
+        'Calling downloadDone for media ID: ${currentMediaLocal.mediaFile.mediaId}',
+      );
+      unawaitedRustCall(
+        RustApi.downloadDone(token: downloadToken),
+        'downloadDone',
+      );
+    }
 
     if (currentMediaLocal.mediaFile.type == MediaType.video) {
       await _setupVideoPlayer(currentMediaLocal);
@@ -386,21 +500,25 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future<void> _updateSenderInfo() async {
-    if (currentMessage == null || widget.group.isDirectChat) return;
+    final group = widget.group;
+    if (currentMessage == null || group == null || group.isDirectChat) return;
     final sender = await twonlyDB.contactsDao.getContactById(
       currentMessage!.senderId!,
     );
     if (mounted && sender != null) {
       _currentMediaSender =
-          '${getContactDisplayName(sender)} (${widget.group.groupName})';
+          '${getContactDisplayName(sender)} (${group.groupName})';
     }
   }
 
   Future<void> _notifyMessageOpened(MediaFileService mediaLocal) async {
-    if (currentMessage == null) return;
+    if (currentMessage == null || _isOwnStory) return;
+    // A story item is reported the first time only; replays are not news.
+    if (_isStory && currentMessage!.openedAt != null) return;
     var markAsOpenMessageIDs = [currentMessage!.messageId];
 
-    if (userService.currentUser.automaticallyMarkEqualMediaFilesAsOpened &&
+    if (!_isStory &&
+        userService.currentUser.automaticallyMarkEqualMediaFilesAsOpened &&
         mediaLocal.mediaFile.storedFileHash != null) {
       final messageIds = await twonlyDB.mediaFilesDao.getMessageIdsByMediaHash(
         mediaLocal.mediaFile.storedFileHash!,
@@ -417,10 +535,15 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       markAsOpenMessageIDs = messageIds;
     }
 
-    await notifyContactAboutOpeningMessage(
-      currentMessage!.senderId!,
-      markAsOpenMessageIDs,
-    );
+    await NativeNotificationService.cancelNotifications(markAsOpenMessageIDs);
+    try {
+      await RustApi.notifyMessagesOpened(
+        contactId: currentMessage!.senderId!,
+        messageIds: markAsOpenMessageIDs,
+      );
+    } finally {
+      await NativeNotificationService.cancelNotifications(markAsOpenMessageIDs);
+    }
   }
 
   Future<void> _setupVideoPlayer(MediaFileService mediaLocal) async {
@@ -430,7 +553,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     );
 
     await controller.setLooping(
-      mediaLocal.mediaFile.displayLimitInMilliseconds == null,
+      _isStory || mediaLocal.mediaFile.displayLimitInMilliseconds == null,
     );
 
     if (!mounted) {
@@ -456,7 +579,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               progress.value = 1 - ctrl.value.position.inSeconds / duration;
             }
 
-            if (mediaLocal.mediaFile.displayLimitInMilliseconds != null) {
+            if (!_isStory &&
+                mediaLocal.mediaFile.displayLimitInMilliseconds != null) {
               if (ctrl.value.position == ctrl.value.duration) {
                 advanceToNextMediaOrExit();
               }
@@ -480,7 +604,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   void _setupImageTimer(MediaFileService mediaLocal) {
-    if (mediaLocal.mediaFile.displayLimitInMilliseconds != null) {
+    // A story image stays until the viewer moves on.
+    if (!_isStory && mediaLocal.mediaFile.displayLimitInMilliseconds != null) {
       canBeSeenUntil = clock.now().add(
         Duration(
           milliseconds: mediaLocal.mediaFile.displayLimitInMilliseconds!,
@@ -531,14 +656,15 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         mediaStored: Value(true),
       ),
     );
-    await sendCipherTextToGroup(
-      widget.group.groupId,
-      pb.EncryptedContent(
+    await RustApi.sendEncryptedContentToGroup(
+      groupId: msg.groupId,
+      content: pb.EncryptedContent(
         mediaUpdate: pb.EncryptedContent_MediaUpdate(
           type: pb.EncryptedContent_MediaUpdate_Type.STORED,
           targetMessageId: msg.messageId,
         ),
-      ),
+      ).writeToBuffer(),
+      onlySendIfNoReceiptsAreOpen: false,
     );
     setState(() {
       imageSaved = true;
@@ -558,6 +684,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Widget bottomNavigation() {
+    if (_isOwnStory) {
+      return OwnStoryBottomBar(
+        key: mediaWidgetKey,
+        mediaFile: currentMedia?.mediaFile,
+        onDeleted: advanceToNextMediaOrExit,
+      );
+    }
     return MediaViewerBottomNavigationBar(
       key: mediaWidgetKey,
       currentMedia: currentMedia,
@@ -586,15 +719,18 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         progressTimer?.cancel();
         await videoController?.pause();
         if (!mounted) return;
+        final group = _group;
+        if (group == null) return;
         await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) {
-              return CameraSendToView(widget.group);
+              return CameraSendToView(group);
             },
           ),
         );
         if (mounted &&
+            !_isStory &&
             currentMedia!.mediaFile.displayLimitInMilliseconds != null) {
           await advanceToNextMediaOrExit();
         } else {
@@ -619,12 +755,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   void _sendTextMessage() {
     if (textMessageController.text.isNotEmpty) {
-      unawaited(
-        insertAndSendTextMessage(
-          widget.group.groupId,
-          textMessageController.text,
-          currentMessage!.messageId,
+      unawaitedRustCall(
+        RustApi.insertAndSendText(
+          groupId: currentMessage!.groupId,
+          text: textMessageController.text,
+          quoteMessageId: currentMessage!.messageId,
         ),
+        'insertAndSendText',
       );
       textMessageController.clear();
     }
@@ -665,7 +802,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         });
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: SafeArea(
+          maintainBottomViewPadding: true,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -694,7 +833,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               if (currentMedia != null &&
                   currentMedia?.mediaFile.downloadState != DownloadState.ready)
                 Positioned.fill(child: _loader()),
-              if (canBeSeenUntil != null || progress.value >= 0)
+              // A story image has no clock to show; a video still shows how far
+              // it has played.
+              if ((canBeSeenUntil != null || progress.value >= 0) &&
+                  !(_isStory && videoController == null))
                 Positioned(
                   right: 20,
                   top: 27,
@@ -728,10 +870,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     fontWeight: FontWeight.bold,
                     color: showSendTextMessageInput
                         ? null
-                        : const Color.fromARGB(255, 126, 126, 126),
-                    shadows: const [
+                        : context.appColor(AppColor.mediaForegroundMuted),
+                    shadows: [
                       Shadow(
-                        color: Color.fromARGB(122, 0, 0, 0),
+                        color: context.appColor(AppColor.mediaScrim),
                         blurRadius: 5,
                       ),
                     ],
@@ -741,18 +883,24 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               if (showSendTextMessageInput)
                 MediaViewerMessageInput(
                   controller: textMessageController,
+                  safeAreaBottomPadding: MediaQuery.viewPaddingOf(
+                    context,
+                  ).bottom,
                   onSubmitted: (value) => _sendTextMessage(),
                   onSendPressed: _sendTextMessage,
                 ),
               if (currentMessage != null)
                 AdditionalMessageContent(currentMessage!),
-              if (currentMedia != null)
+              if (currentMedia != null && !_isOwnStory)
                 ReactionButtons(
                   show: showShortReactions,
                   textInputFocused: showSendTextMessageInput,
                   mediaViewerDistanceFromBottom: mediaViewerDistanceFromBottom,
-                  groupId: widget.group.groupId,
+                  groupId: currentMessage!.groupId,
                   messageId: currentMessage!.messageId,
+                  // A story row never shows in the chat, so a reaction to it
+                  // goes there as a message quoting the story instead.
+                  asQuotedText: _isStory,
                   emojiKey: emojiKey,
                   hide: () {
                     setState(() {

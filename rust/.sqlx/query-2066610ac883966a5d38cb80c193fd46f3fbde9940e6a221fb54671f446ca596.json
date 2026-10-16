@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO webxdc_instances\n                   (instance_id, group_id, app_id, version, origin_token)\n               VALUES (?, ?, ?, ?, ?)\n               ON CONFLICT(instance_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "2066610ac883966a5d38cb80c193fd46f3fbde9940e6a221fb54671f446ca596"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT OR IGNORE INTO notification_outbox(\n                event_id, notification_id, conversation_id, sender_id,\n                message_id, kind, content, created_at\n            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "19af16bcf6c54900ed6032ce8ed7b5ef9d71456488805e343c2af10ad471b22a"
+}

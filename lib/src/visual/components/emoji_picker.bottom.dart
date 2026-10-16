@@ -1,11 +1,26 @@
 import 'dart:io';
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+
 import 'package:flutter/material.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
+import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 
-class EmojiPickerBottom extends StatelessWidget {
-  const EmojiPickerBottom({super.key});
+class EmojiPickerBottom extends StatefulWidget {
+  const EmojiPickerBottom({
+    this.allowStickers = false,
+    super.key,
+  });
+
+  final bool allowStickers;
+
+  @override
+  State<EmojiPickerBottom> createState() => _EmojiPickerBottomState();
+}
+
+class _EmojiPickerBottomState extends State<EmojiPickerBottom> {
+  bool _showStickers = false;
 
   @override
   Widget build(BuildContext context) {
@@ -33,13 +48,39 @@ class EmojiPickerBottom extends StatelessWidget {
                 margin: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(32),
-                  color: Colors.grey,
+                  color: context.color.outline,
                 ),
                 height: 3,
                 width: 60,
               ),
               Expanded(
                 child: EmojiPicker(
+                  alternateView: _showStickers
+                      ? StickerPicker(
+                          selectCreatedSticker: true,
+                          onEmojiPressed: () {
+                            setState(() => _showStickers = false);
+                          },
+                          onStickerSelected: (sticker) {
+                            unawaitedRustCall(
+                              twonlyDB.stickersDao.recordUse(
+                                sticker.contentHash,
+                              ),
+                              'recordStickerUse',
+                            );
+                            Navigator.pop(
+                              context,
+                              StickerLayerData(
+                                key: GlobalKey(),
+                                webp: sticker.webp,
+                                contentHash: sticker.contentHash,
+                                width: sticker.width,
+                                height: sticker.height,
+                              ),
+                            );
+                          },
+                        )
+                      : null,
                   onEmojiSelected: (category, emoji) {
                     Navigator.pop(
                       context,
@@ -54,6 +95,9 @@ class EmojiPickerBottom extends StatelessWidget {
                     height: 400,
                     locale: Localizations.localeOf(context),
                     checkPlatformCompatibility: false,
+                    resizeConfig: const ResizeConfig(
+                      showDragHandle: false,
+                    ),
                     emojiTextStyle: TextStyle(
                       fontSize: 24 * (Platform.isIOS ? 1.2 : 1),
                       fontFamilyFallback: Platform.isAndroid
@@ -66,7 +110,7 @@ class EmojiPickerBottom extends StatelessWidget {
                     ),
                     searchViewConfig: SearchViewConfig(
                       backgroundColor: context.color.surfaceContainer,
-                      buttonIconColor: Colors.white,
+                      buttonIconColor: context.color.onSurface,
                     ),
                     categoryViewConfig: CategoryViewConfig(
                       backgroundColor: context.color.surfaceContainer,
@@ -79,6 +123,11 @@ class EmojiPickerBottom extends StatelessWidget {
                       backgroundColor: context.color.surfaceContainer,
                       buttonColor: context.color.surfaceContainer,
                       buttonIconColor: context.color.secondary,
+                      stickerButtonLabel: context.lang.sticker,
+                      showStickerButton: widget.allowStickers,
+                      onStickerButtonPressed: widget.allowStickers
+                          ? () => setState(() => _showStickers = true)
+                          : null,
                     ),
                   ),
                 ),

@@ -5,6 +5,8 @@
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher">
+        <service android:name=".location.LiveLocationService" android:exported="false"
+            android:foregroundServiceType="location" android:stopWithTask="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -59,6 +61,13 @@
                 <data android:mimeType="video/*" />
             </intent-filter>
         </activity>
+        <!-- Hybrid Composition++ for the webxdc webview: the engine hands the
+             platform view to SurfaceControl instead of merging the raster and
+             platform threads, which is what keeps a route transition smooth
+             while an app is on screen. Ignored below Vulkan on API 34, where
+             the view falls back to the texture path on its own. -->
+        <meta-data android:name="io.flutter.embedding.android.EnableHcpp" android:value="true" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
@@ -71,14 +80,80 @@
             android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
             tools:node="remove">
         </service>
+        <service
+            android:name=".notifications.TwonlyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.notification-avatars"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/notification_avatar_paths" />
+        </provider>
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+        <!-- Twonly owns background FCM delivery natively. Keep the Flutter
+             plugin for foreground permission/token APIs, but never allow it
+             to launch a Dart background isolate. -->
+        <service
+            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingService"
+            tools:node="remove" />
+        <service
+            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingBackgroundService"
+            tools:node="remove" />
+        <receiver
+            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingReceiver"
+            tools:node="remove" />
+        <!-- A reboot drops WorkManager's periodic flush, and with it the only
+             thing that resumes an unsent message without the user opening the
+             app. -->
+        <receiver
+            android:name=".directmedia.BootCompletedReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".widget.TwonlyWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/twonly_widget_info" />
+        </receiver>
+        <activity
+            android:name=".widget.TwonlyWidgetConfigureActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Twonly.WidgetConfigure" />
         <meta-data
             android:name="eu.twonly.service.TWONLY_LOGO"
             android:resource="@drawable/ic_launcher_foreground" />
     </application>
 
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Requested only for user-enabled location features. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>

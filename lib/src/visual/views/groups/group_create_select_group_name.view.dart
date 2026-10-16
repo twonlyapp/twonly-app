@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/contact_labels.comp.dart';
+import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
-import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/elements/my_input.element.dart';
 
 class GroupCreateSelectGroupNameView extends StatefulWidget {
   const GroupCreateSelectGroupNameView({
@@ -36,9 +38,11 @@ class _GroupCreateSelectGroupNameViewState
       _isLoading = true;
     });
 
-    final wasSuccess = await createNewGroup(
-      textFieldGroupName.text,
-      widget.selectedUsers,
+    final wasSuccess = await rust_groups.createNewGroup(
+      groupName: textFieldGroupName.text,
+      memberIds: Int64List.fromList(
+        widget.selectedUsers.map((contact) => contact.userId).toList(),
+      ),
     );
     if (wasSuccess) {
       // POP
@@ -97,16 +101,11 @@ class _GroupCreateSelectGroupNameViewState
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: TextField(
-                    onChanged: (_) async {
-                      setState(() {});
-                    },
-                    autofocus: true,
+                  child: MyInput(
                     controller: textFieldGroupName,
-                    decoration: getInputDecoration(
-                      context,
-                      context.lang.groupNameInput,
-                    ),
+                    autofocus: true,
+                    hintText: context.lang.groupNameInput,
+                    onChanged: (_) => setState(() {}),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -122,8 +121,8 @@ class _GroupCreateSelectGroupNameViewState
                       return UserContextMenu(
                         key: ValueKey(user.userId),
                         contact: user,
-                        child: ContactLabelsSubtitleBuilder(
-                          contactId: user.userId,
+                        child: ContactGroupsSubtitleBuilder(
+                          userId: user.userId,
                           builder: (context, subtitleWidget) {
                             return ListTile(
                               title: Row(

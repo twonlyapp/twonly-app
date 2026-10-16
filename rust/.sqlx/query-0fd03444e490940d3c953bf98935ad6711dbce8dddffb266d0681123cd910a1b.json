@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT stored AS \"stored: bool\" FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "stored: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "stored"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0fd03444e490940d3c953bf98935ad6711dbce8dddffb266d0681123cd910a1b"
+}

@@ -1,326 +1,429 @@
-import CryptoKit
 import Foundation
-import Security
+import Intents
 import UserNotifications
+import WidgetKit
+import rust_lib_twonly
 
-class NotificationService: UNNotificationServiceExtension {
+private let runtimeAppGroup = "group.eu.twonly.runtime"
 
-    var contentHandler: ((UNNotificationContent) -> Void)?
-    var bestAttemptContent: UNMutableNotificationContent?
+/// Budget for the work deferred behind the alert. Behind a rendered alert it
+/// runs after the content handler has fired, so the system may reclaim the
+/// extension before it ends; a wake-up with nothing to render spends it up
+/// front instead, where the whole budget is actually available.
+private let finalizeDeadlineMs: UInt64 = 5_000
 
-    override func didReceive(
-        _ request: UNNotificationRequest,
-        withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
-    ) {
-        self.contentHandler = contentHandler
-        bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
+private struct NativeNotificationResponse: Decodable {
+  let ok: Bool
+  let widgetRefresh: Bool
+  let batch: NativeNotificationBatch?
+  let fallback: NativeNotificationPresentation?
+  let error: String?
 
-        // Store the current timestamp in Keychain for iOS FCM messaging tracking
-        let nowMs = String(format: "%.0f", Date().timeIntervalSince1970 * 1000)
-        writeToKeychain(key: "last_fcm_message_timestamp", value: nowMs)
-        NSLog("Received APNs push notification, updated last_fcm_message_timestamp to \(nowMs)")
-
-        if let bestAttemptContent = bestAttemptContent {
-
-            guard bestAttemptContent.userInfo as? [String: Any] != nil,
-                let push_data = bestAttemptContent.userInfo["push_data"] as? String
-            else {
-                return contentHandler(bestAttemptContent)
-            }
-
-            let data = getPushNotificationData(pushData: push_data)
-
-            if data != nil {
-                if data!.title == "blocked" {
-                    NSLog("Block message because user is blocked!")
-                    // https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.usernotifications.filtering
-                    return contentHandler(UNNotificationContent())
-                }
-                bestAttemptContent.title = data!.title
-                bestAttemptContent.body = data!.body
-                bestAttemptContent.threadIdentifier = String(format: "%d", data!.notificationId)
-            } else {
-                NSLog("Could not decrypt message. Show default.")
-                bestAttemptContent.title = "\(bestAttemptContent.title)"
-            }
-
-            contentHandler(bestAttemptContent)
-        }
-    }
-
-    override func serviceExtensionTimeWillExpire() {
-        // Called just before the extension will be terminated by the system.
-        // Use this as an opportunity to deliver your "best attempt" at modified content, otherwise the original push payload will be used.
-        if let contentHandler = contentHandler, let bestAttemptContent = bestAttemptContent {
-            contentHandler(bestAttemptContent)
-        }
-    }
-
+  enum CodingKeys: String, CodingKey {
+    case ok, batch, fallback, error
+    case widgetRefresh = "widget_refresh"
+  }
 }
 
-func getPushNotificationData(pushData: String) -> (
-    title: String, body: String, notificationId: Int64
-)? {
-
-    guard let data = Data(base64Encoded: pushData) else {
-        NSLog("Failed to decode base64 string")
-        return nil
-    }
-
-    do {
-        let pushData = try EncryptedPushNotification(serializedBytes: data)
-
-        var pushNotification: PushNotification?
-        var pushUser: PushUser?
-
-        // Check the keyId
-        if pushData.keyID == 0 {
-            let key = "InsecureOnlyUsedForAddingContact".data(using: .utf8)!
-            pushNotification = tryDecryptMessage(key: key, pushData: pushData)
-        } else {
-            let pushUsers = getPushUsers()
-            if pushUsers != nil {
-                for tryPushUser in pushUsers! {
-                    for pushKey in tryPushUser.pushKeys {
-                        if pushKey.id == pushData.keyID {
-                            pushNotification = tryDecryptMessage(
-                                key: pushKey.key, pushData: pushData)
-                            if pushNotification != nil {
-                                pushUser = tryPushUser
-                                if isUUIDNewer(pushUser!.lastMessageID, pushNotification!.messageID)
-                                {
-                                    //return ("blocked", "blocked", 0)
-                                }
-                                break
-                            }
-                        }
-                    }
-                    if pushUser != nil { break }
-                }
-            } else {
-                NSLog("pushKeys are empty")
-            }
-        }
-
-        if pushUser?.blocked == true {
-            return ("blocked", "blocked", 0)
-        }
-
-        // Handle the push notification based on the pushKind
-        if let pushNotification = pushNotification {
-
-            if pushNotification.kind == .testNotification {
-                return ("Test Notification", "This is a test notification.", 0)
-            } else if pushUser != nil {
-                return (
-                    pushUser!.displayName,
-                    getPushNotificationText(pushNotification: pushNotification, userKnown: true).0, pushUser!.userID
-                )
-            } else {
-                let content = getPushNotificationText(pushNotification: pushNotification, userKnown: false)
-                return (
-                    content.1, content.0, 1
-                )
-            }
-
-        } else {
-            NSLog("Failed to decrypt message or pushKind is nil")
-        }
-        return nil
-    } catch {
-        NSLog("Error decoding JSON: \(error)")
-        return nil
-    }
+private struct NativeNotificationPresentation: Decodable {
+  let title: String
+  let body: String
 }
 
-func isUUIDNewer(_ uuid1: String, _ uuid2: String) -> Bool {
-    guard uuid1.count >= 8, uuid2.count >= 8 else { return true }
-    let hex1 = String(uuid1.prefix(8))
-    let hex2 = String(uuid2.prefix(8))
-    guard let timestamp1 = UInt32(hex1, radix: 16),
-        let timestamp2 = UInt32(hex2, radix: 16)
-    else { return true }
-    return timestamp1 > timestamp2
+private struct NativeNotificationBatch: Decodable {
+  let additions: [NativeNotificationAddition]
+  let removals: [String]
+  let badgeCount: Int64
+  let completed: Bool
+
+  enum CodingKeys: String, CodingKey {
+    case additions, removals, completed
+    case badgeCount = "badge_count"
+  }
 }
 
-func tryDecryptMessage(key: Data, pushData: EncryptedPushNotification) -> PushNotification? {
+private struct NativeNotificationAddition: Decodable {
+  let eventId: String
+  let notificationId: String
+  let conversationId: String?
+  let senderId: Int64
+  let senderName: String
+  let title: String
+  let body: String
+  let conversationName: String?
+  let isGroup: Bool
+  let messageId: String?
+  let kind: String
+  let content: String?
+  let createdAt: Int64
+  let avatarPath: String?
+  let conversationAvatarPath: String?
 
-    do {
-        // Create a nonce for ChaChaPoly
-        let nonce = try ChaChaPoly.Nonce(data: pushData.nonce)
+  enum CodingKeys: String, CodingKey {
+    case kind, content, title, body
+    case eventId = "event_id"
+    case notificationId = "notification_id"
+    case conversationId = "conversation_id"
+    case senderId = "sender_id"
+    case senderName = "sender_name"
+    case conversationName = "conversation_name"
+    case isGroup = "is_group"
+    case messageId = "message_id"
+    case createdAt = "created_at"
+    case avatarPath = "avatar_path"
+    case conversationAvatarPath = "conversation_avatar_path"
+  }
 
-        // Create a sealed box for ChaChaPoly
-        let sealedBox = try ChaChaPoly.SealedBox(
-            nonce: nonce,
-            ciphertext: pushData.ciphertext,
-            tag: pushData.mac
-        )
-
-        // Decrypt the data using the key
-        let decryptedData = try ChaChaPoly.open(sealedBox, using: SymmetricKey(data: key))
-
-        // Here you can determine the PushKind based on the decrypted message
-        return try PushNotification(serializedBytes: decryptedData)
-    } catch {
-        NSLog("Decryption failed: \(error)")
-    }
-
-    return nil
+  var notificationGroup: String {
+    return "chat:\(conversationId ?? ""):sender:\(senderId):kind:\(kind)"
+  }
 }
 
-func getPushUsers() -> [PushUser]? {
-    // Retrieve the data from secure storage (Keychain)
-    guard let pushUsersB64 = readFromKeychain(key: "push_keys_receiving") else {
-        NSLog("No data found for key: push_keys_receiving")
-        return nil
-    }
-    guard let pushUsersBytes = Data(base64Encoded: pushUsersB64) else {
-        NSLog("Failed to decode base64 push users")
-        return nil
-    }
+private struct RenderedNotification {
+  let addition: NativeNotificationAddition
+  let eventIds: [String]
+  let notificationIds: [String]
+  let replacingRequestIds: [String]
 
-    do {
-        let pushUsers = try PushUsers(serializedBytes: pushUsersBytes)
-        return pushUsers.users
-    } catch {
-        NSLog("Error decoding JSON: \(error)")
-        return nil
-    }
+  var body: String {
+    return addition.body
+  }
 }
 
-// Helper function to read from Keychain
-func readFromKeychain(key: String) -> String? {
-    let query: [String: Any] = [
-        kSecClass as String: kSecClassGenericPassword,
-        kSecAttrAccount as String: key,
-        kSecAttrService as String: "flutter_secure_storage_service",
-        kSecReturnData as String: kCFBooleanTrue!,
-        kSecMatchLimit as String: kSecMatchLimitOne,
-        kSecAttrAccessGroup as String: "CN332ZUGRP.eu.twonly.shared",  // Use your access group
-    ]
+final class NotificationService: UNNotificationServiceExtension {
+  private let finishLock = NSLock()
+  private var hasFinished = false
+  private var contentHandler: ((UNNotificationContent) -> Void)?
+  private var fallbackContent: UNNotificationContent?
 
-    var dataTypeRef: AnyObject? = nil
-    let status: OSStatus = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
+  override func didReceive(
+    _ request: UNNotificationRequest,
+    withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
+  ) {
+    self.contentHandler = contentHandler
+    fallbackContent = request.content
 
-    if status == errSecSuccess {
-        if let data = dataTypeRef as? Data {
-            return String(data: data, encoding: .utf8)
-        }
+    guard let runtimeDirectory = Self.runtimeDirectory() else {
+      deliverFallback(reason: "shared runtime directory is unavailable")
+      return
     }
 
-    return nil
-}
-
-// Helper function to write to Keychain
-func writeToKeychain(key: String, value: String) {
-    guard let data = value.data(using: .utf8) else {
-        NSLog("Failed to convert value to data for keychain key: \(key)")
+    DispatchQueue.global(qos: .userInitiated).async {
+      guard let response = Self.processWakeup(runtimeDirectory: runtimeDirectory) else {
+        self.deliverFallback(reason: "notification worker returned no response")
         return
+      }
+      guard response.ok else {
+        self.deliverFallback(
+          reason: response.error ?? "notification worker failed",
+          presentation: response.fallback
+        )
+        return
+      }
+      if response.widgetRefresh {
+        WidgetCenter.shared.reloadAllTimelines()
+      }
+      guard let batch = response.batch, !batch.additions.isEmpty else {
+        // Nothing is waiting on screen for this wake-up — widget-only media, a
+        // story the user muted or one that already expired — so the deferred
+        // work runs while the extension is still guaranteed its time, rather
+        // than after the content handler has made it eligible for termination.
+        Self.finalizeRuntime()
+        // The worker ran and decided there is nothing to announce. With the
+        // notification filtering entitlement, empty content drops the push
+        // instead of showing its "You got a new message" placeholder.
+        NSLog("Twonly wake-up had nothing to announce; suppressing the alert")
+        self.finish(with: UNNotificationContent())
+        return
+      }
+      self.render(batch: batch, original: request.content)
     }
+  }
 
-    let query: [String: Any] = [
-        kSecClass as String: kSecClassGenericPassword,
-        kSecAttrAccount as String: key,
-        kSecAttrService as String: "flutter_secure_storage_service",
-        kSecAttrAccessGroup as String: "CN332ZUGRP.eu.twonly.shared"
-    ]
+  override func serviceExtensionTimeWillExpire() {
+    deliverFallback(reason: "notification service extension timed out")
+  }
 
-    // Delete existing item first to ensure a clean overwrite
-    SecItemDelete(query as CFDictionary)
-
-    // Add the new item with background-compatible accessibility
-    var addQuery = query
-    addQuery[kSecValueData as String] = data
-    addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
-
-    let status = SecItemAdd(addQuery as CFDictionary, nil)
-    if status != errSecSuccess {
-        NSLog("Failed to write keychain item for key \(key): \(status)")
-    } else {
-        NSLog("Successfully wrote keychain item for key: \(key)")
+  private func render(batch: NativeNotificationBatch, original: UNNotificationContent) {
+    let center = UNUserNotificationCenter.current()
+    center.getDeliveredNotifications { [weak self] delivered in
+      self?.render(
+        groups: Self.groupedAdditions(batch.additions, delivered: delivered.map(\.request)),
+        badgeCount: batch.badgeCount,
+        original: original
+      )
     }
-}
+  }
 
-func getPushNotificationText(pushNotification: PushNotification, userKnown: Bool) -> (String, String) {
-    let systemLanguage = Locale.current.language.languageCode?.identifier ?? "en"  // Get the current system language
+  private static func groupedAdditions(
+    _ additions: [NativeNotificationAddition], delivered: [UNNotificationRequest]
+  ) -> [RenderedNotification] {
+    // Keep one alert per sender and kind, including across separate wake-ups.
+    let grouped = Dictionary(grouping: additions) {
+      $0.notificationGroup
+    }
+    return grouped.values.compactMap { entries -> RenderedNotification? in
+      guard let latest = entries.sorted(by: {
+        if $0.createdAt == $1.createdAt { return $0.eventId < $1.eventId }
+        return $0.createdAt < $1.createdAt
+      }).last else { return nil }
+      let previous = delivered.filter {
+        $0.content.userInfo["notification_group"] as? String == latest.notificationGroup
+      }
+      return RenderedNotification(
+        addition: latest,
+        eventIds: entries.map(\.eventId),
+        notificationIds: [latest.notificationId],
+        replacingRequestIds: previous.map(\.identifier)
+      )
+    }.sorted {
+      if $0.addition.createdAt == $1.addition.createdAt {
+        return $0.addition.eventId < $1.addition.eventId
+      }
+      return $0.addition.createdAt < $1.addition.createdAt
+    }
+  }
 
-    var pushNotificationText: [PushKind: String] = [:]
-    var title = "You"
-    var noTranslationFoundTitle = "You have a new message."
-    var noTranslationFoundBody = "Open twonly to learn more."
+  private func render(
+    groups: [RenderedNotification], badgeCount: Int64, original: UNNotificationContent
+  ) {
+    let center = UNUserNotificationCenter.current()
+    let group = DispatchGroup()
+    let stateLock = NSLock()
+    var deliveredEventIds: [String] = []
+    var replacedRequestIds: [String] = []
+    var finalContent: UNNotificationContent = original
 
-    // Define the messages based on the system language
-    if systemLanguage.contains("de") {  // German
-        title = "Du"
-        noTranslationFoundTitle = "Du hast eine neue Nachricht."
-        noTranslationFoundBody = "Öffne twonly um mehr zu erfahren."
-        if (userKnown) {
-            pushNotificationText = [
-                .text: "hat eine Nachricht{inGroup} gesendet.",
-                .twonly: "hat ein twonly{inGroup} gesendet.",
-                .video: "hat ein Video{inGroup} gesendet.",
-                .image: "hat ein Bild{inGroup} gesendet.",
-                .audio: "hat eine Sprachnachricht{inGroup} gesendet.",
-                .contactRequest: "möchte sich mit dir vernetzen.",
-                .acceptRequest: "ist jetzt mit dir vernetzt.",
-                .storedMediaFile: "hat dein Bild gespeichert.",
-                .reaction: "hat auf dein Bild reagiert.",
-                .testNotification: "Das ist eine Testbenachrichtigung.",
-                .reopenedMedia: "hat dein Bild erneut geöffnet.",
-                .reactionToVideo: "hat mit {{content}} auf dein Video reagiert.",
-                .reactionToText: "hat mit {{content}} auf deinen Text reagiert.",
-                .reactionToImage: "hat mit {{content}} auf dein Bild reagiert.",
-                .reactionToAudio: "hat mit {{content}} auf deine Sprachnachricht reagiert.",
-                .response: "hat dir{inGroup} geantwortet.",
-                .addedToGroup: "hat dich zu \"{{content}}\" hinzugefügt.",
-            ]
-        } else {
-            pushNotificationText = [
-                .contactRequest: "hast eine neue Kontaktanfrage erhalten.",
-            ]
+    for (index, rendered) in groups.enumerated() {
+      group.enter()
+      communicationContent(for: rendered, badgeCount: badgeCount, original: original) {
+        content in
+        let isFinal = index == groups.count - 1
+        if isFinal {
+          stateLock.lock()
+          finalContent = content
+          deliveredEventIds.append(contentsOf: rendered.eventIds)
+          replacedRequestIds.append(contentsOf: rendered.replacingRequestIds)
+          stateLock.unlock()
+          group.leave()
+          return
         }
-    } else { 
-        if (userKnown) {
-            pushNotificationText = [
-                .text: "sent a message{inGroup}.",
-                .twonly: "sent a twonly{inGroup}.",
-                .video: "sent a video{inGroup}.",
-                .image: "sent an image{inGroup}.",
-                .audio: "sent a voice message{inGroup}.",
-                .contactRequest: "wants to connect with you.",
-                .acceptRequest: "is now connected with you.",
-                .storedMediaFile: "has stored your image.",
-                .reaction: "has reacted to your image.",
-                .testNotification: "This is a test notification.",
-                .reopenedMedia: "has reopened your image.",
-                .reactionToVideo: "has reacted with {{content}} to your video.",
-                .reactionToText: "has reacted with {{content}} to your text.",
-                .reactionToImage: "has reacted with {{content}} to your image.",
-                .reactionToAudio: "has reacted with {{content}} to your voice message.",
-                .response: "has responded{inGroup}.",
-                .addedToGroup: "has added you to \"{{content}}\"",
-            ]
-        } else {
-            pushNotificationText = [
-                .contactRequest: "have received a new contact request.",
-            ]
+
+        let request = UNNotificationRequest(
+          identifier: rendered.addition.notificationGroup,
+          content: content,
+          trigger: nil
+        )
+        center.add(request) { error in
+          if let error {
+            NSLog("Could not schedule Twonly notification: \(error)")
+          } else {
+            stateLock.lock()
+            deliveredEventIds.append(contentsOf: rendered.eventIds)
+            // A local replacement may reuse the same request identifier.
+            replacedRequestIds.append(contentsOf: rendered.replacingRequestIds.filter {
+              $0 != request.identifier
+            })
+            stateLock.unlock()
+          }
+          group.leave()
         }
+      }
     }
 
-    var content = pushNotificationText[pushNotification.kind] ?? ""
-    if (content == "") {
-        title = noTranslationFoundTitle
-        content = noTranslationFoundBody
+    group.notify(queue: .global(qos: .userInitiated)) { [weak self] in
+      stateLock.lock()
+      let eventIds = deliveredEventIds
+      let content = finalContent
+      let replacedIds = replacedRequestIds
+      stateLock.unlock()
+      Self.acknowledge(eventIds: eventIds)
+      center.removeDeliveredNotifications(withIdentifiers: replacedIds)
+      self?.finish(with: content)
+      // The alert is on screen. Whatever time the system still grants this
+      // extension goes to the deferred work; being terminated part-way only
+      // defers it to the next wake-up or app launch.
+      Self.finalizeRuntime()
     }
+  }
 
-    if pushNotification.hasAdditionalContent {
-        content.replace("{{content}}", with: pushNotification.additionalContent)
-        content.replace("{inGroup}", with: " in {inGroup}")
-        content.replace("{inGroup}", with: pushNotification.additionalContent)
-    } else {
-        content.replace("{inGroup}", with: "")
+  private func communicationContent(
+    for rendered: RenderedNotification,
+    badgeCount: Int64,
+    original: UNNotificationContent,
+    completion: @escaping (UNNotificationContent) -> Void
+  ) {
+    let addition = rendered.addition
+    let mutable = (original.mutableCopy() as? UNMutableNotificationContent)
+      ?? UNMutableNotificationContent()
+    mutable.title = addition.senderName
+    mutable.body = rendered.body
+    mutable.threadIdentifier = addition.notificationGroup
+    mutable.badge = NSNumber(value: badgeCount)
+    mutable.sound = .default
+    var userInfo = mutable.userInfo
+    if let conversationId = addition.conversationId {
+      userInfo["conversation_id"] = conversationId
     }
+    userInfo["notification_kind"] = addition.kind
+    userInfo["notification_id"] = addition.notificationId
+    userInfo["notification_ids"] = rendered.notificationIds
+    userInfo.removeValue(forKey: "text_group")
+    userInfo["notification_group"] = addition.notificationGroup
+    mutable.userInfo = userInfo
 
-    // Return the corresponding message or an empty string if not found
-    return (content, title)
+    let avatar = addition.avatarPath
+      .flatMap { try? Data(contentsOf: URL(fileURLWithPath: $0)) }
+      .map(INImage.init(imageData:))
+    let sender = INPerson(
+      personHandle: INPersonHandle(value: String(addition.senderId), type: .unknown),
+      nameComponents: nil,
+      displayName: addition.senderName,
+      image: avatar,
+      contactIdentifier: nil,
+      customIdentifier: String(addition.senderId)
+    )
+    let groupName = addition.isGroup
+      ? addition.conversationName.map(INSpeakableString.init(spokenPhrase:))
+      : nil
+    let intent = INSendMessageIntent(
+      recipients: nil,
+      outgoingMessageType: .outgoingMessageText,
+      content: rendered.body,
+      speakableGroupName: groupName,
+      conversationIdentifier: addition.notificationGroup,
+      serviceName: "Twonly",
+      sender: sender,
+      attachments: nil
+    )
+    if addition.isGroup, let path = addition.conversationAvatarPath,
+      let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+      intent.setImage(INImage(imageData: data), forParameterNamed: \.speakableGroupName)
+    }
+    let interaction = INInteraction(intent: intent, response: nil)
+    interaction.direction = .incoming
+    interaction.donate { error in
+      if let error {
+        NSLog("Could not donate Twonly communication intent: \(error)")
+        completion(mutable)
+        return
+      }
+      do {
+        let content = try mutable.updating(from: intent)
+        // Keep our grouping and tap metadata after SiriKit enriches the alert.
+        if let enriched = content.mutableCopy() as? UNMutableNotificationContent {
+          enriched.title = addition.senderName
+          enriched.threadIdentifier = mutable.threadIdentifier
+          enriched.userInfo = mutable.userInfo
+          completion(enriched)
+        } else {
+          completion(content)
+        }
+      } catch {
+        NSLog("Could not create Twonly communication notification: \(error)")
+        completion(mutable)
+      }
+    }
+  }
+
+  private func finish(with content: UNNotificationContent) {
+    finishLock.lock()
+    guard !hasFinished else {
+      finishLock.unlock()
+      return
+    }
+    hasFinished = true
+    let handler = contentHandler
+    fallbackContent = nil
+    contentHandler = nil
+    finishLock.unlock()
+    handler?(content)
+  }
+
+  private func deliverFallback(
+    reason: String,
+    presentation: NativeNotificationPresentation? = nil
+  ) {
+    NSLog("Delivering Twonly wake-up fallback notification: \(reason)")
+    guard let presentation else {
+      finish(with: fallbackContent ?? UNMutableNotificationContent())
+      return
+    }
+    let content = (fallbackContent?.mutableCopy() as? UNMutableNotificationContent)
+      ?? UNMutableNotificationContent()
+    content.title = presentation.title
+    content.body = presentation.body
+    finish(with: content)
+  }
+
+  private static func runtimeDirectory() -> String? {
+    guard
+      let container = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: runtimeAppGroup
+      )
+    else { return nil }
+    let directory = container.appendingPathComponent("runtime", isDirectory: true)
+    do {
+      try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+      try (directory as NSURL).setResourceValue(
+        URLFileProtection.completeUntilFirstUserAuthentication,
+        forKey: .fileProtectionKey
+      )
+      return directory.path
+    } catch {
+      NSLog("Could not open Twonly runtime directory: \(error)")
+      return nil
+    }
+  }
+
+  private static func processWakeup(runtimeDirectory: String) -> NativeNotificationResponse? {
+    let locale = Locale.current.identifier
+    let pointer = runtimeDirectory.withCString { databaseDirectory in
+      runtimeDirectory.withCString { dataDirectory in
+        locale.withCString { locale in
+          twonly_notification_process(databaseDirectory, dataDirectory, locale, 22_000)
+        }
+      }
+    }
+    guard let pointer else { return nil }
+    defer { twonly_notification_string_free(pointer) }
+    let json = String(cString: pointer)
+    do {
+      return try JSONDecoder().decode(
+        NativeNotificationResponse.self,
+        from: Data(json.utf8)
+      )
+    } catch {
+      NSLog("Could not decode Twonly notification worker response: \(error)")
+      return nil
+    }
+  }
+
+  private static func finalizeRuntime() {
+    guard let pointer = twonly_notification_finalize(finalizeDeadlineMs) else { return }
+    defer { twonly_notification_string_free(pointer) }
+    let json = String(cString: pointer)
+    guard
+      let response = try? JSONDecoder().decode(
+        NativeNotificationResponse.self,
+        from: Data(json.utf8)
+      )
+    else { return }
+    if let error = response.error {
+      NSLog("Deferred Twonly notification maintenance failed: \(error)")
+    }
+    if response.widgetRefresh {
+      WidgetCenter.shared.reloadAllTimelines()
+    }
+  }
+
+  private static func acknowledge(eventIds: [String]) {
+    guard !eventIds.isEmpty, let data = try? JSONEncoder().encode(eventIds),
+      let json = String(data: data, encoding: .utf8)
+    else { return }
+    let pointer = json.withCString { twonly_notification_acknowledge($0) }
+    guard let pointer else { return }
+    twonly_notification_string_free(pointer)
+  }
+
 }

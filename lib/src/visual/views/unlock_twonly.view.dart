@@ -57,9 +57,9 @@ class _UnlockTwonlyViewState extends State<UnlockTwonlyView> {
                 child: Text(
                   context.lang.unlockTwonlyDesc,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey,
+                    color: context.color.onSurfaceVariant,
                   ),
                 ),
               ),

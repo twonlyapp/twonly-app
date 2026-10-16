@@ -10,14 +10,14 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/contact_labels.comp.dart';
+import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
-import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/elements/contact_chip.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/groups/group_create_select_group_name.view.dart';
 
 class GroupCreateSelectMembersView extends StatefulWidget {
@@ -162,15 +162,13 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: TextField(
-                    onChanged: (_) async {
-                      await filterUsers();
-                    },
+                  child: MyInput(
                     controller: searchUserName,
-                    decoration: getInputDecoration(
-                      context,
-                      context.lang.shareImageSearchAllContacts,
-                    ),
+                    dense: true,
+                    fontWeight: FontWeight.normal,
+                    hintText: context.lang.shareImageSearchAllContacts,
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    onChanged: (_) => unawaited(filterUsers()),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -219,9 +217,10 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                       return UserContextMenu(
                         key: ValueKey(user.userId),
                         contact: user,
-                        child: ContactLabelsSubtitleBuilder(
-                          contactId: user.userId,
-                          additionalSubtitle: alreadyInGroup.contains(user.userId)
+                        child: ContactGroupsSubtitleBuilder(
+                          userId: user.userId,
+                          additionalSubtitle:
+                              alreadyInGroup.contains(user.userId)
                               ? Text(context.lang.alreadyInGroup)
                               : null,
                           builder: (context, subtitleWidget) {
@@ -259,7 +258,9 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                                       return const BorderSide(width: 0);
                                     }
                                     return BorderSide(
-                                      color: Theme.of(context).colorScheme.outline,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outline,
                                     );
                                   },
                                 ),

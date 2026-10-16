@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 
 String beautifulZoomScale(double scale) {
@@ -49,13 +50,18 @@ class CameraZoomButtons extends StatelessWidget {
       wideCameraIndex = index;
     }
 
-    final isFront = controller.description.lensDirection == CameraLensDirection.front;
+    final isFront =
+        controller.description.lensDirection == CameraLensDirection.front;
 
-    final showWideAngleZoomIOS = !showWideAngleZoom && Platform.isIOS && wideCameraIndex != null && !isFront;
+    final showWideAngleZoomIOS =
+        !showWideAngleZoom &&
+        Platform.isIOS &&
+        wideCameraIndex != null &&
+        !isFront;
 
     final zoomButtonStyle = TextButton.styleFrom(
       padding: EdgeInsets.zero,
-      foregroundColor: Colors.white,
+      foregroundColor: context.appColor(AppColor.mediaForeground),
       minimumSize: const Size(40, 40),
       alignment: Alignment.center,
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -63,11 +69,14 @@ class CameraZoomButtons extends StatelessWidget {
 
     const zoomTextStyle = TextStyle(fontSize: 13);
     final isSmallerFocused =
-        scaleFactor < 1 || (showWideAngleZoomIOS && selectedCameraDetails.cameraId == wideCameraIndex);
+        scaleFactor < 1 ||
+        (showWideAngleZoomIOS &&
+            selectedCameraDetails.cameraId == wideCameraIndex);
     final isMiddleFocused =
         scaleFactor >= 1 &&
         scaleFactor < 2 &&
-        !(showWideAngleZoomIOS && selectedCameraDetails.cameraId == wideCameraIndex);
+        !(showWideAngleZoomIOS &&
+            selectedCameraDetails.cameraId == wideCameraIndex);
 
     final maxLevel = max(
       min(selectedCameraDetails.maxAvailableZoom, 2),
@@ -82,7 +91,7 @@ class CameraZoomButtons extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(40),
         child: ColoredBox(
-          color: const Color.fromARGB(90, 0, 0, 0),
+          color: context.appColor(AppColor.mediaScrim),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -90,7 +99,9 @@ class CameraZoomButtons extends StatelessWidget {
                 TextButton(
                   style: zoomButtonStyle.copyWith(
                     foregroundColor: WidgetStateProperty.all(
-                      isSmallerFocused ? Colors.yellow : Colors.white,
+                      isSmallerFocused
+                          ? context.appColor(AppColor.selectedZoom)
+                          : context.appColor(AppColor.mediaForeground),
                     ),
                   ),
                   onPressed: () async {
@@ -113,25 +124,32 @@ class CameraZoomButtons extends StatelessWidget {
               TextButton(
                 style: zoomButtonStyle.copyWith(
                   foregroundColor: WidgetStateProperty.all(
-                    isMiddleFocused ? Colors.yellow : Colors.white,
+                    isMiddleFocused
+                        ? context.appColor(AppColor.selectedZoom)
+                        : context.appColor(AppColor.mediaForeground),
                   ),
                 ),
                 onPressed: () async {
-                  if (showWideAngleZoomIOS && selectedCameraDetails.cameraId == wideCameraIndex) {
+                  if (showWideAngleZoomIOS &&
+                      selectedCameraDetails.cameraId == wideCameraIndex) {
                     await selectCamera(0, true);
                   } else {
                     updateScaleFactor(1.0);
                   }
                 },
                 child: Text(
-                  isMiddleFocused ? '${beautifulZoomScale(scaleFactor)}x' : '1.0x',
+                  isMiddleFocused
+                      ? '${beautifulZoomScale(scaleFactor)}x'
+                      : '1.0x',
                   style: zoomTextStyle,
                 ),
               ),
               TextButton(
                 style: zoomButtonStyle.copyWith(
                   foregroundColor: WidgetStateProperty.all(
-                    (scaleFactor >= 2) ? Colors.yellow : Colors.white,
+                    (scaleFactor >= 2)
+                        ? context.appColor(AppColor.selectedZoom)
+                        : context.appColor(AppColor.mediaForeground),
                   ),
                 ),
                 onPressed: () async {
@@ -140,7 +158,8 @@ class CameraZoomButtons extends StatelessWidget {
                     2,
                   ).toDouble();
 
-                  if (showWideAngleZoomIOS && selectedCameraDetails.cameraId == wideCameraIndex) {
+                  if (showWideAngleZoomIOS &&
+                      selectedCameraDetails.cameraId == wideCameraIndex) {
                     await selectCamera(0, true);
                   }
                   updateScaleFactor(level);

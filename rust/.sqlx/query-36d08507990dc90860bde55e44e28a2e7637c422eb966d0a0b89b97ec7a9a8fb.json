@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO contacts(user_id, username, avatar_svg_compressed) VALUES (?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "36d08507990dc90860bde55e44e28a2e7637c422eb966d0a0b89b97ec7a9a8fb"
+}

@@ -1,26 +1,29 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/contact_labels.comp.dart';
+import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/contact/contact.view.dart';
+import 'package:twonly/src/visual/views/contact/select_contact_groups.view.dart';
 import 'package:twonly/src/visual/views/groups/group_create_select_members.view.dart';
 import 'package:twonly/src/visual/views/groups/group_member.context.dart';
 import 'package:twonly/src/visual/views/settings/profile/profile.view.dart';
+import 'package:twonly/src/visual/views/webxdc/webxdc_chat_apps.view.dart';
 
 class GroupView extends StatefulWidget {
   const GroupView(this.groupId, {super.key});
@@ -53,6 +56,16 @@ class _GroupViewState extends State<GroupView> {
   }
 
   Future<void> initAsync() async {
+    // Opening the group is the user's way of retrying: ask for every member
+    // key that is still missing, ignoring the per-member request interval.
+    // Without a member's key the admin actions on them stay hidden.
+    unawaited(
+      rust_groups.fetchMissingGroupPublicKeys(
+        groupId: widget.groupId,
+        force: true,
+      ),
+    );
+
     final groupStream = twonlyDB.groupsDao.watchGroup(widget.groupId);
     groupSub = groupStream.listen((update) {
       if (update != null) {
@@ -66,7 +79,9 @@ class _GroupViewState extends State<GroupView> {
       setState(() {
         members = update;
         members.sort(
-          (b, a) => a.$2.memberState!.index.compareTo(b.$2.memberState!.index),
+          (b, a) => (a.$2.memberState ?? MemberState.normal).index.compareTo(
+            (b.$2.memberState ?? MemberState.normal).index,
+          ),
         );
       });
     });
@@ -79,7 +94,10 @@ class _GroupViewState extends State<GroupView> {
         newGroupName != null &&
         newGroupName != '' &&
         newGroupName != _group!.groupName) {
-      if (!await updateGroupName(_group!, newGroupName)) {
+      if (!await rust_groups.updateGroupName(
+        groupId: _group!.groupId,
+        groupName: newGroupName,
+      )) {
         if (mounted) {
           showNetworkIssue(context);
         }
@@ -99,7 +117,10 @@ class _GroupViewState extends State<GroupView> {
             )
             as List<int>?;
     if (selectedUserIds == null) return;
-    if (!await addNewGroupMembers(_group!, selectedUserIds)) {
+    if (!await rust_groups.addNewGroupMembers(
+      groupId: _group!.groupId,
+      memberIds: Int64List.fromList(selectedUserIds),
+    )) {
       if (mounted) {
         showNetworkIssue(context);
       }
@@ -135,21 +156,7 @@ class _GroupViewState extends State<GroupView> {
       }
     }
 
-    late bool success;
-
-    if (_group!.isGroupAdmin) {
-      // Current user is a admin, to the state can be updated by the user him self.
-      final keyPair = IdentityKeyPair.fromSerialized(
-        _group!.myGroupPrivateKey!,
-      );
-      success = !(await removeMemberFromGroup(
-        _group!,
-        keyPair.getPublicKey().serialize(),
-        userService.currentUser.userId,
-      ));
-    } else {
-      success = await leaveAsNonAdminFromGroup(_group!);
-    }
+    final success = await rust_groups.leaveGroup(groupId: _group!.groupId);
 
     if (!success) {
       if (mounted) {
@@ -207,6 +214,28 @@ class _GroupViewState extends State<GroupView> {
             groupId: widget.groupId,
             disabled: !_group!.isGroupAdmin,
           ),
+          BetterListTile(
+            icon: FontAwesomeIcons.layerGroup,
+            text: context.lang.webxdcChatApps,
+            onTap: () => context.navPush(
+              WebxdcChatAppsView(groupId: widget.groupId),
+            ),
+          ),
+          ContactGroupsSubtitleBuilder(
+            groupId: widget.groupId,
+            builder: (context, subtitleWidget) {
+              return BetterListTile(
+                icon: FontAwesomeIcons.tag,
+                text: context.lang.contactGroupsTitle,
+                subtitle: subtitleWidget,
+                onTap: () {
+                  context.navPush(
+                    SelectContactGroupsView(groupId: widget.groupId),
+                  );
+                },
+              );
+            },
+          ),
           const Divider(),
           ListTile(
             title: Padding(
@@ -249,8 +278,8 @@ class _GroupViewState extends State<GroupView> {
               group: _group!,
               contact: member.$1,
               member: member.$2,
-              child: ContactLabelsSubtitleBuilder(
-                contactId: member.$1.userId,
+              child: ContactGroupsSubtitleBuilder(
+                userId: member.$1.userId,
                 builder: (context, subtitleWidget) {
                   return BetterListTile(
                     padding: const EdgeInsets.only(left: 13),
@@ -293,7 +322,7 @@ class _GroupViewState extends State<GroupView> {
           if (!_group!.leftGroup)
             BetterListTile(
               icon: FontAwesomeIcons.rightFromBracket,
-              color: Colors.red,
+              color: context.color.error,
               text: context.lang.leaveGroup,
               onTap: _leaveGroup,
             )

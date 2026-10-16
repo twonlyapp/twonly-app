@@ -9,19 +9,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hashlib/random.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:restart_app/restart_app.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:twonly/core/bridge/wrapper.dart' show RustUtils;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
-import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -31,6 +26,7 @@ import 'package:twonly/src/visual/elements/contact_chip.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/onboarding/components/animated_bell_icon.comp.dart';
+import 'package:twonly/src/visual/views/onboarding/recovery_progress.view.dart';
 
 class RecoverPasswordless extends StatefulWidget {
   const RecoverPasswordless({this.initialEmailToken, super.key});
@@ -262,10 +258,13 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
         );
 
         // Fetch serverKey
-        final res = await apiService.getServerKeyForPasswordlessRecovery(
-          userId: userId,
-          pinUnlockToken: reconstructed.pinUnlockToken,
-          pinProtectionKey: await pinKey.extractBytes(),
+        final res = await rustApiResult(
+          RustApi.getServerKeyForPasswordlessRecovery(
+            userId: userId,
+            serverKeyProtection: const [],
+            pinUnlockToken: Uint8List.fromList(reconstructed.pinUnlockToken),
+            pinProtectionKey: Uint8List.fromList(await pinKey.extractBytes()),
+          ),
         );
 
         if (res.isError) {
@@ -281,8 +280,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           return;
         }
 
-        final ok = res.value as server.Response_Ok;
-        serverKey = Uint8List.fromList(ok.passwordlessRecoveryServerKey);
+        serverKey = Uint8List.fromList(res.value!);
       } else if (reconstructed.hasEmailHint()) {
         final state = _onboardingState;
         if (state == null) return;
@@ -302,10 +300,12 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           }
 
           // Fetch serverKey (sends recovery email)
-          final res = await apiService.getServerKeyForPasswordlessRecovery(
-            userId: userId,
-            email: email,
-            serverKeyProtection: reconstructed.serverKeyProtection,
+          final res = await rustApiResult(
+            RustApi.getServerKeyForPasswordlessRecovery(
+              userId: userId,
+              email: email,
+              serverKeyProtection: reconstructed.serverKeyProtection,
+            ),
           );
 
           if (res.isError) {
@@ -398,31 +398,28 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
 
       final recoveryData = RecoveryData.fromBuffer(recoveryDataBytes);
 
-      // Start full passwordless recovery
-      final error = await BackupService.startPasswordlessBackupRecovery(
-        recoveryData.userId.toInt(),
-        shares.first.myDisplayName,
-        Uint8List.fromList(recoveryData.keyManager),
-      );
-
       if (!mounted) return;
 
-      if (error != null) {
-        showSnackbar(
-          context,
-          error.toLocalizedString(context),
-        );
-        setState(() {
-          _isRecovering = false;
-        });
-        return;
-      }
-
-      // Successful! Restart the app to apply restored keymanager/archive database
-      await Restart.restartApp(
-        notificationTitle: context.lang.recoverSuccessTitle,
-        notificationBody: context.lang.recoverSuccessBody,
-        forceKill: true,
+      // Start full passwordless recovery. The progress view reports every
+      // step and restarts the app once the recovery succeeded.
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => RecoveryProgressView(
+            username: shares.first.myDisplayName,
+            steps: const [
+              RecoveryProgress.restoringIdentity,
+              RecoveryProgress.downloadingArchive,
+              RecoveryProgress.extractingData,
+            ],
+            runRecovery: (onProgress) =>
+                BackupService.startPasswordlessBackupRecovery(
+                  recoveryData.userId.toInt(),
+                  shares.first.myDisplayName,
+                  Uint8List.fromList(recoveryData.keyManager),
+                  onProgress: onProgress,
+                ),
+          ),
+        ),
       );
     } catch (e) {
       Log.error('Failed to recover passwordless: $e');
@@ -444,11 +441,13 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
   Future<void> _registerPasswordlessNotification(OnboardingState state) async {
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (!mounted) return;
-    final res = await apiService.registerPasswordlessNotification(
-      notificationId: state.notificationId!,
-      downloadAuthToken: state.downloadAuthToken!,
-      langCode: Localizations.localeOf(context).languageCode,
-      googleFcm: fcmToken,
+    final res = await rustApiResult(
+      RustApi.registerPasswordlessNotification(
+        notificationId: state.notificationId!,
+        downloadAuthToken: state.downloadAuthToken!,
+        langCode: Localizations.localeOf(context).languageCode,
+        googleFcm: fcmToken,
+      ),
     );
     if (res.isSuccess) {
       state.serverRegistered = true;
@@ -478,7 +477,6 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
 
   Widget _buildProgressSection(
     BuildContext context,
-    bool isDark,
     List<ReceivedRecoveryShare> shares,
   ) {
     final first = shares.first;
@@ -493,7 +491,9 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
             children: [
               AvatarIcon(
                 svg: first.myAvatarSvg != null
-                    ? getAvatarSvg(Uint8List.fromList(first.myAvatarSvg!))
+                    ? RustApi.decodeAvatarSvg(
+                        avatarSvgCompressed: first.myAvatarSvg!,
+                      )
                     : null,
                 fontSize: 60,
               ),
@@ -531,11 +531,11 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           child: LinearProgressIndicator(
             value: shares.length / threshold,
             minHeight: 12,
-            backgroundColor: isDark
-                ? Colors.white.withValues(alpha: 0.1)
-                : Colors.black.withValues(alpha: 0.08),
+            backgroundColor: context.color.surfaceContainerHighest,
             valueColor: AlwaysStoppedAnimation<Color>(
-              thresholdReached ? Colors.green : context.color.primary,
+              thresholdReached
+                  ? context.appColor(AppColor.success)
+                  : context.color.primary,
             ),
           ),
         ),
@@ -567,7 +567,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
                 'Reconstruction failed: $_reconstructionError',
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(color: context.color.error),
                 textAlign: TextAlign.center,
               ),
             )
@@ -602,12 +602,12 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
             MyButton(
               onPressed: _isRecovering ? null : () => _recoverNow(shares),
               child: _isRecovering
-                  ? const SizedBox(
+                  ? SizedBox(
                       height: 24,
                       width: 24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        color: Colors.black87,
+                        color: context.color.onPrimary,
                       ),
                     )
                   : Text(
@@ -650,7 +650,6 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = isDarkMode(context);
     final shares = _onboardingState?.receivedShares ?? [];
     final hasShares = shares.isNotEmpty;
     final threshold = hasShares ? shares.first.threshold : 0;
@@ -662,7 +661,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           title: Text(context.lang.passwordlessRecoveryRecoverBtn),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            color: isDark ? Colors.white70 : Colors.black54,
+            color: context.color.onSurfaceVariant,
             iconSize: 20,
             onPressed: () => Navigator.of(context).pop(),
           ),
@@ -678,7 +677,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
         title: Text(context.lang.passwordlessRecoveryRecoverBtn),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          color: isDark ? Colors.white70 : Colors.black54,
+          color: context.color.onSurfaceVariant,
           iconSize: 20,
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -698,19 +697,15 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
                 const SizedBox(height: 24),
               ],
 
-              if (hasShares) _buildProgressSection(context, isDark, shares),
+              if (hasShares) _buildProgressSection(context, shares),
 
               if (!_notificationsEnabled && !hasShares) ...[
                 Container(
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.black.withValues(alpha: 0.04),
+                    color: context.color.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.black.withValues(alpha: 0.06),
+                      color: context.color.outlineVariant,
                     ),
                   ),
                   padding: const EdgeInsets.all(16),
@@ -762,14 +757,10 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
                 if (!hasShares)
                   Container(
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.black.withValues(alpha: 0.04),
+                      color: context.color.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : Colors.black.withValues(alpha: 0.06),
+                        color: context.color.outlineVariant,
                       ),
                     ),
                     padding: const EdgeInsets.all(16),
@@ -777,7 +768,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
                       children: [
                         Icon(
                           Icons.info_outline_rounded,
-                          color: isDark ? Colors.white70 : Colors.black54,
+                          color: context.color.onSurfaceVariant,
                           size: 22,
                         ),
                         const SizedBox(width: 12),
@@ -797,13 +788,11 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.appColor(AppColor.qrBackground),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(
-                            alpha: isDark ? 0.3 : 0.08,
-                          ),
+                          color: context.color.shadow.withValues(alpha: 0.2),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -814,12 +803,12 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
                         data: _shareUrl,
                         errorCorrectLevel: QrErrorCorrectLevel.M,
                       ),
-                      eyeStyle: const QrEyeStyle(
-                        color: Colors.black,
+                      eyeStyle: QrEyeStyle(
+                        color: context.appColor(AppColor.qrForeground),
                         borderRadius: 4,
                       ),
-                      dataModuleStyle: const QrDataModuleStyle(
-                        color: Colors.black,
+                      dataModuleStyle: QrDataModuleStyle(
+                        color: context.appColor(AppColor.qrForeground),
                         borderRadius: 4,
                       ),
                       gapless: false,

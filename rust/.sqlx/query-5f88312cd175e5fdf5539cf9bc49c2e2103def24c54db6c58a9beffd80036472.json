@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE contacts\n            SET recovery_contacts_secret_share = NULL,\n                recovery_contacts_last_heartbeat = NULL,\n                recovery_contacts_threshold = NULL\n            WHERE user_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "5f88312cd175e5fdf5539cf9bc49c2e2103def24c54db6c58a9beffd80036472"
+}

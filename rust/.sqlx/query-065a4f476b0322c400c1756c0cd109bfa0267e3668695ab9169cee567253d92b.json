@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "PRAGMA defer_foreign_keys = ON",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "065a4f476b0322c400c1756c0cd109bfa0267e3668695ab9169cee567253d92b"
+}

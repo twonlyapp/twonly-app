@@ -28,14 +28,15 @@ class _ReactiveTapFeedbackState extends State<ReactiveTapFeedback>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      lowerBound: double.negativeInfinity,
-      upperBound: double.infinity,
-      value: 0,
-    )..addListener(() {
-        setState(() {});
-      });
+    _controller =
+        AnimationController(
+          vsync: this,
+          lowerBound: double.negativeInfinity,
+          upperBound: double.infinity,
+          value: 0,
+        )..addListener(() {
+          setState(() {});
+        });
   }
 
   @override

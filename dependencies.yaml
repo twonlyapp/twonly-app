@@ -4,14 +4,24 @@ dependencies:
   audio_waveforms:
     git: https://github.com/SimformSolutionsPvtLtd/audio_waveforms.git
     tag: 2.0.2
+    custom_changes: true
+    custom_changes_description: Make Android waveform codec cleanup safe after extraction completion and repeated stops.
   avatar_maker:
     git: https://github.com/RoadTripMoustache/avatar_maker.git
     tag: 1.5.0
+    custom_changes: true
+    custom_changes_description: Cache raster previews and reuse generated avatar SVGs to reduce scrolling lag.
     keep:
     - assets/icons
   blurhash_dart:
     git: https://github.com/justacid/blurhash-dart.git
     tag: v1.2.1
+  camera_avfoundation:
+    git: https://github.com/flutter/packages.git
+    tag: camera_avfoundation-v0.10.3
+    path: packages/camera/camera_avfoundation
+    custom_changes: true
+    custom_changes_description: Downscale and throttle rear-camera QR analysis frames.
   exif:
     git: https://github.com/bigflood/dartexif.git
     dependencies:
@@ -36,6 +46,8 @@ dependencies:
       path: packages/video_player/video_player_avfoundation
     - name: camera_android_camerax
       path: packages/camera/camera_android_camerax
+      custom_changes: true
+      custom_changes_description: Use lower-resolution rear-camera QR analysis frames.
     commit: b4f7d807a822a8ce327aae21353ac2217e928f6d
   flutter_sharing_intent:
     git: https://github.com/bhagat-techind/flutter_sharing_intent.git
@@ -63,25 +75,6 @@ dependencies:
         git: https://github.com/Pyozer/dots_indicator.git
         commit: 508f5883ac79bdbc10254092de3f28f571d261cd
     commit: 4a90e557630b28834479ed9c64a9d2d0185d8e48
-  libsignal_protocol_dart:
-    git: https://github.com/MixinNetwork/libsignal_protocol_dart.git
-    dependencies:
-      adaptive_number:
-        git: https://github.com/lemoony/adaptive_number_dart
-        commit: ea9178fdd4d82ac45cf0ec966ac870dae661124f
-      ed25519_edwards:
-        git: https://github.com/Tougee/ed25519.git
-        commit: 7353ba759ea9f4646cbf481c2ef949625c8ce4cf
-      optional:
-        git: https://github.com/tonio-ramirez/optional.dart.git
-        commit: 71c638891ce4f2aff35c7387727989f31f9d877d
-      pointycastle:
-        git: https://github.com/bcgit/pc-dart.git
-        commit: bbd8569f68a7fccbdf0b92d0b44a9219c126c8dd
-      x25519:
-        git: https://github.com/Tougee/curve25519.git
-        commit: ecb1d357714537bba6e276ef45f093846d4beaee
-    commit: c95a1586057022acdbb9c76b1692d94cc549bcc7
   lottie:
     git: https://github.com/xvrh/lottie-flutter.git
     commit: 127bc29f2c6bd8b32ec4064a09e54e6b31cd0a88
@@ -91,9 +84,6 @@ dependencies:
   photo_view:
     git: https://github.com/bluefireteam/photo_view.git
     commit: a13ca2fc387a3fb1276126959e092c44d0029987
-  pro_video_editor:
-    git: https://github.com/hm21/pro_video_editor.git
-    tag: v2.11.3
   qr_flutter:
     git: https://github.com/theyakka/qr.flutter.git
     dependencies:

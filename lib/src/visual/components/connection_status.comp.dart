@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/loader/ripple.loader.dart';
@@ -13,13 +14,15 @@ class ConnectionStatusComp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!userService.currentUser.isDeveloper) return child;
+
     final isConnected = context.watch<CustomChangeProvider>().isConnected;
     return Stack(
       children: [
         if (!isConnected)
-          const Positioned.fill(
+          Positioned.fill(
             child: SpinKitRipple(
-              color: Colors.red,
+              color: context.color.error,
             ),
           ),
         Container(
@@ -29,7 +32,7 @@ class ConnectionStatusComp extends StatelessWidget {
             border: Border.all(
               color: isConnected
                   ? context.color.primary.withAlpha(100)
-                  : Colors.red,
+                  : context.color.error,
             ),
           ),
           padding: const EdgeInsets.all(0.5),

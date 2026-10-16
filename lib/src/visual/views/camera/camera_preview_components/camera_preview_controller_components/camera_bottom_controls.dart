@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/zoom_tutorial_overlay.dart';
-import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/zoom_selector.dart';
 
@@ -12,12 +12,10 @@ class CameraBottomControls extends StatelessWidget {
     required this.mainController,
     required this.isVideoRecording,
     required this.videoRecordingLocked,
-    required this.isFront,
     required this.keyTriggerButton,
     required this.keyLockButton,
     required this.onTakePicture,
-    required this.onPressSideButtonLeft,
-    required this.onPressSideButtonRight,
+    required this.onPickImageFromGallery,
     required this.updateScaleFactor,
     required this.onStopVideoRecording,
     super.key,
@@ -26,12 +24,10 @@ class CameraBottomControls extends StatelessWidget {
   final MainCameraController mainController;
   final bool isVideoRecording;
   final bool videoRecordingLocked;
-  final bool isFront;
   final GlobalKey keyTriggerButton;
   final GlobalKey keyLockButton;
   final VoidCallback onTakePicture;
-  final VoidCallback onPressSideButtonLeft;
-  final VoidCallback onPressSideButtonRight;
+  final VoidCallback onPickImageFromGallery;
   final Future<void> Function(double) updateScaleFactor;
   final VoidCallback onStopVideoRecording;
 
@@ -66,17 +62,11 @@ class CameraBottomControls extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (!isVideoRecording)
-                  _buildSideButtonLeft()
+                  _buildSideButtonLeft(context)
                 else
-                  _buildLockOrStopButton(),
-                _buildShutterButton(),
-                if (!isVideoRecording)
-                  if (isFront)
-                    _buildSideButtonRight()
-                  else
-                    const SizedBox(width: 80)
-                else
-                  const SizedBox(width: 80),
+                  _buildLockOrStopButton(context),
+                _buildShutterButton(context),
+                const SizedBox(width: 80),
               ],
             ),
           ],
@@ -85,7 +75,7 @@ class CameraBottomControls extends StatelessWidget {
     );
   }
 
-  Widget _buildLockOrStopButton() {
+  Widget _buildLockOrStopButton(BuildContext context) {
     if (videoRecordingLocked) {
       // Show stop button
       return GestureDetector(
@@ -100,7 +90,7 @@ class CameraBottomControls extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: Colors.red,
+                color: context.appColor(AppColor.recording),
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
@@ -113,9 +103,9 @@ class CameraBottomControls extends StatelessWidget {
     }
   }
 
-  Widget _buildSideButtonLeft() {
+  Widget _buildSideButtonLeft(BuildContext context) {
     return GestureDetector(
-      onTap: onPressSideButtonLeft,
+      onTap: onPickImageFromGallery,
       child: Align(
         child: Container(
           height: 50,
@@ -123,12 +113,8 @@ class CameraBottomControls extends StatelessWidget {
           padding: const EdgeInsets.all(2),
           child: Center(
             child: FaIcon(
-              mc.isSelectingFaceFilters
-                  ? mc.currentFilterType.index == 1
-                        ? FontAwesomeIcons.xmark
-                        : FontAwesomeIcons.arrowLeft
-                  : FontAwesomeIcons.photoFilm,
-              color: Colors.white,
+              FontAwesomeIcons.photoFilm,
+              color: context.appColor(AppColor.mediaForeground),
               size: 25,
             ),
           ),
@@ -137,7 +123,7 @@ class CameraBottomControls extends StatelessWidget {
     );
   }
 
-  Widget _buildShutterButton() {
+  Widget _buildShutterButton(BuildContext context) {
     return StreamBuilder(
       stream: userService.onUserUpdated,
       builder: (context, snapshot) {
@@ -156,40 +142,16 @@ class CameraBottomControls extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(
                     width: 7,
-                    color: isVideoRecording ? Colors.red : Colors.white,
+                    color: isVideoRecording
+                        ? context.appColor(AppColor.recording)
+                        : context.appColor(AppColor.mediaForeground),
                   ),
                 ),
-                child: mc.currentFilterType.preview,
               ),
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildSideButtonRight() {
-    return GestureDetector(
-      onTap: onPressSideButtonRight,
-      child: Align(
-        child: Container(
-          height: 50,
-          width: 80,
-          padding: const EdgeInsets.all(2),
-          child: Center(
-            child: FaIcon(
-              mc.isSelectingFaceFilters
-                  ? mc.currentFilterType.index ==
-                            FaceFilterType.values.length - 1
-                        ? FontAwesomeIcons.xmark
-                        : FontAwesomeIcons.arrowRight
-                  : FontAwesomeIcons.faceGrinTongueSquint,
-              color: Colors.white,
-              size: 25,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -249,10 +211,10 @@ class _AnimatedLockButtonState extends State<_AnimatedLockButton>
         height: 50,
         width: 80,
         padding: const EdgeInsets.all(2),
-        child: const Center(
+        child: Center(
           child: FaIcon(
             FontAwesomeIcons.lock,
-            color: Colors.white,
+            color: context.appColor(AppColor.mediaForeground),
             size: 25,
           ),
         ),

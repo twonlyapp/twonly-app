@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
+pub mod app_database;
 pub mod backup;
 pub mod key_manager;
 pub mod signal;

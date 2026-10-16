@@ -45,23 +45,11 @@ class MyInput extends StatefulWidget {
 class _MyInputState extends State<MyInput> {
   @override
   Widget build(BuildContext context) {
-    final isDark = isDarkMode(context);
-
-    final inputFillColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.05);
-
-    final inputBorderColor = isDark
-        ? Colors.white.withValues(alpha: 0.05)
-        : Colors.black.withValues(alpha: 0.05);
-
-    final inputHintColor = isDark
-        ? Colors.white.withValues(alpha: 0.5)
-        : Colors.black.withValues(alpha: 0.5);
-
-    final prefixIconColor = isDark
-        ? Colors.white.withValues(alpha: 0.6)
-        : Colors.black.withValues(alpha: 0.6);
+    final colors = context.color;
+    final inputFillColor = colors.surfaceContainerLow;
+    final inputBorderColor = colors.outlineVariant.withValues(alpha: 0.6);
+    final inputHintColor = colors.onSurfaceVariant.withValues(alpha: 0.75);
+    final prefixIconColor = colors.onSurfaceVariant;
 
     return ReactiveTapFeedback(
       behavior: HitTestBehavior.translucent,
@@ -109,7 +97,7 @@ class _MyInputState extends State<MyInput> {
         style: TextStyle(
           fontSize: widget.dense ? 16 : 18,
           fontWeight: widget.fontWeight ?? FontWeight.w500,
-          color: isDark ? Colors.white : Colors.black87,
+          color: colors.onSurface,
         ),
         decoration: InputDecoration(
           isDense: widget.dense,
@@ -139,25 +127,25 @@ class _MyInputState extends State<MyInput> {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(widget.dense ? 12 : 18),
             borderSide: BorderSide(
-              color: isDark ? Colors.white : Colors.black87,
+              color: colors.onSurface,
               width: 2,
             ),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(widget.dense ? 12 : 18),
-            borderSide: const BorderSide(
-              color: Colors.redAccent,
+            borderSide: BorderSide(
+              color: colors.error,
             ),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(widget.dense ? 12 : 18),
-            borderSide: const BorderSide(
-              color: Colors.redAccent,
+            borderSide: BorderSide(
+              color: colors.error,
               width: 2,
             ),
           ),
-          errorStyle: const TextStyle(
-            color: Colors.redAccent,
+          errorStyle: TextStyle(
+            color: colors.error,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -173,7 +161,7 @@ class _MyInputState extends State<MyInput> {
           suffixIcon: widget.suffixIcon != null
               ? IconTheme(
                   data: IconThemeData(
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: colors.onSurface,
                   ),
                   child: widget.suffixIcon!,
                 )

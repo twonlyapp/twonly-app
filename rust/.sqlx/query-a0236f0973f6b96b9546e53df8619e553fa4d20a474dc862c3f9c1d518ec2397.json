@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COALESCE(MAX(serial), 0) + 1 AS \"next!: i64\"\n               FROM webxdc_updates WHERE instance_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "next!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a0236f0973f6b96b9546e53df8619e553fa4d20a474dc862c3f9c1d518ec2397"
+}

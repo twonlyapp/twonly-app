@@ -23,10 +23,10 @@ class NewsIconButtonComp extends StatelessWidget {
             return NotificationBadgeComp(
               count: count.toString(),
               backgroundColor: context.color.primary,
-              textColor: Colors.black87,
+              textColor: context.color.onPrimary,
               child: IconButton(
                 onPressed: () => context.push(Routes.settingsHelpNews),
-                color: Colors.grey,
+                color: context.color.onSurfaceVariant,
                 tooltip: context.lang.settingsHelpNews,
                 icon: const FaIcon(FontAwesomeIcons.bullhorn, size: 19),
               ),

@@ -3,6 +3,7 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
+import '../../backup/backup_archive.dart';
 import '../../frb_generated.dart';
 import '../../keys/backup_password_keys.dart';
 import '../../lib.dart';
@@ -22,6 +23,9 @@ class RustBackupArchive {
           .crateBridgeWrapperBackupRustBackupArchiveRestoreBackupArchive(
             filePath: filePath,
           );
+
+  static Future<BackupStorageInfo> storageInfo() => RustLib.instance.api
+      .crateBridgeWrapperBackupRustBackupArchiveStorageInfo();
 
   @override
   int get hashCode => 0;

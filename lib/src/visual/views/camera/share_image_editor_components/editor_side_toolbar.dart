@@ -1,0 +1,208 @@
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
+import 'package:twonly/src/visual/components/notification_badge.comp.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_layer_stack.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
+
+/// The editing tools next to the media: add text, drawing and emojis, pick the
+/// display time and protect the media.
+class EditorSideToolbar extends StatelessWidget {
+  const EditorSideToolbar({
+    required this.layerStack,
+    required this.mediaService,
+    required this.onChanged,
+    required this.onEditDisplayTime,
+    required this.onToggleAudio,
+    required this.onToggleRequiresAuth,
+    required this.canTrim,
+    required this.trimmerVisible,
+    required this.onToggleTrimmer,
+    required this.sendToWidget,
+    required this.showWidgetOption,
+    required this.highlightWidgetOption,
+    required this.isUpdatingWidgetMode,
+    required this.widgetActionKey,
+    required this.onToggleSendToWidget,
+    required this.colorSamplerLoader,
+    required this.onCreateStickerFromImage,
+    super.key,
+  });
+
+  final EditorLayerStack layerStack;
+  final MediaFileService mediaService;
+
+  /// Called after the layer stack was modified so the editor can rebuild.
+  final VoidCallback onChanged;
+  final VoidCallback onEditDisplayTime;
+  final VoidCallback onToggleAudio;
+  final VoidCallback onToggleRequiresAuth;
+
+  /// Whether the clip is far enough along for the cutter to be openable at all;
+  /// it needs a player that knows how long the recording is.
+  final bool canTrim;
+  final bool trimmerVisible;
+  final VoidCallback onToggleTrimmer;
+  final bool sendToWidget;
+  final bool showWidgetOption;
+  final bool highlightWidgetOption;
+  final bool isUpdatingWidgetMode;
+  final GlobalKey widgetActionKey;
+  final VoidCallback onToggleSendToWidget;
+  final EditorColorSamplerLoader? colorSamplerLoader;
+  final VoidCallback onCreateStickerFromImage;
+
+  MediaFile get media => mediaService.mediaFile;
+
+  /// How long the receiver may look at the media, `∞` when unlimited and `0`
+  /// for videos (they are limited by their own length).
+  String get _displayTimeLabel {
+    if (media.type == MediaType.video) return '0';
+    final limit = media.displayLimitInMilliseconds;
+    if (limit == null) return '∞';
+    return (limit ~/ 1000).toString();
+  }
+
+  IconData get _displayTimeIcon {
+    if (media.type != MediaType.video) return Icons.timer_outlined;
+    return (media.displayLimitInMilliseconds == null)
+        ? Icons.repeat_rounded
+        : Icons.repeat_one_rounded;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (layerStack.takesOverScreen) return const SizedBox.shrink();
+
+    final canBeEdited = media.type != MediaType.gif;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (canBeEdited)
+          ActionButton(
+            Icons.text_fields_rounded,
+            tooltipText: context.lang.addTextItem,
+            onPressed: () {
+              layerStack.addTextLayer();
+              onChanged();
+            },
+          ),
+        const SizedBox(height: 8),
+        if (canBeEdited)
+          ActionButton(
+            Icons.draw_rounded,
+            tooltipText: context.lang.addDrawing,
+            onPressed: () {
+              layerStack.addDrawLayer(colorSamplerLoader: colorSamplerLoader);
+              onChanged();
+            },
+          ),
+        const SizedBox(height: 8),
+        if (canBeEdited)
+          ActionButton(
+            Icons.add_reaction_outlined,
+            tooltipText: context.lang.addEmoji,
+            onPressed: () async {
+              final layer = await showModalBottomSheet<Layer>(
+                context: context,
+                backgroundColor: context.color.surface,
+                builder: (context) => const EmojiPickerBottom(
+                  allowStickers: true,
+                ),
+              );
+              if (layer == null) return;
+              layerStack.add(layer);
+              onChanged();
+            },
+          ),
+        if (showWidgetOption) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            key: widgetActionKey,
+            child: ActionButton(
+              sendToWidget ? Icons.widgets_rounded : Icons.widgets_outlined,
+              tooltipText: context.lang.shareImageSendToWidget,
+              color: sendToWidget || highlightWidgetOption
+                  ? Theme.of(context).colorScheme.primary
+                  : context.appColor(AppColor.mediaForeground),
+              disable: isUpdatingWidgetMode,
+              onPressed: onToggleSendToWidget,
+            ),
+          ),
+        ],
+        if (!sendToWidget) ...[
+          const SizedBox(height: 8),
+          NotificationBadgeComp(
+            count: _displayTimeLabel,
+            child: ActionButton(
+              _displayTimeIcon,
+              tooltipText: context.lang.protectAsARealTwonly,
+              onPressed: onEditDisplayTime,
+            ),
+          ),
+        ],
+        if (canTrim) ...[
+          const SizedBox(height: 8),
+          ActionButton(
+            Icons.content_cut_rounded,
+            tooltipText: 'Trim video',
+            color: trimmerVisible
+                ? Theme.of(context).colorScheme.primary
+                : context.appColor(AppColor.mediaForeground),
+            onPressed: onToggleTrimmer,
+          ),
+        ],
+        if (media.type == MediaType.video) ...[
+          const SizedBox(height: 8),
+          ActionButton(
+            (mediaService.removeAudio)
+                ? Icons.volume_off_rounded
+                : Icons.volume_up_rounded,
+            tooltipText: 'Enable Audio in Video',
+            color: (mediaService.removeAudio)
+                ? context.appColor(AppColor.mediaForegroundMuted)
+                : context.appColor(AppColor.mediaForeground),
+            onPressed: onToggleAudio,
+          ),
+        ],
+        if (media.type == MediaType.image) ...[
+          const SizedBox(height: 8),
+          ActionButton(
+            Icons.select_all_rounded,
+            key: const Key('createStickerFromImage'),
+            tooltipText: context.lang.createStickerFromImage,
+            color: context.appColor(AppColor.mediaForeground),
+            onPressed: onCreateStickerFromImage,
+          ),
+          const SizedBox(height: 8),
+          ActionButton(
+            Icons.crop_rotate_outlined,
+            tooltipText: 'Crop or rotate image',
+            color: context.appColor(AppColor.mediaForeground),
+            onPressed: () {
+              layerStack.toggleBackgroundEditing();
+              onChanged();
+            },
+          ),
+        ],
+        if (!sendToWidget) ...[
+          const SizedBox(height: 8),
+          ActionButton(
+            FontAwesomeIcons.shieldHeart,
+            tooltipText: context.lang.protectAsARealTwonly,
+            color: media.requiresAuthentication
+                ? Theme.of(context).colorScheme.primary
+                : context.appColor(AppColor.mediaForeground),
+            onPressed: onToggleRequiresAuth,
+          ),
+        ],
+      ],
+    );
+  }
+}

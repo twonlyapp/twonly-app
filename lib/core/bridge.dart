@@ -7,33 +7,40 @@ import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `get_twonly_flutter`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `TwonlyFlutter`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AnnouncedUser`, `OtherPromotion`
+// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `initialize_twonly_notification`
 
 Future<void> initializeTwonlyFlutter({required InitConfig config}) =>
     RustLib.instance.api.crateBridgeInitializeTwonlyFlutter(config: config);
 
-class AnnouncedUser {
-  final PlatformInt64 userId;
-  final Uint8List publicKey;
-  final PlatformInt64 publicId;
+/// Initializes the complete Rust runtime without Flutter or callback setup.
+/// Background executables should call this before using `RustApi`.
+Future<void> initializeTwonlyStandalone({required InitConfig config}) =>
+    RustLib.instance.api.crateBridgeInitializeTwonlyStandalone(config: config);
 
-  const AnnouncedUser({
-    required this.userId,
-    required this.publicKey,
-    required this.publicId,
+class FlameState {
+  final PlatformInt64 counter;
+  final bool isExpiring;
+  final bool isBestFriend;
+
+  const FlameState({
+    required this.counter,
+    required this.isExpiring,
+    required this.isBestFriend,
   });
 
   @override
-  int get hashCode => userId.hashCode ^ publicKey.hashCode ^ publicId.hashCode;
+  int get hashCode =>
+      counter.hashCode ^ isExpiring.hashCode ^ isBestFriend.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is AnnouncedUser &&
+      other is FlameState &&
           runtimeType == other.runtimeType &&
-          userId == other.userId &&
-          publicKey == other.publicKey &&
-          publicId == other.publicId;
+          counter == other.counter &&
+          isExpiring == other.isExpiring &&
+          isBestFriend == other.isBestFriend;
 }
 
 class InitConfig {
@@ -55,43 +62,4 @@ class InitConfig {
           runtimeType == other.runtimeType &&
           databaseDir == other.databaseDir &&
           dataDir == other.dataDir;
-}
-
-class OtherPromotion {
-  final int promotionId;
-  final PlatformInt64 publicId;
-  final PlatformInt64 fromContactId;
-  final int threshold;
-  final Uint8List announcementShare;
-  final PlatformInt64? publicKeyVerifiedTimestamp;
-
-  const OtherPromotion({
-    required this.promotionId,
-    required this.publicId,
-    required this.fromContactId,
-    required this.threshold,
-    required this.announcementShare,
-    this.publicKeyVerifiedTimestamp,
-  });
-
-  @override
-  int get hashCode =>
-      promotionId.hashCode ^
-      publicId.hashCode ^
-      fromContactId.hashCode ^
-      threshold.hashCode ^
-      announcementShare.hashCode ^
-      publicKeyVerifiedTimestamp.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OtherPromotion &&
-          runtimeType == other.runtimeType &&
-          promotionId == other.promotionId &&
-          publicId == other.publicId &&
-          fromContactId == other.fromContactId &&
-          threshold == other.threshold &&
-          announcementShare == other.announcementShare &&
-          publicKeyVerifiedTimestamp == other.publicKeyVerifiedTimestamp;
 }

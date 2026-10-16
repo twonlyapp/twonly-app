@@ -4,7 +4,11 @@ import re
 import sys
 
 ARB_DIR = 'lib/src/localization/translations'
-LIB_DIR = 'lib'
+# (directory, file extension) pairs whose sources may reference ARB keys.
+SOURCE_DIRS = [
+    ('lib', '.dart'),
+    ('rust/src', '.rs'),
+]
 
 def get_arb_data(filepath):
     try:
@@ -34,30 +38,31 @@ def main():
     en_keys = get_keys(en_data)
     print(f"Found {len(en_keys)} keys in en.arb")
 
-    # 1. Check for unused keys in Dart files
-    print("\n--- Checking for unused keys in Dart files ---")
-    all_dart_text = ""
-    for root, _, files in os.walk(LIB_DIR):
-        for file in files:
-            if file.endswith('.dart'):
-                filepath = os.path.join(root, file)
-                if "generated" in str(filepath):
-                    continue
-                try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        all_dart_text += f.read() + "\n"
-                except Exception as e:
-                    print(f"Could not read {filepath}: {e}")
+    # 1. Check for unused keys in Dart and Rust files
+    print("\n--- Checking for unused keys in Dart and Rust files ---")
+    all_source_text = ""
+    for source_dir, extension in SOURCE_DIRS:
+        for root, _, files in os.walk(source_dir):
+            for file in files:
+                if file.endswith(extension):
+                    filepath = os.path.join(root, file)
+                    if "generated" in str(filepath):
+                        continue
+                    try:
+                        with open(filepath, 'r', encoding='utf-8') as f:
+                            all_source_text += f.read() + "\n"
+                    except Exception as e:
+                        print(f"Could not read {filepath}: {e}")
 
     unused_keys = set()
     for key in sorted(en_keys):
         # Using word boundary to avoid partial matches
         pattern = r'\b' + re.escape(key) + r'\b'
-        if not re.search(pattern, all_dart_text):
+        if not re.search(pattern, all_source_text):
             unused_keys.add(key)
             
     if unused_keys:
-        print(f"Found {len(unused_keys)} keys in en.arb that do not appear to be used in the Dart code:")
+        print(f"Found {len(unused_keys)} keys in en.arb that do not appear to be used in the Dart or Rust code:")
         for k in sorted(unused_keys):
             print(f"  - {k}")
             
@@ -86,7 +91,7 @@ def main():
         else:
             print("\nRun with --fix to automatically delete these unused keys.")
     else:
-        print("All keys in en.arb seem to be used in the Dart files.")
+        print("All keys in en.arb seem to be used in the Dart or Rust files.")
 
     # 2. Compare other .arb files with en.arb
     print("\n--- Comparing other .arb files with en.arb ---")

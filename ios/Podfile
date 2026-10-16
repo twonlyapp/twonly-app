@@ -97,6 +97,5 @@ post_install do |installer|
 end
 
 target 'NotificationService' do
-  pod 'SwiftProtobuf'
-  # pod 'Firebase/Messaging'
+  pod 'rust_lib_twonly', :path => '.symlinks/plugins/rust_lib_twonly/ios'
 end

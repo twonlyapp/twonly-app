@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Material checkbox drawable is 32dp wide with the 18dp box centred in
+     it, so 7dp of the leading and 7dp of the trailing offset come from the
+     drawable itself. The margin and padding below add to that: the box sits
+     16dp inside the card and the label follows 16dp after it. -->
+<com.google.android.material.checkbox.MaterialCheckBox
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/group_checkbox"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="9dp"
+    android:background="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:minHeight="56dp"
+    android:paddingStart="9dp"
+    android:paddingEnd="16dp"
+    android:textAppearance="?attr/textAppearanceBodyLarge"
+    android:textColor="?attr/colorOnSurface" />

@@ -8,17 +8,15 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
-    hide Message;
-import 'package:twonly/src/services/api/mediafiles/download.api.dart'
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/services/mediafiles/media_download_policy.dart'
     as received;
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
-import 'package:twonly/src/visual/themes/colors.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/in_chat_media_viewer.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/message_color.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer.view.dart';
 
 class ChatMediaEntry extends StatefulWidget {
@@ -29,6 +27,7 @@ class ChatMediaEntry extends StatefulWidget {
     required this.mediaService,
     required this.borderRadius,
     required this.info,
+    this.useSharedData = false,
     super.key,
   });
 
@@ -38,6 +37,7 @@ class ChatMediaEntry extends StatefulWidget {
   final MediaFileService mediaService;
   final BorderRadius borderRadius;
   final BubbleInfo info;
+  final bool useSharedData;
 
   @override
   State<ChatMediaEntry> createState() => _ChatMediaEntryState();
@@ -47,21 +47,49 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
   GlobalKey reopenMediaFile = GlobalKey();
   bool _canBeReopened = false;
 
+  /// Decoded once per message instead of on every rebuild; the buffer only
+  /// changes when the message itself does.
+  String? _link;
+
   @override
   void initState() {
     super.initState();
+    _decodeAdditionalData();
     unawaited(initAsync());
   }
 
+  @override
+  void didUpdateWidget(ChatMediaEntry oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message.additionalMessageData !=
+        widget.message.additionalMessageData) {
+      _decodeAdditionalData();
+    }
+  }
+
+  void _decodeAdditionalData() {
+    final addData = widget.message.additionalMessageData;
+    if (addData == null) {
+      _link = null;
+      return;
+    }
+    final data = AdditionalMessageData.fromBuffer(addData);
+    _link = data.hasLink() ? data.link : null;
+  }
+
   Future<void> initAsync() async {
-    if (widget.message.senderId == null || widget.message.mediaStored) {
+    if (widget.message.senderId == null ||
+        widget.message.mediaStored ||
+        widget.message.isWidgetMedia) {
       return;
     }
     if (widget.mediaService.mediaFile.requiresAuthentication ||
         widget.mediaService.mediaFile.displayLimitInMilliseconds != null) {
       return;
     }
-    if (widget.mediaService.tempPath.existsSync() && mounted) {
+    // Async check keeps media discovery off the UI thread.
+    // ignore: avoid_slow_async_io
+    if (await widget.mediaService.tempPath.exists() && mounted) {
       setState(() {
         _canBeReopened = true;
       });
@@ -69,19 +97,24 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
   }
 
   Future<void> onDoubleTap() async {
-    if (widget.message.openedAt == null || widget.message.mediaStored) {
+    if (widget.message.isWidgetMedia ||
+        widget.message.openedAt == null ||
+        widget.message.mediaStored) {
       return;
     }
     if (widget.mediaService.canBeOpenedAgain &&
         widget.message.senderId != null) {
-      await sendCipherText(
-        widget.message.senderId!,
-        EncryptedContent(
+      await RustApi.sendEncryptedContent(
+        contactId: widget.message.senderId!,
+        content: EncryptedContent(
           mediaUpdate: EncryptedContent_MediaUpdate(
             type: EncryptedContent_MediaUpdate_Type.REOPENED,
             targetMessageId: widget.message.messageId,
           ),
-        ),
+        ).writeToBuffer(),
+        onlySendIfNoReceiptsAreOpen: false,
+        onlyReturnEncryptedData: false,
+        blocking: true,
       );
       await twonlyDB.messagesDao.updateMessageId(
         widget.message.messageId,
@@ -91,6 +124,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
   }
 
   Future<void> onTap() async {
+    if (widget.message.isWidgetMedia) return;
     if ((widget.mediaService.mediaFile.downloadState == DownloadState.ready) &&
         widget.message.openedAt == null) {
       if (!mounted) return;
@@ -112,37 +146,40 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
     );
 
     var imageBorderRadius = widget.borderRadius;
+    // ChatMediaEntry is only used for non-audio media. Reserve the final
+    // preview extent for every stored item, even while its thumbnail metadata
+    // is still catching up, so the row cannot grow underneath the scroll
+    // position. Widget media deliberately remains the compact status bubble.
+    final reservesStoredPreviewSpace =
+        widget.message.mediaStored && !widget.message.isWidgetMedia;
 
     Widget additionalMessageData = Container();
 
-    final addData = widget.message.additionalMessageData;
-    if (addData != null) {
-      final data = AdditionalMessageData.fromBuffer(addData);
-      if (data.hasLink() && widget.message.mediaStored) {
-        imageBorderRadius = widget.borderRadius.copyWith(
-          bottomLeft: const Radius.circular(5),
-          bottomRight: const Radius.circular(5),
-        );
+    final link = _link;
+    if (link != null && widget.message.mediaStored) {
+      imageBorderRadius = widget.borderRadius.copyWith(
+        bottomLeft: const Radius.circular(5),
+        bottomRight: const Radius.circular(5),
+      );
 
-        additionalMessageData = Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.8,
+      additionalMessageData = Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.8,
+        ),
+        padding: widget.info.padding,
+        decoration: BoxDecoration(
+          color: widget.info.color,
+          borderRadius: widget.borderRadius.copyWith(
+            topLeft: const Radius.circular(5),
           ),
-          padding: widget.info.padding,
-          decoration: BoxDecoration(
-            color: widget.info.color,
-            borderRadius: widget.borderRadius.copyWith(
-              topLeft: const Radius.circular(5),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              BetterText(text: data.link, textColor: widget.info.textColor),
-            ],
-          ),
-        );
-      }
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            BetterText(text: link, textColor: widget.info.textColor),
+          ],
+        ),
+      );
     }
 
     return Column(
@@ -155,17 +192,13 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
           onDoubleTap: onDoubleTap,
           onTap: (widget.message.type == MessageType.media.name) ? onTap : null,
           child: SizedBox(
+            key: ValueKey('chat_media_frame_${widget.message.messageId}'),
             width: (widget.info.minWidth > 150)
                 ? widget.info.minWidth
-                : (widget.message.mediaStored &&
-                      widget.mediaService.imagePreviewAvailable)
+                : reservesStoredPreviewSpace
                 ? 150
                 : null,
-            height:
-                (widget.message.mediaStored &&
-                    widget.mediaService.imagePreviewAvailable)
-                ? 271
-                : null,
+            height: reservesStoredPreviewSpace ? 271 : null,
             child: Align(
               alignment: Alignment.centerRight,
               child: ClipRRect(
@@ -179,6 +212,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
                   canBeReopened: _canBeReopened,
                   borderRadius: imageBorderRadius,
                   info: widget.info,
+                  useSharedData: widget.useSharedData,
                 ),
               ),
             ),

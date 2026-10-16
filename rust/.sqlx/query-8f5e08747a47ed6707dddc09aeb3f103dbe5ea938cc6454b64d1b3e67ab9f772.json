@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO groups(group_id, group_name) VALUES ('group-1', 'Chat')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "8f5e08747a47ed6707dddc09aeb3f103dbe5ea938cc6454b64d1b3e67ab9f772"
+}

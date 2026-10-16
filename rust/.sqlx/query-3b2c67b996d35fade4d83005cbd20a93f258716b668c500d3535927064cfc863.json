@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT contact_id, member_state FROM group_members WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "member_state",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "member_state"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "3b2c67b996d35fade4d83005cbd20a93f258716b668c500d3535927064cfc863"
+}

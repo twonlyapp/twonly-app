@@ -4,28 +4,29 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/signal/session.signal.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/contact_labels.comp.dart';
+import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
+import 'package:twonly/src/visual/elements/my_chip.element.dart';
+import 'package:twonly/src/visual/views/contact/contact_components/avatar_preference.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/mutual_groups_expansion_tile.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
-import 'package:twonly/src/visual/views/contact/contact_components/user_discovery_contact_settings.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/verification_expansion_tile.comp.dart';
-import 'package:twonly/src/visual/views/contact/select_contact_labels.view.dart';
+import 'package:twonly/src/visual/views/contact/select_contact_groups.view.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
+import 'package:twonly/src/visual/views/webxdc/webxdc_chat_apps.view.dart';
 
 class ContactView extends StatefulWidget {
   const ContactView(this.userId, {super.key});
@@ -125,7 +126,9 @@ class _ContactViewState extends State<ContactView> {
   Future<void> handleReportUser(Contact contact) async {
     final reason = await showReportDialog(context, contact);
     if (reason == null) return;
-    final res = await apiService.reportUser(contact.userId, reason);
+    final res = await rustApiResult(
+      RustApi.reportUser(userId: contact.userId, reason: reason),
+    );
     if (!mounted) return;
     if (res.isSuccess) {
       showSnackbar(
@@ -151,21 +154,18 @@ class _ContactViewState extends State<ContactView> {
     if (!confirmed || !mounted) return;
 
     setState(() => _isResettingSignalSession = true);
-    var success = false;
-    try {
-      success = await resetSignalSession(contact.userId);
-    } catch (error) {
-      Log.error('Could not reset Signal session: $error');
-    }
+    final result = await rustApiResult(
+      RustSignal.resetContactSession(contactId: contact.userId),
+    );
     if (!mounted) return;
 
     setState(() => _isResettingSignalSession = false);
     showSnackbar(
       context,
-      success
+      result.isSuccess
           ? context.lang.contactResetSessionSuccess(displayName)
           : context.lang.contactResetSessionFailed,
-      level: success ? SnackbarLevel.success : SnackbarLevel.error,
+      level: result.isSuccess ? SnackbarLevel.success : SnackbarLevel.error,
     );
   }
 
@@ -227,6 +227,67 @@ class _ContactViewState extends State<ContactView> {
           ),
           if (getContactDisplayName(contact) != contact.username)
             Center(child: Text('(${contact.username})')),
+          if (contact.twonlyScore != null ||
+              (contact.joinedAt != null && !contact.accountDeleted))
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (contact.twonlyScore != null)
+                      IntrinsicWidth(
+                        child: MyChip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const FaIcon(FontAwesomeIcons.trophy, size: 14),
+                              const SizedBox(width: 7),
+                              Text('${contact.twonlyScore}'),
+                            ],
+                          ),
+                          onTap: () => showDialog<void>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text(
+                                context.lang.publicProfileTwonlyScore,
+                              ),
+                              content: Text(
+                                context.lang.contactTwonlyScoreDescription,
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(context.lang.ok),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (contact.joinedAt != null && !contact.accountDeleted)
+                      IntrinsicWidth(
+                        child: MyChip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const FaIcon(
+                                FontAwesomeIcons.calendarDay,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 7),
+                              Text(formatJoinedAt(context, contact.joinedAt!)),
+                            ],
+                          ),
+                          onTap: null,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
           const SizedBox(height: 50),
           BetterListTile(
             icon: FontAwesomeIcons.solidComments,
@@ -236,7 +297,10 @@ class _ContactViewState extends State<ContactView> {
                 contact.userId,
               );
               if (group != null && context.mounted) {
-                await context.push(Routes.chatsMessages(group.groupId));
+                await context.push(
+                  Routes.chatsMessages(group.groupId),
+                  extra: group,
+                );
               }
             },
           ),
@@ -256,22 +320,35 @@ class _ContactViewState extends State<ContactView> {
               }
             },
           ),
+          AvatarPreferenceTile(contact: contact),
           SelectChatDeletionTimeListTitle(
             groupId: getUUIDforDirectChat(
               widget.userId,
               userService.currentUser.userId,
             ),
           ),
-          ContactLabelsSubtitleBuilder(
-            contactId: contact.userId,
+          BetterListTile(
+            icon: FontAwesomeIcons.layerGroup,
+            text: context.lang.webxdcChatApps,
+            onTap: () => context.navPush(
+              WebxdcChatAppsView(
+                groupId: getUUIDforDirectChat(
+                  widget.userId,
+                  userService.currentUser.userId,
+                ),
+              ),
+            ),
+          ),
+          ContactGroupsSubtitleBuilder(
+            userId: contact.userId,
             builder: (context, subtitleWidget) {
               return BetterListTile(
                 icon: FontAwesomeIcons.tag,
-                text: context.lang.contactLabelsTitle,
+                text: context.lang.contactGroupsTitle,
                 subtitle: subtitleWidget,
                 onTap: () {
                   context.navPush(
-                    SelectContactLabelsView(contactId: contact.userId),
+                    SelectContactGroupsView(userId: contact.userId),
                   );
                 },
               );
@@ -285,9 +362,6 @@ class _ContactViewState extends State<ContactView> {
             contact: contact,
           ),
           MutualGroupsExpansionTileComp(
-            contact: contact,
-          ),
-          UserDiscoveryContactSettingsComp(
             contact: contact,
           ),
           const Divider(),
@@ -317,7 +391,7 @@ class _ContactViewState extends State<ContactView> {
           BetterListTile(
             icon: FontAwesomeIcons.userMinus,
             iconSize: 16,
-            color: Colors.red,
+            color: context.color.error,
             text: context.lang.contactRemove,
             onTap: () => handleUserRemoveRequest(contact),
           ),
@@ -327,9 +401,10 @@ class _ContactViewState extends State<ContactView> {
                 icon: FontAwesomeIcons.arrowsRotate,
                 text: 'Update Connection to V2 (PQXDH)',
                 onTap: () async {
-                  final userData = await apiService.getUserById(contact.userId);
-                  if (userData != null) {
-                    await processSignalUserData(userData);
+                  try {
+                    await RustApi.establishSignalSession(
+                      contactId: contact.userId,
+                    );
                     final updatedContact = await twonlyDB.contactsDao
                         .getContactById(contact.userId);
                     final isV2 =
@@ -346,6 +421,13 @@ class _ContactViewState extends State<ContactView> {
                             : SnackbarLevel.error,
                       );
                     }
+                  } catch (e) {
+                    if (context.mounted) {
+                      showSnackbar(
+                        context,
+                        'Failed to update connection to V2: $e',
+                      );
+                    }
                   }
                 },
               ),
@@ -353,12 +435,25 @@ class _ContactViewState extends State<ContactView> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Center(
-                child: Text(
-                  'Encryption: ${switch (contact.signalVersion) {
-                    SignalVersion.v1 => 'Signal Protocol (v1)',
-                    SignalVersion.v2 => 'PQXDH (v2)',
-                  }}',
-                  style: const TextStyle(color: Colors.grey),
+                child: Column(
+                  children: [
+                    Text(
+                      'Encryption: ${switch (contact.signalVersion) {
+                        SignalVersion.v1 => 'Signal Protocol (v1)',
+                        SignalVersion.v2 => 'PQXDH (v2)',
+                      }}',
+                      style: TextStyle(
+                        color: context.color.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Can send widgets: ${contact.widgetSharingAllowed ? 'Yes' : 'No'}',
+                      style: TextStyle(
+                        color: context.color.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                UPDATE messages\n                SET media_reopened = 1\n                WHERE message_id = ?\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "6f27065bbb1277aa35530ac6bce6e780683555d0c125183b949846950cfac139"
+}

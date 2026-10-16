@@ -30,6 +30,10 @@ android {
         jvmTarget = "17"
     }
 
+    testOptions {
+        unitTests.includeAndroidResources = true
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "eu.twonly"
@@ -40,6 +44,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders = [appName: "twonly"]
     }
     signingConfigs {
@@ -56,9 +61,12 @@ android {
             applicationIdSuffix ".testing"
             manifestPlaceholders = [appName: "twonly [dev]"]
         }
-        // profile {
-        //     applicationIdSuffix ".STOP"
-        // }
+        profile {
+            // Profile builds are installed while profiling production-like
+            // performance. They must never replace the store app.
+            applicationIdSuffix ".testing"
+            manifestPlaceholders = [appName: "twonly [profile]"]
+        }
         release {
             shrinkResources false
             minifyEnabled false
@@ -72,7 +80,24 @@ flutter {
 }
 
 dependencies {
+  testImplementation 'junit:junit:4.13.2'
+  testImplementation 'org.robolectric:robolectric:4.16'
+  testImplementation 'com.squareup.okhttp3:mockwebserver:5.4.0'
+  implementation 'com.squareup.okhttp3:okhttp:5.4.0'
+  implementation 'androidx.exifinterface:exifinterface:1.4.2'
+  androidTestImplementation 'androidx.test:runner:1.3.0'
+  androidTestImplementation 'junit:junit:4.12'
   coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
-  implementation 'com.otaliastudios:transcoder:0.11.0'
+  implementation platform('com.google.firebase:firebase-bom:34.9.0')
+  implementation 'com.google.firebase:firebase-messaging'
+  implementation 'androidx.work:work-runtime:2.10.2'
+  // Hardware video composition and transcoding: MediaCodec for decode/encode,
+  // OpenGL for the overlay. Replaces both the software Flutter editor pass and
+  // the previous third-party transcoder.
+  implementation 'androidx.media3:media3-transformer:1.11.0'
+  implementation 'androidx.media3:media3-effect:1.11.0'
+  implementation 'androidx.media3:media3-common:1.11.0'
   implementation 'androidx.core:core-splashscreen:1.0.1'
+  // Material 3 components for the native widget configuration screen.
+  implementation 'com.google.android.material:material:1.13.0'
 }

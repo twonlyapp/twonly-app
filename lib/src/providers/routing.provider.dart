@@ -37,18 +37,18 @@ import 'package:twonly/src/visual/views/settings/help/diagnostics.view.dart';
 import 'package:twonly/src/visual/views/settings/help/faq.view.dart';
 import 'package:twonly/src/visual/views/settings/help/faq/verification_badge_faq.view.dart';
 import 'package:twonly/src/visual/views/settings/help/help.view.dart';
+import 'package:twonly/src/visual/views/settings/help/manual_verification.view.dart';
 import 'package:twonly/src/visual/views/settings/help/news.view.dart';
 import 'package:twonly/src/visual/views/settings/notification.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy/block_users.view.dart';
+import 'package:twonly/src/visual/views/settings/privacy/public_profile.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery.view.dart';
 import 'package:twonly/src/visual/views/settings/profile/modify_avatar.view.dart';
 import 'package:twonly/src/visual/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/visual/views/settings/settings_main.view.dart';
 import 'package:twonly/src/visual/views/settings/share_with_friends.view.dart';
 import 'package:twonly/src/visual/views/settings/subscription/subscription.view.dart';
-import 'package:twonly/src/visual/views/user_study/user_study_questionnaire.view.dart';
-import 'package:twonly/src/visual/views/user_study/user_study_welcome.view.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -99,10 +99,32 @@ final routerProvider = GoRouter(
           },
         ),
         GoRoute(
+          path: 'story/:contactId',
+          builder: (context, state) {
+            final contactId = int.parse(state.pathParameters['contactId']!);
+            return MediaViewerView.story(
+              StorySource.contact(
+                contactId,
+                initialMediaId: state.extra as String?,
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: 'own_story',
+          builder: (context, state) => MediaViewerView.story(
+            StorySource.own(initialMediaId: state.extra as String?),
+          ),
+        ),
+        GoRoute(
           path: 'messages/:groupId',
           builder: (context, state) {
             final groupId = state.pathParameters['groupId']!;
-            return ChatMessagesView(groupId);
+            final extra = state.extra;
+            return ChatMessagesView(
+              groupId,
+              initialGroup: extra is Group ? extra : null,
+            );
           },
         ),
       ],
@@ -220,6 +242,10 @@ final routerProvider = GoRouter(
               path: 'user_discovery',
               builder: (context, state) => const UserDiscoverySettingsView(),
             ),
+            GoRoute(
+              path: 'public_profile',
+              builder: (context, state) => const PublicProfilePrivacyView(),
+            ),
           ],
         ),
         GoRoute(
@@ -253,6 +279,14 @@ final routerProvider = GoRouter(
                   builder: (context, state) => VerificationBadeFaqView(
                     contact: state.extra as Contact?,
                   ),
+                  routes: [
+                    GoRoute(
+                      path: 'manual',
+                      builder: (context, state) => ManualVerificationView(
+                        contact: state.extra! as Contact,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -267,19 +301,6 @@ final routerProvider = GoRouter(
             GoRoute(
               path: 'diagnostics',
               builder: (context, state) => const DiagnosticsView(),
-            ),
-            GoRoute(
-              path: 'user_study',
-              builder: (context, state) => UserStudyWelcomeView(
-                wasOpenedAutomatic: state.extra as bool? ?? false,
-              ),
-              routes: [
-                GoRoute(
-                  path: 'questionnaire',
-                  builder: (context, state) =>
-                      const UserStudyQuestionnaireView(),
-                ),
-              ],
             ),
             GoRoute(
               path: 'credits',

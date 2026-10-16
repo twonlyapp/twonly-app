@@ -159,57 +159,7 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
       }).toList();
     });
   }
-
-  Future<int> getTransferredTrustVerificationsCount() async {
-    final kv = keyVerifications;
-    final ur = userDiscoveryUserRelations;
-
-    final query = selectOnly(ur, distinct: true)
-      ..addColumns([ur.announcedUserId])
-      ..join([
-        innerJoin(contacts, contacts.userId.equalsExp(ur.fromContactId)),
-        innerJoin(kv, kv.contactId.equalsExp(ur.fromContactId)),
-      ])
-      ..where(
-        ur.publicKeyVerifiedTimestamp.isNotNull() &
-            ur.announcedUserId.equalsExp(ur.fromContactId).not(),
-      )
-      ..groupBy([ur.announcedUserId]);
-
-    final rows = await query.get();
-    return rows.length;
-  }
-
-  Future<int> getCountOfContactsWithVerificationBadge() async {
-    final kv = keyVerifications;
-    final ur = userDiscoveryUserRelations;
-
-    final query = selectOnly(ur, distinct: true)
-      ..addColumns([ur.announcedUserId])
-      ..join([
-        innerJoin(contacts, contacts.userId.equalsExp(ur.fromContactId)),
-        innerJoin(kv, kv.contactId.equalsExp(ur.fromContactId)),
-      ])
-      ..where(
-        ur.publicKeyVerifiedTimestamp.isNotNull() &
-            ur.announcedUserId.equalsExp(ur.fromContactId).not(),
-      )
-      ..groupBy([ur.announcedUserId]);
-
-    final rows = await query.get();
-    final transferredIds = rows.map((r) => r.read(ur.announcedUserId)!).toSet();
-
-    final directVerifications = await select(kv).get();
-    final directIds = directVerifications.map((v) => v.contactId).toSet();
-
-    // Reduce transferred contacts where announcedUserId is already in KeyVerifications
-    transferredIds.removeWhere(directIds.contains);
-
-    // Add count of all users who are in the KeyVerification table
-    return transferredIds.length + directIds.length;
-  }
-
-  Stream<VerificationStatus> watchAllGroupMembersVerified(String groupId) {
+Stream<VerificationStatus> watchAllGroupMembersVerified(String groupId) {
     final gm = groupMembers;
     final directKv = alias(keyVerifications, 'directKv');
     final ur = userDiscoveryUserRelations;
@@ -256,6 +206,51 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
       if (allAtLeastPartial) return VerificationStatus.partialTrusted;
 
       return VerificationStatus.notTrusted;
+    });
+  }
+
+  Stream<Map<String, VerificationStatus>> watchAllGroupsVerificationStatus() {
+    final gm = groupMembers;
+    final directKv = alias(keyVerifications, 'allGroupsDirectKv');
+    final ur = userDiscoveryUserRelations;
+    final verifierKv = alias(keyVerifications, 'allGroupsVerifierKv');
+
+    final query = select(gm).join([
+      leftOuterJoin(directKv, directKv.contactId.equalsExp(gm.contactId)),
+      leftOuterJoin(
+        ur,
+        ur.announcedUserId.equalsExp(gm.contactId) &
+            ur.publicKeyVerifiedTimestamp.isNotNull() &
+            ur.fromContactId.equalsExp(gm.contactId).not(),
+      ),
+      leftOuterJoin(
+        verifierKv,
+        verifierKv.contactId.equalsExp(ur.fromContactId),
+      ),
+    ]);
+
+    return query.watch().map((rows) {
+      final groups = <String, Map<int, ({bool direct, bool partial})>>{};
+      for (final row in rows) {
+        final member = row.readTable(gm);
+        final members = groups.putIfAbsent(member.groupId, () => {});
+        final current =
+            members[member.contactId] ?? (direct: false, partial: false);
+        members[member.contactId] = (
+          direct: current.direct || row.readTableOrNull(directKv) != null,
+          partial: current.partial || row.readTableOrNull(verifierKv) != null,
+        );
+      }
+      return {
+        for (final entry in groups.entries)
+          entry.key: entry.value.values.every((member) => member.direct)
+              ? VerificationStatus.trusted
+              : entry.value.values.every(
+                  (member) => member.direct || member.partial,
+                )
+              ? VerificationStatus.partialTrusted
+              : VerificationStatus.notTrusted,
+      };
     });
   }
 

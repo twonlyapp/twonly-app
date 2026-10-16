@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT media_send_counter, media_received_counter FROM contacts WHERE user_id = 7",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_send_counter",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "media_send_counter"
+          }
+        }
+      },
+      {
+        "name": "media_received_counter",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "media_received_counter"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "171f02051bfe0b07af544652524c7d56665033c64c180972ebd3bf44cbc34a54"
+}

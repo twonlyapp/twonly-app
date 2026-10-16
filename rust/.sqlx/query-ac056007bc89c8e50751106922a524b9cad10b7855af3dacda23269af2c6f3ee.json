@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE notification_outbox SET cleared_at = ?\n                   WHERE message_id = ? AND kind = 'story' AND cleared_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "ac056007bc89c8e50751106922a524b9cad10b7855af3dacda23269af2c6f3ee"
+}

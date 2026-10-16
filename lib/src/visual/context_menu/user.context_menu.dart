@@ -17,13 +17,16 @@ class UserContextMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final navigator = Navigator.of(context);
+    // `late` so the ancestor lookup only runs if the menu is actually
+    // opened, rather than once per row on every rebuild.
+    late final navigator = Navigator.of(context);
     return ContextMenu(
       minWidth: 150,
-      items: [
+      items: () => [
         ContextMenuItem(
           title: context.lang.contextMenuUserProfile,
-          onTap: () => navigator.context.push(Routes.profileContact(contact.userId)),
+          onTap: () =>
+              navigator.context.push(Routes.profileContact(contact.userId)),
           icon: FontAwesomeIcons.user,
         ),
       ],

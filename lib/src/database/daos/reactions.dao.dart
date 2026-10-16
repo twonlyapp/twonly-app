@@ -108,6 +108,14 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
         .watch();
   }
 
+  Stream<List<Reaction>> watchReactionsForMessages(Set<String> messageIds) {
+    if (messageIds.isEmpty) return Stream.value(const []);
+    return (select(reactions)
+          ..where((reaction) => reaction.messageId.isIn(messageIds))
+          ..orderBy([(reaction) => OrderingTerm.desc(reaction.createdAt)]))
+        .watch();
+  }
+
   Stream<Reaction?> watchLastReactions(String groupId) {
     final query =
         (select(reactions)).join(
@@ -119,10 +127,44 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
               ),
             ],
           )
-          ..where(messages.groupId.equals(groupId))
+          ..where(
+            messages.groupId.equals(groupId) &
+                (messages.isStory.equals(false) |
+                    messages.mediaStored.equals(true)),
+          )
           ..orderBy([OrderingTerm.desc(messages.createdAt)])
           ..limit(1);
     return query.map((row) => row.readTable(reactions)).watchSingleOrNull();
+  }
+
+  Stream<List<(String, Reaction)>> watchLatestReactionsByGroup() {
+    return customSelect(
+      '''
+      SELECT reaction_rows.*
+      FROM (
+        SELECT reactions.*,
+               messages.group_id AS reaction_group_id,
+               ROW_NUMBER() OVER (
+                 PARTITION BY messages.group_id
+                 ORDER BY messages.created_at DESC, reactions.created_at DESC
+               ) AS reaction_rank
+        FROM reactions
+        INNER JOIN messages ON messages.message_id = reactions.message_id
+        WHERE messages.is_story = 0 OR messages.media_stored = 1
+      ) AS reaction_rows
+      WHERE reaction_rank = 1
+      ''',
+      readsFrom: {reactions, messages},
+    ).watch().map(
+      (rows) => rows
+          .map(
+            (row) => (
+              row.read<String>('reaction_group_id'),
+              reactions.map(row.data),
+            ),
+          )
+          .toList(),
+    );
   }
 
   Stream<List<(Reaction, Contact?)>> watchReactionWithContacts(

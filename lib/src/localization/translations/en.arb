@@ -1,4 +1,5 @@
 {
+  "subscriptionAllApps": "Access to all apps",
   "@@locale": "en",
   "registerSlogan": "Stay in touch privately.",
   "onboardingWelcomeTitle": "Welcome to twonly!",
@@ -16,6 +17,8 @@
   "registerSubmitButton": "Register now!",
   "chatsTapToSend": "Click to send your first image",
   "cameraPreviewSendTo": "Send to",
+  "cameraPermissionsBody": "twonly needs access to the camera and microphone.",
+  "cameraPermissionsRequestButton": "Request permissions",
   "shareImageTitle": "Share with",
   "shareImageBestFriends": "Best friends",
   "shareImagePinnedContacts": "Pinnded",
@@ -30,6 +33,10 @@
   "startNewChatNewContact": "New Contact",
   "shareImageAllUsers": "All contacts",
   "shareImageShowArchived": "Show archived users",
+  "shareImageSendToWidget": "Send to home-screen widget",
+  "shareImageWidgetExplainerTitle": "Send to a widget",
+  "shareImageWidgetExplainerBody": "Sends the photo straight to your friends' home-screen widgets. Only friends who allow them can be selected.",
+  "shareImageWidgetExplainerDismiss": "Got it",
   "searchUsernameInput": "Username",
   "addFriendTitle": "Add friends",
   "searchUserNamePending": "Request pending",
@@ -49,6 +56,7 @@
   "messageSendState_Received": "Received",
   "messageSendState_Opened": "Opened",
   "messageSendState_Send": "Sent",
+  "messageSendState_Delivered": "Received",
   "messageSendState_Sending": "Sending",
   "messageSendState_TapToLoad": "Tap to load",
   "messageSendState_Loading": "Downloading",
@@ -62,7 +70,37 @@
   "settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle": "If you receive the same media in multiple chats, opening one marks all others as opened.",
   "settingsPreSelectedReactionsError": "A maximum of 12 reactions can be selected.",
   "settingsProfile": "Profile",
-  "settingsStorageData": "Data and storage",
+  "settingsStorageData": "Memories & Storage",
+  "memoryDetailsTitle": "Details",
+  "memoryDetailsCapturedAt": "Captured",
+  "memoryDetailsLocation": "Location",
+  "memoryDetailsLocationPending": "Finding capture location…",
+  "memoryDetailsNoLocation": "No location recorded",
+  "memoryDetailsOpenMap": "Open in map",
+  "memoryLocationTitle": "Store location in Memories",
+  "memoryLocationSubtitle": "Capture coordinates for Memories and gallery exports. These coordinates are never sent to contacts.",
+  "locationStickerSettingTitle": "Location sticker",
+  "locationStickerSettingSubtitle": "Shows your city or country, or coordinates if no place name is available. Your location is shared only when you select the location filter.",
+  "locationStickerLoading": "Finding your location…",
+  "liveLocationMenu": "Location",
+  "liveLocationTitle": "Live location",
+  "liveLocationExplanation": "Share your current location in this chat. Everyone in this group can see it. Only your latest location is kept.",
+  "liveLocationDuration": "Share for",
+  "liveLocationMinutes": "{count} minutes",
+  "@liveLocationMinutes": {"placeholders": {"count": {"type": "int"}}},
+  "liveLocationHours": "{count, plural, =1{1 hour} other{{count} hours}}",
+  "@liveLocationHours": {"placeholders": {"count": {"type": "int"}}},
+  "liveLocationStart": "Start sharing",
+  "liveLocationStop": "Stop sharing",
+  "liveLocationAlreadySharing": "Your location is already being shared in this chat.",
+  "liveLocationNotificationBody": "Your current location is being shared. Tap Stop sharing to end it.",
+  "liveLocationStartFailed": "Could not start sharing. Allow location and notifications, then try again.",
+  "liveLocationStopFailed": "Could not stop sharing. Please try again.",
+  "liveLocationWaiting": "Waiting for location…",
+  "liveLocationEnded": "Location sharing ended",
+  "liveLocationLastUpdate": "Last update: {time}",
+  "@liveLocationLastUpdate": {"placeholders": {"time": {"type": "String"}}},
+  "memoryLocationPermissionDenied": "Precise location access was not granted. The setting remains disabled.",
   "settingsStorageDataStoreInGTitle": "Store in Gallery",
   "settingsStorageDataMediaAutoDownload": "Media auto-download",
   "settingsStorageDataAutoDownMobile": "When using mobile data",
@@ -87,13 +125,20 @@
       "len": {}
     }
   },
+  "publicProfilePrivacyTitle": "Public Profile",
+  "publicProfilePrivacyDescription": "Choose who can see information about your profile.",
+  "publicProfileTwonlyScore": "twonly Score",
+  "contactTwonlyScoreDescription": "The twonly Score reflects a person's activity on twonly. It is calculated from several factors, such as how many photos and videos they send and receive.",
+  "contactJoinedToday": "Joined today",
+  "contactJoinedDaysAgo": "{days, plural, =1{Joined 1 day ago} other{Joined {days} days ago}}",
+  "contactJoinedMonthsAgo": "{months, plural, =1{Joined 1 month ago} other{Joined {months} months ago}}",
+  "contactJoinedYearsAgo": "{years, plural, =1{Joined 1 year ago} other{Joined {years} years ago}}",
+  "privacyVisibilityNobody": "Nobody",
+  "privacyVisibilityOnlyContacts": "Only Contacts",
+  "privacyVisibilityEveryone": "Everyone",
   "settingsNotification": "Notification",
   "settingsNotifyPermission": "Notification permissions",
   "settingsNotifyPermissionDesc": "Open system settings to allow push notifications.",
-  "settingsNotifyTroubleshooting": "Troubleshooting",
-  "settingsNotifyTroubleshootingDesc": "Click here if you have problems receiving push notifications.",
-  "settingsNotifyTroubleshootingNoProblem": "No problem detected",
-  "settingsNotifyTroubleshootingNoProblemDesc": "Press OK to receive a test notification. If you do not receive the test notification, please click on the new menu item that appears after you click “OK”.",
   "settingsNotifyResetTitle": "Reset notification tokens",
   "settingsNotifyResetTitleSubtitle": "Reset your notification tokens if you have problems receiving push notifications.",
   "settingsNotifyResetTitleReset": "Your notification tokens have been reset.",
@@ -101,7 +146,6 @@
   "settingsHelp": "Help",
   "settingsHelpDiagnostics": "Diagnostic protocol",
   "settingsHelpFAQ": "FAQ",
-  "feedbackTooltip": "Give Feedback to improve twonly.",
   "settingsHelpContactUs": "Contact us",
   "settingsHelpVersion": "Version",
   "settingsHelpLicenses": "Licenses (Source-Code)",
@@ -126,6 +170,7 @@
   "hideNewsIcon": "Hide News Icon",
   "settingsHelpTerms": "Terms of Service",
   "settingsAppearanceTheme": "Theme",
+  "settingsAppearanceLanguage": "Language",
   "settingsAccountDeleteAccount": "Delete account",
   "settingsAccountDeleteAccountNoBallance": "Once you delete your account, there is no going back.",
   "settingsAccountDeleteModalTitle": "Are you sure?",
@@ -163,6 +208,7 @@
     }
   },
   "verificationTypeLink": "Verified via link.",
+  "verificationTypeManual": "Safety number compared manually.",
   "verificationTypeMigratedFromOldVersion": "Migrated from old version.",
   "contactViewMessage": "Message",
   "contactNickname": "Nickname",
@@ -224,6 +270,10 @@
   "protectAsARealTwonly": "Send as real twonly!",
   "addDrawing": "Drawing",
   "addEmoji": "Emoji",
+  "drawingColorPicker": "Pick color from image",
+  "createStickerFromImage": "Create sticker from image",
+  "stickerSelectionHint": "Move or resize the frame around the part you want as a sticker.",
+  "stickerCreating": "Creating sticker…",
   "toggleFlashLight": "Toggle the flash light",
   "userFound": "{username} found",
   "userFoundBody": "Do you want to connect with {username}?",
@@ -244,36 +294,26 @@
   "errorPlanNotAllowed": "This feature is not available in your current plan.",
   "errorPlanUpgradeNotYearly": "The plan upgrade must be paid for annually, as the current plan is also billed annually.",
   "upgradeToPaidPlanButton": "Upgrade to {planId}{sufix}",
-  "partOfPaidPlanOf": "You are part of the paid plan of {username}!",
   "partOfPaidPlanFrom": "Part of the paid plan of",
   "subscriptionCurrentPlanBadge": "Current",
   "year": "year",
   "yearly": "Yearly",
   "month": "month",
   "monthly": "Monthly",
-  "proFeature1": "Unlimited media file uploads",
   "proFeature2": "1 additional Plus user",
   "proFeature3": "25GB Memories storage",
   "proFeature4": "Restore flames",
-  "familyFeature1": "Unlimited media file uploads",
   "familyFeature2": "4 additional Plus user",
   "familyFeature3": "50GB Memories storage",
   "familyFeature4": "Restore flames",
   "freeFeature1": "10 Media file uploads per day",
-  "plusFeature1": "Unlimited media file uploads",
   "plusFeature2": "Additional features (coming-soon)",
   "manageAdditionalUsers": "Manage additional users",
   "open": "Open",
   "buy": "Buy",
   "autoRenewal": "Auto renewal",
   "additionalUsersList": "Your additional users",
-  "galleryDelete": "Delete file",
-  "galleryExport": "Export to gallery",
   "galleryExportSuccess": "Successfully saved in the Gallery.",
-  "gallerySelectAll": "Select all",
-  "galleryDeselectAll": "Deselect all",
-  "galleryFavorite": "Favorite",
-  "galleryUnfavorite": "Unfavorite",
   "galleryCancel": "Cancel",
   "memoriesEmpty": "As soon as you save pictures or videos, they end up here in your memories.",
   "deleteTitle": "Are you sure?",
@@ -282,7 +322,6 @@
   "deleteOkBtnForMe": "Delete for me",
   "deleteOnlyForMe": "Delete only for me",
   "deleteImageTitle": "Are you sure?",
-  "deleteImageBody": "The image will be irrevocably deleted.",
   "deleteMemoriesBody": "{count, plural, =1 {The image will be irrevocably deleted.} other {The {count} images will be irrevocably deleted.}}",
   "@deleteMemoriesBody": {
     "placeholders": {
@@ -308,16 +347,7 @@
   "memoriesMenuDelete": "Delete completely",
   "memoriesMenuDeleteLocal": "Delete locally",
   "settingsBackup": "Backup",
-  "backupPending": "Pending",
-  "backupFailed": "Failed",
-  "backupSuccess": "Success",
-  "backupTwonlySafeDesc": "Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.",
   "backupNoPasswordRecovery": "Due to twonly's security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.",
-  "backupIdentityHeader": "Identity",
-  "backupArchiveHeader": "Contacts & Messages",
-  "backupLastBackupDate": "Last backup",
-  "backupLastBackupSize": "Backup size",
-  "backupLastBackupResult": "Result",
   "backupInsecurePassword": "Insecure password",
   "backupInsecurePasswordDesc": "The chosen password is very insecure and can therefore easily be guessed by attackers. Please choose a secure password.",
   "backupInsecurePasswordOk": "Continue anyway",
@@ -385,6 +415,7 @@
   "selectMembers": "Select members",
   "selectGroupName": "Select group name",
   "groupNameInput": "Group name",
+  "contactGroupNamePlaceholder": "Enter name here",
   "groupMembers": "Members",
   "addMember": "Add member",
   "createGroup": "Create group",
@@ -421,7 +452,9 @@
   "groupActionYou": "you",
   "groupActionYour": "your",
   "notificationFillerIn": "in",
+  "notificationLiveLocation": "shared their live location{inGroup}.",
   "notificationText": "sent a message{inGroup}.",
+  "notificationTextMessages": "sent {count} messages{inGroup}.",
   "notificationTwonly": "sent a twonly{inGroup}.",
   "notificationVideo": "sent a video{inGroup}.",
   "notificationImage": "sent an image{inGroup}.",
@@ -438,7 +471,6 @@
   "notificationReactionToAudio": "has reacted with {reaction} to your audio message.",
   "notificationResponse": "has responded{inGroup}.",
   "notificationCategoryMessageTitle": "Messages",
-  "notificationCategoryMessageDesc": "Messages from other users.",
   "notificationConnectionFallback": "You may have new messages.",
   "groupContextMenuDeleteGroup": "This will permanently delete all messages in this chat.",
   "groupYouAreNowLongerAMember": "You are no longer part of this group.",
@@ -466,6 +498,21 @@
   "avatarSaveChanges": "Would you like to save the changes?",
   "avatarSaveChangesStore": "Save",
   "avatarSaveChangesDiscard": "Discard",
+  "contactAvatarTitle": "Avatar",
+  "contactAvatarPhoto": "Photo avatar",
+  "contactAvatarIllustrated": "Illustrated avatar",
+  "customAvatarSvgTab": "Public avatar",
+  "customAvatarCustomize": "Customize",
+  "customAvatarPhotoTab": "Personal avatar",
+  "customAvatarExplanation": "Replaces your public avatar for the selected audience.",
+  "customAvatarCreate": "Choose photo",
+  "customAvatarReplace": "Change photo",
+  "customAvatarRemove": "Remove",
+  "customAvatarAudience": "Who can see the photo avatar?",
+  "customAvatarAcceptedOnly": "Contacts only",
+  "customAvatarEveryone": "Everyone",
+  "customAvatarChooseSource": "Choose avatar photo",
+  "customAvatarCreateFailed": "The photo avatar could not be created.",
   "inProcess": "In process",
   "draftMessage": "Draft",
   "voiceMessageSlideToCancel": "Slide to cancel",
@@ -511,11 +558,27 @@
   "gotLinkFromFriend": "Yes, I got the link from my friend!",
   "couldNotVerifyUsername": "Could not verify {username}",
   "linkPubkeyDoesNotMatch": "The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!",
+  "verificationMissingSession": "There is no secure session stored for this contact yet. Exchange a message first, then ask the person to share a new verification link.",
+  "verificationLinkInvalidTitle": "Invalid verification link",
+  "verificationLinkInvalid": "The verification link is incomplete or invalid. Ask the person to share it again from their twonly profile.",
+  "verificationLinkErrorTitle": "Verification unavailable",
+  "verificationLinkError": "twonly could not check this verification link. Please try again.",
+  "verificationOwnProfileTitle": "This is your profile",
+  "verificationOwnProfile": "You scanned your own verification code.",
   "startWithCameraOpen": "Start with camera open",
   "showImagePreviewWhenSending": "Display image preview when selecting recipients",
   "verifiedPublicKey": "The identity of {username} has been successfully verified.",
   "memoriesAYearAgo": "One year ago",
   "memoriesXYearsAgo": "{years} years ago",
+  "memoriesAMonthAgo": "One month ago",
+  "memoriesXMonthsAgo": "{months} months ago",
+  "@memoriesXMonthsAgo": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
   "migrationOfMemories": "Migration of media files: {open} still to be processed.",
   "autoStoreAllSendUnlimitedMediaFiles": "Save all sent media",
   "autoStoreAllSendUnlimitedMediaFilesSubtitle": "If you enable this option, all images you send will be saved as long as they were sent with an infinite countdown and not in twonly mode.",
@@ -542,6 +605,36 @@
   "verificationBadgeGreenDesc": "A contact you have *personally verified* using the QR code.",
   "verificationBadgeYellowDesc": "A contact who has been verified by at least one of *your contacts*.",
   "verificationBadgeRedDesc": "A contact whose identity has *not* yet been verified.",
+  "manualVerificationOpen": "Safety numbers",
+  "manualVerificationTitle": "Compare safety number",
+  "manualVerificationMarkVerified": "Mark as verified",
+  "manualVerificationDescription": "Compare this safety number with {username}. If both devices show the same number, your end-to-end encryption is verified.",
+  "@manualVerificationDescription": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "manualVerificationMissingKeyTitle": "No safety number available",
+  "manualVerificationMissingKeyDescription": "There is no Signal session with {username} yet. Exchange a message first, then try again.",
+  "@manualVerificationMissingKeyDescription": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "manualVerificationLoadFailed": "The safety number could not be loaded.",
+  "manualVerificationRetry": "Try again",
+  "manualVerificationSuccess": "You compared the safety number with {username} and confirmed their identity.",
+  "@manualVerificationSuccess": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
   "scanNow": "Scan now",
   "qrScannerVerifyHint": "To verify, the other person must open their QR code (Chat Lists > QR code button at the bottom right)",
   "qrScannerVerifyUserHint": "To verify, {username} must open their QR code (Chat Lists > QR code button at the bottom right)",
@@ -711,6 +804,13 @@
   "recoverErrorUnknown": "An unknown error occurred. Please try again.",
   "recoverSuccessTitle": "Backup successfully recovered.",
   "recoverSuccessBody": "Click here to open the app again",
+  "recoverProgressTitle": "Restoring your backup",
+  "recoverProgressSubtitle": "This might take a moment, please keep the app open.",
+  "recoverProgressResolvingAccount": "Verifying account",
+  "recoverProgressRestoringIdentity": "Restoring your identity",
+  "recoverProgressDownloadingArchive": "Downloading and decrypting messages and contacts",
+  "recoverProgressExtractingData": "Extracting data",
+  "recoverProgressFinishing": "Finishing up",
   "iosRecoveryWelcomeBack": "Welcome Back",
   "iosRecoveryPrompt": "We detected a previously secured twonly identity on this device. Would you like to automatically download and restore your contacts, messages, and settings from your cloud archive?",
   "iosRecoveryNoBackupFound": "No backup archive could be retrieved from the server for this device.\n\nError: {error}\n\nPlease proceed to register a new twonly account.",
@@ -722,13 +822,7 @@
   "registerNewAccount": "Register New Account",
   "tryRestoreAgain": "Try Restore Again",
   "registeringNewAccount": "Registering new account",
-  "createShortcut": "Create shortcut",
-  "editShortcut": "Edit shortcut",
-  "deleteShortcut": "Delete shortcut",
-  "deleteShortcutBody": "Are you sure you want to delete this shortcut?",
-  "updateShortcut": "Update shortcut",
   "selectEmoji": "Select Emoji",
-  "errorEmojiUsedOrInvalid": "Emoji already used or invalid",
   "subscriptionPledgeSecureTitle": "Secure by Design",
   "subscriptionPledgeSecureDesc": "Your messages and shared moments are fully end-to-end encrypted.",
   "subscriptionPledgeNoAdsTitle": "No Ads or Data selling",
@@ -897,6 +991,8 @@
   "passwordlessRecoveryNoShareStored": "No recovery share stored for this contact.",
   "passwordlessRecoveryEmailSent": "Recovery email sent!",
   "passwordlessRecoveryShareSent": "Recovery share sent!",
+  "passwordlessRecoveryAuthReason": "Authenticate to send your recovery share",
+  "passwordlessRecoveryAuthFailed": "Authentication failed, the recovery share was not sent.",
   "passwordlessRecoveryNetworkError": "Network error, please ensure you have internet",
   "passwordlessRecoveryInvalidEmail": "The email address is invalid.",
   "passwordlessRecoveryResendEmail": "Resend recovery email",
@@ -933,7 +1029,6 @@
   "missingRecoveryContactsCardAction": "Select Contacts",
   "memoriesBackupLimitReached": "Cloud backup limit reached! Please upgrade your plan or free up space.",
   "settingsStorageLocal": "Local storage",
-  "settingsStorageNoCloudBackupTitle": "No Cloud Backup",
   "settingsStorageNoCloudBackupCard": "Back up your memories to the cloud to free up local space and ensure you never lose your pictures. All end-to-end encrypted.",
   "galleryActionSave": "Save",
   "galleryActionExport": "Export",
@@ -952,6 +1047,25 @@
   "settingsStorageCloudOnly": "Cloud only",
   "settingsStorageLocalAndCloud": "Local and cloud",
   "settingsStorageLocalOnly": "Local only",
+  "settingsStorageByChat": "Storage by chat",
+  "settingsStorageTemporaryMediaDescription": "Temporary media files are sent media files that have not been stored. They remain on your device until the receiver has received and opened them.",
+  "settingsStorageNoChats": "No chats found.",
+  "settingsStorageStoredMediaCount": "{count, plural, =1 {1 stored file} other {{count} stored files}}",
+  "@settingsStorageStoredMediaCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "settingsStorageTemporaryMediaCount": "{count, plural, =1 {1 temporary file} other {{count} temporary files}}",
+  "@settingsStorageTemporaryMediaCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "settingsStorageDisableBackupTitle": "Disable Backup?",
   "settingsStorageDisableBackupBody": "This will delete all backed up memories from the cloud. There {count, plural, =1 {is *1 image*} other {are *{count} images*}} only stored in the cloud that will be *permanently lost*. Are you sure you want to proceed?",
   "@settingsStorageDisableBackupBody": {
@@ -972,16 +1086,26 @@
     }
   },
   "settingsShowRestoreFlameTitle": "Show flame restore warning",
-  "contactLabelsTitle": "Contact Labels",
-  "contactLabelsSubtitleEmpty": "No labels selected",
-  "contactLabelsMaxLimit": "Maximum 3 labels per contact",
-  "createLabel": "Create new label",
-  "editLabel": "Edit label",
-  "deleteLabel": "Delete label",
-  "deleteLabelConfirmation": "Are you sure you want to delete this label? It will be removed from all contacts.",
-  "labelNameHint": "Label name",
-  "labelTextColor": "Text color",
-  "labelBackgroundColor": "Background color",
+  "contactGroupsTitle": "Contact Groups",
+  "contactGroupsSubtitleEmpty": "No visible contact groups selected",
+  "createContactGroup": "Create contact group",
+  "editContactGroup": "Edit contact group",
+  "deleteContactGroup": "Delete contact group",
+  "deleteContactGroupConfirmation": "Are you sure you want to delete this contact group? It will be removed from all contacts and groups.",
+  "contactGroupTextColor": "Text color",
+  "contactGroupBackgroundColor": "Background color",
+  "contactGroupNoBackground": "No background",
+  "contactGroupFeatures": "Features",
+  "contactGroupShowAsLabel": "Show as visible label",
+  "contactGroupShowAsLabelSubtitle": "Display this contact group next to its contacts.",
+  "contactGroupShowAsShortcut": "Show as shortcut",
+  "contactGroupShowAsShortcutSubtitle": "Use its emoji to select all members when sharing.",
+  "contactGroupShortcutNeedsEmoji": "Select an emoji before enabling the shortcut.",
+  "contactGroupMembers": "Members",
+  "contactGroupLabelFeature": "Visible label",
+  "contactGroupShortcutFeature": "Shortcut",
+  "contactGroupSettings": "Edit contact group",
+  "save": "Save",
   "customColor": "Custom Color",
   "hue": "Hue",
   "saturation": "Saturation",
@@ -1000,7 +1124,6 @@
   "backupCloudSectionTitle": "Backup Your Data",
   "backupCloudSectionDesc": "Backup your content so nothing gets lost.",
   "backupCloudContactsMessages": "Contacts & Messages",
-  "backupCloudFreeActive": "Free Active",
   "backupCloudImagesMedia": "Images & Media",
   "backupCloudProBadge": "Pro",
   "memoriesAddingToFavorites": "Adding to favorites...",
@@ -1011,17 +1134,148 @@
   "fileLimitReachedDetail": "This file is {size}, but your plan allows at most {limit} per send.",
   "@fileLimitReachedDetail": {
     "placeholders": {
-      "size": { "type": "String" },
-      "limit": { "type": "String" }
+      "size": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
     }
   },
   "fileLimitReachedDetailNoSize": "Your plan allows at most {limit} per send.",
   "@fileLimitReachedDetailNoSize": {
     "placeholders": {
-      "limit": { "type": "String" }
+      "limit": {
+        "type": "String"
+      }
     }
   },
   "fileLimitReachedHint": "Record a shorter video and send it again.",
   "fileLimitReachedHintFree": "Record a shorter video, or upgrade your plan to send larger files.",
-  "fileLimitReachedUpgrade": "Upgrade plan"
+  "fileLimitReachedUpgrade": "Upgrade plan",
+  "contactGroupUsedByWidget": "Home screen widget",
+  "contactGroupAddWidgetSubtitle": "Add a widget for this contact group.",
+  "contactGroupWidgetTutorialTitle": "Add a home screen widget",
+  "contactGroupWidgetTutorialAndroidStep1": "Touch and hold an empty area on your home screen, then tap Widgets.",
+  "contactGroupWidgetTutorialAndroidStep2": "Find twonly, then drag its widget onto your home screen.",
+  "contactGroupWidgetTutorialAndroidStep3": "Select this contact group in the setup screen, then tap Save.",
+  "contactGroupWidgetTutorialIosStep1": "Touch and hold an empty area on your Home Screen, then tap Edit and Add Widget.",
+  "contactGroupWidgetTutorialIosStep2": "Find twonly, choose a size, then tap Add Widget.",
+  "contactGroupWidgetTutorialIosStep3": "Touch and hold the widget, tap Edit Widget, then select this contact group.",
+  "contactGroupUsedByWidgetSubtitle": "{count, plural, =1{A widget on your home screen shows photos from this group.} other{{count} widgets on your home screen show photos from this group.}}",
+  "@contactGroupUsedByWidgetSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contactGroupDeleteBlockedByWidget": "{count, plural, =1{This contact group is used by a widget on your home screen. Remove that widget first, then you can delete the group.} other{This contact group is used by {count} widgets on your home screen. Remove those widgets first, then you can delete the group.}}",
+  "@contactGroupDeleteBlockedByWidget": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "webxdcStoreMenu": "App",
+  "webxdcStoreTitle": "Add an app",
+  "webxdcStoreEmpty": "No apps are available yet.",
+  "webxdcStoreOffline": "The app list could not be loaded. Check your connection and try again.",
+  "webxdcStoreFailed": "The app could not be added to this chat.",
+  "webxdcStoreAlreadyAdded": "Already added to this chat",
+  "webxdcChatApps": "Chat apps",
+  "webxdcChatAppsEmpty": "No one-time apps have been added to this chat yet.",
+  "webxdcUnavailable": "This app could not be loaded.",
+  "webxdcDeleteConfirm": "Everything this app saved on this device is deleted. Other members keep their own copy.",
+  "webxdcExternalLinkTitle": "Leave twonly?",
+  "webxdcExternalLinkBody": "This link opens outside twonly, in your browser:",
+  "notificationStory": "posted a story.",
+  "settingsNotifyStories": "Story notifications",
+  "settingsNotifyStoriesSubtitle": "Be notified of the first story of the day from contacts you've written with in the last two weeks.",
+  "contactGroupShareStories": "Share stories",
+  "contactGroupShareStoriesSubtitle": "Offer this group as an audience when you post a story.",
+  "contactGroupStoriesFeature": "Stories",
+  "story": "Story",
+  "storyExpired": "Story expired",
+  "storyMine": "My story",
+  "storyDeleteTitle": "Delete story?",
+  "storyDeleteBody": "This removes it from your story.",
+  "storyDelete": "Delete",
+  "storyDeleteFailed": "Could not delete it. Try again in a moment.",
+  "shareImageStory": "Story",
+  "shareImageStoryAudience": "{count, plural, =1{Reaches 1 contact} other{Reaches {count} contacts}}",
+  "@shareImageStoryAudience": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareImageStoryUnavailable": "twonly-protected media can't be posted as a story.",
+  "shareImageStoryAll": "All contacts",
+  "shareImageStoryNewGroup": "New story group",
+  "shareImageStoryFailed": "Could not post the story. One send can reach at most {max} people.",
+  "@shareImageStoryFailed": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationStoryReply": "has replied to your story.",
+  "notificationStoryReaction": "has reacted with {reaction} to your story.",
+  "notificationStoredStory": "has saved your story.",
+  "storyViews": "{count, plural, =0{No views yet} =1{1 view} other{{count} views}}",
+  "@storyViews": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sticker": "Sticker",
+  "stickers": "Stickers",
+  "createSticker": "Create sticker",
+  "stickerPickFromGallery": "Gallery",
+  "noStickersYet": "Create your first sticker from a photo.",
+  "stickerAdded": "Sticker saved",
+  "stickerAlreadySaved": "This sticker is already saved",
+  "stickerCreateFailed": "The sticker could not be created.",
+  "stickerSaveFailed": "The sticker could not be saved.",
+  "notificationSticker": "sent a sticker{inGroup}.",
+  "storeSticker": "Save sticker",
+  "removeSticker": "Remove from collection",
+  "deleteSticker": "Delete sticker",
+  "rotateSticker": "Rotate sticker",
+  "stickerRotateFailed": "The sticker could not be rotated.",
+  "releaseNotesTitle": "What's new",
+  "releaseNotesIntroduction": "The biggest twonly update yet is here. Here's a quick look at what's new.",
+  "releaseNotesAlsoImproved": "Also improved",
+  "releaseNotesStickers": "Stickers",
+  "releaseNotesStickersDescription": "Turn your photos into stickers and share them in chats.",
+  "releaseNotesWidgets": "Widgets",
+  "releaseNotesWidgetsDescription": "See fresh photos from your favorite people right on your home screen.",
+  "releaseNotesStories": "Stories",
+  "releaseNotesStoriesDescription": "Share moments with your contacts for 24 hours.",
+  "releaseNotesMiniGames": "Mini games in chats & groups",
+  "releaseNotesMiniGamesDescription": "Play small games together, right inside your conversations.",
+  "releaseNotesMemoriesMap": "Memories on the map",
+  "releaseNotesMemoriesMapDescription": "Save locations with your photos and videos in Memories and explore them on a map. Enable this in Settings > Memories & Storage.",
+  "releaseNotesReliableMessages": "Better message and push reliability",
+  "releaseNotesImprovedUi": "Improved interface",
+  "releaseNotesCustomAvatars": "Custom avatars",
+  "releaseNotesArabic": "Arabic language (experimental)",
+  "memoriesMapTitle": "Memories map",
+  "memoriesMapNoLocations": "No saved memories have a recorded location yet.",
+  "memoriesMapNoResults": "No memories in this area. Move or zoom the map to explore another place.",
+  "memoriesMapLoadError": "Could not load the map. Check your connection and try again.",
+  "memoriesMapVisibleCount": "{count, plural, =1 {1 memory in this area} other {{count} memories in this area}}",
+  "@memoriesMapVisibleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

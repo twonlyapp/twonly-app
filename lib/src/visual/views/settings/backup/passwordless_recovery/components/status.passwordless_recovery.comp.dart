@@ -58,7 +58,9 @@ class PasswordLessRecoveryStatus extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          context.lang.passwordlessRecoveryStatusEnabled(trustedFriendsCount),
+                          context.lang.passwordlessRecoveryStatusEnabled(
+                            trustedFriendsCount,
+                          ),
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: context.color.onSurfaceVariant,

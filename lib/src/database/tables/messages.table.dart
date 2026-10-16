@@ -3,10 +3,20 @@ import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 
-enum MessageType { media, text, contacts, restoreFlameCounter, askAboutUser }
+enum MessageType {
+  media,
+  text,
+  contacts,
+  restoreFlameCounter,
+  askAboutUser,
+  webxdcApp,
+}
 
 @DataClassName('Message')
-@TableIndex(name: 'idx_messages_group_id_created_at', columns: {#groupId, #createdAt})
+@TableIndex(
+  name: 'idx_messages_group_id_created_at',
+  columns: {#groupId, #createdAt},
+)
 class Messages extends Table {
   TextColumn get groupId =>
       text().references(Groups, #groupId, onDelete: KeyAction.cascade)();
@@ -37,6 +47,11 @@ class Messages extends Table {
 
   BoolColumn get isDeletedFromSender =>
       boolean().withDefault(const Constant(false))();
+  BoolColumn get isWidgetMedia =>
+      boolean().withDefault(const Constant(false))();
+
+  /// A story item: hidden from the chat until saved, gone 24h after sending.
+  BoolColumn get isStory => boolean().withDefault(const Constant(false))();
 
   DateTimeColumn get openedAt => dateTime().nullable()();
   DateTimeColumn get openedByAll => dateTime().nullable()();

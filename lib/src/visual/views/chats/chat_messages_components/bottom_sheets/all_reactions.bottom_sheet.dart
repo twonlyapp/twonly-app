@@ -6,7 +6,6 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -56,15 +55,16 @@ class _AllReactionsViewState extends State<AllReactionsView> {
       emoji,
       true,
     );
-    await sendCipherTextToGroup(
-      widget.message.groupId,
-      pb.EncryptedContent(
+    await RustApi.sendEncryptedContentToGroup(
+      groupId: widget.message.groupId,
+      content: pb.EncryptedContent(
         reaction: pb.EncryptedContent_Reaction(
           targetMessageId: widget.message.messageId,
           emoji: emoji,
           remove: true,
         ),
-      ),
+      ).writeToBuffer(),
+      onlySendIfNoReceiptsAreOpen: false,
     );
   }
 
@@ -80,10 +80,10 @@ class _AllReactionsViewState extends State<AllReactionsView> {
             topRight: Radius.circular(32),
           ),
           color: context.color.surface,
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
               blurRadius: 10.9,
-              color: Color.fromRGBO(0, 0, 0, 0.1),
+              color: context.color.shadow.withValues(alpha: 0.1),
             ),
           ],
         ),
@@ -93,7 +93,7 @@ class _AllReactionsViewState extends State<AllReactionsView> {
               margin: const EdgeInsets.all(30),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
-                color: Colors.grey,
+                color: context.color.outline,
               ),
               height: 3,
               width: 60,

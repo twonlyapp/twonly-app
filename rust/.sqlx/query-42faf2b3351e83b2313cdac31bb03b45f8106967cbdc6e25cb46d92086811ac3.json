@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE contacts\n        SET recovery_last_heartbeat = CASE\n            WHEN ? THEN CAST(strftime('%s', 'now') AS INTEGER)\n            ELSE NULL\n        END\n        WHERE user_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "42faf2b3351e83b2313cdac31bb03b45f8106967cbdc6e25cb46d92086811ac3"
+}

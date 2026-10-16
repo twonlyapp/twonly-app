@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
@@ -20,9 +21,7 @@ class MainCameraPreview extends StatelessWidget {
     }
     return Positioned.fill(
       child: MediaViewSizingHelper(
-        requiredHeight: 0,
-        additionalPadding: 59,
-        bottomNavigation: Container(),
+        bottomNavigation: const SizedBox.shrink(),
         child: Stack(
           children: [
             Screenshot(
@@ -46,14 +45,6 @@ class MainCameraPreview extends StatelessWidget {
                       child: CameraPreview(
                         key: mainCameraController.cameraPreviewKey,
                         mainCameraController.cameraController!,
-                        child: Stack(
-                          children: [
-                            if (mainCameraController.facePaint != null)
-                              Positioned.fill(
-                                child: mainCameraController.facePaint!,
-                              ),
-                          ],
-                        ),
                       ),
                     ),
                   ),
@@ -98,7 +89,9 @@ class MainCameraPreview extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Colors.white.withAlpha(150),
+                                    color: context.appColor(
+                                      AppColor.mediaForegroundMuted,
+                                    ),
                                   ),
                                 ),
                               ),

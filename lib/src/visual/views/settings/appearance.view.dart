@@ -9,6 +9,14 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/custom_color_picker_dialog.comp.dart';
 import 'package:twonly/src/visual/elements/radio_button.element.dart';
 
+/// Each language is listed in its own name, so it can be found again after
+/// switching to a language the user cannot read.
+const _languageNames = {
+  'en': 'English',
+  'de': 'Deutsch',
+  'ar': 'العربية',
+};
+
 class AppearanceView extends StatefulWidget {
   const AppearanceView({super.key});
 
@@ -73,6 +81,47 @@ class _AppearanceViewState extends State<AppearanceView> {
     }
   }
 
+  Future<void> _showSelectLanguage(BuildContext context) async {
+    final currentLocale = context.read<SettingsChangeProvider>().locale;
+
+    // A record distinguishes picking the system default (null) from dismissing.
+    final selected = await showDialog<({Locale? locale})>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(context.lang.settingsAppearanceLanguage),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioButton<Locale?>(
+                value: null,
+                groupValue: currentLocale,
+                label: context.lang.themeSystemDefault,
+                onChanged: (value) {
+                  Navigator.of(context).pop((locale: value));
+                },
+              ),
+              for (final locale in supportedLocales)
+                RadioButton<Locale?>(
+                  value: locale,
+                  groupValue: currentLocale,
+                  label: _languageName(locale),
+                  onChanged: (value) {
+                    Navigator.of(context).pop((locale: value));
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+    if (selected != null && context.mounted) {
+      await context.read<SettingsChangeProvider>().updateLocale(
+        selected.locale,
+      );
+    }
+  }
+
   Future<void> _showSelectPrimaryColor(BuildContext context) async {
     const presetColors = <Color>[
       Color(0xFF57CC99), // Original Twonly Green
@@ -86,8 +135,9 @@ class _AppearanceViewState extends State<AppearanceView> {
       context: context,
       showDragHandle: true,
       builder: (context) {
-        final activeColor =
-            context.watch<SettingsChangeProvider>().primaryColor;
+        final activeColor = context
+            .watch<SettingsChangeProvider>()
+            .primaryColor;
         return Padding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
           child: Column(
@@ -97,15 +147,14 @@ class _AppearanceViewState extends State<AppearanceView> {
               Text(
                 context.lang.settingsAppearancePrimaryColor,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: presetColors.map((color) {
-                  final isSelected =
-                      activeColor.toARGB32() == color.toARGB32();
+                  final isSelected = activeColor.toARGB32() == color.toARGB32();
                   return GestureDetector(
                     onTap: () async {
                       await context
@@ -126,15 +175,16 @@ class _AppearanceViewState extends State<AppearanceView> {
                           ),
                         ],
                         border: Border.all(
-                          color:
-                              isSelected ? Colors.white : Colors.transparent,
+                          color: isSelected
+                              ? context.appColor(AppColor.mediaForeground)
+                              : Colors.transparent,
                           width: 3,
                         ),
                       ),
                       child: isSelected
-                          ? const Icon(
+                          ? Icon(
                               Icons.check,
-                              color: Colors.white,
+                              color: context.appColor(AppColor.mediaForeground),
                               size: 24,
                             )
                           : null,
@@ -161,7 +211,10 @@ class _AppearanceViewState extends State<AppearanceView> {
                         Colors.red,
                       ],
                     ),
-                    border: Border.all(color: Colors.white24, width: 2),
+                    border: Border.all(
+                      color: context.color.outlineVariant,
+                      width: 2,
+                    ),
                   ),
                 ),
                 title: Text(context.lang.customColor),
@@ -191,21 +244,23 @@ class _AppearanceViewState extends State<AppearanceView> {
     );
   }
 
-  Future<void> toggleShowNewsIcon() async {
+  Future<void> updateHideNewsIcon(bool hideNewsIcon) async {
     await UserService.update((u) {
-      u.showNewsShortcut = !u.showNewsShortcut;
+      u.showNewsShortcut = !hideNewsIcon;
     });
   }
 
-  Future<void> toggleStartWithCameraOpen() async {
+  Future<void> updateStartWithCameraOpen(bool startWithCameraOpen) async {
     await UserService.update((u) {
-      u.startWithCameraOpen = !u.startWithCameraOpen;
+      u.startWithCameraOpen = startWithCameraOpen;
     });
   }
 
-  Future<void> toggleShowImagePreviewWhenSending() async {
+  Future<void> updateShowImagePreviewWhenSending(
+    bool showImagePreviewWhenSending,
+  ) async {
     await UserService.update((u) {
-      u.showShowImagePreviewWhenSending = !u.showShowImagePreviewWhenSending;
+      u.showShowImagePreviewWhenSending = showImagePreviewWhenSending;
     });
   }
 
@@ -220,9 +275,13 @@ class _AppearanceViewState extends State<AppearanceView> {
     }
   }
 
+  String _languageName(Locale locale) =>
+      _languageNames[locale.languageCode] ?? locale.languageCode;
+
   @override
   Widget build(BuildContext context) {
     final selectedTheme = context.watch<SettingsChangeProvider>().themeMode;
+    final selectedLocale = context.watch<SettingsChangeProvider>().locale;
     final primaryColor = context.watch<SettingsChangeProvider>().primaryColor;
 
     return Scaffold(
@@ -232,16 +291,34 @@ class _AppearanceViewState extends State<AppearanceView> {
       body: StreamBuilder<void>(
         stream: userService.onUserUpdated,
         builder: (context, snapshot) {
+          final hideNewsIcon = !userService.currentUser.showNewsShortcut;
+          final startWithCameraOpen =
+              userService.currentUser.startWithCameraOpen;
+          final showImagePreviewWhenSending =
+              userService.currentUser.showShowImagePreviewWhenSending;
+
           return ListView(
             children: [
               ListTile(
                 title: Text(context.lang.settingsAppearanceTheme),
                 subtitle: Text(
                   _themeModeLabel(context, selectedTheme),
-                  style: const TextStyle(color: Colors.grey),
+                  style: TextStyle(color: context.color.onSurfaceVariant),
                 ),
                 onTap: () async {
                   await _showSelectThemeMode(context);
+                },
+              ),
+              ListTile(
+                title: Text(context.lang.settingsAppearanceLanguage),
+                subtitle: Text(
+                  selectedLocale == null
+                      ? context.lang.themeSystemDefault
+                      : _languageName(selectedLocale),
+                  style: TextStyle(color: context.color.onSurfaceVariant),
+                ),
+                onTap: () async {
+                  await _showSelectLanguage(context);
                 },
               ),
               ListTile(
@@ -252,7 +329,10 @@ class _AppearanceViewState extends State<AppearanceView> {
                   decoration: BoxDecoration(
                     color: primaryColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1.5),
+                    border: Border.all(
+                      color: context.color.outlineVariant,
+                      width: 1.5,
+                    ),
                   ),
                 ),
                 onTap: () async {
@@ -261,27 +341,34 @@ class _AppearanceViewState extends State<AppearanceView> {
               ),
               ListTile(
                 title: Text(context.lang.hideNewsIcon),
-                onTap: toggleShowNewsIcon,
+                onTap: () async {
+                  await updateHideNewsIcon(!hideNewsIcon);
+                },
                 trailing: Switch.adaptive(
-                  value: !userService.currentUser.showNewsShortcut,
-                  onChanged: (a) => toggleShowNewsIcon(),
+                  value: hideNewsIcon,
+                  onChanged: updateHideNewsIcon,
                 ),
               ),
               ListTile(
                 title: Text(context.lang.startWithCameraOpen),
-                onTap: toggleStartWithCameraOpen,
+                onTap: () async {
+                  await updateStartWithCameraOpen(!startWithCameraOpen);
+                },
                 trailing: Switch.adaptive(
-                  value: userService.currentUser.startWithCameraOpen,
-                  onChanged: (a) => toggleStartWithCameraOpen(),
+                  value: startWithCameraOpen,
+                  onChanged: updateStartWithCameraOpen,
                 ),
               ),
               ListTile(
                 title: Text(context.lang.showImagePreviewWhenSending),
-                onTap: toggleShowImagePreviewWhenSending,
+                onTap: () async {
+                  await updateShowImagePreviewWhenSending(
+                    !showImagePreviewWhenSending,
+                  );
+                },
                 trailing: Switch.adaptive(
-                  value:
-                      userService.currentUser.showShowImagePreviewWhenSending,
-                  onChanged: (a) => toggleShowImagePreviewWhenSending(),
+                  value: showImagePreviewWhenSending,
+                  onChanged: updateShowImagePreviewWhenSending,
                 ),
               ),
             ],

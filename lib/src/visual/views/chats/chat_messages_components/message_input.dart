@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -13,16 +12,28 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
+import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/ask_for_friend_promotions.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/sparks.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/user_discovery_manual_approval.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_indicator.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
+
+typedef SendChatMessage =
+    void Function({
+      required String text,
+      String? quoteMessageId,
+      LocalSticker? sticker,
+    });
+
+enum ChatInputPanel { none, emoji, additional }
 
 class MessageInput extends StatefulWidget {
   const MessageInput({
@@ -30,27 +41,53 @@ class MessageInput extends StatefulWidget {
     required this.quotesMessage,
     required this.textFieldFocus,
     required this.onMessageSend,
+    required this.onPanelChanged,
+    required this.panel,
+    required this.composing,
     super.key,
   });
 
   final Group group;
   final FocusNode textFieldFocus;
   final Message? quotesMessage;
-  final VoidCallback onMessageSend;
+  final SendChatMessage onMessageSend;
+  final ValueChanged<ChatInputPanel> onPanelChanged;
+  final ChatInputPanel panel;
+
+  /// Published so the chat-open heartbeat can stay quiet while the typing
+  /// announcement is already covering this conversation.
+  final ValueNotifier<bool> composing;
 
   @override
   State<MessageInput> createState() => _MessageInputState();
 }
 
+/// How long after the last keystroke the composer still counts as being typed
+/// in. Longer than [typingIndicatorInterval] so the indicator survives the gap
+/// between two announcements.
+const _composingIdleTimeout = Duration(seconds: 6);
+
+/// How far up the finger has to travel before it sits on the lock pill that
+/// floats above the microphone. The pill is drawn 120px above the button and
+/// is 60px tall, so its lower edge is roughly this far from the grab point.
+const _lockHintOffset = 70.0;
+
+/// How far up the finger has to travel for the recording to actually latch.
+const _lockOffset = 100.0;
+
 enum RecordingState { none, recording, finished }
 
-class _MessageInputState extends State<MessageInput> {
+class _MessageInputState extends State<MessageInput>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final TextEditingController _textFieldController;
   late final RecorderController recorderController;
   final bool isApple = Platform.isIOS;
-  bool _emojiShowing = false;
+  bool _stickerShowing = false;
+  bool _switchingToSystemKeyboard = false;
+  double _emojiPickerHeight = 300;
   bool _showSparks = false;
   bool _audioRecordingLock = false;
+  bool _overLockIcon = false;
   int _currentDuration = 0;
   double _cancelSlideOffset = 0;
   Offset _recordingOffset = Offset.zero;
@@ -59,26 +96,37 @@ class _MessageInputState extends State<MessageInput> {
   DateTime? _lastTextChangeTime;
   int? _contactId;
   Timer? _recordingTimer;
+  Timer? _keyboardTransitionTimer;
   DateTime? _recordingStartTime;
 
-  Future<void> _sendMessage() async {
-    if (_textFieldController.text == '') return;
+  /// Pulses the microphone icon while a recording is running so the composer
+  /// reads as live even when the waveform is off screen.
+  late final AnimationController _recordingBlink;
 
-    await insertAndSendTextMessage(
-      widget.group.groupId,
-      _textFieldController.text,
-      widget.quotesMessage?.messageId,
-    );
+  void _sendMessage() {
+    final text = _textFieldController.text;
+    if (text == '') return;
+    final quoteMessageId = widget.quotesMessage?.messageId;
 
     _textFieldController.clear();
-    widget.onMessageSend();
+    widget.onMessageSend(text: text, quoteMessageId: quoteMessageId);
     setState(() {});
+  }
+
+  void _sendSticker(LocalSticker sticker) {
+    final quoteMessageId = widget.quotesMessage?.messageId;
+    widget.onMessageSend(
+      text: StickerService.fallbackText,
+      sticker: sticker,
+      quoteMessageId: quoteMessageId,
+    );
   }
 
   @override
   void initState() {
     super.initState();
 
+    WidgetsBinding.instance.addObserver(this);
     _textFieldController = TextEditingController();
     _textFieldController.addListener(_handleTextChange);
     if (widget.group.draftMessage != null) {
@@ -86,14 +134,17 @@ class _MessageInputState extends State<MessageInput> {
     }
     widget.textFieldFocus.addListener(_handleTextFocusChange);
     if (userService.currentUser.typingIndicators) {
-      _nextTypingIndicator = Timer.periodic(const Duration(seconds: 1), (
-        _,
-      ) async {
-        if (widget.textFieldFocus.hasFocus &&
-            _lastTextChangeTime != null &&
-            DateTime.now().difference(_lastTextChangeTime!) <=
-                const Duration(seconds: 6)) {
-          await sendTypingIndication(widget.group.groupId, true);
+      _nextTypingIndicator = Timer.periodic(typingIndicatorInterval, (_) {
+        final composing = _isComposing;
+        widget.composing.value = composing;
+        if (composing) {
+          unawaitedRustCall(
+            RustApi.sendTyping(
+              groupId: widget.group.groupId,
+              isTyping: true,
+            ),
+            'sendTyping',
+          );
         }
       });
     }
@@ -102,13 +153,26 @@ class _MessageInputState extends State<MessageInput> {
   }
 
   @override
+  void didUpdateWidget(MessageInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.panel == ChatInputPanel.none) {
+      _keyboardTransitionTimer?.cancel();
+      _switchingToSystemKeyboard = false;
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _textFieldController.removeListener(_handleTextChange);
     widget.textFieldFocus.removeListener(_handleTextFocusChange);
     widget.textFieldFocus.dispose();
     _recordingTimer?.cancel();
+    _keyboardTransitionTimer?.cancel();
+    _recordingBlink.dispose();
     recorderController.dispose();
     _nextTypingIndicator?.cancel();
+    widget.composing.value = false;
 
     // Persist draft message on close
     final draftText = _textFieldController.text;
@@ -127,18 +191,116 @@ class _MessageInputState extends State<MessageInput> {
 
   void _initializeControllers() {
     recorderController = RecorderController();
+    _recordingBlink = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+      lowerBound: 0.25,
+    );
   }
 
+  /// Whether the composer counts as being typed in right now.
+  ///
+  /// The idle window outlives one announcement interval, so a pause to think
+  /// mid-sentence does not drop the indicator on the other side.
+  bool get _isComposing =>
+      widget.textFieldFocus.hasFocus &&
+      _lastTextChangeTime != null &&
+      clock.now().difference(_lastTextChangeTime!) <= _composingIdleTimeout;
+
   void _handleTextChange() {
-    _lastTextChangeTime = clock.now();
+    final now = clock.now();
+    // The periodic announcement is what keeps the indicator alive, but at its
+    // cadence the first keystroke would take seconds to reach the other side.
+    // That one is announced directly and the timer carries it from there.
+    final wasIdle =
+        _lastTextChangeTime == null ||
+        now.difference(_lastTextChangeTime!) > typingIndicatorInterval;
+    _lastTextChangeTime = now;
+    if (wasIdle &&
+        userService.currentUser.typingIndicators &&
+        widget.textFieldFocus.hasFocus) {
+      widget.composing.value = true;
+      unawaitedRustCall(
+        RustApi.sendTyping(groupId: widget.group.groupId, isTyping: true),
+        'sendTyping',
+      );
+    }
   }
 
   void _handleTextFocusChange() {
-    if (widget.textFieldFocus.hasFocus) {
-      setState(() {
-        _emojiShowing = false;
-      });
+    if (widget.textFieldFocus.hasFocus &&
+        widget.panel != ChatInputPanel.none &&
+        !_switchingToSystemKeyboard) {
+      _showSystemKeyboard();
     }
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (!mounted || !_switchingToSystemKeyboard) return;
+    final keyboardHeight = _currentKeyboardHeight();
+    if (keyboardHeight < _emojiPickerHeight * 0.8) return;
+
+    _keyboardTransitionTimer?.cancel();
+    _keyboardTransitionTimer = Timer(
+      const Duration(milliseconds: 80),
+      _finishSystemKeyboardTransition,
+    );
+  }
+
+  void _toggleKeyboard() {
+    if (widget.panel == ChatInputPanel.emoji) {
+      _showSystemKeyboard();
+    } else {
+      _showEmojiPicker();
+    }
+  }
+
+  void _showEmojiPicker() => _showPicker(ChatInputPanel.emoji);
+
+  void _showPicker(ChatInputPanel panel) {
+    _keyboardTransitionTimer?.cancel();
+    final keyboardHeight = _currentKeyboardHeight();
+    setState(() {
+      _switchingToSystemKeyboard = false;
+      if (keyboardHeight > 0) {
+        _emojiPickerHeight = keyboardHeight;
+      }
+      _stickerShowing = false;
+    });
+    widget.onPanelChanged(panel);
+    widget.textFieldFocus.unfocus();
+  }
+
+  double _currentKeyboardHeight() {
+    final view = View.of(context);
+    final keyboardHeight = view.viewInsets.bottom / view.devicePixelRatio;
+    final safeAreaBottom = view.viewPadding.bottom / view.devicePixelRatio;
+    return (keyboardHeight - safeAreaBottom).clamp(0, double.infinity);
+  }
+
+  void _showSystemKeyboard() {
+    if (_switchingToSystemKeyboard) return;
+    setState(() => _switchingToSystemKeyboard = true);
+    widget.textFieldFocus.requestFocus();
+
+    // Some platforms only report the final keyboard inset. The fallback still
+    // performs a single picker/keyboard swap instead of following every inset
+    // animation frame.
+    _keyboardTransitionTimer?.cancel();
+    _keyboardTransitionTimer = Timer(
+      const Duration(milliseconds: 700),
+      _finishSystemKeyboardTransition,
+    );
+  }
+
+  void _finishSystemKeyboardTransition() {
+    if (!mounted || !_switchingToSystemKeyboard) return;
+    _keyboardTransitionTimer?.cancel();
+    setState(() {
+      _switchingToSystemKeyboard = false;
+    });
+    widget.onPanelChanged(ChatInputPanel.none);
   }
 
   Future<void> _startAudioRecording() async {
@@ -157,7 +319,9 @@ class _MessageInputState extends State<MessageInput> {
     setState(() {
       _recordingState = RecordingState.recording;
       _currentDuration = 0;
+      _overLockIcon = false;
     });
+    _recordingBlink.repeat(reverse: true);
     _recordingStartTime = clock.now();
     _recordingTimer?.cancel();
     _recordingTimer = Timer.periodic(const Duration(milliseconds: 100), (
@@ -185,9 +349,11 @@ class _MessageInputState extends State<MessageInput> {
   Future<void> _stopAudioRecording() async {
     _recordingTimer?.cancel();
     _recordingTimer = null;
+    _recordingBlink.stop();
     await HapticFeedback.heavyImpact();
     setState(() {
       _audioRecordingLock = false;
+      _overLockIcon = false;
       _cancelSlideOffset = 0;
       _recordingState = RecordingState.none;
     });
@@ -196,10 +362,11 @@ class _MessageInputState extends State<MessageInput> {
 
     if (audioTmpPath == null) return;
 
-    final mediaFileService = await initializeMediaUpload(
-      MediaType.audio,
-      null,
+    final mediaId = await RustApi.initializeMediaUpload(
+      mediaType: MediaType.audio.name,
+      isDraftMedia: false,
     );
+    final mediaFileService = await MediaFileService.fromMediaId(mediaId);
 
     if (mediaFileService == null) return;
 
@@ -207,17 +374,20 @@ class _MessageInputState extends State<MessageInput> {
       ..copySync(mediaFileService.originalPath.path)
       ..deleteSync();
 
-    await insertMediaFileInMessagesTable(
-      mediaFileService,
-      [widget.group.groupId],
+    await RustApi.sendMediaToGroups(
+      mediaId: mediaFileService.mediaFile.mediaId,
+      groupIds: [widget.group.groupId],
+      widgetOnly: false,
     );
   }
 
   Future<void> _cancelAudioRecording() async {
     _recordingTimer?.cancel();
     _recordingTimer = null;
+    _recordingBlink.stop();
     setState(() {
       _audioRecordingLock = false;
+      _overLockIcon = false;
       _cancelSlideOffset = 0;
       _recordingState = RecordingState.none;
     });
@@ -228,7 +398,12 @@ class _MessageInputState extends State<MessageInput> {
     }
   }
 
-  Future<void> _showAdditionalShareModal(BuildContext context) async {
+  Future<void> _toggleAdditionalPicker() async {
+    if (widget.panel == ChatInputPanel.additional) {
+      widget.onPanelChanged(ChatInputPanel.none);
+      return;
+    }
+    _showPicker(ChatInputPanel.additional);
     setState(() {
       _showSparks = false;
     });
@@ -245,17 +420,6 @@ class _MessageInputState extends State<MessageInput> {
         );
       }
     }
-    if (!context.mounted) return;
-    // ignore: inference_failure_on_function_invocation
-    await showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.black,
-      builder: (context) {
-        return ShareAdditionalView(
-          group: widget.group,
-        );
-      },
-    );
   }
 
   Future<void> _loadContactId() async {
@@ -312,16 +476,7 @@ class _MessageInputState extends State<MessageInput> {
                     children: [
                       if (_recordingState != RecordingState.recording)
                         GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _emojiShowing = !_emojiShowing;
-                              if (_emojiShowing) {
-                                widget.textFieldFocus.unfocus();
-                              } else {
-                                widget.textFieldFocus.requestFocus();
-                              }
-                            });
-                          },
+                          onTap: _toggleKeyboard,
                           child: ColoredBox(
                             color: Colors.transparent,
                             child: Padding(
@@ -332,8 +487,10 @@ class _MessageInputState extends State<MessageInput> {
                                 right: 8,
                               ),
                               child: FaIcon(
-                                size: 20,
-                                _emojiShowing
+                                size: widget.panel == ChatInputPanel.emoji
+                                    ? 18
+                                    : 20,
+                                widget.panel == ChatInputPanel.emoji
                                     ? FontAwesomeIcons.keyboard
                                     : FontAwesomeIcons.faceSmile,
                               ),
@@ -373,17 +530,22 @@ class _MessageInputState extends State<MessageInput> {
                                 ),
                                 child: Row(
                                   children: [
-                                    const Padding(
-                                      padding: EdgeInsets.only(
+                                    Padding(
+                                      padding: const EdgeInsets.only(
                                         top: 14,
                                         bottom: 14,
                                         left: 12,
                                         right: 8,
                                       ),
-                                      child: FaIcon(
-                                        FontAwesomeIcons.microphone,
-                                        size: 20,
-                                        color: Colors.red,
+                                      child: FadeTransition(
+                                        opacity: _recordingBlink,
+                                        child: FaIcon(
+                                          FontAwesomeIcons.microphone,
+                                          size: 20,
+                                          color: context.appColor(
+                                            AppColor.recording,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 10),
@@ -392,9 +554,7 @@ class _MessageInputState extends State<MessageInput> {
                                         _currentDuration,
                                       ),
                                       style: TextStyle(
-                                        color: isDarkMode(context)
-                                            ? Colors.white
-                                            : Colors.black,
+                                        color: context.color.onSurface,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -413,8 +573,10 @@ class _MessageInputState extends State<MessageInput> {
                                         onTap: _cancelAudioRecording,
                                         child: Text(
                                           context.lang.voiceMessageCancel,
-                                          style: const TextStyle(
-                                            color: Colors.red,
+                                          style: TextStyle(
+                                            color: context.appColor(
+                                              AppColor.recording,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -426,7 +588,8 @@ class _MessageInputState extends State<MessageInput> {
                           ],
                         ),
                       ),
-                      if (_textFieldController.text == '')
+                      if (_textFieldController.text == '' &&
+                          _recordingState == RecordingState.none)
                         IconButton(
                           icon: const FaIcon(FontAwesomeIcons.camera),
                           onPressed: () {
@@ -444,9 +607,19 @@ class _MessageInputState extends State<MessageInput> {
                         GestureDetector(
                           onLongPressMoveUpdate: (details) {
                             if (_audioRecordingLock) return;
-                            if (_recordingOffset.dy -
-                                    details.localPosition.dy >=
-                                100) {
+                            final upwards =
+                                _recordingOffset.dy - details.localPosition.dy;
+                            // Nudge once when the finger reaches the lock, so
+                            // it is clear the gesture will latch before the
+                            // user commits to it.
+                            if (upwards >= _lockHintOffset && !_overLockIcon) {
+                              _overLockIcon = true;
+                              HapticFeedback.selectionClick();
+                            } else if (upwards < _lockHintOffset &&
+                                _overLockIcon) {
+                              _overLockIcon = false;
+                            }
+                            if (upwards >= _lockOffset) {
                               HapticFeedback.heavyImpact();
                               setState(() {
                                 _audioRecordingLock = true;
@@ -502,9 +675,7 @@ class _MessageInputState extends State<MessageInput> {
                                         borderRadius: BorderRadius.circular(
                                           90,
                                         ),
-                                        color: isDarkMode(context)
-                                            ? Colors.black
-                                            : Colors.white,
+                                        color: context.color.surface,
                                       ),
                                       child: const Center(
                                         child: Column(
@@ -533,7 +704,9 @@ class _MessageInputState extends State<MessageInput> {
                                   right: -20,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: Colors.red,
+                                      color: context.appColor(
+                                        AppColor.recording,
+                                      ),
                                       borderRadius: BorderRadius.circular(90),
                                     ),
                                     width: 60,
@@ -555,7 +728,7 @@ class _MessageInputState extends State<MessageInput> {
                                       color:
                                           (_recordingState ==
                                               RecordingState.recording)
-                                          ? Colors.white
+                                          ? context.color.onError
                                           : null,
                                       (_recordingState == RecordingState.none)
                                           ? FontAwesomeIcons.microphone
@@ -590,15 +763,31 @@ class _MessageInputState extends State<MessageInput> {
                   child: IconButton(
                     icon: const FaIcon(FontAwesomeIcons.plus),
                     padding: const EdgeInsets.all(15),
-                    onPressed: () => _showAdditionalShareModal(context),
+                    color: widget.panel == ChatInputPanel.additional
+                        ? context.color.primary
+                        : null,
+                    onPressed: _toggleAdditionalPicker,
                   ),
                 ),
             ],
           ),
         ),
+        if (widget.panel == ChatInputPanel.additional)
+          ShareAdditionalView(
+            group: widget.group,
+            onDismiss: () => widget.onPanelChanged(ChatInputPanel.none),
+          ),
         Offstage(
-          offstage: !_emojiShowing,
+          offstage: widget.panel != ChatInputPanel.emoji,
           child: EmojiPicker(
+            alternateView: _stickerShowing
+                ? StickerPicker(
+                    onEmojiPressed: () {
+                      setState(() => _stickerShowing = false);
+                    },
+                    onStickerSelected: _sendSticker,
+                  )
+                : null,
             textEditingController: _textFieldController,
             onEmojiSelected: (category, emoji) {
               setState(() {});
@@ -607,13 +796,8 @@ class _MessageInputState extends State<MessageInput> {
               setState(() {});
             },
             config: Config(
-              height: 300,
+              height: _emojiPickerHeight,
               locale: Localizations.localeOf(context),
-              viewOrderConfig: const ViewOrderConfig(
-                top: EmojiPickerItem.searchBar,
-                // middle: EmojiPickerItem.emojiView,
-                bottom: EmojiPickerItem.categoryBar,
-              ),
               emojiTextStyle: TextStyle(
                 fontSize: 24 * (Platform.isIOS ? 1.2 : 1),
               ),
@@ -623,11 +807,10 @@ class _MessageInputState extends State<MessageInput> {
               ),
               searchViewConfig: SearchViewConfig(
                 backgroundColor: context.color.surfaceContainer,
-                buttonIconColor: Colors.white,
+                buttonIconColor: context.color.onSurface,
               ),
               categoryViewConfig: CategoryViewConfig(
                 backgroundColor: context.color.surfaceContainer,
-                dividerColor: Colors.white,
                 indicatorColor: context.color.primary,
                 iconColorSelected: context.color.primary,
                 iconColor: context.color.secondary,
@@ -636,6 +819,10 @@ class _MessageInputState extends State<MessageInput> {
                 backgroundColor: context.color.surfaceContainer,
                 buttonColor: context.color.surfaceContainer,
                 buttonIconColor: context.color.secondary,
+                stickerButtonLabel: context.lang.sticker,
+                onStickerButtonPressed: () {
+                  setState(() => _stickerShowing = true);
+                },
               ),
             ),
           ),

@@ -1,28 +1,25 @@
 import 'dart:async';
 import 'dart:convert' show base64Url, utf8;
 
-import 'package:clock/clock.dart';
-import 'package:collection/collection.dart';
-import 'package:crypto/crypto.dart' hide Hmac;
 import 'package:cryptography_plus/cryptography_plus.dart'
     show Hkdf, Hmac, Mac, SecretBox, SecretKey, Xchacha20;
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:twonly/core/bridge/wrapper.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
+import 'package:twonly/core/user_config.dart' show PasswordlessRecoveryConfig;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart'
     show getContactDisplayName;
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
-import 'package:twonly/src/model/json/userdata.model.dart'
-    show PasswordLessRecovery;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/user.service.dart';
 
 import 'package:twonly/src/utils/keyvalue.dart';
@@ -40,7 +37,7 @@ class PasswordlessRecoveryService {
 
   static String linkPrefix = 'https://me.twonly.eu/r/#';
 
-  static final Set<String> _handledNotificationIds = {};
+  static final Set<String> _openNotificationIds = {};
 
   static Future<void> handleRecoveryLink(String link) async {
     final hashIndex = link.indexOf('#');
@@ -59,25 +56,41 @@ class PasswordlessRecoveryService {
     final notificationId = parts[0];
     final base64Key = parts[1];
 
-    if (_handledNotificationIds.contains(notificationId)) {
+    if (_openNotificationIds.contains(notificationId)) {
       Log.info(
-        'Notification ID $notificationId was already handled, skipping.',
+        'Recovery screen for $notificationId is already open, skipping.',
       );
       return;
     }
-    _handledNotificationIds.add(notificationId);
 
-    final encryptionKey = base64Url.decode(base64Url.normalize(base64Key));
+    final List<int> encryptionKey;
+    try {
+      encryptionKey = base64Url.decode(base64Url.normalize(base64Key));
+    } on FormatException {
+      Log.warn('Recovery link contains an invalid encryption key.');
+      return;
+    }
+    if (notificationId.isEmpty ||
+        parts.length != 2 ||
+        encryptionKey.length != 32) {
+      Log.warn('Recovery link contains invalid recovery data.');
+      return;
+    }
 
     final context = rootNavigatorKey.currentContext;
     if (context != null && context.mounted) {
+      // Suppress duplicate intent deliveries while the screen is open, but
+      // allow reopening after cancellation or a failed submission.
+      _openNotificationIds.add(notificationId);
       unawaited(
-        context.navPush(
-          HelpAFriendPasswordlessRecoveryView(
-            notificationId: notificationId,
-            encryptionKey: encryptionKey,
-          ),
-        ),
+        context
+            .navPush(
+              HelpAFriendPasswordlessRecoveryView(
+                notificationId: notificationId,
+                encryptionKey: encryptionKey,
+              ),
+            )
+            .whenComplete(() => _openNotificationIds.remove(notificationId)),
       );
     }
   }
@@ -128,11 +141,11 @@ class PasswordlessRecoveryService {
         mac: secretBox.mac.bytes,
       );
 
-      final res = await apiService.submitRecoveryShare(
+      await RustApi.submitRecoveryShare(
         notificationId: notificationId,
         encryptedMessage: envelope.writeToBuffer(),
       );
-      return res.isSuccess;
+      return true;
     } catch (e) {
       Log.error('Failed to submit recovery share', error: e);
       return false;
@@ -152,13 +165,16 @@ class PasswordlessRecoveryService {
 
     for (final contact in oldTrustedFriends) {
       try {
-        await sendCipherText(
-          contact.userId,
-          pb.EncryptedContent(
+        await RustApi.sendEncryptedContent(
+          contactId: contact.userId,
+          content: pb.EncryptedContent(
             passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
               delete: true,
             ),
-          ),
+          ).writeToBuffer(),
+          onlySendIfNoReceiptsAreOpen: false,
+          onlyReturnEncryptedData: false,
+          blocking: true,
         );
       } catch (e) {
         Log.error(
@@ -172,7 +188,7 @@ class PasswordlessRecoveryService {
     await twonlyDB.contactsDao.resetRecoveryDataForAllContacts();
     await UserService.update((u) => u.passwordLessRecovery = null);
 
-    final config = PasswordLessRecovery(threshold);
+    final config = PasswordlessRecoveryConfig(threshold: threshold);
     final xchacha20 = Xchacha20.poly1305Aead();
 
     // 2. If enabled, handle the second factor and create serverKey
@@ -295,21 +311,31 @@ class PasswordlessRecoveryService {
       return false;
     }
 
+    // 3.4. Store the shares in the contact's rows
+    // Publish the configuration only after every share is committed. A
+    // connection heartbeat must never see a partially configured helper list
+    // and then postpone sending the remaining shares for 24 hours.
+    await twonlyDB.transaction(() async {
+      for (final contactId in trustedFriendIds) {
+        await twonlyDB.contactsDao.updateContact(
+          contactId,
+          ContactsCompanion(
+            recoveryIsTrustedFriend: const Value(true),
+            recoveryLastHeartbeat: const Value(null),
+            recoverySecretShare: Value(shares.removeLast()),
+          ),
+        );
+      }
+    });
+
     await UserService.update((u) => u.passwordLessRecovery = config);
 
-    // 3.4. Store the shares in the contact's rows
-    for (final contactId in trustedFriendIds) {
-      await twonlyDB.contactsDao.updateContact(
-        contactId,
-        ContactsCompanion(
-          recoveryIsTrustedFriend: const Value(true),
-          recoveryLastHeartbeat: const Value(null),
-          recoverySecretShare: Value(shares.removeLast()),
-        ),
-      );
-    }
-
-    unawaited(performHeartbeat());
+    unawaited(
+      // ignore: inference_failure_on_untyped_parameter
+      RustApi.performPasswordlessRecoveryHeartbeat().catchError((e) {
+        Log.warn('Failed to perform passwordless recovery heartbeat: $e');
+      }),
+    );
 
     // The passwordless is configured successfully.
     return true;
@@ -357,193 +383,6 @@ class PasswordlessRecoveryService {
     }
   }
 
-  static Future<void> performHeartbeat() async {
-    final config = userService.currentUser.passwordLessRecovery;
-
-    if (config != null) {
-      final lastHeartbeat = config.lastServerHeartbeat;
-      final isOlderThanAMonth =
-          lastHeartbeat != null &&
-          clock.now().difference(lastHeartbeat).inDays > 20;
-
-      if ((lastHeartbeat == null || isOlderThanAMonth) &&
-          config.encryptedServerKey != null) {
-        final res = await apiService.registerPasswordLessRecovery(
-          config.encryptedServerKey!,
-          config.pinUnlockToken,
-        );
-
-        if (res.isSuccess) {
-          await UserService.update((u) {
-            u.passwordLessRecovery?.lastServerHeartbeat = clock.now();
-          });
-        }
-      }
-
-      final lastContactHeartbeat = config.lastContactHeartbeat;
-      final isContactHeartbeatOlderThan24h =
-          lastContactHeartbeat == null ||
-          clock.now().difference(lastContactHeartbeat).inHours >= 24;
-
-      if (isContactHeartbeatOlderThan24h) {
-        // Get all contacts where recoveryLastHeartbeat is NULL. Then for each contact send.
-        // recoveryLastHeartbeat is ONLY updated in case the contact has responded.
-        final pendingShares =
-            await (twonlyDB.select(twonlyDB.contacts)..where(
-                  (t) =>
-                      t.recoveryIsTrustedFriend.equals(true) &
-                      t.recoveryLastHeartbeat.isNull() &
-                      t.recoverySecretShare.isNotNull(),
-                ))
-                .get();
-
-        for (final contact in pendingShares) {
-          try {
-            await sendCipherText(
-              contact.userId,
-              pb.EncryptedContent(
-                passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
-                  recoverySecretShare: contact.recoverySecretShare,
-                  delete: false,
-                  threshold: Int64(config.threshold),
-                ),
-              ),
-            );
-          } catch (e) {
-            Log.error(
-              'Failed to send PasswordLessRecovery share to contact ${contact.userId}: $e',
-            );
-          }
-        }
-
-        await UserService.update((u) {
-          u.passwordLessRecovery?.lastContactHeartbeat = clock.now();
-        });
-      }
-    }
-
-    // Send heartbeat to the friends I am a trusted friend.
-    final oneWeekAgo = clock.now().subtract(const Duration(days: 7));
-    final trustedFriendsToNotify =
-        await (twonlyDB.select(twonlyDB.contacts)..where(
-              (t) =>
-                  t.recoveryContactsSecretShare.isNotNull() &
-                  (t.recoveryContactsLastHeartbeat.isNull() |
-                      t.recoveryContactsLastHeartbeat.isSmallerThanValue(
-                        oneWeekAgo,
-                      )),
-            ))
-            .get();
-
-    for (final contact in trustedFriendsToNotify) {
-      try {
-        final share = contact.recoveryContactsSecretShare!;
-        final hash = sha256.convert(share).bytes;
-
-        await sendCipherText(
-          contact.userId,
-          pb.EncryptedContent(
-            passwordlessRecoveryHeartbeat:
-                pb.EncryptedContent_PasswordLessRecoveryHeartbeat(
-                  hash: hash,
-                ),
-          ),
-        );
-
-        await twonlyDB.contactsDao.updateContact(
-          contact.userId,
-          ContactsCompanion(
-            recoveryContactsLastHeartbeat: Value(clock.now()),
-          ),
-        );
-      } catch (e) {
-        Log.error(
-          'Failed to send PasswordLessRecoveryHeartbeat to contact ${contact.userId}: $e',
-        );
-      }
-    }
-  }
-
-  static Future<void> handlePasswordlessRecovery(
-    int fromUserId,
-    pb.EncryptedContent_PasswordLessRecovery msg,
-    String receiptId,
-  ) async {
-    if (msg.delete) {
-      Log.info(
-        '[$receiptId] Received request to delete passwordless recovery share from contact $fromUserId',
-      );
-      await twonlyDB.contactsDao.updateContact(
-        fromUserId,
-        const ContactsCompanion(
-          recoveryContactsSecretShare: Value(null),
-          recoveryContactsLastHeartbeat: Value(null),
-        ),
-      );
-    } else if (msg.hasRecoverySecretShare() && msg.hasThreshold()) {
-      Log.info(
-        '[$receiptId] Received new passwordless recovery share from contact $fromUserId',
-      );
-      await twonlyDB.contactsDao.updateContact(
-        fromUserId,
-        ContactsCompanion(
-          recoveryContactsSecretShare: Value(
-            Uint8List.fromList(msg.recoverySecretShare),
-          ),
-          recoveryContactsThreshold: Value(msg.threshold.toInt()),
-          recoveryContactsLastHeartbeat: const Value(
-            null, // this will trigger that a heartbeat will be send...
-          ),
-        ),
-      );
-    }
-    unawaited(performHeartbeat());
-  }
-
-  static Future<void> handlePasswordlessRecoveryHeartbeat(
-    int fromUserId,
-    pb.EncryptedContent_PasswordLessRecoveryHeartbeat msg,
-    String receiptId,
-  ) async {
-    Log.info(
-      '[$receiptId] Received passwordless recovery heartbeat from contact $fromUserId',
-    );
-    final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
-    final storedShare = contact?.recoverySecretShare;
-
-    if (storedShare == null) {
-      unawaited(
-        sendCipherText(
-          fromUserId,
-          pb.EncryptedContent(
-            passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
-              delete: true,
-            ),
-          ),
-        ),
-      );
-      Log.warn(
-        '[$receiptId] Received passwordless recovery heartbeat from $fromUserId but we did not send him a secret share.',
-      );
-      return;
-    }
-
-    final computedHash = sha256.convert(storedShare).bytes;
-    final recoveryLastHeartbeat =
-        const ListEquality().equals(computedHash, msg.hash)
-        ? clock.now()
-        : null; // The stored share not valid (maybe an old backup was restored). This will cause the performHeartbeat to resend him his share
-    Log.info(
-      '[$receiptId] Got heartbeat: ($recoveryLastHeartbeat)',
-    );
-    await twonlyDB.contactsDao.updateContact(
-      fromUserId,
-      ContactsCompanion(
-        recoveryLastHeartbeat: Value(recoveryLastHeartbeat),
-      ),
-    );
-  }
-
   static Future<bool> checkAndStorePasswordlessMessages(
     OnboardingState state,
   ) async {
@@ -554,17 +393,25 @@ class PasswordlessRecoveryService {
       return false;
     }
 
-    final alreadyReceivedIds = state.receivedShares
-        .map((s) => Int64(s.messageId))
-        .toList();
-
-    final response = await apiService.checkForPasswordlessNotification(
-      notificationId: state.notificationId!,
-      downloadAuthToken: state.downloadAuthToken!,
-      alreadyReceivedIds: alreadyReceivedIds,
+    final alreadyReceivedIds = Int64List.fromList(
+      state.receivedShares.map((share) => share.messageId).toList(),
     );
 
-    if (response == null || response.messages.isEmpty) {
+    late final List<FrbPasswordlessNotificationMessage> messages;
+    try {
+      messages = await RustApi.checkForPasswordlessNotification(
+        notificationId: state.notificationId!,
+        downloadAuthToken: state.downloadAuthToken!,
+        alreadyReceivedMessageIds: alreadyReceivedIds,
+      );
+    } catch (error) {
+      // This runs on a 10s poll, so a socket that is still connecting or
+      // briefly offline is expected. The next tick retries.
+      Log.warn('Failed to load passwordless recovery messages', error);
+      return false;
+    }
+
+    if (messages.isEmpty) {
       return false;
     }
 
@@ -572,8 +419,8 @@ class PasswordlessRecoveryService {
     final secretKey = SecretKey(state.encryptionKey!);
     var didUpdate = false;
 
-    for (final msg in response.messages) {
-      final msgId = msg.id.toInt();
+    for (final msg in messages) {
+      final msgId = msg.id;
 
       try {
         final envelope = EncryptedEnvelope.fromBuffer(msg.encryptedMessage);
@@ -657,13 +504,16 @@ class PasswordlessRecoveryService {
       // It's PIN, we can't migrate it because we don't have the PIN. We delete it so the user has to do it again.
       for (final contact in oldTrustedFriends) {
         try {
-          await sendCipherText(
-            contact.userId,
-            pb.EncryptedContent(
+          await RustApi.sendEncryptedContent(
+            contactId: contact.userId,
+            content: pb.EncryptedContent(
               passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
                 delete: true,
               ),
-            ),
+            ).writeToBuffer(),
+            onlySendIfNoReceiptsAreOpen: false,
+            onlyReturnEncryptedData: false,
+            blocking: true,
           );
         } catch (e) {
           Log.error(

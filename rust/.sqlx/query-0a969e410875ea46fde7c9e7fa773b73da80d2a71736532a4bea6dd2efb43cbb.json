@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO user_discovery_user_relations (\n                announced_user_id, from_contact_id, public_key_verified_timestamp\n            ) VALUES (?, ?, ?)\n            ON CONFLICT(announced_user_id, from_contact_id) DO UPDATE SET\n                public_key_verified_timestamp = excluded.public_key_verified_timestamp\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "0a969e410875ea46fde7c9e7fa773b73da80d2a71736532a4bea6dd2efb43cbb"
+}

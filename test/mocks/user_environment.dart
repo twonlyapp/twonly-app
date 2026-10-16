@@ -3,12 +3,11 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/user.service.dart';
-import 'package:twonly/src/utils/keyvalue.dart';
+
+import 'user_config.dart';
 
 base class ZoneIOOverrides extends IOOverrides {
   @override
@@ -67,15 +66,11 @@ class UserEnvironment {
     required this.username,
     required this.db,
     required this.userService,
-    required this.identityKeyPair,
-    required this.registrationId,
   });
   final int userId;
   final String username;
   final TwonlyDB db;
   final UserService userService;
-  final IdentityKeyPair identityKeyPair;
-  final int registrationId;
 
   static Future<UserEnvironment> create(
     int userId,
@@ -90,7 +85,7 @@ class UserEnvironment {
 
     final us = UserService();
     // ignore: cascade_invocations
-    us.currentUser = UserData(
+    us.currentUser = testUserConfig(
       userId: userId,
       username: username,
       displayName: '$username Display',
@@ -101,24 +96,11 @@ class UserEnvironment {
 
     us.isUserCreated = true;
 
-    final identityKeyPair = generateIdentityKeyPair();
-    final registrationId = generateRegistrationId(true);
-
-    // Save to keyvalue store using zone so it is isolated per-user
-    await runZoned(
-      () => KeyValueStore.put('user', us.currentUser.toJson()),
-      zoneValues: {
-        #userId: userId,
-      },
-    );
-
     return UserEnvironment(
       userId: userId,
       username: username,
       db: db,
       userService: us,
-      identityKeyPair: identityKeyPair,
-      registrationId: registrationId,
     );
   }
 }

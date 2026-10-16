@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO webxdc_updates\n                   (instance_id, serial, message_id, sender_id, payload, info, href, received_at)\n               VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n               ON CONFLICT(message_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "d2977db7648dfba60704ffa01ecf94add71edc00fe4625dc143948b7cb76daf2"
+}

@@ -59,7 +59,7 @@ class CameraScannedOverlay extends StatelessWidget {
               color: Colors.transparent,
               child: FaIcon(
                 FontAwesomeIcons.shareFromSquare,
-                color: isDarkMode(context) ? Colors.white : Colors.black,
+                color: context.color.onSurface,
                 size: 17,
               ),
             ),

@@ -4,9 +4,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart'
     show FaIcon, FontAwesomeIcons;
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/profile_qr_code.comp.dart'
     show ProfileQrCodeComp;
@@ -17,7 +17,7 @@ class EmptyChatListComp extends StatelessWidget {
 
   Future<void> _shareProfile(BuildContext context) async {
     try {
-      final pubKey = await getUserPublicKey();
+      final pubKey = await RustSignal.getUserPublicKey();
       final params = ShareParams(
         text:
             'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(pubKey)}',

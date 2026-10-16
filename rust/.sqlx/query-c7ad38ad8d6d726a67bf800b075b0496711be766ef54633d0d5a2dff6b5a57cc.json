@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM contacts WHERE user_id = ? AND accepted = 1\n               AND blocked = 0 AND media_send_counter >= ? AND user_discovery_excluded = 0\n               AND (? = 0 OR user_discovery_manual_approved = 1))",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM contacts WHERE user_id = ? AND accepted = 1\n               AND blocked = 0 AND media_send_counter >= ? AND user_discovery_excluded = 0\n               AND (? = 0 OR user_discovery_manual_approved = 1))",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c7ad38ad8d6d726a67bf800b075b0496711be766ef54633d0d5a2dff6b5a57cc"
+}

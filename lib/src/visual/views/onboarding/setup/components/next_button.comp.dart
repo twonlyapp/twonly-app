@@ -38,16 +38,20 @@ class NextButtonComp extends StatelessWidget {
                 }
               : null,
           child: isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   height: 24,
                   width: 24,
                   child: CircularProgressIndicator.adaptive(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      context.color.onPrimary,
+                    ),
                   ),
                 )
               : Text(
-                  currentPage.isLast ? context.lang.finishSetup : context.lang.next,
+                  currentPage.isLast
+                      ? context.lang.finishSetup
+                      : context.lang.next,
                 ),
         );
       },

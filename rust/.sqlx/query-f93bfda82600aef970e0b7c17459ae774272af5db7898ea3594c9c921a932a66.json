@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT recovery_contacts_secret_share FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "recovery_contacts_secret_share",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "recovery_contacts_secret_share"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "f93bfda82600aef970e0b7c17459ae774272af5db7898ea3594c9c921a932a66"
+}

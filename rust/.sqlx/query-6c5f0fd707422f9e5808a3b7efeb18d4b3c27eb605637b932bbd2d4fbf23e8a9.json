@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO message_actions(message_id, contact_id, type)\n            VALUES (?, ?, 'ackByServerAt')\n            ON CONFLICT(message_id, contact_id, type)\n            DO UPDATE SET action_at = CAST(strftime('%s', 'now') AS INTEGER)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "6c5f0fd707422f9e5808a3b7efeb18d4b3c27eb605637b932bbd2d4fbf23e8a9"
+}

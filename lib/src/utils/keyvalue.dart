@@ -107,7 +107,9 @@ class KeyValueStore {
       try {
         if (file.existsSync()) {
           final contents = await file.readAsString();
-          val = factory.fromJson(jsonDecode(contents) as Map<String, dynamic>) as T;
+          val =
+              factory.fromJson(jsonDecode(contents) as Map<String, dynamic>)
+                  as T;
         } else {
           val = factory.defaultValue() as T;
         }
@@ -138,7 +140,8 @@ class KeyValueStore {
       try {
         if (file.existsSync()) {
           final contents = await file.readAsString();
-          return factory.fromJson(jsonDecode(contents) as Map<String, dynamic>) as T;
+          return factory.fromJson(jsonDecode(contents) as Map<String, dynamic>)
+              as T;
         }
       } catch (e) {
         Log.warn('Error reading file. Returning default.: $e');
@@ -157,7 +160,8 @@ class KeyValueStore {
       try {
         if (file.existsSync()) {
           final contents = await file.readAsString();
-          return factory.fromJson(jsonDecode(contents) as Map<String, dynamic>) as T;
+          return factory.fromJson(jsonDecode(contents) as Map<String, dynamic>)
+              as T;
         }
       } catch (e) {
         Log.warn('Error reading file.: $e');

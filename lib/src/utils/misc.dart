@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math';
 
 import 'package:clock/clock.dart';
@@ -7,22 +6,25 @@ import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:gal/gal.dart';
-import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
+import 'package:twonly/src/model/error_code.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/themes/colors.dart';
+
+export 'package:twonly/src/visual/themes/colors.dart' show AppColor;
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
   ColorScheme get color => Theme.of(this).colorScheme;
+  Color appColor(AppColor color) {
+    return Theme.of(this).extension<AppColors>()![color];
+  }
+
   Future<dynamic> navPush(Widget route) async {
     return Navigator.push(
       this,
@@ -32,99 +34,6 @@ extension ShortCutsExtension on BuildContext {
         },
       ),
     );
-  }
-}
-
-Future<String?> saveImageToGallery(
-  Uint8List imageBytes, {
-  DateTime? createdAt,
-  String? name,
-}) async {
-  var bytesToProcess = imageBytes;
-
-  if (createdAt != null) {
-    try {
-      bytesToProcess = await Isolate.run(() {
-        final image = img.decodeImage(imageBytes);
-        if (image != null) {
-          final formattedDate = DateFormat(
-            'yyyy:MM:dd HH:mm:ss',
-          ).format(createdAt);
-          image.exif.imageIfd[0x0132] = img.IfdValueAscii(
-            formattedDate,
-          ); // DateTime
-          image.exif.exifIfd[0x9003] = img.IfdValueAscii(
-            formattedDate,
-          ); // DateTimeOriginal
-          image.exif.exifIfd[0x9004] = img.IfdValueAscii(
-            formattedDate,
-          ); // DateTimeDigitized
-
-          return img.encodeJpg(image);
-        }
-        return imageBytes;
-      });
-    } catch (e) {
-      Log.error(e);
-    }
-  }
-
-  final hasAccess = await Gal.hasAccess(toAlbum: true);
-  if (!hasAccess) {
-    await Gal.requestAccess(toAlbum: true);
-  }
-  try {
-    await Gal.putImageBytes(
-      bytesToProcess,
-      album: 'twonly',
-      name: name ?? 'image',
-    );
-    return null;
-  } on GalException catch (e) {
-    Log.error(e);
-    return e.type.message;
-  }
-}
-
-Future<String?> saveVideoToGallery(
-  String videoPath, {
-  String? name,
-}) async {
-  final hasAccess = await Gal.hasAccess(toAlbum: true);
-  if (!hasAccess) {
-    await Gal.requestAccess(toAlbum: true);
-  }
-
-  var pathToSave = videoPath;
-  File? tempFile;
-
-  try {
-    if (name != null) {
-      final file = File(videoPath);
-      final extension = file.path.split('.').last;
-      final tempDir = Directory.systemTemp;
-      tempFile = File(join(tempDir.path, '$name.$extension'));
-      if (tempFile.existsSync()) {
-        try {
-          tempFile.deleteSync();
-        } catch (_) {}
-      }
-      file.copySync(tempFile.path);
-      pathToSave = tempFile.path;
-    }
-    await Gal.putVideo(pathToSave, album: 'twonly');
-    return null;
-  } on GalException catch (e) {
-    Log.error(e);
-    return e.type.message;
-  } finally {
-    if (tempFile != null && tempFile.existsSync()) {
-      try {
-        tempFile.deleteSync();
-      } catch (e) {
-        Log.error('Failed to delete temp video file: $e');
-      }
-    }
   }
 }
 
@@ -150,7 +59,6 @@ String getRandomString(int length) => String.fromCharCodes(
 );
 
 String errorCodeToText(BuildContext context, ErrorCode code) {
-  // ignore: exhaustive_cases
   switch (code) {
     case ErrorCode.InternalError:
       return context.lang.errorInternalError;
@@ -170,8 +78,10 @@ String errorCodeToText(BuildContext context, ErrorCode code) {
       return context.lang.errorVoucherInvalid;
     case ErrorCode.PlanUpgradeNotYearly:
       return context.lang.errorPlanUpgradeNotYearly;
+    // ignore: no_default_cases
+    default:
+      return code.toString();
   }
-  return code.toString();
 }
 
 String formatDuration(BuildContext context, int seconds) {
@@ -189,6 +99,22 @@ String formatDuration(BuildContext context, int seconds) {
   }
 }
 
+String formatJoinedAt(BuildContext context, DateTime joinedAt) {
+  final elapsed = clock.now().toUtc().difference(joinedAt.toUtc());
+  final days = max(0, elapsed.inDays);
+
+  if (days == 0) {
+    return context.lang.contactJoinedToday;
+  }
+  if (days < 30) {
+    return context.lang.contactJoinedDaysAgo(days);
+  }
+  if (days < 365) {
+    return context.lang.contactJoinedMonthsAgo(days ~/ 30);
+  }
+  return context.lang.contactJoinedYearsAgo(days ~/ 365);
+}
+
 Future<bool> authenticateUser(
   String localizedReason, {
   bool force = true,
@@ -202,6 +128,10 @@ Future<bool> authenticateUser(
       return true;
     }
   } on LocalAuthException catch (e) {
+    if (e.code == LocalAuthExceptionCode.userCanceled ||
+        e.code == LocalAuthExceptionCode.systemCanceled) {
+      return false;
+    }
     Log.error(e.toString());
     if (e.code == LocalAuthExceptionCode.noBiometricHardware ||
         e.code == LocalAuthExceptionCode.noBiometricsEnrolled ||
