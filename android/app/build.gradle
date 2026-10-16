@@ -68,8 +68,9 @@ android {
             manifestPlaceholders = [appName: "twonly [profile]"]
         }
         release {
-            shrinkResources false
-            minifyEnabled false
+            shrinkResources = true
+            minifyEnabled = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
        }
     }

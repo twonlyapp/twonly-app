@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E5A100012F90000100A10001 /* NativeErrorReporting.swift in Runner Sources */ = {isa = PBXBuildFile; fileRef = E5A100042F90000100A10004 /* NativeErrorReporting.swift */; };
+		E5A100022F90000100A10002 /* NativeErrorReporting.swift in NotificationService Sources */ = {isa = PBXBuildFile; fileRef = E5A100042F90000100A10004 /* NativeErrorReporting.swift */; };
+		E5A100032F90000100A10003 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = E5A100052F90000100A10005 /* Sentry */; };
+		E5A100062F90000100A10006 /* NativeErrorReportingChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5A100072F90000100A10007 /* NativeErrorReportingChannel.swift */; };
 		05CF222065FC24670B05B6D0 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC1EE71614E1B4F84D6FDC2D /* Pods_RunnerTests.framework */; };
 		06AA21445BEAF2C45DC9DCDF /* Pods_NotificationService.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A198C9B5D90584C4F96206B2 /* Pods_NotificationService.framework */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
@@ -94,6 +98,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E5A100042F90000100A10004 /* NativeErrorReporting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeErrorReporting.swift; sourceTree = "<group>"; };
+		E5A100072F90000100A10007 /* NativeErrorReportingChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeErrorReportingChannel.swift; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		1581CC44342D555EFB889768 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -190,6 +196,7 @@
 			isa = PBXGroup;
 			children = (
 				D4A100012F81000100A10001 /* TwonlyWidgetShared.swift */,
+				E5A100042F90000100A10004 /* NativeErrorReporting.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -228,6 +235,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				06AA21445BEAF2C45DC9DCDF /* Pods_NotificationService.framework in Frameworks */,
+				E5A100032F90000100A10003 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -304,6 +312,7 @@
 			children = (
 				D3A100012F70000100D1A001 /* DirectMediaTransfer.swift */,
 				D3A100052F70000100D1A005 /* BackgroundWork.swift */,
+				E5A100072F90000100A10007 /* NativeErrorReportingChannel.swift */,
 				D3A100042F70000100D1A002 /* NativeImageCodec.swift */,
 				D3A100062F70000100D1A003 /* NativeVideoCodec.swift */,
 				D3A100082F70000100D1A004 /* NativeGallery.swift */,
@@ -425,6 +434,9 @@
 				D21FCEA52D9F2B750088701D /* NotificationService */,
 			);
 			name = NotificationService;
+			packageProductDependencies = (
+				E5A100052F90000100A10005 /* Sentry */,
+			);
 			productName = NotificationService;
 			productReference = D21FCEA42D9F2B750088701D /* NotificationService.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -510,6 +522,7 @@
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (
 				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
+				E5A100082F90000100A10008 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
@@ -756,6 +769,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E5A100012F90000100A10001 /* NativeErrorReporting.swift in Runner Sources */,
+				E5A100062F90000100A10006 /* NativeErrorReportingChannel.swift in Sources */,
 				D3A100022F70000100D1A001 /* DirectMediaTransfer.swift in Sources */,
 				D3A100062F70000100D1A006 /* BackgroundWork.swift in Sources */,
 				D3A100032F70000100D1A002 /* NativeImageCodec.swift in Sources */,
@@ -773,6 +788,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E5A100022F90000100A10002 /* NativeErrorReporting.swift in NotificationService Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1557,6 +1573,17 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		E5A100082F90000100A10008 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
+			requirement = {
+				kind = exactVersion;
+				version = 8.58.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCLocalSwiftPackageReference section */
 		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */ = {
 			isa = XCLocalSwiftPackageReference;
@@ -1565,6 +1592,11 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		E5A100052F90000100A10005 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E5A100082F90000100A10008 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
 		78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FlutterGeneratedPluginSwiftPackage;

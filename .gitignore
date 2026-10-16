@@ -61,3 +61,4 @@ fastlane/repo/status/running.json
 .widget_preview/
 ios/build/
 offline/
+docs/

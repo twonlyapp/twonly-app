@@ -5,6 +5,9 @@
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher">
+        <!-- Consent is checked in MyApplication before starting either Java or
+             NDK crash handling, including launches without a Flutter engine. -->
+        <meta-data android:name="io.sentry.auto-init" android:value="false" />
         <service android:name=".location.LiveLocationService" android:exported="false"
             android:foregroundServiceType="location" android:stopWithTask="false" />
         <activity

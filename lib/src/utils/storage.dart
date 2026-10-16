@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/error_reporting.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// Deletes local databases and files.
@@ -12,6 +13,7 @@ import 'package:twonly/src/utils/log.dart';
 /// Set [removeCredentials] only when the current account is intentionally
 /// abandoned or its key manager is about to be replaced during recovery.
 Future<bool> deleteLocalUserData({bool removeCredentials = false}) async {
+  await ErrorReportingService.setEnabled(false);
   if (removeCredentials) {
     await RustKeyManager.removeLocalCredentials();
     Log.info('Removed the local credentials.');

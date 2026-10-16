@@ -7,6 +7,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import eu.twonly.R
+import eu.twonly.NativeErrorReporting
 import eu.twonly.widget.TwonlyWidgetProvider
 import java.util.Locale
 import org.json.JSONArray
@@ -16,6 +17,7 @@ class TwonlyNotificationWorker(
     params: WorkerParameters,
 ) : Worker(appContext, params) {
     override fun doWork(): Result {
+        NativeErrorReporting.breadcrumb(applicationContext, "notification_processing_started")
         return try {
             val directory = applicationContext.filesDir.absolutePath
             val response = NativeNotificationResponse.parse(
@@ -30,6 +32,9 @@ class TwonlyNotificationWorker(
             ensureNotificationChannel(applicationContext)
             val batch = response.batch
             if (!response.ok || batch == null) {
+                if (runAttemptCount >= MAX_RETRIES) {
+                    NativeErrorReporting.failure(applicationContext, "notification_processing")
+                }
                 // Rust could not reach the mailbox. Show the generic alert so a
                 // high-priority wake-up still produces a notification, and retry.
                 response.fallback?.let(::showFallback)
@@ -54,6 +59,7 @@ class TwonlyNotificationWorker(
             // undrained mailbox is worth another attempt.
             settle(retry = !batch.completed)
         } catch (error: Throwable) {
+            NativeErrorReporting.failure(applicationContext, "notification_processing", error)
             Log.e(TAG, "Native notification processing failed", error)
             if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
         }
@@ -72,6 +78,7 @@ class TwonlyNotificationWorker(
             )
             if (finalized.widgetRefresh) TwonlyWidgetProvider.refreshAll(applicationContext)
         } catch (error: Throwable) {
+            NativeErrorReporting.failure(applicationContext, "notification_finalize", error)
             Log.w(TAG, "Deferred notification maintenance failed", error)
         }
         return Result.success()

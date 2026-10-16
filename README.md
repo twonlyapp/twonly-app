@@ -57,6 +57,11 @@ guarantee a bounty currently :/
 
 Currently there are still some core features and rewrites open I want to do involving a huge rewrite in Rust. Because of this, contributions are currently not wanted. You can still view the code (if you find any security issues please contact me!). Also, issues are currently closed. If you find a bug, please use the in-app option as there you can upload your debug log which helps a lot. 
 
+## Native error reporting
+
+Native background crash reporting and verification are described in
+[Native error reporting](docs/native-error-reporting.md).
+
 ## Custom dependencies
 
 Vendored packages are tracked in `dependencies.yaml`. Set `custom_changes: true`

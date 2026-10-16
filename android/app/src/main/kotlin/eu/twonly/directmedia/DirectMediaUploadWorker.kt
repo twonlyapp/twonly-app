@@ -13,6 +13,7 @@ import androidx.work.Data
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import eu.twonly.R
+import eu.twonly.NativeErrorReporting
 import java.io.File
 import java.util.concurrent.TimeUnit
 import org.json.JSONObject
@@ -32,6 +33,7 @@ class DirectMediaUploadWorker(
     }
 
     override fun doWork(): Result {
+        NativeErrorReporting.breadcrumb(applicationContext, "media_upload_started")
         val attachmentId = inputData.getString(ATTACHMENT_ID) ?: return Result.failure()
         val role = inputData.getString(ROLE) ?: return Result.failure()
         val expiresAt = inputData.getLong(EXPIRES_AT, 0)
@@ -61,6 +63,10 @@ class DirectMediaUploadWorker(
                 Result.failure()
             }
         } catch (error: Exception) {
+            // Connectivity errors and stopped workers are ordinary retries.
+            if (!isStopped && error !is java.io.IOException) {
+                NativeErrorReporting.failure(applicationContext, "media_upload", error)
+            }
             Log.w(TAG, "Transfer $attachmentId/$role attempt=$runAttemptCount failed", error)
             if (expiresAt > System.currentTimeMillis() / 1_000) Result.retry() else Result.failure()
         }

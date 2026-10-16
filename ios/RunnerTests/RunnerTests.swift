@@ -2,8 +2,24 @@ import Flutter
 import Darwin
 import UIKit
 import XCTest
+@testable import Runner
 
 class RunnerTests: XCTestCase {
+
+  func testNativeErrorReportingRequiresExplicitConsent() throws {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: url) }
+    XCTAssertFalse(NativeErrorReporting.readConsent(at: nil))
+    XCTAssertFalse(NativeErrorReporting.readConsent(at: url))
+    for value in ["", "false", "corrupt", "1"] {
+      try Data(value.utf8).write(to: url, options: .atomic)
+      XCTAssertFalse(NativeErrorReporting.readConsent(at: url))
+    }
+    try Data("true".utf8).write(to: url, options: .atomic)
+    XCTAssertTrue(NativeErrorReporting.readConsent(at: url))
+    try Data("false".utf8).write(to: url, options: .atomic)
+    XCTAssertFalse(NativeErrorReporting.readConsent(at: url))
+  }
 
   func testRustCanResolveNativeCallbacks() {
     // Use the same lookup as Rust, without a static reference that would keep

@@ -13,6 +13,7 @@ import androidx.work.WorkManager
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import eu.twonly.MainActivity
+import eu.twonly.NativeErrorReporting
 import eu.twonly.R
 
 class TwonlyFirebaseMessagingService : FirebaseMessagingService() {
@@ -47,6 +48,7 @@ class TwonlyFirebaseMessagingService : FirebaseMessagingService() {
             val directory = applicationContext.filesDir.absolutePath
             NativeNotificationBridge.storeFcmToken(directory, directory, token)
         } catch (error: Throwable) {
+            NativeErrorReporting.failure(applicationContext, "fcm_token_storage", error)
             Log.e(TAG, "Could not persist refreshed FCM token in Rust", error)
         }
     }

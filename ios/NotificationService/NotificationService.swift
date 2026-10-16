@@ -100,17 +100,19 @@ final class NotificationService: UNNotificationServiceExtension {
     _ request: UNNotificationRequest,
     withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
   ) {
+    NativeErrorReporting.startIfAllowed()
+    NativeErrorReporting.breadcrumb("notification_processing_started")
     self.contentHandler = contentHandler
     fallbackContent = request.content
 
     guard let runtimeDirectory = Self.runtimeDirectory() else {
-      deliverFallback(reason: "shared runtime directory is unavailable")
+      deliverFallback(reason: "shared runtime directory is unavailable", operation: "notification_storage")
       return
     }
 
     DispatchQueue.global(qos: .userInitiated).async {
       guard let response = Self.processWakeup(runtimeDirectory: runtimeDirectory) else {
-        self.deliverFallback(reason: "notification worker returned no response")
+        self.deliverFallback(reason: "notification worker returned no response", operation: "notification_response")
         return
       }
       guard response.ok else {
@@ -141,7 +143,7 @@ final class NotificationService: UNNotificationServiceExtension {
   }
 
   override func serviceExtensionTimeWillExpire() {
-    deliverFallback(reason: "notification service extension timed out")
+    deliverFallback(reason: "notification service extension timed out", operation: "notification_expired")
   }
 
   private func render(batch: NativeNotificationBatch, original: UNNotificationContent) {
@@ -342,8 +344,10 @@ final class NotificationService: UNNotificationServiceExtension {
 
   private func deliverFallback(
     reason: String,
+    operation: String = "notification_processing",
     presentation: NativeNotificationPresentation? = nil
   ) {
+    NativeErrorReporting.failure(operation)
     NSLog("Delivering Twonly wake-up fallback notification: \(reason)")
     guard let presentation else {
       finish(with: fallbackContent ?? UNMutableNotificationContent())
@@ -410,6 +414,7 @@ final class NotificationService: UNNotificationServiceExtension {
       )
     else { return }
     if let error = response.error {
+      NativeErrorReporting.failure("notification_finalize")
       NSLog("Deferred Twonly notification maintenance failed: \(error)")
     }
     if response.widgetRefresh {

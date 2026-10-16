@@ -13,6 +13,7 @@ import flutter_sharing_intent
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    NativeErrorReporting.startIfAllowed()
     UNUserNotificationCenter.current().delegate = self
     // Must happen before launching finishes: BGTaskScheduler refuses an
     // identifier registered any later.
@@ -65,6 +66,7 @@ import flutter_sharing_intent
     NativeNotificationChannel.register(with: engineBridge.pluginRegistry)
     WebxdcHostChannel.register(with: engineBridge.pluginRegistry)
     NativeLocationPermission.register(with: engineBridge.pluginRegistry)
+    NativeErrorReportingChannel.register(with: engineBridge.pluginRegistry)
   }
 
   override func userNotificationCenter(

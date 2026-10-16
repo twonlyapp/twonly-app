@@ -10,6 +10,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import eu.twonly.R
+import eu.twonly.NativeErrorReporting
 import org.json.JSONObject
 
 /**
@@ -28,6 +29,7 @@ class MediaPrepareWorker(
     params: WorkerParameters,
 ) : Worker(appContext, params) {
     override fun doWork(): Result {
+        NativeErrorReporting.breadcrumb(applicationContext, "media_preparation_started")
         val mediaId = inputData.getString(MEDIA_ID)
         return try {
             if (mediaId != null) {
@@ -52,11 +54,13 @@ class MediaPrepareWorker(
             } else if (runAttemptCount < MAX_RETRIES) {
                 Result.retry()
             } else {
+                NativeErrorReporting.failure(applicationContext, "media_preparation")
                 // Giving up here loses nothing: the media row still says the
                 // send is unfinished, so the next flush picks it up again.
                 Result.failure()
             }
-        } catch (_: Throwable) {
+        } catch (error: Throwable) {
+            NativeErrorReporting.failure(applicationContext, "media_preparation", error)
             if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
         }
     }
