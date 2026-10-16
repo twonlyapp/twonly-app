@@ -244,7 +244,8 @@ pub(crate) async fn handle_flame_sync(
 
     let Some(group) = sqlx::query!(
         r#"
-        SELECT last_flame_counter_change, flame_counter, max_flame_counter
+        SELECT last_flame_counter_change, last_message_send, last_message_received,
+               flame_counter, max_flame_counter
         FROM groups
         WHERE group_id = ?
         "#,
@@ -256,12 +257,18 @@ pub(crate) async fn handle_flame_sync(
         return Ok(());
     };
 
-    let Some(group_last_flame_counter_change) = group.last_flame_counter_change else {
-        return Ok(());
-    };
-
     let update_counters = flame.force_update
-        || (is_today(group_last_flame_counter_change) & is_today(last_flame_counter_change));
+        || (group.last_flame_counter_change.is_some_and(is_today)
+            && is_today(last_flame_counter_change));
+
+    // A restore marks both directions exchanged on the sender. Apply that same
+    // baseline here: copying only the count leaves it expired in flame_state,
+    // and the next media exchange would reset it to zero again. Use the original
+    // restore time so delayed delivery cannot grant extra days or undo newer media.
+    let restored_at = flame.force_update.then_some(last_flame_counter_change);
+    let last_flame_counter_change = group.last_flame_counter_change.max(restored_at);
+    let last_message_send = group.last_message_send.max(restored_at);
+    let last_message_received = group.last_message_received.max(restored_at);
 
     let flame_counter = if update_counters {
         group.flame_counter.max(flame.flame_counter)
@@ -279,16 +286,212 @@ pub(crate) async fn handle_flame_sync(
         UPDATE groups
         SET also_best_friend = ?,
             flame_counter = ?,
-            max_flame_counter = ?
+            max_flame_counter = ?,
+            last_flame_counter_change = ?,
+            last_message_send = ?,
+            last_message_received = ?
         WHERE group_id = ?
         "#,
         flame.best_friend,
         flame_counter,
         max_flame_counter,
+        last_flame_counter_change,
+        last_message_send,
+        last_message_received,
         group_id,
     )
     .execute(&mut **t)
     .await?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod flame_tests {
+    use super::*;
+    use crate::database::app::AppDatabase;
+    use crate::utils::{current_time, start_of_local_day};
+
+    const DAY: i64 = 86_400;
+
+    #[tokio::test]
+    async fn forced_sync_keeps_the_original_restore_time_across_delays_and_replays() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let path = directory.path().join("app.sqlite");
+        let db = AppDatabase::new(path.to_str().unwrap(), None, false).await?;
+        db.run_migrations().await?;
+        let now = current_time().timestamp();
+        let old_restore = start_of_local_day()? - 4 * DAY;
+        for (id, local_time, local_count, restored_at, expected_time, expected_count) in [
+            (
+                "delayed",
+                Some(old_restore - DAY),
+                0,
+                old_restore,
+                old_restore,
+                0,
+            ),
+            ("newer", Some(now), 20, now - DAY, now, 20),
+            ("empty", None, 0, now, now, 12),
+        ] {
+            sqlx::query(
+                "INSERT INTO groups(group_id, group_name, flame_counter,
+                                    last_message_send, last_message_received, last_flame_counter_change)
+                 VALUES (?, 'Chat', ?, ?, ?, ?)",
+            )
+            .bind(id)
+            .bind(local_count)
+            .bind(local_time)
+            .bind(local_time)
+            .bind(local_time)
+            .execute(&db.pool)
+            .await?;
+            for _ in 0..2 {
+                let mut t = db.pool.begin().await?;
+                handle_flame_sync(
+                    &mut t,
+                    id,
+                    encrypted_content::FlameSync {
+                        flame_counter: 12,
+                        last_flame_counter_change: restored_at * 1000,
+                        force_update: true,
+                        best_friend: false,
+                    },
+                )
+                .await?;
+                t.commit().await?;
+                let dates: (i64, i64, i64) = sqlx::query_as(
+                    "SELECT last_message_send, last_message_received, last_flame_counter_change
+                     FROM groups WHERE group_id = ?",
+                )
+                .bind(id)
+                .fetch_one(&db.pool)
+                .await?;
+                assert_eq!(dates, (expected_time, expected_time, expected_time), "{id}");
+                assert_eq!(
+                    Group::flame_state(&db.pool, id).await?.counter,
+                    expected_count,
+                    "{id}"
+                );
+            }
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn ordinary_sync_does_not_extend_a_streaks_lifetime() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let path = directory.path().join("app.sqlite");
+        let db = AppDatabase::new(path.to_str().unwrap(), None, false).await?;
+        db.run_migrations().await?;
+        let now = current_time().timestamp();
+        let last_exchange = start_of_local_day()? - 4 * DAY;
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, flame_counter,
+                                last_message_send, last_message_received, last_flame_counter_change)
+             VALUES ('chat', 'Chat', 0, ?, ?, ?)",
+        )
+        .bind(now)
+        .bind(last_exchange)
+        .bind(last_exchange)
+        .execute(&db.pool)
+        .await?;
+        let mut t = db.pool.begin().await?;
+        handle_flame_sync(
+            &mut t,
+            "chat",
+            encrypted_content::FlameSync {
+                flame_counter: 12,
+                last_flame_counter_change: now * 1000,
+                force_update: false,
+                best_friend: true,
+            },
+        )
+        .await?;
+        t.commit().await?;
+        let state = Group::flame_state(&db.pool, "chat").await?;
+        assert_eq!(state.counter, 0);
+        assert!(state.is_best_friend);
+        let dates: (i64, i64, i64) = sqlx::query_as(
+            "SELECT last_message_send, last_message_received, last_flame_counter_change
+             FROM groups WHERE group_id = 'chat'",
+        )
+        .fetch_one(&db.pool)
+        .await?;
+        assert_eq!(dates, (now, last_exchange, last_exchange));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn one_restore_revives_both_sides_of_a_one_sided_exchange() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let now = current_time().timestamp();
+        let lapsed = start_of_local_day()? - 4 * DAY;
+        // Either participant can restore, including the one who stopped sending.
+        for restorer_sent_recently in [true, false] {
+            let mut databases = Vec::new();
+            for (side, sent_recently) in [restorer_sent_recently, !restorer_sent_recently]
+                .into_iter()
+                .enumerate()
+            {
+                let path = directory
+                    .path()
+                    .join(format!("{restorer_sent_recently}-{side}.sqlite"));
+                let db = AppDatabase::new(path.to_str().unwrap(), None, false).await?;
+                db.run_migrations().await?;
+                sqlx::query(
+                    "INSERT INTO groups(group_id, group_name, flame_counter, max_flame_counter,
+                                        max_flame_counter_from, last_message_send,
+                                        last_message_received, last_flame_counter_change)
+                     VALUES ('chat', 'Chat', 0, 12, ?, ?, ?, ?)",
+                )
+                .bind(lapsed)
+                .bind(if sent_recently { now } else { lapsed })
+                .bind(if sent_recently { lapsed } else { now })
+                .bind(lapsed)
+                .execute(&db.pool)
+                .await?;
+                assert!(Group::can_restore_flames(&db.pool, "chat").await?);
+                databases.push(db);
+            }
+
+            let sender = &databases[0];
+            let receiver = &databases[1];
+            let mut t = sender.pool.begin().await?;
+            let restored = Group::restore_flames(&mut t, "chat").await?.unwrap();
+            t.commit().await?;
+            let changed: i64 = sqlx::query_scalar(
+                "SELECT last_flame_counter_change FROM groups WHERE group_id = 'chat'",
+            )
+            .fetch_one(&sender.pool)
+            .await?;
+
+            let mut t = receiver.pool.begin().await?;
+            handle_flame_sync(
+                &mut t,
+                "chat",
+                encrypted_content::FlameSync {
+                    flame_counter: restored,
+                    last_flame_counter_change: changed * 1000,
+                    force_update: true,
+                    best_friend: false,
+                },
+            )
+            .await?;
+            t.commit().await?;
+
+            for db in &databases {
+                let state = Group::flame_state(&db.pool, "chat").await?;
+                assert_eq!((state.counter, state.is_expiring), (12, false));
+                assert!(!Group::can_restore_flames(&db.pool, "chat").await?);
+                // The next real image must keep the restored streak intact.
+                let mut t = db.pool.begin().await?;
+                Group::record_media_exchange(&mut t, "chat", true, changed).await?;
+                Group::record_media_exchange(&mut t, "chat", false, changed).await?;
+                t.commit().await?;
+                assert_eq!(Group::flame_state(&db.pool, "chat").await?.counter, 12);
+            }
+        }
+        Ok(())
+    }
 }

@@ -299,19 +299,9 @@ impl MediaUploadService {
             .bind(now)
             .execute(&mut *transaction)
             .await?;
-            if !widget_only {
-                sqlx::query(
-                    r#"UPDATE groups SET deleted_content = 0,
-                           last_message_exchange = MAX(last_message_exchange, ?)
-                       WHERE group_id = ?"#,
-                )
-                .bind(now)
-                .bind(group_id)
-                .execute(&mut *transaction)
-                .await?;
-                Group::record_media_exchange(&mut transaction, group_id, false, now).await?;
-                Group::record_text_or_media(&mut transaction, group_id, now).await?;
-            }
+            Group::increase_last_message_exchange(&mut transaction, group_id, now).await?;
+            Group::record_media_exchange(&mut transaction, group_id, false, now).await?;
+            Group::record_text_or_media(&mut transaction, group_id, now).await?;
         }
         // A story row neither lifts its chat nor feeds its flames: it is not
         // part of the conversation until somebody saves it.
@@ -1887,6 +1877,65 @@ pub(crate) fn parse_reupload_requested_by(value: Option<&str>) -> Vec<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn sending_widget_media_moves_the_chat_first_and_counts_towards_flames(
+    ) -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
+            .await?;
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+        let db = ctx.app_db.read().await.clone();
+        let today = crate::utils::start_of_local_day()?;
+        let now = chrono::Utc::now().timestamp();
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, widget_sharing_allowed) VALUES (7, 'peer', 1)",
+        )
+        .execute(&db.pool)
+        .await?;
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, last_message_exchange, flame_counter,
+                                last_message_send, last_message_received, last_flame_counter_change)
+             VALUES ('widget-chat', 'Peer', 1, 4, ?, ?, ?), ('other-chat', 'Other', ?, 0, NULL, NULL, NULL)",
+        )
+        .bind(today - 1)
+        .bind(now)
+        .bind(today - 1)
+        .bind(now - 1)
+        .execute(&db.pool)
+        .await?;
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES ('widget-chat', 7)")
+            .execute(&db.pool)
+            .await?;
+
+        let service = MediaUploadService::new(&ctx);
+        for expected_media_count in 1..=2 {
+            let media_id = service.initialize("image".into(), None, false).await?;
+            service
+                .insert_into_messages(media_id, vec!["widget-chat".into()], None, true, None)
+                .await?;
+            let first_chat: String = sqlx::query_scalar(
+                "SELECT group_id FROM groups ORDER BY last_message_exchange DESC LIMIT 1",
+            )
+            .fetch_one(&db.pool)
+            .await?;
+            assert_eq!(first_chat, "widget-chat");
+            let state = Group::flame_state(&db.pool, "widget-chat").await?;
+            assert_eq!((state.counter, state.is_expiring), (5, false));
+            let (total, sent_at, active_at): (i64, i64, i64) = sqlx::query_as(
+                "SELECT total_media_counter, last_message_send, last_text_or_media_at FROM groups WHERE group_id = 'widget-chat'",
+            ).fetch_one(&db.pool).await?;
+            assert_eq!(total, expected_media_count);
+            assert!(sent_at >= now);
+            assert!(active_at >= now);
+            let sent: i64 =
+                sqlx::query_scalar("SELECT media_send_counter FROM contacts WHERE user_id = 7")
+                    .fetch_one(&db.pool)
+                    .await?;
+            assert_eq!(sent, expected_media_count);
+        }
+        Ok(())
+    }
 
     #[tokio::test]
     async fn sending_media_preserves_the_archive_choice() -> anyhow::Result<()> {

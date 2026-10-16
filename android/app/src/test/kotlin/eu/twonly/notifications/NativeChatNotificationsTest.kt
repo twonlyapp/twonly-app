@@ -85,6 +85,21 @@ class NativeChatNotificationsTest {
     }
 
     @Test
+    fun flameCountersFollowTheDisplayNameInTitlesPeopleAndShortcuts() {
+        for (name in listOf("Alice 12🔥", "Alice 12🔥⌛", "Alice 12❤️‍🔥", "Alice 💯", "Alice 365🎂⌛", "Alice")) {
+            for (kind in listOf("text", "image", "story")) {
+                val addition = event("flames-$kind", kind).copy(senderName = name, conversationName = name)
+                val notification = post(addition)
+                assertEquals(name, notification.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+                assertEquals(name, style(notification).messages.single().person?.name.toString())
+                assertEquals(name, shortcut(notification).shortLabel.toString())
+                assertEquals(addition.body, notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
+            }
+        }
+        assertEquals(3, NotificationManagerCompat.from(context).activeNotifications.size)
+    }
+
+    @Test
     fun renamedContactsUseTheCurrentNameOnceAcrossAllDirectChatTypes() {
         for (kind in listOf("text", "image", "live_location")) {
             post(event("old-$kind", kind).copy(

@@ -7,6 +7,7 @@ use crate::api::proto::client::{self as proto, encrypted_content};
 use crate::api::runtime::ApiRuntime;
 use crate::bridge::InitConfig;
 use crate::context::Context;
+use crate::database::app::tables::{FlameState, Group};
 use crate::database::app::AppDatabase;
 use crate::error::Result;
 use crate::user_config::UserConfig;
@@ -216,6 +217,7 @@ pub struct NotificationAddition {
     pub notification_id: String,
     pub conversation_id: Option<String>,
     pub sender_id: i64,
+    /// Display name followed by the conversation's current flame indicator.
     pub sender_name: String,
     pub title: String,
     pub body: String,
@@ -672,9 +674,29 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
     .fetch_one(&database.pool)
     .await?;
 
+    let flame_states = if rows.is_empty() {
+        HashMap::new()
+    } else {
+        Group::flame_states(
+            &database.pool,
+            Some(
+                rows.iter()
+                    .filter_map(|row| row.conversation_id.clone())
+                    .collect(),
+            ),
+        )
+        .await?
+    };
     let mut additions = Vec::with_capacity(rows.len());
     for row in rows {
-        let title = row.sender_name.clone();
+        let flame_state = row
+            .conversation_id
+            .as_ref()
+            .and_then(|id| flame_states.get(id))
+            .copied()
+            .unwrap_or_default();
+        let sender_name = notification_sender_name(&row.sender_name, flame_state);
+        let title = sender_name.clone();
         let body = localized_body(locale, &row);
         let text_messages_body = matches!(row.kind.as_str(), "text" | "response").then(|| {
             translation(locale, "notificationTextMessages")
@@ -686,7 +708,7 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
         let conversation_name = if is_group {
             row.conversation_name
         } else {
-            Some(row.sender_name.clone())
+            Some(sender_name.clone())
         };
         let avatar_path =
             match crate::services::avatars::ensure_contact_avatar_png(ctx, row.sender_id).await {
@@ -725,7 +747,7 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
             notification_id: row.notification_id,
             conversation_id: row.conversation_id,
             sender_id: row.sender_id,
-            sender_name: row.sender_name,
+            sender_name,
             title,
             body,
             text_messages_body,
@@ -746,6 +768,31 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
         badge_count,
         completed: true,
     })
+}
+
+/// Both native renderers use this name for the notification's sender.
+/// Match FlameCounterWidget, using the same derived state as the app so expired
+/// counters disappear even before the next media exchange updates the stored row.
+fn notification_sender_name(name: &str, state: FlameState) -> String {
+    if state.counter < 1 {
+        return name.to_owned();
+    }
+    let emoji = if state.counter % 365 == 0 {
+        "🎂"
+    } else if state.counter == 100 {
+        "💯"
+    } else if state.is_best_friend {
+        "❤️‍🔥"
+    } else {
+        "🔥"
+    };
+    let counter = if state.counter == 100 {
+        String::new()
+    } else {
+        state.counter.to_string()
+    };
+    let expiry = if state.is_expiring { "⌛" } else { "" };
+    format!("{name} {counter}{emoji}{expiry}")
 }
 
 /// Drains the mailbox and returns the alert the native caller should render.
@@ -1118,6 +1165,95 @@ pub(crate) fn notification_avatar_path(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn notification_names_match_the_app_flame_counter() {
+        for (counter, is_best_friend, is_expiring, expected) in [
+            (0, false, false, "Alice"),
+            (0, true, true, "Alice"),
+            (12, false, false, "Alice 12🔥"),
+            (12, false, true, "Alice 12🔥⌛"),
+            (12, true, false, "Alice 12❤️‍🔥"),
+            (12, true, true, "Alice 12❤️‍🔥⌛"),
+            (100, false, false, "Alice 💯"),
+            (100, true, true, "Alice 💯⌛"),
+            (365, true, false, "Alice 365🎂"),
+            (730, false, true, "Alice 730🎂⌛"),
+            (366, false, false, "Alice 366🔥"),
+        ] {
+            assert_eq!(
+                notification_sender_name(
+                    "Alice",
+                    FlameState {
+                        counter,
+                        is_best_friend,
+                        is_expiring
+                    },
+                ),
+                expected,
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn notification_batches_use_current_flames_after_the_resolved_display_name() -> Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let db = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username, display_name, nick_name) VALUES (7, 'alice', 'Alice', 'Ali')",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat, flame_counter) VALUES ('direct', 'Old name', 1, 12), ('group', 'Friends', 0, 12)",
+            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, kind, created_at) VALUES ('direct', 'image', 'direct', 7, 'image', 1), ('group', 'text', 'group', 7, 'text', 2), ('request', 'request', NULL, 7, 'contact_request', 3)",
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&db.pool).await?;
+        }
+
+        let today = crate::utils::start_of_local_day()?;
+        for (age_days, best_friend, expected) in [
+            (0, false, "Ali 12🔥"),
+            (0, true, "Ali 12❤️‍🔥"),
+            (2, false, "Ali 12🔥⌛"),
+            (3, false, "Ali"),
+        ] {
+            let exchanged = today - age_days * 86_400 + 1;
+            sqlx::query(
+                "UPDATE groups SET last_message_send = ?, last_message_received = ?, last_flame_counter_change = ?, also_best_friend = ?, total_media_counter = 100 WHERE group_id = 'direct'",
+            )
+            .bind(exchanged)
+            .bind(exchanged)
+            .bind(exchanged)
+            .bind(best_friend)
+            .execute(&db.pool)
+            .await?;
+            sqlx::query(
+                "UPDATE groups SET last_message_send = ?, last_message_received = ?, last_flame_counter_change = ? WHERE group_id = 'group'",
+            )
+            .bind(exchanged)
+            .bind(exchanged)
+            .bind(exchanged)
+            .execute(&db.pool)
+            .await?;
+
+            let batch = pending_batch(&ctx, "en").await?;
+            assert_eq!(batch.additions.len(), 3);
+            let direct = &batch.additions[0];
+            assert_eq!(direct.sender_name, expected);
+            assert_eq!(direct.title, expected);
+            assert_eq!(direct.conversation_name.as_deref(), Some(expected));
+            assert_eq!(direct.body, "sent an image.");
+            assert_eq!(direct.event_id, "direct");
+            assert_eq!(direct.notification_id, "image");
+            let group = &batch.additions[1];
+            assert_eq!(group.sender_name, expected.replace("❤️‍🔥", "🔥"));
+            assert_eq!(group.conversation_name.as_deref(), Some("Friends"));
+            assert_eq!(group.body, "sent a message in Friends.");
+            assert_eq!(batch.additions[2].sender_name, "Ali");
+        }
+        Ok(())
+    }
 
     #[tokio::test]
     async fn deleting_messages_clears_badge_and_broadcasts_outbox_changes() -> Result<()> {

@@ -20,6 +20,7 @@ import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
+import 'package:twonly/src/visual/release_notes/release_notes_0_6_0.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
 import 'package:twonly/src/visual/views/onboarding/components/link_logo_animation.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
@@ -173,6 +174,8 @@ class _RegisterViewState extends State<RegisterView> {
         currentSetupPage: SetupPages.profile.name,
         appVersion: AppState.latestAppVersionId,
       );
+      // These features are already part of the version this account starts on.
+      userData.lastReleaseNotesVersion = releaseNotes060Version;
 
       await UserService.save(userData);
 

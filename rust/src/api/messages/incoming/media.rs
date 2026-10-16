@@ -271,7 +271,7 @@ pub(crate) async fn handle_media(
 
     // A story is not an exchange in the chat it is filed under: it neither
     // moves the chat up nor feeds its flames.
-    if !widget_only && !is_story {
+    if !is_story {
         Group::increase_last_message_exchange(t, group_id, timestamp).await?;
         Group::record_media_exchange(t, group_id, true, timestamp).await?;
         Group::record_text_or_media(t, group_id, timestamp).await?;
@@ -355,6 +355,68 @@ pub(crate) async fn handle_media_update(
 mod tests {
     use super::*;
     use prost::Message as _;
+
+    #[tokio::test]
+    async fn receiving_widget_media_moves_the_chat_first_and_counts_towards_flames_once(
+    ) -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let db = ctx.app_db.read().await.clone();
+        let today = crate::utils::start_of_local_day()?;
+        let now = chrono::Utc::now().timestamp();
+        let mut t = db.pool.begin().await?;
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, widget_sharing_granted) VALUES (7, 'peer', 1)",
+        )
+        .execute(&mut *t)
+        .await?;
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, last_message_exchange, flame_counter,
+                                last_message_send, last_message_received, last_flame_counter_change)
+             VALUES ('widget-chat', 'Peer', 1, 4, ?, ?, ?), ('other-chat', 'Other', ?, 0, NULL, NULL, NULL)",
+        )
+        .bind(now)
+        .bind(today - 1)
+        .bind(today - 1)
+        .bind(now - 1)
+        .execute(&mut *t)
+        .await?;
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES ('widget-chat', 7)")
+            .execute(&mut *t)
+            .await?;
+        let media = encrypted_content::Media {
+            sender_message_id: "widget-message".into(),
+            r#type: MediaType::Image as i32,
+            widget_only: Some(true),
+            timestamp: now * 1000,
+            ..Default::default()
+        };
+        handle_media(&ctx, &mut t, 7, "widget-chat", media.clone(), false).await?;
+        handle_media(&ctx, &mut t, 7, "widget-chat", media, false).await?;
+        t.commit().await?;
+        let first_chat: String = sqlx::query_scalar(
+            "SELECT group_id FROM groups ORDER BY last_message_exchange DESC LIMIT 1",
+        )
+        .fetch_one(&db.pool)
+        .await?;
+        assert_eq!(first_chat, "widget-chat");
+        let state = Group::flame_state(&db.pool, "widget-chat").await?;
+        assert_eq!((state.counter, state.is_expiring), (5, false));
+        let (total, received_at, active_at): (i64, i64, i64) = sqlx::query_as(
+            "SELECT total_media_counter, last_message_received, last_text_or_media_at FROM groups WHERE group_id = 'widget-chat'",
+        ).fetch_one(&db.pool).await?;
+        assert_eq!((total, received_at, active_at), (1, now, now));
+        let received: i64 =
+            sqlx::query_scalar("SELECT media_received_counter FROM contacts WHERE user_id = 7")
+                .fetch_one(&db.pool)
+                .await?;
+        assert_eq!(received, 1);
+        Ok(())
+    }
 
     #[tokio::test]
     async fn widget_arrival_queues_one_opened_receipt_with_the_arrival_time() -> anyhow::Result<()>
