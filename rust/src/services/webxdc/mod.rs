@@ -457,6 +457,7 @@ impl WebxdcService {
         // does not offer should fail here rather than on every recipient's
         // device.
         self.store().resolve_bundle_sha256(&app_id, version).await?;
+        self.ensure_chat_allowed(&group_id, &app_id).await?;
 
         if self
             .existing_instance_if_limited(&group_id, &app_id, version)
@@ -492,6 +493,27 @@ impl WebxdcService {
         Self::insert_instance(&mut transaction, &message_id, &group_id, &app_id, version).await?;
         transaction.commit().await?;
         Ok(message_id)
+    }
+
+    async fn ensure_chat_allowed(&self, group_id: &str, app_id: &str) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let allowed: bool = sqlx::query_scalar(
+            "SELECT EXISTS(SELECT 1 FROM groups WHERE group_id = ? AND
+                (is_direct_chat = 1 OR COALESCE((
+                    SELECT direct_chat_only FROM webxdc_apps WHERE app_id = ?
+                    ORDER BY published DESC, version DESC LIMIT 1
+                ), 0) = 0))",
+        )
+        .bind(group_id)
+        .bind(app_id)
+        .fetch_one(&database.pool)
+        .await?;
+        if !allowed {
+            return Err(TwonlyError::Generic(
+                "this app can only be played in direct chats".into(),
+            ));
+        }
+        Ok(())
     }
 
     async fn existing_instance_if_limited(
@@ -645,7 +667,7 @@ impl WebxdcService {
         let summary = sanitize(update.summary.as_deref(), MAX_SUMMARY_CHARS);
         let document = sanitize(update.document.as_deref(), MAX_DOCUMENT_CHARS);
 
-        Self::append_update(
+        let inserted = Self::append_update(
             transaction,
             &update.instance_id,
             message_id,
@@ -656,6 +678,9 @@ impl WebxdcService {
             received_at,
         )
         .await?;
+        if !inserted {
+            return Ok(());
+        }
         Self::apply_instance_labels(
             transaction,
             &update.instance_id,
@@ -714,7 +739,7 @@ impl WebxdcService {
             let href = row.href.as_deref().and_then(sanitize_href);
             let summary = sanitize(row.summary.as_deref(), MAX_SUMMARY_CHARS);
             let document = sanitize(row.document.as_deref(), MAX_DOCUMENT_CHARS);
-            Self::append_update(
+            let inserted = Self::append_update(
                 transaction,
                 instance_id,
                 &row.message_id,
@@ -725,6 +750,9 @@ impl WebxdcService {
                 row.received_at,
             )
             .await?;
+            if !inserted {
+                continue;
+            }
             Self::apply_instance_labels(
                 transaction,
                 instance_id,
@@ -756,13 +784,13 @@ impl WebxdcService {
         Ok(())
     }
 
-    /// Writes an update's `info` into the chat as a message of its own.
+    /// Keeps the latest automatic announcement beside its refreshed app card.
     ///
     /// An app announces things a person is meant to read -- "a new game
     /// started", "it is your turn". The update carrying it is state rather than
     /// a message and stays hidden, so the announcement is materialised here
-    /// instead: an ordinary chat row that names the app it came from and points
-    /// back at its card.
+    /// instead. It replaces the previous automatic announcement for this
+    /// instance and moves the card to the same point in the conversation.
     ///
     /// Both devices build the row out of the update they already have, so
     /// nothing extra is sent, and the id derived from the update's own message
@@ -779,6 +807,40 @@ impl WebxdcService {
         info: &str,
         created_at: i64,
     ) -> Result<()> {
+        let latest: Option<String> = sqlx::query_scalar(
+            "SELECT message_id FROM webxdc_updates
+             WHERE instance_id = ? AND info IS NOT NULL
+             ORDER BY received_at DESC, serial DESC LIMIT 1",
+        )
+        .bind(instance_id)
+        .fetch_optional(&mut **transaction)
+        .await?;
+        if latest.as_deref() != Some(update_message_id) {
+            return Ok(());
+        }
+        // Only generated info rows are replaced. User-sent app text and the
+        // complete update log remain, as do undelivered game receipts.
+        sqlx::query(
+            "DELETE FROM messages WHERE group_id = ? AND message_id IN (
+                SELECT message_id || '-info' FROM webxdc_updates
+                WHERE instance_id = ? AND message_id != ?
+            )",
+        )
+        .bind(group_id)
+        .bind(instance_id)
+        .bind(update_message_id)
+        .execute(&mut **transaction)
+        .await?;
+        sqlx::query(
+            "UPDATE messages SET created_at = MAX(created_at, ?)
+             WHERE message_id = ? AND group_id = ? AND type = 'webxdcApp'",
+        )
+        .bind(created_at)
+        .bind(instance_id)
+        .bind(group_id)
+        .execute(&mut **transaction)
+        .await?;
+
         let origin = proto::AdditionalMessageData {
             r#type: proto::additional_message_data::Type::WebxdcSent as i32,
             webxdc_origin: Some(proto::WebxdcOrigin {
@@ -827,7 +889,7 @@ impl WebxdcService {
         info: Option<&str>,
         href: Option<&str>,
         received_at: i64,
-    ) -> Result<()> {
+    ) -> Result<bool> {
         let next_serial: i64 = sqlx::query_scalar!(
             r#"SELECT COALESCE(MAX(serial), 0) + 1 AS "next!: i64"
                FROM webxdc_updates WHERE instance_id = ?"#,
@@ -838,7 +900,7 @@ impl WebxdcService {
 
         // `message_id` is unique, so a redelivered message is a no-op rather
         // than a duplicated move.
-        sqlx::query!(
+        let inserted = sqlx::query!(
             r#"INSERT INTO webxdc_updates
                    (instance_id, serial, message_id, sender_id, payload, info, href, received_at)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -854,7 +916,7 @@ impl WebxdcService {
         )
         .execute(&mut **transaction)
         .await?;
-        Ok(())
+        Ok(inserted.rows_affected() > 0)
     }
 
     async fn apply_instance_labels(
@@ -1115,6 +1177,8 @@ impl WebxdcService {
             .instance(instance_id)
             .await?
             .ok_or_else(|| TwonlyError::Generic("unknown webxdc instance".into()))?;
+        self.ensure_chat_allowed(&instance.group_id, &instance.app_id)
+            .await?;
         if let Some(path) = self.apply_cached_update(&instance, instance_id).await? {
             return Ok(path);
         }
@@ -1155,6 +1219,8 @@ impl WebxdcService {
             None => {
                 let sha256 = store
                     .resolve_bundle_sha256(&instance.app_id, instance.version)
+                    .await?;
+                self.ensure_chat_allowed(&instance.group_id, &instance.app_id)
                     .await?;
                 Self::pin(&self.ctx, instance_id, instance.version, &sha256).await?;
                 sha256
@@ -1379,6 +1445,224 @@ mod tests {
     use sha2::{Digest, Sha256};
 
     #[tokio::test]
+    async fn upgrading_compacts_existing_game_announcements_without_losing_moves() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO groups(group_id, group_name) VALUES ('g', 'Games');
+             INSERT INTO messages(message_id, group_id, type, content, created_at)
+             VALUES ('card', 'g', 'webxdcApp', NULL, 100),
+                    ('first-info', 'g', 'text', 'First move', 200),
+                    ('last-info', 'g', 'text', 'Last move', 300),
+                    ('shared', 'g', 'text', 'Shared text', 250);
+             INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token)
+             VALUES ('card', 'g', 'chess', 1, 'origin');
+             INSERT INTO webxdc_updates(instance_id, serial, message_id, payload, info, received_at)
+             VALUES ('card', 1, 'first', '{}', 'First move', 200),
+                    ('card', 2, 'last', '{}', 'Last move', 300);
+             DROP INDEX idx_webxdc_updates_announcements;",
+        )
+        .execute(&database.pool)
+        .await?;
+        sqlx::raw_sql(include_str!(
+            "../../database/app/migrations/0042_webxdc_latest_announcement.sql"
+        ))
+        .execute(&database.pool)
+        .await?;
+        let ids: Vec<String> =
+            sqlx::query_scalar("SELECT message_id FROM messages ORDER BY message_id")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(ids, ["card", "last-info", "shared"]);
+        let card_at: i64 =
+            sqlx::query_scalar("SELECT created_at FROM messages WHERE message_id = 'card'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(card_at, 300);
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM webxdc_updates")
+            .fetch_one(&database.pool)
+            .await?;
+        assert_eq!(count, 2);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn direct_chat_only_apps_cannot_be_created_or_started_in_groups() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO groups(group_id, group_name, is_direct_chat)
+             VALUES ('direct', 'Alice', 1), ('group', 'Friends', 0);
+             INSERT INTO webxdc_apps(app_id, version, name, bundle_sha256, bundle_bytes, cached_at, direct_chat_only)
+             VALUES ('chess', 1, 'Chess', 'hash', 10, 0, 1);
+             INSERT INTO messages(message_id, group_id, type) VALUES ('card', 'group', 'webxdcApp');
+             INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token)
+             VALUES ('card', 'group', 'chess', 1, 'origin');",
+        ).execute(&database.pool).await?;
+        let service = WebxdcService::new(&ctx);
+        service.ensure_chat_allowed("direct", "chess").await?;
+        assert!(service.ensure_chat_allowed("group", "chess").await.is_err());
+        assert!(service
+            .create_instance("group".into(), "chess".into(), 1)
+            .await
+            .is_err());
+        assert!(service.prepare_bundle("card").await.is_err());
+        let cards: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE type = 'webxdcApp'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(
+            cards, 1,
+            "rejected placement leaves no card or outgoing message"
+        );
+        sqlx::query("UPDATE webxdc_apps SET direct_chat_only = 0")
+            .execute(&database.pool)
+            .await?;
+        service.ensure_chat_allowed("group", "chess").await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn game_announcements_replace_only_the_same_instances_automatic_text() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'sender');
+             INSERT INTO groups(group_id, group_name) VALUES ('g', 'Games');
+             INSERT INTO messages(message_id, group_id, type, created_at)
+             VALUES ('card', 'g', 'webxdcApp', 100), ('other-card', 'g', 'webxdcApp', 100),
+                    ('person', 'g', 'text', 250);
+             INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token, created_at)
+             VALUES ('card', 'g', 'chess', 1, 'origin', 100),
+                    ('other-card', 'g', 'chess', 1, 'other-origin', 100);",
+        ).execute(&database.pool).await?;
+        let mut tx = database.pool.begin().await?;
+        for (id, instance, info, at) in [
+            ("move-1", "card", Some("Alice played"), 200),
+            ("other-move", "other-card", Some("Bob played"), 260),
+            ("move-2", "card", Some("Ben played"), 300),
+            ("late-move", "card", Some("Older move"), 150),
+            ("move-1", "card", Some("Alice played"), 200),
+            ("silent", "card", None, 400),
+        ] {
+            WebxdcService::handle_incoming_update(
+                &mut tx,
+                id,
+                "g",
+                7,
+                &proto::WebxdcUpdate {
+                    instance_id: instance.into(),
+                    payload: "{}".into(),
+                    info: info.map(str::to_owned),
+                    ..Default::default()
+                },
+                at,
+            )
+            .await?;
+            if id == "move-1" && at == 200 {
+                sqlx::query("INSERT OR IGNORE INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, message_id, kind, created_at) VALUES ('first', 'move-1', 'g', 7, 'move-1-info', 'webxdc', 200)")
+                    .execute(&mut *tx).await?;
+            }
+        }
+        let messages: Vec<(String, Option<String>, i64)> = sqlx::query_as(
+            "SELECT message_id, content, created_at FROM messages ORDER BY created_at, message_id",
+        )
+        .fetch_all(&mut *tx)
+        .await?;
+        assert_eq!(
+            messages
+                .iter()
+                .map(|row| row.0.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "person",
+                "other-card",
+                "other-move-info",
+                "card",
+                "move-2-info"
+            ]
+        );
+        assert_eq!(messages.last().unwrap().1.as_deref(), Some("Ben played"));
+        assert_eq!(
+            messages[3].2, 300,
+            "silent, late and replayed updates do not move the card"
+        );
+        let updates: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM webxdc_updates")
+            .fetch_one(&mut *tx)
+            .await?;
+        assert_eq!(
+            updates, 5,
+            "the full game history is retained without duplicate moves"
+        );
+        let cleared: Option<i64> = sqlx::query_scalar(
+            "SELECT cleared_at FROM notification_outbox WHERE event_id = 'first'",
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+        assert!(
+            cleared.is_some(),
+            "superseded announcements no longer count towards the badge"
+        );
+        tx.commit().await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn incoming_game_announcements_lift_the_chat_but_silent_updates_do_not() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'sender');
+             INSERT INTO groups(group_id, group_name, last_message_exchange) VALUES ('g', 'Games', 100);
+             INSERT INTO messages(message_id, group_id, type, created_at) VALUES ('card', 'g', 'webxdcApp', 100);
+             INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token)
+             VALUES ('card', 'g', 'connect4', 3, 'origin');",
+        )
+        .execute(&database.pool)
+        .await?;
+        for (message_id, info, timestamp, expected_activity) in [
+            ("silent", None, 200, 100),
+            ("move", Some("Your turn"), 300, 300),
+            ("silent-again", None, 400, 300),
+        ] {
+            let mut tx = database.pool.begin().await?;
+            WebxdcService::handle_incoming_update(
+                &mut tx,
+                message_id,
+                "g",
+                7,
+                &proto::WebxdcUpdate {
+                    instance_id: "card".into(),
+                    payload: "{}".into(),
+                    info: info.map(str::to_owned),
+                    ..Default::default()
+                },
+                timestamp,
+            )
+            .await?;
+            tx.commit().await?;
+            let activity: i64 =
+                sqlx::query_scalar("SELECT last_message_exchange FROM groups WHERE group_id = 'g'")
+                    .fetch_one(&database.pool)
+                    .await?;
+            assert_eq!(activity, expected_activity);
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn outgoing_announcements_track_delivery_without_owning_the_game_outbox() -> Result<()> {
         let directory = tempfile::tempdir()?;
         let ctx =
@@ -1393,7 +1677,7 @@ mod tests {
             "INSERT INTO contacts(user_id, username, signal_version) VALUES (7, 'ben', 'v2')",
             "INSERT INTO groups(group_id, group_name, last_message_exchange) VALUES ('g', 'Games', 100)",
             "INSERT INTO group_members(group_id, contact_id) VALUES ('g', 7)",
-            "INSERT INTO messages(message_id, group_id, type) VALUES ('card', 'g', 'webxdcApp')",
+            "INSERT INTO messages(message_id, group_id, type, created_at) VALUES ('card', 'g', 'webxdcApp', 100)",
             "INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token) VALUES ('card', 'g', 'connect4', 3, 'origin')",
         ] {
             sqlx::query(statement).execute(&database.pool).await?;
@@ -1406,6 +1690,10 @@ mod tests {
             (Some("Ben's turn"), true),
             (None, false),
         ] {
+            sqlx::query("UPDATE groups SET last_message_exchange = 100 WHERE group_id = 'g'")
+                .execute(&database.pool)
+                .await?;
+            let sent_at = chrono::Utc::now().timestamp();
             tokio::time::timeout(
                 std::time::Duration::from_secs(1),
                 service.send_update(
@@ -1420,6 +1708,15 @@ mod tests {
             )
             .await
             .expect("queuing a game move waited for the network")?;
+            let last_exchange: i64 =
+                sqlx::query_scalar("SELECT last_message_exchange FROM groups WHERE group_id = 'g'")
+                    .fetch_one(&database.pool)
+                    .await?;
+            if info.is_some() {
+                assert!(last_exchange >= sent_at, "visible game moves lift the chat");
+            } else {
+                assert_eq!(last_exchange, 100, "silent updates leave chat order alone");
+            }
             let update_id: String = sqlx::query_scalar(
                 "SELECT message_id FROM webxdc_updates WHERE instance_id = 'card' ORDER BY serial DESC LIMIT 1",
             ).fetch_one(&database.pool).await?;
@@ -1473,11 +1770,6 @@ mod tests {
             assert_eq!(actions, i64::from(info.is_some() && !delete_announcement));
             tx.commit().await?;
         }
-        let last_exchange: i64 =
-            sqlx::query_scalar("SELECT last_message_exchange FROM groups WHERE group_id = 'g'")
-                .fetch_one(&database.pool)
-                .await?;
-        assert_eq!(last_exchange, 100);
         Ok(())
     }
 
@@ -1745,6 +2037,18 @@ mod tests {
         .execute(&mut *transaction)
         .await?;
 
+        WebxdcService::insert_instance(&mut transaction, "card-1", "group-1", "mills", 3).await?;
+        WebxdcService::append_update(
+            &mut transaction,
+            "card-1",
+            "update-1",
+            None,
+            "{}",
+            Some("Alice is on turn"),
+            None,
+            1234,
+        )
+        .await?;
         for _ in 0..2 {
             WebxdcService::insert_info_message(
                 &mut transaction,

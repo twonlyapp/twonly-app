@@ -105,13 +105,18 @@ enum BackgroundWork {
         twonly_background_string_free(pointer)
         return value
       }
-      let ok = json?.contains("\"ok\":true") ?? false
+      let result = json?.data(using: .utf8).flatMap {
+        (try? JSONSerialization.jsonObject(with: $0)) as? [String: Any]
+      }
+      let ok = result?["ok"] as? Bool ?? false
+      let pending = (result?["pending_uploads"] as? Bool ?? false)
+        || (result?["pending_messages"] as? Bool ?? false)
       if !ok { NativeErrorReporting.failure("outbox_flush") }
       NativeErrorReporting.breadcrumb("outbox_flush_finished")
       // Keep a rolling reservation: as long as anything is unsent, there is a
       // scheduled chance to send it.
       scheduleFlush()
-      finish(ok)
+      finish(ok && !pending)
     }
   }
 }

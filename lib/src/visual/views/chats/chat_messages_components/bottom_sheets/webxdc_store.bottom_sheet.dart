@@ -127,6 +127,20 @@ class _WebxdcStoreViewState extends State<WebxdcStoreView> {
             ),
             const SizedBox(height: 8),
             Expanded(child: _body(controller)),
+            if (!widget.group.isDirectChat)
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                  child: Text(
+                    context.lang.webxdcStoreDirectChatHint,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: context.color.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

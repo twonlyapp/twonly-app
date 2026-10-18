@@ -115,7 +115,10 @@ impl WebxdcStore {
             .await
             .map_err(|error| TwonlyError::Generic(error.to_string()))?;
         let catalog = WebxdcCatalog::decode(bytes.as_ref())?;
+        self.cache_catalog(catalog).await
+    }
 
+    async fn cache_catalog(&self, catalog: WebxdcCatalog) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
         let mut transaction = database.pool.begin().await?;
         // Everything the catalog no longer carries goes, except what a chat on
@@ -152,8 +155,8 @@ impl WebxdcStore {
                 r#"INSERT INTO webxdc_apps
                        (app_id, version, name, name_translations, source_code_url,
                         description, icon, bundle_sha256, bundle_bytes, published,
-                        cached_at, pro_only, sort_order, one_time)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)
+                        cached_at, pro_only, sort_order, one_time, direct_chat_only)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)
                    ON CONFLICT(app_id, version) DO UPDATE SET
                        name = excluded.name,
                        name_translations = excluded.name_translations,
@@ -166,6 +169,7 @@ impl WebxdcStore {
                        pro_only = excluded.pro_only,
                        sort_order = excluded.sort_order,
                        one_time = excluded.one_time,
+                       direct_chat_only = excluded.direct_chat_only,
                        cached_at = excluded.cached_at"#,
                 entry.app_id,
                 entry.version,
@@ -180,6 +184,7 @@ impl WebxdcStore {
                 entry.pro_only,
                 sort_order,
                 entry.one_time,
+                entry.direct_chat_only,
             )
             .execute(&mut *transaction)
             .await?;
@@ -336,7 +341,40 @@ impl WebxdcStore {
 
 #[cfg(test)]
 mod tests {
-    use super::pick_localized;
+    use super::{pick_localized, Context, WebxdcCatalog, WebxdcCatalogEntry, WebxdcStore};
+
+    #[tokio::test]
+    async fn catalog_refresh_persists_and_updates_direct_chat_eligibility(
+    ) -> crate::error::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let store = WebxdcStore::new(&ctx);
+        let database = ctx.app_db.read().await.clone();
+        for direct_chat_only in [false, true, false] {
+            store
+                .cache_catalog(WebxdcCatalog {
+                    entries: vec![WebxdcCatalogEntry {
+                        app_id: "chess".into(),
+                        version: 1,
+                        name: "Chess".into(),
+                        bundle_sha256: "a".repeat(64),
+                        bundle_bytes: 10,
+                        direct_chat_only,
+                        ..Default::default()
+                    }],
+                })
+                .await?;
+            let cached: bool = sqlx::query_scalar(
+                "SELECT direct_chat_only FROM webxdc_apps WHERE app_id = 'chess'",
+            )
+            .fetch_one(&database.pool)
+            .await?;
+            assert_eq!(cached, direct_chat_only);
+        }
+        Ok(())
+    }
 
     fn languages(preferred: &[&str]) -> Vec<String> {
         preferred.iter().map(|tag| (*tag).to_string()).collect()

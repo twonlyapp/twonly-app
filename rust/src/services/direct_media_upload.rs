@@ -1249,9 +1249,15 @@ impl DirectMediaUploadService {
                    JOIN contacts c ON c.user_id = gm.contact_id
                    WHERE gm.group_id = ?
                      AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')
-                     AND c.account_deleted = 0"#,
+                     AND c.account_deleted = 0
+                     AND NOT EXISTS (
+                         SELECT 1 FROM message_actions a
+                         WHERE a.message_id = ? AND a.contact_id = gm.contact_id
+                           AND a.type = 'sendFailed'
+                     )"#,
             )
             .bind(&message.group_id)
+            .bind(&message.message_id)
             .fetch_all(&database.pool)
             .await?;
             for recipient in recipients {
@@ -1329,7 +1335,7 @@ impl DirectMediaUploadService {
                     .call()
                     .await;
                 let Some(encrypted_body) = self
-                    .story_envelope(&message, recipient.contact_id, envelope)
+                    .recipient_envelope(&message, recipient.contact_id, envelope)
                     .await?
                 else {
                     continue;
@@ -1365,9 +1371,11 @@ impl DirectMediaUploadService {
         ))
     }
 
-    /// A missing bundle excludes this story recipient, without changing their
-    /// contact or delaying anybody else's envelope. Other failures still retry.
-    async fn story_envelope(
+    /// A peer without keys or a usable session cannot receive this send. Keep
+    /// that failure per recipient so a later preparation of the shared media
+    /// cannot retry it or prevent the other recipients from receiving it.
+    /// Transient errors still retry; stories retain their retirement policy.
+    async fn recipient_envelope(
         &self,
         message: &MessageRow,
         contact_id: i64,
@@ -1399,6 +1407,31 @@ impl DirectMediaUploadService {
                     contact_id,
                     message_id = message.message_id,
                     "skipping story recipient without a prekey bundle or usable session"
+                );
+                Ok(None)
+            }
+            Err(TwonlyError::PeerHasNoPrekeyBundle(_)) => {
+                let database = self.ctx.app_db.read().await.clone();
+                let mut transaction = database.pool.begin().await?;
+                sqlx::query(
+                    r#"INSERT INTO message_actions(message_id, contact_id, type)
+                       VALUES (?, ?, 'sendFailed')
+                       ON CONFLICT(message_id, contact_id, type) DO NOTHING"#,
+                )
+                .bind(&message.message_id)
+                .bind(contact_id)
+                .execute(&mut *transaction)
+                .await?;
+                sqlx::query("DELETE FROM receipts WHERE message_id = ? AND contact_id = ?")
+                    .bind(&message.message_id)
+                    .bind(contact_id)
+                    .execute(&mut *transaction)
+                    .await?;
+                transaction.commit().await?;
+                tracing::warn!(
+                    contact_id,
+                    message_id = message.message_id,
+                    "media send permanently failed: recipient has no prekey bundle or usable session"
                 );
                 Ok(None)
             }
@@ -1685,7 +1718,7 @@ mod tests {
         };
         let service = DirectMediaUploadService::new(&ctx);
         assert!(service
-            .story_envelope(
+            .recipient_envelope(
                 &row("missing"),
                 7,
                 Err(TwonlyError::PeerHasNoPrekeyBundle(7))
@@ -1694,7 +1727,7 @@ mod tests {
             .is_none());
         assert_eq!(
             service
-                .story_envelope(&row("healthy"), 8, Ok(Some(vec![1, 2, 3])))
+                .recipient_envelope(&row("healthy"), 8, Ok(Some(vec![1, 2, 3])))
                 .await?,
             Some(vec![1, 2, 3])
         );
@@ -1711,7 +1744,7 @@ mod tests {
             .await?;
         assert_eq!(accepted, 1, "skipping must not modify the contact");
         assert!(service
-            .story_envelope(
+            .recipient_envelope(
                 &row("healthy"),
                 8,
                 Err(TwonlyError::Generic("network unavailable".into()))
@@ -1724,6 +1757,202 @@ mod tests {
                 .await?,
             1
         );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn missing_bundle_permanently_fails_only_that_media_recipient() -> anyhow::Result<()> {
+        let sender_dir = tempfile::tempdir()?;
+        let receiver_dir = tempfile::tempdir()?;
+        let sender = upload_test_context(sender_dir.path(), 42).await?;
+        let receiver = upload_test_context(receiver_dir.path(), 7).await?;
+        let bundle = receiver
+            .signal_engine
+            .lock()
+            .await
+            .as_ref()
+            .unwrap()
+            .generate_bundle()
+            .await?;
+        sender
+            .signal_engine
+            .lock()
+            .await
+            .as_ref()
+            .unwrap()
+            .process_prekey_bundle("7".into(), 1, bundle)
+            .await?;
+        let database = sender.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username, signal_version) VALUES(7, 'healthy', 'v2'), (8, 'missing', 'v2')",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES('group', 'Group', 0), ('direct', 'Direct', 1)",
+            "INSERT INTO group_members(group_id, contact_id) VALUES('group', 7), ('group', 8), ('direct', 8)",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+        let upload = MediaUploadService::new(&sender);
+        let media_id = upload.initialize("audio".into(), None, false).await?;
+        let source = crate::services::mediafiles::MediaFileService::new(&sender)
+            .temp_path(&media_id, "audio");
+        std::fs::create_dir_all(source.parent().unwrap())?;
+        std::fs::write(&source, b"voice message")?;
+        for group_id in ["group", "direct"] {
+            sqlx::query("INSERT INTO messages(message_id, group_id, type, media_id) VALUES(?, ?, 'media', ?)")
+                .bind(group_id).bind(group_id).bind(&media_id)
+                .execute(&database.pool).await?;
+            sqlx::query("INSERT INTO receipts(receipt_id, contact_id, message_id, message, will_be_retried_by_media_upload) VALUES(?, 8, ?, x'00', 1)")
+                .bind(group_id).bind(group_id).execute(&database.pool).await?;
+        }
+        let row = |id: &str| MessageRow {
+            group_id: id.into(),
+            message_id: id.into(),
+            created_at: chrono::Utc::now().timestamp(),
+            quotes_message_id: None,
+            additional_message_data: None,
+            is_widget_media: 0,
+            is_story: 0,
+        };
+        let direct = DirectMediaUploadService::new(&sender);
+        // Network errors remain retryable and must not write terminal actions.
+        assert!(direct
+            .recipient_envelope(
+                &row("group"),
+                7,
+                Err(TwonlyError::Generic("network unavailable".into()))
+            )
+            .await
+            .is_err());
+        for id in ["group", "direct"] {
+            assert!(direct
+                .recipient_envelope(&row(id), 8, Err(TwonlyError::PeerHasNoPrekeyBundle(8)))
+                .await?
+                .is_none());
+            // Repeating the result is idempotent and keeps the original time.
+            assert!(direct
+                .recipient_envelope(&row(id), 8, Err(TwonlyError::PeerHasNoPrekeyBundle(8)))
+                .await?
+                .is_none());
+            assert!(!upload.record_reupload_request(8, &media_id, id).await?);
+        }
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM message_actions WHERE type = 'sendFailed'"
+            )
+            .fetch_one(&database.pool)
+            .await?,
+            2
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM receipts")
+                .fetch_one(&database.pool)
+                .await?,
+            0
+        );
+        // Real encryption succeeds for the healthy group member. Preparation
+        // can be retried without ever asking the network for the failed peer.
+        for _ in 0..2 {
+            let (_, _, manifest) = direct.prepare_media(&media_id).await?;
+            assert_eq!(manifest.dispatches.len(), 1);
+            assert_eq!(manifest.dispatches[0].recipient_user_id, 7);
+        }
+        let mut transaction = database.pool.begin().await?;
+        MediaFile::mark_uploaded(&mut transaction, &media_id).await?;
+        transaction.commit().await?;
+        let acks: Vec<(String, i64)> = sqlx::query_as(
+            "SELECT message_id, contact_id FROM message_actions WHERE type = 'ackByServerAt'",
+        )
+        .fetch_all(&database.pool)
+        .await?;
+        assert_eq!(acks, vec![("group".into(), 7)]);
+        let messages: Vec<(String, Option<i64>)> =
+            sqlx::query_as("SELECT message_id, ack_by_server FROM messages ORDER BY message_id")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(messages[0], ("direct".into(), None));
+        assert!(messages[1].1.is_some(), "the group must finish normally");
+        assert!(
+            !upload
+                .record_reupload_request(8, &media_id, "group")
+                .await?
+        );
+
+        // Keys published later must not revive this failed send. A new
+        // message to the same contact remains independent and can succeed.
+        let bundle = receiver
+            .signal_engine
+            .lock()
+            .await
+            .as_ref()
+            .unwrap()
+            .generate_bundle()
+            .await?;
+        sender
+            .signal_engine
+            .lock()
+            .await
+            .as_ref()
+            .unwrap()
+            .process_prekey_bundle("8".into(), 1, bundle)
+            .await?;
+        let (_, _, manifest) = direct.prepare_media(&media_id).await?;
+        assert_eq!(manifest.dispatches.len(), 1);
+        assert_eq!(manifest.dispatches[0].recipient_user_id, 7);
+        sqlx::query("INSERT INTO messages(message_id, group_id, type, media_id) VALUES('fresh', 'direct', 'media', ?)")
+            .bind(&media_id).execute(&database.pool).await?;
+        let (_, _, manifest) = direct.prepare_media(&media_id).await?;
+        assert_eq!(manifest.dispatches.len(), 2);
+        assert!(manifest.dispatches.iter().any(|d| d.recipient_user_id == 8));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn media_with_only_failed_recipients_stops_preparation() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = upload_test_context(directory.path(), 42).await?;
+        let database = ctx.app_db.read().await.clone();
+        let upload = MediaUploadService::new(&ctx);
+        let media_id = upload.initialize("audio".into(), None, false).await?;
+        let source =
+            crate::services::mediafiles::MediaFileService::new(&ctx).temp_path(&media_id, "audio");
+        std::fs::create_dir_all(source.parent().unwrap())?;
+        std::fs::write(&source, b"voice message")?;
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES(8, 'missing')",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES('direct', 'Direct', 1)",
+            "INSERT INTO group_members(group_id, contact_id) VALUES('direct', 8)",
+            "INSERT INTO direct_media_upload_slots(attachment_id, expires_at, maximum_object_bytes, upload_url, upload_fields_json, capability, state) VALUES('slot', 9999999999, 1000000, 'https://objects.example', '{}', x'01', 'cached')",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+        sqlx::query("INSERT INTO app_metadata(key, value) VALUES(?, ?)")
+            .bind(API_NAMESPACE_KEY)
+            .bind(RustApi::api_base_url("https".into()))
+            .execute(&database.pool)
+            .await?;
+        sqlx::query("INSERT INTO messages(message_id, group_id, type, media_id) VALUES('failed', 'direct', 'media', ?)")
+            .bind(&media_id).execute(&database.pool).await?;
+        sqlx::query("INSERT INTO message_actions(message_id, contact_id, type) VALUES('failed', 8, 'sendFailed')")
+            .execute(&database.pool).await?;
+        upload.start_upload(&media_id).await?;
+        let state: String =
+            sqlx::query_scalar("SELECT upload_state FROM media_files WHERE media_id = ?")
+                .bind(&media_id)
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(state, "storedOnly");
+        // No slot or network is needed when maintenance encounters it again.
+        sqlx::query("DELETE FROM direct_media_upload_slots")
+            .execute(&database.pool)
+            .await?;
+        upload.start_upload(&media_id).await?;
+        assert_eq!(
+            DirectMediaUploadService::new(&ctx)
+                .pending_job_count()
+                .await?,
+            0
+        );
+        assert_eq!(sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM messages WHERE message_id = 'failed' AND ack_by_server IS NULL")
+            .fetch_one(&database.pool).await?, 1);
         Ok(())
     }
 

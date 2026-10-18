@@ -83,13 +83,16 @@ async fn stories_widgets_and_group_messages_preserve_archive_state() -> anyhow::
     sqlx::raw_sql(
         "INSERT INTO messages(message_id, group_id, sender_id, type, is_story, is_widget_media)
          VALUES ('story', 'direct', 7, 'media', 1, 0),
-                ('widget', 'direct', 7, 'media', 0, 1),
                 ('group', 'group', 7, 'text', 0, 0);",
     )
     .execute(&db.pool)
     .await?;
     assert_eq!(chat_state(&db, "direct").await?, (1, 1));
-    assert_eq!(chat_state(&db, "group").await?, (1, 1));
+    assert_eq!(chat_state(&db, "group").await?, (1, 0));
+    sqlx::query("INSERT INTO messages(message_id, group_id, sender_id, type, is_widget_media) VALUES ('widget', 'direct', 7, 'media', 1)")
+        .execute(&db.pool).await?;
+    // Widget entries restore a cleared chat's visibility without unarchiving it.
+    assert_eq!(chat_state(&db, "direct").await?, (1, 0));
     Ok(())
 }
 

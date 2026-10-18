@@ -3096,6 +3096,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get webxdcStoreFailed => 'تعذّرت إضافة التطبيق إلى هذه المحادثة.';
 
   @override
+  String get webxdcStoreDirectChatHint =>
+      'لا يمكن لعب بعض الألعاب إلا في المحادثات الفردية.';
+
+  @override
   String get webxdcStoreAlreadyAdded => 'مضاف بالفعل إلى هذه المحادثة';
 
   @override
@@ -3345,4 +3349,7 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get mediaSendFailed => 'تعذّر الإرسال';
 }

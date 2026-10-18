@@ -529,7 +529,7 @@ impl MediaUploadService {
                 let database = self.ctx.app_db.read().await.clone();
                 let mut transaction = database.pool.begin().await?;
                 sqlx::query(
-                    "UPDATE media_files SET upload_state = 'storedOnly' WHERE media_id = ?",
+                    "UPDATE media_files SET upload_state = 'storedOnly', reupload_requested_by = NULL, reupload_targets = NULL WHERE media_id = ?",
                 )
                 .bind(media_id)
                 .execute(&mut *transaction)
@@ -636,7 +636,12 @@ impl MediaUploadService {
                JOIN group_members gm ON gm.group_id = m.group_id
                WHERE m.message_id = ? AND m.media_id = ? AND m.sender_id IS NULL
                  AND gm.contact_id = ?
-                 AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup'))"#,
+                 AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')
+                 AND NOT EXISTS (
+                     SELECT 1 FROM message_actions a
+                     WHERE a.message_id = m.message_id AND a.contact_id = gm.contact_id
+                       AND a.type = 'sendFailed'
+                 ))"#,
         )
         .bind(message_id)
         .bind(media_id)

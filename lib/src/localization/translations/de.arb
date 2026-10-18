@@ -1166,6 +1166,7 @@
   "webxdcStoreEmpty": "Es sind noch keine Apps verfügbar.",
   "webxdcStoreOffline": "Die App-Liste konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
   "webxdcStoreFailed": "Die App konnte diesem Chat nicht hinzugefügt werden.",
+  "webxdcStoreDirectChatHint": "Einige Spiele können nur in Einzelchats gespielt werden.",
   "webxdcStoreAlreadyAdded": "Bereits zu diesem Chat hinzugefügt",
   "webxdcChatApps": "Chat-Apps",
   "webxdcChatAppsEmpty": "Diesem Chat wurden noch keine einmaligen Apps hinzugefügt.",
@@ -1253,5 +1254,6 @@
   "memoriesMapNoLocations": "Noch keine gespeicherten Erinnerungen mit Standort vorhanden.",
   "memoriesMapNoResults": "Keine Erinnerungen in diesem Bereich. Verschiebe oder zoome die Karte, um einen anderen Ort zu erkunden.",
   "memoriesMapLoadError": "Die Karte konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
-  "memoriesMapVisibleCount": "{count, plural, =1 {1 Erinnerung in diesem Bereich} other {{count} Erinnerungen in diesem Bereich}}"
+  "memoriesMapVisibleCount": "{count, plural, =1 {1 Erinnerung in diesem Bereich} other {{count} Erinnerungen in diesem Bereich}}",
+  "mediaSendFailed": "Senden fehlgeschlagen"
 }

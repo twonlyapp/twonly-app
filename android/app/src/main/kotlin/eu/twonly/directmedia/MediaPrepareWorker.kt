@@ -42,11 +42,11 @@ class MediaPrepareWorker(
                 NativeMediaPrepareBridge.run(directory, directory, mediaId),
             )
             if (response.optBoolean("ok", false)) {
-                // Rust performed a synchronous status pass before returning.
-                // Keep this WorkManager job as the durable owner until the
-                // server says the attachment is terminal; a Tokio task created
-                // inside NativeMediaPrepareBridge would die with that call.
-                if (response.optBoolean("pending_uploads", false)) {
+                // A bounded mailbox/outbox drain can also leave work behind.
+                // Its Tokio runtime ends with this call, so WorkManager owns
+                // the retry for messages as well as native media transfers.
+                if (response.optBoolean("pending_uploads", false) ||
+                    response.optBoolean("pending_messages", false)) {
                     Result.retry()
                 } else {
                     Result.success()

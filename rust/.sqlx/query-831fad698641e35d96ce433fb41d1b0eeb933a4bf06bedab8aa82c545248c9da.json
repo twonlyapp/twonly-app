@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT app_id AS \"app_id!: String\", version AS \"version!: i64\",\n                  name AS \"name!: String\",\n                  pro_only AS \"pro_only!: bool\",\n                  one_time AS \"one_time!: bool\",\n                  (SELECT instance_id FROM webxdc_instances\n                   WHERE webxdc_instances.group_id = ?\n                     AND webxdc_instances.app_id = webxdc_apps.app_id\n                   ORDER BY created_at ASC LIMIT 1) AS \"instance_id: String\",\n                  name_translations AS \"name_translations!: String\",\n                  source_code_url AS \"source_code_url: String\",\n                  description AS \"description!: String\",\n                  icon AS \"icon: Vec<u8>\", bundle_bytes AS \"bundle_bytes!: i64\"\n           FROM webxdc_apps\n           WHERE published = 1\n             AND version = (SELECT MAX(version) FROM webxdc_apps AS newer\n                            WHERE newer.app_id = webxdc_apps.app_id AND newer.published = 1)\n           ORDER BY sort_order ASC, name ASC, app_id ASC",
+  "query": "SELECT app_id AS \"app_id!: String\", version AS \"version!: i64\",\n                  name AS \"name!: String\",\n                  pro_only AS \"pro_only!: bool\",\n                  one_time AS \"one_time!: bool\",\n                  (SELECT instance_id FROM webxdc_instances\n                   WHERE webxdc_instances.group_id = ?\n                     AND webxdc_instances.app_id = webxdc_apps.app_id\n                   ORDER BY created_at ASC LIMIT 1) AS \"instance_id: String\",\n                  name_translations AS \"name_translations!: String\",\n                  source_code_url AS \"source_code_url: String\",\n                  description AS \"description!: String\",\n                  icon AS \"icon: Vec<u8>\", bundle_bytes AS \"bundle_bytes!: i64\"\n           FROM webxdc_apps\n           WHERE published = 1\n             AND (direct_chat_only = 0 OR EXISTS (\n                 SELECT 1 FROM groups WHERE group_id = ? AND is_direct_chat = 1\n             ))\n             AND version = (SELECT MAX(version) FROM webxdc_apps AS newer\n                            WHERE newer.app_id = webxdc_apps.app_id AND newer.published = 1)\n           ORDER BY sort_order ASC, name ASC, app_id ASC",
   "describe": {
     "columns": [
       {
@@ -126,7 +126,7 @@
       }
     ],
     "parameters": {
-      "Right": 1
+      "Right": 2
     },
     "nullable": [
       false,
@@ -142,5 +142,5 @@
       false
     ]
   },
-  "hash": "1eb6b6e8e4ed43f43c3e6c570ffad96638f7c02d4baa4bdea006ea2a439ec24f"
+  "hash": "831fad698641e35d96ce433fb41d1b0eeb933a4bf06bedab8aa82c545248c9da"
 }

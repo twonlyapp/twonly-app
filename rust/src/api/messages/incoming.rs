@@ -394,7 +394,8 @@ async fn claim_legacy_upgrade_request(
     fields(
         receipt_id = tracing::field::Empty,
         user = tracing::field::Empty,
-        kind = tracing::field::Empty
+        kind = tracing::field::Empty,
+        group_id = tracing::field::Empty
     )
 )]
 /// Entry point for one inbound server message, whichever transport carried it.
@@ -793,6 +794,9 @@ async fn handle_encrypted_inner(
     let type_kind = content_type_kind(&content);
 
     tracing::Span::current().record("kind", type_kind);
+    if let Some(group_id) = content.group_id.as_deref() {
+        tracing::Span::current().record("group_id", group_id);
+    }
     tracing::info!("Handling incoming message: {type_kind}");
 
     if let Some(request) = content.contact_request {

@@ -37,11 +37,60 @@ pub(crate) async fn handle_group_create(
     group_id: &str,
     create: encrypted_content::GroupCreate,
 ) -> Result<()> {
+    let announce = store_group_invitation(t, from_user_id, group_id, create).await?;
+
+    if announce {
+        GroupService::spawn_state_refresh_and_announce(ctx, group_id.to_owned());
+        crate::services::webxdc::WebxdcService::spawn_sync_request(
+            ctx,
+            group_id.to_owned(),
+            from_user_id,
+        );
+    } else {
+        // Our existing key is already announced through the reliable outbox.
+        // A repair must not fan out another GroupJoin to every member, or
+        // restart app sync. A peer missing our key can request it directly.
+        tracing::info!(
+            group_id,
+            from_user_id,
+            "received a repeated group invitation"
+        );
+        GroupService::spawn_state_refresh(ctx, Some(group_id.to_owned()));
+    }
+
+    Ok(())
+}
+
+/// Returns whether this invitation needs an initial key announcement and sync.
+async fn store_group_invitation(
+    t: &mut Transaction<'_, Sqlite>,
+    from_user_id: i64,
+    group_id: &str,
+    create: encrypted_content::GroupCreate,
+) -> Result<bool> {
     Contact::ensure_exists(t, from_user_id).await?;
 
-    let mut rng = rand::rngs::StdRng::from_os_rng();
-    let identity = libsignal_protocol::IdentityKeyPair::generate(&mut rng);
-    let private_key = identity.serialize().to_vec();
+    let existing = sqlx::query!(
+        "SELECT my_group_private_key, left_group FROM groups WHERE group_id = ?",
+        group_id,
+    )
+    .fetch_optional(&mut **t)
+    .await?;
+    // Membership repair sends GroupCreate too, potentially from several peers.
+    // It must neither invent another join nor replace the key peers already
+    // know (an admin's key also authorizes updates on the group server).
+    let is_new_membership = existing.as_ref().is_none_or(|group| group.left_group != 0);
+    let needs_key = existing
+        .as_ref()
+        .is_none_or(|group| group.my_group_private_key.is_none());
+    let private_key = existing
+        .and_then(|group| group.my_group_private_key)
+        .unwrap_or_else(|| {
+            let mut rng = rand::rngs::StdRng::from_os_rng();
+            libsignal_protocol::IdentityKeyPair::generate(&mut rng)
+                .serialize()
+                .to_vec()
+        });
     let group_name = create.group_name.unwrap_or_default();
 
     sqlx::query!(
@@ -56,8 +105,8 @@ pub(crate) async fn handle_group_create(
         ON CONFLICT(group_id) DO UPDATE SET
             state_encryption_key = excluded.state_encryption_key,
             my_group_private_key = excluded.my_group_private_key,
-            left_group = 0,
-            deleted_content = 0
+            deleted_content = CASE WHEN left_group = 1 THEN 0 ELSE deleted_content END,
+            left_group = 0
         "#,
         group_id,
         create.state_key,
@@ -81,24 +130,19 @@ pub(crate) async fn handle_group_create(
     .execute(&mut **t)
     .await?;
 
-    sqlx::query!(
-        r#"INSERT INTO group_histories(group_history_id, group_id, contact_id, type)
-           VALUES (?, ?, ?, 'addMember')"#,
-        new_uuid_v4(),
-        group_id,
-        from_user_id,
-    )
-    .execute(&mut **t)
-    .await?;
+    if is_new_membership {
+        sqlx::query!(
+            r#"INSERT INTO group_histories(group_history_id, group_id, contact_id, type)
+               VALUES (?, ?, ?, 'addMember')"#,
+            new_uuid_v4(),
+            group_id,
+            from_user_id,
+        )
+        .execute(&mut **t)
+        .await?;
+    }
 
-    GroupService::spawn_state_refresh_and_announce(ctx, group_id.to_owned());
-    crate::services::webxdc::WebxdcService::spawn_sync_request(
-        ctx,
-        group_id.to_owned(),
-        from_user_id,
-    );
-
-    Ok(())
+    Ok(is_new_membership || needs_key)
 }
 
 pub(crate) async fn handle_group_join(
@@ -304,6 +348,190 @@ pub(crate) async fn handle_flame_sync(
     .await?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod invitation_tests {
+    use super::*;
+    use crate::database::app::AppDatabase;
+
+    async fn database() -> Result<(tempfile::TempDir, AppDatabase)> {
+        let directory = tempfile::tempdir()?;
+        let db = AppDatabase::new(
+            directory.path().join("app.sqlite").to_str().unwrap(),
+            None,
+            false,
+        )
+        .await?;
+        db.run_migrations().await?;
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice'), (8, 'bob')")
+            .execute(&db.pool)
+            .await?;
+        Ok((directory, db))
+    }
+
+    async fn invite(db: &AppDatabase, sender: i64, public_key: Vec<u8>) -> Result<bool> {
+        let mut t = db.pool.begin().await?;
+        let announce = store_group_invitation(
+            &mut t,
+            sender,
+            "chat",
+            encrypted_content::GroupCreate {
+                state_key: vec![1; 32],
+                group_public_key: public_key,
+                group_name: Some("Chat".into()),
+            },
+        )
+        .await?;
+        t.commit().await?;
+        Ok(announce)
+    }
+
+    async fn private_key(db: &AppDatabase) -> Result<Vec<u8>> {
+        Ok(
+            sqlx::query_scalar("SELECT my_group_private_key FROM groups WHERE group_id = 'chat'")
+                .fetch_one(&db.pool)
+                .await?,
+        )
+    }
+
+    #[tokio::test]
+    async fn repeated_invitations_repair_members_without_repeating_history_or_rotating_keys(
+    ) -> Result<()> {
+        let (_directory, db) = database().await?;
+        assert!(invite(&db, 7, vec![7]).await?);
+        let identity = private_key(&db).await?;
+        libsignal_protocol::IdentityKeyPair::try_from(identity.as_slice())?;
+        sqlx::query(
+            "UPDATE groups SET joined_group = 1, is_group_admin = 1,
+                               state_version_id = 42, deleted_content = 1 WHERE group_id = 'chat'",
+        )
+        .execute(&db.pool)
+        .await?;
+        for _ in 0..69 {
+            assert!(!invite(&db, 7, vec![9]).await?);
+        }
+        assert!(!invite(&db, 8, vec![9]).await?);
+        assert_eq!(private_key(&db).await?, identity);
+        let histories: Vec<(i64, Option<i64>)> = sqlx::query_as(
+            "SELECT contact_id, affected_contact_id FROM group_histories WHERE group_id = 'chat'",
+        )
+        .fetch_all(&db.pool)
+        .await?;
+        assert_eq!(histories, vec![(7, None)]);
+        let state: (i64, i64, i64, i64) = sqlx::query_as(
+            "SELECT joined_group, is_group_admin, state_version_id, deleted_content
+             FROM groups WHERE group_id = 'chat'",
+        )
+        .fetch_one(&db.pool)
+        .await?;
+        assert_eq!(state, (1, 1, 42, 1));
+        let keys: Vec<Vec<u8>> = sqlx::query_scalar(
+            "SELECT group_public_key FROM group_members WHERE group_id = 'chat'",
+        )
+        .fetch_all(&db.pool)
+        .await?;
+        assert_eq!(keys, vec![vec![9], vec![9]]);
+
+        // Expiring the original action must not make a repair look like a join.
+        sqlx::query("DELETE FROM group_histories WHERE group_id = 'chat'")
+            .execute(&db.pool)
+            .await?;
+        assert!(!invite(&db, 8, vec![8]).await?);
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM group_histories")
+            .fetch_one(&db.pool)
+            .await?;
+        assert_eq!(count, 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn rejoining_records_one_new_action_and_restores_the_chat() -> Result<()> {
+        let (_directory, db) = database().await?;
+        assert!(invite(&db, 7, vec![7]).await?);
+        sqlx::query(
+            "UPDATE groups SET left_group = 1, deleted_content = 1 WHERE group_id = 'chat'",
+        )
+        .execute(&db.pool)
+        .await?;
+        assert!(invite(&db, 8, vec![8]).await?);
+        assert!(!invite(&db, 8, vec![8]).await?);
+        let senders: Vec<i64> = sqlx::query_scalar("SELECT contact_id FROM group_histories")
+            .fetch_all(&db.pool)
+            .await?;
+        assert_eq!(senders, vec![7, 8]);
+        let flags: (i64, i64) = sqlx::query_as(
+            "SELECT left_group, deleted_content FROM groups WHERE group_id = 'chat'",
+        )
+        .fetch_one(&db.pool)
+        .await?;
+        assert_eq!(flags, (0, 0));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn incomplete_group_gets_a_key_without_a_false_join_action() -> Result<()> {
+        let (_directory, db) = database().await?;
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat')")
+            .execute(&db.pool)
+            .await?;
+        assert!(invite(&db, 7, vec![7]).await?);
+        let identity = private_key(&db).await?;
+        libsignal_protocol::IdentityKeyPair::try_from(identity.as_slice())?;
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM group_histories")
+            .fetch_one(&db.pool)
+            .await?;
+        assert_eq!(count, 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn incoming_key_announcements_do_not_generate_more_announcements() -> Result<()> {
+        let (_directory, db) = database().await?;
+        assert!(invite(&db, 7, vec![7]).await?);
+        let identity = private_key(&db).await?;
+        let mut t = db.pool.begin().await?;
+        for _ in 0..69 {
+            handle_group_join(
+                &mut t,
+                7,
+                "chat",
+                encrypted_content::GroupJoin {
+                    group_public_key: vec![7],
+                },
+            )
+            .await?;
+        }
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM receipts")
+            .fetch_one(&mut *t)
+            .await?;
+        assert_eq!(count, 0);
+
+        // An explicit resend request still gets a targeted response.
+        handle_resend_group_public_key(&mut t, 7, "chat").await?;
+        let replies: Vec<(i64, Vec<u8>)> =
+            sqlx::query_as("SELECT contact_id, message FROM receipts")
+                .fetch_all(&mut *t)
+                .await?;
+        assert_eq!(replies.len(), 1);
+        assert_eq!(replies[0].0, 7);
+        use prost::Message as _;
+        let envelope = crate::api::proto::client::Message::decode(replies[0].1.as_slice())?;
+        let content = crate::api::proto::client::EncryptedContent::decode(
+            envelope.encrypted_content.unwrap().as_slice(),
+        )?;
+        assert_eq!(content.group_id.as_deref(), Some("chat"));
+        assert_eq!(
+            content.group_join.unwrap().group_public_key,
+            libsignal_protocol::IdentityKeyPair::try_from(identity.as_slice())?
+                .identity_key()
+                .serialize()
+                .to_vec(),
+        );
+        t.commit().await?;
+        assert_eq!(private_key(&db).await?, identity);
+        Ok(())
+    }
 }
 
 #[cfg(test)]

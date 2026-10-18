@@ -5200,6 +5200,12 @@ abstract class AppLocalizations {
   /// **'The app could not be added to this chat.'**
   String get webxdcStoreFailed;
 
+  /// No description provided for @webxdcStoreDirectChatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Some games can only be played in direct chats.'**
+  String get webxdcStoreDirectChatHint;
+
   /// No description provided for @webxdcStoreAlreadyAdded.
   ///
   /// In en, this message translates to:
@@ -5601,6 +5607,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1 {1 memory in this area} other {{count} memories in this area}}'**
   String memoriesMapVisibleCount(int count);
+
+  /// No description provided for @mediaSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Send failed'**
+  String get mediaSendFailed;
 }
 
 class _AppLocalizationsDelegate

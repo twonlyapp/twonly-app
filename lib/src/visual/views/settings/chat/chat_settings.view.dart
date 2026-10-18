@@ -45,6 +45,10 @@ class _ChatSettingsViewState extends State<ChatSettingsView> {
                 title: Text(context.lang.settingsPreSelectedReactions),
                 onTap: () => context.push(Routes.settingsChatsReactions),
               ),
+              ListTile(
+                title: Text(context.lang.contactGroupsTitle),
+                onTap: () => context.push(Routes.settingsChatsContactGroups),
+              ),
               SwitchListTile.adaptive(
                 title: Text(
                   context

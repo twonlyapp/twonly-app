@@ -342,6 +342,15 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       );
       final groupIds = entry.value;
 
+      // Group actions have no read receipts, so their retention starts when
+      // the action was recorded. Sweep existing history as well as new rows.
+      await (delete(attachedDatabase.groupHistories)..where(
+            (h) =>
+                h.groupId.isIn(groupIds) &
+                h.actionAt.isSmallerThanValue(deletionTime),
+          ))
+          .go();
+
       final deletedCount =
           await (delete(messages)..where(
                 (m) =>
@@ -749,15 +758,27 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         .watch();
   }
 
-  Stream<List<MessageAction>> watchAcknowledgementsForMessages(
+  /// Failures affect the message status only in direct chats. Groups keep
+  /// their normal status and expose each failed recipient in message info.
+  Stream<List<MessageAction>> watchDeliveryActionsForMessages(
     Set<String> messageIds,
   ) {
     if (messageIds.isEmpty) return Stream.value(const []);
-    return (select(messageActions)..where(
-          (action) =>
-              action.messageId.isIn(messageIds) &
-              action.type.equals(MessageActionType.ackByUserAt.name),
+    return (select(messageActions).join([
+          innerJoin(
+            messages,
+            messages.messageId.equalsExp(messageActions.messageId),
+          ),
+          innerJoin(groups, groups.groupId.equalsExp(messages.groupId)),
+        ])..where(
+          messageActions.messageId.isIn(messageIds) &
+              (messageActions.type.equals(MessageActionType.ackByUserAt.name) |
+                  (messageActions.type.equals(
+                        MessageActionType.sendFailed.name,
+                      ) &
+                      groups.isDirectChat.equals(true))),
         ))
+        .map((row) => row.readTable(messageActions))
         .watch();
   }
 

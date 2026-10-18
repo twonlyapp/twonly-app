@@ -136,6 +136,8 @@ message WebxdcCatalogEntry {
   bool pro_only = 11;
   // Only one instance of this app may be placed into a chat.
   bool one_time = 12;
+  // Available only in one-to-one conversations.
+  bool direct_chat_only = 13;
 }
 
 message WebxdcCatalog {

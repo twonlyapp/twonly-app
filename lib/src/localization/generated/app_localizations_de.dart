@@ -3082,6 +3082,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die App konnte diesem Chat nicht hinzugefügt werden.';
 
   @override
+  String get webxdcStoreDirectChatHint =>
+      'Einige Spiele können nur in Einzelchats gespielt werden.';
+
+  @override
   String get webxdcStoreAlreadyAdded => 'Bereits zu diesem Chat hinzugefügt';
 
   @override
@@ -3330,4 +3334,7 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get mediaSendFailed => 'Senden fehlgeschlagen';
 }

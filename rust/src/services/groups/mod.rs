@@ -146,6 +146,55 @@ fn claim_public_key_request(group_id: &str, contact_id: i64, force: bool) -> boo
     true
 }
 
+/// Claims a membership repair by rotating the receipt it refers to. A delayed
+/// error for an already retried or acknowledged receipt must not create a new
+/// invitation. Check the group too: receipt ownership alone is not sufficient.
+async fn retry_membership_receipt(
+    t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+    from_user_id: i64,
+    group_id: &str,
+    related_receipt_id: &str,
+) -> Result<bool> {
+    let message = sqlx::query_scalar!(
+        "SELECT message FROM receipts WHERE receipt_id = ? AND contact_id = ?",
+        related_receipt_id,
+        from_user_id,
+    )
+    .fetch_optional(&mut **t)
+    .await?;
+    let Some(message) = message else {
+        return Ok(false);
+    };
+    let envelope = proto::Message::decode(message.as_slice())?;
+    let Some(content) = envelope.encrypted_content else {
+        return Ok(false);
+    };
+    if EncryptedContent::decode(content.as_slice())?
+        .group_id
+        .as_deref()
+        != Some(group_id)
+    {
+        return Ok(false);
+    }
+
+    let new_receipt_id = new_uuid_v4();
+    sqlx::query!(
+        r#"UPDATE receipts
+               SET receipt_id = ?,
+                   mark_for_retry = ?,
+                   retry_count = retry_count + 1,
+                   ack_by_server_at = NULL
+               WHERE receipt_id = ? AND contact_id = ?"#,
+        new_receipt_id,
+        current_time().timestamp(),
+        related_receipt_id,
+        from_user_id,
+    )
+    .execute(&mut **t)
+    .await?;
+    Ok(true)
+}
+
 impl GroupService {
     pub async fn on_connected(&self) -> Result<()> {
         self.fetch_group_states_for_unjoined_groups().await?;
@@ -278,6 +327,16 @@ impl GroupService {
         let mut transaction = database.pool.begin().await?;
         let t = &mut transaction;
 
+        if !retry_membership_receipt(t, from_user_id, &group_id, &related_receipt_id).await? {
+            tracing::info!(
+                group_id,
+                from_user_id,
+                related_receipt_id,
+                "ignoring an obsolete or unrelated group membership error"
+            );
+            return Ok(());
+        }
+
         let group = GroupRecord::load_in_transaction(t, &group_id).await?;
         let is_still_member = sqlx::query_scalar!(
             r#"SELECT EXISTS(
@@ -308,22 +367,6 @@ impl GroupService {
             )
             .await?;
         }
-
-        let new_receipt_id = new_uuid_v4();
-        sqlx::query!(
-            r#"UPDATE receipts
-               SET receipt_id = ?,
-                   mark_for_retry = ?,
-                   retry_count = retry_count + 1,
-                   ack_by_server_at = NULL
-               WHERE receipt_id = ? AND contact_id = ?"#,
-            new_receipt_id,
-            current_time().timestamp(),
-            related_receipt_id,
-            from_user_id,
-        )
-        .execute(&mut **t)
-        .await?;
 
         transaction.commit().await?;
         Ok(())
@@ -1250,6 +1293,74 @@ impl GroupService {
         // refreshes first discovers the other with an empty key and requests it.
         Self::queue_missing_group_public_key_requests(t, group_id).await?;
 
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod membership_repair_tests {
+    use super::*;
+    use crate::database::app::AppDatabase;
+
+    #[tokio::test]
+    async fn only_the_current_receipt_for_that_contact_and_group_can_trigger_repair() -> Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+        let db = AppDatabase::new(
+            directory.path().join("app.sqlite").to_str().unwrap(),
+            None,
+            false,
+        )
+        .await?;
+        db.run_migrations().await?;
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice'), (8, 'bob')")
+            .execute(&db.pool)
+            .await?;
+        let mut t = db.pool.begin().await?;
+        let receipt_id = queue_encrypted_content(
+            &mut t,
+            7,
+            EncryptedContent {
+                group_id: Some("chat".into()),
+                group_join: Some(GroupJoin {
+                    group_public_key: vec![7],
+                }),
+                ..Default::default()
+            },
+            true,
+        )
+        .await?;
+        t.commit().await?;
+
+        let mut t = db.pool.begin().await?;
+        assert!(!retry_membership_receipt(&mut t, 8, "chat", &receipt_id).await?);
+        assert!(!retry_membership_receipt(&mut t, 7, "other", &receipt_id).await?);
+        assert!(!retry_membership_receipt(&mut t, 7, "chat", "missing").await?);
+        assert!(retry_membership_receipt(&mut t, 7, "chat", &receipt_id).await?);
+        // A failed repair transaction leaves the original receipt repairable.
+        t.rollback().await?;
+
+        let mut t = db.pool.begin().await?;
+        assert!(retry_membership_receipt(&mut t, 7, "chat", &receipt_id).await?);
+        t.commit().await?;
+
+        let mut t = db.pool.begin().await?;
+        // Distinct incoming error IDs can still refer to the same old receipt.
+        // Those must not generate another invitation or rotate it again.
+        for _ in 0..69 {
+            assert!(!retry_membership_receipt(&mut t, 7, "chat", &receipt_id).await?);
+        }
+        t.commit().await?;
+        let receipts: Vec<(String, i64, Option<i64>, Option<i64>)> = sqlx::query_as(
+            "SELECT receipt_id, retry_count, ack_by_server_at, mark_for_retry FROM receipts",
+        )
+        .fetch_all(&db.pool)
+        .await?;
+        assert_eq!(receipts.len(), 1);
+        assert_ne!(receipts[0].0, receipt_id);
+        assert_eq!(receipts[0].1, 1);
+        assert!(receipts[0].2.is_none());
+        assert!(receipts[0].3.is_some());
         Ok(())
     }
 }

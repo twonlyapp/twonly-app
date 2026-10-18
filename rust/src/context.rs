@@ -62,8 +62,7 @@ pub struct Context {
     /// Coalesces overlapping flushes of this account's receipt queue. Per
     /// context for the same reason: a flush scans one app database, so a claim
     /// held for one account must not silence another account's flush.
-    pub(crate) queued_receipt_flush:
-        std::sync::Mutex<crate::api::messages::incoming::messages::FlushClaim>,
+    pub(crate) queued_receipt_flush: crate::api::messages::incoming::messages::FlushClaim,
     /// Serializes this account's upload preparation, which reserves slots and
     /// writes request files that a second concurrent pass would duplicate.
     /// Held across a reconciliation round trip, so one account waiting on the
@@ -152,7 +151,7 @@ impl Context {
             incoming_generation: AtomicU64::new(0),
             incoming_committed: Notify::new(),
             pqc_bundle_verified: AtomicBool::new(false),
-            queued_receipt_flush: std::sync::Mutex::default(),
+            queued_receipt_flush: Default::default(),
             media_preprocessing: Mutex::new(()),
             media_retransmission: Mutex::new(()),
             webxdc_visibility: Default::default(),
@@ -340,7 +339,7 @@ impl Context {
                         incoming_generation: AtomicU64::new(0),
                         incoming_committed: Notify::new(),
                         pqc_bundle_verified: AtomicBool::new(false),
-                        queued_receipt_flush: std::sync::Mutex::default(),
+                        queued_receipt_flush: Default::default(),
                         media_preprocessing: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
                         webxdc_visibility: Default::default(),
@@ -387,7 +386,7 @@ impl Context {
                         incoming_generation: AtomicU64::new(0),
                         incoming_committed: Notify::new(),
                         pqc_bundle_verified: AtomicBool::new(false),
-                        queued_receipt_flush: std::sync::Mutex::default(),
+                        queued_receipt_flush: Default::default(),
                         media_preprocessing: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
                         webxdc_visibility: Default::default(),

@@ -137,11 +137,17 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
 
   @override
   Widget build(BuildContext context) {
+    final sendFailed =
+        ChatMessageActionScope.maybeOf(
+          context,
+        )?.failedMessageIds.contains(widget.message.messageId) ??
+        false;
     final awaitsStoredPreview =
         !widget.message.isWidgetMedia &&
         widget.message.mediaStored &&
-        !widget.mediaService.imagePreviewAvailable;
-    if (widget.message.isWidgetMedia ||
+        (!widget.mediaService.imagePreviewAvailable || sendFailed);
+    if (sendFailed ||
+        widget.message.isWidgetMedia ||
         !widget.message.mediaStored ||
         !widget.mediaService.imagePreviewAvailable) {
       final status = Row(
@@ -154,6 +160,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
                 ? MainAxisAlignment.end
                 : MainAxisAlignment.start,
             canBeReopened: widget.canBeReopened,
+            group: widget.group,
           ),
           if (widget.info.displayTime || widget.message.modifiedAt != null)
             FriendlyMessageTime(

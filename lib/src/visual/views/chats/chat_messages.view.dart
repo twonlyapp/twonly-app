@@ -30,6 +30,7 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_grou
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_date_chip.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/game_chat_messages.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/in_chat_group_overview.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/pending_chat_messages.dart';
@@ -49,6 +50,7 @@ class _ChatViewData {
   Map<String, MediaFile> mediaFilesById = {};
   Map<String, List<Reaction>> reactionsByMessageId = {};
   Set<String> ackedMessageIds = {};
+  Set<String> failedMessageIds = {};
 
   List<ChatItem> chatItems = [];
   List<Message> allMessages = [];
@@ -306,6 +308,24 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
 
   Future<void> _applyLoadedMessages({required bool reportOpened}) async {
     final revision = ++_loadedMessagesRevision;
+    // Older pages are kept in memory rather than watched. A game update can
+    // delete one of their info rows, including another move in the same second.
+    final olderGameInfoIds = _data.olderMessages
+        .where((message) => gameAnnouncementInstance(message) != null)
+        .map((message) => message.messageId)
+        .toSet();
+    if (olderGameInfoIds.isNotEmpty) {
+      final current = await twonlyDB.messagesDao
+          .watchMessagesByIds(olderGameInfoIds)
+          .first;
+      if (!mounted || revision != _loadedMessagesRevision) return;
+      _data.olderMessages = [
+        ..._data.olderMessages.where(
+          (message) => !olderGameInfoIds.contains(message.messageId),
+        ),
+        ...current,
+      ];
+    }
     final byId = <String, Message>{
       for (final message in _data.olderMessages) message.messageId: message,
       for (final message in _data.latestMessages) message.messageId: message,
@@ -450,10 +470,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
           _notifyMessageDataChanged();
         });
     _subscriptions.messageActions = twonlyDB.messagesDao
-        .watchAcknowledgementsForMessages(messageIds)
+        .watchDeliveryActionsForMessages(messageIds)
         .listen((actions) {
           if (!mounted) return;
           _data.ackedMessageIds = actions
+              .where((action) => action.type == MessageActionType.ackByUserAt)
+              .map((action) => action.messageId)
+              .toSet();
+          _data.failedMessageIds = actions
+              .where((action) => action.type == MessageActionType.sendFailed)
               .map((action) => action.messageId)
               .toSet();
           _notifyMessageDataChanged();
@@ -840,6 +865,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                     alignment: Alignment.topCenter,
                     child: ChatMessageActionScope(
                       ackedMessageIds: _data.ackedMessageIds,
+                      failedMessageIds: _data.failedMessageIds,
                       child: ScrollablePositionedList.builder(
                         reverse: true,
                         itemCount: _data.chatItems.length + 1 + 1,

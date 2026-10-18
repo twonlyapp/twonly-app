@@ -217,7 +217,7 @@ pub struct NotificationAddition {
     pub notification_id: String,
     pub conversation_id: Option<String>,
     pub sender_id: i64,
-    /// Display name followed by the conversation's current flame indicator.
+    /// Display name, with the current flame indicator only for direct chats.
     pub sender_name: String,
     pub title: String,
     pub body: String,
@@ -688,21 +688,28 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
         .await?
     };
     let mut additions = Vec::with_capacity(rows.len());
-    for row in rows {
+    for mut row in rows {
         let flame_state = row
             .conversation_id
             .as_ref()
             .and_then(|id| flame_states.get(id))
             .copied()
             .unwrap_or_default();
-        let sender_name = notification_sender_name(&row.sender_name, flame_state);
+        let is_group = row.conversation_id.is_some() && row.is_direct_chat == 0;
+        let sender_name = if is_group {
+            row.conversation_name = row
+                .conversation_name
+                .map(|name| notification_display_name(&name, flame_state));
+            row.sender_name.clone()
+        } else {
+            notification_display_name(&row.sender_name, flame_state)
+        };
         let title = sender_name.clone();
         let body = localized_body(locale, &row);
         let text_messages_body = matches!(row.kind.as_str(), "text" | "response").then(|| {
             translation(locale, "notificationTextMessages")
                 .replace("{inGroup}", &group_suffix(locale, &row))
         });
-        let is_group = row.conversation_id.is_some() && row.is_direct_chat == 0;
         // A direct chat's stored name may predate a contact profile update.
         // Every native presentation should use the current resolved name.
         let conversation_name = if is_group {
@@ -770,10 +777,10 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
     })
 }
 
-/// Both native renderers use this name for the notification's sender.
+/// Both native renderers use this for the direct-chat sender or group name.
 /// Match FlameCounterWidget, using the same derived state as the app so expired
 /// counters disappear even before the next media exchange updates the stored row.
-fn notification_sender_name(name: &str, state: FlameState) -> String {
+fn notification_display_name(name: &str, state: FlameState) -> String {
     if state.counter < 1 {
         return name.to_owned();
     }
@@ -899,6 +906,19 @@ pub async fn finalize_wakeup(deadline_ms: u64) -> Result<()> {
     }
 
     if owns_connection && ctx.is_notification_runtime() {
+        // Inbound handling schedules receipt delivery asynchronously. Even
+        // after the mailbox drained, its last flush may still own requests on
+        // this socket. Join it within the remaining notification budget.
+        match tokio::time::timeout(
+            remaining(),
+            crate::api::messages::incoming::messages::retransmit_queued_receipts_and_wait(&ctx),
+        )
+        .await
+        {
+            Ok(Ok(())) => {}
+            Ok(Err(error)) => tracing::warn!(%error, "notification receipt flush failed"),
+            Err(_) => tracing::info!("notification receipt flush window elapsed"),
+        }
         // Bounded on its own rather than out of what is left: closing costs a
         // round trip at most, and a server that never answers the handshake
         // must not hold the worker open. The socket dies with the process
@@ -1182,7 +1202,7 @@ mod tests {
             (366, false, false, "Alice 366🔥"),
         ] {
             assert_eq!(
-                notification_sender_name(
+                notification_display_name(
                     "Alice",
                     FlameState {
                         counter,
@@ -1196,8 +1216,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn notification_batches_use_current_flames_after_the_resolved_display_name() -> Result<()>
-    {
+    async fn notification_batches_put_flames_on_direct_senders_and_group_names() -> Result<()> {
         let directory = tempfile::tempdir()?;
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
@@ -1212,11 +1231,11 @@ mod tests {
         }
 
         let today = crate::utils::start_of_local_day()?;
-        for (age_days, best_friend, expected) in [
-            (0, false, "Ali 12🔥"),
-            (0, true, "Ali 12❤️‍🔥"),
-            (2, false, "Ali 12🔥⌛"),
-            (3, false, "Ali"),
+        for (age_days, best_friend, expected, expected_group) in [
+            (0, false, "Ali 12🔥", "Friends 12🔥"),
+            (0, true, "Ali 12❤️‍🔥", "Friends 12🔥"),
+            (2, false, "Ali 12🔥⌛", "Friends 12🔥⌛"),
+            (3, false, "Ali", "Friends"),
         ] {
             let exchanged = today - age_days * 86_400 + 1;
             sqlx::query(
@@ -1247,9 +1266,14 @@ mod tests {
             assert_eq!(direct.event_id, "direct");
             assert_eq!(direct.notification_id, "image");
             let group = &batch.additions[1];
-            assert_eq!(group.sender_name, expected.replace("❤️‍🔥", "🔥"));
-            assert_eq!(group.conversation_name.as_deref(), Some("Friends"));
-            assert_eq!(group.body, "sent a message in Friends.");
+            assert_eq!(group.sender_name, "Ali");
+            assert_eq!(group.title, "Ali");
+            assert_eq!(group.conversation_name.as_deref(), Some(expected_group));
+            assert_eq!(group.body, format!("sent a message in {expected_group}."));
+            assert_eq!(
+                group.text_messages_body.as_deref(),
+                Some(format!("sent {{count}} messages in {expected_group}.").as_str()),
+            );
             assert_eq!(batch.additions[2].sender_name, "Ali");
         }
         Ok(())
@@ -1951,7 +1975,11 @@ mod tests {
             sqlx::query_scalar("SELECT content FROM messages WHERE type = 'text'")
                 .fetch_all(&database.pool)
                 .await?;
-        assert_eq!(announcements, vec!["Anna played a move. Ben is on turn"; 3]);
+        assert_eq!(
+            announcements,
+            vec!["Anna played a move. Ben is on turn"; 2],
+            "only the latest announcement for each game stays in the chat",
+        );
         let batch = pending_batch(&ctx, "en").await?;
         assert_eq!(batch.additions.len(), 2);
         assert!(batch

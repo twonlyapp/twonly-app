@@ -3053,6 +3053,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webxdcStoreFailed => 'The app could not be added to this chat.';
 
   @override
+  String get webxdcStoreDirectChatHint =>
+      'Some games can only be played in direct chats.';
+
+  @override
   String get webxdcStoreAlreadyAdded => 'Already added to this chat';
 
   @override
@@ -3299,4 +3303,7 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get mediaSendFailed => 'Send failed';
 }

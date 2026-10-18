@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE messages SET ack_by_server = ?\n               WHERE media_id = ? AND ack_by_server IS NULL\n                 AND NOT EXISTS (\n                     SELECT 1 FROM groups g JOIN message_actions a\n                       ON a.message_id = messages.message_id AND a.type = 'sendFailed'\n                     WHERE g.group_id = messages.group_id AND g.is_direct_chat = 1\n                 )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "78f14f2761181853e716484865ba638dade8f8000f9152db1fab225148a738bf"
+}

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT r.contact_id, r.message, r.message_id, r.contact_will_sends_receipt,\n               r.wake_receiver, c.account_deleted, c.signal_version\n        FROM receipts r\n        JOIN contacts c ON c.user_id = r.contact_id\n        WHERE r.receipt_id = ?\n        ",
+  "query": "\n        SELECT r.contact_id, r.message, r.message_id, r.contact_will_sends_receipt,\n               r.wake_receiver, c.account_deleted, c.signal_version,\n               r.ack_by_server_at, r.last_retry\n        FROM receipts r\n        JOIN contacts c ON c.user_id = r.contact_id\n        WHERE r.receipt_id = ?\n        ",
   "describe": {
     "columns": [
       {
@@ -79,6 +79,28 @@
             "name": "signal_version"
           }
         }
+      },
+      {
+        "name": "ack_by_server_at",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "ack_by_server_at"
+          }
+        }
+      },
+      {
+        "name": "last_retry",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "last_retry"
+          }
+        }
       }
     ],
     "parameters": {
@@ -91,8 +113,10 @@
       false,
       false,
       false,
-      false
+      false,
+      true,
+      true
     ]
   },
-  "hash": "2a923146a880d7f8684495e93324a743ae58b3f32e01e5ad1fa5a304bb535ae5"
+  "hash": "f2aca8bd82eb97ff0d2126e96a6e76d29529f39aa82eba40092fd89eac9500e4"
 }

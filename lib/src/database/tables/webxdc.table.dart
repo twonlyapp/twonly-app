@@ -34,6 +34,8 @@ class WebxdcApps extends Table {
   BoolColumn get proOnly => boolean().withDefault(const Constant(false))();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   BoolColumn get oneTime => boolean().withDefault(const Constant(false))();
+  BoolColumn get directChatOnly =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {appId, version};

@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -124,6 +125,64 @@ void main() {
 
       // msg_d_sender_deleted_expired should be deleted because isDeletedFromSender is true and createdAt < deletionLimit
       expect(remainingIds.contains('msg_d_sender_deleted_expired'), isFalse);
+    },
+  );
+
+  test(
+    'group actions expire by age using each chat retention policy',
+    () async {
+      final now = DateTime.utc(2026, 10, 18, 12);
+      await withClock(Clock.fixed(now), () async {
+        for (final (groupId, hours, direct) in [
+          ('short', 2, false),
+          ('long', 4, false),
+          ('direct', 2, true),
+        ]) {
+          await twonlyDB.groupsDao.createNewGroup(
+            GroupsCompanion.insert(
+              groupId: groupId,
+              groupName: groupId,
+              isDirectChat: Value(direct),
+              deleteMessagesAfterMilliseconds: Value(hours * 60 * 60 * 1000),
+            ),
+          );
+          for (final type in GroupActionType.values) {
+            for (final age in [1, 2, 3, 5]) {
+              await twonlyDB.groupsDao.insertGroupAction(
+                GroupHistoriesCompanion.insert(
+                  groupHistoryId: '$groupId-${type.name}-$age',
+                  groupId: groupId,
+                  type: type,
+                  actionAt: Value(now.subtract(Duration(hours: age))),
+                ),
+              );
+            }
+          }
+        }
+
+        await twonlyDB.messagesDao.purgeMessageTable();
+
+        final remaining = await twonlyDB.select(twonlyDB.groupHistories).get();
+        expect(
+          remaining.map((action) => action.groupHistoryId),
+          unorderedEquals([
+            for (final groupId in ['short', 'long', 'direct'])
+              for (final type in GroupActionType.values)
+                for (final age in (groupId == 'long' ? [1, 2, 3] : [1, 2]))
+                  '$groupId-${type.name}-$age',
+          ]),
+        );
+        // Removing the history must not remove the chat or its actual settings.
+        expect(await twonlyDB.groupsDao.getAllGroups(), hasLength(3));
+        expect(
+          (await twonlyDB.groupsDao.getGroup(
+            'long',
+          ))!.deleteMessagesAfterMilliseconds,
+          4 * 60 * 60 * 1000,
+        );
+        await twonlyDB.messagesDao.purgeMessageTable();
+        expect(await twonlyDB.select(twonlyDB.groupHistories).get(), remaining);
+      });
     },
   );
 

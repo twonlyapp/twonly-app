@@ -4,6 +4,7 @@ import 'package:clock/clock.dart';
 import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/game_chat_messages.dart';
 
 /// Outgoing rows displayed while Rust is still persisting them.
 ///
@@ -63,9 +64,11 @@ class PendingChatMessages {
   List<Message> merge(Iterable<Message> persisted) {
     final byId = {for (final message in persisted) message.messageId: message};
     byId.keys.forEach(_messages.remove);
-    return [...byId.values, ..._messages.values]..sort((a, b) {
-      final byTime = a.createdAt.compareTo(b.createdAt);
-      return byTime != 0 ? byTime : a.messageId.compareTo(b.messageId);
-    });
+    final chronological = [...byId.values, ..._messages.values]
+      ..sort((a, b) {
+        final byTime = a.createdAt.compareTo(b.createdAt);
+        return byTime != 0 ? byTime : a.messageId.compareTo(b.messageId);
+      });
+    return arrangeGameMessages(chronological);
   }
 }

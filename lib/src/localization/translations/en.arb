@@ -1183,6 +1183,7 @@
   "webxdcStoreEmpty": "No apps are available yet.",
   "webxdcStoreOffline": "The app list could not be loaded. Check your connection and try again.",
   "webxdcStoreFailed": "The app could not be added to this chat.",
+  "webxdcStoreDirectChatHint": "Some games can only be played in direct chats.",
   "webxdcStoreAlreadyAdded": "Already added to this chat",
   "webxdcChatApps": "Chat apps",
   "webxdcChatAppsEmpty": "No one-time apps have been added to this chat yet.",
@@ -1277,5 +1278,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "mediaSendFailed": "Send failed"
 }
