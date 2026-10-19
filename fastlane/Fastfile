@@ -1,3 +1,5 @@
+require "tempfile"
+
 default_platform(:android)
 
 platform :android do
@@ -13,8 +15,8 @@ platform :android do
     )
   end
 
-  desc "Build the application locally and upload it as a new GitHub release"
-  lane :release_github do
+  desc "Build the application locally and publish it to GitHub and F-Droid"
+  lane :fdroid do |options|
     # Read pubspec.yaml to get the version
     pubspec_path = File.expand_path("../pubspec.yaml", __dir__)
     unless File.exist?(pubspec_path)
@@ -49,38 +51,42 @@ platform :android do
       UI.important("CHANGELOG.md not found at #{changelog_path}. Using default description.")
     end
 
-    # Handle key.properties swapping if key.github.properties exists
-    key_properties_path = File.expand_path("../android/key.properties", __dir__)
-    github_properties_path = File.expand_path("../android/key.github.properties", __dir__)
-    backup_properties_path = File.expand_path("../android/key.properties.backup", __dir__)
-
-    swapped_properties = false
-    if File.exist?(github_properties_path)
-      UI.message("Found key.github.properties. Swapping in for the build...")
-      if File.exist?(key_properties_path)
-        FileUtils.cp(key_properties_path, backup_properties_path)
-      end
-      FileUtils.cp(github_properties_path, key_properties_path)
-      swapped_properties = true
+    if options[:skip_build].to_s == "true"
+      UI.message("Reusing existing release APKs without rebuilding...")
     else
-      UI.message("No key.github.properties found. Building with default key.properties...")
-    end
+      # Handle key.properties swapping if key.github.properties exists
+      key_properties_path = File.expand_path("../android/key.properties", __dir__)
+      github_properties_path = File.expand_path("../android/key.github.properties", __dir__)
+      backup_properties_path = File.expand_path("../android/key.properties.backup", __dir__)
 
-    begin
-      # Build the Android application
-      UI.message("Building Android APK...")
-      Dir.chdir(File.expand_path("..", __dir__)) do
-        sh("flutter build apk --release --split-per-abi")
+      swapped_properties = false
+      if File.exist?(github_properties_path)
+        UI.message("Found key.github.properties. Swapping in for the build...")
+        if File.exist?(key_properties_path)
+          FileUtils.cp(key_properties_path, backup_properties_path)
+        end
+        FileUtils.cp(github_properties_path, key_properties_path)
+        swapped_properties = true
+      else
+        UI.message("No key.github.properties found. Building with default key.properties...")
       end
-    ensure
-      # Restore original key.properties if swapped
-      if swapped_properties
-        UI.message("Restoring original key.properties...")
-        if File.exist?(backup_properties_path)
-          FileUtils.cp(backup_properties_path, key_properties_path)
-          FileUtils.rm(backup_properties_path)
-        else
-          FileUtils.rm_f(key_properties_path)
+
+      begin
+        # Build the Android application
+        UI.message("Building Android APK...")
+        Dir.chdir(File.expand_path("..", __dir__)) do
+          sh("flutter build apk --release --split-per-abi")
+        end
+      ensure
+        # Restore original key.properties if swapped
+        if swapped_properties
+          UI.message("Restoring original key.properties...")
+          if File.exist?(backup_properties_path)
+            FileUtils.cp(backup_properties_path, key_properties_path)
+            FileUtils.rm(backup_properties_path)
+          else
+            FileUtils.rm_f(key_properties_path)
+          end
         end
       end
     end
@@ -95,26 +101,45 @@ platform :android do
     
     UI.message("Found APKs to upload: #{apks.join(', ')}")
 
-    # Retrieve GitHub Token (fall back to gh auth token)
-    github_token = ENV["GITHUB_TOKEN"]
-    if github_token.nil? || github_token.empty?
-      UI.message("GITHUB_TOKEN env variable not set. Retrieving token via GitHub CLI (gh auth token)...")
-      begin
-        github_token = sh("gh auth token").strip
-      rescue => e
-        UI.user_error!("Failed to retrieve token from gh CLI. Make sure gh is installed and authenticated, or GITHUB_TOKEN environment variable is set. Error: #{e}")
+    # gh streams large APK uploads without Fastlane's Excon write timeout.
+    # It uses GITHUB_TOKEN/GH_TOKEN or the existing gh login without logging a token.
+    repository = "twonlyapp/twonly-app"
+    release_exists = sh("gh", "release", "view", tag_name, "--repo", repository, log: false) do |status, output, _command|
+      if status.success?
+        true
+      elsif output.match?(/release not found|HTTP 404/i)
+        false
+      else
+        UI.user_error!("Could not check GitHub release #{tag_name}: #{output}")
       end
     end
 
-    UI.message("Creating GitHub Release #{tag_name}...")
-    set_github_release(
-      repository_name: "twonlyapp/twonly-app",
-      api_token: github_token,
-      tag_name: tag_name,
-      name: "Release #{tag_name}",
-      description: release_notes,
-      upload_assets: apks
-    )
+    if release_exists
+      UI.message("Resuming uploads to GitHub release #{tag_name}...")
+    else
+      UI.message("Creating GitHub release #{tag_name}...")
+      Tempfile.create(["twonly-release-notes", ".md"]) do |notes|
+        notes.write(release_notes)
+        notes.flush
+        sh("gh", "release", "create", tag_name, "--repo", repository,
+           "--title", "Release #{tag_name}", "--notes-file", notes.path)
+      end
+    end
+
+    apks.each do |apk_path|
+      attempts = 0
+      begin
+        attempts += 1
+        # Replaces partial assets left by an interrupted upload of this version.
+        sh("gh", "release", "upload", tag_name, apk_path, "--repo", repository, "--clobber")
+      rescue StandardError
+        raise if attempts >= 3
+
+        UI.important("Upload of #{File.basename(apk_path)} failed; retrying (#{attempts + 1}/3)...")
+        sleep(5 * attempts)
+        retry
+      end
+    end
     UI.success("Successfully uploaded release #{tag_name} to GitHub!")
 
     # F-Droid deployment

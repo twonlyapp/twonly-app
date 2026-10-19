@@ -49,6 +49,39 @@ unsafe fn required_string(pointer: *const c_char, name: &str) -> Result<String, 
         .map_err(|error| format!("{name} is not UTF-8: {error}"))
 }
 
+fn log_push_received(data_dir: &str, message_id: &str, sent_at_ms: i64) {
+    // Arrival must be durable before WorkManager queues the drain, even when
+    // storage/credentials prevent Context initialization. Do not acquire the
+    // worker lock: a previous push may still be waiting for its mailbox.
+    let flutter_owns_process = Context::get_static().is_ok_and(|ctx| ctx.is_flutter_runtime());
+    crate::log::init_tracing(std::path::Path::new(data_dir), !flutter_owns_process);
+    tracing::info!(
+        platform = std::env::consts::OS,
+        message_id,
+        sent_at_ms = (sent_at_ms > 0).then_some(sent_at_ms),
+        "native push received"
+    );
+}
+
+/// Records native push arrival in app.log without starting a worker or opening
+/// the database. Only transport metadata belongs here, never the push payload.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn twonly_notification_received(
+    data_dir: *const c_char,
+    message_id: *const c_char,
+    sent_at_ms: i64,
+) {
+    let _ = catch_unwind(AssertUnwindSafe(|| {
+        let Ok(data_dir) = (unsafe { required_string(data_dir, "data_dir") }) else {
+            return;
+        };
+        let Ok(message_id) = (unsafe { required_string(message_id, "message_id") }) else {
+            return;
+        };
+        log_push_received(&data_dir, &message_id, sent_at_ms);
+    }));
+}
+
 /// One runtime for the whole worker process. `twonly_notification_process`
 /// hands its batch back before the background socket is done with it, so the
 /// tasks it spawned have to outlive that call — a per-call runtime would drop
@@ -236,6 +269,24 @@ mod android_jni {
         env.new_string(value)
             .map(JString::into_raw)
             .unwrap_or(std::ptr::null_mut())
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_logPushReceived(
+        mut env: JNIEnv<'_>,
+        _class: JClass<'_>,
+        data_dir: JString<'_>,
+        message_id: JString<'_>,
+        sent_at_ms: jlong,
+    ) {
+        let _ = catch_unwind(AssertUnwindSafe(|| {
+            if let (Ok(data_dir), Ok(message_id)) = (
+                java_string(&mut env, data_dir),
+                java_string(&mut env, message_id),
+            ) {
+                log_push_received(&data_dir, &message_id, sent_at_ms);
+            }
+        }));
     }
 
     #[unsafe(no_mangle)]

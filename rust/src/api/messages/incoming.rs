@@ -649,8 +649,6 @@ pub async fn handle_decoded_server_message(
         tracing::warn!(%error, "could not record the last server-message timestamp");
     }
 
-    ctx.mark_incoming_committed();
-
     let ctx = ctx.clone();
     tokio::spawn(async move {
         // The peer reset their session, so the parked receipt has to wait for a

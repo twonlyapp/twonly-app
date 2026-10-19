@@ -8,6 +8,14 @@
 extern "C" {
 #endif
 
+/* Log arrival before scheduling the drain. Pass only the transport identifier;
+   sent_at_ms is zero when the transport does not supply a send timestamp. */
+void twonly_notification_received(
+    const char *data_dir,
+    const char *message_id,
+    int64_t sent_at_ms
+);
+
 char *twonly_notification_process(
     const char *database_dir,
     const char *data_dir,

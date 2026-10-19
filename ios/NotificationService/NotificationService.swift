@@ -100,6 +100,7 @@ final class NotificationService: UNNotificationServiceExtension {
     _ request: UNNotificationRequest,
     withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
   ) {
+    NSLog("Native push received: requestId=%@", request.identifier)
     NativeErrorReporting.startIfAllowed()
     NativeErrorReporting.breadcrumb("notification_processing_started")
     self.contentHandler = contentHandler
@@ -108,6 +109,12 @@ final class NotificationService: UNNotificationServiceExtension {
     guard let runtimeDirectory = Self.runtimeDirectory() else {
       deliverFallback(reason: "shared runtime directory is unavailable", operation: "notification_storage")
       return
+    }
+
+    runtimeDirectory.withCString { directory in
+      request.identifier.withCString { identifier in
+        twonly_notification_received(directory, identifier, 0)
+      }
     }
 
     DispatchQueue.global(qos: .userInitiated).async {

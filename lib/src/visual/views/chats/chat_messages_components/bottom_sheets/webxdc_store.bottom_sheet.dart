@@ -65,7 +65,11 @@ class _WebxdcStoreViewState extends State<WebxdcStoreView> {
   }
 
   Future<void> _place(rust_webxdc.WebxdcStoreApp app) async {
-    if (app.proOnly && !isPayingUser(context.read<PurchasesProvider>().plan)) {
+    if (app.proOnly &&
+        !isUserAllowed(
+          context.read<PurchasesProvider>().plan,
+          PremiumFeatures.ProApps,
+        )) {
       await context.push(Routes.settingsSubscription);
       return;
     }

@@ -18,6 +18,17 @@ import eu.twonly.R
 
 class TwonlyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
+        Log.i(TAG, "Native push received: messageId=${message.messageId}, sentAtMs=${message.sentTime}")
+        try {
+            NativeNotificationBridge.logPushReceived(
+                applicationContext.filesDir.absolutePath,
+                message.messageId.orEmpty(),
+                message.sentTime,
+            )
+        } catch (error: Throwable) {
+            Log.w(TAG, "Could not persist native push arrival", error)
+        }
+
         // Server side alerts (plan changes, passwordless recovery) carry a ready
         // made notification instead of the opaque wake-up envelope. Android only
         // presents those by itself while twonly is backgrounded, so dropping them

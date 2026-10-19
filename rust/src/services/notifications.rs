@@ -827,39 +827,32 @@ pub async fn process_wakeup(
 
     let deadline = std::time::Duration::from_millis(deadline_ms.clamp(1_000, 28_000));
 
-    let owns_connection = ctx.is_notification_runtime();
-    let completed = if owns_connection {
-        let generation = ctx.mailbox_generation();
-        ApiRuntime::connect(&ctx).await?;
-        tokio::time::timeout(deadline, ctx.wait_for_mailbox_after(generation))
-            .await
-            .is_ok()
-    } else {
-        // The generation has to be sampled before the snapshot. A commit that
-        // lands between the two is invisible to both the snapshot, which ran
-        // too early, and the wait, whose baseline already counts it — leaving
-        // an alert that is durable on disk stalled for the whole deadline.
-        let generation = ctx.incoming_generation();
-        let initial = pending_batch(&ctx, locale).await?;
-        if !initial.additions.is_empty() {
-            return Ok(initial);
-        }
-        // Flutter already owns the socket. Nudge the server to redeliver in
-        // case the push raced a drain that had already finished.
-        if let Ok(client) = ApiRuntime::client(&ctx).await {
-            client.request_catch_up().await;
-        }
-        tokio::time::timeout(deadline, ctx.wait_for_incoming_after(generation))
-            .await
-            .is_ok()
-    };
+    let completed = drain_wakeup_mailbox(&ctx, deadline).await?;
 
     // Give concurrently acknowledged batches a small window to commit their
     // durable notification rows before the native caller renders the result.
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     let mut batch = pending_batch(&ctx, locale).await?;
     batch.completed = completed;
+    tracing::info!(
+        completed,
+        additions = batch.additions.len(),
+        removals = batch.removals.len(),
+        "native push processing finished"
+    );
     Ok(batch)
+}
+
+async fn drain_wakeup_mailbox(ctx: &Arc<Context>, deadline: std::time::Duration) -> Result<bool> {
+    // Sample before connecting/nudging: even an empty mailbox can drain before
+    // connect returns. One incoming message is not proof that the drain ended.
+    let generation = ctx.mailbox_generation();
+    ApiRuntime::client(ctx).await?.catch_up_after_push().await?;
+    Ok(
+        tokio::time::timeout(deadline, ctx.wait_for_mailbox_after(generation))
+            .await
+            .is_ok(),
+    )
 }
 
 /// Settles what the wake-up still owes the app once its notification is on
@@ -1185,6 +1178,90 @@ pub(crate) fn notification_avatar_path(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn native_push_restores_a_stopped_shared_connection_and_waits_for_mailbox() -> Result<()>
+    {
+        use crate::api::runtime::ApiClient;
+        use crate::bridge::api::{ApiConfig, ApiConnectionState};
+        use std::sync::atomic::Ordering;
+        use std::time::Duration;
+
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        ApiRuntime::close(&ctx).await?;
+        // Reproduce the shared-process path: the context is not a dedicated
+        // notification runtime, and Flutter's cached reachability is offline.
+        assert!(!ctx.is_notification_runtime());
+        let client = ApiClient::new(
+            &ctx,
+            ApiConfig {
+                websocket_url: "ws://127.0.0.1:1".into(),
+                legacy_user_app_version: 0,
+                in_background: true,
+                can_use_login_token_for_auth: true,
+            },
+        );
+        *ctx.api_client.get().unwrap().write().await = client.clone();
+        client.set_network_available(false).await?;
+        ctx.mark_mailbox_drained(); // An old drain must not finish this wake-up.
+
+        let mut drain = Box::pin(drain_wakeup_mailbox(&ctx, Duration::from_secs(1)));
+        // Poll the worker until it waits for the server, without running the
+        // socket tasks. No external network or live server is needed.
+        tokio::select! {
+            biased;
+            result = &mut drain => panic!("mailbox completed before the server drained it: {result:?}"),
+            () = std::future::ready(()) => {}
+        }
+        assert!(client.ws_client.lock().await.is_some());
+        assert_eq!(*client.state.read().await, ApiConnectionState::Connecting);
+        assert!(client.network_available.load(Ordering::Acquire));
+        assert!(client.in_background.load(Ordering::Acquire));
+        assert!(client.requested_background.load(Ordering::Acquire));
+
+        // Empty mailboxes count as completed too; waiting for an incoming chat
+        // message used to make duplicate pushes time out and retry needlessly.
+        ctx.mark_mailbox_drained();
+        assert!(drain.await?);
+        client.close().await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn native_push_without_a_mailbox_drain_remains_retryable() -> Result<()> {
+        use crate::api::runtime::ApiClient;
+        use crate::bridge::api::{ApiConfig, ApiConnectionState};
+        use std::time::Duration;
+
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        ApiRuntime::close(&ctx).await?;
+        let client = ApiClient::new(
+            &ctx,
+            ApiConfig {
+                websocket_url: "ws://127.0.0.1:1".into(),
+                legacy_user_app_version: 0,
+                in_background: true,
+                can_use_login_token_for_auth: true,
+            },
+        );
+        *ctx.api_client.get().unwrap().write().await = client.clone();
+        // An inert transport keeps this timeout test entirely offline.
+        *client.ws_client.lock().await = Some(Arc::new(
+            stream_tungstenite::WebSocketClient::builder("ws://127.0.0.1:1").build(),
+        ));
+        client.set_state(ApiConnectionState::Authenticated).await;
+        ctx.mark_mailbox_drained();
+
+        assert!(!drain_wakeup_mailbox(&ctx, Duration::from_millis(10)).await?);
+        client.close().await;
+        Ok(())
+    }
 
     #[test]
     fn notification_names_match_the_app_flame_counter() {

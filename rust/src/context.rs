@@ -53,8 +53,6 @@ pub struct Context {
     pub(crate) api_client: OnceCell<RwLock<Arc<ApiClient>>>,
     mailbox_generation: AtomicU64,
     mailbox_drained: Notify,
-    incoming_generation: AtomicU64,
-    incoming_committed: Notify,
     /// Set once this connection has confirmed the account has a PQC prekey
     /// bundle on the server (or has just published one). Per context rather
     /// than process-wide so two accounts in one process check independently.
@@ -148,8 +146,6 @@ impl Context {
             api_client: OnceCell::const_new(),
             mailbox_generation: AtomicU64::new(0),
             mailbox_drained: Notify::new(),
-            incoming_generation: AtomicU64::new(0),
-            incoming_committed: Notify::new(),
             pqc_bundle_verified: AtomicBool::new(false),
             queued_receipt_flush: Default::default(),
             media_preprocessing: Mutex::new(()),
@@ -336,8 +332,6 @@ impl Context {
                         api_client: OnceCell::const_new(),
                         mailbox_generation: AtomicU64::new(0),
                         mailbox_drained: Notify::new(),
-                        incoming_generation: AtomicU64::new(0),
-                        incoming_committed: Notify::new(),
                         pqc_bundle_verified: AtomicBool::new(false),
                         queued_receipt_flush: Default::default(),
                         media_preprocessing: Mutex::new(()),
@@ -383,8 +377,6 @@ impl Context {
                         api_client: OnceCell::const_new(),
                         mailbox_generation: AtomicU64::new(0),
                         mailbox_drained: Notify::new(),
-                        incoming_generation: AtomicU64::new(0),
-                        incoming_committed: Notify::new(),
                         pqc_bundle_verified: AtomicBool::new(false),
                         queued_receipt_flush: Default::default(),
                         media_preprocessing: Mutex::new(()),
@@ -456,25 +448,6 @@ impl Context {
         while self.mailbox_generation() <= generation {
             let notified = self.mailbox_drained.notified();
             if self.mailbox_generation() > generation {
-                break;
-            }
-            notified.await;
-        }
-    }
-
-    pub(crate) fn incoming_generation(&self) -> u64 {
-        self.incoming_generation.load(Ordering::Acquire)
-    }
-
-    pub(crate) fn mark_incoming_committed(&self) {
-        self.incoming_generation.fetch_add(1, Ordering::AcqRel);
-        self.incoming_committed.notify_waiters();
-    }
-
-    pub(crate) async fn wait_for_incoming_after(&self, generation: u64) {
-        while self.incoming_generation() <= generation {
-            let notified = self.incoming_committed.notified();
-            if self.incoming_generation() > generation {
                 break;
             }
             notified.await;
