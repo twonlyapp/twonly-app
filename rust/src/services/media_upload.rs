@@ -945,9 +945,18 @@ impl MediaUploadService {
                 // The caller asks for a thumbnail, not just for the flag to be
                 // refreshed: a UI that only ever recorded "still missing" would
                 // ask again on every rebuild and never get a preview.
-                if !files.thumbnail_path(media_id).exists() {
+                let thumbnail = files.thumbnail_path(media_id);
+                let needs_thumbnail = || {
+                    std::fs::metadata(&thumbnail).map_or(true, |metadata| {
+                        metadata.len() == 0
+                            || metadata.len() > media_codec::THUMBNAIL_MAX_BYTES as u64
+                    })
+                };
+                // Older versions wrote previews without a size limit. Replace
+                // those atomically too, so queued cloud backups can recover.
+                if needs_thumbnail() {
                     let permit = THUMBNAIL_BACKFILL.acquire().await;
-                    if !files.thumbnail_path(media_id).exists() {
+                    if needs_thumbnail() {
                         let Some(media) = self.load(media_id).await? else {
                             return Ok(());
                         };
@@ -2142,6 +2151,19 @@ mod tests {
                 .fetch_one(&database.pool)
                 .await?;
         assert_eq!(has_thumbnail, 1);
+
+        // A failed cloud backup may already have an oversized preview from an
+        // older version. Refresh it without deleting the original media.
+        let original = std::fs::read(&stored)?;
+        std::fs::write(
+            files.thumbnail_path(media_id),
+            vec![0; media_codec::THUMBNAIL_MAX_BYTES + 1],
+        )?;
+        service.media_step_finished(media_id, "thumbnail").await?;
+        let thumbnail = files.thumbnail_path(media_id);
+        assert!(std::fs::metadata(&thumbnail)?.len() <= media_codec::THUMBNAIL_MAX_BYTES as u64);
+        assert!(media_codec::decode(&thumbnail).is_ok());
+        assert_eq!(std::fs::read(&stored)?, original);
         Ok(())
     }
 

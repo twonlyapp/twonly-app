@@ -352,6 +352,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
   }
 
   Future<void> takePicture() async {
+    if (!mounted) return;
     if (mc.isSharePreviewIsShown || mc.isVideoRecording) return;
 
     setState(() {
@@ -386,8 +387,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
     final image = await mc.screenshotController.capture(
       pixelRatio: MediaQuery.of(context).devicePixelRatio,
     );
+    if (!mounted) return;
 
-    if (await pushMediaEditor(image, null)) {
+    final shouldReturn = await pushMediaEditor(image, null);
+    if (!mounted || shouldReturn) {
       return;
     }
     setState(() {

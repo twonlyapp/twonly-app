@@ -642,6 +642,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future<void> onPressedSaveToGallery() async {
+    if (!mounted) return;
     final media = currentMedia;
     final msg = currentMessage;
     if (media == null || msg == null) return;
@@ -666,6 +667,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       ).writeToBuffer(),
       onlySendIfNoReceiptsAreOpen: false,
     );
+    if (!mounted) return;
     setState(() {
       imageSaved = true;
       imageSaving = false;

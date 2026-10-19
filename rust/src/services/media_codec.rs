@@ -25,6 +25,10 @@ const LARGE_IMAGE_BYTES: usize = 2_000_000;
 
 const THUMBNAIL_MIN_EDGE: u32 = 300;
 const THUMBNAIL_QUALITY: f32 = 50.0;
+const THUMBNAIL_MAX_EDGE: u32 = 2048;
+/// The Memories server signs thumbnails for 300 KB plus 100 KB of overhead.
+/// Keep the plaintext within that budget, leaving room for encryption and POST.
+pub(crate) const THUMBNAIL_MAX_BYTES: usize = 300_000;
 
 /// Alpha at or below this counts as transparent when trimming borders. Matches
 /// the threshold the Dart implementation used, so existing media crops the same.
@@ -282,8 +286,8 @@ fn encode_lossless_webp(image: &DynamicImage) -> Result<Vec<u8>> {
 }
 
 /// Scales down so the shorter edge lands on `THUMBNAIL_MIN_EDGE`, never scaling
-/// an already small image up. A GIF decodes to its first frame, which is
-/// exactly what its thumbnail should show.
+/// an already small image up. Long images and large encoded previews are reduced
+/// further to fit the Memories upload budget. A GIF decodes to its first frame.
 pub(crate) fn create_image_thumbnail(source: &Path, destination: &Path) -> Result<()> {
     let total_started = Instant::now();
     let source_bytes = file_size(source);
@@ -292,11 +296,22 @@ pub(crate) fn create_image_thumbnail(source: &Path, destination: &Path) -> Resul
     let decode_ms = elapsed_ms(decode_started);
     let (source_width, source_height) = (image.width(), image.height());
     let resize_started = Instant::now();
-    let thumbnail = downscale(&image, THUMBNAIL_MIN_EDGE);
+    let mut thumbnail = downscale(&image, THUMBNAIL_MIN_EDGE);
+    if thumbnail.width().max(thumbnail.height()) > THUMBNAIL_MAX_EDGE {
+        thumbnail = thumbnail.thumbnail(THUMBNAIL_MAX_EDGE, THUMBNAIL_MAX_EDGE);
+    }
     let resize_ms = elapsed_ms(resize_started);
-    let (output_width, output_height) = (thumbnail.width(), thumbnail.height());
     let encode_started = Instant::now();
-    let encoded = encode_webp(&thumbnail, THUMBNAIL_QUALITY)?;
+    let mut encoded = encode_webp(&thumbnail, THUMBNAIL_QUALITY)?;
+    while encoded.len() > THUMBNAIL_MAX_BYTES {
+        // Reduce both dimensions, retaining aspect ratio. Fixed WebP quality
+        // alone cannot bound the size, especially with a detailed alpha channel.
+        let width = (thumbnail.width() * 3 / 4).max(1);
+        let height = (thumbnail.height() * 3 / 4).max(1);
+        thumbnail = thumbnail.thumbnail(width, height);
+        encoded = encode_webp(&thumbnail, THUMBNAIL_QUALITY)?;
+    }
+    let (output_width, output_height) = (thumbnail.width(), thumbnail.height());
     let encode_ms = elapsed_ms(encode_started);
     let write_started = Instant::now();
     write_atomically(destination, &encoded)?;
@@ -555,6 +570,40 @@ mod tests {
             .unwrap();
         create_image_thumbnail(&small, &destination).unwrap();
         assert_eq!(decode(&destination).unwrap().width(), 64);
+    }
+
+    #[test]
+    fn detailed_long_thumbnails_fit_the_cloud_upload_budget() {
+        let directory = tempfile::tempdir().unwrap();
+        let source = directory.path().join("long.png");
+        let destination = directory.path().join("thumb.webp");
+        // High-entropy colour and alpha exercise the byte limit even after
+        // applying the maximum edge. A flat-colour panorama compresses too well.
+        let mut state = 123456789u32;
+        let noisy = image::RgbaImage::from_fn(300, 4096, |_, _| {
+            let mut channels = [0u8; 4];
+            for channel in &mut channels {
+                state ^= state << 13;
+                state ^= state >> 17;
+                state ^= state << 5;
+                *channel = state as u8;
+            }
+            Rgba(channels)
+        });
+        let image = DynamicImage::ImageRgba8(noisy);
+        let bounded = image.thumbnail(THUMBNAIL_MAX_EDGE, THUMBNAIL_MAX_EDGE);
+        assert!(encode_webp(&bounded, THUMBNAIL_QUALITY).unwrap().len() > THUMBNAIL_MAX_BYTES);
+        image.save(&source).unwrap();
+
+        create_image_thumbnail(&source, &destination).unwrap();
+
+        assert!(std::fs::metadata(&destination).unwrap().len() <= THUMBNAIL_MAX_BYTES as u64);
+        let thumbnail = decode(&destination).unwrap();
+        assert!(thumbnail.width() < bounded.width());
+        assert!(thumbnail.height() < bounded.height());
+        assert!(
+            (thumbnail.width() as f32 / thumbnail.height() as f32 - 300.0 / 4096.0).abs() < 0.01
+        );
     }
 
     #[test]

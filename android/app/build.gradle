@@ -91,7 +91,8 @@ dependencies {
   coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
   implementation platform('com.google.firebase:firebase-bom:34.9.0')
   implementation 'com.google.firebase:firebase-messaging'
-  implementation 'androidx.work:work-runtime:2.10.2'
+  // 2.10.5 fixes foreground-service shutdown racing with pending worker starts.
+  implementation 'androidx.work:work-runtime:2.10.5'
   // Hardware video composition and transcoding: MediaCodec for decode/encode,
   // OpenGL for the overlay. Replaces both the software Flutter editor pass and
   // the previous third-party transcoder.

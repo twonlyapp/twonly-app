@@ -101,8 +101,17 @@ class MainCameraController {
   Color? scanHighlightColor;
   Offset? focusPointOffset;
 
-  Future<void>? _initializeFuture;
-  Future<void>? _pendingDisposal;
+  // CameraX shares one native camera across controllers. Keep initialization,
+  // lens changes and disposal ordered, including across camera views.
+  static Future<void> _cameraOperations = Future<void>.value();
+
+  static Future<void> _runCameraOperation(Future<void> Function() operation) {
+    final result = _cameraOperations.then((_) => operation());
+    // A failed operation must not prevent subsequent cleanup or reopening.
+    _cameraOperations = result.then<void>((_) {}, onError: (Object error) {});
+    return result;
+  }
+
   int _cameraSessionId = 0;
   DateTime? _lastBarcodeFrame;
 
@@ -113,30 +122,24 @@ class MainCameraController {
     scannedUrl = null;
     final cameraControllerTemp = cameraController;
     cameraController = null;
-    final initFutureTemp = _initializeFuture;
-    _initializeFuture = null;
-    // prevents: CameraException(Disposed CameraController, buildPreview() was called on a disposed CameraController.)
-    _pendingDisposal = Future.delayed(
-      const Duration(milliseconds: 100),
-      () async {
-        try {
-          if (initFutureTemp != null) {
-            await initFutureTemp;
-          }
-          // ignore: empty_catches
-        } catch (e) {}
-        try {
-          await cameraControllerTemp?.stopImageStream();
-          // ignore: empty_catches
-        } catch (e) {
-        } finally {
-          await cameraControllerTemp?.dispose();
+    final disposal = _runCameraOperation(() async {
+      // Let the preview leave the widget tree before disposing its controller.
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      if (cameraControllerTemp == null) return;
+      try {
+        if (cameraControllerTemp.value.isStreamingImages) {
+          await cameraControllerTemp.stopImageStream();
         }
-      },
-    );
+      } catch (e) {
+        Log.warn('Could not stop image stream while closing camera: $e');
+      } finally {
+        await cameraControllerTemp.dispose();
+      }
+    });
     initCameraStarted = false;
     selectedCameraDetails = SelectedCameraDetails();
     setState?.call();
+    await disposal;
   }
 
   Future<void> selectCamera(int sCameraId, bool init) async {
@@ -144,20 +147,32 @@ class MainCameraController {
     initCameraStarted = true;
     final sessionId = ++_cameraSessionId;
 
+    await _runCameraOperation(() async {
+      if (sessionId != _cameraSessionId) return;
+      try {
+        await _selectCamera(sCameraId, init, sessionId);
+      } finally {
+        // An old selection must not reset a newer selection's loading state.
+        if (sessionId == _cameraSessionId) {
+          initCameraStarted = false;
+          setState?.call();
+        }
+      }
+    });
+  }
+
+  Future<void> _selectCamera(int sCameraId, bool init, int sessionId) async {
+
     // Start checking microphone permission concurrently
     final micPermissionFuture = Permission.microphone.isGranted;
 
     try {
-      await _pendingDisposal;
-      if (sessionId != _cameraSessionId) return;
-
       if (AppEnvironment.cameras.isEmpty) {
         AppEnvironment.cameras = await availableCameras();
         if (sessionId != _cameraSessionId) return;
       }
     } catch (e) {
       Log.error('Error querying available cameras: $e');
-      initCameraStarted = false;
       setState?.call();
       return;
     }
@@ -167,7 +182,6 @@ class MainCameraController {
       Log.warn(
         'Trying to select a non existing camera $cameraId >= ${AppEnvironment.cameras.length}',
       );
-      initCameraStarted = false;
       setState?.call();
       return;
     }
@@ -219,9 +233,8 @@ class MainCameraController {
 
       var assignedToGlobal = false;
       try {
-        _initializeFuture = controller.initialize();
         try {
-          await _initializeFuture;
+          await controller.initialize();
         } on CameraException catch (e) {
           // If specific image format is unsupported on this hardware, fallback to default format
           Log.warn(
@@ -233,12 +246,11 @@ class MainCameraController {
             resolution,
             enableAudio: hasMic,
           );
-          _initializeFuture = controller.initialize();
-          await _initializeFuture;
+          await controller.initialize();
         }
 
         if (sessionId != _cameraSessionId) {
-          unawaited(controller.dispose());
+          await controller.dispose();
           return;
         }
 
@@ -253,13 +265,13 @@ class MainCameraController {
           await controller.startImageStream(_processCameraImage);
         }
         if (sessionId != _cameraSessionId) {
-          unawaited(controller.dispose());
+          await controller.dispose();
           return;
         }
 
         await controller.setZoomLevel(selectedCameraDetails.scaleFactor);
         if (sessionId != _cameraSessionId) {
-          unawaited(controller.dispose());
+          await controller.dispose();
           return;
         }
 
@@ -280,7 +292,7 @@ class MainCameraController {
                 : VideoStabilizationMode.level1,
           );
           if (sessionId != _cameraSessionId) {
-            unawaited(controller.dispose());
+            await controller.dispose();
             return;
           }
         }
@@ -294,14 +306,13 @@ class MainCameraController {
           Log.error('Error initializing camera: $e');
         }
         if (!assignedToGlobal) {
-          unawaited(controller.dispose());
+          await controller.dispose();
         } else {
           if (cameraController == controller) {
             cameraController = null;
           }
-          unawaited(controller.dispose());
+          await controller.dispose();
         }
-        initCameraStarted = false;
         setState?.call();
         return;
       }
@@ -337,7 +348,6 @@ class MainCameraController {
         } else {
           Log.error('Error switching camera description: $e');
         }
-        initCameraStarted = false;
         return;
       }
     }
@@ -345,7 +355,6 @@ class MainCameraController {
     if (sessionId != _cameraSessionId) return;
     final controller = cameraController;
     if (controller == null) {
-      initCameraStarted = false;
       return;
     }
 
@@ -377,7 +386,6 @@ class MainCameraController {
 
       qrCodePain = null;
       zoomButtonKey = GlobalKey();
-      initCameraStarted = false;
       setState?.call();
     } catch (e) {
       if (e is CameraException) {
@@ -388,8 +396,7 @@ class MainCameraController {
       if (cameraController == controller) {
         cameraController = null;
       }
-      unawaited(controller.dispose());
-      initCameraStarted = false;
+      await controller.dispose();
       return;
     }
   }

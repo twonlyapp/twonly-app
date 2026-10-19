@@ -47,7 +47,7 @@ dependencies:
     - name: camera_android_camerax
       path: packages/camera/camera_android_camerax
       custom_changes: true
-      custom_changes_description: Use lower-resolution rear-camera QR analysis frames.
+      custom_changes_description: Use lower-resolution rear-camera QR analysis frames and allow repeated preview surface cleanup.
     commit: b4f7d807a822a8ce327aae21353ac2217e928f6d
   flutter_sharing_intent:
     git: https://github.com/bhagat-techind/flutter_sharing_intent.git

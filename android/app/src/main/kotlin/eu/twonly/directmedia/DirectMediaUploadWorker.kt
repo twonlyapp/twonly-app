@@ -40,9 +40,10 @@ class DirectMediaUploadWorker(
         if (expiresAt <= System.currentTimeMillis() / 1_000) return Result.failure()
         return try {
             recordActivity()
-            // Become a data-sync foreground service before opening the file/network
-            // streams, otherwise Android may stop long uploads in the background.
-            setForegroundAsync(foregroundInfo(attachmentId)).get(10, TimeUnit.SECONDS)
+            // Extend the execution budget for long uploads when permitted.
+            // Background retries must also be able to run without a service.
+            setForegroundWhenAllowed(foregroundInfo(attachmentId))
+            if (isStopped) return Result.retry()
             val path = inputData.getString(DESCRIPTOR_PATH) ?: return Result.failure()
             val descriptor = JSONObject(File(path).readText(Charsets.UTF_8))
             val request = descriptor.getJSONObject(role)

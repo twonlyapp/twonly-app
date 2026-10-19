@@ -20,9 +20,9 @@ import org.json.JSONObject
  * transfers the OS finished while nothing was listening, and drain the message
  * outbox. With one, it prepares that single send.
  *
- * The Rust call is synchronous and owns its own runtime, so this worker only
- * has to hold a foreground service around it — without one, Android stops long
- * background work, which is the exact failure this whole path exists to fix.
+ * The Rust call is synchronous and owns its own runtime. Foreground execution
+ * extends its budget when permitted; background retries can still run as
+ * ordinary WorkManager jobs when Android disallows starting the service.
  */
 class MediaPrepareWorker(
     appContext: Context,
@@ -35,8 +35,9 @@ class MediaPrepareWorker(
             if (mediaId != null) {
                 // Only a user-visible send justifies a foreground service; the
                 // periodic flush runs as ordinary background work.
-                setForegroundAsync(foregroundInfo()).get()
+                setForegroundWhenAllowed(foregroundInfo())
             }
+            if (isStopped) return Result.retry()
             val directory = applicationContext.filesDir.absolutePath
             val response = JSONObject(
                 NativeMediaPrepareBridge.run(directory, directory, mediaId),
