@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1
+
+- Fix: Media files were not sent when a single user was inactive in a group
+
 ## 0.6.0
 
 - New: Stickers

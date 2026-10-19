@@ -54,67 +54,60 @@ void main() {
     await locator.reset();
   });
 
-  testWidgets('only the foreground game route suppresses its turn alerts', (
-    tester,
-  ) async {
-    final navigator = GlobalKey<NavigatorState>();
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    await tester.pumpWidget(
-      MaterialApp(
-        navigatorKey: navigator,
-        home: const WebxdcAppView(
-          launch: WebxdcLaunch(
-            instanceId: 'connect4-chat-a',
-            appId: 'connect4',
-            origin: 'origin',
-            title: 'Connect Four',
+  for (final appId in ['backend-uploaded-game', 'expenses']) {
+    testWidgets(
+      '$appId: only the foreground app route suppresses its alerts',
+      (
+        tester,
+      ) async {
+        final navigator = GlobalKey<NavigatorState>();
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            navigatorKey: navigator,
+            home: WebxdcAppView(
+              launch: WebxdcLaunch(
+                instanceId: '$appId-chat-a',
+                appId: appId,
+                origin: 'origin',
+                title: appId,
+              ),
+            ),
           ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(api.visibleInstances.last, 'connect4-chat-a');
+        );
+        await tester.pumpAndSettle();
+        expect(api.visibleInstances.last, '$appId-chat-a');
 
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-    expect(api.visibleInstances.last, isNull);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-    expect(api.visibleInstances.last, isNull);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    expect(api.visibleInstances.last, 'connect4-chat-a');
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.inactive,
+        );
+        expect(api.visibleInstances.last, isNull);
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        expect(api.visibleInstances.last, isNull);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        expect(api.visibleInstances.last, '$appId-chat-a');
 
-    final covered = navigator.currentState!.push<void>(
-      MaterialPageRoute(builder: (_) => const Scaffold(body: Text('Share'))),
-    );
-    await tester.pumpAndSettle();
-    expect(api.visibleInstances.last, isNull);
-    navigator.currentState!.pop();
-    await tester.pumpAndSettle();
-    await covered;
-    expect(api.visibleInstances.last, 'connect4-chat-a');
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    expect(api.visibleInstances.last, isNull);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
-
-  testWidgets('other apps keep their notification behavior while open', (
-    tester,
-  ) async {
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: WebxdcAppView(
-          launch: WebxdcLaunch(
-            instanceId: 'expenses-chat-a',
-            appId: 'expenses',
-            origin: 'origin',
-            title: 'Expenses',
+        final covered = navigator.currentState!.push<void>(
+          MaterialPageRoute(
+            builder: (_) => const Scaffold(body: Text('Share')),
           ),
-        ),
-      ),
+        );
+        await tester.pumpAndSettle();
+        expect(api.visibleInstances.last, isNull);
+        navigator.currentState!.pop();
+        await tester.pumpAndSettle();
+        await covered;
+        expect(api.visibleInstances.last, '$appId-chat-a');
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        expect(api.visibleInstances.last, isNull);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
     );
-    await tester.pumpAndSettle();
-    expect(api.visibleInstances, everyElement(isNull));
-    await tester.pumpWidget(const SizedBox.shrink());
-  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+  }
 }

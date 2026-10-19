@@ -44,7 +44,7 @@ class _WebxdcAppViewState extends State<WebxdcAppView>
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Depending on isCurrent also updates visibility when another route covers
-    // the game, such as the share-to-chat flow.
+    // the app, such as the share-to-chat flow.
     _routeIsCurrent = ModalRoute.isCurrentOf(context) ?? true;
     _updateVisibility();
     final animation = ModalRoute.of(context)?.animation;
@@ -72,7 +72,6 @@ class _WebxdcAppViewState extends State<WebxdcAppView>
     WebxdcHost.setVisible(
       widget.launch.instanceId,
       visible:
-          const {'connect4', 'mills'}.contains(widget.launch.appId) &&
           !_closing &&
           (lifecycle == null || lifecycle == AppLifecycleState.resumed) &&
           _routeIsCurrent,
