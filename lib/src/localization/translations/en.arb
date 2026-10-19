@@ -21,7 +21,7 @@
   "cameraPermissionsRequestButton": "Request permissions",
   "shareImageTitle": "Share with",
   "shareImageBestFriends": "Best friends",
-  "shareImagePinnedContacts": "Pinnded",
+  "shareImagePinnedContacts": "Pinned",
   "shareImagedEditorSendImage": "Send",
   "shareImagedEditorShareWith": "Share with",
   "shareImagedEditorSaveImage": "Save",
@@ -87,9 +87,21 @@
   "liveLocationExplanation": "Share your current location in this chat. Everyone in this group can see it. Only your latest location is kept.",
   "liveLocationDuration": "Share for",
   "liveLocationMinutes": "{count} minutes",
-  "@liveLocationMinutes": {"placeholders": {"count": {"type": "int"}}},
+  "@liveLocationMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "liveLocationHours": "{count, plural, =1{1 hour} other{{count} hours}}",
-  "@liveLocationHours": {"placeholders": {"count": {"type": "int"}}},
+  "@liveLocationHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "liveLocationStart": "Start sharing",
   "liveLocationStop": "Stop sharing",
   "liveLocationAlreadySharing": "Your location is already being shared in this chat.",
@@ -99,7 +111,13 @@
   "liveLocationWaiting": "Waiting for location…",
   "liveLocationEnded": "Location sharing ended",
   "liveLocationLastUpdate": "Last update: {time}",
-  "@liveLocationLastUpdate": {"placeholders": {"time": {"type": "String"}}},
+  "@liveLocationLastUpdate": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "memoryLocationPermissionDenied": "Precise location access was not granted. The setting remains disabled.",
   "settingsStorageDataStoreInGTitle": "Store in Gallery",
   "settingsStorageDataMediaAutoDownload": "Media auto-download",
@@ -307,7 +325,6 @@
   "familyFeature3": "50GB Memories storage",
   "familyFeature4": "Restore flames",
   "freeFeature1": "10 Media file uploads per day",
-  "plusFeature2": "Additional features (coming-soon)",
   "manageAdditionalUsers": "Manage additional users",
   "open": "Open",
   "buy": "Buy",
@@ -499,8 +516,6 @@
   "avatarSaveChangesStore": "Save",
   "avatarSaveChangesDiscard": "Discard",
   "contactAvatarTitle": "Avatar",
-  "contactAvatarPhoto": "Photo avatar",
-  "contactAvatarIllustrated": "Illustrated avatar",
   "customAvatarSvgTab": "Public avatar",
   "customAvatarCustomize": "Customize",
   "customAvatarPhotoTab": "Personal avatar",
@@ -731,13 +746,6 @@
       "userId": {}
     }
   },
-  "contactUserDiscoveryImagesLeft": "{imagesLeft} more images are needed until your friends are shared with {username}.",
-  "@contactUserDiscoveryImagesLeft": {
-    "placeholders": {
-      "imagesLeft": {},
-      "username": {}
-    }
-  },
   "userDiscoveryEnabledVersion": "Version: {version}",
   "@userDiscoveryEnabledVersion": {
     "placeholders": {
@@ -766,8 +774,6 @@
     }
   },
   "onboardingSetupCompleteDesc": "You can now share your moments with your friends securely without distractions like ads.",
-  "contactUserDiscoveryManualApprovalPending": "Contact was not yet manually approved.",
-  "contactUserDiscoveryManualApprovalApprove": "Approve",
   "exampleUserName1": "james",
   "exampleUserName2": "mary",
   "exampleUserName3": "john",
@@ -1239,9 +1245,7 @@
   "stickers": "Stickers",
   "createSticker": "Create sticker",
   "stickerPickFromGallery": "Gallery",
-  "noStickersYet": "Create your first sticker from a photo.",
   "stickerAdded": "Sticker saved",
-  "stickerAlreadySaved": "This sticker is already saved",
   "stickerCreateFailed": "The sticker could not be created.",
   "stickerSaveFailed": "The sticker could not be saved.",
   "notificationSticker": "sent a sticker{inGroup}.",

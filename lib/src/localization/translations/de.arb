@@ -91,9 +91,21 @@
   "liveLocationExplanation": "Teile deinen aktuellen Standort in diesem Chat. Alle Mitglieder dieser Gruppe können ihn sehen. Nur dein letzter Standort wird gespeichert.",
   "liveLocationDuration": "Teilen für",
   "liveLocationMinutes": "{count} Minuten",
-  "@liveLocationMinutes": {"placeholders": {"count": {"type": "int"}}},
+  "@liveLocationMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "liveLocationHours": "{count, plural, =1{1 Stunde} other{{count} Stunden}}",
-  "@liveLocationHours": {"placeholders": {"count": {"type": "int"}}},
+  "@liveLocationHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "liveLocationStart": "Teilen starten",
   "liveLocationStop": "Teilen beenden",
   "liveLocationAlreadySharing": "Dein Standort wird bereits in diesem Chat geteilt.",
@@ -103,7 +115,13 @@
   "liveLocationWaiting": "Standort wird ermittelt…",
   "liveLocationEnded": "Standortfreigabe beendet",
   "liveLocationLastUpdate": "Letzte Aktualisierung: {time}",
-  "@liveLocationLastUpdate": {"placeholders": {"time": {"type": "String"}}},
+  "@liveLocationLastUpdate": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "memoryLocationPermissionDenied": "Der genaue Standortzugriff wurde nicht erlaubt. Die Einstellung bleibt deaktiviert.",
   "settingsStorageDataStoreInGTitle": "In der Galerie speichern",
   "settingsStorageDataMediaAutoDownload": "Automatischer Mediendownload",
@@ -297,7 +315,6 @@
   "familyFeature3": "50GB Memories Speicher",
   "familyFeature4": "Flammen wiederherstellen",
   "freeFeature1": "10 Medien-Datei-Uploads pro Tag",
-  "plusFeature2": "Zusatzfunktionen (coming-soon)",
   "manageAdditionalUsers": "Zusätzliche Benutzer verwalten",
   "open": "Offene",
   "buy": "Kaufen",
@@ -489,8 +506,6 @@
   "avatarSaveChangesStore": "Speichern",
   "avatarSaveChangesDiscard": "Verwerfen",
   "contactAvatarTitle": "Avatar",
-  "contactAvatarPhoto": "Foto-Avatar",
-  "contactAvatarIllustrated": "Gezeichneter Avatar",
   "customAvatarSvgTab": "Öffentlicher Avatar",
   "customAvatarCustomize": "Anpassen",
   "customAvatarPhotoTab": "Persönlicher Avatar",
@@ -714,13 +729,6 @@
       "userId": {}
     }
   },
-  "contactUserDiscoveryImagesLeft": "Es fehlen noch {imagesLeft} Bilder bis deine Freunde mit {username} geteilt werden.",
-  "@contactUserDiscoveryImagesLeft": {
-    "placeholders": {
-      "imagesLeft": {},
-      "username": {}
-    }
-  },
   "userDiscoveryEnabledVersion": "Version: {version}",
   "@userDiscoveryEnabledVersion": {
     "placeholders": {
@@ -749,8 +757,6 @@
     }
   },
   "onboardingSetupCompleteDesc": "Du kannst jetzt deine Momente sicher mit deinen Freunden teilen, ohne Ablenkungen wie Werbung.",
-  "contactUserDiscoveryManualApprovalPending": "Der Kontakt wurde noch nicht manuell freigegeben.",
-  "contactUserDiscoveryManualApprovalApprove": "Freigeben",
   "exampleUserName1": "max_mustermann",
   "exampleUserName2": "erika_musterfrau",
   "exampleUserName3": "hans",
@@ -1222,9 +1228,7 @@
   "stickers": "Sticker",
   "createSticker": "Sticker erstellen",
   "stickerPickFromGallery": "Galerie",
-  "noStickersYet": "Erstelle deinen ersten Sticker aus einem Foto.",
   "stickerAdded": "Sticker gespeichert",
-  "stickerAlreadySaved": "Dieser Sticker ist bereits gespeichert",
   "stickerCreateFailed": "Der Sticker konnte nicht erstellt werden.",
   "stickerSaveFailed": "Der Sticker konnte nicht gespeichert werden.",
   "notificationSticker": "hat einen Sticker gesendet{inGroup}.",

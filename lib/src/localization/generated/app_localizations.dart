@@ -229,7 +229,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareImagePinnedContacts.
   ///
   /// In en, this message translates to:
-  /// **'Pinnded'**
+  /// **'Pinned'**
   String get shareImagePinnedContacts;
 
   /// No description provided for @shareImagedEditorSendImage.
@@ -1618,12 +1618,6 @@ abstract class AppLocalizations {
   /// **'10 Media file uploads per day'**
   String get freeFeature1;
 
-  /// No description provided for @plusFeature2.
-  ///
-  /// In en, this message translates to:
-  /// **'Additional features (coming-soon)'**
-  String get plusFeature2;
-
   /// No description provided for @manageAdditionalUsers.
   ///
   /// In en, this message translates to:
@@ -2626,18 +2620,6 @@ abstract class AppLocalizations {
   /// **'Avatar'**
   String get contactAvatarTitle;
 
-  /// No description provided for @contactAvatarPhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'Photo avatar'**
-  String get contactAvatarPhoto;
-
-  /// No description provided for @contactAvatarIllustrated.
-  ///
-  /// In en, this message translates to:
-  /// **'Illustrated avatar'**
-  String get contactAvatarIllustrated;
-
   /// No description provided for @customAvatarSvgTab.
   ///
   /// In en, this message translates to:
@@ -3568,12 +3550,6 @@ abstract class AppLocalizations {
   /// **'User {userId}'**
   String chatAskAFriendUnknownUser(Object userId);
 
-  /// No description provided for @contactUserDiscoveryImagesLeft.
-  ///
-  /// In en, this message translates to:
-  /// **'{imagesLeft} more images are needed until your friends are shared with {username}.'**
-  String contactUserDiscoveryImagesLeft(Object imagesLeft, Object username);
-
   /// No description provided for @userDiscoveryEnabledVersion.
   ///
   /// In en, this message translates to:
@@ -3621,18 +3597,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can now share your moments with your friends securely without distractions like ads.'**
   String get onboardingSetupCompleteDesc;
-
-  /// No description provided for @contactUserDiscoveryManualApprovalPending.
-  ///
-  /// In en, this message translates to:
-  /// **'Contact was not yet manually approved.'**
-  String get contactUserDiscoveryManualApprovalPending;
-
-  /// No description provided for @contactUserDiscoveryManualApprovalApprove.
-  ///
-  /// In en, this message translates to:
-  /// **'Approve'**
-  String get contactUserDiscoveryManualApprovalApprove;
 
   /// No description provided for @exampleUserName1.
   ///
@@ -5410,23 +5374,11 @@ abstract class AppLocalizations {
   /// **'Gallery'**
   String get stickerPickFromGallery;
 
-  /// No description provided for @noStickersYet.
-  ///
-  /// In en, this message translates to:
-  /// **'Create your first sticker from a photo.'**
-  String get noStickersYet;
-
   /// No description provided for @stickerAdded.
   ///
   /// In en, this message translates to:
   /// **'Sticker saved'**
   String get stickerAdded;
-
-  /// No description provided for @stickerAlreadySaved.
-  ///
-  /// In en, this message translates to:
-  /// **'This sticker is already saved'**
-  String get stickerAlreadySaved;
 
   /// No description provided for @stickerCreateFailed.
   ///

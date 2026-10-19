@@ -879,9 +879,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get freeFeature1 => '10 Medien-Datei-Uploads pro Tag';
 
   @override
-  String get plusFeature2 => 'Zusatzfunktionen (coming-soon)';
-
-  @override
   String get manageAdditionalUsers => 'Zusätzliche Benutzer verwalten';
 
   @override
@@ -1504,12 +1501,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactAvatarTitle => 'Avatar';
 
   @override
-  String get contactAvatarPhoto => 'Foto-Avatar';
-
-  @override
-  String get contactAvatarIllustrated => 'Gezeichneter Avatar';
-
-  @override
   String get customAvatarSvgTab => 'Öffentlicher Avatar';
 
   @override
@@ -2088,11 +2079,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String contactUserDiscoveryImagesLeft(Object imagesLeft, Object username) {
-    return 'Es fehlen noch $imagesLeft Bilder bis deine Freunde mit $username geteilt werden.';
-  }
-
-  @override
   String userDiscoveryEnabledVersion(Object version) {
     return 'Version: $version';
   }
@@ -2124,13 +2110,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingSetupCompleteDesc =>
       'Du kannst jetzt deine Momente sicher mit deinen Freunden teilen, ohne Ablenkungen wie Werbung.';
-
-  @override
-  String get contactUserDiscoveryManualApprovalPending =>
-      'Der Kontakt wurde noch nicht manuell freigegeben.';
-
-  @override
-  String get contactUserDiscoveryManualApprovalApprove => 'Freigeben';
 
   @override
   String get exampleUserName1 => 'max_mustermann';
@@ -3216,13 +3195,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stickerPickFromGallery => 'Galerie';
 
   @override
-  String get noStickersYet => 'Erstelle deinen ersten Sticker aus einem Foto.';
-
-  @override
   String get stickerAdded => 'Sticker gespeichert';
-
-  @override
-  String get stickerAlreadySaved => 'Dieser Sticker ist bereits gespeichert';
 
   @override
   String get stickerCreateFailed => 'Der Sticker konnte nicht erstellt werden.';
