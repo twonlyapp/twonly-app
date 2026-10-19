@@ -28,6 +28,7 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/animated_
 import 'package:twonly/src/visual/views/chats/chat_messages_components/blink.component.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_group_action.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_notification_listener.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_date_chip.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/game_chat_messages.dart';
@@ -98,8 +99,7 @@ class ChatMessagesView extends StatefulWidget {
   State<ChatMessagesView> createState() => _ChatMessagesViewState();
 }
 
-class _ChatMessagesViewState extends State<ChatMessagesView>
-    with WidgetsBindingObserver {
+class _ChatMessagesViewState extends State<ChatMessagesView> {
   static const _messagePageSize = 100;
 
   final _animationState = _MessageAnimationState();
@@ -133,22 +133,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     super.initState();
     _group = widget.initialGroup;
     textFieldFocus = FocusNode();
-    WidgetsBinding.instance.addObserver(this);
     itemPositionsListener.itemPositions.addListener(_loadOlderWhenNeeded);
-    // Opening a conversation acknowledges chat activity such as reactions and
-    // media status updates, while unopened media keeps its notifications.
-    unawaited(NativeNotificationService.clearConversation(widget.groupId));
     initStreams();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    if (state != AppLifecycleState.resumed) return;
-    if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? false)) return;
-    // Notifications that arrived while this chat sat in the background are
-    // acknowledged as soon as the user looks at it again.
-    unawaited(NativeNotificationService.clearConversation(widget.groupId));
   }
 
   @override
@@ -162,7 +148,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
       textFieldFocus?.dispose();
       // ignore: empty_catches
     } catch (e) {}
-    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -778,7 +763,12 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ChatNotificationListener(
+    conversationId: widget.groupId,
+    child: _buildChat(context),
+  );
+
+  Widget _buildChat(BuildContext context) {
     if (_group == null) {
       // Drawing nothing leaves the pushed route black until the group row
       // arrives, which is plainly visible whenever the database is busy. The

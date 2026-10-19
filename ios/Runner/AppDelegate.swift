@@ -90,8 +90,14 @@ import flutter_sharing_intent
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
   ) {
     NSLog("userNotificationCenter:willPresent")
-
-    completionHandler([.alert, .sound])
+    DispatchQueue.main.async {
+      if NativeNotificationChannel.handleArrival(notification) {
+        center.removeDeliveredNotifications(withIdentifiers: [notification.request.identifier])
+        completionHandler([])
+        return
+      }
+      completionHandler([.alert, .sound])
+    }
   }
 
 }
@@ -104,6 +110,19 @@ class NativeNotificationChannel {
   private static let channelName = "eu.twonly/notificationTap"
   private static let notificationIdsKey = "notification_ids"
   private static let badgeCountKey = "badge_count"
+  private static var channel: FlutterMethodChannel?
+  private static var visibleConversationId: String?
+
+  /// Foreground APNs delivery may follow Flutter's outbox cleanup. Suppress
+  /// chat activity here as well, preserving media opened in the media viewer.
+  static func handleArrival(_ notification: UNNotification) -> Bool {
+    channel?.invokeMethod("onNotificationArrived", arguments: nil)
+    let info = notification.request.content.userInfo
+    guard let visible = visibleConversationId,
+      info["conversation_id"] as? String == visible else { return false }
+    let mediaKinds: Set<String> = ["twonly", "image", "video", "audio", "story"]
+    return !mediaKinds.contains(info["notification_kind"] as? String ?? "")
+  }
 
   static func register(with registry: FlutterPluginRegistry) {
     guard let registrar = registry.registrar(forPlugin: "TwonlyNativeNotifications") else {
@@ -113,8 +132,13 @@ class NativeNotificationChannel {
       name: channelName,
       binaryMessenger: registrar.messenger()
     )
+    self.channel = channel
     channel.setMethodCallHandler { call, result in
       switch call.method {
+      case "setVisibleConversation":
+        let arguments = call.arguments as? [String: Any]
+        visibleConversationId = arguments?["conversation_id"] as? String
+        result(nil)
       case "cancelNotifications":
         guard
           let arguments = call.arguments as? [String: Any],

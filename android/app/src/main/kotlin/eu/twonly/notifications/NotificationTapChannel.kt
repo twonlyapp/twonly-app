@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import io.flutter.embedding.engine.FlutterEngine
@@ -15,6 +17,12 @@ internal fun nativeNotificationId(value: String): Int = value.hashCode() and Int
 /** The single channel every twonly notification is posted on. */
 internal const val NOTIFICATION_CHANNEL_ID = "twonly_messages_v2"
 internal const val TEXT_MESSAGE_ID = "twonly_message_id"
+
+internal fun suppressesConversationNotification(
+    visibleConversationId: String?,
+    addition: NativeNotificationAddition,
+): Boolean = visibleConversationId != null && addition.conversationId == visibleConversationId &&
+    addition.kind !in setOf("twonly", "image", "video", "audio", "story")
 
 /** Retains unread entries when only part of a combined alert was opened. */
 internal fun cancelNativeNotifications(context: Context, notificationIds: Collection<String>) {
@@ -74,11 +82,26 @@ object NotificationTapChannel {
     private var pendingConversationId: String? = null
     private var pendingNotificationKind: String? = null
     private var pendingLaunch = false
+    @Volatile private var visibleConversationId: String? = null
+
+    internal fun suppresses(addition: NativeNotificationAddition): Boolean =
+        suppressesConversationNotification(visibleConversationId, addition)
+
+    internal fun notificationArrived() {
+        Handler(Looper.getMainLooper()).post {
+            channel?.invokeMethod("onNotificationArrived", null)
+        }
+    }
 
     fun configure(flutterEngine: FlutterEngine, context: Context) {
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
+                "setVisibleConversation" -> {
+                    visibleConversationId = call.argument<String>(EXTRA_CONVERSATION_ID)
+                        ?.takeIf(String::isNotEmpty)
+                    result.success(null)
+                }
                 "consumeInitialNotification" -> {
                     val launched = pendingLaunch
                     val conversationId = pendingConversationId
@@ -109,6 +132,7 @@ object NotificationTapChannel {
     }
 
     fun detach() {
+        visibleConversationId = null
         channel?.setMethodCallHandler(null)
         channel = null
     }

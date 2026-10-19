@@ -1952,7 +1952,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn sending_media_preserves_the_archive_choice() -> anyhow::Result<()> {
+    async fn sending_media_unarchives_chats() -> anyhow::Result<()> {
         let temp = tempfile::tempdir()?;
         let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
             .await?;
@@ -1987,7 +1987,7 @@ mod tests {
         .await?;
         assert_eq!(
             groups,
-            vec![("active".into(), 0, 0), ("archived".into(), 1, 0)]
+            vec![("active".into(), 0, 0), ("archived".into(), 0, 0)]
         );
         let count: i64 =
             sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE sender_id IS NULL")
@@ -2022,7 +2022,7 @@ mod tests {
             (9, None),
         ] {
             let group_id = stories::direct_chat(&ctx, &mut t, contact_id).await?;
-            sqlx::query("UPDATE groups SET last_text_or_media_at = ? WHERE group_id = ?")
+            sqlx::query("UPDATE groups SET last_text_or_media_at = ?, archived = 1, deleted_content = 1, last_message_exchange = 123 WHERE group_id = ?")
                 .bind(last_exchange)
                 .bind(group_id)
                 .execute(&mut *t)
@@ -2060,6 +2060,15 @@ mod tests {
             .fetch_one(&database.pool)
             .await?;
         assert_eq!(groups, 3, "a broadcast must not create chats");
+        let chat_states: Vec<(i64, i64, i64)> =
+            sqlx::query_as("SELECT archived, deleted_content, last_message_exchange FROM groups")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(
+            chat_states,
+            vec![(1, 1, 123); 3],
+            "broadcasting a story must not unarchive, restore or reorder chats"
+        );
         let last_exchange: i64 =
             sqlx::query_scalar("SELECT last_text_or_media_at FROM groups WHERE group_id = ?")
                 .bind(Group::direct_chat_id(42, 7))

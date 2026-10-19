@@ -653,14 +653,14 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       final msgTime = insertMessage.createdAt.present
           ? insertMessage.createdAt.value
           : clock.now();
+      final isChatMessage =
+          insertMessage.isStory != const Value(true) ||
+          insertMessage.mediaStored == const Value(true);
 
       await twonlyDB.groupsDao.updateGroup(
         message.groupId.value,
         GroupsCompanion(
-          // Sending into an archived chat preserves the user's choice.
-          archived: message.senderId.present && message.senderId.value != null
-              ? const Value(false)
-              : const Value.absent(),
+          archived: isChatMessage ? const Value(false) : const Value.absent(),
           deletedContent: const Value(false),
         ),
       );

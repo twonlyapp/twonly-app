@@ -50,6 +50,7 @@ class TwonlyNotificationWorker(
             }
             if (delivered.isNotEmpty()) {
                 NativeNotificationBridge.acknowledge(JSONArray(delivered).toString())
+                NotificationTapChannel.notificationArrived()
                 // Real notifications supersede a placeholder from an earlier attempt.
                 manager.cancel(FALLBACK_ID)
             }
@@ -88,6 +89,10 @@ class TwonlyNotificationWorker(
         manager: NotificationManagerCompat,
         additions: List<NativeNotificationAddition>,
     ): Boolean {
+        if (NotificationTapChannel.suppresses(additions.last())) {
+            cancelNativeNotifications(applicationContext, additions.map { it.notificationId })
+            return true
+        }
         val notificationId = nativeNotificationId(nativeNotificationKey(additions.last()))
         val notification = buildNativeChatNotification(applicationContext, additions)
         return try {

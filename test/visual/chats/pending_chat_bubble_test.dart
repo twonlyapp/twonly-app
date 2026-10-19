@@ -31,6 +31,10 @@ class _OutgoingApi implements RustLibApi {
   final List<Completer<String>> completions = [];
 
   @override
+  Stream<List<String>> crateBridgeWrapperAppDatabaseRustAppDatabaseChanges() =>
+      const Stream.empty();
+
+  @override
   Future<FlameState> crateBridgeGroupsFlameState({
     required String groupId,
   }) async =>

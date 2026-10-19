@@ -60,6 +60,21 @@ class NativeChatNotificationsTest {
         NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(notification),
     )
 
+    @Test
+    fun visibleConversationSuppressesActivityAndPreservesMediaAlerts() {
+        for (chat in listOf("direct", "group")) {
+            for (kind in listOf("text", "reaction", "stored_media", "reopened_media", "webxdc", "added_to_group", "future_activity")) {
+                val addition = event("activity", kind = kind, chat = chat)
+                assertTrue(suppressesConversationNotification(chat, addition))
+                assertFalse(suppressesConversationNotification(null, addition))
+                assertFalse(suppressesConversationNotification("other", addition))
+            }
+            for (kind in listOf("twonly", "image", "video", "audio", "story")) {
+                assertFalse(suppressesConversationNotification(chat, event("media", kind = kind, chat = chat)))
+            }
+        }
+    }
+
     private fun shortcut(notification: Notification): android.content.pm.ShortcutInfo {
         assertNotNull(ShadowLog.getLogsForTag("TwonlyNotifications").toString(), notification.shortcutId)
         return context.getSystemService(ShortcutManager::class.java)
