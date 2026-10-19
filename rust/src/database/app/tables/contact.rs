@@ -169,9 +169,24 @@ impl Contact {
         t: &mut Transaction<'_, Sqlite>,
         user_id: i64,
     ) -> Result<Option<Self>> {
-        let contact = sqlx::query_as!(Self, "SELECT * FROM contacts WHERE user_id = ?", user_id)
-            .fetch_optional(&mut **t)
-            .await?;
+        let contact = sqlx::query_as!(
+            Self,
+            r#"SELECT user_id, username, display_name, nick_name,
+                      avatar_svg_compressed, sender_profile_counter,
+                      accepted, deleted_by_user, requested, requested_by_user,
+                      blocked, verified, account_deleted, created_at, signal_version,
+                      user_discovery_version, user_discovery_excluded,
+                      user_discovery_manual_approved, recovery_is_trusted_friend,
+                      recovery_last_heartbeat, recovery_secret_share,
+                      recovery_contacts_secret_share, recovery_contacts_last_heartbeat,
+                      recovery_contacts_threshold, ask_for_friend_promotions,
+                      media_send_counter, media_received_counter,
+                      widget_sharing_allowed, widget_sharing_granted, twonly_score, joined_at
+               FROM contacts WHERE user_id = ?"#,
+            user_id,
+        )
+        .fetch_optional(&mut **t)
+        .await?;
 
         Ok(contact)
     }

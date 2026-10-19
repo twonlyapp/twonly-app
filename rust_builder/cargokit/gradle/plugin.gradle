@@ -2,7 +2,9 @@
 /// Details: https://fzyzcjy.github.io/flutter_rust_bridge/manual/integrate/builtin
 
 import java.nio.file.Paths
+import javax.inject.Inject
 import org.apache.tools.ant.taskdefs.condition.Os
+import org.gradle.process.ExecOperations
 
 CargoKitPlugin.file = buildscript.sourceFile
 
@@ -14,6 +16,9 @@ class CargoKitExtension {
 }
 
 abstract class CargoKitBuildTask extends DefaultTask {
+
+    @Inject
+    protected abstract ExecOperations getExecOperations()
 
     @Input
     String buildMode
@@ -60,12 +65,13 @@ abstract class CargoKitBuildTask extends DefaultTask {
         def rootProjectDir = project.rootProject.projectDir.absolutePath
 
         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-            project.providers.exec {
+            execOperations.exec {
                 commandLine 'chmod', '+x', path
-            }.result.get()
+            }
         }
 
-        project.providers.exec {
+        // ExecOperations forwards compiler output to the Gradle build log.
+        execOperations.exec {
             executable path
             args "build-gradle"
             environment "CARGOKIT_ROOT_PROJECT_DIR", rootProjectDir
@@ -80,7 +86,7 @@ abstract class CargoKitBuildTask extends DefaultTask {
             environment "CARGOKIT_MIN_SDK_VERSION", minSdkVersion
             environment "CARGOKIT_TARGET_PLATFORMS", targetPlatforms.join(",")
             environment "CARGOKIT_JAVA_HOME", System.properties['java.home']
-        }.result.get()
+        }
     }
 }
 
