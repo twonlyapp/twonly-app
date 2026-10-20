@@ -1,7 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:collection/collection.dart';
-import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:twonly/core/bridge/wrapper/user_discovery.dart';
 import 'package:twonly/globals.dart';
@@ -12,45 +9,6 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class UserDiscoveryService {
-  static Future<void> checkForNewAnnouncedUsers() async {
-    final announcedUsers = await twonlyDB.userDiscoveryDao
-        .getNewAnnouncementsWithoutData();
-
-    for (final announcedUser in announcedUsers) {
-      final FrbUserData? userdata;
-      try {
-        userdata = await RustApi.getUserById(
-          userId: announcedUser.announcedUserId,
-        );
-      } catch (_) {
-        continue;
-      }
-      if (!userdata.publicIdentityKey.equals(
-        announcedUser.announcedPublicKey.toList(),
-      )) {
-        if (kDebugMode) {
-          Log.warn(
-            '${userdata.publicIdentityKey} != ${announcedUser.announcedPublicKey.toList()}',
-          );
-        }
-        Log.error(
-          'Server delivered a different public key then received from the announcement.',
-        );
-        continue;
-      }
-
-      Log.info('Updating the username from the announced user');
-
-      // Updating the username, so the data will not be requested again..
-      await twonlyDB.userDiscoveryDao.updateAnnouncedUser(
-        announcedUser.announcedUserId,
-        UserDiscoveryAnnouncedUsersCompanion(
-          username: Value(utf8.decode(userdata.username)),
-        ),
-      );
-    }
-  }
-
   static bool shouldRequestManualApproval(Contact c) {
     final u = userService.currentUser;
     if (!c.accepted || c.blocked) return false;
