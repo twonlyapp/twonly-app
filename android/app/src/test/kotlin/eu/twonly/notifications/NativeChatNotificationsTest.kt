@@ -60,6 +60,21 @@ class NativeChatNotificationsTest {
         NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(notification),
     )
 
+    @Test
+    fun visibleConversationSuppressesActivityAndPreservesMediaAlerts() {
+        for (chat in listOf("direct", "group")) {
+            for (kind in listOf("text", "reaction", "stored_media", "reopened_media", "webxdc", "added_to_group", "future_activity")) {
+                val addition = event("activity", kind = kind, chat = chat)
+                assertTrue(suppressesConversationNotification(chat, addition))
+                assertFalse(suppressesConversationNotification(null, addition))
+                assertFalse(suppressesConversationNotification("other", addition))
+            }
+            for (kind in listOf("twonly", "image", "video", "audio", "story")) {
+                assertFalse(suppressesConversationNotification(chat, event("media", kind = kind, chat = chat)))
+            }
+        }
+    }
+
     private fun shortcut(notification: Notification): android.content.pm.ShortcutInfo {
         assertNotNull(ShadowLog.getLogsForTag("TwonlyNotifications").toString(), notification.shortcutId)
         return context.getSystemService(ShortcutManager::class.java)
@@ -82,6 +97,21 @@ class NativeChatNotificationsTest {
                 manager.notify(id, it)
             }
         }.last()
+    }
+
+    @Test
+    fun flameCountersFollowTheDisplayNameInTitlesPeopleAndShortcuts() {
+        for (name in listOf("Alice 12🔥", "Alice 12🔥⌛", "Alice 12❤️‍🔥", "Alice 💯", "Alice 365🎂⌛", "Alice")) {
+            for (kind in listOf("text", "image", "story")) {
+                val addition = event("flames-$kind", kind).copy(senderName = name, conversationName = name)
+                val notification = post(addition)
+                assertEquals(name, notification.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+                assertEquals(name, style(notification).messages.single().person?.name.toString())
+                assertEquals(name, shortcut(notification).shortLabel.toString())
+                assertEquals(addition.body, notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
+            }
+        }
+        assertEquals(3, NotificationManagerCompat.from(context).activeNotifications.size)
     }
 
     @Test

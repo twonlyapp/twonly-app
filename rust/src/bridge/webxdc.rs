@@ -91,6 +91,14 @@ pub async fn refresh_catalog() -> Result<()> {
 /// here, so which language a user reads is never sent anywhere.
 pub async fn catalog(group_id: String, languages: Vec<String>) -> Result<Vec<WebxdcStoreApp>> {
     let ctx = crate::context::Context::get_static()?;
+    catalog_for_context(&ctx, &group_id, &languages).await
+}
+
+async fn catalog_for_context(
+    ctx: &std::sync::Arc<crate::context::Context>,
+    group_id: &str,
+    languages: &[String],
+) -> Result<Vec<WebxdcStoreApp>> {
     let database = ctx.app_db.read().await.clone();
     let rows = sqlx::query!(
         r#"SELECT app_id AS "app_id!: String", version AS "version!: i64",
@@ -107,9 +115,13 @@ pub async fn catalog(group_id: String, languages: Vec<String>) -> Result<Vec<Web
                   icon AS "icon: Vec<u8>", bundle_bytes AS "bundle_bytes!: i64"
            FROM webxdc_apps
            WHERE published = 1
+             AND (direct_chat_only = 0 OR EXISTS (
+                 SELECT 1 FROM groups WHERE group_id = ? AND is_direct_chat = 1
+             ))
              AND version = (SELECT MAX(version) FROM webxdc_apps AS newer
                             WHERE newer.app_id = webxdc_apps.app_id AND newer.published = 1)
            ORDER BY sort_order ASC, name ASC, app_id ASC"#,
+        group_id,
         group_id,
     )
     .fetch_all(&database.pool)
@@ -121,14 +133,11 @@ pub async fn catalog(group_id: String, languages: Vec<String>) -> Result<Vec<Web
             version: row.version,
             // The untranslated name is what an app translated into no language
             // the reader has is still called.
-            name: crate::services::webxdc::store::pick_localized(
-                &row.name_translations,
-                &languages,
-            )
-            .unwrap_or(row.name),
+            name: crate::services::webxdc::store::pick_localized(&row.name_translations, languages)
+                .unwrap_or(row.name),
             description: crate::services::webxdc::store::pick_localized(
                 &row.description,
-                &languages,
+                languages,
             ),
             source_code_url: row.source_code_url,
             icon: row.icon,
@@ -294,4 +303,47 @@ pub async fn delete_instance(instance_id: String) -> Result<Option<String>> {
 pub async fn members(instance_id: String) -> Result<String> {
     let ctx = crate::context::Context::get_static()?;
     WebxdcService::new(ctx).members(&instance_id).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn catalog_hides_direct_chat_games_only_in_groups() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = crate::context::Context::init_for_testing(
+            directory.path().join("db"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO groups(group_id, group_name, is_direct_chat)
+             VALUES ('direct', 'Alice', 1), ('group', 'Friends', 0);
+             INSERT INTO webxdc_apps(app_id, version, name, bundle_sha256, bundle_bytes, cached_at, direct_chat_only)
+             VALUES ('chess', 1, 'Chess', 'hash', 10, 0, 1),
+                    ('shared', 1, 'Shared game', 'hash', 10, 0, 0),
+                    ('chess', 2, 'Chess 2', 'hash', 10, 0, 1);",
+        )
+        .execute(&database.pool)
+        .await?;
+        let languages = vec!["en".to_owned()];
+        let direct = catalog_for_context(&ctx, "direct", &languages).await?;
+        assert_eq!(direct.len(), 2);
+        assert_eq!(direct[0].app_id, "chess");
+        assert_eq!(direct[0].version, 2);
+        let group = catalog_for_context(&ctx, "group", &languages).await?;
+        assert_eq!(group.len(), 1);
+        assert_eq!(group[0].app_id, "shared");
+
+        sqlx::query("UPDATE webxdc_apps SET direct_chat_only = 0 WHERE app_id = 'chess'")
+            .execute(&database.pool)
+            .await?;
+        assert_eq!(
+            catalog_for_context(&ctx, "group", &languages).await?.len(),
+            2
+        );
+        Ok(())
+    }
 }

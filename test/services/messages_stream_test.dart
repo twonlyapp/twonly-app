@@ -40,62 +40,6 @@ void main() {
     await twonlyDB.close();
   });
 
-  for (final archived in [true, false]) {
-    test(
-      'sending preserves archived=$archived and restores deleted chats',
-      () async {
-        await twonlyDB.groupsDao.createNewGroup(
-          GroupsCompanion.insert(
-            groupId: 'sending',
-            groupName: 'Sending',
-            archived: Value(archived),
-            deletedContent: const Value(true),
-          ),
-        );
-
-        final message = await twonlyDB.messagesDao.insertMessage(
-          MessagesCompanion.insert(
-            messageId: 'outgoing',
-            groupId: 'sending',
-            type: 'text',
-            content: const Value('Hello'),
-          ),
-        );
-
-        expect(message, isNotNull);
-        final group = await twonlyDB.groupsDao.watchGroup('sending').first;
-        expect(group!.archived, archived);
-        expect(group.deletedContent, isFalse);
-      },
-    );
-  }
-
-  test('an incoming message still unarchives a chat', () async {
-    await twonlyDB.contactsDao.insertOnConflictUpdate(
-      ContactsCompanion.insert(userId: const Value(2), username: 'sender'),
-    );
-    await twonlyDB.groupsDao.createNewGroup(
-      GroupsCompanion.insert(
-        groupId: 'incoming',
-        groupName: 'Incoming',
-        archived: const Value(true),
-      ),
-    );
-    final message = await twonlyDB.messagesDao.insertMessage(
-      MessagesCompanion.insert(
-        messageId: 'received',
-        groupId: 'incoming',
-        type: 'text',
-        senderId: const Value(2),
-      ),
-    );
-    expect(message, isNotNull);
-    expect(
-      (await twonlyDB.groupsDao.watchGroup('incoming').first)!.archived,
-      isFalse,
-    );
-  });
-
   test(
     'watchByGroupId stream emits updates when a new text message is inserted',
     () async {
@@ -122,14 +66,16 @@ void main() {
       expect(emissions.first, isEmpty);
 
       // 3. Insert a message
-      await twonlyDB.messagesDao.insertMessage(
-        MessagesCompanion.insert(
-          messageId: 'msg_1',
-          groupId: 'test_group_stream',
-          type: 'text',
-          content: const Value('Hello world'),
-        ),
-      );
+      await twonlyDB
+          .into(twonlyDB.messages)
+          .insert(
+            MessagesCompanion.insert(
+              messageId: 'msg_1',
+              groupId: 'test_group_stream',
+              type: 'text',
+              content: const Value('Hello world'),
+            ),
+          );
 
       // Wait for the stream to propagate the event
       await Future.delayed(const Duration(milliseconds: 100));
@@ -144,7 +90,7 @@ void main() {
   );
 
   test(
-    'simulate sending flow with group updates and verify messages stream emits',
+    'message and draft changes notify their respective streams',
     () async {
       await twonlyDB.groupsDao.createNewGroup(
         GroupsCompanion.insert(
@@ -167,8 +113,7 @@ void main() {
       expect(messagesEmissions, hasLength(1));
       expect(groupEmissions, hasLength(1));
 
-      // Simulate sending:
-      // 1. Update group draftMessage to null (as done in insertAndSendTextMessage)
+      // Update the draft and insert a fixture for the Rust-owned send path.
       await twonlyDB.groupsDao.updateGroup(
         'test_group_2',
         const GroupsCompanion(
@@ -176,16 +121,16 @@ void main() {
         ),
       );
 
-      // 2. Insert message
-      final message = await twonlyDB.messagesDao.insertMessage(
-        MessagesCompanion(
-          groupId: const Value('test_group_2'),
-          content: const Value('Hello from simulation'),
-          type: Value(MessageType.text.name),
-        ),
-      );
-
-      expect(message, isNotNull);
+      await twonlyDB
+          .into(twonlyDB.messages)
+          .insert(
+            MessagesCompanion.insert(
+              messageId: 'simulated-message',
+              groupId: 'test_group_2',
+              content: const Value('Hello from simulation'),
+              type: MessageType.text.name,
+            ),
+          );
 
       await Future.delayed(const Duration(milliseconds: 100));
 
@@ -195,7 +140,7 @@ void main() {
       // Verify message stream received updates containing the new message
       expect(messagesEmissions.length, greaterThan(1));
       expect(
-        messagesEmissions.last.any((m) => m.messageId == message!.messageId),
+        messagesEmissions.last.any((m) => m.messageId == 'simulated-message'),
         isTrue,
       );
 
@@ -219,16 +164,18 @@ void main() {
           username: 'sender',
         ),
       );
-      await twonlyDB.messagesDao.insertMessage(
-        MessagesCompanion.insert(
-          messageId: 'older_text',
-          groupId: groupId,
-          senderId: const Value(2),
-          type: MessageType.text.name,
-          content: const Value('Still visible'),
-          createdAt: Value(now),
-        ),
-      );
+      await twonlyDB
+          .into(twonlyDB.messages)
+          .insert(
+            MessagesCompanion.insert(
+              messageId: 'older_text',
+              groupId: groupId,
+              senderId: const Value(2),
+              type: MessageType.text.name,
+              content: const Value('Still visible'),
+              createdAt: Value(now),
+            ),
+          );
       await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
         MediaFilesCompanion.insert(
           mediaId: 'removed_media',
@@ -236,16 +183,18 @@ void main() {
           downloadState: const Value(DownloadState.ready),
         ),
       );
-      await twonlyDB.messagesDao.insertMessage(
-        MessagesCompanion.insert(
-          messageId: 'broken_media_message',
-          groupId: groupId,
-          senderId: const Value(2),
-          type: MessageType.media.name,
-          mediaId: const Value('removed_media'),
-          createdAt: Value(now.add(const Duration(minutes: 1))),
-        ),
-      );
+      await twonlyDB
+          .into(twonlyDB.messages)
+          .insert(
+            MessagesCompanion.insert(
+              messageId: 'broken_media_message',
+              groupId: groupId,
+              senderId: const Value(2),
+              type: MessageType.media.name,
+              mediaId: const Value('removed_media'),
+              createdAt: Value(now.add(const Duration(minutes: 1))),
+            ),
+          );
 
       await twonlyDB.mediaFilesDao.deleteMediaFile('removed_media');
 

@@ -1,6 +1,5 @@
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
-import 'package:hashlib/random.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
@@ -342,6 +341,15 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       );
       final groupIds = entry.value;
 
+      // Group actions have no read receipts, so their retention starts when
+      // the action was recorded. Sweep existing history as well as new rows.
+      await (delete(attachedDatabase.groupHistories)..where(
+            (h) =>
+                h.groupId.isIn(groupIds) &
+                h.actionAt.isSmallerThanValue(deletionTime),
+          ))
+          .go();
+
       final deletedCount =
           await (delete(messages)..where(
                 (m) =>
@@ -460,155 +468,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     });
   }
 
-  Future<void> handleMessagesOpened(
-    Value<int> contactId,
-    List<String> messageIds,
-    DateTime timestamp,
-  ) async {
-    if (contactId.present) {
-      final contactExists = await twonlyDB.contactsDao.getContactById(
-        contactId.value,
-      );
-      if (contactExists == null) {
-        Log.info(
-          'handleMessagesOpened: Contact ${contactId.value} does not exist in database, ignoring messages opened action.',
-        );
-        return;
-      }
-    }
-    for (final messageId in messageIds) {
-      try {
-        await transaction(() async {
-          final msg = await getMessageById(messageId).getSingleOrNull();
-          if (msg == null) {
-            Log.info(
-              'handleMessagesOpened: Message $messageId does not exist in database, skipping.',
-            );
-            return;
-          }
-          var ts = timestamp;
-          if (ts.isBefore(msg.createdAt)) {
-            Log.warn(
-              'Receiver clock skew detected for message $messageId. '
-              'Action timestamp $ts is before message creation ${msg.createdAt}. '
-              'Clamping to creation time.',
-            );
-            ts = msg.createdAt;
-          }
-
-          await into(messageActions).insertOnConflictUpdate(
-            MessageActionsCompanion(
-              messageId: Value(messageId),
-              contactId: contactId,
-              type: const Value(MessageActionType.openedAt),
-              actionAt: Value(ts),
-            ),
-          );
-
-          final isOpenedByAll = await haveAllMembers(
-            messageId,
-            MessageActionType.openedAt,
-          );
-          await (update(
-            messages,
-          )..where((tbl) => tbl.messageId.equals(messageId))).write(
-            MessagesCompanion(
-              openedAt: Value(ts),
-              openedByAll: Value(isOpenedByAll ? ts : null),
-            ),
-          );
-        });
-
-        // Read-back verification: confirm the write was persisted.
-        final verified = await getMessageById(messageId).getSingleOrNull();
-        if (verified != null && verified.openedAt == null) {
-          Log.warn(
-            'handleMessagesOpened read-back failed for $messageId, retrying',
-          );
-          await (update(
-            messages,
-          )..where((tbl) => tbl.messageId.equals(messageId))).write(
-            MessagesCompanion(
-              openedAt: Value(timestamp),
-            ),
-          );
-        }
-
-        Log.info(
-          'handleMessagesOpened completed for message $messageId',
-        );
-      } catch (e) {
-        Log.warn('handleMessagesOpened failed for $messageId: $e');
-        Log.error(
-          'handleMessagesOpened failed for: $e',
-          onlyIfSentryEnabled: true,
-        );
-      }
-    }
-  }
-
-  Future<void> handleMessageAckByServer(
-    int contactId,
-    String messageId,
-    DateTime timestamp,
-  ) async {
-    final contactExists = await twonlyDB.contactsDao.getContactById(contactId);
-    if (contactExists == null) {
-      Log.info(
-        'handleMessageAckByServer: Contact $contactId does not exist in database, ignoring message ack.',
-      );
-      return;
-    }
-    await transaction(() async {
-      final msg = await getMessageById(messageId).getSingleOrNull();
-      if (msg == null) {
-        Log.info(
-          'handleMessageAckByServer: Message $messageId does not exist in database, skipping.',
-        );
-        return;
-      }
-      await into(messageActions).insertOnConflictUpdate(
-        MessageActionsCompanion(
-          messageId: Value(messageId),
-          contactId: Value(contactId),
-          type: const Value(MessageActionType.ackByServerAt),
-          actionAt: Value(timestamp),
-        ),
-      );
-      await twonlyDB.messagesDao.updateMessageId(
-        messageId,
-        MessagesCompanion(ackByServer: Value(timestamp)),
-      );
-    });
-  }
-
-  Future<bool> haveAllMembers(
-    String messageId,
-    MessageActionType action,
-  ) async {
-    try {
-      final message = await twonlyDB.messagesDao
-          .getMessageById(messageId)
-          .getSingleOrNull();
-      if (message == null) return true;
-      final members = await twonlyDB.groupsDao.getGroupNonLeftMembers(
-        message.groupId,
-      );
-
-      final actions =
-          await (select(messageActions)..where(
-                (t) =>
-                    t.type.equals(action.name) & t.messageId.equals(messageId),
-              ))
-              .get();
-
-      return members.length == actions.length;
-    } catch (e) {
-      Log.error(e);
-      return true;
-    }
-  }
-
   Future<void> updateMessageId(
     String messageId,
     MessagesCompanion updatedValues,
@@ -627,57 +486,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       messages,
     )..where((c) => c.mediaId.equals(mediaId))).write(updatedValues);
     Log.info('Updated $count message(s) with mediaId $mediaId');
-  }
-
-  Future<Message?> insertMessage(MessagesCompanion message) async {
-    try {
-      var insertMessage = message;
-
-      if (message.messageId == const Value.absent()) {
-        insertMessage = message.copyWith(
-          messageId: Value(uuid.v7()),
-        );
-      }
-
-      await into(messages).insertOnConflictUpdate(insertMessage);
-
-      final msgTime = insertMessage.createdAt.present
-          ? insertMessage.createdAt.value
-          : clock.now();
-
-      await twonlyDB.groupsDao.updateGroup(
-        message.groupId.value,
-        GroupsCompanion(
-          // Sending into an archived chat preserves the user's choice.
-          archived: message.senderId.present && message.senderId.value != null
-              ? const Value(false)
-              : const Value.absent(),
-          deletedContent: const Value(false),
-        ),
-      );
-
-      await twonlyDB.groupsDao.increaseLastMessageExchange(
-        message.groupId.value,
-        msgTime,
-      );
-
-      if (message.senderId.present && message.senderId.value != null) {
-        await twonlyDB.groupsDao.increaseMemberLastMessage(
-          message.groupId.value,
-          message.senderId.value!,
-          msgTime,
-        );
-      }
-
-      final messageId = insertMessage.messageId.value;
-
-      return await (select(
-        messages,
-      )..where((t) => t.messageId.equals(messageId))).getSingle();
-    } catch (e) {
-      Log.error('Could not insert message: $e');
-      return null;
-    }
   }
 
   Future<void> deleteMessagesById(String messageId) {
@@ -749,15 +557,27 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         .watch();
   }
 
-  Stream<List<MessageAction>> watchAcknowledgementsForMessages(
+  /// Failures affect the message status only in direct chats. Groups keep
+  /// their normal status and expose each failed recipient in message info.
+  Stream<List<MessageAction>> watchDeliveryActionsForMessages(
     Set<String> messageIds,
   ) {
     if (messageIds.isEmpty) return Stream.value(const []);
-    return (select(messageActions)..where(
-          (action) =>
-              action.messageId.isIn(messageIds) &
-              action.type.equals(MessageActionType.ackByUserAt.name),
+    return (select(messageActions).join([
+          innerJoin(
+            messages,
+            messages.messageId.equalsExp(messageActions.messageId),
+          ),
+          innerJoin(groups, groups.groupId.equalsExp(messages.groupId)),
+        ])..where(
+          messageActions.messageId.isIn(messageIds) &
+              (messageActions.type.equals(MessageActionType.ackByUserAt.name) |
+                  (messageActions.type.equals(
+                        MessageActionType.sendFailed.name,
+                      ) &
+                      groups.isDirectChat.equals(true))),
         ))
+        .map((row) => row.readTable(messageActions))
         .watch();
   }
 

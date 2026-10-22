@@ -63,6 +63,23 @@ class FriendlyMessageTime extends StatelessWidget {
   }
 
   Widget? _buildStatusIcon(BuildContext context, Color iconColor) {
+    if (message.senderId == null &&
+        (ChatMessageActionScope.maybeOf(context)?.failedMessageIds.contains(
+              message.messageId,
+            ) ??
+            false)) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 4),
+        child: Tooltip(
+          message: context.lang.mediaSendFailed,
+          child: Icon(
+            Icons.error_outline,
+            size: 12,
+            color: context.color.error,
+          ),
+        ),
+      );
+    }
     if (message.type != MessageType.text.name || message.senderId != null) {
       return null;
     }
@@ -120,17 +137,20 @@ class ChatMessageActionScope extends InheritedWidget {
   const ChatMessageActionScope({
     required this.ackedMessageIds,
     required super.child,
+    this.failedMessageIds = const {},
     super.key,
   });
 
   final Set<String> ackedMessageIds;
+  final Set<String> failedMessageIds;
 
   static ChatMessageActionScope? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ChatMessageActionScope>();
 
   @override
   bool updateShouldNotify(ChatMessageActionScope oldWidget) =>
-      ackedMessageIds != oldWidget.ackedMessageIds;
+      ackedMessageIds != oldWidget.ackedMessageIds ||
+      failedMessageIds != oldWidget.failedMessageIds;
 }
 
 String friendlyTime(BuildContext context, DateTime dt) {

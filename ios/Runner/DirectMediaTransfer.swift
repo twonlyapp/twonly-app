@@ -82,6 +82,7 @@ final class DirectMediaTransfer: NSObject, URLSessionTaskDelegate, URLSessionDel
 
   func handleEvents(identifier: String, completion: @escaping () -> Void) -> Bool {
     guard identifier == Self.sessionIdentifier else { return false }
+    NativeErrorReporting.breadcrumb("background_url_session_wakeup")
     backgroundCompletion = completion
     _ = session
     return true

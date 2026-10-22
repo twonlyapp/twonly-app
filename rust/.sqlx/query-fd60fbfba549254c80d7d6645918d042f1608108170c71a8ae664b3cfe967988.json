@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT my_group_private_key, left_group FROM groups WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "my_group_private_key",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "my_group_private_key"
+          }
+        }
+      },
+      {
+        "name": "left_group",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "left_group"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "fd60fbfba549254c80d7d6645918d042f1608108170c71a8ae664b3cfe967988"
+}

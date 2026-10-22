@@ -60,6 +60,12 @@ impl MediaFile {
             JOIN group_members ON group_members.group_id = messages.group_id
             WHERE messages.media_id = ?
               AND (group_members.member_state IS NULL OR group_members.member_state != 'leftGroup')
+              AND NOT EXISTS (
+                  SELECT 1 FROM message_actions failed
+                  WHERE failed.message_id = messages.message_id
+                    AND failed.contact_id = group_members.contact_id
+                    AND failed.type = 'sendFailed'
+              )
             -- The first acknowledgement is the true one; a later settle of the
             -- same media must not move a timestamp that already stands.
             ON CONFLICT(message_id, contact_id, type)
@@ -72,7 +78,13 @@ impl MediaFile {
         .await?;
 
         let acknowledged = sqlx::query!(
-            "UPDATE messages SET ack_by_server = ? WHERE media_id = ? AND ack_by_server IS NULL",
+            r#"UPDATE messages SET ack_by_server = ?
+               WHERE media_id = ? AND ack_by_server IS NULL
+                 AND NOT EXISTS (
+                     SELECT 1 FROM groups g JOIN message_actions a
+                       ON a.message_id = messages.message_id AND a.type = 'sendFailed'
+                     WHERE g.group_id = messages.group_id AND g.is_direct_chat = 1
+                 )"#,
             now,
             media_id,
         )

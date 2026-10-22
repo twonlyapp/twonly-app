@@ -27,14 +27,6 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
   // ignore: matching_super_parameters
   KeyVerificationDao(super.db);
 
-  Future<List<VerificationToken>> getRecentVerificationTokens() {
-    // Tokens are only valid for one hour, so if the users are currently offline, the verification notification will still work later.
-    final cutoff = DateTime.now().subtract(const Duration(hours: 1));
-    return (select(
-      verificationTokens,
-    )..where((t) => t.createdAt.isBiggerOrEqualValue(cutoff))).get();
-  }
-
   Future<int> insertVerificationToken(Uint8List token) {
     return into(verificationTokens).insert(
       VerificationTokensCompanion.insert(token: token),
@@ -159,7 +151,8 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
       }).toList();
     });
   }
-Stream<VerificationStatus> watchAllGroupMembersVerified(String groupId) {
+
+  Stream<VerificationStatus> watchAllGroupMembersVerified(String groupId) {
     final gm = groupMembers;
     final directKv = alias(keyVerifications, 'directKv');
     final ur = userDiscoveryUserRelations;

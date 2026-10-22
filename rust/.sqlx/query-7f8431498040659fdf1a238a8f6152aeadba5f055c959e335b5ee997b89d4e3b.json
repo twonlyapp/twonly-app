@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT accepted FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "accepted",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "accepted"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7f8431498040659fdf1a238a8f6152aeadba5f055c959e335b5ee997b89d4e3b"
+}

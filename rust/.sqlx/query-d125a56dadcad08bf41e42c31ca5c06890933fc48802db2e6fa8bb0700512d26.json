@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE notification_outbox SET conversation_id = ?\n        WHERE conversation_id IS NULL AND cleared_at IS NULL\n          AND kind IN ('reopened_media', 'stored_media', 'stored_story')\n          AND message_id IN (SELECT message_id FROM messages WHERE group_id = ?)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "d125a56dadcad08bf41e42c31ca5c06890933fc48802db2e6fa8bb0700512d26"
+}

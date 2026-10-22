@@ -79,8 +79,8 @@ unsafe fn optional_string(pointer: *const c_char) -> Option<String> {
 fn response_json(outcome: Option<RunOutcome>, error: Option<String>) -> *mut c_char {
     let json = match (outcome, error) {
         (Some(outcome), None) => format!(
-            r#"{{"ok":true,"pending_uploads":{}}}"#,
-            outcome.pending_uploads
+            r#"{{"ok":true,"pending_uploads":{},"pending_messages":{}}}"#,
+            outcome.pending_uploads, outcome.pending_messages
         ),
         (_, Some(error)) => format!(
             r#"{{"ok":false,"error":{}}}"#,

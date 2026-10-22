@@ -6,6 +6,9 @@ internal object NativeNotificationBridge {
     }
 
     @JvmStatic
+    external fun logPushReceived(dataDirectory: String, messageId: String, sentAtMs: Long)
+
+    @JvmStatic
     external fun process(
         databaseDirectory: String,
         dataDirectory: String,

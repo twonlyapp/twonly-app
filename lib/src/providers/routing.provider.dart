@@ -22,6 +22,7 @@ import 'package:twonly/src/visual/views/settings/backup/backup_settings.view.dar
 import 'package:twonly/src/visual/views/settings/backup/backup_setup.view.dart';
 import 'package:twonly/src/visual/views/settings/chat/chat_reactions.view.dart';
 import 'package:twonly/src/visual/views/settings/chat/chat_settings.view.dart';
+import 'package:twonly/src/visual/views/settings/chat/contact_groups.view.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage.view.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage/import_from_gallery.view.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage/manage_storage.view.dart';
@@ -227,6 +228,10 @@ final routerProvider = GoRouter(
             GoRoute(
               path: 'reactions',
               builder: (context, state) => const ChatReactionSelectionView(),
+            ),
+            GoRoute(
+              path: 'contact_groups',
+              builder: (context, state) => const ContactGroupsView(),
             ),
           ],
         ),

@@ -16,47 +16,18 @@ use prost::Message as ProstMessage;
 use proto::encrypted_content::error_messages::Type;
 use sqlx::{Sqlite, Transaction};
 use std::sync::{Arc, Mutex, PoisonError};
+use tokio::sync::Notify;
 
-#[cfg(not(debug_assertions))]
-use std::collections::HashMap;
-#[cfg(not(debug_assertions))]
-use std::sync::LazyLock;
+/// Successful sends remain in the outbox until the peer acknowledges them.
+/// Keep their cooldown durable and apply it in the queue query, rather than
+/// repeatedly selecting them and logging one suppressed attempt per receipt.
+const RESEND_SUPPRESSION_SECONDS: i64 = 120;
 
-#[cfg(not(debug_assertions))]
-static ALREADY_QUEUED_RECEIPTS: LazyLock<Mutex<HashMap<String, std::time::Instant>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
-
-/// How long a receipt the server has already taken is kept out of the queue.
-#[cfg(not(debug_assertions))]
-const RESEND_SUPPRESSION: std::time::Duration = std::time::Duration::from_secs(120);
-
-/// Whether the server accepted this receipt inside the suppression window.
-///
-/// Every inbound message marks a peer's whole outbox for retry, so a chat busy
-/// enough to keep flushing would otherwise re-send the same envelope on every
-/// message that arrives.
-#[cfg(not(debug_assertions))]
-fn recently_sent(receipt_id: &str) -> bool {
-    let mut sent = ALREADY_QUEUED_RECEIPTS
-        .lock()
-        .unwrap_or_else(PoisonError::into_inner);
-    sent.retain(|_, time| time.elapsed() < RESEND_SUPPRESSION);
-    sent.contains_key(receipt_id)
-}
-
-/// Starts the suppression window, once the server has actually taken the
-/// envelope.
-///
-/// Recorded on success rather than on the attempt: a send that fails has not
-/// reached anyone, and locking it out for two minutes turned a transient
-/// failure -- one dropped socket, one timed-out request -- into an outbox that
-/// stayed stuck long after the connection came back.
-#[cfg(not(debug_assertions))]
-fn note_sent(receipt_id: &str) {
-    ALREADY_QUEUED_RECEIPTS
-        .lock()
-        .unwrap_or_else(PoisonError::into_inner)
-        .insert(receipt_id.to_owned(), std::time::Instant::now());
+fn receipt_is_due(acknowledged: Option<i64>, last_retry: Option<i64>, now: i64) -> bool {
+    match acknowledged {
+        None => true,
+        Some(ack) => last_retry.unwrap_or(ack) <= now - RESEND_SUPPRESSION_SECONDS,
+    }
 }
 
 /// Coalesces overlapping flushes of one account's receipt queue.
@@ -73,6 +44,12 @@ fn note_sent(receipt_id: &str) {
 /// dirty flag would buy the wrong queue a second pass.
 #[derive(Default)]
 pub(crate) struct FlushClaim {
+    state: Mutex<FlushState>,
+    finished: Notify,
+}
+
+#[derive(Default)]
+struct FlushState {
     running: bool,
     dirty: bool,
 }
@@ -81,15 +58,15 @@ pub(crate) struct FlushClaim {
 /// it — an error or a panic on the way out — frees the claim for the next
 /// caller instead of blocking every later flush.
 struct FlushGuard<'a> {
-    claim: &'a Mutex<FlushClaim>,
+    claim: &'a FlushClaim,
     released: bool,
 }
 
 impl<'a> FlushGuard<'a> {
     /// Registers a flush for this caller. Returns `None` when one is already
     /// running, in which case it is marked dirty and will query once more.
-    fn claim(state: &'a Mutex<FlushClaim>) -> Option<Self> {
-        let mut claim = state.lock().unwrap_or_else(PoisonError::into_inner);
+    fn claim(state: &'a FlushClaim) -> Option<Self> {
+        let mut claim = state.state.lock().unwrap_or_else(PoisonError::into_inner);
         if claim.running {
             claim.dirty = true;
             return None;
@@ -108,13 +85,18 @@ impl<'a> FlushGuard<'a> {
     /// Both happen under one lock so a request cannot be dropped between the
     /// last query and the release.
     fn release_or_take_dirty(&mut self) -> bool {
-        let mut claim = self.claim.lock().unwrap_or_else(PoisonError::into_inner);
+        let mut claim = self
+            .claim
+            .state
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
         if claim.dirty {
             claim.dirty = false;
             return true;
         }
         claim.running = false;
         self.released = true;
+        self.claim.finished.notify_waiters();
         false
     }
 }
@@ -125,9 +107,11 @@ impl Drop for FlushGuard<'_> {
             return;
         }
         self.claim
+            .state
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .running = false;
+        self.claim.finished.notify_waiters();
     }
 }
 
@@ -168,6 +152,19 @@ pub(crate) async fn queue_encrypted_content(
         .wake_receiver(wake_receiver)
         .insert(t)
         .await?;
+
+    if content.group_create.is_some()
+        || content.group_join.is_some()
+        || content.resend_group_public_key.is_some()
+    {
+        tracing::info!(
+            receipt_id,
+            contact_id = target_user_id,
+            group_id = content.group_id.as_deref(),
+            kind = crate::api::messages::content_type_kind(&content),
+            "queued group key control message"
+        );
+    }
 
     if let Some((update_message_id, instance_id)) = webxdc_update {
         // Hidden updates have no messages row or delivery indicator of their
@@ -455,6 +452,8 @@ struct PreparedQueuedReceiptRow {
     wake_receiver: i64,
     account_deleted: i64,
     signal_version: String,
+    ack_by_server_at: Option<i64>,
+    last_retry: Option<i64>,
 }
 
 async fn load_queued_receipt_row(
@@ -465,7 +464,8 @@ async fn load_queued_receipt_row(
         PreparedQueuedReceiptRow,
         r#"
         SELECT r.contact_id, r.message, r.message_id, r.contact_will_sends_receipt,
-               r.wake_receiver, c.account_deleted, c.signal_version
+               r.wake_receiver, c.account_deleted, c.signal_version,
+               r.ack_by_server_at, r.last_retry
         FROM receipts r
         JOIN contacts c ON c.user_id = r.contact_id
         WHERE r.receipt_id = ?
@@ -611,19 +611,20 @@ pub(crate) async fn prepare_queued_receipt(
 }
 
 pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) -> Result<()> {
-    #[cfg(not(debug_assertions))]
-    if recently_sent(receipt_id) {
-        tracing::info!(
-            "Blocking queued receipt, as it was already sent within the last 120 seconds"
-        );
-        return Ok(());
-    }
-
     let started = std::time::Instant::now();
     let app_db = ctx.app_db.read().await.clone();
     let Some(row) = load_queued_receipt_row(&app_db.pool, receipt_id).await? else {
         return Ok(());
     };
+    // Direct sends share the same rule as a sweep. An explicit recovery clears
+    // ack_by_server_at, so failed sends and session-reset retries bypass it.
+    if !receipt_is_due(
+        row.ack_by_server_at,
+        row.last_retry,
+        chrono::Utc::now().timestamp(),
+    ) {
+        return Ok(());
+    }
 
     // `account_deleted` is a latch: one `UserIdNotFound` on any contact-scoped
     // request sets it, and this check runs before anything that could clear it,
@@ -703,9 +704,6 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         }
     }
 
-    #[cfg(not(debug_assertions))]
-    note_sent(receipt_id);
-
     // A peer's delivery receipt may arrive much later. Log server acceptance
     // separately so delayed receiver wake-ups do not look like delayed sends.
     tracing::info!(
@@ -743,6 +741,9 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
             .await?;
     }
     if receipt.contact_will_sends_receipt == 0 {
+        // Terminal replies are deleted on success. A redelivered message may
+        // queue its acknowledgement again; allow that reply immediately so a
+        // lost acknowledgement never keeps the peer's outbox alive.
         Receipt::delete(&mut *t, receipt_id).await?;
     } else {
         // The wake is spent the moment the server accepts the envelope, so it
@@ -818,6 +819,25 @@ pub async fn retransmit_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
         return Ok(());
     };
 
+    flush_claimed_receipts(ctx, &mut guard).await
+}
+
+/// Unlike event-triggered flushes, a worker about to close its socket must wait
+/// for an existing flush. Register before claiming so completion or cancellation
+/// between the claim check and the await cannot lose the wake-up.
+pub(crate) async fn retransmit_queued_receipts_and_wait(ctx: &Arc<Context>) -> Result<()> {
+    loop {
+        let notified = ctx.queued_receipt_flush.finished.notified();
+        tokio::pin!(notified);
+        notified.as_mut().enable();
+        if let Some(mut guard) = FlushGuard::claim(&ctx.queued_receipt_flush) {
+            return flush_claimed_receipts(ctx, &mut guard).await;
+        }
+        notified.await;
+    }
+}
+
+async fn flush_claimed_receipts(ctx: &Arc<Context>, guard: &mut FlushGuard<'_>) -> Result<()> {
     loop {
         flush_queued_receipts(ctx).await?;
 
@@ -829,27 +849,54 @@ pub async fn retransmit_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
 
 async fn flush_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
-    let receipt_ids = sqlx::query_scalar!(
-        r#"
-        SELECT receipt_id FROM receipts
-        WHERE will_be_retried_by_media_upload = 0
-          AND deferred_until_session IS NULL
-          AND (ack_by_server_at IS NULL OR mark_for_retry IS NOT NULL)
-          AND (mark_for_retry_after_accepted IS NULL OR EXISTS(
-              SELECT 1 FROM contacts
-              WHERE contacts.user_id = receipts.contact_id AND contacts.accepted = 1
-          ))
-        ORDER BY created_at
-        "#
-    )
-    .fetch_all(&database.pool)
-    .await?;
+    let receipt_ids = due_receipt_ids(&database.pool, chrono::Utc::now().timestamp()).await?;
     for receipt_id in receipt_ids {
         if let Err(error) = send_queued_receipt(ctx, &receipt_id).await {
             tracing::warn!(receipt_id, "queued delivery receipt retry failed: {error}");
         }
     }
     Ok(())
+}
+
+async fn due_receipt_ids(pool: &sqlx::SqlitePool, now: i64) -> Result<Vec<String>> {
+    let retry_before = now - RESEND_SUPPRESSION_SECONDS;
+    let receipt_ids = sqlx::query_scalar!(
+        r#"
+        SELECT receipt_id FROM receipts
+        WHERE will_be_retried_by_media_upload = 0
+          AND deferred_until_session IS NULL
+          AND (ack_by_server_at IS NULL OR mark_for_retry IS NOT NULL)
+          AND (ack_by_server_at IS NULL OR COALESCE(last_retry, ack_by_server_at) <= ?)
+          AND (mark_for_retry_after_accepted IS NULL OR EXISTS(
+              SELECT 1 FROM contacts
+              WHERE contacts.user_id = receipts.contact_id AND contacts.accepted = 1
+          ))
+        ORDER BY created_at
+        "#,
+        retry_before,
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(receipt_ids)
+}
+
+/// Includes cooldown entries: the scheduler must retain the next chance to
+/// retry them, while contacts without a session or acceptance stay parked.
+pub(crate) async fn has_pending_receipts(ctx: &Arc<Context>) -> Result<bool> {
+    let database = ctx.app_db.read().await.clone();
+    Ok(sqlx::query_scalar::<_, i64>(
+        r#"SELECT EXISTS(SELECT 1 FROM receipts
+           WHERE will_be_retried_by_media_upload = 0
+             AND deferred_until_session IS NULL
+             AND (ack_by_server_at IS NULL OR mark_for_retry IS NOT NULL)
+             AND (mark_for_retry_after_accepted IS NULL OR EXISTS(
+                 SELECT 1 FROM contacts WHERE contacts.user_id = receipts.contact_id
+                   AND contacts.accepted = 1
+             )))"#,
+    )
+    .fetch_one(&database.pool)
+    .await?
+        != 0)
 }
 
 pub(crate) async fn queue_decryption_error(
@@ -989,6 +1036,165 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    async fn receipt_sweeps_skip_cooldowns_but_preserve_retries() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'accepted', 1), (8, 'unaccepted', 0)")
+            .execute(&database.pool).await?;
+        let now = chrono::Utc::now().timestamp();
+        // A busy mailbox marks all 200 recently accepted messages again. None
+        // should reach the send loop, even across many consecutive sweeps.
+        for index in 0..200 {
+            sqlx::query("INSERT INTO receipts(receipt_id, contact_id, message, ack_by_server_at, last_retry, mark_for_retry) VALUES (?, 7, x'00', ?, ?, ?)")
+                .bind(format!("recent-{index}")).bind(now - 1).bind(now - 1).bind(now)
+                .execute(&database.pool).await?;
+        }
+        for (id, ack, last_retry) in [
+            ("unsent", None, None),
+            ("failed-attempt", None, Some(now)),
+            ("explicit-reset", None, Some(now - 1)),
+            ("old", Some(now - 121), Some(now - 120)),
+            ("legacy-no-last-retry", Some(now - 120), None),
+        ] {
+            sqlx::query("INSERT INTO receipts(receipt_id, contact_id, message, ack_by_server_at, last_retry, mark_for_retry) VALUES (?, 7, x'00', ?, ?, ?)")
+                .bind(id).bind(ack).bind(last_retry).bind(now)
+                .execute(&database.pool).await?;
+        }
+        for statement in [
+            "INSERT INTO receipts(receipt_id, contact_id, message, deferred_until_session) VALUES ('deferred', 7, x'00', 1)",
+            "INSERT INTO receipts(receipt_id, contact_id, message, will_be_retried_by_media_upload) VALUES ('media', 7, x'00', 1)",
+            "INSERT INTO receipts(receipt_id, contact_id, message, mark_for_retry_after_accepted) VALUES ('unaccepted', 8, x'00', 1)",
+            "INSERT INTO receipts(receipt_id, contact_id, message, ack_by_server_at) VALUES ('not-marked', 7, x'00', 1)",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+        for _ in 0..10 {
+            let mut due = due_receipt_ids(&database.pool, now).await?;
+            due.sort();
+            assert_eq!(
+                due,
+                [
+                    "explicit-reset",
+                    "failed-attempt",
+                    "legacy-no-last-retry",
+                    "old",
+                    "unsent"
+                ]
+            );
+        }
+        assert_eq!(due_receipt_ids(&database.pool, now + 119).await?.len(), 205);
+        assert!(has_pending_receipts(&ctx).await?);
+
+        // Direct calls use persisted timestamps too, before decoding or
+        // networking. x'00' would fail to decode if this cooldown were missed.
+        send_queued_receipt(&ctx, "recent-0").await?;
+        assert!(!receipt_is_due(Some(now - 1), Some(now - 1), now));
+        assert!(receipt_is_due(None, Some(now - 1), now));
+        assert!(receipt_is_due(Some(now - 120), None, now));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn duplicate_delivery_acknowledgements_are_immediately_due() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'peer')")
+            .execute(&database.pool)
+            .await?;
+        for _ in 0..2 {
+            let mut t = database.pool.begin().await?;
+            queue_sender_delivery_receipt(&mut t, 7, "duplicate").await?;
+            t.commit().await?;
+            assert_eq!(
+                due_receipt_ids(&database.pool, chrono::Utc::now().timestamp()).await?,
+                ["duplicate"]
+            );
+            // Terminal replies are removed once the server accepts them. A
+            // subsequent genuine duplicate can queue the same ACK immediately.
+            Receipt::delete(&database.pool, "duplicate").await?;
+        }
+        assert!(!has_pending_receipts(&ctx).await?);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn shutdown_flush_waits_for_the_active_flush() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let mut guard = FlushGuard::claim(&ctx.queued_receipt_flush).unwrap();
+        let waiting = {
+            let ctx = ctx.clone();
+            tokio::spawn(async move { retransmit_queued_receipts_and_wait(&ctx).await })
+        };
+        tokio::task::yield_now().await;
+        assert!(!waiting.is_finished());
+        assert!(
+            guard.release_or_take_dirty(),
+            "the waiter requested a final pass"
+        );
+        assert!(!waiting.is_finished());
+        assert!(!guard.release_or_take_dirty());
+        tokio::time::timeout(std::time::Duration::from_secs(1), waiting)
+            .await
+            .unwrap()
+            .unwrap()?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn cancelling_an_active_flush_wakes_every_shutdown_waiter() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let (started, ready) = tokio::sync::oneshot::channel();
+        let active = {
+            let ctx = ctx.clone();
+            tokio::spawn(async move {
+                let guard = FlushGuard::claim(&ctx.queued_receipt_flush).unwrap();
+                started.send(()).unwrap();
+                std::future::pending::<()>().await;
+                drop(guard);
+            })
+        };
+        ready.await.unwrap();
+        let mut waiters = Vec::new();
+        for _ in 0..3 {
+            let ctx = ctx.clone();
+            waiters.push(tokio::spawn(async move {
+                retransmit_queued_receipts_and_wait(&ctx).await
+            }));
+        }
+        tokio::task::yield_now().await;
+        assert!(waiters.iter().all(|waiter| !waiter.is_finished()));
+        active.abort();
+        for waiter in waiters {
+            tokio::time::timeout(std::time::Duration::from_secs(1), waiter)
+                .await
+                .unwrap()
+                .unwrap()?;
+        }
+        assert!(FlushGuard::claim(&ctx.queued_receipt_flush).is_some());
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn server_acknowledgements_resolve_the_game_announcement_without_a_cascading_link(
     ) -> Result<()> {
         let directory = tempfile::tempdir()?;
@@ -1110,7 +1316,7 @@ mod tests {
 
     #[test]
     fn a_second_flush_request_marks_the_running_one_dirty() {
-        let state = Mutex::new(FlushClaim::default());
+        let state = FlushClaim::default();
         let mut guard = FlushGuard::claim(&state).expect("nothing else holds the claim");
         assert!(FlushGuard::claim(&state).is_none());
 
@@ -1130,8 +1336,8 @@ mod tests {
     /// for one must not turn the other's flush into a no-op.
     #[test]
     fn each_account_holds_its_own_flush_claim() {
-        let first = Mutex::new(FlushClaim::default());
-        let second = Mutex::new(FlushClaim::default());
+        let first = FlushClaim::default();
+        let second = FlushClaim::default();
 
         let _held = FlushGuard::claim(&first).expect("nothing else holds the claim");
         assert!(FlushGuard::claim(&second).is_some());

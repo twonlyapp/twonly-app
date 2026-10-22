@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.3
+
+- Fix: In some cases, media files could no longer be sent
+
+## 0.6.2
+
+- Fix: Push notifications were not received immediately
+
+## 0.6.1
+
+- Fix: Media files were not sent when a single user was inactive in a group
+
 ## 0.6.0
 
 - New: Stickers

@@ -18,7 +18,7 @@ use sha2::{Digest, Sha256};
 use std::io::Cursor;
 use std::path::Path;
 
-#[cfg(target_os = "android")]
+#[cfg(any(target_os = "android", test))]
 mod android;
 
 const WORKING_EDGE: u32 = 900;

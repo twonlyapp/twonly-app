@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, LazyLock, Mutex as SyncMutex, Weak};
 use std::time::Duration;
 use stream_tungstenite::{ClientConfig, WebSocketClient};
-use tokio::sync::{Mutex, RwLock, broadcast, mpsc, oneshot};
+use tokio::sync::{broadcast, mpsc, oneshot, Mutex, RwLock};
 
 use super::auth::ApiAuthHandshaker;
 
@@ -134,6 +134,36 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn native_push_keeps_a_healthy_socket_and_requests_catch_up() {
+        let client = client();
+        let socket = socket();
+        *client.ws_client.lock().await = Some(socket.clone());
+        client.is_authenticated.store(true, Ordering::Release);
+        client.set_state(ApiConnectionState::Authenticated).await;
+        let (sender, mut receiver) = mpsc::channel(1);
+        *client.catch_up_tx.lock().await = Some(sender);
+
+        client.catch_up_after_push().await.unwrap();
+
+        assert!(client.is_current_connection(&socket).await);
+        assert!(receiver.try_recv().is_ok());
+        assert!(client.is_authenticated.load(Ordering::Acquire));
+    }
+
+    #[tokio::test]
+    async fn native_push_does_not_replace_an_in_flight_connection() {
+        let client = client();
+        let socket = socket();
+        *client.ws_client.lock().await = Some(socket.clone());
+        client.set_state(ApiConnectionState::Connecting).await;
+
+        client.catch_up_after_push().await.unwrap();
+
+        assert!(client.is_current_connection(&socket).await);
+        assert_eq!(*client.state.read().await, ApiConnectionState::Connecting);
+    }
+
+    #[tokio::test]
     async fn replacement_failure_is_processed_during_an_existing_retry() {
         let client = client();
         // Keep the test offline, including once the forced retry timer expires.
@@ -232,6 +262,36 @@ impl ApiClient {
         if let Some(sender) = self.catch_up_tx.lock().await.as_ref() {
             let _ = sender.try_send(());
         }
+    }
+
+    /// A native push can run while Flutter is suspended with a cached offline
+    /// flag and no socket. Restore the shared client before requesting a drain;
+    /// runtime ownership alone says nothing about transport availability.
+    pub(crate) async fn catch_up_after_push(self: &Arc<Self>) -> Result<()> {
+        let _change = self.connection_change.lock().await;
+        let state = *self.state.read().await;
+        let missing_socket = self.ws_client.lock().await.is_none();
+        tracing::info!(
+            ?state,
+            missing_socket,
+            network_available = self.network_available.load(Ordering::Acquire),
+            in_background = self.in_background.load(Ordering::Acquire),
+            "processing native push catch-up"
+        );
+
+        // Dart's connectivity stream may not run again until the app resumes.
+        // The native wake-up gets one network attempt regardless of that cache.
+        self.network_available.store(true, Ordering::Release);
+        if missing_socket || state == ApiConnectionState::Stopped {
+            if !missing_socket {
+                self.discard_current_connection("native push found a stopped connection")
+                    .await;
+            }
+            tracing::info!("restoring API connection for native push");
+            self.connect_inner().await?;
+        }
+        self.request_catch_up().await;
+        Ok(())
     }
 
     /// Runs the catch-up loop for one connection. It exits as soon as that

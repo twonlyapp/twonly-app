@@ -299,19 +299,9 @@ impl MediaUploadService {
             .bind(now)
             .execute(&mut *transaction)
             .await?;
-            if !widget_only {
-                sqlx::query(
-                    r#"UPDATE groups SET deleted_content = 0,
-                           last_message_exchange = MAX(last_message_exchange, ?)
-                       WHERE group_id = ?"#,
-                )
-                .bind(now)
-                .bind(group_id)
-                .execute(&mut *transaction)
-                .await?;
-                Group::record_media_exchange(&mut transaction, group_id, false, now).await?;
-                Group::record_text_or_media(&mut transaction, group_id, now).await?;
-            }
+            Group::increase_last_message_exchange(&mut transaction, group_id, now).await?;
+            Group::record_media_exchange(&mut transaction, group_id, false, now).await?;
+            Group::record_text_or_media(&mut transaction, group_id, now).await?;
         }
         // A story row neither lifts its chat nor feeds its flames: it is not
         // part of the conversation until somebody saves it.
@@ -539,7 +529,7 @@ impl MediaUploadService {
                 let database = self.ctx.app_db.read().await.clone();
                 let mut transaction = database.pool.begin().await?;
                 sqlx::query(
-                    "UPDATE media_files SET upload_state = 'storedOnly' WHERE media_id = ?",
+                    "UPDATE media_files SET upload_state = 'storedOnly', reupload_requested_by = NULL, reupload_targets = NULL WHERE media_id = ?",
                 )
                 .bind(media_id)
                 .execute(&mut *transaction)
@@ -646,7 +636,12 @@ impl MediaUploadService {
                JOIN group_members gm ON gm.group_id = m.group_id
                WHERE m.message_id = ? AND m.media_id = ? AND m.sender_id IS NULL
                  AND gm.contact_id = ?
-                 AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup'))"#,
+                 AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')
+                 AND NOT EXISTS (
+                     SELECT 1 FROM message_actions a
+                     WHERE a.message_id = m.message_id AND a.contact_id = gm.contact_id
+                       AND a.type = 'sendFailed'
+                 ))"#,
         )
         .bind(message_id)
         .bind(media_id)
@@ -950,9 +945,18 @@ impl MediaUploadService {
                 // The caller asks for a thumbnail, not just for the flag to be
                 // refreshed: a UI that only ever recorded "still missing" would
                 // ask again on every rebuild and never get a preview.
-                if !files.thumbnail_path(media_id).exists() {
+                let thumbnail = files.thumbnail_path(media_id);
+                let needs_thumbnail = || {
+                    std::fs::metadata(&thumbnail).map_or(true, |metadata| {
+                        metadata.len() == 0
+                            || metadata.len() > media_codec::THUMBNAIL_MAX_BYTES as u64
+                    })
+                };
+                // Older versions wrote previews without a size limit. Replace
+                // those atomically too, so queued cloud backups can recover.
+                if needs_thumbnail() {
                     let permit = THUMBNAIL_BACKFILL.acquire().await;
-                    if !files.thumbnail_path(media_id).exists() {
+                    if needs_thumbnail() {
                         let Some(media) = self.load(media_id).await? else {
                             return Ok(());
                         };
@@ -1889,7 +1893,66 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn sending_media_preserves_the_archive_choice() -> anyhow::Result<()> {
+    async fn sending_widget_media_moves_the_chat_first_and_counts_towards_flames(
+    ) -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
+            .await?;
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+        let db = ctx.app_db.read().await.clone();
+        let today = crate::utils::start_of_local_day()?;
+        let now = chrono::Utc::now().timestamp();
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, widget_sharing_allowed) VALUES (7, 'peer', 1)",
+        )
+        .execute(&db.pool)
+        .await?;
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, last_message_exchange, flame_counter,
+                                last_message_send, last_message_received, last_flame_counter_change)
+             VALUES ('widget-chat', 'Peer', 1, 4, ?, ?, ?), ('other-chat', 'Other', ?, 0, NULL, NULL, NULL)",
+        )
+        .bind(today - 1)
+        .bind(now)
+        .bind(today - 1)
+        .bind(now - 1)
+        .execute(&db.pool)
+        .await?;
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES ('widget-chat', 7)")
+            .execute(&db.pool)
+            .await?;
+
+        let service = MediaUploadService::new(&ctx);
+        for expected_media_count in 1..=2 {
+            let media_id = service.initialize("image".into(), None, false).await?;
+            service
+                .insert_into_messages(media_id, vec!["widget-chat".into()], None, true, None)
+                .await?;
+            let first_chat: String = sqlx::query_scalar(
+                "SELECT group_id FROM groups ORDER BY last_message_exchange DESC LIMIT 1",
+            )
+            .fetch_one(&db.pool)
+            .await?;
+            assert_eq!(first_chat, "widget-chat");
+            let state = Group::flame_state(&db.pool, "widget-chat").await?;
+            assert_eq!((state.counter, state.is_expiring), (5, false));
+            let (total, sent_at, active_at): (i64, i64, i64) = sqlx::query_as(
+                "SELECT total_media_counter, last_message_send, last_text_or_media_at FROM groups WHERE group_id = 'widget-chat'",
+            ).fetch_one(&db.pool).await?;
+            assert_eq!(total, expected_media_count);
+            assert!(sent_at >= now);
+            assert!(active_at >= now);
+            let sent: i64 =
+                sqlx::query_scalar("SELECT media_send_counter FROM contacts WHERE user_id = 7")
+                    .fetch_one(&db.pool)
+                    .await?;
+            assert_eq!(sent, expected_media_count);
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn sending_media_unarchives_chats() -> anyhow::Result<()> {
         let temp = tempfile::tempdir()?;
         let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
             .await?;
@@ -1924,7 +1987,7 @@ mod tests {
         .await?;
         assert_eq!(
             groups,
-            vec![("active".into(), 0, 0), ("archived".into(), 1, 0)]
+            vec![("active".into(), 0, 0), ("archived".into(), 0, 0)]
         );
         let count: i64 =
             sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE sender_id IS NULL")
@@ -1959,7 +2022,7 @@ mod tests {
             (9, None),
         ] {
             let group_id = stories::direct_chat(&ctx, &mut t, contact_id).await?;
-            sqlx::query("UPDATE groups SET last_text_or_media_at = ? WHERE group_id = ?")
+            sqlx::query("UPDATE groups SET last_text_or_media_at = ?, archived = 1, deleted_content = 1, last_message_exchange = 123 WHERE group_id = ?")
                 .bind(last_exchange)
                 .bind(group_id)
                 .execute(&mut *t)
@@ -1997,6 +2060,15 @@ mod tests {
             .fetch_one(&database.pool)
             .await?;
         assert_eq!(groups, 3, "a broadcast must not create chats");
+        let chat_states: Vec<(i64, i64, i64)> =
+            sqlx::query_as("SELECT archived, deleted_content, last_message_exchange FROM groups")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(
+            chat_states,
+            vec![(1, 1, 123); 3],
+            "broadcasting a story must not unarchive, restore or reorder chats"
+        );
         let last_exchange: i64 =
             sqlx::query_scalar("SELECT last_text_or_media_at FROM groups WHERE group_id = ?")
                 .bind(Group::direct_chat_id(42, 7))
@@ -2088,6 +2160,19 @@ mod tests {
                 .fetch_one(&database.pool)
                 .await?;
         assert_eq!(has_thumbnail, 1);
+
+        // A failed cloud backup may already have an oversized preview from an
+        // older version. Refresh it without deleting the original media.
+        let original = std::fs::read(&stored)?;
+        std::fs::write(
+            files.thumbnail_path(media_id),
+            vec![0; media_codec::THUMBNAIL_MAX_BYTES + 1],
+        )?;
+        service.media_step_finished(media_id, "thumbnail").await?;
+        let thumbnail = files.thumbnail_path(media_id);
+        assert!(std::fs::metadata(&thumbnail)?.len() <= media_codec::THUMBNAIL_MAX_BYTES as u64);
+        assert!(media_codec::decode(&thumbnail).is_ok());
+        assert_eq!(std::fs::read(&stored)?, original);
         Ok(())
     }
 

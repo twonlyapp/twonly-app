@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO message_actions(message_id, contact_id, type, action_at)\n            SELECT messages.message_id, group_members.contact_id, 'ackByServerAt', ?\n            FROM messages\n            JOIN group_members ON group_members.group_id = messages.group_id\n            WHERE messages.media_id = ?\n              AND (group_members.member_state IS NULL OR group_members.member_state != 'leftGroup')\n              AND NOT EXISTS (\n                  SELECT 1 FROM message_actions failed\n                  WHERE failed.message_id = messages.message_id\n                    AND failed.contact_id = group_members.contact_id\n                    AND failed.type = 'sendFailed'\n              )\n            -- The first acknowledgement is the true one; a later settle of the\n            -- same media must not move a timestamp that already stands.\n            ON CONFLICT(message_id, contact_id, type)\n            DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "2d725e3049ead6d09904ad6e4a67af165bc2ccb7c98342fb7b6a54f2ea514830"
+}

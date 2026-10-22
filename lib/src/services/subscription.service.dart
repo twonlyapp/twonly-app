@@ -8,10 +8,16 @@ enum SubscriptionPlan {
   Plus,
 }
 
-enum PremiumFeatures { RestoreFlames }
+enum PremiumFeatures { RestoreFlames, ProApps }
 
 const Map<PremiumFeatures, List<SubscriptionPlan>> planPermissions = {
   PremiumFeatures.RestoreFlames: [
+    SubscriptionPlan.Family,
+    SubscriptionPlan.Plus,
+    SubscriptionPlan.Tester,
+    SubscriptionPlan.Pro,
+  ],
+  PremiumFeatures.ProApps: [
     SubscriptionPlan.Family,
     SubscriptionPlan.Plus,
     SubscriptionPlan.Tester,

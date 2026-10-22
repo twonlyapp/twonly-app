@@ -394,7 +394,8 @@ async fn claim_legacy_upgrade_request(
     fields(
         receipt_id = tracing::field::Empty,
         user = tracing::field::Empty,
-        kind = tracing::field::Empty
+        kind = tracing::field::Empty,
+        group_id = tracing::field::Empty
     )
 )]
 /// Entry point for one inbound server message, whichever transport carried it.
@@ -554,6 +555,14 @@ pub async fn handle_decoded_server_message(
                     Receipt::store_pending_plaintext(&mut t, &message.receipt_id, &plaintext)
                         .await?;
                     t.commit().await?;
+
+                    let content =
+                        proto::EncryptedContent::decode(plaintext.as_slice()).map_err(|error| {
+                            TwonlyError::UnprocessableContent(format!(
+                                "invalid decrypted client content: {error}"
+                            ))
+                        })?;
+                    contact::prepare_contact_request(ctx, from_user_id, &content).await?;
                     t = database.pool.begin().await?;
 
                     // Decrypting proves the peer speaks v2, so drop any 'v1'
@@ -576,12 +585,6 @@ pub async fn handle_decoded_server_message(
                     .execute(&mut *t)
                     .await?;
 
-                    let content =
-                        proto::EncryptedContent::decode(plaintext.as_slice()).map_err(|error| {
-                            TwonlyError::UnprocessableContent(format!(
-                                "invalid decrypted client content: {error}"
-                            ))
-                        })?;
                     withhold_delivery_receipt = process_encrypted_or_queue_error(
                         ctx,
                         &mut t,
@@ -647,8 +650,6 @@ pub async fn handle_decoded_server_message(
     }) {
         tracing::warn!(%error, "could not record the last server-message timestamp");
     }
-
-    ctx.mark_incoming_committed();
 
     let ctx = ctx.clone();
     tokio::spawn(async move {
@@ -793,6 +794,9 @@ async fn handle_encrypted_inner(
     let type_kind = content_type_kind(&content);
 
     tracing::Span::current().record("kind", type_kind);
+    if let Some(group_id) = content.group_id.as_deref() {
+        tracing::Span::current().record("group_id", group_id);
+    }
     tracing::info!("Handling incoming message: {type_kind}");
 
     if let Some(request) = content.contact_request {
@@ -976,6 +980,69 @@ async fn handle_encrypted_inner(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn contact_request_lookup_does_not_hold_the_app_connection() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice')")
+            .execute(&database.pool)
+            .await?;
+        let content = proto::EncryptedContent {
+            contact_request: Some(proto::encrypted_content::ContactRequest {
+                r#type: proto::encrypted_content::contact_request::Type::Request as i32,
+            }),
+            ..Default::default()
+        };
+        // Resume after decryption, without needing a Signal session or server.
+        let mut t = database.pool.begin().await?;
+        Receipt::claim_received(&mut t, "contact-request").await?;
+        Receipt::store_pending_plaintext(&mut t, "contact-request", &content.encode_to_vec())
+            .await?;
+        t.commit().await?;
+
+        let client = crate::api::ApiRuntime::client(&ctx).await?;
+        let _transport = client.ws_client.lock().await;
+        let message = proto::Message {
+            receipt_id: "contact-request".into(),
+            r#type: Type::CiphertextV2 as i32,
+            ..Default::default()
+        };
+        {
+            let handling = handle_decoded_server_message(&ctx, 7, message);
+            tokio::pin!(handling);
+            // Drive handling until it waits for the deliberately stalled lookup.
+            assert!(
+                tokio::time::timeout(std::time::Duration::from_millis(100), &mut handling,)
+                    .await
+                    .is_err()
+            );
+
+            let rows = tokio::time::timeout(
+                std::time::Duration::from_secs(1),
+                database.raw_select(
+                    "SELECT username FROM contacts WHERE user_id = 7".into(),
+                    vec![],
+                ),
+            )
+            .await??;
+            assert_eq!(rows.rows[0].values[0].text_value.as_deref(), Some("alice"));
+        }
+        // Cancelling the lookup leaves the plaintext durable for redelivery.
+        let mut t = database.pool.begin().await?;
+        assert_eq!(
+            Receipt::pending_plaintext(&mut t, "contact-request").await?,
+            Some(content.encode_to_vec())
+        );
+        t.rollback().await?;
+        Ok(())
+    }
 
     #[tokio::test]
     async fn reactions_to_expired_messages_are_acknowledged_without_blocking_valid_reactions(

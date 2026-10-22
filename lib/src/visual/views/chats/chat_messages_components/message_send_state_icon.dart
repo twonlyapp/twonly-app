@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -67,6 +68,14 @@ class MessageSendStateIcon extends StatefulWidget {
 }
 
 class _MessageSendStateIconState extends State<MessageSendStateIcon> {
+  Stream<List<MessageAction>>? _deliveryActions;
+
+  @override
+  void didUpdateWidget(MessageSendStateIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.messages != oldWidget.messages) _deliveryActions = null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -87,6 +96,40 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
   @override
   Widget build(BuildContext context) {
+    final sharedActions = ChatMessageActionScope.maybeOf(context);
+    if (sharedActions != null) {
+      return _buildStatus(context, sharedActions.failedMessageIds);
+    }
+    final pendingIds = widget.messages
+        .where(
+          (m) =>
+              m.senderId == null &&
+              m.mediaId != null &&
+              m.ackByServer == null &&
+              m.openedAt == null &&
+              !m.isDeletedFromSender,
+        )
+        .map((m) => m.messageId)
+        .toSet();
+    if (pendingIds.isEmpty || widget.group?.isDirectChat == false) {
+      return _buildStatus(context, const {});
+    }
+    _deliveryActions ??= twonlyDB.messagesDao.watchDeliveryActionsForMessages(
+      pendingIds,
+    );
+    return StreamBuilder<List<MessageAction>>(
+      stream: _deliveryActions,
+      builder: (context, snapshot) => _buildStatus(
+        context,
+        (snapshot.data ?? [])
+            .where((a) => a.type == MessageActionType.sendFailed)
+            .map((a) => a.messageId)
+            .toSet(),
+      ),
+    );
+  }
+
+  Widget _buildStatus(BuildContext context, Set<String> failedMessageIds) {
     var icons = <Widget>[];
     var text = '';
     Widget? textWidget;
@@ -174,6 +217,20 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
           icon = getLoaderIcon(color);
           text = context.lang.messageSendState_Sending;
 
+          // With no eligible recipients, preparation ends without an upload.
+          // Groups retain their ordinary status; recipient failures stay in
+          // message info. Direct failures are rendered below from the action.
+          if (mediaFile?.uploadState == UploadState.storedOnly &&
+              widget.group?.isDirectChat == false) {
+            icon = FaIcon(
+              FontAwesomeIcons.solidPaperPlane,
+              size: 12,
+              color: color,
+            );
+            text = context.lang.messageSendState_Send;
+            break;
+          }
+
           if (mediaFile != null) {
             if (mediaFile.uploadState == UploadState.uploadLimitReached) {
               icon = FaIcon(
@@ -258,6 +315,16 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       if (message.isDeletedFromSender) {
         icon = FaIcon(FontAwesomeIcons.trash, size: 10, color: color);
         text = context.lang.messageWasDeletedShort;
+      }
+
+      if (message.senderId == null &&
+          !message.isDeletedFromSender &&
+          failedMessageIds.contains(message.messageId)) {
+        icon = Icon(Icons.error_outline, size: 14, color: context.color.error);
+        text = context.lang.mediaSendFailed;
+        textWidget = null;
+        onTap = null;
+        hasLoader = false;
       }
 
       if (hasLoader) {

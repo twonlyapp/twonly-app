@@ -4,6 +4,7 @@ import 'package:mutex/mutex.dart';
 import 'package:twonly/core/bridge/user_config.dart';
 import 'package:twonly/core/user_config.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/services/error_reporting.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class UserService {
@@ -17,7 +18,7 @@ class UserService {
   Future<bool> tryInit() async {
     final config = await UserConfigApi.load();
     if (config == null) return false;
-    _applyRustUserConfig(config, notify: false);
+    await _applyRustUserConfig(config, notify: false);
     return isUserCreated;
   }
 
@@ -47,7 +48,7 @@ class UserService {
           base: config,
           config: user,
         );
-        userService._applyRustUserConfig(normalized);
+        await userService._applyRustUserConfig(normalized);
       } catch (e) {
         Log.error('Could not update the user: $e');
       }
@@ -56,20 +57,31 @@ class UserService {
 
   static Future<void> save(UserConfig user) async {
     final normalized = await UserConfigApi.save(config: user);
-    userService._applyRustUserConfig(normalized);
+    await userService._applyRustUserConfig(normalized);
   }
 
   static Future<void> handleRustUserConfigChanged(UserConfig config) async {
     try {
-      userService._applyRustUserConfig(config);
+      await userService._applyRustUserConfig(config);
     } catch (e) {
       Log.warn(e);
     }
   }
 
-  void _applyRustUserConfig(UserConfig config, {bool notify = true}) {
+  Future<void> _applyRustUserConfig(
+    UserConfig config, {
+    bool notify = true,
+  }) async {
     currentUser = config;
     isUserCreated = true;
+    try {
+      await ErrorReportingService.setEnabled(
+        config.allowErrorTrackingViaSentry,
+      );
+    } catch (e) {
+      // Reporting must not prevent login or updating the user's settings.
+      Log.warn('Could not configure error reporting', e);
+    }
     if (notify) triggerUserUpdate();
   }
 

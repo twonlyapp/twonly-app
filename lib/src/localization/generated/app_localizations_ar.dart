@@ -9,227 +9,235 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get subscriptionAllApps => 'الوصول إلى جميع التطبيقات';
+  String get subscriptionAllApps => 'الوُصُولُ إِلَى جَمِيعِ التَّطْبِيقَات';
 
   @override
-  String get registerSlogan => 'ابقَ على تواصل بخصوصية.';
+  String get registerSlogan => 'ابْقَ عَلَى تَوَاصُلٍ بِخُصُوصِيَّةٍ.';
 
   @override
-  String get onboardingWelcomeTitle => 'مرحبًا بك في twonly!';
+  String get onboardingWelcomeTitle => 'مَرْحَباً بِكَ فِي twonly!';
 
   @override
   String get onboardingWelcomeBody =>
-      'اكتشف طريقة خاصة وآمنة للبقاء على تواصل مع أصدقائك من خلال مشاركة الصور الفورية.';
+      'اِسْتَمْتِعْ بِطَرِيقَةٍ خَاصَّةٍ وَآمِنَةٍ لِلبَقَاءِ عَلَى تَوَاصُلٍ مَعَ أَصْدِقَائِكَ مِنْ خِلَالِ مُشَارَكَةِ الصُّوَرِ الْفَوْرِيَّةِ.';
 
   @override
-  String get onboardingE2eTitle => 'مشاركة بلا قلق';
+  String get onboardingE2eTitle => 'مُشَارَكَةٌ بِكُلِّ أَرْيَحِيَّةٍ';
 
   @override
   String get onboardingE2eBody =>
-      'بفضل التشفير التام بين الطرفين، اطمئن إلى أن اللحظات التي تشاركها لا يراها أحد سواك وسوى أصدقائك.';
+      'مَعَ التَّشْفِيرِ مِنَ الطَّرَفِ إِلَى الطَّرَفِ اِسْتَمْتِعْ بِطُمَأْنِينَةٍ تَامَّةٍ فَلَنْ يَتَمَكَّنَ مِنْ رُؤْيَةِ اللَّحَظَاتِ الَّتِي تُشَارِكُهَا إِلَّا أَنْتَ وَأَصْدِقَاؤُكَ.';
 
   @override
-  String get onboardingFocusTitle => 'ركّز على مشاركة اللحظات';
+  String get onboardingFocusTitle => 'رَكِّزْ عَلَى مُشَارَكَةِ اللَّحَظَاتِ';
 
   @override
   String get onboardingFocusBody =>
-      'وداعًا للميزات التي تسبب الإدمان! صُمّم twonly لمشاركة اللحظات، بعيدًا عن المشتتات غير المفيدة والإعلانات.';
+      'وَدِّعِ الْمِيِّزَاتِ الَّتِي تُسَبِّبُ الإِدْمَانَ! أُنْشِئَ twonly لِمُشَارَكَةِ اللَّحَظَاتِ، بِعِيداً عَنِ التَّشْتِيتَاتِ غَيْرِ الضَّرُورِيَّةِ وَالإِعْلَانَاتِ.';
 
   @override
-  String get onboardingNotProductTitle => 'أنت لست المنتَج!';
+  String get onboardingNotProductTitle => 'أَنْتَ لَسْتَ الْمُنْتَجَ!';
 
   @override
   String get onboardingNotProductBody =>
-      'يُموَّل twonly من خلال اشتراك اختياري. لن تُباع بياناتك أبدًا.';
+      'يَتِمُّ تَمْوِيلُ twonly مِنْ خِلَالِ اشْتِرَاكٍ اخْتِيَارِيٍّ. لَنْ نَبِيعَ بَيَانَاتِكَ أَبَداً.';
 
   @override
-  String get registerUsernameSlogan => 'أنشئ حسابك';
+  String get registerUsernameSlogan => 'أَنْشِئْ حِسَابَكَ';
 
   @override
-  String get registerUsernameDecoration => 'اسم المستخدم';
+  String get registerUsernameDecoration => 'اِسْمُ المُسْتَخْدِمِ';
 
   @override
-  String get registerUsernameLimits => '3 أحرف على الأقل.';
+  String get registerUsernameLimits => '3 حُرُوفٍ عَلَى الأَقَلِّ.';
 
   @override
   String get registerProofOfWorkFailed =>
-      'حدثت مشكلة في اختبار التحقق. يُرجى المحاولة مرة أخرى.';
+      'حَدَثَتْ مُشْكِلَةٌ أَثْنَاءَ اخْتِبَارِ التَّحَقُّقِ مِنْ أَنَّكَ لَسْتَ رُوبُوتًا. يُرْجَى المُحَاوَلَةُ مَرَّةً أُخْرَى.';
 
   @override
-  String get registerSubmitButton => 'سجّل الآن!';
+  String get registerSubmitButton => 'سَجِّلْ الآنَ!';
 
   @override
-  String get chatsTapToSend => 'اضغط لإرسال صورتك الأولى';
+  String get chatsTapToSend => 'اِنْقُرْ لِإِرْسَالِ أَوَّلِ صُورَةٍ لَكَ';
 
   @override
-  String get cameraPreviewSendTo => 'إرسال إلى';
+  String get cameraPreviewSendTo => 'إِرْسَالٌ إِلَى';
 
   @override
   String get cameraPermissionsBody =>
-      'يحتاج twonly إلى الوصول إلى الكاميرا والميكروفون.';
+      'يَحْتَاجُ twonly إِلَى الوُصُولِ إِلَى الكَامِيرَا وَالمِيكْرُوفُونِ.';
 
   @override
-  String get cameraPermissionsRequestButton => 'طلب الأذونات';
+  String get cameraPermissionsRequestButton => 'طَلَبُ الأَذُونَاتِ';
 
   @override
-  String get shareImageTitle => 'مشاركة مع';
+  String get shareImageTitle => 'مُشَارَكَةٌ مَعَ';
 
   @override
-  String get shareImageBestFriends => 'أفضل الأصدقاء';
+  String get shareImageBestFriends => 'أَعَزُّ الأَصْدِقَاءِ';
 
   @override
-  String get shareImagePinnedContacts => 'المثبّتة';
+  String get shareImagePinnedContacts => 'جِهَاتُ الاِتِّصَالِ المُثَبَّتَةُ';
 
   @override
-  String get shareImagedEditorSendImage => 'إرسال';
+  String get shareImagedEditorSendImage => 'إِرْسَال';
 
   @override
-  String get shareImagedEditorShareWith => 'مشاركة مع';
+  String get shareImagedEditorShareWith => 'مُشَارَكَةٌ مَعَ';
 
   @override
-  String get shareImagedEditorSaveImage => 'حفظ';
+  String get shareImagedEditorSaveImage => 'حَفْظ';
 
   @override
-  String get shareImagedEditorSavedImage => 'تم الحفظ';
+  String get shareImagedEditorSavedImage => 'تَمَّ الحَفْظُ';
 
   @override
-  String get shareImageSearchAllContacts => 'البحث في جميع جهات الاتصال';
+  String get shareImageSearchAllContacts =>
+      'البَحْثُ فِي جَمِيعِ جِهَاتِ الاِتِّصَالِ';
 
   @override
-  String get startNewChatSearchHint => 'الاسم أو اسم المستخدم أو اسم المجموعة';
+  String get startNewChatSearchHint =>
+      'الاِسْمُ أَوِ اسْمُ المُسْتَخْدِمِ أَوِ اسْمُ المَجْمُوعَةِ';
 
   @override
-  String get shareImagedSelectAll => 'تحديد الكل';
+  String get shareImagedSelectAll => 'تَحْدِيدُ الكُلِّ';
 
   @override
-  String get startNewChatTitle => 'اختر جهة اتصال';
+  String get startNewChatTitle => 'اِخْتِيَارُ جِهَةِ الاِتِّصَالِ';
 
   @override
-  String get startNewChatNewContact => 'جهة اتصال جديدة';
+  String get startNewChatNewContact => 'جِهَةُ اتِّصَالٍ جَدِيدَةٌ';
 
   @override
-  String get shareImageAllUsers => 'جميع جهات الاتصال';
+  String get shareImageAllUsers => 'جَمِيعُ جِهَاتِ الاِتِّصَالِ';
 
   @override
-  String get shareImageShowArchived => 'إظهار المستخدمين المؤرشفين';
+  String get shareImageShowArchived =>
+      'إِظْهَارُ المُسْتَخْدِمِينَ المُؤَرْشَفِينَ';
 
   @override
-  String get shareImageSendToWidget => 'إرسال إلى أداة الشاشة الرئيسية';
+  String get shareImageSendToWidget =>
+      'إِرْسَالٌ إِلَى أَدَاةِ الشَّاشَةِ الرَّئِيسِيَّةِ';
 
   @override
-  String get shareImageWidgetExplainerTitle => 'إرسال إلى أداة';
+  String get shareImageWidgetExplainerTitle => 'إِرْسَالٌ إِلَى أَدَاةٍ';
 
   @override
   String get shareImageWidgetExplainerBody =>
-      'يُرسل الصورة مباشرةً إلى أدوات الشاشة الرئيسية لدى أصدقائك. لا يمكن اختيار سوى الأصدقاء الذين يسمحون بذلك.';
+      'يُرْسِلُ الصُّورَةَ مُبَاشَرَةً إِلَى أَدَوَاتِ الشَّاشَةِ الرَّئِيسِيَّةِ لِأَصْدِقَائِكَ وَيُمْكِنُكَ تَحْدِيدُ الأَصْدِقَاءِ الَّذِينَ سَمَحُوا بِذَلِكَ فَقَطْ.';
 
   @override
-  String get shareImageWidgetExplainerDismiss => 'فهمت';
+  String get shareImageWidgetExplainerDismiss => 'فَهِمْتُ';
 
   @override
-  String get searchUsernameInput => 'اسم المستخدم';
+  String get searchUsernameInput => 'اِسْمُ المُسْتَخْدِمِ';
 
   @override
-  String get addFriendTitle => 'إضافة أصدقاء';
+  String get addFriendTitle => 'إِضَافَةُ الأَصْدِقَاءِ';
 
   @override
-  String get searchUserNamePending => 'الطلب قيد الانتظار';
+  String get searchUserNamePending => 'الطَّلَبُ قَيْدُ الاِنْتِظَارِ';
 
   @override
-  String get searchUsernameNotFound => 'اسم المستخدم غير موجود';
+  String get searchUsernameNotFound =>
+      'لَمْ يَتِمَّ العُثُورُ عَلَى اسْمِ المُسْتَخْدِمِ';
 
   @override
-  String get searchUsernameNewFollowerTitle => 'الطلبات المفتوحة';
+  String get searchUsernameNewFollowerTitle => 'الطَّلَبَاتُ المَفْتُوحَةُ';
 
   @override
-  String get chatListDetailInput => 'اكتب رسالة';
+  String get chatListDetailInput => 'اُكْتُبْ رِسَالَةً';
 
   @override
-  String get userDeletedAccount => 'تم حذف حساب هذا المستخدم.';
+  String get userDeletedAccount => 'لَقَدْ حَذَفَ المُسْتَخْدِمُ حِسَابَهُ.';
 
   @override
-  String get contextMenuUserProfile => 'الملف الشخصي';
+  String get contextMenuUserProfile => 'المَلَفُّ الشَّخْصِيُّ';
 
   @override
-  String get contextMenuArchiveUser => 'أرشفة';
+  String get contextMenuArchiveUser => 'أَرْشَفَة';
 
   @override
-  String get contextMenuUndoArchiveUser => 'إلغاء الأرشفة';
+  String get contextMenuUndoArchiveUser => 'إِلْغَاءُ الأَرْشَفَةِ';
 
   @override
-  String get contextMenuOpenChat => 'فتح المحادثة';
+  String get contextMenuOpenChat => 'فَتْحُ المُحَادَثَةِ';
 
   @override
-  String get contextMenuPin => 'تثبيت';
+  String get contextMenuPin => 'تَثْبِيت';
 
   @override
-  String get contextMenuUnpin => 'إلغاء التثبيت';
+  String get contextMenuUnpin => 'إِلْغَاءُ التَّثْبِيتِ';
 
   @override
-  String get contextMenuViewAgain => 'عرض مرة أخرى';
+  String get contextMenuViewAgain => 'عَرْضٌ مَرَّةً أُخْرَى';
 
   @override
-  String get mediaViewerAuthReason => 'يُرجى المصادقة لعرض رسالة twonly هذه!';
+  String get mediaViewerAuthReason =>
+      'يُرْجَى المُصَادَقَةُ لِرُؤْيَةِ هَذَا twonly!';
 
   @override
-  String get mediaViewerTwonlyTapToOpen => 'اضغط لفتح رسالة twonly!';
+  String get mediaViewerTwonlyTapToOpen =>
+      'اِنْقُرْ لِفَتْحِ twonly الخَاصِّ بِكَ!';
 
   @override
-  String get messageSendState_Received => 'تم الاستلام';
+  String get messageSendState_Received => 'تَمَّ الاِسْتِلَامُ';
 
   @override
-  String get messageSendState_Opened => 'تم الفتح';
+  String get messageSendState_Opened => 'تَمَّ الفَتْحُ';
 
   @override
-  String get messageSendState_Send => 'تم الإرسال';
+  String get messageSendState_Send => 'تَمَّ الإِرْسَالُ';
 
   @override
-  String get messageSendState_Delivered => 'تم الاستلام';
+  String get messageSendState_Delivered => 'تَمَّ التَّسْلِيمُ';
 
   @override
-  String get messageSendState_Sending => 'جارٍ الإرسال';
+  String get messageSendState_Sending => 'جَارٍ الإِرْسَالُ';
 
   @override
-  String get messageSendState_TapToLoad => 'اضغط للتحميل';
+  String get messageSendState_TapToLoad => 'اِنْقُرْ لِلتَّحْمِيلِ';
 
   @override
-  String get messageSendState_Loading => 'جارٍ التنزيل';
+  String get messageSendState_Loading => 'جَارٍ التَّنْزِيلُ';
 
   @override
-  String get messageStoredInGallery => 'حُفظت في المعرض';
+  String get messageStoredInGallery => 'مَحْفُوظٌ فِي مَعْرِضِ الصُّوَرِ';
 
   @override
-  String get messageReopened => 'أُعيد فتحها';
+  String get messageReopened => 'تَمَّتْ إِعَادَةُ الفَتْحِ';
 
   @override
-  String get imageEditorDrawOk => 'اعتماد الرسم';
+  String get imageEditorDrawOk => 'اعْتِمَادُ الرَّسْمِ';
 
   @override
-  String get settingsTitle => 'الإعدادات';
+  String get settingsTitle => 'الإِعْدَادَاتُ';
 
   @override
-  String get settingsChats => 'المحادثات';
+  String get settingsChats => 'المُحَادَثَاتُ';
 
   @override
-  String get settingsPreSelectedReactions => 'رموز التفاعل المحددة مسبقًا';
+  String get settingsPreSelectedReactions =>
+      'رُمُوزُ التَّفَاعُلِ المُحَدَّدَةُ مُسْبَقاً';
 
   @override
   String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle =>
-      'تمييز المكررات كمفتوحة';
+      'تَمْيِيزُ المُكَرَّرِ عَلَى أَنَّهُ مَفْتُوحٌ';
 
   @override
   String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle =>
-      'إذا استلمت الوسائط نفسها في عدة محادثات، فإن فتحها في إحداها يميّزها كمفتوحة في البقية.';
+      'إِذَا تَلَقَّيْتَ نَفْسَ الوَسَائِطِ فِي عِدَّةِ مُحَادَثَاتٍ، فَإِنَّ فَتْحَهَا فِي إِحْدَاهَا يُمَيِّزُهَا كَمَفْتُوحَةٍ فِي البَقِيَّة.';
 
   @override
   String get settingsPreSelectedReactionsError =>
-      'يمكن اختيار 12 تفاعلًا كحد أقصى.';
+      'يُمْكِنُ تَحْدِيدُ 12 رَدَّ فِعْلٍ كَحَدٍّ أَقْصَى.';
 
   @override
-  String get settingsProfile => 'الملف الشخصي';
+  String get settingsProfile => 'المَلَفُّ الشَّخْصِيُّ';
 
   @override
-  String get settingsStorageData => 'الذكريات والتخزين';
+  String get settingsStorageData => 'الذِّكْرَيَاتُ وَالتَّخْزِينُ';
 
   @override
   String get memoryDetailsTitle => 'التفاصيل';
@@ -250,11 +258,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memoryDetailsOpenMap => 'فتح في الخريطة';
 
   @override
-  String get memoryLocationTitle => 'حفظ الموقع في الذكريات';
+  String get memoryLocationTitle => 'حَفْظُ المَوْقِعِ فِي الذِّكْرَيَاتِ';
 
   @override
   String get memoryLocationSubtitle =>
-      'إحداثيات الالتقاط للذكريات وللتصدير إلى المعرض. لا تُرسل هذه الإحداثيات أبدًا إلى جهات الاتصال.';
+      'المَوْقِعُ لِلذِّكْرَيَاتِ وَتَصْدِيرِ الصُّوَرِ إِلَى مَعْرِضِ الصُّوَرِ. لَنْ يُرْسَلَ أَبَداً إِلَى جِهَاتِ الاِتِّصَالِ.';
 
   @override
   String get locationStickerSettingTitle => 'ملصق الموقع';
@@ -329,66 +337,72 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get memoryLocationPermissionDenied =>
-      'لم يُمنح إذن الوصول إلى الموقع الدقيق. سيبقى هذا الإعداد معطّلًا.';
+      'لَمْ يُمْنَحِ الوُصُولُ إِلَى المَوْقِعِ الدَّقِيقِ وَيَبْقَى الإِعْدَادُ مُعَطَّلاً.';
 
   @override
-  String get settingsStorageDataStoreInGTitle => 'الحفظ في المعرض';
+  String get settingsStorageDataStoreInGTitle =>
+      'الحَفْظُ فِي مَعْرِضِ الصُّوَرِ';
 
   @override
-  String get settingsStorageDataMediaAutoDownload => 'التنزيل التلقائي للوسائط';
+  String get settingsStorageDataMediaAutoDownload =>
+      'التَّنْزِيلُ التِّلْقَائِيُّ لِلْوَسَائِطِ';
 
   @override
-  String get settingsStorageDataAutoDownMobile => 'عند استخدام بيانات الجوال';
+  String get settingsStorageDataAutoDownMobile =>
+      'عِنْدَ اِسْتِخْدَامِ بَيَانَاتِ الهَاتِفِ المَحْمُولِ';
 
   @override
-  String get settingsStorageDataAutoDownWifi => 'عند استخدام Wi-Fi';
+  String get settingsStorageDataAutoDownWifi =>
+      'عِنْدَ اِسْتِخْدَامِ شَبَكَةِ الوَايْ فَاي';
 
   @override
-  String get settingsStorageManageTitle => 'إدارة التخزين';
+  String get settingsStorageManageTitle => 'إِدَارَةُ التَّخْزِينِ';
 
   @override
-  String get settingsStorageUsed => 'المساحة المستخدمة';
+  String get settingsStorageUsed => 'مَسَاحَةُ التَّخْزِينِ المُسْتَخْدَمَةُ';
 
   @override
-  String get settingsStorageImages => 'الصور';
+  String get settingsStorageImages => 'الصُّوَرُ';
 
   @override
-  String get settingsStorageVideos => 'مقاطع الفيديو';
+  String get settingsStorageVideos => 'المَرْئِيَّات';
 
   @override
-  String get settingsStorageGifs => 'صور GIF';
+  String get settingsStorageGifs => 'الصُّوَرُ المَتَحَرِّكَةُ';
 
   @override
-  String get settingsProfileCustomizeAvatar => 'خصّص صورتك الرمزية';
+  String get settingsProfileCustomizeAvatar =>
+      'تَخْصِيصُ الصُّورَةِ الرَّمْزِيَّةِ';
 
   @override
-  String get settingsProfileEditDisplayName => 'الاسم المعروض';
+  String get settingsProfileEditDisplayName => 'الاِسْمُ المَعْرُوضُ';
 
   @override
-  String get settingsProfileEditDisplayNameNew => 'اسم معروض جديد';
+  String get settingsProfileEditDisplayNameNew =>
+      'الاِسْمُ المَعْرُوضُ الجَدِيدُ';
 
   @override
-  String get settingsAccount => 'الحساب';
+  String get settingsAccount => 'الحِسَابُ';
 
   @override
-  String get settingsSubscription => 'الاشتراك';
+  String get settingsSubscription => 'الاِشْتِرَاكُ';
 
   @override
-  String get settingsAppearance => 'المظهر';
+  String get settingsAppearance => 'المَظْهَرُ';
 
   @override
-  String get settingsPrivacy => 'الخصوصية والأمان';
+  String get settingsPrivacy => 'الخُصُوصِيَّةُ وَالأَمَانُ';
 
   @override
-  String get settingsPrivacyBlockUsers => 'حظر جهات الاتصال';
+  String get settingsPrivacyBlockUsers => 'حَظْرُ جِهَاتِ الاِتِّصَالِ';
 
   @override
   String get settingsPrivacyBlockUsersDesc =>
-      'لن تتمكن جهات الاتصال المحظورة من التواصل معك. يمكنك إلغاء حظر أي جهة اتصال في أي وقت.';
+      'لَنْ تَسْتَطِيعَ جِهَاتُ الاِتِّصَالِ المَحْظُورَةُ التَّوَاصُلَ مَعَكَ وَيُمْكِنُكَ إِلْغَاءُ حَظْرِ أَيِّ جِهَةِ اتِّصَالٍ فِي أَيِّ وَقْتٍ.';
 
   @override
   String settingsPrivacyBlockUsersCount(Object len) {
-    return 'جهات الاتصال: $len';
+    return 'جِهَاتُ الاِتِّصَالِ المَحْظُورَةُ: $len';
   }
 
   @override
@@ -460,323 +474,332 @@ class AppLocalizationsAr extends AppLocalizations {
   String get privacyVisibilityEveryone => 'الجميع';
 
   @override
-  String get settingsNotification => 'الإشعارات';
+  String get settingsNotification => 'الإِشْعَارَاتُ';
 
   @override
-  String get settingsNotifyPermission => 'أذونات الإشعارات';
+  String get settingsNotifyPermission => 'أَذُونَاتُ الإِشْعَارَاتِ';
 
   @override
   String get settingsNotifyPermissionDesc =>
-      'افتح إعدادات النظام للسماح بالإشعارات الفورية.';
+      'اِفْتَحْ إِعْدَادَاتِ النِّظَامِ لِلسَّمَاحِ بِالإِشْعَارَاتِ الفَوْرِيَّةِ.';
 
   @override
-  String get settingsNotifyResetTitle => 'إعادة تعيين رموز الإشعارات';
+  String get settingsNotifyResetTitle =>
+      'إِعَادَةُ تَعْيِينِ رُمُوزِ الإِشْعَارَاتِ';
 
   @override
   String get settingsNotifyResetTitleSubtitle =>
-      'أعد تعيين رموز الإشعارات إذا واجهت مشكلات في استلام الإشعارات الفورية.';
+      'أَعِدْ تَعْيِينِ رُمُوزِ الإِشْعَارَاتِ الخَاصَّةِ بِكَ إِذَا كَانَتْ لَدَيْكَ مُشْكِلَةٌ فِي تَلَقِّي الإِشْعَارَاتِ الفَوْرِيَّةِ.';
 
   @override
   String get settingsNotifyResetTitleReset =>
-      'تمت إعادة تعيين رموز الإشعارات الخاصة بك.';
+      'تَمَّتْ إِعَادَةُ تَعْيِينِ رُمُوزِ الإِشْعَارَاتِ الخَاصَّةِ بِكَ.';
 
   @override
   String get settingsNotifyResetTitleResetDesc =>
-      'إذا استمرت المشكلة، يُرجى إرسال سجل تصحيح الأخطاء إلينا عبر الإعدادات > المساعدة حتى نتمكن من فحص المشكلة.';
+      'إِذَا اسْتَمَرَّتِ المُشْكِلَةُ يُرْجَى إِرْسَالُ سِجِلِّ التَّصْحِيحِ إِلَيْنَا عَبْرَ الإِعْدَادَاتِ > المُسَاعَدَةِ لِنَتَمَكَّنَ مِنْ فَحْصِ المَسْأَلَةِ.';
 
   @override
-  String get settingsHelp => 'المساعدة';
+  String get settingsHelp => 'المُسَاعَدَةُ';
 
   @override
-  String get settingsHelpDiagnostics => 'سجل التشخيص';
+  String get settingsHelpDiagnostics => 'سِجِلُّ التَّشْخِيصِ';
 
   @override
-  String get settingsHelpFAQ => 'الأسئلة الشائعة';
+  String get settingsHelpFAQ => 'الأَسْئِلَةُ الأَكْثَرُ تَكْرَاراً';
 
   @override
-  String get settingsHelpContactUs => 'اتصل بنا';
+  String get settingsHelpContactUs => 'التَّوَاصُلُ مَعَنَا';
 
   @override
-  String get settingsHelpVersion => 'الإصدار';
+  String get settingsHelpVersion => 'الإِصْدَارُ';
 
   @override
-  String get settingsHelpLicenses => 'التراخيص (الشيفرة المصدرية)';
+  String get settingsHelpLicenses => 'تَرَاخِيصُ الرَّمْزِ المَصْدَرِيِّ';
 
   @override
-  String get settingsHelpCredits => 'التراخيص (الصور)';
+  String get settingsHelpCredits => 'تَرَاخِيصُ الصُّوَرِ';
 
   @override
-  String get settingsHelpImprint => 'بيانات الناشر وسياسة الخصوصية';
+  String get settingsHelpImprint =>
+      'البَيَانَاتُ القَانُونِيَّةُ وَسِيَاسَةُ الخُصُوصِيَّةِ';
 
   @override
-  String get contactUsFaq => 'هل قرأت الأسئلة الشائعة؟';
+  String get contactUsFaq =>
+      'هَلْ قَرَأْتَ الأَسْئِلَةَ الأَكْثَرَ تَكْرَاراً حَتَّى الآنَ؟';
 
   @override
-  String get contactUsEmojis => 'كيف تشعر؟ (اختياري)';
+  String get contactUsEmojis => 'مَا شُعُورُكَ؟ (اِخْتِيَارِيٌّ)';
 
   @override
-  String get contactUsSelectOption => 'يُرجى اختيار أحد الخيارات';
+  String get contactUsSelectOption => 'يُرْجَى تَحْدِيدُ خِيَارٍ';
 
   @override
-  String get contactUsReason => 'أخبرنا عن سبب تواصلك معنا';
+  String get contactUsReason => 'يُرْجَى بَيَانُ سَبَبِ التَّوَاصُلِ';
 
   @override
   String get contactUsMessage =>
-      'إذا كنت ترغب في تلقي رد، يُرجى إضافة عنوان بريدك الإلكتروني حتى نتمكن من التواصل معك.';
+      'إِذَا كُنْتَ تَرْغَبُ فِي تَلَقِّي الإِجَابَةِ يُرْجَى إِضَافَةُ عُنْوَانِ بَرِيدِكَ الإِلِكْتُرُونِيِّ لِنَتَمَكَّنَ مِنَ التَّوَاصُلِ مَعَكَ.';
 
   @override
-  String get contactUsYourMessage => 'رسالتك';
+  String get contactUsYourMessage => 'رِسَالَتُكَ';
 
   @override
-  String get contactUsMessageTitle => 'أخبرنا بما يحدث';
+  String get contactUsMessageTitle => 'يُرْجَى بَيَانُ المَشْكَلَةِ';
 
   @override
-  String get contactUsReasonNotWorking => 'شيء ما لا يعمل';
+  String get contactUsReasonNotWorking => 'ثَمَّةَ خَلَلٌ مَا';
 
   @override
-  String get contactUsReasonFeatureRequest => 'طلب ميزة';
+  String get contactUsReasonFeatureRequest => 'طَلَبُ مِيَزَةٍ';
 
   @override
-  String get contactUsReasonQuestion => 'سؤال';
+  String get contactUsReasonQuestion => 'سُؤَالٌ';
 
   @override
-  String get contactUsReasonFeedback => 'ملاحظات';
+  String get contactUsReasonFeedback => 'آَرَاءٌ وَمُلاَحَظَاتٌ';
 
   @override
-  String get contactUsReasonOther => 'أخرى';
+  String get contactUsReasonOther => 'أُخْرَى';
 
   @override
-  String get contactUsIncludeLog => 'إرفاق سجل تصحيح الأخطاء';
+  String get contactUsIncludeLog => 'إِدْرَاجُ سِجِلِّ التَّصْحِيحِ';
 
   @override
-  String get contactUsWhatsThat => 'ما هذا؟';
+  String get contactUsWhatsThat => 'تَفَاصِيلُ سِجِلِّ التَّشْغِيلِ';
 
   @override
   String get contactUsLastWarning =>
-      'هذه هي المعلومات التي سيتم إرسالها إلينا. يُرجى مراجعتها ثم الضغط على إرسال.';
+      'هَذِهِ هِيَ المَعْلُومَاتُ الَّتِي سَتُرْسَلُ إِلَيْنَا، يُرْجَى التَّأَكُّدُ مِنْ صِحَّتِهَا ثُمَّ الضَّغْطُ عَلَى زِرِّ الإِرْسَالِ.';
 
   @override
-  String get contactUsSuccess => 'تم إرسال ملاحظاتك بنجاح!';
+  String get contactUsSuccess =>
+      'تَمَّ إِرْسَالُ الآَرَاءِ وَالمُلاَحَظَاتِ بِنَجَاحٍ!';
 
   @override
-  String get hideNewsIcon => 'إخفاء أيقونة الأخبار';
+  String get hideNewsIcon => 'إِخْفَاءُ أَيْقُونَةِ الأَخْبَارِ';
 
   @override
-  String get settingsHelpTerms => 'شروط الخدمة';
+  String get settingsHelpTerms => 'شُرُوطُ الخِدْمَةِ';
 
   @override
-  String get settingsAppearanceTheme => 'السمة';
+  String get settingsAppearanceTheme => 'المَظْهَرُ';
 
   @override
   String get settingsAppearanceLanguage => 'اللغة';
 
   @override
-  String get settingsAccountDeleteAccount => 'حذف الحساب';
+  String get settingsAccountDeleteAccount => 'حَذْفُ الحِسَابِ';
 
   @override
   String get settingsAccountDeleteAccountNoBallance =>
-      'بمجرد حذف حسابك، لا يمكن التراجع عن ذلك.';
+      'بِمُجَرَّدِ حَذْفِ حِسَابِكَ لَنْ تَتَمَكَّنَ مِنَ الرُّجُوعِ عَنْ هَذَا الإِجْرَاءِ.';
 
   @override
-  String get settingsAccountDeleteModalTitle => 'هل أنت متأكد؟';
+  String get settingsAccountDeleteModalTitle => 'هَلْ أَنْتَ مُتَأَكِّدٌ؟';
 
   @override
   String get settingsAccountDeleteModalBody =>
-      'سيتم حذف حسابك، ولن تكون هناك أي إمكانية لاستعادته.';
+      'سَيُحْذَفُ حِسَابُكَ وَلَنْ تَكُونَ هُنَاكَ أَيُّ فُرْصَةٍ لاِسْتِرْدَادِهِ.';
 
   @override
-  String get contactVerifyNumberTitle => 'التحقق من جهات الاتصال';
+  String get contactVerifyNumberTitle =>
+      'التَّحَقُّقُ مِنَ جِهَاتِ الإِتِّصَالِ';
 
   @override
   String verifyUserIdentity(Object username) {
-    return 'التحقق من هوية $username';
+    return 'التَّحَقُّقُ مِنْ هُوِيَّةِ $username';
   }
 
   @override
   String get contactVerifyNumberSubtitle =>
-      'تحقق من هوية جهات اتصالك للتأكد من أنك تراسل الشخص الصحيح.';
+      'تَحَقَّقْ مِنْ هُوِيَّةِ جِهَاتِ اتِّصَالِكَ لِلتَّأَكُّدِ مِنْ أَنَّكَ تُراَسِلُ الشَّخْصَ الصَّحِيحَ.';
 
   @override
-  String get inChatContactNotVerified => 'جهة الاتصال غير موثّقة.';
+  String get inChatContactNotVerified =>
+      'جِهَةُ الإِتِّصَالِ غَيْرُ مُتَحَقَّقٍ مِنْهَا.';
 
   @override
   String groupMembersNotVerified(Object count) {
-    return 'أعضاء غير موثّقين: $count.';
+    return 'عَدَدُ $count مِنْ الأَعْضَاءِ غَيْرُ مُتَحَقَّقٍ مِنْهُمْ.';
   }
 
   @override
-  String get userVerifiedTitle => 'تم التحقق من جهة الاتصال';
+  String get userVerifiedTitle => 'جِهَةُ الإِتِّصَالِ مُتَحَقَّقٌ مِنْهَا.';
 
   @override
   String scanUserQrCode(Object username) {
-    return 'امسح رمز QR الخاص بـ $username';
+    return 'مَسْحُ رَمْزِ الِاسْتِجَابَةِ السَّرِيعَةِ الخَاصِّ بِـ $username';
   }
 
   @override
-  String get openOwnQrCode => 'افتح رمز QR الخاص بك';
+  String get openOwnQrCode =>
+      'افْتَحْ رَمْزَ الِاسْتِجَابَةِ السَّرِيعَةِ الخَاصَّ بِكَ';
 
   @override
   String contactVerifiedBy(Object username) {
-    return 'تم التحقق بواسطة $username';
+    return 'تَمَّ التَّحَقُّقُ بِوَاسِطَةِ $username';
   }
 
   @override
   String get contactSharedByUnknown =>
-      'تمت مشاركتها من جهة اتصال موثّقة (اسم المستخدم غير متاح)';
+      'مُشَارَكٌ مِنْ جِهَةِ اتِّصَالٍ مُتَحَقَّقٍ مِنْهَا (اسْمُ المُسْتَخْدِمِ غَيْرُ مُتَاحٍ)';
 
   @override
-  String get verificationTypeQrScanned => 'لقد مسحت رمز QR الخاص بجهة الاتصال.';
+  String get verificationTypeQrScanned =>
+      'مَسَحْتَ رَمْزَ الِاسْتِجَابَةِ السَّرِيعَةِ الخَاصَّ بِهِ.';
 
   @override
   String verificationTypeSecretQrToken(Object username) {
-    return 'تم مسح رمز QR الخاص بك من قِبل $username.';
+    return 'قَامَ $username بِمَسْحِ رَمْزِ الِاسْتِجَابَةِ السَّرِيعَةِ الخَاصِّ بِكَ';
   }
 
   @override
-  String get verificationTypeLink => 'تم التحقق عبر رابط.';
+  String get verificationTypeLink => 'تَمَّ التَّحَقُّقُ عَبْرَ الرَّابِطِ.';
 
   @override
-  String get verificationTypeManual => 'تمت مقارنة رقم الأمان يدويًا.';
+  String get verificationTypeManual =>
+      'تَمَّتْ مُقَارَنَةُ رَقْمِ الأَمَانِ يَدَوِيًّا.';
 
   @override
   String get verificationTypeMigratedFromOldVersion =>
-      'تم النقل من إصدار قديم.';
+      'تَمَّ النَّقْلُ مِنَ الإِصْدَارِ القَدِيمِ.';
 
   @override
-  String get contactViewMessage => 'رسالة';
+  String get contactViewMessage => 'رِسَالَةٌ';
 
   @override
-  String get contactNickname => 'الاسم المستعار';
+  String get contactNickname => 'الاِسْمُ المُسْتَعَارُ';
 
   @override
-  String get contactNicknameNew => 'اسم مستعار جديد';
+  String get contactNicknameNew => 'الاِسْمُ المُسْتَعَارُ الجَدِيدُ';
 
   @override
-  String get contactBlock => 'حظر';
+  String get contactBlock => 'حَظْر';
 
   @override
-  String get contactTroubleshoot => 'استكشاف مشكلات الاتصال وإصلاحها';
+  String get contactTroubleshoot => 'اِسْتَكْشِفْ أَخْطَاءَ الاِتِّصَالِ';
 
   @override
   String contactResetSessionTitle(String username) {
-    return 'إعادة تعيين الاتصال مع $username؟';
+    return 'إِعَادَةُ تَعْيِينِ الاِتِّصَالِ مَعَ $username؟';
   }
 
   @override
   String get contactResetSessionBody =>
-      'سيزيل twonly الاتصال المشفّر الحالي وينشئ اتصالًا جديدًا. قد تُفقد الرسائل التي لا تزال قيد الإرسال.';
+      'سَيُزِيلُ twonly الاِتِّصَالَ المُشَفَّرَ الحَالِيَّ وَيُنشِئُ اتِّصَالًا جَدِيدًا. قَدْ تُفْقَدُ الرَّسَائِلُ الَّتِي هِيَ قَيْدَ الإِرْسَالِ حَالِيًّا.';
 
   @override
-  String get contactResetSessionConfirm => 'إعادة تعيين الاتصال';
+  String get contactResetSessionConfirm => 'إِعَادَةُ تَعْيِينِ الاِتِّصَالِ';
 
   @override
   String contactResetSessionSuccess(String username) {
-    return 'تمت إعادة إنشاء الاتصال المشفّر مع $username.';
+    return 'أُعِيدَ إِنْشَاءُ الاِتِّصَالِ المُشَفَّرِ مَعَ $username.';
   }
 
   @override
   String get contactResetSessionFailed =>
-      'تعذّرت إعادة تعيين الاتصال. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.';
+      'تَعَذَّرَ إِعَادَةُ تَعْيِينِ الاِتِّصَالِ. يُرْجَى التَّحَقُّقُ مِنِ اتِّصَالِكَ بِالإِنْتَرْنِتِ وَالمُحَاوَلَةُ مَرَّةً أُخْرَى.';
 
   @override
   String contactBlockTitle(Object username) {
-    return 'حظر $username';
+    return 'حَظْرُ $username';
   }
 
   @override
   String get contactBlockBody =>
-      'لن تتمكن جهة الاتصال المحظورة من إرسال رسائل إليك بعد الآن، وسيتم إخفاء ملفها الشخصي. لإلغاء حظر جهة اتصال، انتقل إلى الإعدادات > الخصوصية > جهات الاتصال المحظورة.';
+      'لَنْ تَتَمَكَّنَ جِهَةُ الاِتِّصَالِ المَحْظُورَةُ بَعْدَ الآنَ مِنْ إِرْسَالِ رَسَائِلَ إِلَيْكَ وَلَنْ يَعُودَ مَلَفُّهَا الشَّخْصِيُّ ظَاهِرًا لَكَ وَلِإِلْغَاءِ حَظْرِ جِهَةِ اتِّصَالٍ اِنْتَقِلْ إِلَى الإِعْدَادَاتِ > الخُصُوصِيَّةِ > جِهَاتِ الاِتِّصَالِ المَحْظُورَةِ.';
 
   @override
-  String get contactRemove => 'إزالة جهة الاتصال';
+  String get contactRemove => 'إِزَالَةُ جِهَةِ الاِتِّصَالِ';
 
   @override
   String contactRemoveTitle(Object username) {
-    return 'إزالة $username';
+    return 'إِزَالَةُ $username';
   }
 
   @override
   String get contactRemoveBody =>
-      'إزالة جهة الاتصال نهائيًا. إذا حاولت جهة الاتصال إرسال رسالة جديدة إليك، فسيتعيّن عليك قبولها مرة أخرى أولًا.';
+      'إِزَالَةُ جِهَةِ الاِتِّصَالِ نِهَائِيًّا. إِذَا حَاوَلَتْ جِهَةُ الاِتِّصَالِ إِرْسَالَ رِسَالَةٍ جَدِيدَةٍ إِلَيْكَ فَسَيَتَعَيَّنُ عَلَيْكَ قَبُولُ جِهَةِ الاِتِّصَالِ مِنْ جَدِيدٍ أَوَّلًا.';
 
   @override
-  String get undo => 'تراجع';
+  String get undo => 'تَرَاجُع';
 
   @override
-  String get redo => 'إعادة';
+  String get redo => 'إِعَادَةُ التَّنْفِيذِ';
 
   @override
-  String get next => 'التالي';
+  String get next => 'التَّالِي';
 
   @override
-  String get finishSetup => 'إكمال الإعداد';
+  String get finishSetup => 'إِكْمَالُ الإِعْدَادِ';
 
   @override
-  String get submit => 'إرسال';
+  String get submit => 'تَقْدِيم';
 
   @override
-  String get close => 'إغلاق';
+  String get close => 'إِغْلَاق';
 
   @override
-  String get disable => 'تعطيل';
+  String get disable => 'تَعْطِيل';
 
   @override
-  String get enable => 'تفعيل';
+  String get enable => 'تَفْعِيل';
 
   @override
-  String get cancel => 'إلغاء';
+  String get cancel => 'إِلْغَاء';
 
   @override
-  String get now => 'الآن';
+  String get now => 'الآنَ';
 
   @override
-  String get you => 'أنت';
+  String get you => 'أَنْتَ';
 
   @override
-  String get minutesShort => 'د';
+  String get minutesShort => 'دَقِيقَة';
 
   @override
-  String get image => 'صورة';
+  String get image => 'صُورَة';
 
   @override
-  String get video => 'فيديو';
+  String get video => 'مَقْطَعٌ مَرْئِيٌّ';
 
   @override
-  String get react => 'تفاعل';
+  String get react => 'تَفَاعُل';
 
   @override
-  String get reply => 'رد';
+  String get reply => 'رَدّ';
 
   @override
-  String get copy => 'نسخ';
+  String get copy => 'نَسْخ';
 
   @override
-  String get edit => 'تعديل';
+  String get edit => 'تَعْدِيل';
 
   @override
-  String get delete => 'حذف';
+  String get delete => 'حَذْف';
 
   @override
-  String get info => 'معلومات';
+  String get info => 'مَعْلُومَات';
 
   @override
-  String get ok => 'حسنًا';
+  String get ok => 'حَسَنًا';
 
   @override
   String get switchFrontAndBackCamera =>
-      'التبديل بين الكاميرا الأمامية والخلفية.';
+      'التَّبْدِيلُ بَيْنَ الكَامِيرَا الأَمَامِيَّةِ وَالكَامِيرَا الخَلْفِيَّةِ';
 
   @override
-  String get addTextItem => 'نص';
+  String get addTextItem => 'نَصّ';
 
   @override
-  String get protectAsARealTwonly => 'إرسال كرسالة twonly حقيقية!';
+  String get protectAsARealTwonly => 'أَرْسِلْ كَـtwonly حَقِيقِيٍّ!';
 
   @override
-  String get addDrawing => 'رسم';
+  String get addDrawing => 'رَسْم';
 
   @override
-  String get addEmoji => 'رمز تعبيري';
+  String get addEmoji => 'رَمْزٌ تَعْبِيرِيٌّ';
 
   @override
   String get drawingColorPicker => 'اختيار لون من الصورة';
@@ -792,204 +815,215 @@ class AppLocalizationsAr extends AppLocalizations {
   String get stickerCreating => 'جارٍ إنشاء الملصق…';
 
   @override
-  String get toggleFlashLight => 'تشغيل الفلاش أو إيقافه';
+  String get toggleFlashLight => 'تَشْغِيلُ مَصْبَاحِ الوَمْضِ وَإِيقَافُهُ';
 
   @override
   String userFound(Object username) {
-    return 'تم العثور على $username';
+    return 'تَمَّ العُثُورُ عَلَى $username';
   }
 
   @override
   String userFoundBody(String username) {
-    return 'هل تريد التواصل مع $username؟';
+    return 'هَلْ تُرِيدُ الاِتِّصَالَ بِـ$username؟';
   }
 
   @override
   String get errorInternalError =>
-      'الخادم غير متاح حاليًا. يُرجى المحاولة لاحقًا.';
+      'الخَادِمُ غَيْرُ مُتَاحٍ حَالِيًّا. يُرْجَى المُحَاوَلَةُ مَرَّةً أُخْرَى لَاحِقًا.';
 
   @override
   String get errorInvalidInvitationCode =>
-      'رمز الدعوة الذي أدخلته غير صالح. يُرجى التحقق من الرمز والمحاولة مرة أخرى.';
+      'رَمْزُ الدَّعْوَةِ الَّذِي أَدْخَلْتَهُ غَيْرُ صَالِحٍ. يُرْجَى التَّحَقُّقُ مِنَ الرَّمْزِ وَالمُحَاوَلَةُ مَرَّةً أُخْرَى.';
 
   @override
-  String get errorUsernameAlreadyTaken => 'اسم المستخدم مستخدم بالفعل.';
+  String get errorUsernameAlreadyTaken =>
+      'اِسْمُ المُسْتَخْدِمِ مُسْتَخْدَمٌ مُسْبَقًا.';
 
   @override
   String get errorUsernameNotValid =>
-      'اسم المستخدم الذي أدخلته لا يستوفي المعايير المطلوبة. يُرجى اختيار اسم مستخدم صالح.';
+      'اِسْمُ المُسْتَخْدِمِ الَّذِي أَدْخَلْتَهُ لَا يَسْتَوْفِي المَعَايِيرَ المَطْلُوبَةَ. يُرْجَى اِخْتِيَارُ اِسْمِ مُسْتَخْدِمٍ صَالِحٍ.';
 
   @override
   String get errorNotEnoughCredit => 'ليس لديك رصيد twonly كافٍ.';
 
   @override
-  String get errorVoucherInvalid => 'رمز القسيمة الذي أدخلته غير صالح.';
+  String get errorVoucherInvalid =>
+      'رَمْزُ القَسِيمَةِ الَّذِي أَدْخَلْتَهُ غَيْرُ صَالِحٍ.';
 
   @override
-  String get errorPlanLimitReached => 'لقد وصلت إلى حد خطتك. يُرجى ترقية خطتك.';
+  String get errorPlanLimitReached =>
+      'لَقَدْ بَلَغْتَ الحَدَّ الأَقْصَى لِخُطَّتِكَ. يُرْجَى تَرْقِيَةُ خُطَّتِكَ.';
 
   @override
-  String get errorPlanNotAllowed => 'هذه الميزة غير متاحة في خطتك الحالية.';
+  String get errorPlanNotAllowed =>
+      'هَذِهِ المِيْزَةُ غَيْرُ مُتَاحَةٍ فِي خُطَّتِكَ الحَالِيَّةِ.';
 
   @override
   String get errorPlanUpgradeNotYearly =>
-      'يجب دفع قيمة ترقية الخطة سنويًا، لأن الخطة الحالية تُدفع سنويًا أيضًا.';
+      'يَجِبُ دَفْعُ تَرْقِيَةِ الخُطَّةِ سَنَوِيًّا، لِأَنَّ الخُطَّةَ الحَالِيَّةَ تُفْرَضُ رُسُومُهَا سَنَوِيًّا أَيْضًا.';
 
   @override
   String upgradeToPaidPlanButton(Object planId, Object sufix) {
-    return 'الترقية إلى $planId$sufix';
+    return 'التَّرْقِيَةُ إِلَى $planId $sufix';
   }
 
   @override
-  String get partOfPaidPlanFrom => 'ضمن الخطة المدفوعة لـ';
+  String get partOfPaidPlanFrom => 'ضِمْنَ الخُطَّةِ المَدْفُوعَةِ لِـ';
 
   @override
-  String get subscriptionCurrentPlanBadge => 'الحالية';
+  String get subscriptionCurrentPlanBadge => 'الحَالِيَّة';
 
   @override
-  String get year => 'سنة';
+  String get year => 'سَنَة';
 
   @override
-  String get yearly => 'سنويًا';
+  String get yearly => 'سَنَوِيّ';
 
   @override
-  String get month => 'شهر';
+  String get month => 'شَهْر';
 
   @override
-  String get monthly => 'شهريًا';
+  String get monthly => 'شَهْرِيّ';
 
   @override
-  String get proFeature2 => 'مستخدم Plus إضافي واحد';
+  String get proFeature2 =>
+      'مُسْتَخْدِمٌ إِضَافِيٌّ وَاحِدٌ مِنْ مُشْتَرِكِي Plus';
 
   @override
-  String get proFeature3 => 'مساحة 25 GB لتخزين الذكريات';
+  String get proFeature3 =>
+      '25 غِيغَابَايْتَ مِنْ سِعَةِ تَخْزِينِ الذِّكْرَيَاتِ';
 
   @override
-  String get proFeature4 => 'استعادة الشعلات';
+  String get proFeature4 => 'اِسْتِعَادَةُ سِلْسِلَةِ التَّوَاصُلِ';
 
   @override
-  String get familyFeature2 => '4 مستخدمين Plus إضافيين';
+  String get familyFeature2 =>
+      '4 مُسْتَخْدِمِينَ إِضَافِيِّينَ مِنْ مُشْتَرِكِي Plus';
 
   @override
-  String get familyFeature3 => 'مساحة 50 GB لتخزين الذكريات';
+  String get familyFeature3 =>
+      '50 غِيغَابَايْتَ مِنْ سِعَةِ تَخْزِينِ الذِّكْرَيَاتِ';
 
   @override
-  String get familyFeature4 => 'استعادة الشعلات';
+  String get familyFeature4 => 'اِسْتِعَادَةُ سِلْسِلَةِ التَّوَاصُلِ';
 
   @override
-  String get freeFeature1 => 'رفع 10 ملفات وسائط يوميًا';
+  String get freeFeature1 => '10 مَلَفَّاتِ وَسَائِطٍ مَرْفُوعَةٍ يَوْمِيًّا';
 
   @override
-  String get plusFeature2 => 'ميزات إضافية (قريبًا)';
+  String get manageAdditionalUsers =>
+      'إِدَارَةُ المُسْتَخْدِمِينَ الإِضَافِيِّينَ';
 
   @override
-  String get manageAdditionalUsers => 'إدارة المستخدمين الإضافيين';
+  String get open => 'فَتْح';
 
   @override
-  String get open => 'فتح';
+  String get buy => 'شِرَاء';
 
   @override
-  String get buy => 'شراء';
+  String get autoRenewal => 'التَّجْدِيدُ التِّلْقَائِيُّ';
 
   @override
-  String get autoRenewal => 'التجديد التلقائي';
+  String get additionalUsersList => 'مُسْتَخْدِمُوكَ الإِضَافِيُّونَ';
 
   @override
-  String get additionalUsersList => 'مستخدموك الإضافيون';
+  String get galleryExportSuccess =>
+      'تَمَّ الحَفْظُ فِي مَعْرِضِ الصُّوَرِ بِنَجَاحٍ.';
 
   @override
-  String get galleryExportSuccess => 'تم الحفظ في المعرض بنجاح.';
-
-  @override
-  String get galleryCancel => 'إلغاء';
+  String get galleryCancel => 'إِلْغَاء';
 
   @override
   String get memoriesEmpty =>
-      'بمجرد حفظ الصور أو مقاطع الفيديو، ستظهر هنا في ذكرياتك.';
+      'بِمُجَرَّدِ حَفْظِكَ لِلصُّوَرِ أَوْ مَقَاطِعِ المَرْئِيَّاتِ سَتَجِدُهَا هُنَا فِي ذِكْرَيَاتِكَ.';
 
   @override
-  String get deleteTitle => 'هل أنت متأكد؟';
+  String get deleteTitle => 'هَلْ أَنْتَ مُتَأَكِّدٌ؟';
 
   @override
-  String get deleteOkBtnForAll => 'حذف لدى الجميع';
+  String get deleteOkBtnForAll => 'حَذْفٌ لِلْجَمِيعِ';
 
   @override
   String memoriesDeleteSnackbarSuccess(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'تم حذف $count عنصر بنجاح',
-      many: 'تم حذف $count عنصرًا بنجاح',
-      few: 'تم حذف $count عناصر بنجاح',
-      two: 'تم حذف عنصرين بنجاح',
-      one: 'تم حذف عنصر واحد بنجاح',
+      other: 'تَمَّ حَذْفُ $count عُنْصُرٍ بِنَجَاحٍ',
+      many: 'تَمَّ حَذْفُ $count عُنْصُرًا بِنَجَاحٍ',
+      few: 'تَمَّ حَذْفُ $count عَنَاصِرَ بِنَجَاحٍ',
+      two: 'تَمَّ حَذْفُ عُنْصُرَيْنِ بِنَجَاحٍ',
+      one: 'تَمَّ حَذْفُ عُنْصُرٍ وَاحِدٍ بِنَجَاحٍ',
     );
     return '$_temp0';
   }
 
   @override
-  String get deleteOkBtnForMe => 'حذف لديّ';
+  String get deleteOkBtnForMe => 'حَذْفٌ لِي';
 
   @override
-  String get deleteOnlyForMe => 'حذف لديّ فقط';
+  String get deleteOnlyForMe => 'حَذْفٌ لِي فَقَطْ';
 
   @override
-  String get deleteImageTitle => 'هل أنت متأكد؟';
+  String get deleteImageTitle => 'هَلْ أَنْتَ مُتَأَكِّدٌ؟';
 
   @override
   String deleteMemoriesBody(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'سيتم حذف $count صورة نهائيًا.',
-      many: 'سيتم حذف $count صورة نهائيًا.',
-      few: 'سيتم حذف $count صور نهائيًا.',
-      two: 'سيتم حذف الصورتين نهائيًا.',
-      one: 'سيتم حذف الصورة نهائيًا.',
+      other:
+          'سَتُحْذَفُ $count صُورَةٍ نِهَائِيًّا وَلَا يُمْكِنُ اسْتِرْدَادُهَا.',
+      many:
+          'سَتُحْذَفُ $count صُورَةً نِهَائِيًّا وَلَا يُمْكِنُ اسْتِرْدَادُهَا.',
+      few:
+          'سَتُحْذَفُ $count صُوَرٍ نِهَائِيًّا وَلَا يُمْكِنُ اسْتِرْدَادُهَا.',
+      two:
+          'سَتُحْذَفُ الصُّورَتَانِ نِهَائِيًّا وَلَا يُمْكِنُ اسْتِرْدَادُهُمَا.',
+      one: 'سَتُحْذَفُ الصُّورَةُ نِهَائِيًّا وَلَا يُمْكِنُ اسْتِرْدَادُهَا.',
     );
-    return '$_temp0';
+    return '‏$_temp0';
   }
 
   @override
-  String get deleteMemoriesLocalOnly => 'محليًا فقط';
+  String get deleteMemoriesLocalOnly => 'مَحَلِّيٌّ فَقَطْ';
 
   @override
-  String get deleteMemoriesCompletely => 'بالكامل';
+  String get deleteMemoriesCompletely => 'بِالْكَامِلِ';
 
   @override
   String memoriesSelectedCount(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count عنصر',
-      many: '$count عنصرًا',
-      few: '$count عناصر',
-      two: 'عنصران',
-      one: 'عنصر واحد',
+      other: '$count عُنْصُرٍ',
+      many: '$count عُنْصُرًا',
+      few: '$count عَنَاصِرَ',
+      two: 'عُنْصُرَانِ',
+      one: 'عُنْصُرٌ وَاحِدٌ',
     );
     return '$_temp0';
   }
 
   @override
-  String get memoriesMenuSelectAll => 'تحديد الكل';
+  String get memoriesMenuSelectAll => 'تَحْدِيدُ الكُلِّ';
 
   @override
-  String get memoriesMenuDeselectAll => 'إلغاء تحديد الكل';
+  String get memoriesMenuDeselectAll => 'إِلْغَاءُ تَحْدِيدِ الكُلِّ';
 
   @override
-  String get memoriesMenuExport => 'تصدير إلى المعرض';
+  String get memoriesMenuExport => 'تَصْدِيرٌ إِلَى مَعْرِضِ الصُّوَرِ';
 
   @override
-  String get memoriesMenuFavorite => 'إضافة إلى المفضلة';
+  String get memoriesMenuFavorite => 'إِضَافَةٌ إِلَى المُفَضَّلَةِ';
 
   @override
-  String get memoriesMenuDelete => 'حذف بالكامل';
+  String get memoriesMenuDelete => 'حَذْفٌ كَامِلٌ';
 
   @override
-  String get memoriesMenuDeleteLocal => 'حذف محليًا';
+  String get memoriesMenuDeleteLocal => 'حَذْفٌ مَحَلِّيٌّ';
 
   @override
-  String get settingsBackup => 'النسخ الاحتياطي';
+  String get settingsBackup => 'نُسْخَةٌ اِحْتِيَاطِيَّةٌ';
 
   @override
   String get backupNoPasswordRecovery =>
@@ -1010,7 +1044,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backupTwonlySafeLongDesc =>
-      'لا يستخدم twonly أي حسابات مستخدمين مركزية. عند التثبيت يتم إنشاء زوج مفاتيح يتكوّن من مفتاح عام ومفتاح خاص. يُخزَّن المفتاح الخاص على جهازك فقط لحمايته من الوصول غير المصرّح به. أما المفتاح العام فيُرفع إلى الخادم ويُربط باسم المستخدم الذي اخترته حتى يتمكن الآخرون من العثور عليك.\n\nيُنشئ النسخ الاحتياطي في twonly بانتظام نسخة احتياطية مشفّرة ومجهولة الهوية من مفتاحك الخاص مع جهات اتصالك وإعداداتك. يكفي اسم المستخدم وكلمة المرور التي اخترتها لاستعادة هذه البيانات على جهاز آخر.';
+      'لَا تَمْتَلِكُ twonly أَيَّ حِسَابَاتِ مُسْتَخْدِمِينَ مَرْكَزِيَّةٍ. يُنْشَأُ أَثْنَاءَ التَّثْبِيتِ مُفْتَاحٌ عَامٌّ وَمِفْتَاحٌ خَاصٌّ يُشَكِّلَانِ مَعًا زَوْجًا مِنَ المَفَاتِيحِ لَا يُخَزَّنُ المِفْتَاحُ الخَاصُّ إِلَّا عَلَى جِهَازِكَ لِحِمَايَتِهِ مِنَ الوُصُولِ غَيْرِ المُصَرَّحِ بِهِ. أَمَّا المِفْتَاحُ العَامُّ فَيُرْفَعُ إِلَى الخَادِمِ وَيُرْبَطُ بِاسْمِ المُسْتَخْدِمِ الَّذِي تَخْتَارُهُ لِيَتَمَكَّنَ الآخَرُونَ مِنَ العُثُورِ عَلَيْكَ.\n\nيُنْشِئُ twonly نُسَخًا اِحْتِيَاطِيَّةً مُشَفَّرَةً وَمَجْهُولَةَ الهُوِيَّةِ مِنْ مِفْتَاحِكَ الخَاصِّ إِلَى جَانِبِ جِهَاتِ اتِّصَالِكَ وَإِعْدَادَاتِكَ بِصُورَةٍ دَوْرِيَّةٍ وَيَكْفِي اِسْمُ المُسْتَخْدِمِ وَكَلِمَةُ المُرُورِ الَّتِي تَخْتَارُهَا لِاسْتِعَادَةِ هَذِهِ البَيَانَاتِ عَلَى جِهَازٍ آخَرَ.';
 
   @override
   String get backupSelectStrongPassword =>
@@ -1466,22 +1500,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteChatAfter => 'حذف المحادثة بعد...';
 
   @override
-  String get deleteChatAfterAnHour => 'ساعة واحدة.';
+  String get deleteChatAfterAnHour => 'سَاعَةٌ وَاحِدَةٌ.';
 
   @override
-  String get deleteChatAfterADay => 'يوم واحد.';
+  String get deleteChatAfterADay => 'يَوْمٌ وَاحِدٌ.';
 
   @override
-  String get deleteChatAfterAWeek => 'أسبوع واحد.';
+  String get deleteChatAfterAWeek => 'أُسْبُوعٌ وَاحِدٌ.';
 
   @override
-  String get deleteChatAfterAMonth => 'شهر واحد.';
+  String get deleteChatAfterAMonth => 'شَهْرٌ وَاحِدٌ.';
 
   @override
-  String get deleteChatAfterAYear => 'سنة واحدة.';
+  String get deleteChatAfterAYear => 'سَنَةٌ وَاحِدَةٌ.';
 
   @override
-  String get yourTwonlyScore => 'نقاط twonly الخاصة بك';
+  String get yourTwonlyScore => 'نُقَاطُكَ فِي twonly';
 
   @override
   String get registrationClosed =>
@@ -1512,12 +1546,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get contactAvatarTitle => 'الصورة الرمزية';
-
-  @override
-  String get contactAvatarPhoto => 'صورة رمزية فوتوغرافية';
-
-  @override
-  String get contactAvatarIllustrated => 'صورة رمزية مرسومة';
 
   @override
   String get customAvatarSvgTab => 'الصورة الرمزية العامة';
@@ -1807,7 +1835,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteUserErrorMessage =>
-      'لا يمكنك حذف جهة الاتصال إلا بعد حذف المحادثة المباشرة، وعندما لا تعود جهة الاتصال عضوًا في أي مجموعة.';
+      'لَا يُمْكِنُكَ إِزَالَةُ جِهَةِ الاِتِّصَالِ إِلَّا بَعْدَ حَذْفِ المُحَادَثَةِ المُبَاشِرَةِ وَعَدَمِ بَقَاءِ جِهَةِ الاِتِّصَالِ عُضْوًا فِي أَيِّ مَجْمُوعَةٍ.';
 
   @override
   String groupSizeLimitError(Object size) {
@@ -1839,7 +1867,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get verificationBadgeGeneralDesc =>
-      'تمنحك الشارة راحة البال بأنك تراسل *الشخص الصحيح* وأن *رسائلك تبقى سرية*.';
+      'تَمْنَحُكَ شَارَةُ التَّحَقُّقِ طُمَأْنِينَةً بِأَنَّكَ تُرَاسِلُ *الشَّخْصَ الصَّحِيحَ* وَأَنَّ *رَسَائِلَكَ تَبْقَى سِرِّيَّةً*.';
 
   @override
   String get verificationBadgeGreenDesc =>
@@ -2094,11 +2122,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String contactUserDiscoveryImagesLeft(Object imagesLeft, Object username) {
-    return 'الصور المتبقية قبل مشاركة أصدقائك مع $username: $imagesLeft.';
-  }
-
-  @override
   String userDiscoveryEnabledVersion(Object version) {
     return 'الإصدار: $version';
   }
@@ -2132,47 +2155,40 @@ class AppLocalizationsAr extends AppLocalizations {
       'يمكنك الآن مشاركة لحظاتك مع أصدقائك بأمان ودون مشتتات مثل الإعلانات.';
 
   @override
-  String get contactUserDiscoveryManualApprovalPending =>
-      'لم تتم الموافقة على جهة الاتصال يدويًا بعد.';
+  String get exampleUserName1 => 'جيمس';
 
   @override
-  String get contactUserDiscoveryManualApprovalApprove => 'موافقة';
+  String get exampleUserName2 => 'ماري';
 
   @override
-  String get exampleUserName1 => 'ahmed';
+  String get exampleUserName3 => 'جون';
 
   @override
-  String get exampleUserName2 => 'fatima';
+  String get exampleUserName4 => 'باتريشيا';
 
   @override
-  String get exampleUserName3 => 'omar';
+  String get exampleUserName5 => 'روبرت';
 
   @override
-  String get exampleUserName4 => 'layla';
+  String get exampleUserName6 => 'جينيفر';
 
   @override
-  String get exampleUserName5 => 'youssef';
+  String get exampleUserName7 => 'مايكل';
 
   @override
-  String get exampleUserName6 => 'mariam';
+  String get exampleUserName8 => 'ليندا';
 
   @override
-  String get exampleUserName7 => 'khaled';
+  String get exampleUserName9 => 'ويليام';
 
   @override
-  String get exampleUserName8 => 'nour';
+  String get exampleUserName10 => 'لينا';
 
   @override
-  String get exampleUserName9 => 'hassan';
+  String get exampleUserName11 => 'ديفيد';
 
   @override
-  String get exampleUserName10 => 'lena';
-
-  @override
-  String get exampleUserName11 => 'david';
-
-  @override
-  String get exampleJane => 'sara';
+  String get exampleJane => 'جين';
 
   @override
   String get back => 'رجوع';
@@ -2240,7 +2256,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get iosRecoveryPrompt =>
-      'اكتشفنا هوية twonly مؤمّنة سابقًا على هذا الجهاز. هل تريد تنزيل جهات اتصالك ورسائلك وإعداداتك واستعادتها تلقائيًا من أرشيفك السحابي؟';
+      'لَقَدْ اكْتَشَفْنَا هُوِيَّةَ twonly مُؤَمَّنَةً مُسْبَقًا عَلَى هَذَا الجِهَازِ. هَلْ تُرِيدُ تَنْزِيلَ جِهَاتِ اتِّصَالِكَ وَرَسَائِلِكَ وَإِعْدَادَاتِكَ وَاسْتِعَادَتَهَا تِلْقَائِيًّا مِنْ أَرْشِيفِكَ السَّحَابِيِّ؟';
 
   @override
   String iosRecoveryNoBackupFound(Object error) {
@@ -2316,10 +2332,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unverifiedWarningButton => 'تحقق الآن';
 
   @override
-  String get today => 'اليوم';
+  String get today => 'اليَوْم';
 
   @override
-  String get yesterday => 'أمس';
+  String get yesterday => 'أَمْسِ';
 
   @override
   String get galleryDisableWarningTitle => 'تعطيل الحفظ في المعرض؟';
@@ -3096,6 +3112,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get webxdcStoreFailed => 'تعذّرت إضافة التطبيق إلى هذه المحادثة.';
 
   @override
+  String get webxdcStoreDirectChatHint =>
+      'لا يمكن لعب بعض الألعاب إلا في المحادثات الفردية.';
+
+  @override
   String get webxdcStoreAlreadyAdded => 'مضاف بالفعل إلى هذه المحادثة';
 
   @override
@@ -3113,11 +3133,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'سيتم حذف كل ما حفظه هذا التطبيق على هذا الجهاز. يحتفظ الأعضاء الآخرون بنسختهم الخاصة.';
 
   @override
-  String get webxdcExternalLinkTitle => 'مغادرة twonly؟';
+  String get webxdcExternalLinkTitle => 'مُغَادَرَةُ twonly؟';
 
   @override
   String get webxdcExternalLinkBody =>
-      'يُفتح هذا الرابط خارج twonly، في متصفحك:';
+      'يَفْتَحُ هَذَا الرَّابِطُ خَارِجَ تَطْبِيقِ twonly فِي مُتَصَفِّحِكَ:';
 
   @override
   String get notificationStory => 'قصة جديدة.';
@@ -3225,13 +3245,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get stickerPickFromGallery => 'المعرض';
 
   @override
-  String get noStickersYet => 'أنشئ ملصقك الأول من صورة.';
-
-  @override
   String get stickerAdded => 'تم حفظ الملصق';
-
-  @override
-  String get stickerAlreadySaved => 'هذا الملصق محفوظ بالفعل';
 
   @override
   String get stickerCreateFailed => 'تعذّر إنشاء الملصق.';
@@ -3345,4 +3359,7 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get mediaSendFailed => 'تعذّر الإرسال';
 }

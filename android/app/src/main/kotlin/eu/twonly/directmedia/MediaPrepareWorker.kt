@@ -10,6 +10,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import eu.twonly.R
+import eu.twonly.NativeErrorReporting
 import org.json.JSONObject
 
 /**
@@ -19,32 +20,34 @@ import org.json.JSONObject
  * transfers the OS finished while nothing was listening, and drain the message
  * outbox. With one, it prepares that single send.
  *
- * The Rust call is synchronous and owns its own runtime, so this worker only
- * has to hold a foreground service around it — without one, Android stops long
- * background work, which is the exact failure this whole path exists to fix.
+ * The Rust call is synchronous and owns its own runtime. Foreground execution
+ * extends its budget when permitted; background retries can still run as
+ * ordinary WorkManager jobs when Android disallows starting the service.
  */
 class MediaPrepareWorker(
     appContext: Context,
     params: WorkerParameters,
 ) : Worker(appContext, params) {
     override fun doWork(): Result {
+        NativeErrorReporting.breadcrumb(applicationContext, "media_preparation_started")
         val mediaId = inputData.getString(MEDIA_ID)
         return try {
             if (mediaId != null) {
                 // Only a user-visible send justifies a foreground service; the
                 // periodic flush runs as ordinary background work.
-                setForegroundAsync(foregroundInfo()).get()
+                setForegroundWhenAllowed(foregroundInfo())
             }
+            if (isStopped) return Result.retry()
             val directory = applicationContext.filesDir.absolutePath
             val response = JSONObject(
                 NativeMediaPrepareBridge.run(directory, directory, mediaId),
             )
             if (response.optBoolean("ok", false)) {
-                // Rust performed a synchronous status pass before returning.
-                // Keep this WorkManager job as the durable owner until the
-                // server says the attachment is terminal; a Tokio task created
-                // inside NativeMediaPrepareBridge would die with that call.
-                if (response.optBoolean("pending_uploads", false)) {
+                // A bounded mailbox/outbox drain can also leave work behind.
+                // Its Tokio runtime ends with this call, so WorkManager owns
+                // the retry for messages as well as native media transfers.
+                if (response.optBoolean("pending_uploads", false) ||
+                    response.optBoolean("pending_messages", false)) {
                     Result.retry()
                 } else {
                     Result.success()
@@ -52,11 +55,13 @@ class MediaPrepareWorker(
             } else if (runAttemptCount < MAX_RETRIES) {
                 Result.retry()
             } else {
+                NativeErrorReporting.failure(applicationContext, "media_preparation")
                 // Giving up here loses nothing: the media row still says the
                 // send is unfinished, so the next flush picks it up again.
                 Result.failure()
             }
-        } catch (_: Throwable) {
+        } catch (error: Throwable) {
+            NativeErrorReporting.failure(applicationContext, "media_preparation", error)
             if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
         }
     }

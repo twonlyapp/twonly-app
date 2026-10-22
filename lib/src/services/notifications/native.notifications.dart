@@ -28,6 +28,9 @@ class NativeNotificationService {
 
   static final StreamController<NativeNotificationTap> _taps =
       StreamController<NativeNotificationTap>.broadcast();
+  static final StreamController<void> _arrivals =
+      StreamController<void>.broadcast();
+  static String? _visibleConversation;
 
   /// Lives for the whole process: the badge has to follow the outbox for as
   /// long as the app runs.
@@ -36,6 +39,10 @@ class NativeNotificationService {
 
   /// Emits metadata for every native notification tapped while the app runs.
   static Stream<NativeNotificationTap> get taps => _taps.stream;
+
+  /// Native delivery can happen in a separate process without a Rust commit
+  /// broadcast reaching Flutter. Reconcile the outbox after presentation too.
+  static Stream<void> get arrivals => _arrivals.stream;
 
   /// Messages and activity in a chat open their conversation. Incoming media,
   /// stories and contact requests stay on the chat overview.
@@ -55,11 +62,38 @@ class NativeNotificationService {
 
   static void init() {
     _startBadgeSync();
-    if (!Platform.isAndroid) return;
+    if (!Platform.isAndroid && !Platform.isIOS) return;
     _channel.setMethodCallHandler((call) async {
+      if (call.method == 'onNotificationArrived') {
+        _arrivals.add(null);
+        unawaited(refreshBadgeCount());
+        return;
+      }
       if (call.method != 'onNotificationTapped') return;
       _taps.add(_tapOf(call.arguments));
     });
+  }
+
+  /// Keeps native presentation from racing the open conversation's cleanup.
+  static Future<void> setConversationVisible(
+    String conversationId, {
+    required bool visible,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    if (visible) {
+      _visibleConversation = conversationId;
+    } else if (_visibleConversation == conversationId) {
+      _visibleConversation = null;
+    } else {
+      return;
+    }
+    try {
+      await _channel.invokeMethod<void>('setVisibleConversation', {
+        _conversationIdKey: _visibleConversation,
+      });
+    } catch (e) {
+      Log.error('Could not update the visible notification conversation: $e');
+    }
   }
 
   /// Keeps the iOS app icon badge in sync with the pending notification

@@ -29,6 +29,8 @@ class _MemoriesApi implements RustLibApi {
   late StackTrace stackTrace;
   int requests = 0;
   int confirmations = 0;
+  int thumbnailRefreshes = 0;
+  Future<void> Function(String mediaId)? refreshThumbnail;
   Uint8List? mediaKey;
   Completer<FrbMemoriesUploadUrls>? pendingRequest;
   Completer<void>? requestStarted;
@@ -88,6 +90,16 @@ class _MemoriesApi implements RustLibApi {
   }) async {}
 
   @override
+  Future<void> crateBridgeApiRustApiMediaStepFinished({
+    required String mediaId,
+    required String kind,
+  }) async {
+    expect(kind, 'thumbnail');
+    thumbnailRefreshes++;
+    await refreshThumbnail?.call(mediaId);
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -125,6 +137,8 @@ void main() {
       ..originalDate = null
       ..requests = 0
       ..confirmations = 0
+      ..thumbnailRefreshes = 0
+      ..refreshThumbnail = null
       ..mediaKey = null
       ..error = null
       ..pendingRequest = null
@@ -206,6 +220,57 @@ void main() {
     expect(service.currentProgress, isNull);
   });
 
+  test('repairs an existing oversized thumbnail before uploading', () async {
+    final media = MediaFileService(
+      (await database.mediaFilesDao.getMediaFileById(mediaId))!,
+    );
+    media.thumbnailPath.writeAsBytesSync(Uint8List(400001));
+    api.refreshThumbnail = (_) async {
+      expect(api.requests, 0);
+      await media.thumbnailPath.writeAsBytes([4, 5, 6]);
+    };
+    final uploads = <String>[];
+    final client = MockClient((request) async {
+      expect(api.thumbnailRefreshes, 1);
+      expect(request.bodyBytes.length, lessThan(400000));
+      uploads.add(request.url.path);
+      return http.Response('', 204);
+    });
+    addTearDown(client.close);
+
+    await http.runWithClient(service.checkUploads, () => client);
+
+    expect(uploads, ['/thumbnail', '/full']);
+    expect(api.confirmations, 1);
+    expect(await database.mediaFilesDao.getMemoriesToBackup(), isEmpty);
+    expect(media.storedPath.readAsBytesSync(), [1, 2, 3]);
+  });
+
+  test(
+    'failed thumbnail repair leaves backup queued without an S3 request',
+    () async {
+      final media = MediaFileService(
+        (await database.mediaFilesDao.getMediaFileById(mediaId))!,
+      );
+      media.thumbnailPath.writeAsBytesSync(Uint8List(400001));
+      final client = MockClient((_) async {
+        fail('An oversized thumbnail must not be sent to S3');
+      });
+      addTearDown(client.close);
+
+      await http.runWithClient(service.checkUploads, () => client);
+
+      expect(api.thumbnailRefreshes, 1);
+      expect(api.requests, 0);
+      expect(api.confirmations, 0);
+      expect(await database.mediaFilesDao.getMemoriesToBackup(), hasLength(1));
+      expect(
+        records.singleWhere((r) => r.error is StateError).error.toString(),
+        contains('400001 bytes'),
+      );
+    },
+  );
+
   test('concurrent saves use the shared backup worker', () async {
     final pending = Completer<FrbMemoriesUploadUrls>();
     final started = Completer<void>();
@@ -248,6 +313,7 @@ void main() {
       final record = records.singleWhere(
         (record) => record.message == 'Error backing up memory $mediaId',
       );
+      expect(record.level, Level.SHOUT);
       expect(record.error.toString(), contains('S3 upload failed: 500'));
       expect(record.stackTrace, isNotNull);
       expect(service.isProcessing, isFalse);
@@ -260,6 +326,73 @@ void main() {
       expect(await database.mediaFilesDao.getMemoriesToBackup(), isEmpty);
     },
   );
+
+  for (final uploadPath in ['/thumbnail', '/full']) {
+    for (final error in [
+      const SocketException('Failed host lookup: fsn1.your-objectstorage.com'),
+      const SocketException(
+        'Software caused connection abort',
+        osError: OSError('Software caused connection abort', 103),
+        port: 45090,
+      ),
+      http.ClientException(
+        'SocketException: Software caused connection abort '
+        '(OS Error: Software caused connection abort, errno = 103), '
+        'address = fsn1.your-objectstorage.com, port = 45090',
+        Uri.parse('https://fsn1.your-objectstorage.com/twonly'),
+      ),
+      http.ClientException(
+        'Software caused connection abort',
+        Uri.parse('https://fsn1.your-objectstorage.com/twonly'),
+      ),
+      http.ClientException(
+        'SocketException: Failed host lookup: fsn1.your-objectstorage.com',
+        Uri.parse('https://fsn1.your-objectstorage.com/twonly'),
+      ),
+      TimeoutException('Upload timed out'),
+    ]) {
+      test('$uploadPath $error warns and permits a successful retry', () async {
+        final stackTrace = StackTrace.fromString(
+          '#0      uploadToS3 (package:twonly/upload.dart:42:7)',
+        );
+        final client = MockClient((request) async {
+          if (request.url.path == uploadPath) {
+            Error.throwWithStackTrace(error, stackTrace);
+          }
+          return http.Response('', 204);
+        });
+        addTearDown(client.close);
+
+        await http.runWithClient(service.checkUploads, () => client);
+
+        final record = records.singleWhere(
+          (record) => record.message == 'Error backing up memory $mediaId',
+        );
+        expect(record.level, Level.WARNING);
+        expect(record.error, same(error));
+        expect(record.stackTrace.toString(), contains(stackTrace.toString()));
+        expect(records.where((r) => r.level >= Level.SEVERE), isEmpty);
+        expect(api.confirmations, 0);
+        expect(
+          (await database.mediaFilesDao.getMediaFileById(mediaId))!.cloudState,
+          CloudState.none,
+        );
+        expect(
+          await database.mediaFilesDao.getMemoriesToBackup(),
+          hasLength(1),
+        );
+        expect(service.isProcessing, isFalse);
+        expect(service.currentProgress, isNull);
+
+        final retryClient = MockClient((_) async => http.Response('', 204));
+        addTearDown(retryClient.close);
+        await http.runWithClient(service.checkUploads, () => retryClient);
+
+        expect(api.confirmations, 1);
+        expect(await database.mediaFilesDao.getMemoriesToBackup(), isEmpty);
+      });
+    }
+  }
 
   tearDown(() async {
     service.dispose();

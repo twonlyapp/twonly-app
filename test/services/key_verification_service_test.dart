@@ -97,27 +97,26 @@ void main() {
 
   group('KeyVerificationDao – Verification Tokens', () {
     test(
-      'insertVerificationToken stores token; getRecentVerificationTokens returns it',
+      'insertVerificationToken persists the token',
       () async {
         final token = Uint8List.fromList([1, 2, 3, 4, 5, 6, 7, 8]);
         await twonlyDB.keyVerificationDao.insertVerificationToken(token);
 
-        final tokens = await twonlyDB.keyVerificationDao
-            .getRecentVerificationTokens();
+        final tokens = await twonlyDB.select(twonlyDB.verificationTokens).get();
         expect(tokens.length, 1);
         expect(tokens.first.token, token);
       },
     );
 
-    test('multiple tokens are all returned when recent', () async {
+    test('multiple verification tokens are persisted', () async {
       final t1 = Uint8List.fromList(List.generate(16, (i) => i));
       final t2 = Uint8List.fromList(List.generate(16, (i) => i + 16));
       await twonlyDB.keyVerificationDao.insertVerificationToken(t1);
       await twonlyDB.keyVerificationDao.insertVerificationToken(t2);
 
-      final tokens = await twonlyDB.keyVerificationDao
-          .getRecentVerificationTokens();
+      final tokens = await twonlyDB.select(twonlyDB.verificationTokens).get();
       expect(tokens.length, 2);
+      expect(tokens.map((token) => token.token), unorderedEquals([t1, t2]));
     });
   });
 

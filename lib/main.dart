@@ -35,7 +35,6 @@ import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/webxdc/webxdc_host.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/sentry_event_filter.dart';
 import 'package:twonly/src/utils/startup_guard.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 
@@ -219,22 +218,6 @@ Future<StartupResult> _startup(SettingsChangeProvider settings) async {
 
     if (userExists) {
       unawaited(FcmNotificationService.initAfterUserLoaded());
-
-      if (userService.currentUser.allowErrorTrackingViaSentry) {
-        AppState.allowErrorTrackingViaSentry = true;
-        // Not awaited: error reporting does not have to be live before the
-        // first screen is.
-        unawaited(
-          SentryFlutter.init(
-            (options) => options
-              ..dsn =
-                  'https://6b24a012c85144c9b522440a1d17d01c@glitchtip.twonly.eu/4'
-              ..tracesSampleRate = 0.1
-              ..beforeSend = filterSentryEvent
-              ..enableAutoSessionTracking = false,
-          ),
-        );
-      }
 
       // Data migrations have to finish before any screen reads the database.
       await runMigrations();

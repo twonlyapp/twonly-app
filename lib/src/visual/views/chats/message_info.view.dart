@@ -147,6 +147,11 @@ class _MessageInfoViewState extends State<MessageInfoView> {
             t.$1.type == MessageActionType.openedAt &&
             t.$2.userId == groupMember.$2.userId,
       );
+      final sendFailed = messageActions.firstWhereOrNull(
+        (t) =>
+            t.$1.type == MessageActionType.sendFailed &&
+            t.$2.userId == groupMember.$2.userId,
+      );
       var actionTypeText = context.lang.waitingForInternet;
       var actionAt = widget.message.createdAt;
       if (ackByServer != null) {
@@ -160,6 +165,10 @@ class _MessageInfoViewState extends State<MessageInfoView> {
       if (openedByUser != null) {
         actionTypeText = context.lang.opened;
         actionAt = openedByUser.$1.actionAt;
+      }
+      if (sendFailed != null) {
+        actionTypeText = context.lang.mediaSendFailed;
+        actionAt = sendFailed.$1.actionAt;
       }
 
       columns.add(

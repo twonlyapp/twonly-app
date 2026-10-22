@@ -3,10 +3,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/release_notes.comp.dart';
 
+const releaseNotes060Version = '0.6.0';
+
 ReleaseNotesData releaseNotes060(BuildContext context) {
   final lang = context.lang;
   return ReleaseNotesData(
-    version: '0.6.0',
+    version: releaseNotes060Version,
     title: lang.releaseNotesTitle,
     introduction: lang.releaseNotesIntroduction,
     additionalChangesTitle: lang.releaseNotesAlsoImproved,

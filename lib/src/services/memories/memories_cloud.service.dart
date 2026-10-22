@@ -77,6 +77,10 @@ Chacha20 _mediaCipher() => BackgroundChacha.poly1305Aead(
 class MemoriesCloudService {
   static final Map<String, Mutex> _fileMutexes = {};
 
+  // Matches Rust's THUMBNAIL_MAX_BYTES and the server's thumbnail allowance.
+  // The POST policy reserves another 100 KB for encryption and upload overhead.
+  static const _maxThumbnailBytes = 300000;
+
   /// Cloud transfers allowed to run at once. Every gallery tile without a local
   /// file asks for one as it scrolls into view and nothing cancels the request
   /// when it scrolls back out, so without a ceiling a fast scroll leaves
@@ -256,8 +260,19 @@ class MemoriesCloudService {
 
       if (!ms.storedPath.existsSync()) return false;
 
-      if (!mediaFile.hasThumbnail) {
-        await MediaFileService(mediaFile).createThumbnail();
+      final thumbnail = ms.thumbnailPath;
+      if (!mediaFile.hasThumbnail ||
+          !thumbnail.existsSync() ||
+          thumbnail.lengthSync() == 0 ||
+          thumbnail.lengthSync() > _maxThumbnailBytes) {
+        await ms.createThumbnail();
+      }
+      if (thumbnail.existsSync() &&
+          thumbnail.lengthSync() > _maxThumbnailBytes) {
+        throw StateError(
+          'Thumbnail still exceeds $_maxThumbnailBytes bytes after regeneration '
+          '(${thumbnail.lengthSync()} bytes)',
+        );
       }
 
       final sizeBytes = ms.storedPath.lengthSync();
@@ -271,7 +286,7 @@ class MemoriesCloudService {
       } catch (error, stackTrace) {
         final message =
             'Could not get upload URLs for memory ${mediaFile.mediaId}';
-        if (_expectedUploadUrlFailure(error)) {
+        if (_expectedUploadFailure(error)) {
           // The row remains queued and the periodic worker retries it.
           Log.warn(message, error, stackTrace);
         } else {
@@ -334,11 +349,12 @@ class MemoriesCloudService {
         throw Exception('Server confirmation failed: ${confirmRes.error}');
       }
     } catch (error, stackTrace) {
-      Log.error(
-        'Error backing up memory ${mediaFile.mediaId}',
-        error: error,
-        stackTrace: stackTrace,
-      );
+      final message = 'Error backing up memory ${mediaFile.mediaId}';
+      if (_expectedUploadFailure(error)) {
+        Log.warn(message, error, stackTrace);
+      } else {
+        Log.error(message, error: error, stackTrace: stackTrace);
+      }
       await twonlyDB.mediaFilesDao.updateMedia(
         mediaFile.mediaId,
         const MediaFilesCompanion(
@@ -349,7 +365,9 @@ class MemoriesCloudService {
     }
   }
 
-  static bool _expectedUploadUrlFailure(Object error) {
+  static bool _expectedUploadFailure(Object error) {
+    // IOClient wraps socket failures (including connection aborts) in a
+    // ClientException. Keep these retryable failures out of error reporting.
     if (error is SocketException ||
         error is TimeoutException ||
         error is http.ClientException) {
@@ -403,7 +421,8 @@ class MemoriesCloudService {
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception(
-        'S3 upload failed: ${response.statusCode} - ${response.body}',
+        'S3 upload failed: ${response.statusCode} '
+        '(${encryptedBytes.length} encrypted bytes) - ${response.body}',
       );
     }
   }

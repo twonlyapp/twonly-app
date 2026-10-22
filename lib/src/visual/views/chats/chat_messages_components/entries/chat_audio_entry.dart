@@ -76,7 +76,13 @@ class _ChatAudioEntryState extends State<ChatAudioEntry> {
       return Container(); // media file was purged
     }
 
-    final showTime = info.displayTime || message.modifiedAt != null;
+    final sendFailed =
+        ChatMessageActionScope.maybeOf(
+          context,
+        )?.failedMessageIds.contains(message.messageId) ??
+        false;
+    final showTime =
+        info.displayTime || message.modifiedAt != null || sendFailed;
     final messageTime = showTime ? FriendlyMessageTime(message: message) : null;
     final isDownloaded =
         mediaService.mediaFile.downloadState == DownloadState.ready ||

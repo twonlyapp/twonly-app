@@ -13313,6 +13313,21 @@ class $WebxdcAppsTable extends WebxdcApps
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _directChatOnlyMeta = const VerificationMeta(
+    'directChatOnly',
+  );
+  @override
+  late final GeneratedColumn<bool> directChatOnly = GeneratedColumn<bool>(
+    'direct_chat_only',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("direct_chat_only" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     appId,
@@ -13329,6 +13344,7 @@ class $WebxdcAppsTable extends WebxdcApps
     proOnly,
     sortOrder,
     oneTime,
+    directChatOnly,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -13453,6 +13469,15 @@ class $WebxdcAppsTable extends WebxdcApps
         oneTime.isAcceptableOrUnknown(data['one_time']!, _oneTimeMeta),
       );
     }
+    if (data.containsKey('direct_chat_only')) {
+      context.handle(
+        _directChatOnlyMeta,
+        directChatOnly.isAcceptableOrUnknown(
+          data['direct_chat_only']!,
+          _directChatOnlyMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -13518,6 +13543,10 @@ class $WebxdcAppsTable extends WebxdcApps
         DriftSqlType.bool,
         data['${effectivePrefix}one_time'],
       )!,
+      directChatOnly: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}direct_chat_only'],
+      )!,
     );
   }
 
@@ -13552,6 +13581,7 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
   final bool proOnly;
   final int sortOrder;
   final bool oneTime;
+  final bool directChatOnly;
   const WebxdcApp({
     required this.appId,
     required this.version,
@@ -13567,6 +13597,7 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
     required this.proOnly,
     required this.sortOrder,
     required this.oneTime,
+    required this.directChatOnly,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -13589,6 +13620,7 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
     map['pro_only'] = Variable<bool>(proOnly);
     map['sort_order'] = Variable<int>(sortOrder);
     map['one_time'] = Variable<bool>(oneTime);
+    map['direct_chat_only'] = Variable<bool>(directChatOnly);
     return map;
   }
 
@@ -13610,6 +13642,7 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
       proOnly: Value(proOnly),
       sortOrder: Value(sortOrder),
       oneTime: Value(oneTime),
+      directChatOnly: Value(directChatOnly),
     );
   }
 
@@ -13633,6 +13666,7 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
       proOnly: serializer.fromJson<bool>(json['proOnly']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       oneTime: serializer.fromJson<bool>(json['oneTime']),
+      directChatOnly: serializer.fromJson<bool>(json['directChatOnly']),
     );
   }
   @override
@@ -13653,6 +13687,7 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
       'proOnly': serializer.toJson<bool>(proOnly),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'oneTime': serializer.toJson<bool>(oneTime),
+      'directChatOnly': serializer.toJson<bool>(directChatOnly),
     };
   }
 
@@ -13671,6 +13706,7 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
     bool? proOnly,
     int? sortOrder,
     bool? oneTime,
+    bool? directChatOnly,
   }) => WebxdcApp(
     appId: appId ?? this.appId,
     version: version ?? this.version,
@@ -13688,6 +13724,7 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
     proOnly: proOnly ?? this.proOnly,
     sortOrder: sortOrder ?? this.sortOrder,
     oneTime: oneTime ?? this.oneTime,
+    directChatOnly: directChatOnly ?? this.directChatOnly,
   );
   WebxdcApp copyWithCompanion(WebxdcAppsCompanion data) {
     return WebxdcApp(
@@ -13715,6 +13752,9 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
       proOnly: data.proOnly.present ? data.proOnly.value : this.proOnly,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       oneTime: data.oneTime.present ? data.oneTime.value : this.oneTime,
+      directChatOnly: data.directChatOnly.present
+          ? data.directChatOnly.value
+          : this.directChatOnly,
     );
   }
 
@@ -13734,7 +13774,8 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
           ..write('cachedAt: $cachedAt, ')
           ..write('proOnly: $proOnly, ')
           ..write('sortOrder: $sortOrder, ')
-          ..write('oneTime: $oneTime')
+          ..write('oneTime: $oneTime, ')
+          ..write('directChatOnly: $directChatOnly')
           ..write(')'))
         .toString();
   }
@@ -13755,6 +13796,7 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
     proOnly,
     sortOrder,
     oneTime,
+    directChatOnly,
   );
   @override
   bool operator ==(Object other) =>
@@ -13773,7 +13815,8 @@ class WebxdcApp extends DataClass implements Insertable<WebxdcApp> {
           other.cachedAt == this.cachedAt &&
           other.proOnly == this.proOnly &&
           other.sortOrder == this.sortOrder &&
-          other.oneTime == this.oneTime);
+          other.oneTime == this.oneTime &&
+          other.directChatOnly == this.directChatOnly);
 }
 
 class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
@@ -13791,6 +13834,7 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
   final Value<bool> proOnly;
   final Value<int> sortOrder;
   final Value<bool> oneTime;
+  final Value<bool> directChatOnly;
   final Value<int> rowid;
   const WebxdcAppsCompanion({
     this.appId = const Value.absent(),
@@ -13807,6 +13851,7 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
     this.proOnly = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.oneTime = const Value.absent(),
+    this.directChatOnly = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   WebxdcAppsCompanion.insert({
@@ -13824,6 +13869,7 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
     this.proOnly = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.oneTime = const Value.absent(),
+    this.directChatOnly = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : appId = Value(appId),
        version = Value(version),
@@ -13846,6 +13892,7 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
     Expression<bool>? proOnly,
     Expression<int>? sortOrder,
     Expression<bool>? oneTime,
+    Expression<bool>? directChatOnly,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -13863,6 +13910,7 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
       if (proOnly != null) 'pro_only': proOnly,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (oneTime != null) 'one_time': oneTime,
+      if (directChatOnly != null) 'direct_chat_only': directChatOnly,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -13882,6 +13930,7 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
     Value<bool>? proOnly,
     Value<int>? sortOrder,
     Value<bool>? oneTime,
+    Value<bool>? directChatOnly,
     Value<int>? rowid,
   }) {
     return WebxdcAppsCompanion(
@@ -13899,6 +13948,7 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
       proOnly: proOnly ?? this.proOnly,
       sortOrder: sortOrder ?? this.sortOrder,
       oneTime: oneTime ?? this.oneTime,
+      directChatOnly: directChatOnly ?? this.directChatOnly,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -13948,6 +13998,9 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
     if (oneTime.present) {
       map['one_time'] = Variable<bool>(oneTime.value);
     }
+    if (directChatOnly.present) {
+      map['direct_chat_only'] = Variable<bool>(directChatOnly.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -13971,6 +14024,7 @@ class WebxdcAppsCompanion extends UpdateCompanion<WebxdcApp> {
           ..write('proOnly: $proOnly, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('oneTime: $oneTime, ')
+          ..write('directChatOnly: $directChatOnly, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -27300,6 +27354,7 @@ typedef $$WebxdcAppsTableCreateCompanionBuilder =
       Value<bool> proOnly,
       Value<int> sortOrder,
       Value<bool> oneTime,
+      Value<bool> directChatOnly,
       Value<int> rowid,
     });
 typedef $$WebxdcAppsTableUpdateCompanionBuilder =
@@ -27318,6 +27373,7 @@ typedef $$WebxdcAppsTableUpdateCompanionBuilder =
       Value<bool> proOnly,
       Value<int> sortOrder,
       Value<bool> oneTime,
+      Value<bool> directChatOnly,
       Value<int> rowid,
     });
 
@@ -27397,6 +27453,11 @@ class $$WebxdcAppsTableFilterComposer
 
   ColumnFilters<bool> get oneTime => $composableBuilder(
     column: $table.oneTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get directChatOnly => $composableBuilder(
+    column: $table.directChatOnly,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -27479,6 +27540,11 @@ class $$WebxdcAppsTableOrderingComposer
     column: $table.oneTime,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get directChatOnly => $composableBuilder(
+    column: $table.directChatOnly,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$WebxdcAppsTableAnnotationComposer
@@ -27541,6 +27607,11 @@ class $$WebxdcAppsTableAnnotationComposer
 
   GeneratedColumn<bool> get oneTime =>
       $composableBuilder(column: $table.oneTime, builder: (column) => column);
+
+  GeneratedColumn<bool> get directChatOnly => $composableBuilder(
+    column: $table.directChatOnly,
+    builder: (column) => column,
+  );
 }
 
 class $$WebxdcAppsTableTableManager
@@ -27585,6 +27656,7 @@ class $$WebxdcAppsTableTableManager
                 Value<bool> proOnly = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> oneTime = const Value.absent(),
+                Value<bool> directChatOnly = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WebxdcAppsCompanion(
                 appId: appId,
@@ -27601,6 +27673,7 @@ class $$WebxdcAppsTableTableManager
                 proOnly: proOnly,
                 sortOrder: sortOrder,
                 oneTime: oneTime,
+                directChatOnly: directChatOnly,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -27619,6 +27692,7 @@ class $$WebxdcAppsTableTableManager
                 Value<bool> proOnly = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> oneTime = const Value.absent(),
+                Value<bool> directChatOnly = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WebxdcAppsCompanion.insert(
                 appId: appId,
@@ -27635,6 +27709,7 @@ class $$WebxdcAppsTableTableManager
                 proOnly: proOnly,
                 sortOrder: sortOrder,
                 oneTime: oneTime,
+                directChatOnly: directChatOnly,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

@@ -78,7 +78,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareImageBestFriends => 'Best friends';
 
   @override
-  String get shareImagePinnedContacts => 'Pinnded';
+  String get shareImagePinnedContacts => 'Pinned';
 
   @override
   String get shareImagedEditorSendImage => 'Send';
@@ -875,9 +875,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get freeFeature1 => '10 Media file uploads per day';
 
   @override
-  String get plusFeature2 => 'Additional features (coming-soon)';
-
-  @override
   String get manageAdditionalUsers => 'Manage additional users';
 
   @override
@@ -1496,12 +1493,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactAvatarTitle => 'Avatar';
 
   @override
-  String get contactAvatarPhoto => 'Photo avatar';
-
-  @override
-  String get contactAvatarIllustrated => 'Illustrated avatar';
-
-  @override
   String get customAvatarSvgTab => 'Public avatar';
 
   @override
@@ -2074,11 +2065,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String contactUserDiscoveryImagesLeft(Object imagesLeft, Object username) {
-    return '$imagesLeft more images are needed until your friends are shared with $username.';
-  }
-
-  @override
   String userDiscoveryEnabledVersion(Object version) {
     return 'Version: $version';
   }
@@ -2110,13 +2096,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingSetupCompleteDesc =>
       'You can now share your moments with your friends securely without distractions like ads.';
-
-  @override
-  String get contactUserDiscoveryManualApprovalPending =>
-      'Contact was not yet manually approved.';
-
-  @override
-  String get contactUserDiscoveryManualApprovalApprove => 'Approve';
 
   @override
   String get exampleUserName1 => 'james';
@@ -3053,6 +3032,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webxdcStoreFailed => 'The app could not be added to this chat.';
 
   @override
+  String get webxdcStoreDirectChatHint =>
+      'Some games can only be played in direct chats.';
+
+  @override
   String get webxdcStoreAlreadyAdded => 'Already added to this chat';
 
   @override
@@ -3182,13 +3165,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stickerPickFromGallery => 'Gallery';
 
   @override
-  String get noStickersYet => 'Create your first sticker from a photo.';
-
-  @override
   String get stickerAdded => 'Sticker saved';
-
-  @override
-  String get stickerAlreadySaved => 'This sticker is already saved';
 
   @override
   String get stickerCreateFailed => 'The sticker could not be created.';
@@ -3299,4 +3276,7 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get mediaSendFailed => 'Send failed';
 }

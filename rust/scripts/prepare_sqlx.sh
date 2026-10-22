@@ -16,6 +16,10 @@ for migration in "$rust_dir"/src/database/signal/migrations/*.sql; do
 done
 
 cd "$rust_dir"
-cargo sqlx prepare -- --all-targets
+# Allow preparing just the app library with --lib, without compiling API tests.
+if [ "$#" -eq 0 ]; then
+    set -- --all-targets
+fi
+SQLX_OFFLINE=false cargo sqlx prepare -- "$@"
 
 echo "Prepared SQLx schema database and offline query metadata."

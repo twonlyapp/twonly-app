@@ -24,6 +24,10 @@ import '../../mocks/user_config.dart';
 
 class _PickerApi implements RustLibApi {
   @override
+  Stream<List<String>> crateBridgeWrapperAppDatabaseRustAppDatabaseChanges() =>
+      const Stream.empty();
+
+  @override
   Future<FlameState> crateBridgeGroupsFlameState({
     required String groupId,
   }) async =>

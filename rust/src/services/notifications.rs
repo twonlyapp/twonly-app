@@ -7,6 +7,7 @@ use crate::api::proto::client::{self as proto, encrypted_content};
 use crate::api::runtime::ApiRuntime;
 use crate::bridge::InitConfig;
 use crate::context::Context;
+use crate::database::app::tables::{FlameState, Group};
 use crate::database::app::AppDatabase;
 use crate::error::Result;
 use crate::user_config::UserConfig;
@@ -216,6 +217,7 @@ pub struct NotificationAddition {
     pub notification_id: String,
     pub conversation_id: Option<String>,
     pub sender_id: i64,
+    /// Display name, with the current flame indicator only for direct chats.
     pub sender_name: String,
     pub title: String,
     pub body: String,
@@ -672,21 +674,48 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
     .fetch_one(&database.pool)
     .await?;
 
+    let flame_states = if rows.is_empty() {
+        HashMap::new()
+    } else {
+        Group::flame_states(
+            &database.pool,
+            Some(
+                rows.iter()
+                    .filter_map(|row| row.conversation_id.clone())
+                    .collect(),
+            ),
+        )
+        .await?
+    };
     let mut additions = Vec::with_capacity(rows.len());
-    for row in rows {
-        let title = row.sender_name.clone();
+    for mut row in rows {
+        let flame_state = row
+            .conversation_id
+            .as_ref()
+            .and_then(|id| flame_states.get(id))
+            .copied()
+            .unwrap_or_default();
+        let is_group = row.conversation_id.is_some() && row.is_direct_chat == 0;
+        let sender_name = if is_group {
+            row.conversation_name = row
+                .conversation_name
+                .map(|name| notification_display_name(&name, flame_state));
+            row.sender_name.clone()
+        } else {
+            notification_display_name(&row.sender_name, flame_state)
+        };
+        let title = sender_name.clone();
         let body = localized_body(locale, &row);
         let text_messages_body = matches!(row.kind.as_str(), "text" | "response").then(|| {
             translation(locale, "notificationTextMessages")
                 .replace("{inGroup}", &group_suffix(locale, &row))
         });
-        let is_group = row.conversation_id.is_some() && row.is_direct_chat == 0;
         // A direct chat's stored name may predate a contact profile update.
         // Every native presentation should use the current resolved name.
         let conversation_name = if is_group {
             row.conversation_name
         } else {
-            Some(row.sender_name.clone())
+            Some(sender_name.clone())
         };
         let avatar_path =
             match crate::services::avatars::ensure_contact_avatar_png(ctx, row.sender_id).await {
@@ -725,7 +754,7 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
             notification_id: row.notification_id,
             conversation_id: row.conversation_id,
             sender_id: row.sender_id,
-            sender_name: row.sender_name,
+            sender_name,
             title,
             body,
             text_messages_body,
@@ -746,6 +775,31 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
         badge_count,
         completed: true,
     })
+}
+
+/// Both native renderers use this for the direct-chat sender or group name.
+/// Match FlameCounterWidget, using the same derived state as the app so expired
+/// counters disappear even before the next media exchange updates the stored row.
+fn notification_display_name(name: &str, state: FlameState) -> String {
+    if state.counter < 1 {
+        return name.to_owned();
+    }
+    let emoji = if state.counter % 365 == 0 {
+        "🎂"
+    } else if state.counter == 100 {
+        "💯"
+    } else if state.is_best_friend {
+        "❤️‍🔥"
+    } else {
+        "🔥"
+    };
+    let counter = if state.counter == 100 {
+        String::new()
+    } else {
+        state.counter.to_string()
+    };
+    let expiry = if state.is_expiring { "⌛" } else { "" };
+    format!("{name} {counter}{emoji}{expiry}")
 }
 
 /// Drains the mailbox and returns the alert the native caller should render.
@@ -773,39 +827,32 @@ pub async fn process_wakeup(
 
     let deadline = std::time::Duration::from_millis(deadline_ms.clamp(1_000, 28_000));
 
-    let owns_connection = ctx.is_notification_runtime();
-    let completed = if owns_connection {
-        let generation = ctx.mailbox_generation();
-        ApiRuntime::connect(&ctx).await?;
-        tokio::time::timeout(deadline, ctx.wait_for_mailbox_after(generation))
-            .await
-            .is_ok()
-    } else {
-        // The generation has to be sampled before the snapshot. A commit that
-        // lands between the two is invisible to both the snapshot, which ran
-        // too early, and the wait, whose baseline already counts it — leaving
-        // an alert that is durable on disk stalled for the whole deadline.
-        let generation = ctx.incoming_generation();
-        let initial = pending_batch(&ctx, locale).await?;
-        if !initial.additions.is_empty() {
-            return Ok(initial);
-        }
-        // Flutter already owns the socket. Nudge the server to redeliver in
-        // case the push raced a drain that had already finished.
-        if let Ok(client) = ApiRuntime::client(&ctx).await {
-            client.request_catch_up().await;
-        }
-        tokio::time::timeout(deadline, ctx.wait_for_incoming_after(generation))
-            .await
-            .is_ok()
-    };
+    let completed = drain_wakeup_mailbox(&ctx, deadline).await?;
 
     // Give concurrently acknowledged batches a small window to commit their
     // durable notification rows before the native caller renders the result.
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     let mut batch = pending_batch(&ctx, locale).await?;
     batch.completed = completed;
+    tracing::info!(
+        completed,
+        additions = batch.additions.len(),
+        removals = batch.removals.len(),
+        "native push processing finished"
+    );
     Ok(batch)
+}
+
+async fn drain_wakeup_mailbox(ctx: &Arc<Context>, deadline: std::time::Duration) -> Result<bool> {
+    // Sample before connecting/nudging: even an empty mailbox can drain before
+    // connect returns. One incoming message is not proof that the drain ended.
+    let generation = ctx.mailbox_generation();
+    ApiRuntime::client(ctx).await?.catch_up_after_push().await?;
+    Ok(
+        tokio::time::timeout(deadline, ctx.wait_for_mailbox_after(generation))
+            .await
+            .is_ok(),
+    )
 }
 
 /// Settles what the wake-up still owes the app once its notification is on
@@ -852,6 +899,19 @@ pub async fn finalize_wakeup(deadline_ms: u64) -> Result<()> {
     }
 
     if owns_connection && ctx.is_notification_runtime() {
+        // Inbound handling schedules receipt delivery asynchronously. Even
+        // after the mailbox drained, its last flush may still own requests on
+        // this socket. Join it within the remaining notification budget.
+        match tokio::time::timeout(
+            remaining(),
+            crate::api::messages::incoming::messages::retransmit_queued_receipts_and_wait(&ctx),
+        )
+        .await
+        {
+            Ok(Ok(())) => {}
+            Ok(Err(error)) => tracing::warn!(%error, "notification receipt flush failed"),
+            Err(_) => tracing::info!("notification receipt flush window elapsed"),
+        }
         // Bounded on its own rather than out of what is left: closing costs a
         // round trip at most, and a server that never answers the handshake
         // must not hold the worker open. The socket dies with the process
@@ -1118,6 +1178,183 @@ pub(crate) fn notification_avatar_path(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn native_push_restores_a_stopped_shared_connection_and_waits_for_mailbox() -> Result<()>
+    {
+        use crate::api::runtime::ApiClient;
+        use crate::bridge::api::{ApiConfig, ApiConnectionState};
+        use std::sync::atomic::Ordering;
+        use std::time::Duration;
+
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        ApiRuntime::close(&ctx).await?;
+        // Reproduce the shared-process path: the context is not a dedicated
+        // notification runtime, and Flutter's cached reachability is offline.
+        assert!(!ctx.is_notification_runtime());
+        let client = ApiClient::new(
+            &ctx,
+            ApiConfig {
+                websocket_url: "ws://127.0.0.1:1".into(),
+                legacy_user_app_version: 0,
+                in_background: true,
+                can_use_login_token_for_auth: true,
+            },
+        );
+        *ctx.api_client.get().unwrap().write().await = client.clone();
+        client.set_network_available(false).await?;
+        ctx.mark_mailbox_drained(); // An old drain must not finish this wake-up.
+
+        let mut drain = Box::pin(drain_wakeup_mailbox(&ctx, Duration::from_secs(1)));
+        // Poll the worker until it waits for the server, without running the
+        // socket tasks. No external network or live server is needed.
+        tokio::select! {
+            biased;
+            result = &mut drain => panic!("mailbox completed before the server drained it: {result:?}"),
+            () = std::future::ready(()) => {}
+        }
+        assert!(client.ws_client.lock().await.is_some());
+        assert_eq!(*client.state.read().await, ApiConnectionState::Connecting);
+        assert!(client.network_available.load(Ordering::Acquire));
+        assert!(client.in_background.load(Ordering::Acquire));
+        assert!(client.requested_background.load(Ordering::Acquire));
+
+        // Empty mailboxes count as completed too; waiting for an incoming chat
+        // message used to make duplicate pushes time out and retry needlessly.
+        ctx.mark_mailbox_drained();
+        assert!(drain.await?);
+        client.close().await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn native_push_without_a_mailbox_drain_remains_retryable() -> Result<()> {
+        use crate::api::runtime::ApiClient;
+        use crate::bridge::api::{ApiConfig, ApiConnectionState};
+        use std::time::Duration;
+
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        ApiRuntime::close(&ctx).await?;
+        let client = ApiClient::new(
+            &ctx,
+            ApiConfig {
+                websocket_url: "ws://127.0.0.1:1".into(),
+                legacy_user_app_version: 0,
+                in_background: true,
+                can_use_login_token_for_auth: true,
+            },
+        );
+        *ctx.api_client.get().unwrap().write().await = client.clone();
+        // An inert transport keeps this timeout test entirely offline.
+        *client.ws_client.lock().await = Some(Arc::new(
+            stream_tungstenite::WebSocketClient::builder("ws://127.0.0.1:1").build(),
+        ));
+        client.set_state(ApiConnectionState::Authenticated).await;
+        ctx.mark_mailbox_drained();
+
+        assert!(!drain_wakeup_mailbox(&ctx, Duration::from_millis(10)).await?);
+        client.close().await;
+        Ok(())
+    }
+
+    #[test]
+    fn notification_names_match_the_app_flame_counter() {
+        for (counter, is_best_friend, is_expiring, expected) in [
+            (0, false, false, "Alice"),
+            (0, true, true, "Alice"),
+            (12, false, false, "Alice 12🔥"),
+            (12, false, true, "Alice 12🔥⌛"),
+            (12, true, false, "Alice 12❤️‍🔥"),
+            (12, true, true, "Alice 12❤️‍🔥⌛"),
+            (100, false, false, "Alice 💯"),
+            (100, true, true, "Alice 💯⌛"),
+            (365, true, false, "Alice 365🎂"),
+            (730, false, true, "Alice 730🎂⌛"),
+            (366, false, false, "Alice 366🔥"),
+        ] {
+            assert_eq!(
+                notification_display_name(
+                    "Alice",
+                    FlameState {
+                        counter,
+                        is_best_friend,
+                        is_expiring
+                    },
+                ),
+                expected,
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn notification_batches_put_flames_on_direct_senders_and_group_names() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let db = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id, username, display_name, nick_name) VALUES (7, 'alice', 'Alice', 'Ali')",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat, flame_counter) VALUES ('direct', 'Old name', 1, 12), ('group', 'Friends', 0, 12)",
+            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, kind, created_at) VALUES ('direct', 'image', 'direct', 7, 'image', 1), ('group', 'text', 'group', 7, 'text', 2), ('request', 'request', NULL, 7, 'contact_request', 3)",
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&db.pool).await?;
+        }
+
+        let today = crate::utils::start_of_local_day()?;
+        for (age_days, best_friend, expected, expected_group) in [
+            (0, false, "Ali 12🔥", "Friends 12🔥"),
+            (0, true, "Ali 12❤️‍🔥", "Friends 12🔥"),
+            (2, false, "Ali 12🔥⌛", "Friends 12🔥⌛"),
+            (3, false, "Ali", "Friends"),
+        ] {
+            let exchanged = today - age_days * 86_400 + 1;
+            sqlx::query(
+                "UPDATE groups SET last_message_send = ?, last_message_received = ?, last_flame_counter_change = ?, also_best_friend = ?, total_media_counter = 100 WHERE group_id = 'direct'",
+            )
+            .bind(exchanged)
+            .bind(exchanged)
+            .bind(exchanged)
+            .bind(best_friend)
+            .execute(&db.pool)
+            .await?;
+            sqlx::query(
+                "UPDATE groups SET last_message_send = ?, last_message_received = ?, last_flame_counter_change = ? WHERE group_id = 'group'",
+            )
+            .bind(exchanged)
+            .bind(exchanged)
+            .bind(exchanged)
+            .execute(&db.pool)
+            .await?;
+
+            let batch = pending_batch(&ctx, "en").await?;
+            assert_eq!(batch.additions.len(), 3);
+            let direct = &batch.additions[0];
+            assert_eq!(direct.sender_name, expected);
+            assert_eq!(direct.title, expected);
+            assert_eq!(direct.conversation_name.as_deref(), Some(expected));
+            assert_eq!(direct.body, "sent an image.");
+            assert_eq!(direct.event_id, "direct");
+            assert_eq!(direct.notification_id, "image");
+            let group = &batch.additions[1];
+            assert_eq!(group.sender_name, "Ali");
+            assert_eq!(group.title, "Ali");
+            assert_eq!(group.conversation_name.as_deref(), Some(expected_group));
+            assert_eq!(group.body, format!("sent a message in {expected_group}."));
+            assert_eq!(
+                group.text_messages_body.as_deref(),
+                Some(format!("sent {{count}} messages in {expected_group}.").as_str()),
+            );
+            assert_eq!(batch.additions[2].sender_name, "Ali");
+        }
+        Ok(())
+    }
 
     #[tokio::test]
     async fn deleting_messages_clears_badge_and_broadcasts_outbox_changes() -> Result<()> {
@@ -1815,7 +2052,11 @@ mod tests {
             sqlx::query_scalar("SELECT content FROM messages WHERE type = 'text'")
                 .fetch_all(&database.pool)
                 .await?;
-        assert_eq!(announcements, vec!["Anna played a move. Ben is on turn"; 3]);
+        assert_eq!(
+            announcements,
+            vec!["Anna played a move. Ben is on turn"; 2],
+            "only the latest announcement for each game stays in the chat",
+        );
         let batch = pending_batch(&ctx, "en").await?;
         assert_eq!(batch.additions.len(), 2);
         assert!(batch

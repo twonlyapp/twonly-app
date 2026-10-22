@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -60,51 +61,65 @@ void main() {
 
       // 2. Insert test messages:
       // Msg A: Unopened (openedByAll is null)
-      await twonlyDB.messagesDao.insertMessage(
-        MessagesCompanion.insert(
-          messageId: 'msg_a_unopened',
-          groupId: 'test_group',
-          type: 'text',
-          createdAt: Value(
-            deletionLimit.subtract(const Duration(minutes: 5)),
-          ), // older than deletion threshold
-        ),
-      );
+      await twonlyDB
+          .into(twonlyDB.messages)
+          .insert(
+            MessagesCompanion.insert(
+              messageId: 'msg_a_unopened',
+              groupId: 'test_group',
+              type: 'text',
+              createdAt: Value(
+                deletionLimit.subtract(const Duration(minutes: 5)),
+              ), // older than deletion threshold
+            ),
+          );
 
       // Msg B: Opened long ago (openedByAll is older than deletion threshold)
-      await twonlyDB.messagesDao.insertMessage(
-        MessagesCompanion.insert(
-          messageId: 'msg_b_opened_expired',
-          groupId: 'test_group',
-          type: 'text',
-          openedByAll: Value(
-            deletionLimit.subtract(const Duration(minutes: 5)),
-          ),
-          createdAt: Value(deletionLimit.subtract(const Duration(minutes: 30))),
-        ),
-      );
+      await twonlyDB
+          .into(twonlyDB.messages)
+          .insert(
+            MessagesCompanion.insert(
+              messageId: 'msg_b_opened_expired',
+              groupId: 'test_group',
+              type: 'text',
+              openedByAll: Value(
+                deletionLimit.subtract(const Duration(minutes: 5)),
+              ),
+              createdAt: Value(
+                deletionLimit.subtract(const Duration(minutes: 30)),
+              ),
+            ),
+          );
 
       // Msg C: Opened recently (openedByAll is newer than deletion threshold)
-      await twonlyDB.messagesDao.insertMessage(
-        MessagesCompanion.insert(
-          messageId: 'msg_c_opened_recent',
-          groupId: 'test_group',
-          type: 'text',
-          openedByAll: Value(deletionLimit.add(const Duration(minutes: 5))),
-          createdAt: Value(deletionLimit.subtract(const Duration(minutes: 10))),
-        ),
-      );
+      await twonlyDB
+          .into(twonlyDB.messages)
+          .insert(
+            MessagesCompanion.insert(
+              messageId: 'msg_c_opened_recent',
+              groupId: 'test_group',
+              type: 'text',
+              openedByAll: Value(deletionLimit.add(const Duration(minutes: 5))),
+              createdAt: Value(
+                deletionLimit.subtract(const Duration(minutes: 10)),
+              ),
+            ),
+          );
 
       // Msg D: Deleted from sender, older than threshold
-      await twonlyDB.messagesDao.insertMessage(
-        MessagesCompanion.insert(
-          messageId: 'msg_d_sender_deleted_expired',
-          groupId: 'test_group',
-          type: 'text',
-          isDeletedFromSender: const Value(true),
-          createdAt: Value(deletionLimit.subtract(const Duration(minutes: 5))),
-        ),
-      );
+      await twonlyDB
+          .into(twonlyDB.messages)
+          .insert(
+            MessagesCompanion.insert(
+              messageId: 'msg_d_sender_deleted_expired',
+              groupId: 'test_group',
+              type: 'text',
+              isDeletedFromSender: const Value(true),
+              createdAt: Value(
+                deletionLimit.subtract(const Duration(minutes: 5)),
+              ),
+            ),
+          );
 
       // Run purge
       await twonlyDB.messagesDao.purgeMessageTable();
@@ -124,6 +139,64 @@ void main() {
 
       // msg_d_sender_deleted_expired should be deleted because isDeletedFromSender is true and createdAt < deletionLimit
       expect(remainingIds.contains('msg_d_sender_deleted_expired'), isFalse);
+    },
+  );
+
+  test(
+    'group actions expire by age using each chat retention policy',
+    () async {
+      final now = DateTime.utc(2026, 10, 18, 12);
+      await withClock(Clock.fixed(now), () async {
+        for (final (groupId, hours, direct) in [
+          ('short', 2, false),
+          ('long', 4, false),
+          ('direct', 2, true),
+        ]) {
+          await twonlyDB.groupsDao.createNewGroup(
+            GroupsCompanion.insert(
+              groupId: groupId,
+              groupName: groupId,
+              isDirectChat: Value(direct),
+              deleteMessagesAfterMilliseconds: Value(hours * 60 * 60 * 1000),
+            ),
+          );
+          for (final type in GroupActionType.values) {
+            for (final age in [1, 2, 3, 5]) {
+              await twonlyDB.groupsDao.insertGroupAction(
+                GroupHistoriesCompanion.insert(
+                  groupHistoryId: '$groupId-${type.name}-$age',
+                  groupId: groupId,
+                  type: type,
+                  actionAt: Value(now.subtract(Duration(hours: age))),
+                ),
+              );
+            }
+          }
+        }
+
+        await twonlyDB.messagesDao.purgeMessageTable();
+
+        final remaining = await twonlyDB.select(twonlyDB.groupHistories).get();
+        expect(
+          remaining.map((action) => action.groupHistoryId),
+          unorderedEquals([
+            for (final groupId in ['short', 'long', 'direct'])
+              for (final type in GroupActionType.values)
+                for (final age in (groupId == 'long' ? [1, 2, 3] : [1, 2]))
+                  '$groupId-${type.name}-$age',
+          ]),
+        );
+        // Removing the history must not remove the chat or its actual settings.
+        expect(await twonlyDB.groupsDao.getAllGroups(), hasLength(3));
+        expect(
+          (await twonlyDB.groupsDao.getGroup(
+            'long',
+          ))!.deleteMessagesAfterMilliseconds,
+          4 * 60 * 60 * 1000,
+        );
+        await twonlyDB.messagesDao.purgeMessageTable();
+        expect(await twonlyDB.select(twonlyDB.groupHistories).get(), remaining);
+      });
     },
   );
 
@@ -158,19 +231,21 @@ void main() {
             downloadState: const Value(DownloadState.ready),
           ),
         );
-        await twonlyDB.messagesDao.insertMessage(
-          MessagesCompanion.insert(
-            messageId: fixture.id,
-            groupId: 'widgets',
-            senderId: Value(fixture.sender),
-            type: 'media',
-            mediaId: Value(fixture.id),
-            isWidgetMedia: Value(fixture.widget),
-            openedAt: Value(fixture.at),
-            openedByAll: Value(fixture.at),
-            createdAt: Value(fixture.at),
-          ),
-        );
+        await twonlyDB
+            .into(twonlyDB.messages)
+            .insert(
+              MessagesCompanion.insert(
+                messageId: fixture.id,
+                groupId: 'widgets',
+                senderId: Value(fixture.sender),
+                type: 'media',
+                mediaId: Value(fixture.id),
+                isWidgetMedia: Value(fixture.widget),
+                openedAt: Value(fixture.at),
+                openedByAll: Value(fixture.at),
+                createdAt: Value(fixture.at),
+              ),
+            );
       }
 
       final visible = await (await twonlyDB.messagesDao.watchByGroupId(

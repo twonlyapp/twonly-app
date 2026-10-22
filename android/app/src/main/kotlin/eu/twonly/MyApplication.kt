@@ -13,6 +13,7 @@ class MyApplication : FlutterApplication() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        NativeErrorReporting.startIfAllowed(this)
         Keyring.initializeNdkContext(this)
         // Registered from the application rather than the activity: a process
         // started by a push or by WorkManager itself must keep the flush alive

@@ -68,6 +68,7 @@ enum MessageActionType {
   openedAt,
   ackByUserAt,
   ackByServerAt,
+  sendFailed,
 }
 
 @DataClassName('MessageAction')

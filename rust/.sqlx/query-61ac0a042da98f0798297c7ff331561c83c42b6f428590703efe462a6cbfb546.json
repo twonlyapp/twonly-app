@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE groups\n        SET also_best_friend = ?,\n            flame_counter = ?,\n            max_flame_counter = ?,\n            last_flame_counter_change = ?,\n            last_message_send = ?,\n            last_message_received = ?\n        WHERE group_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "61ac0a042da98f0798297c7ff331561c83c42b6f428590703efe462a6cbfb546"
+}

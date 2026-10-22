@@ -1,0 +1,2 @@
+ALTER TABLE webxdc_apps
+    ADD COLUMN direct_chat_only BOOLEAN NOT NULL DEFAULT FALSE;

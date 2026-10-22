@@ -15,7 +15,9 @@ use tokio::sync::broadcast;
 #[cfg(test)]
 mod avatar_activity_tests;
 #[cfg(test)]
-mod direct_chat_archive_tests;
+mod chat_archive_tests;
+#[cfg(test)]
+mod chat_activity_tests;
 mod legacy_import;
 pub mod tables;
 

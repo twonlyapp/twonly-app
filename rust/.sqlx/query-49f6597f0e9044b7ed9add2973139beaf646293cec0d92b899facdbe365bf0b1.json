@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT last_flame_counter_change, last_message_send, last_message_received,\n               flame_counter, max_flame_counter\n        FROM groups\n        WHERE group_id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "last_flame_counter_change",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_flame_counter_change"
+          }
+        }
+      },
+      {
+        "name": "last_message_send",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_message_send"
+          }
+        }
+      },
+      {
+        "name": "last_message_received",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_message_received"
+          }
+        }
+      },
+      {
+        "name": "flame_counter",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "flame_counter"
+          }
+        }
+      },
+      {
+        "name": "max_flame_counter",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "max_flame_counter"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "49f6597f0e9044b7ed9add2973139beaf646293cec0d92b899facdbe365bf0b1"
+}

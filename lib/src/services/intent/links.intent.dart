@@ -253,9 +253,10 @@ Future<void> handleIntentSharedFile(
   void Function(String, MediaType) onMediaCallBack,
 ) async {
   for (final file in files) {
-    if (file.value == null) {
-      Log.error(
-        'Got shared media, but value is empty: getMediaStream ${file.mimeType}',
+    final value = file.value;
+    if (value == null || value.trim().isEmpty) {
+      Log.warn(
+        'Ignoring shared item with an empty value: ${file.type}, ${file.mimeType}',
       );
       continue;
     }
@@ -264,19 +265,19 @@ Future<void> handleIntentSharedFile(
 
     switch (file.type) {
       case SharedMediaType.URL:
-        if (file.value?.startsWith('http') ?? false) {
-          final uri = Uri.parse(file.value!);
+        if (value.startsWith('http')) {
+          final uri = Uri.parse(value);
           Log.info('Got link via handle intent share file: ${uri.scheme}');
           await onUrlCallBack(uri);
         }
       case SharedMediaType.IMAGE:
         var type = MediaType.image;
-        if (file.value!.endsWith('.gif')) {
+        if (value.endsWith('.gif')) {
           type = MediaType.gif;
         }
-        onMediaCallBack(file.value!, type);
+        onMediaCallBack(value, type);
       case SharedMediaType.VIDEO:
-        onMediaCallBack(file.value!, MediaType.video);
+        onMediaCallBack(value, MediaType.video);
       // ignore: no_default_cases
       default:
     }

@@ -147,6 +147,58 @@ pub(crate) async fn check_for_profile_update(
     Ok(())
 }
 
+/// Refreshes request metadata before inbound handling opens its transaction.
+/// A server lookup may take the full request timeout, and its error handling
+/// can itself write to the app database. Neither can hold its only connection.
+pub(crate) async fn prepare_contact_request(
+    ctx: &Arc<Context>,
+    from_user_id: i64,
+    content: &EncryptedContent,
+) -> Result<()> {
+    if !content
+        .contact_request
+        .as_ref()
+        .is_some_and(|request| request.r#type == Type::Request as i32)
+    {
+        return Ok(());
+    }
+
+    let database = ctx.app_db.read().await.clone();
+    let auto_accept = sqlx::query_scalar::<_, bool>(
+        "SELECT blocked = 0 AND (accepted != 0 OR requested_by_user != 0) \
+         FROM contacts WHERE user_id = ?",
+    )
+    .bind(from_user_id)
+    .fetch_optional(&database.pool)
+    .await?
+    .unwrap_or(false);
+    if auto_accept {
+        return Ok(());
+    }
+
+    let user = match Server::get_user_by_id(ctx, from_user_id).await? {
+        ServerResult::Ok(user) => user,
+        ServerResult::ErrorCode(code) => {
+            return Err(TwonlyError::Generic(format!(
+                "Failed to get user by id: {code}"
+            )));
+        }
+    };
+    let username = String::from_utf8(
+        user.username
+            .ok_or_else(|| TwonlyError::Generic("user response has no username".into()))?,
+    )?;
+    sqlx::query(
+        "UPDATE contacts SET username = ?, joined_at = COALESCE(?, joined_at) WHERE user_id = ?",
+    )
+    .bind(username)
+    .bind(user.joined_at)
+    .bind(from_user_id)
+    .execute(&database.pool)
+    .await?;
+    Ok(())
+}
+
 pub(crate) async fn handle_contact_request(
     ctx: &Arc<Context>,
     tr: &mut Transaction<'_, Sqlite>,
@@ -192,35 +244,15 @@ pub(crate) async fn handle_contact_request(
                 )
                 .await?;
             } else {
-                let user = match Server::get_user_by_id(ctx, from_user_id).await? {
-                    ServerResult::Ok(u) => u,
-                    ServerResult::ErrorCode(code) => {
-                        return Err(TwonlyError::Generic(format!(
-                            "Failed to get user by id: {}",
-                            code
-                        )));
-                    }
-                };
-
-                let username = user
-                    .username
-                    .ok_or_else(|| TwonlyError::Generic("user response has no username".into()))?;
-
+                // The sender already exists, and prepare_contact_request refreshed
+                // its metadata before this transaction acquired the connection.
                 UpdateContact::builder()
                     .user_id(from_user_id)
-                    .username(String::from_utf8(username)?)
                     .requested(true)
                     .deleted_by_user(false)
                     .build()
                     .insert_on_conflict_update(tr)
                     .await?;
-                if let Some(joined_at) = user.joined_at {
-                    sqlx::query("UPDATE contacts SET joined_at = ? WHERE user_id = ?")
-                        .bind(joined_at)
-                        .bind(from_user_id)
-                        .execute(&mut **tr)
-                        .await?;
-                }
             }
         }
         Type::Accept => {
@@ -399,4 +431,61 @@ pub(crate) async fn handle_contact_update(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn contact_request_transaction_preserves_metadata_and_rolls_back() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, joined_at, deleted_by_user) \
+             VALUES (7, 'alice', 123, 1)",
+        )
+        .execute(&database.pool)
+        .await?;
+        let client = crate::api::ApiRuntime::client(&ctx).await?;
+        let _transport = client.ws_client.lock().await;
+
+        for commit in [false, true] {
+            let mut t = database.pool.begin().await?;
+            tokio::time::timeout(
+                std::time::Duration::from_secs(1),
+                handle_contact_request(
+                    &ctx,
+                    &mut t,
+                    7,
+                    encrypted_content::ContactRequest {
+                        r#type: Type::Request as i32,
+                    },
+                ),
+            )
+            .await??;
+            let contact = Contact::get_contact_by_id(&mut t, 7).await?.unwrap();
+            assert_eq!(contact.username, "alice");
+            assert_eq!(contact.joined_at, Some(123));
+            assert_eq!(contact.requested, 1);
+            assert_eq!(contact.deleted_by_user, 0);
+            if commit {
+                t.commit().await?;
+            } else {
+                t.rollback().await?;
+            }
+            let requested: i64 =
+                sqlx::query_scalar("SELECT requested FROM contacts WHERE user_id = 7")
+                    .fetch_one(&database.pool)
+                    .await?;
+            assert_eq!(requested, i64::from(commit));
+        }
+        Ok(())
+    }
 }

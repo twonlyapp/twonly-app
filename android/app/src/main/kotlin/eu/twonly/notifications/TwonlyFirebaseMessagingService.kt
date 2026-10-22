@@ -13,10 +13,22 @@ import androidx.work.WorkManager
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import eu.twonly.MainActivity
+import eu.twonly.NativeErrorReporting
 import eu.twonly.R
 
 class TwonlyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
+        Log.i(TAG, "Native push received: messageId=${message.messageId}, sentAtMs=${message.sentTime}")
+        try {
+            NativeNotificationBridge.logPushReceived(
+                applicationContext.filesDir.absolutePath,
+                message.messageId.orEmpty(),
+                message.sentTime,
+            )
+        } catch (error: Throwable) {
+            Log.w(TAG, "Could not persist native push arrival", error)
+        }
+
         // Server side alerts (plan changes, passwordless recovery) carry a ready
         // made notification instead of the opaque wake-up envelope. Android only
         // presents those by itself while twonly is backgrounded, so dropping them
@@ -47,6 +59,7 @@ class TwonlyFirebaseMessagingService : FirebaseMessagingService() {
             val directory = applicationContext.filesDir.absolutePath
             NativeNotificationBridge.storeFcmToken(directory, directory, token)
         } catch (error: Throwable) {
+            NativeErrorReporting.failure(applicationContext, "fcm_token_storage", error)
             Log.e(TAG, "Could not persist refreshed FCM token in Rust", error)
         }
     }

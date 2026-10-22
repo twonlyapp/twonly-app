@@ -15,56 +15,6 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
   // ignore: matching_super_parameters
   ReactionsDao(super.db);
 
-  Future<void> updateReaction(
-    int contactId,
-    String messageId,
-    String groupId,
-    String emoji,
-    bool remove,
-  ) async {
-    if (!isOneEmoji(emoji)) {
-      Log.error('Did not update reaction as it is not an emoji!');
-      return;
-    }
-    final msg = await twonlyDB.messagesDao
-        .getMessageById(messageId)
-        .getSingleOrNull();
-    if (msg == null) {
-      Log.warn('updateReaction: Message $messageId not found!');
-      return;
-    }
-    if (msg.groupId != groupId) {
-      Log.warn('updateReaction: Message groupId ${msg.groupId} != $groupId');
-      Log.error(
-        'updateReaction: Message groupId mismatch',
-        onlyIfSentryEnabled: true,
-      );
-      return;
-    }
-
-    try {
-      if (remove) {
-        await (delete(reactions)..where(
-              (t) =>
-                  t.senderId.equals(contactId) &
-                  t.messageId.equals(messageId) &
-                  t.emoji.equals(emoji),
-            ))
-            .go();
-      } else {
-        await into(reactions).insertOnConflictUpdate(
-          ReactionsCompanion(
-            messageId: Value(messageId),
-            emoji: Value(emoji),
-            senderId: Value(contactId),
-          ),
-        );
-      }
-    } catch (e) {
-      Log.error(e);
-    }
-  }
-
   Future<void> updateMyReaction(
     String messageId,
     String emoji,

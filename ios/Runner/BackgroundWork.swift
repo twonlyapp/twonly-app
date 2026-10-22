@@ -74,6 +74,7 @@ enum BackgroundWork {
   private static let runtimeAppGroup = "group.eu.twonly.runtime"
 
   private static func run(_ task: BGProcessingTask) {
+    NativeErrorReporting.breadcrumb("outbox_flush_started")
     // The system may reclaim the task at any point; ask Rust to stop by ending
     // the run, and reschedule so the work is not simply dropped.
     let queue = DispatchQueue(label: "eu.twonly.outbox-flush", qos: .utility)
@@ -84,11 +85,13 @@ enum BackgroundWork {
       task.setTaskCompleted(success: success)
     }
     task.expirationHandler = {
+      NativeErrorReporting.failure("outbox_flush_expired")
       scheduleFlush()
       finish(false)
     }
     queue.async {
       guard let directory = runtimeDirectory() else {
+        NativeErrorReporting.failure("outbox_flush_storage")
         finish(false)
         return
       }
@@ -102,11 +105,18 @@ enum BackgroundWork {
         twonly_background_string_free(pointer)
         return value
       }
-      let ok = json?.contains("\"ok\":true") ?? false
+      let result = json?.data(using: .utf8).flatMap {
+        (try? JSONSerialization.jsonObject(with: $0)) as? [String: Any]
+      }
+      let ok = result?["ok"] as? Bool ?? false
+      let pending = (result?["pending_uploads"] as? Bool ?? false)
+        || (result?["pending_messages"] as? Bool ?? false)
+      if !ok { NativeErrorReporting.failure("outbox_flush") }
+      NativeErrorReporting.breadcrumb("outbox_flush_finished")
       // Keep a rolling reservation: as long as anything is unsent, there is a
       // scheduled chance to send it.
       scheduleFlush()
-      finish(ok)
+      finish(ok && !pending)
     }
   }
 }

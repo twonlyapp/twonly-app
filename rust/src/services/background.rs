@@ -30,6 +30,9 @@ use std::time::Duration;
 /// own, so this stays well inside it.
 const AUTHENTICATION_TIMEOUT: Duration = Duration::from_secs(20);
 const AUTHENTICATION_POLL: Duration = Duration::from_millis(250);
+/// Mailbox delivery and the final receipt flush share one bounded window.
+/// On expiry their durable rows remain owned by the native scheduler.
+const MESSAGE_DRAIN_TIMEOUT: Duration = Duration::from_secs(20);
 
 /// What a maintenance run should do.
 pub enum Job {
@@ -45,6 +48,7 @@ pub enum Job {
 /// finished or must be retried later by the OS.
 pub struct RunOutcome {
     pub pending_uploads: bool,
+    pub pending_messages: bool,
 }
 
 /// Runs a maintenance job in a process that may have no Flutter engine.
@@ -54,6 +58,9 @@ pub struct RunOutcome {
 pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
     Context::init_notification(config).await?;
     let ctx = Context::get_static()?.clone();
+    // Authentication can drain a small mailbox before the worker reaches its
+    // final wait. Sampling after connecting would miss that completion.
+    let mailbox_generation = ctx.mailbox_generation();
 
     // A send that has not been prepared yet needs an upload slot, and one for a
     // contact with no Signal session yet needs a prekey bundle. Both want the
@@ -75,6 +82,10 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
     };
     if !connected {
         tracing::info!("background maintenance is running without a server connection");
+    } else if owns_connection && ctx.mailbox_generation() == mailbox_generation {
+        // Also covers an already-authenticated connection whose previous
+        // mailbox drain happened before this run sampled its generation.
+        ApiRuntime::client(&ctx).await?.request_catch_up().await;
     }
 
     match &job {
@@ -119,9 +130,6 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
         if let Err(error) = ApiRuntime::replay_outbox(&ctx).await {
             tracing::warn!(%error, "could not replay the API outbox");
         }
-        if let Err(error) = messages::retransmit_queued_receipts(&ctx).await {
-            tracing::warn!(%error, "could not retransmit queued receipts");
-        }
         if let Err(error) = DirectMediaUploadService::new(&ctx).preload_slots().await {
             tracing::warn!(%error, "could not preload direct-media upload slots");
         }
@@ -133,12 +141,52 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
         }
     }
 
+    let messages_finished = if connected && owns_connection {
+        finish_message_work(&ctx, mailbox_generation, MESSAGE_DRAIN_TIMEOUT).await
+    } else {
+        !owns_connection
+    };
+    let pending_messages = owns_connection
+        && ctx.is_notification_runtime()
+        && (!messages_finished
+            || messages::has_pending_receipts(&ctx)
+                .await
+                .unwrap_or_else(|error| {
+                    tracing::warn!(%error, "could not count pending receipts");
+                    true
+                }));
+
     // Flutter may have claimed a process that WorkManager started while this
     // run was in flight. Never close the replacement foreground client.
     if owns_connection && ctx.is_notification_runtime() {
         ApiRuntime::close(&ctx).await?;
     }
-    Ok(RunOutcome { pending_uploads })
+    Ok(RunOutcome {
+        pending_uploads,
+        pending_messages,
+    })
+}
+
+/// MailboxDrained is sent by the server after it has received the page ACKs.
+/// Only then can the last outbox pass know every inbound delivery receipt is
+/// durable. Waiting for the active flush prevents shutdown under its requests.
+async fn finish_message_work(ctx: &Arc<Context>, generation: u64, budget: Duration) -> bool {
+    match tokio::time::timeout(budget, async {
+        ctx.wait_for_mailbox_after(generation).await;
+        messages::retransmit_queued_receipts_and_wait(ctx).await
+    })
+    .await
+    {
+        Ok(Ok(())) => true,
+        Ok(Err(error)) => {
+            tracing::warn!(%error, "could not finish background receipt flush");
+            false
+        }
+        Err(_) => {
+            tracing::info!("background message drain window elapsed; retaining work for retry");
+            false
+        }
+    }
 }
 
 /// Opens the socket and waits for the handshake, bounded. A background job that
@@ -164,4 +212,96 @@ async fn connect_and_authenticate(ctx: &Arc<Context>) -> bool {
         }
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn shutdown_waits_for_mailbox_and_the_existing_receipt_flush() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let generation = ctx.mailbox_generation();
+        let database = ctx.app_db.read().await.clone();
+        // Hold the single connection so the existing flush cannot finish.
+        let transaction = database.pool.begin().await?;
+        let active = {
+            let ctx = ctx.clone();
+            tokio::spawn(async move { messages::retransmit_queued_receipts(&ctx).await })
+        };
+        tokio::task::yield_now().await;
+        let finishing = {
+            let ctx = ctx.clone();
+            tokio::spawn(async move {
+                finish_message_work(&ctx, generation, Duration::from_secs(2)).await
+            })
+        };
+        tokio::task::yield_now().await;
+        assert!(
+            !finishing.is_finished(),
+            "authentication alone is not a drained mailbox"
+        );
+        ctx.mark_mailbox_drained();
+        tokio::task::yield_now().await;
+        assert!(
+            !finishing.is_finished(),
+            "the active flush still owns database work"
+        );
+        transaction.commit().await?;
+        active.await.unwrap()?;
+        assert!(finishing.await.unwrap());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn shutdown_recognises_a_mailbox_drained_before_the_wait() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let generation = ctx.mailbox_generation();
+        ctx.mark_mailbox_drained();
+        assert!(finish_message_work(&ctx, generation, Duration::from_secs(1)).await);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn shutdown_deadline_keeps_unfinished_receipts_durable() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'peer')")
+            .execute(&database.pool)
+            .await?;
+        sqlx::query(
+            "INSERT INTO receipts(receipt_id, contact_id, message) VALUES ('unsent', 7, x'00')",
+        )
+        .execute(&database.pool)
+        .await?;
+        let generation = ctx.mailbox_generation();
+        tokio::time::pause();
+        assert!(!finish_message_work(&ctx, generation, Duration::from_secs(1)).await);
+        tokio::time::resume();
+        assert!(messages::has_pending_receipts(&ctx).await?);
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM receipts WHERE receipt_id = 'unsent'"
+            )
+            .fetch_one(&database.pool)
+            .await?,
+            1
+        );
+        Ok(())
+    }
 }

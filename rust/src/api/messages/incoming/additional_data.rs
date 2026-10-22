@@ -79,10 +79,9 @@ pub(crate) async fn handle_additional_data_message(
     }
 
     // A hidden message carries state a feature exchanges rather than something
-    // a person sent, so it leaves no trace in the chat: no row means it cannot
-    // be rendered, quoted, deleted, or swept up by the deletion timer, and the
-    // chat's last exchange is left alone so a running app cannot keep a streak
-    // alive on its own.
+    // a person sent. The feature may have created a visible announcement above;
+    // that row updates chat activity through the database trigger. The hidden
+    // payload itself needs no additional chat row.
     if message.hidden {
         return Ok(());
     }
