@@ -265,8 +265,6 @@ impl Context {
 
         std::fs::create_dir_all(&config.data_dir)?;
 
-        crate::database::restore_install::recover_before_open(&config).await?;
-
         // Logging is process-wide and owns app.log directly. Initialize it
         // before the context check so notification and Flutter runtimes both
         // have a sink even when the main context already exists.
@@ -288,6 +286,8 @@ impl Context {
                     })
             },
         );
+
+        crate::database::restore_install::recover_before_open(&config).await?;
 
         if GLOBAL_CONTEXT.initialized() {
             tracing::info!("twonly already initialized. Ensuring storage directories exist.");

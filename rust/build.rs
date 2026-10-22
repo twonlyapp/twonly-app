@@ -9,13 +9,17 @@ fn main() -> Result<()> {
     let pubspec =
         std::fs::read_to_string("../pubspec.yaml").expect("could not read ../pubspec.yaml");
 
-    let version = pubspec
+    let full_version = pubspec
         .lines()
         .find_map(|line| line.strip_prefix("version: "))
-        .map(|version| version.split('+').next().unwrap_or(version).trim())
+        .map(str::trim)
         .expect("no `version:` entry in ../pubspec.yaml");
 
+    let version = full_version.split('+').next().unwrap_or(full_version);
+
     println!("cargo:rustc-env=TWONLY_APP_VERSION={version}");
+
+    println!("cargo:rustc-env=TWONLY_APP_FULL_VERSION={full_version}");
 
     let websocket_proto_root = "src/api/proto";
 

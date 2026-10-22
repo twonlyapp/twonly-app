@@ -575,6 +575,12 @@ pub(crate) fn init_tracing(data_dir: &Path, source: LogSource) {
             .with(file_layer)
             .try_init();
     });
+
+    tracing::info!(
+        app_version = env!("TWONLY_APP_FULL_VERSION"),
+        platform = std::env::consts::OS,
+        "twonly runtime initialized"
+    );
 }
 
 fn app_log() -> Result<&'static AppLog> {
