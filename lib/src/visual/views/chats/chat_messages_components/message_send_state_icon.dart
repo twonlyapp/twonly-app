@@ -57,6 +57,7 @@ class MessageSendStateIcon extends StatefulWidget {
     this.mediaFiles, {
     super.key,
     this.canBeReopened = false,
+    this.showDraft = false,
     this.group,
     this.lastReaction,
     this.mainAxisAlignment = MainAxisAlignment.end,
@@ -66,6 +67,9 @@ class MessageSendStateIcon extends StatefulWidget {
   final StoredReaction? lastReaction;
   final MainAxisAlignment mainAxisAlignment;
   final bool canBeReopened;
+
+  /// Shows the conversation draft in chat list previews.
+  final bool showDraft;
   final Group? group;
 
   @override
@@ -381,7 +385,8 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
           }
         }
       }
-      if (widget.group != null &&
+      if (widget.showDraft &&
+          widget.group != null &&
           widget.group!.draftMessage != null &&
           widget.group!.draftMessage != '') {
         icons = [
