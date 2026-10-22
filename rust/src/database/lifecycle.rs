@@ -76,6 +76,16 @@ pub(crate) fn cancel_native() {
     }
 }
 
+/// Wait for the admitted native job's cleanup, then keep this process from
+/// starting another job while its identity and files are being removed.
+pub(crate) async fn stop_native_for_reset() {
+    cancel_native();
+
+    if let Ok(_permit) = NATIVE_RUNS.clone().acquire_owned().await {
+        NATIVE_RUNS.close();
+    }
+}
+
 pub(crate) fn cancel_foreground() {
     let operations = OPERATIONS
         .lock()

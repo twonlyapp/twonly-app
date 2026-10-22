@@ -99,13 +99,18 @@ impl RustKeyManager {
     }
 
     pub async fn remove_local_credentials() -> Result<()> {
-        let ctx = get_twonly_flutter()?;
+        crate::database::lifecycle::foreground::stop_for_reset().await;
 
-        let _lifecycle = ctx.database_lifecycle.lock().await;
+        // Reset must also work when a corrupt database or key manager prevented
+        // Context initialization. It intentionally bypasses restore admission:
+        // both the active identity and any staged restore are being abandoned.
+        crate::secure_storage::SecureStorage::init()?;
 
-        crate::keys::KeyManager::remove_from_keychain(&ctx.secure_storage)?;
+        let storage = crate::secure_storage::SecureStorage::new("eu.twonly");
 
-        ctx.secure_storage.delete("api_auth_token")?;
+        crate::keys::KeyManager::remove_from_keychain(&storage)?;
+
+        storage.delete("api_auth_token")?;
 
         Ok(())
     }

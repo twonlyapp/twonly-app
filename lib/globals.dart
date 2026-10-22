@@ -29,11 +29,13 @@ class AppEnvironment {
       if (sharedSupportDir == null || sharedSupportDir.isEmpty) {
         throw StateError('The iOS runtime App Group is unavailable.');
       }
+      // Keep the actual runtime path available to reset/recovery even if the
+      // migration fails and startup falls back to the critical error screen.
+      supportDir = sharedSupportDir;
       await migrateToSharedSupportDirectory(
         Directory(privateSupportDir),
         Directory(sharedSupportDir),
       );
-      supportDir = sharedSupportDir;
     } else {
       supportDir = privateSupportDir;
     }

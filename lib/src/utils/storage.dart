@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/error_reporting.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -15,10 +17,35 @@ Future<bool> deleteLocalUserData({bool removeCredentials = false}) async {
     await RustKeyManager.removeLocalCredentials();
     Log.info('Removed the local credentials.');
   }
-  final appDir = await getApplicationSupportDirectory();
-  if (appDir.existsSync()) {
-    appDir.deleteSync(recursive: true);
+  final privateDir = await getApplicationSupportDirectory();
+  // iOS runtime data lives in the App Group. Also clear the old private copy
+  // so it cannot bring back an abandoned account during a later migration.
+  final directories = {
+    privateDir.path,
+    AppEnvironment.supportDir,
+    AppEnvironment.cacheDir,
+  };
+  for (final path in directories) {
+    _clearDirectory(Directory(path));
   }
   Log.info('Deleted the local user data.');
   return true;
+}
+
+void _clearDirectory(Directory directory) {
+  if (!directory.existsSync()) return;
+  for (final entity in directory.listSync(followLinks: false)) {
+    // Keep shared lock inodes and the iOS migration marker. Removing either
+    // would let another process bypass admission or re-import old private data.
+    if (entity.path.endsWith('.twonly-maintenance.lock') ||
+        entity.path == '${directory.path}/.runtime_storage_migrated_v1') {
+      continue;
+    }
+    if (entity is Directory) {
+      _clearDirectory(entity);
+      if (entity.listSync(followLinks: false).isEmpty) entity.deleteSync();
+    } else {
+      entity.deleteSync();
+    }
+  }
 }

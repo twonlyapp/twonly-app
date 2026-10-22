@@ -12,6 +12,8 @@ use tokio::sync::watch;
 
 static ACTIVE: AtomicBool = AtomicBool::new(true);
 
+static RESETTING: AtomicBool = AtomicBool::new(false);
+
 static NATIVE_EVENTS: AtomicBool = AtomicBool::new(false);
 
 static CHANGED: tokio::sync::Notify = tokio::sync::Notify::const_new();
@@ -157,6 +159,8 @@ pub(crate) async fn until_background() {
 }
 
 pub(crate) fn visibility(active: bool) {
+    let active = active && !RESETTING.load(Ordering::Acquire);
+
     ACTIVE.store(active, Ordering::Release);
 
     CHANGED.notify_waiters();
@@ -176,6 +180,12 @@ async fn visible() -> Result<()> {
     loop {
         let changed = CHANGED.notified();
 
+        if RESETTING.load(Ordering::Acquire) {
+            return Err(TwonlyError::Generic(
+                "Restart required after local data reset".into(),
+            ));
+        }
+
         #[cfg(target_os = "ios")]
         let active = crate::native::background_execution::active()?;
 
@@ -190,6 +200,30 @@ async fn visible() -> Result<()> {
 
         tokio::select! { _ = changed => {}, _ = tokio::time::sleep(std::time::Duration::from_millis(100)) => {} }
     }
+}
+
+/// A reset abandons this process's identity. Lifecycle callbacks must not reopen
+/// its pools or write its credentials again before the app restarts.
+pub(crate) async fn stop_for_reset() {
+    RESETTING.store(true, Ordering::Release);
+
+    visibility(false);
+
+    let _transition = TRANSITION.lock().await;
+
+    // Initialization may have admitted an epoch just after the first cancel.
+    // Holding TRANSITION now ensures this cancellation cannot miss its owner.
+    visibility(false);
+
+    if let Ok(context) = Context::get_static() {
+        // A failed startup can leave a Closed(Err) epoch. Waiting still drains
+        // its handles; its original initialization error must not block reset.
+        if let Err(error) = context.foreground.drained().await {
+            tracing::warn!(%error, "foreground closed with an error before reset");
+        }
+    }
+
+    super::stop_native_for_reset().await;
 }
 
 /// Startup and resume use the same serialized owner. The owned task finishes
