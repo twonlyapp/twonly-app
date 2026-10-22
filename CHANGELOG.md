@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.3
+
+- Fix: In some cases, media files could no longer be sent
+
 ## 0.6.2
 
 - Fix: Push notifications were not received immediately

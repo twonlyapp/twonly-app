@@ -20,7 +20,8 @@ dev-api = []
 [dependencies]
 flutter_rust_bridge = { version = "=2.12.0", features = ["chrono"] }
 thiserror = "2.0.18"
-sqlx = { version = "0.9.0-alpha.1", default-features = false, features = [
+# Pinned upstream SQLx accepts libsqlite3-sys 0.38, including the SQLCipher WAL fix.
+sqlx = { git = "https://github.com/launchbadge/sqlx", rev = "36f3a5c1c7a3e939ca80ec38f42a4b60aab9061b", default-features = false, features = [
     "runtime-tokio",
     "sqlite",
     "migrate",
@@ -29,7 +30,7 @@ sqlx = { version = "0.9.0-alpha.1", default-features = false, features = [
     "derive",
     "json",
 ] }
-libsqlite3-sys = { version = "0.35.0", features = [
+libsqlite3-sys = { version = "=0.38.2", features = [
     "bundled-sqlcipher-vendored-openssl",
 ] }
 tokio = { version = "1.44", features = ["macros", "rt-multi-thread", "sync", "time"] }
@@ -101,6 +102,10 @@ tract-nnef = { version = "=0.23.8", default-features = false }
 
 
 [build-dependencies]
+# SQLx's query macros run on the host. Check SQLCipher syntax there too.
+libsqlite3-sys = { version = "=0.38.2", features = ["bundled-sqlcipher-vendored-openssl"] }
+syn = { version = "2", features = ["full", "visit"] }
+proc-macro2 = "1"
 prost-build = "0.14.1"
 
 [profile.release]

@@ -436,7 +436,6 @@ impl DirectMediaUploadService {
         // been stored.
         let _guard = PRELOAD_LOCK.lock().await;
         let known = self.locally_known_slot_ids().await?;
-        let database = self.ctx.app_db.read().await.clone();
         let request = RequestUploadSlots {
             locally_known_slot_ids: known,
         };
@@ -475,6 +474,12 @@ impl DirectMediaUploadService {
             refill_threshold = slots.refill_threshold,
             "direct-media upload slots response from server"
         );
+        self.store_slots(slots).await
+    }
+
+    async fn store_slots(&self, slots: UploadSlots) -> Result<usize> {
+        let count = slots.slots.len();
+        let database = self.ctx.app_db.read().await.clone();
         let mut transaction = database.pool.begin().await?;
         // The server decides how deep this cache may be. Remembering the number
         // keeps an offline launch from refilling against a stale guess.
@@ -502,10 +507,12 @@ impl DirectMediaUploadService {
                        maximum_object_bytes = excluded.maximum_object_bytes,
                        upload_url = excluded.upload_url,
                        upload_fields_json = excluded.upload_fields_json,
-                       capability = excluded.capability,
-                       state = 'cached'"#,
+                       capability = excluded.capability
+                   WHERE direct_media_upload_slots.state = 'cached'
+                     AND direct_media_upload_slots.attachment_id NOT IN
+                         (SELECT attachment_id FROM direct_media_upload_jobs)"#,
             )
-            .bind(slot.attachment_id)
+            .bind(&slot.attachment_id)
             .bind(slot.expires_at_unix_seconds)
             .bind(slot.maximum_object_bytes)
             .bind(upload.url)
@@ -522,7 +529,9 @@ impl DirectMediaUploadService {
         let database = self.ctx.app_db.read().await.clone();
         Ok(sqlx::query_scalar(
             r#"SELECT COUNT(*) FROM direct_media_upload_slots
-               WHERE state = 'cached' AND expires_at > CAST(strftime('%s','now') AS INTEGER)"#,
+               WHERE state = 'cached'
+                 AND expires_at > CAST(strftime('%s','now') AS INTEGER)
+                 AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)"#,
         )
         .fetch_one(&database.pool)
         .await?)
@@ -568,7 +577,7 @@ impl DirectMediaUploadService {
         }
     }
 
-    async fn reserve_slot(&self) -> Result<CachedSlot> {
+    async fn reserve_slot(&self) -> Result<(CachedSlot, sqlx::Transaction<'static, sqlx::Sqlite>)> {
         self.ensure_slots().await?;
         let database = self.ctx.app_db.read().await.clone();
         let mut transaction = database.pool.begin().await?;
@@ -578,6 +587,7 @@ impl DirectMediaUploadService {
                  SELECT attachment_id FROM direct_media_upload_slots
                  WHERE state = 'cached'
                    AND expires_at > CAST(strftime('%s','now') AS INTEGER)
+                   AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)
                  ORDER BY expires_at ASC LIMIT 1
                )
                RETURNING attachment_id, expires_at, maximum_object_bytes, upload_url,
@@ -586,14 +596,16 @@ impl DirectMediaUploadService {
         .fetch_optional(&mut *transaction)
         .await?
         .ok_or_else(|| TwonlyError::Generic("no usable direct-media upload slot".into()))?;
-        transaction.commit().await?;
-        Ok(slot)
+        // Keep the write lock until preparation has inserted the job. No
+        // reconciler (including another process) can observe an orphaned
+        // reservation between claiming the slot and persisting its owner.
+        Ok((slot, transaction))
     }
 
     pub async fn pending_job_count(&self) -> Result<i64> {
         let database = self.ctx.app_db.read().await.clone();
         Ok(sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM direct_media_upload_jobs WHERE state IN ('scheduled', 'waiting_for_server')",
+            "SELECT COUNT(*) FROM direct_media_upload_jobs WHERE state IN ('prepared', 'scheduled', 'waiting_for_server')",
         )
         .fetch_one(&database.pool)
         .await?)
@@ -615,14 +627,8 @@ impl DirectMediaUploadService {
         self.ensure_api_namespace().await?;
         let database = self.ctx.app_db.read().await.clone();
 
-        // Release any orphaned reserved slots (slots marked reserved with no associated job)
-        let _ = sqlx::query(
-            r#"UPDATE direct_media_upload_slots SET state = 'cached'
-               WHERE state = 'reserved'
-                 AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)"#,
-        )
-        .execute(&database.pool)
-        .await;
+        self.repair_slot_reservations().await?;
+        self.resume_prepared_jobs().await?;
 
         let jobs = sqlx::query_as::<_, PendingJob>(
             r#"SELECT j.attachment_id, j.media_id, j.multipart_path, j.manifest_path,
@@ -630,7 +636,7 @@ impl DirectMediaUploadService {
                       j.reupload_requested_by, j.reupload_targets
                FROM direct_media_upload_jobs j
                JOIN direct_media_upload_slots s ON s.attachment_id = j.attachment_id
-               WHERE j.state IN ('scheduled', 'waiting_for_server')"#,
+               WHERE j.state IN ('prepared', 'scheduled', 'waiting_for_server')"#,
         )
         .fetch_all(&database.pool)
         .await?;
@@ -651,6 +657,53 @@ impl DirectMediaUploadService {
             Some(error) => Err(error),
             None => Ok(()),
         }
+    }
+
+    async fn repair_slot_reservations(&self) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+        // Old clients could return a live job's slot to the cache. The job,
+        // its recipient scope and its immutable files still own that slot.
+        sqlx::query(
+            "UPDATE direct_media_upload_slots SET state = 'reserved' WHERE state = 'cached' AND attachment_id IN (SELECT attachment_id FROM direct_media_upload_jobs)",
+        )
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "UPDATE direct_media_upload_slots SET state = 'cached' WHERE state = 'reserved' AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)",
+        )
+        .execute(&mut *transaction)
+        .await?;
+        transaction.commit().await?;
+        Ok(())
+    }
+
+    async fn resume_prepared_jobs(&self) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let jobs = sqlx::query_as::<_, (String, String)>(
+            "SELECT attachment_id, media_id FROM direct_media_upload_jobs WHERE state = 'prepared'",
+        )
+        .fetch_all(&database.pool)
+        .await?;
+        for (attachment_id, media_id) in jobs {
+            let lock = media_lock(&media_id);
+            let _guard = lock.lock().await;
+            let descriptor = sqlx::query_scalar::<_, String>(
+                "SELECT native_descriptor_json FROM direct_media_upload_jobs WHERE attachment_id = ? AND state = 'prepared' AND expires_at > CAST(strftime('%s','now') AS INTEGER)",
+            )
+            .bind(&attachment_id)
+            .fetch_optional(&database.pool)
+            .await?;
+            if let Some(descriptor) = descriptor {
+                if let Err(error) = self
+                    .schedule_prepared_job(&attachment_id, &descriptor)
+                    .await
+                {
+                    tracing::warn!(%attachment_id, %error, "could not resume prepared media upload");
+                }
+            }
+        }
+        Ok(())
     }
 
     async fn reconcile_job(&self, job: &PendingJob) -> Result<()> {
@@ -741,7 +794,7 @@ impl DirectMediaUploadService {
     /// failed send to discover. Dropping them costs one refill instead.
     async fn purge_cached_slots(&self) {
         let database = self.ctx.app_db.read().await.clone();
-        let purged = sqlx::query("DELETE FROM direct_media_upload_slots WHERE state = 'cached'")
+        let purged = sqlx::query("DELETE FROM direct_media_upload_slots WHERE state = 'cached' AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)")
             .execute(&database.pool)
             .await
             .map(|result| result.rows_affected())
@@ -892,7 +945,7 @@ impl DirectMediaUploadService {
         let _guard = lock.lock().await;
         let database = self.ctx.app_db.read().await.clone();
         let claimed = sqlx::query(
-            "DELETE FROM direct_media_upload_jobs WHERE attachment_id = ? AND state IN ('scheduled', 'waiting_for_server')",
+            "DELETE FROM direct_media_upload_jobs WHERE attachment_id = ? AND state IN ('prepared', 'scheduled', 'waiting_for_server')",
         )
         .bind(&job.attachment_id)
         .execute(&database.pool)
@@ -994,77 +1047,79 @@ impl DirectMediaUploadService {
     }
 
     pub async fn prepare_and_schedule(&self, media_id: &str) -> Result<String> {
-        self.cleanup_stale_media_jobs(media_id).await;
-        let slot = self.reserve_slot().await?;
-        match self.prepare_reserved(media_id, &slot).await {
-            Ok(()) => Ok(slot.attachment_id),
-            Err(error) => {
-                self.release_reservation(&slot.attachment_id).await;
-                Err(error)
-            }
-        }
-    }
-
-    async fn cleanup_stale_media_jobs(&self, media_id: &str) {
+        // A process can die after native scheduling but before the media row
+        // is updated. Reuse the same requests; never discard an active job.
         let database = self.ctx.app_db.read().await.clone();
-        let jobs = sqlx::query_as::<_, (String, String, String, String)>(
-            r#"DELETE FROM direct_media_upload_jobs WHERE media_id = ?
-               RETURNING attachment_id, multipart_path, manifest_path, complete_body_path"#,
+        let existing = sqlx::query_as::<_, (String, String, String)>(
+            r#"SELECT j.attachment_id, j.native_descriptor_json, j.state
+               FROM direct_media_upload_jobs j
+               JOIN media_files m ON m.media_id = j.media_id
+               WHERE j.media_id = ? AND j.state IN ('prepared', 'scheduled', 'waiting_for_server')
+                 AND j.expires_at > CAST(strftime('%s','now') AS INTEGER)
+                 AND j.reupload_requested_by IS m.reupload_requested_by
+                 AND j.reupload_targets IS m.reupload_targets
+               ORDER BY j.created_at DESC LIMIT 1"#,
         )
         .bind(media_id)
-        .fetch_all(&database.pool)
-        .await
-        .unwrap_or_default();
-
-        for (attachment_id, multipart, manifest, complete) in jobs {
-            for path in [&multipart, &manifest, &complete] {
-                let _ = std::fs::remove_file(path);
-            }
-            let job_dir = PathBuf::from(&self.ctx.config.data_dir)
-                .join("direct-media-upload")
-                .join(&attachment_id);
-            let _ = std::fs::remove_dir(job_dir);
-            let _ = sqlx::query(
-                "UPDATE direct_media_upload_slots SET state = 'cached' WHERE attachment_id = ?",
-            )
-            .bind(&attachment_id)
-            .execute(&database.pool)
-            .await;
-        }
-    }
-
-    /// Preparation failed somewhere between writing the job row and handing it
-    /// to the native uploader. Nothing was scheduled, so the half-built job and
-    /// its files are removed and the slot goes back into the cache unused.
-    async fn release_reservation(&self, attachment_id: &str) {
-        let database = self.ctx.app_db.read().await.clone();
-        let paths = sqlx::query_as::<_, (String, String, String)>(
-            r#"DELETE FROM direct_media_upload_jobs WHERE attachment_id = ? AND state = 'prepared'
-               RETURNING multipart_path, manifest_path, complete_body_path"#,
-        )
-        .bind(attachment_id)
         .fetch_optional(&database.pool)
-        .await;
-        if let Ok(Some((multipart, manifest, complete))) = paths {
-            for path in [multipart, manifest, complete] {
-                let _ = std::fs::remove_file(path);
+        .await?;
+        if let Some((attachment_id, descriptor, state)) = existing {
+            if state == "prepared" {
+                self.schedule_prepared_job(&attachment_id, &descriptor)
+                    .await?;
             }
+            watch_pending_uploads(&self.ctx);
+            return Ok(attachment_id);
         }
-        let _ = std::fs::remove_dir(
-            PathBuf::from(&self.ctx.config.data_dir)
-                .join("direct-media-upload")
-                .join(attachment_id),
-        );
-        let _ = sqlx::query(
-            "UPDATE direct_media_upload_slots SET state = 'cached' WHERE attachment_id = ? AND state = 'reserved'",
-        )
-        .bind(attachment_id)
-        .execute(&database.pool)
-        .await;
+
+        // Encryption and recipient/session work use the database, so finish
+        // them before opening the transaction that owns the upload slot.
+        let prepared = self.prepare_media(media_id).await?;
+        let (attachment_id, descriptor) = self.persist_prepared_job(media_id, prepared).await?;
+        self.schedule_prepared_job(&attachment_id, &descriptor)
+            .await?;
+        Ok(attachment_id)
     }
 
-    async fn prepare_reserved(&self, media_id: &str, slot: &CachedSlot) -> Result<()> {
-        let (encrypted_path, encrypted_size, manifest) = self.prepare_media(media_id).await?;
+    async fn persist_prepared_job(
+        &self,
+        media_id: &str,
+        prepared: (PathBuf, i64, AttachmentManifest),
+    ) -> Result<(String, String)> {
+        let (slot, mut transaction) = self.reserve_slot().await?;
+        let descriptor = match self
+            .prepare_reserved(media_id, &slot, prepared, &mut transaction)
+            .await
+        {
+            Ok(descriptor) => descriptor,
+            Err(error) => {
+                // Still holding the write lock: another sender cannot reuse
+                // this slot before its partial request files are removed.
+                let directory = PathBuf::from(&self.ctx.config.data_dir)
+                    .join("direct-media-upload")
+                    .join(&slot.attachment_id);
+                for name in ["media.multipart", "manifest.pb", "complete.pb"] {
+                    let _ = std::fs::remove_file(directory.join(name));
+                }
+                let _ = std::fs::remove_dir(directory);
+                transaction.rollback().await?;
+                return Err(error);
+            }
+        };
+        transaction.commit().await?;
+        // Once committed, even a failed/partial native schedule must retain
+        // its immutable requests. Reconciliation retries the prepared job.
+        Ok((slot.attachment_id, descriptor))
+    }
+
+    async fn prepare_reserved(
+        &self,
+        media_id: &str,
+        slot: &CachedSlot,
+        prepared: (PathBuf, i64, AttachmentManifest),
+        transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+    ) -> Result<String> {
+        let (encrypted_path, encrypted_size, manifest) = prepared;
         // The server rejects an oversized object anyway, but only once the whole
         // upload has been spent: the manifest is refused outright, and an object
         // that slips past it is deleted at finalize with `single_object_limit`.
@@ -1122,8 +1177,7 @@ impl DirectMediaUploadService {
             },
         };
         let descriptor_json = serde_json::to_string(&descriptor)?;
-        let database = self.ctx.app_db.read().await.clone();
-        sqlx::query(
+        let inserted = sqlx::query(
             r#"INSERT INTO direct_media_upload_jobs
                (attachment_id, media_id, multipart_path, manifest_path,
                 complete_body_path, native_descriptor_json, state, expires_at,
@@ -1139,20 +1193,28 @@ impl DirectMediaUploadService {
         .bind(&descriptor_json)
         .bind(slot.expires_at)
         .bind(media_id)
-        .execute(&database.pool)
+        .execute(&mut **transaction)
         .await?;
+        if inserted.rows_affected() != 1 {
+            return Err(TwonlyError::Generic(format!(
+                "media {media_id} no longer exists"
+            )));
+        }
+        Ok(descriptor_json)
+    }
 
-        transfer::schedule(&descriptor_json)?;
+    async fn schedule_prepared_job(&self, attachment_id: &str, descriptor: &str) -> Result<()> {
+        // Start the watcher even if native scheduling fails: the prepared job
+        // is durable and must keep the foreground/native retry alive.
+        watch_pending_uploads(&self.ctx);
+        transfer::schedule(descriptor)?;
+        let database = self.ctx.app_db.read().await.clone();
         sqlx::query(
-            "UPDATE direct_media_upload_jobs SET state = 'scheduled', updated_at = CAST(strftime('%s','now') AS INTEGER) WHERE attachment_id = ?",
+            "UPDATE direct_media_upload_jobs SET state = 'scheduled', updated_at = CAST(strftime('%s','now') AS INTEGER) WHERE attachment_id = ? AND state = 'prepared'",
         )
-        .bind(&slot.attachment_id)
+        .bind(attachment_id)
         .execute(&database.pool)
         .await?;
-        // If Flutter is alive this lands on its long-lived Rust runtime even
-        // when preparation itself was called by WorkManager. Otherwise it is a
-        // no-op and the durable native retry owns reconciliation.
-        watch_pending_uploads(&self.ctx);
         Ok(())
     }
 
@@ -2716,59 +2778,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn stale_media_jobs_are_cleaned_up_and_slots_cached() {
-        let directory = tempfile::tempdir().unwrap();
-        let ctx = Context::init_for_testing(
-            directory.path().join("database"),
-            directory.path().join("data"),
-        )
-        .await
-        .unwrap();
-        let service = DirectMediaUploadService::new(&ctx);
-
-        let job_dir = directory.path().join("data/direct-media-upload/slot-stale");
-        std::fs::create_dir_all(&job_dir).unwrap();
-        let multipart = job_dir.join("media.multipart");
-        let manifest = job_dir.join("manifest.pb");
-        let complete = job_dir.join("complete.pb");
-        for p in [&multipart, &manifest, &complete] {
-            std::fs::write(p, b"data").unwrap();
-        }
-
-        let database = ctx.app_db.read().await.clone();
-        sqlx::query(
-            r#"INSERT INTO direct_media_upload_slots
-               (attachment_id, expires_at, maximum_object_bytes, upload_url,
-                upload_fields_json, capability, state)
-               VALUES('slot-stale', 9999999999, 1000000, 'https://objects.example', '{}', x'01', 'reserved')"#,
-        )
-        .execute(&database.pool)
-        .await
-        .unwrap();
-
-        sqlx::query(
-            r#"INSERT INTO direct_media_upload_jobs
-               (attachment_id, media_id, multipart_path, manifest_path,
-                complete_body_path, native_descriptor_json, state, expires_at)
-               VALUES('slot-stale', 'media-stale', ?, ?, ?, '{}', 'scheduled', 9999999999)"#,
-        )
-        .bind(multipart.to_string_lossy().as_ref())
-        .bind(manifest.to_string_lossy().as_ref())
-        .bind(complete.to_string_lossy().as_ref())
-        .execute(&database.pool)
-        .await
-        .unwrap();
-
-        assert_eq!(service.usable_slot_count().await.unwrap(), 0);
-
-        service.cleanup_stale_media_jobs("media-stale").await;
-
-        assert_eq!(service.usable_slot_count().await.unwrap(), 1);
-        assert!(!multipart.exists());
-        assert!(!job_dir.exists());
-    }
-
-    #[tokio::test]
     async fn known_slot_ids_include_in_flight_reservations() {
         let directory = tempfile::tempdir().unwrap();
         let ctx = Context::init_for_testing(
@@ -2905,5 +2914,335 @@ mod tests {
         .await
         .unwrap();
         assert!(!wakes(story_row("second", now), "second").await);
+    }
+
+    async fn slot_test_context() -> anyhow::Result<(tempfile::TempDir, Arc<Context>)> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO app_metadata(key, value) VALUES(?, ?)")
+            .bind(API_NAMESPACE_KEY)
+            .bind(RustApi::api_base_url("https".into()))
+            .execute(&database.pool)
+            .await?;
+        for media_id in ["original", "replacement"] {
+            sqlx::query("INSERT INTO media_files(media_id,type,upload_state) VALUES(?, 'image', 'preprocessing')")
+                .bind(media_id).execute(&database.pool).await?;
+        }
+        for (attachment_id, expires_at) in [("first", 9999999998_i64), ("second", 9999999999)] {
+            sqlx::query("INSERT INTO direct_media_upload_slots(attachment_id,expires_at,maximum_object_bytes,upload_url,upload_fields_json,capability,state) VALUES(?, ?, 1000000, 'https://objects.example', '{}', x'01', 'cached')")
+                .bind(attachment_id).bind(expires_at).execute(&database.pool).await?;
+        }
+        Ok((directory, ctx))
+    }
+
+    fn test_prepared_media(ctx: &Context) -> (PathBuf, i64, AttachmentManifest) {
+        let path = PathBuf::from(&ctx.config.data_dir).join("encrypted-fixture");
+        std::fs::write(&path, b"immutable media").unwrap();
+        (path, 15, AttachmentManifest::default())
+    }
+
+    async fn test_pending_job(ctx: &Context, attachment_id: &str) -> anyhow::Result<PendingJob> {
+        let database = ctx.app_db.read().await.clone();
+        Ok(sqlx::query_as(
+            r#"SELECT j.attachment_id, j.media_id, j.multipart_path, j.manifest_path,
+                      j.complete_body_path, s.capability, j.expires_at,
+                      j.reupload_requested_by, j.reupload_targets
+               FROM direct_media_upload_jobs j
+               JOIN direct_media_upload_slots s USING(attachment_id)
+               WHERE j.attachment_id = ?"#,
+        )
+        .bind(attachment_id)
+        .fetch_one(&database.pool)
+        .await?)
+    }
+
+    #[tokio::test]
+    async fn reservation_and_job_are_atomic_across_connections() -> anyhow::Result<()> {
+        let (_directory, ctx) = slot_test_context().await?;
+        let database = ctx.app_db.read().await.clone();
+        // A distinct pool represents foreground/background work in another
+        // process: the guarantee must come from SQLite, not an in-memory lock.
+        let competing_pool = sqlx::sqlite::SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect_with((*database.pool.connect_options()).clone())
+            .await?;
+        let service = DirectMediaUploadService::new(&ctx);
+        let (slot, mut transaction) = service.reserve_slot().await?;
+        let (started, start_received) = tokio::sync::oneshot::channel();
+        let mut competing = tokio::spawn(async move {
+            started.send(()).unwrap();
+            sqlx::query("UPDATE direct_media_upload_slots SET state = 'cached' WHERE state = 'reserved' AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)")
+                .execute(&competing_pool).await.unwrap();
+            competing_pool.close().await;
+        });
+        start_received.await?;
+        assert!(
+            tokio::time::timeout(Duration::from_millis(50), &mut competing)
+                .await
+                .is_err()
+        );
+        service
+            .prepare_reserved(
+                "original",
+                &slot,
+                test_prepared_media(&ctx),
+                &mut transaction,
+            )
+            .await?;
+        transaction.commit().await?;
+        competing.await?;
+        service.repair_slot_reservations().await?;
+        let state: String = sqlx::query_scalar(
+            "SELECT state FROM direct_media_upload_slots WHERE attachment_id = ?",
+        )
+        .bind(&slot.attachment_id)
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(state, "reserved");
+        let (next, transaction) = service.reserve_slot().await?;
+        assert_ne!(next.attachment_id, slot.attachment_id);
+        transaction.rollback().await?;
+        assert_eq!(
+            test_pending_job(&ctx, &slot.attachment_id).await?.media_id,
+            "original"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn failed_preparation_rolls_back_reservation() -> anyhow::Result<()> {
+        let (_directory, ctx) = slot_test_context().await?;
+        let service = DirectMediaUploadService::new(&ctx);
+        let (path, _, manifest) = test_prepared_media(&ctx);
+        let error = service
+            .persist_prepared_job("original", (path, 1000001, manifest))
+            .await
+            .unwrap_err();
+        assert!(matches!(error, TwonlyError::MediaTooLarge { .. }));
+        assert_eq!(service.usable_slot_count().await?, 2);
+        assert_eq!(service.pending_job_count().await?, 0);
+        // A cancelled task also rolls back the uncommitted claim.
+        let (_, transaction) = service.reserve_slot().await?;
+        drop(transaction);
+        service.repair_slot_reservations().await?;
+        assert_eq!(service.usable_slot_count().await?, 2);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn failed_native_schedule_keeps_prepared_job_and_files() -> anyhow::Result<()> {
+        let (_directory, ctx) = slot_test_context().await?;
+        let service = DirectMediaUploadService::new(&ctx);
+        let (attachment_id, descriptor) = service
+            .persist_prepared_job("original", test_prepared_media(&ctx))
+            .await?;
+        // The host has no native transfer callback. A failed/partial handoff
+        // must retain the same requests for the next foreground/OS retry.
+        assert!(service
+            .schedule_prepared_job(&attachment_id, &descriptor)
+            .await
+            .is_err());
+        service.resume_prepared_jobs().await?;
+        assert_eq!(service.pending_job_count().await?, 1);
+        let job = test_pending_job(&ctx, &attachment_id).await?;
+        for path in [
+            &job.multipart_path,
+            &job.manifest_path,
+            &job.complete_body_path,
+        ] {
+            assert!(Path::new(path).exists());
+        }
+        let database = ctx.app_db.read().await.clone();
+        let saved: String = sqlx::query_scalar(
+            "SELECT native_descriptor_json FROM direct_media_upload_jobs WHERE attachment_id = ?",
+        )
+        .bind(&attachment_id)
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(saved, descriptor);
+        assert_eq!(service.usable_slot_count().await?, 1);
+        // Native scheduling may have succeeded just before a crash. A ready
+        // attachment must complete even if its durable row is still prepared.
+        service
+            .apply_status(
+                &job,
+                AttachmentStatus {
+                    state: AttachmentState::Ready as i32,
+                    ..Default::default()
+                },
+            )
+            .await?;
+        assert_eq!(service.pending_job_count().await?, 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn retry_reuses_scheduled_job_without_replacing_files_or_scope() -> anyhow::Result<()> {
+        let (_directory, ctx) = slot_test_context().await?;
+        let service = DirectMediaUploadService::new(&ctx);
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("UPDATE media_files SET reupload_requested_by = '[7]', reupload_targets = 'saved-targets' WHERE media_id = 'original'")
+            .execute(&database.pool).await?;
+        let (attachment_id, descriptor) = service
+            .persist_prepared_job("original", test_prepared_media(&ctx))
+            .await?;
+        sqlx::query(
+            "UPDATE direct_media_upload_jobs SET state = 'scheduled' WHERE attachment_id = ?",
+        )
+        .bind(&attachment_id)
+        .execute(&database.pool)
+        .await?;
+        let before = test_pending_job(&ctx, &attachment_id).await?;
+        let bytes = std::fs::read(&before.multipart_path)?;
+        // There is no source media or encryption key: a retry must find the
+        // saved job before trying to generate replacement requests.
+        assert_eq!(
+            service.prepare_and_schedule("original").await?,
+            attachment_id
+        );
+        assert_eq!(std::fs::read(&before.multipart_path)?, bytes);
+        let saved: String = sqlx::query_scalar(
+            "SELECT native_descriptor_json FROM direct_media_upload_jobs WHERE attachment_id = ?",
+        )
+        .bind(&attachment_id)
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(saved, descriptor);
+        assert_eq!(
+            test_pending_job(&ctx, &attachment_id)
+                .await?
+                .reupload_targets,
+            before.reupload_targets
+        );
+        // A different media must get its own attachment, retaining this job.
+        let (other_id, _) = service
+            .persist_prepared_job("replacement", test_prepared_media(&ctx))
+            .await?;
+        assert_ne!(other_id, attachment_id);
+        assert_eq!(
+            test_pending_job(&ctx, &attachment_id).await?.media_id,
+            "original"
+        );
+        assert_eq!(std::fs::read(&before.multipart_path)?, bytes);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn cached_job_repair_and_migration_preserve_completion() -> anyhow::Result<()> {
+        for migrate in [false, true] {
+            let (_directory, ctx) = slot_test_context().await?;
+            let service = DirectMediaUploadService::new(&ctx);
+            let database = ctx.app_db.read().await.clone();
+            let (attachment_id, _) = service
+                .persist_prepared_job("original", test_prepared_media(&ctx))
+                .await?;
+            sqlx::query(
+                "UPDATE direct_media_upload_jobs SET state = 'scheduled' WHERE attachment_id = ?",
+            )
+            .bind(&attachment_id)
+            .execute(&database.pool)
+            .await?;
+            sqlx::query(
+                "UPDATE direct_media_upload_slots SET state = 'cached' WHERE attachment_id = ?",
+            )
+            .bind(&attachment_id)
+            .execute(&database.pool)
+            .await?;
+            sqlx::query("UPDATE media_files SET upload_state = 'backgroundUploadTaskStarted' WHERE media_id = 'original'")
+                .execute(&database.pool).await?;
+            let job = test_pending_job(&ctx, &attachment_id).await?;
+            let bytes = std::fs::read(&job.multipart_path)?;
+            // Also verify the real reservation path skips the poisoned slot
+            // before either repair has run.
+            let (available, transaction) = service.reserve_slot().await?;
+            assert_ne!(available.attachment_id, attachment_id);
+            transaction.rollback().await?;
+            if migrate {
+                sqlx::raw_sql(include_str!(
+                    "../database/app/migrations/0044_cleanup_stuck_direct_media_upload_jobs.sql"
+                ))
+                .execute(&database.pool)
+                .await?;
+            } else {
+                service.repair_slot_reservations().await?;
+            }
+            assert_eq!(service.pending_job_count().await?, 1);
+            assert_eq!(std::fs::read(&job.multipart_path)?, bytes);
+            let state: String = sqlx::query_scalar(
+                "SELECT state FROM direct_media_upload_slots WHERE attachment_id = ?",
+            )
+            .bind(&attachment_id)
+            .fetch_one(&database.pool)
+            .await?;
+            assert_eq!(state, "reserved");
+            assert_eq!(
+                test_pending_job(&ctx, &attachment_id).await?.media_id,
+                "original"
+            );
+            service
+                .apply_status(
+                    &job,
+                    AttachmentStatus {
+                        state: AttachmentState::Ready as i32,
+                        ..Default::default()
+                    },
+                )
+                .await?;
+            let state: String = sqlx::query_scalar(
+                "SELECT upload_state FROM media_files WHERE media_id = 'original'",
+            )
+            .fetch_one(&database.pool)
+            .await?;
+            assert_eq!(state, "uploaded");
+            assert_eq!(service.pending_job_count().await?, 0);
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn refill_and_cache_purge_preserve_jobs_and_reserved_slots() -> anyhow::Result<()> {
+        use crate::api::proto::http_requests::{PresignedPostV2, UploadSlot};
+        let (_directory, ctx) = slot_test_context().await?;
+        let service = DirectMediaUploadService::new(&ctx);
+        let database = ctx.app_db.read().await.clone();
+        let (attachment_id, descriptor) = service
+            .persist_prepared_job("original", test_prepared_media(&ctx))
+            .await?;
+        for slot_state in ["cached", "reserved"] {
+            sqlx::query("UPDATE direct_media_upload_slots SET state = ? WHERE attachment_id = ?")
+                .bind(slot_state)
+                .bind(&attachment_id)
+                .execute(&database.pool)
+                .await?;
+            service
+                .store_slots(UploadSlots {
+                    slots: vec![UploadSlot {
+                        attachment_id: attachment_id.clone(),
+                        expires_at_unix_seconds: 9999999999,
+                        maximum_object_bytes: 1,
+                        media_upload: Some(PresignedPostV2 {
+                            url: "https://replacement.example".into(),
+                            fields: HashMap::new(),
+                        }),
+                        background_capability: vec![2],
+                    }],
+                    ..Default::default()
+                })
+                .await?;
+            service.purge_cached_slots().await;
+            assert_eq!(
+                test_pending_job(&ctx, &attachment_id).await?.capability,
+                vec![1]
+            );
+            let saved: String = sqlx::query_scalar("SELECT native_descriptor_json FROM direct_media_upload_jobs WHERE attachment_id = ?")
+                .bind(&attachment_id).fetch_one(&database.pool).await?;
+            assert_eq!(saved, descriptor);
+        }
+        Ok(())
     }
 }
