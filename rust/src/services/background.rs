@@ -322,6 +322,12 @@ mod tests {
 
         let database = ctx.app_db.read().await.clone();
 
+        // Context now completes import before exposing a runtime. Recreate an
+        // incomplete import explicitly to exercise the maintenance guard.
+        sqlx::query("DELETE FROM app_metadata WHERE key = 'legacy_import_complete'")
+            .execute(&database.pool)
+            .await?;
+
         sqlx::query!(
             r#"
                 INSERT INTO groups(group_id, group_name, delete_messages_after_milliseconds)

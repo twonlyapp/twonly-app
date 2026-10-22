@@ -44,6 +44,9 @@ pub enum TwonlyError {
     #[error("Could not find the given database")]
     DatabaseNotFound,
 
+    #[error("message is retained pending contact acceptance")]
+    ContactAcceptancePending,
+
     #[error("main_key could not be loaded from the key_chain")]
     MissingMainKey,
 

@@ -529,6 +529,7 @@ pub async fn handle_decoded_server_message(
     }
 
     let mut withhold_delivery_receipt = false;
+    let mut defer_until_accepted = false;
 
     let mut rebuild_session = false;
 
@@ -624,15 +625,16 @@ pub async fn handle_decoded_server_message(
                     .execute(&mut *t)
                     .await?;
 
-                    withhold_delivery_receipt = process_encrypted_or_queue_error(
+                    let delivery = process_encrypted_or_queue_error(
                         ctx,
                         &mut t,
                         from_user_id,
                         &message.receipt_id,
                         content,
                     )
-                    .await?
-                        == Delivery::Withhold;
+                    .await?;
+                    withhold_delivery_receipt = delivery != Delivery::Ack;
+                    defer_until_accepted = delivery == Delivery::Deferred;
                 }
                 // The ratchet has already consumed this message, so it was
                 // handled and the peer is only missing the answer. Falling
@@ -685,7 +687,9 @@ pub async fn handle_decoded_server_message(
 
     // The message is about to become durable, so the plaintext parked for a
     // retry that is no longer needed can go.
-    Receipt::clear_pending_plaintext(&mut t, &message.receipt_id).await?;
+    if !defer_until_accepted {
+        Receipt::clear_pending_plaintext(&mut t, &message.receipt_id).await?;
+    }
 
     t.commit().await?;
 
@@ -716,7 +720,13 @@ pub async fn handle_decoded_server_message(
         }
     });
 
-    Ok(())
+    if defer_until_accepted {
+        // Keep the reliable-mailbox envelope on the server too. A redelivery
+        // resumes the plaintext; it must never reach the duplicate/ACK path.
+        Err(TwonlyError::ContactAcceptancePending)
+    } else {
+        Ok(())
+    }
 }
 
 /// Answers a peer's session reset by opening a new session with them.
@@ -786,6 +796,8 @@ pub(crate) enum Delivery {
     /// Tell the sender nothing, either because an error response goes back
     /// instead or because the content is ignored outright.
     Withhold,
+    /// Keep decrypted content and retry it after the friendship is accepted.
+    Deferred,
 }
 
 /// Dispatches already-decrypted client-to-client content to its concrete
@@ -807,7 +819,10 @@ pub(crate) async fn handle_encrypted(
 
     let notification_content = content.clone();
 
-    handle_encrypted_inner(ctx, t, from_user_id, receipt_id, content).await?;
+    match handle_encrypted_inner(ctx, t, from_user_id, receipt_id, content).await {
+        Err(TwonlyError::ContactAcceptancePending) => return Ok(Delivery::Deferred),
+        result => result?,
+    }
 
     crate::services::notifications::record_incoming_event(
         ctx,
@@ -947,6 +962,12 @@ async fn handle_encrypted_inner(
         if Group::direct_chat_id(local_user_id, from_user_id) == group_id {
             let contact = Contact::get_contact_by_id(t, from_user_id).await?;
 
+            // A deliberate block is terminal, rather than a friendship waiting
+            // for acceptance. Do not create a request or retain its mailbox row.
+            if contact.as_ref().is_some_and(|value| value.blocked != 0) {
+                return Ok(());
+            }
+
             if let Some(contact) =
                 contact.filter(|value| value.accepted != 0 && value.deleted_by_user == 0)
             {
@@ -973,7 +994,7 @@ async fn handle_encrypted_inner(
                 )
                 .await?;
 
-                return Ok(());
+                return Err(TwonlyError::ContactAcceptancePending);
             }
         }
     }
@@ -1039,6 +1060,173 @@ async fn handle_encrypted_inner(
 mod tests {
 
     use super::*;
+
+    #[tokio::test]
+    async fn blocked_media_does_not_create_a_request_or_wait_for_acceptance() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        ctx.key_manager.lock().await.user_id = Some(42);
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username, blocked, deleted_by_user) VALUES (7, 'blocked', 1, 1)")
+            .execute(&database.pool).await?;
+        let mut t = database.pool.begin().await?;
+        let delivery = handle_encrypted(
+            &ctx,
+            &mut t,
+            7,
+            "blocked-image",
+            proto::EncryptedContent {
+                group_id: Some(Group::direct_chat_id(42, 7)),
+                media: Some(proto::encrypted_content::Media {
+                    r#type: proto::encrypted_content::media::Type::Image as i32,
+                    sender_message_id: "blocked-image".into(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+        )
+        .await?;
+        assert_eq!(delivery, Delivery::Ack);
+        let contact = Contact::get_contact_by_id(&mut t, 7).await?.unwrap();
+        assert_eq!(
+            (
+                contact.accepted,
+                contact.requested,
+                contact.blocked,
+                contact.deleted_by_user
+            ),
+            (0, 0, 1, 1)
+        );
+        let pending: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM receipts")
+            .fetch_one(&mut *t)
+            .await?;
+        assert_eq!(pending, 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn media_waiting_for_acceptance_is_not_acked_and_survives_redelivery() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        ctx.key_manager.lock().await.user_id = Some(42);
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'friend')")
+            .execute(&database.pool)
+            .await?;
+        let group_id = Group::direct_chat_id(42, 7);
+        let content = proto::EncryptedContent {
+            group_id: Some(group_id.clone()),
+            media: Some(proto::encrypted_content::Media {
+                r#type: proto::encrypted_content::media::Type::Image as i32,
+                sender_message_id: "new-image".into(),
+                timestamp: chrono::Utc::now().timestamp_millis(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let mut t = database.pool.begin().await?;
+        Receipt::claim_received(&mut t, "image-receipt").await?;
+        Receipt::store_pending_plaintext(&mut t, "image-receipt", &content.encode_to_vec()).await?;
+        t.commit().await?;
+        // Keep background delivery offline while exercising the real inbound path.
+        let client = crate::api::ApiRuntime::client(&ctx).await?;
+        let _transport = client.ws_client.lock().await;
+        let message = server_to_client::PendingMessageV2 {
+            delivery_id: 1,
+            from_user_id: 7,
+            body: proto::Message {
+                receipt_id: "image-receipt".into(),
+                r#type: Type::CiphertextV2 as i32,
+                ..Default::default()
+            }
+            .encode_to_vec(),
+        };
+        for _ in 0..2 {
+            let response = acknowledge_pending_messages(
+                &ctx,
+                server_to_client::PendingMessagesV2 {
+                    messages: vec![message.clone()],
+                },
+            )
+            .await;
+            let Some(Response::Ok(response)) = response.response else {
+                panic!("expected mailbox response")
+            };
+            let Some(ok::Ok::AcknowledgedPendingMessages(ack)) = response.ok else {
+                panic!("expected delivery IDs")
+            };
+            assert!(
+                ack.delivery_ids.is_empty(),
+                "the server must retain the undelivered image"
+            );
+            let mut t = database.pool.begin().await?;
+            assert_eq!(
+                Receipt::pending_plaintext(&mut t, "image-receipt").await?,
+                Some(content.encode_to_vec())
+            );
+            let acked: bool = sqlx::query_scalar(
+                "SELECT EXISTS(SELECT 1 FROM receipts WHERE receipt_id = 'image-receipt')",
+            )
+            .fetch_one(&mut *t)
+            .await?;
+            assert!(!acked, "no success receipt before the image is stored");
+            let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM messages")
+                .fetch_one(&mut *t)
+                .await?;
+            assert_eq!(count, 0);
+            t.rollback().await?;
+        }
+        let mut t = database.pool.begin().await?;
+        sqlx::query("UPDATE contacts SET accepted = 1, requested = 0 WHERE user_id = 7")
+            .execute(&mut *t)
+            .await?;
+        let contact = Contact::get_contact_by_id(&mut t, 7).await?.unwrap();
+        Group::create_direct_chat(&ctx, &mut t, contact).await?;
+        t.commit().await?;
+        {
+            let response = acknowledge_pending_messages(
+                &ctx,
+                server_to_client::PendingMessagesV2 {
+                    messages: vec![message.clone()],
+                },
+            )
+            .await;
+            let Some(Response::Ok(response)) = response.response else {
+                panic!("expected mailbox response")
+            };
+            let Some(ok::Ok::AcknowledgedPendingMessages(ack)) = response.ok else {
+                panic!("expected delivery IDs")
+            };
+            assert_eq!(ack.delivery_ids, vec![1]);
+        }
+        let mut t = database.pool.begin().await?;
+        assert!(Receipt::pending_plaintext(&mut t, "image-receipt")
+            .await?
+            .is_none());
+        let copies: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM messages WHERE message_id = 'new-image' AND media_id IS NOT NULL",
+        )
+        .fetch_one(&mut *t)
+        .await?;
+        assert_eq!(copies, 1);
+        let acked: bool = sqlx::query_scalar(
+            "SELECT EXISTS(SELECT 1 FROM receipts WHERE receipt_id = 'image-receipt')",
+        )
+        .fetch_one(&mut *t)
+        .await?;
+        assert!(acked);
+        Ok(())
+    }
 
     #[tokio::test]
 

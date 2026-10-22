@@ -7,11 +7,43 @@ use super::{
     AppDatabase, MigrationReport, TableMigrationCount, APPLICATION_TABLES, LEGACY_COPY_TABLES,
 };
 use crate::error::{Result, TwonlyError};
-use sqlx::{Acquire, AssertSqlSafe, Row};
+use sqlx::{AssertSqlSafe, Connection, Row};
 use std::collections::BTreeSet;
 use std::path::Path;
 
 impl AppDatabase {
+    /// Native receivers must import the same historical store as Flutter before
+    /// looking up contacts or consuming a Signal ratchet step.
+    pub(crate) async fn prepare_application_data(&self, directory: &Path) -> Result<()> {
+        if !self.is_legacy_import_complete().await? {
+            let legacy = directory.join("twonly.sqlite");
+            if legacy.exists() {
+                let report = self.import_legacy(&legacy).await?;
+                tracing::info!(
+                    tables = report.tables.len(),
+                    "legacy application import completed"
+                );
+            } else {
+                self.complete_empty_legacy_import().await?;
+            }
+        }
+
+        // SQL migrations run before the legacy rows arrive. Reconcile after
+        // import as well, and repair any later downgrade on the next startup.
+        self.repair_direct_chat_contacts().await
+    }
+
+    pub(crate) async fn repair_direct_chat_contacts(&self) -> Result<()> {
+        let mut transaction = self.pool.begin().await?;
+        sqlx::raw_sql(include_str!(
+            "migrations/0045_repair_direct_chat_contacts.sql"
+        ))
+        .execute(&mut *transaction)
+        .await?;
+        transaction.commit().await?;
+        Ok(())
+    }
+
     pub async fn is_legacy_import_complete(&self) -> Result<bool> {
         let value = sqlx::query_scalar!(
             r#"
@@ -80,9 +112,10 @@ impl AppDatabase {
             .execute(&mut *connection)
             .await;
 
-        let report = import_result?;
-
-        Ok(report)
+        import_result?;
+        drop(connection);
+        self.repair_direct_chat_contacts().await?;
+        self.migration_report().await
     }
 
     async fn migration_report(&self) -> Result<MigrationReport> {
@@ -134,7 +167,20 @@ async fn import(
         )));
     }
 
-    let mut tx = connection.begin().await?;
+    // Two processes can both observe an incomplete import. Acquire the writer
+    // before checking again so the second cannot overwrite newly received data.
+    let mut tx = connection.begin_with("BEGIN IMMEDIATE").await?;
+    let complete: Option<String> =
+        sqlx::query_scalar("SELECT value FROM app_metadata WHERE key = 'legacy_import_complete'")
+            .fetch_optional(&mut *tx)
+            .await?;
+    if complete.as_deref() == Some("1") {
+        tx.commit().await?;
+        return Ok(MigrationReport {
+            legacy_version,
+            tables: Vec::new(),
+        });
+    }
 
     sqlx::query!(r#"PRAGMA defer_foreign_keys = ON"#)
         .execute(&mut *tx)
@@ -624,6 +670,57 @@ mod tests {
 
             assert_eq!(actual, expected, "Signal data changed in {table}");
         }
+    }
+
+    #[tokio::test]
+    async fn native_startup_imports_existing_friends_before_the_first_message() {
+        let directory = tempdir().unwrap();
+        let legacy_path = directory.path().join("twonly.sqlite");
+        let legacy = AppDatabase::new(legacy_path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        create_legacy_schema(&legacy.pool).await;
+        for statement in [
+            "PRAGMA user_version = 25",
+            "INSERT INTO contacts(user_id, username, requested) VALUES (7, 'friend', 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat, flame_counter) VALUES ('direct', 'Friend', 1, 65)",
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('direct', 7)",
+        ] {
+            sqlx::query(statement).execute(&legacy.pool).await.unwrap();
+        }
+        legacy.pool.close().await;
+        // This is the same preparation Context performs before creating the API runtime.
+        let target = AppDatabase::new(
+            directory.path().join("app_db.sqlite").to_str().unwrap(),
+            None,
+            false,
+        )
+        .await
+        .unwrap();
+        target.run_migrations().await.unwrap();
+        assert!(!target.is_legacy_import_complete().await.unwrap());
+        target
+            .prepare_application_data(directory.path())
+            .await
+            .unwrap();
+        assert!(target.is_legacy_import_complete().await.unwrap());
+        let friend: (bool, bool, i64) = sqlx::query_as(
+            "SELECT c.accepted, c.requested, g.flame_counter FROM contacts c JOIN group_members m ON m.contact_id = c.user_id JOIN groups g ON g.group_id = m.group_id WHERE c.user_id = 7"
+        ).fetch_one(&target.pool).await.unwrap();
+        assert_eq!(friend, (true, false, 65));
+        sqlx::query("UPDATE contacts SET nick_name = 'Kept after import' WHERE user_id = 7")
+            .execute(&target.pool)
+            .await
+            .unwrap();
+        target
+            .prepare_application_data(directory.path())
+            .await
+            .unwrap();
+        let name: String = sqlx::query_scalar("SELECT nick_name FROM contacts WHERE user_id = 7")
+            .fetch_one(&target.pool)
+            .await
+            .unwrap();
+        assert_eq!(name, "Kept after import");
     }
 
     async fn create_legacy_schema(pool: &SqlitePool) {

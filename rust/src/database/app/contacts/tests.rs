@@ -39,6 +39,63 @@ fn query(filter: ContactFilter) -> ContactQuery {
 }
 
 #[tokio::test]
+async fn direct_chat_repair_restores_friends_without_reviving_removed_contacts() {
+    let (_directory, database) = open().await;
+    for statement in [
+        "INSERT INTO contacts(user_id, username, requested, requested_by_user, blocked, deleted_by_user, account_deleted) VALUES
+         (1, 'friend', 1, 1, 0, 0, 0), (2, 'group-only', 1, 0, 0, 0, 0),
+         (3, 'blocked', 1, 0, 1, 0, 0), (4, 'removed', 1, 0, 0, 1, 0),
+         (5, 'deleted-account', 1, 0, 0, 0, 1), (6, 'outgoing', 0, 1, 0, 0, 0),
+         (7, 'incidental-contact', 0, 0, 0, 0, 0)",
+        "INSERT INTO groups(group_id, group_name, is_direct_chat, flame_counter) VALUES ('direct', 'Friend', 1, 65), ('group', 'Group', 0, 0)",
+        "INSERT INTO group_members(group_id, contact_id) VALUES ('direct', 1), ('direct', 3), ('direct', 4), ('direct', 5), ('group', 2)",
+        "INSERT INTO receipts(receipt_id, contact_id, message, mark_for_retry_after_accepted) VALUES ('friend', 1, x'00', 1), ('blocked', 3, x'00', 1)",
+    ] {
+        sqlx::query(statement).execute(&database.pool).await.unwrap();
+    }
+    database.repair_direct_chat_contacts().await.unwrap();
+    database.repair_direct_chat_contacts().await.unwrap();
+    let mut tx = database.pool.begin().await.unwrap();
+    let friend = queries::get(&mut tx, 1).await.unwrap().unwrap();
+    assert_eq!(
+        (friend.accepted, friend.requested, friend.requested_by_user),
+        (1, 0, 0)
+    );
+    for id in 2..=7 {
+        assert_eq!(
+            queries::get(&mut tx, id).await.unwrap().unwrap().accepted,
+            0
+        );
+    }
+    let visible = queries::list(&mut tx, &query(ContactFilter::NotAccepted))
+        .await
+        .unwrap();
+    assert_eq!(
+        visible.iter().map(|c| c.user_id).collect::<Vec<_>>(),
+        vec![2, 6]
+    );
+    assert_eq!(
+        queries::count(&mut tx, ContactCount::Requested)
+            .await
+            .unwrap(),
+        1
+    );
+    let parked: Vec<String> = sqlx::query_scalar(
+        "SELECT receipt_id FROM receipts WHERE mark_for_retry_after_accepted IS NOT NULL",
+    )
+    .fetch_all(&mut *tx)
+    .await
+    .unwrap();
+    assert_eq!(parked, vec!["blocked"]);
+    let flames: i64 =
+        sqlx::query_scalar("SELECT flame_counter FROM groups WHERE group_id = 'direct'")
+            .fetch_one(&mut *tx)
+            .await
+            .unwrap();
+    assert_eq!(flames, 65);
+}
+
+#[tokio::test]
 
 async fn native_upsert_preserves_defaults_null_patches_and_photo_preference() {
     let (_directory, database) = open().await;

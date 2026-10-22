@@ -152,6 +152,7 @@ impl Context {
         .await?;
 
         app_db.run_migrations().await?;
+        app_db.prepare_application_data(&database_dir).await?;
 
         let app_db = Arc::new(RwLock::new(Arc::new(app_db)));
 
@@ -378,6 +379,7 @@ impl Context {
                         .await?;
 
                         database.run_migrations().await?;
+                        database.prepare_application_data(&database_dir).await?;
 
                         Ok::<_, TwonlyError>(database)
                     },

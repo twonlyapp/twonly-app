@@ -106,7 +106,9 @@ pub async fn list(connection: &mut SqliteConnection, input: &ContactQuery) -> Re
         ),
         ContactFilter::NotAccepted => select!(
             r#"
-                WHERE accepted = 0 AND blocked = 0 AND deleted_by_user = 0 ORDER BY user_id
+                WHERE accepted = 0 AND blocked = 0 AND deleted_by_user = 0
+                  AND account_deleted = 0 AND (requested = 1 OR requested_by_user = 1)
+                ORDER BY user_id
             "#
         ),
         ContactFilter::Accepted => select!(
@@ -167,6 +169,7 @@ pub async fn count(connection: &mut SqliteConnection, metric: ContactCount) -> R
                 AND accepted = 0
                 AND deleted_by_user = 0
                 AND blocked = 0
+                AND account_deleted = 0
         "#,
             )
             .fetch_one(connection)
