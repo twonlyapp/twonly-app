@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE\n            FROM messages\n            WHERE type != 'webxdcApp'\n                AND (is_story = 0\n                    OR media_stored = 1\n            )\n                AND (is_widget_media = 0\n                    OR sender_id IS NULL\n            )\n                AND (media_stored = 0\n                    OR is_deleted_from_sender = 1\n            )\n                AND EXISTS(\n                SELECT 1\n                FROM groups g\n                WHERE g.group_id = messages.group_id\n                    AND ((opened_by_all IS NOT NULL\n                            AND opened_by_all < CAST((? - g.delete_messages_after_milliseconds) / 1000 AS INTEGER)\n                    )\n                        OR (is_deleted_from_sender = 1\n                            AND messages.created_at < CAST((? - g.delete_messages_after_milliseconds) / 1000 AS\n                                INTEGER)\n                    )\n                )\n            )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "6e0b93dce45940af70d4b99681c5fb26acc118970b7e4f54c286897831e22c80"
+}

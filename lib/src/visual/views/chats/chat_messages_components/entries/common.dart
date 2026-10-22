@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/src/model/message_enums.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
@@ -20,9 +22,9 @@ class BubbleInfo {
 
 BubbleInfo getBubbleInfo(
   BuildContext context,
-  Message message,
-  Message? nextMessage,
-  Message? prevMessage,
+  StoredMessage message,
+  StoredMessage? nextMessage,
+  StoredMessage? prevMessage,
   Map<int, Contact>? userIdToContact,
   double minWidth,
 ) {
@@ -117,7 +119,10 @@ double measureTextWidth(
   return width;
 }
 
-bool combineTextMessageWithNext(Message message, Message? nextMessage) {
+bool combineTextMessageWithNext(
+  StoredMessage message,
+  StoredMessage? nextMessage,
+) {
   if (nextMessage != null) {
     if (nextMessage.senderId == message.senderId) {
       if (nextMessage.content == null ||

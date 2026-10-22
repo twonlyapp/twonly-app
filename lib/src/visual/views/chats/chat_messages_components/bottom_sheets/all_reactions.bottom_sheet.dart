@@ -1,11 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/reactions/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -13,15 +19,15 @@ import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 class AllReactionsView extends StatefulWidget {
   const AllReactionsView({required this.message, super.key});
 
-  final Message message;
+  final StoredMessage message;
 
   @override
   State<AllReactionsView> createState() => _AllReactionsViewState();
 }
 
 class _AllReactionsViewState extends State<AllReactionsView> {
-  StreamSubscription<List<(Reaction, Contact?)>>? reactionsSub;
-  List<(Reaction, Contact?)> reactionsUsers = [];
+  StreamSubscription<List<(StoredReaction, Contact?)>>? reactionsSub;
+  List<(StoredReaction, Contact?)> reactionsUsers = [];
 
   @override
   void initState() {
@@ -36,8 +42,13 @@ class _AllReactionsViewState extends State<AllReactionsView> {
   }
 
   Future<void> initAsync() async {
-    final stream = twonlyDB.reactionsDao.watchReactionWithContacts(
-      widget.message.messageId,
+    final stream = watchRustDatabase(
+      (control) => rust_reactions
+          .watchReactionsWithContacts(
+            message: widget.message.messageId,
+            control: control,
+          )
+          .map(reactionsWithContacts),
     );
 
     reactionsSub = stream.listen((update) {
@@ -50,10 +61,11 @@ class _AllReactionsViewState extends State<AllReactionsView> {
   }
 
   Future<void> removeReaction(String emoji) async {
-    await twonlyDB.reactionsDao.updateMyReaction(
-      widget.message.messageId,
-      emoji,
-      true,
+    await rust_reactions.updateOwnReaction(
+      message: widget.message.messageId,
+      emoji: emoji,
+      remove: true,
+      transaction: currentDatabaseSession(),
     );
     await RustApi.sendEncryptedContentToGroup(
       groupId: widget.message.groupId,

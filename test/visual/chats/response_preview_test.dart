@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/response_container.dart';
 
@@ -14,7 +16,7 @@ void main() {
     tester,
   ) async {
     final bytes = File('assets/images/default_avatar.png').readAsBytesSync();
-    final message = Message(
+    final message = StoredMessage(
       groupId: 'group',
       messageId: 'sticker',
       type: 'text',
@@ -33,7 +35,7 @@ void main() {
       isDeletedFromSender: false,
       isWidgetMedia: false,
       isStory: false,
-      createdAt: DateTime(2026),
+      createdAtSeconds: databaseSeconds(DateTime(2026)),
     );
     final group = Group(
       groupId: 'group',
@@ -49,10 +51,10 @@ void main() {
       totalMediaCounter: 0,
       alsoBestFriend: false,
       deleteMessagesAfterMilliseconds: 0,
-      createdAt: DateTime(2026),
+      createdAtSeconds: databaseSeconds(DateTime(2026)),
       flameCounter: 0,
       maxFlameCounter: 0,
-      lastMessageExchange: DateTime(2026),
+      lastMessageExchangeSeconds: databaseSeconds(DateTime(2026)),
     );
 
     Widget app({required bool showBorder}) => MaterialApp(

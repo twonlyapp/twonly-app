@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "PRAGMA data_version",
+  "describe": {
+    "columns": [
+      {
+        "name": "data_version",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "8415d69bd6c6d1c0eb3de4f9bc8133784c71337f16892424a35c67110058ea46"
+}

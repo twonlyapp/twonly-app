@@ -1,4 +1,5 @@
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 
 class MemoryItem {
@@ -7,12 +8,12 @@ class MemoryItem {
     required this.messages,
     this.sender,
   });
-  final List<Message> messages;
+  final List<StoredMessage> messages;
   final MediaFileService mediaService;
   final Contact? sender;
 
   static Future<Map<String, MemoryItem>> convertFromMessages(
-    List<Message> messages,
+    List<StoredMessage> messages,
   ) async {
     final items = <String, MemoryItem>{};
     for (final message in messages) {

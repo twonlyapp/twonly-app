@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    SELECT contact_group_id AS label, user_id AS \"user!\"\n                    FROM contact_group_members WHERE user_id IS NOT NULL\n                    ORDER BY contact_group_id, user_id\n                ",
+  "describe": {
+    "columns": [
+      {
+        "name": "label",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "contact_group_id"
+          }
+        }
+      },
+      {
+        "name": "user!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "bba7a6a535d668045f224f52b50dad32b9ac1ffa521c69e06bff42421fb51c3d"
+}

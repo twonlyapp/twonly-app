@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -29,13 +31,16 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   void initState() {
     super.initState();
-    twonlyScoreSub = twonlyDB.groupsDao.watchSumTotalMediaCounter().listen((
-      update,
-    ) {
-      setState(() {
-        twonlyScore = update;
-      });
-    });
+    twonlyScoreSub =
+        watchRustDatabase(
+          (control) => rust_groups.watchGroupsTotalMedia(control: control),
+        ).listen((
+          update,
+        ) {
+          setState(() {
+            twonlyScore = update;
+          });
+        });
   }
 
   @override

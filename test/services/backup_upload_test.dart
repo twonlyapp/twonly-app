@@ -8,13 +8,18 @@ import 'package:http/testing.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
 import 'package:twonly/src/services/backup.service.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
+
+import '../mocks/user_config.dart';
 
 class _BackupApi implements RustLibApi {
   late String archivePath;
+  int archiveCreates = 0;
 
   @override
   String crateBridgeApiRustApiApiBaseUrl({required String protocol}) =>
@@ -31,8 +36,10 @@ class _BackupApi implements RustLibApi {
 
   @override
   Future<(String, String)>
-  crateBridgeWrapperBackupRustBackupArchiveCreateBackupArchive() async =>
-      ('download-token', archivePath);
+  crateBridgeWrapperBackupRustBackupArchiveCreateBackupArchive() async {
+    archiveCreates++;
+    return ('download-token', archivePath);
+  }
 
   @override
   Future<Map<String, String>>
@@ -69,6 +76,20 @@ void main() {
   tearDownAll(RustLib.dispose);
 
   setUp(() async {
+    AppState.isAppInBackground = false;
+    await locator.reset();
+    final user = UserService()
+      ..isUserCreated = true
+      ..currentUser = (testUserConfig(
+        userId: 1,
+        username: 'backup',
+        displayName: 'Backup',
+        subscriptionPlan: 'Free',
+        currentSetupPage: null,
+        appVersion: 1,
+      )..isBackupEnabled = true);
+    locator.registerSingleton<UserService>(user);
+    api.archiveCreates = 0;
     directory = Directory.systemTemp.createTempSync('twonly-backup-upload-');
     AppEnvironment.initTesting(
       customCacheDir: directory.path,
@@ -84,6 +105,7 @@ void main() {
   });
 
   tearDown(() async {
+    AppState.isAppInBackground = true;
     for (final timer in retryTimers) {
       timer.cancel();
     }
@@ -102,6 +124,30 @@ void main() {
         return timer;
       },
     ),
+  );
+
+  test(
+    'a background request waits for resume before creating an archive',
+    () async {
+      final status = CurrentBackupStatus()
+        ..identityState = LastBackupUploadState.success
+        ..identityLastSuccessFull = lastSuccess
+        ..archiveState = LastBackupUploadState.failed;
+      await KeyValueStore.put(KeyValueKeys.currentBackupState, status.toJson());
+      AppState.isAppInBackground = true;
+      final client = _UploadClient((_) async => http.Response('', 200));
+      await upload(client);
+      expect(api.archiveCreates, 0);
+      expect(client.closed, isFalse);
+      AppState.isAppInBackground = false;
+      await http.runWithClient(BackupService.resumePendingBackup, () => client);
+      expect(api.archiveCreates, 1);
+      expect(
+        (await BackupService.getData()).archiveState,
+        LastBackupUploadState.success,
+      );
+      expect(client.closed, isTrue);
+    },
   );
 
   for (final identity in [true, false]) {

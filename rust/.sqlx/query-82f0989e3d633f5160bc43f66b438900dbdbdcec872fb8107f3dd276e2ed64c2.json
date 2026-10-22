@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO app_metadata(key, value) VALUES ('io-marker', 'same-transaction')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "82f0989e3d633f5160bc43f66b438900dbdbdcec872fb8107f3dd276e2ed64c2"
+}

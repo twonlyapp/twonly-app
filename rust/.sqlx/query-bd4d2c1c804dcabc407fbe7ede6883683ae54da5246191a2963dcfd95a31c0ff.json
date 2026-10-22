@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO app_metadata(key, value) VALUES ('wal-sentinel', 'committed')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "bd4d2c1c804dcabc407fbe7ede6883683ae54da5246191a2963dcfd95a31c0ff"
+}

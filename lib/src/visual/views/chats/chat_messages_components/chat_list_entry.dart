@@ -2,16 +2,25 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/reactions/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart'
-    hide MessageActions;
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/services/live_location.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -50,15 +59,15 @@ class ChatListEntry extends StatefulWidget {
     this.useSharedData = false,
     super.key,
   });
-  final Message? prevMessage;
-  final Message? nextMessage;
-  final Message message;
+  final StoredMessage? prevMessage;
+  final StoredMessage? nextMessage;
+  final StoredMessage message;
   final Group group;
   final Map<int, Contact>? userIdToContact;
   final bool hideReactions;
   final MediaFile? mediaFile;
-  final List<Reaction>? reactions;
-  final Map<String, Message>? messagesById;
+  final List<StoredReaction>? reactions;
+  final Map<String, StoredMessage>? messagesById;
   final Map<String, MediaFile>? mediaFilesById;
   final bool useSharedData;
   final List<MemoryItem> galleryItems;
@@ -72,8 +81,8 @@ class ChatListEntry extends StatefulWidget {
 class _ChatListEntryState extends State<ChatListEntry> {
   MediaFileService? mediaService;
 
-  List<Reaction> reactions = [];
-  StreamSubscription<List<Reaction>>? reactionsSub;
+  List<StoredReaction> reactions = [];
+  StreamSubscription<List<StoredReaction>>? reactionsSub;
 
   StreamSubscription<MediaFile?>? mediaFileSub;
 
@@ -117,9 +126,17 @@ class _ChatListEntryState extends State<ChatListEntry> {
   Future<void> initAsync() async {
     if (widget.useSharedData) return;
     if (widget.message.mediaId != null) {
-      final mediaFileStream = twonlyDB.mediaFilesDao.watchMedia(
-        widget.message.mediaId!,
-      );
+      final mediaFileStream = watchRustDatabase(
+        (control) => rust_mediafiles
+            .watchMediaFiles(
+              input: db_mediafiles.MediaQuery(
+                filter: db_mediafiles.MediaFilter.ids,
+                ids: [widget.message.mediaId!].toList(),
+              ),
+              control: control,
+            )
+            .map(orderedMediaFiles),
+      ).map((rows) => rows.isEmpty ? null : rows.single);
       mediaFileSub = mediaFileStream.listen((mediaFiles) {
         if (mediaFiles != null) {
           mediaService = MediaFileService(mediaFiles);
@@ -131,8 +148,11 @@ class _ChatListEntryState extends State<ChatListEntry> {
         }
       });
     }
-    final stream = twonlyDB.reactionsDao.watchReactions(
-      widget.message.messageId,
+    final stream = watchRustDatabase(
+      (control) => rust_reactions.watchReactions(
+        messages: {widget.message.messageId}.toList(),
+        control: control,
+      ),
     );
 
     reactionsSub = stream.listen((update) {
@@ -382,13 +402,13 @@ class _ChatListEntryState extends State<ChatListEntry> {
 }
 
 extension on ChatListEntry {
-  Message? msgQuote({Map<String, Message>? messagesById}) {
+  StoredMessage? msgQuote({Map<String, StoredMessage>? messagesById}) {
     final quotedId = message.quotesMessageId;
     return quotedId == null ? null : messagesById?[quotedId];
   }
 
   MediaFile? msgQuoteMedia({
-    Map<String, Message>? messagesById,
+    Map<String, StoredMessage>? messagesById,
     Map<String, MediaFile>? mediaFilesById,
   }) {
     final quoted = msgQuote(messagesById: messagesById);
@@ -397,9 +417,9 @@ extension on ChatListEntry {
 }
 
 (EdgeInsetsGeometry, BorderRadius, bool) getMessageLayout(
-  Message message,
-  Message? prevMessage,
-  Message? nextMessage,
+  StoredMessage message,
+  StoredMessage? prevMessage,
+  StoredMessage? nextMessage,
   bool hasReactions,
 ) {
   var bottom = 10.0;

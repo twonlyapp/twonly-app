@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/stories.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/stories.dart' as rust_stories;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/story_strip.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expiry_timer.dart';
@@ -28,11 +29,21 @@ class _OwnStoryStripState extends State<OwnStoryStrip> {
   @override
   void initState() {
     super.initState();
-    _itemsSub = twonlyDB.storiesDao.watchOwnStoryItems().listen((items) {
-      if (!mounted) return;
-      setState(() => _items = items);
-      _scheduleExpiry();
-    });
+    _itemsSub =
+        (() {
+          final cutoff =
+              clock.now().subtract(storyLifetime).millisecondsSinceEpoch ~/
+              1000;
+          return watchRustDatabase(
+            (control) => rust_stories
+                .watchOwnStories(cutoff: cutoff, control: control)
+                .map(ownStoryItems),
+          );
+        })().listen((items) {
+          if (!mounted) return;
+          setState(() => _items = items);
+          _scheduleExpiry();
+        });
   }
 
   @override

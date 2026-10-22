@@ -1,23 +1,33 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/services/live_location.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/location_map.dart';
 
 class LiveLocationMapView extends StatefulWidget {
   const LiveLocationMapView({required this.message, super.key});
-  final Message message;
+  final StoredMessage message;
   @override
   State<LiveLocationMapView> createState() => _LiveLocationMapViewState();
 }
 
 class _LiveLocationMapViewState extends State<LiveLocationMapView> {
-  late final Stream<Message?> _message = twonlyDB.messagesDao
-      .getMessageById(widget.message.messageId)
-      .watchSingleOrNull();
+  late final Stream<StoredMessage?> _message = watchRustDatabase(
+    (control) => rust_messages.watchMessages(
+      input: db_messages.MessageQuery(
+        filter: db_messages.MessageFilter.ids,
+        ids: {widget.message.messageId}.toList(),
+        nowMs: clock.now().millisecondsSinceEpoch,
+      ),
+      control: control,
+    ),
+  ).map((rows) => rows.isEmpty ? null : rows.single);
   Timer? _timer;
   bool _stopping = false;
   @override
@@ -52,7 +62,7 @@ class _LiveLocationMapViewState extends State<LiveLocationMapView> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(context.lang.liveLocationTitle)),
-    body: StreamBuilder<Message?>(
+    body: StreamBuilder<StoredMessage?>(
       stream: _message,
       initialData: widget.message,
       builder: (context, snapshot) {

@@ -1,17 +1,22 @@
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 Future<bool> promptAndDisableMemoriesBackup(BuildContext context) async {
-  final cloudOnlyCount = await twonlyDB.mediaFilesDao
-      .getCloudOnlyMemoriesCount();
+  final cloudOnlyCount = await rust_mediafiles.cloudOnlyMediaCount(
+    directory: MediaFileService.buildDirectoryPath(
+      'stored',
+      AppEnvironment.supportDir,
+    ).path,
+    transaction: currentDatabaseSession(),
+  );
 
   if (!context.mounted) return false;
 
@@ -83,21 +88,15 @@ Future<bool> promptAndDisableMemoriesBackup(BuildContext context) async {
   if (confirmed == true) {
     try {
       await RustApi.disableMemoriesBackup();
-      final allMedias = await (twonlyDB.select(
-        twonlyDB.mediaFiles,
-      )..where((t) => t.stored.equals(true))).get();
-      for (final media in allMedias) {
-        final ms = MediaFileService(media);
-        if (!ms.storedPath.existsSync()) {
-          await ms.fullMediaRemoval();
-          await twonlyDB.mediaFilesDao.deleteMediaFile(media.mediaId);
-        }
-      }
-      await twonlyDB.mediaFilesDao.updateAllMediaFiles(
-        const MediaFilesCompanion(
-          cloudState: Value(CloudState.none),
-        ),
-      );
+      await (() async {
+        await rust_mediafiles.finishMemoriesBackupDisable(
+          directory: MediaFileService.buildDirectoryPath(
+            'stored',
+            AppEnvironment.supportDir,
+          ).path,
+          transaction: currentDatabaseSession(),
+        );
+      })();
       await UserService.update((u) => u.isCloudBackupEnabled = false);
       return true;
     } catch (e) {

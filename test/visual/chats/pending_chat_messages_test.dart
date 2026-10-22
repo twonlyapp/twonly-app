@@ -1,8 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:clock/clock.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/pending_chat_messages.dart';
 
 void main() {
@@ -38,7 +39,7 @@ void main() {
       expect(pending.merge([]), [first, second, third]);
 
       final storedSecond = second.copyWith(
-        ackByServer: Value(second.createdAt),
+        ackByServer: NullableInt(value: databaseSeconds(second.createdAt)),
       );
       expect(pending.merge([storedSecond]), [first, storedSecond, third]);
       expect(pending.contains(second.messageId), isFalse);

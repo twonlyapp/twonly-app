@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/stickers/table.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/services/stickers/sticker_cache.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker/bottom_action_bar.dart';
 import 'package:twonly/src/visual/components/sticker_preview.dialog.dart';
@@ -25,8 +26,7 @@ class StickerPicker extends StatefulWidget {
 }
 
 class _StickerPickerState extends State<StickerPicker> {
-  late final Stream<List<LocalSticker>> _stickers = twonlyDB.stickersDao
-      .watchAll();
+  late final Stream<List<LocalSticker>> _stickers = watchCachedStickers();
   bool _creating = false;
 
   Future<void> _createSticker() async {

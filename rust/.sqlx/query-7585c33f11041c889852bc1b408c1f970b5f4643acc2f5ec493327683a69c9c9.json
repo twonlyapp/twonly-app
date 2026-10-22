@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO app_metadata(key, value) VALUES ('promoted', 'foreground')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "7585c33f11041c889852bc1b408c1f970b5f4643acc2f5ec493327683a69c9c9"
+}

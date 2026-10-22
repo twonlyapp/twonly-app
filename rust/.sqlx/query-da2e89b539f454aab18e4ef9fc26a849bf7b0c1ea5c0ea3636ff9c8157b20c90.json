@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT media_id, type, size_in_bytes FROM media_files",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "type",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "size_in_bytes",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "size_in_bytes"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "da2e89b539f454aab18e4ef9fc26a849bf7b0c1ea5c0ea3636ff9c8157b20c90"
+}

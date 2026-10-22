@@ -3,13 +3,16 @@ import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
+import 'package:twonly/core/bridge/database/stickers.dart' as rust_stickers;
+import 'package:twonly/core/database/app/stickers/table.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 
 class StickerService {
   const StickerService._();
@@ -64,13 +67,17 @@ class StickerService {
 
   static Future<LocalSticker> createFromPath(String imagePath) async {
     final output = await RustApi.createSticker(imagePath: imagePath);
-    await twonlyDB.stickersDao.save(
+    await rust_stickers.saveSticker(
       webp: output.webp,
       width: output.width,
       height: output.height,
       expectedHash: output.contentHash,
+      transaction: currentDatabaseSession(),
     );
-    final sticker = await twonlyDB.stickersDao.getByHash(output.contentHash);
+    final sticker = await rust_stickers.getSticker(
+      hash: output.contentHash,
+      transaction: currentDatabaseSession(),
+    );
     if (sticker == null) {
       throw StateError('created sticker was not stored');
     }
@@ -130,11 +137,12 @@ class StickerService {
   }
 
   static Future<bool> saveReceived(StickerData sticker) {
-    return twonlyDB.stickersDao.save(
+    return rust_stickers.saveSticker(
       webp: Uint8List.fromList(sticker.webp),
       width: sticker.width,
       height: sticker.height,
       expectedHash: hex.encode(sticker.sha256),
+      transaction: currentDatabaseSession(),
     );
   }
 
@@ -142,12 +150,13 @@ class StickerService {
     final output = await RustApi.rotateSticker(
       webp: Uint8List.fromList(sticker.webp),
     );
-    return twonlyDB.stickersDao.replace(
-      contentHash: hex.encode(sticker.sha256),
+    return rust_stickers.replaceSticker(
+      hash: hex.encode(sticker.sha256),
       webp: output.webp,
       width: output.width,
       height: output.height,
       expectedHash: output.contentHash,
+      transaction: currentDatabaseSession(),
     );
   }
 
@@ -162,6 +171,9 @@ class StickerService {
       quoteMessageId: quoteMessageId,
       additionalMessageData: encodeAdditional(sticker),
     );
-    await twonlyDB.stickersDao.recordUse(sticker.contentHash);
+    await rust_stickers.recordStickerUse(
+      hash: sticker.contentHash,
+      transaction: currentDatabaseSession(),
+    );
   }
 }

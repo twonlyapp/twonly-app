@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/utils/contact_name.dart';
 
 class FaqMarkdownView extends StatelessWidget {
   const FaqMarkdownView({

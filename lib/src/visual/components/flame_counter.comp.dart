@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:twonly/core/bridge.dart' show FlameState;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/groups.dart' as rust_groups;
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 
 class FlameCounterWidget extends StatefulWidget {
@@ -57,17 +60,34 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
     if (group != null) {
       groupId = group.groupId;
     } else if (widget.groupId == null && widget.contactId != null) {
-      group = await twonlyDB.groupsDao.getDirectChat(widget.contactId!);
+      group = await rust_groups
+          .listGroups(
+            input: db_groups.GroupQuery(
+              filter: db_groups.GroupFilter.directContact,
+              contactId: widget.contactId,
+            ),
+            transaction: currentDatabaseSession(),
+          )
+          .then((rows) => rows.isEmpty ? null : rows.single);
       groupId = group?.groupId;
     } else if (groupId != null) {
-      group = await twonlyDB.groupsDao.getGroup(groupId);
+      group = await rust_groups.getGroup(
+        id: groupId,
+        transaction: currentDatabaseSession(),
+      );
     }
     if (groupId != null && group != null) {
       if (widget.group != null) {
         _apply(await rust_groups.flameState(groupId: groupId));
         return;
       }
-      final stream = twonlyDB.groupsDao.watchFlameCounter(groupId);
+      final watchedGroupId = groupId;
+      final stream = watchRustDatabase(
+        (control) => rust_groups.watchGroupFlame(
+          group: watchedGroupId,
+          control: control,
+        ),
+      );
       flameCounterSub = stream.listen(_apply);
     }
   }

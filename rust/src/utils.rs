@@ -27,6 +27,7 @@ pub(crate) fn is_today(timestamp: i64) -> bool {
 /// Midnight of the current day in the user's timezone. Flame counters roll over
 /// at the local day boundary, so every comparison against "today" has to start
 /// here instead of at a UTC boundary.
+
 pub(crate) fn start_of_local_day() -> Result<i64> {
     Ok(Local
         .from_local_datetime(
@@ -46,38 +47,50 @@ pub(crate) fn new_uuid_v4() -> String {
 
 /// Media and message identifiers are time-ordered so that inserting them keeps
 /// the primary-key index append-only, matching what Drift generated before.
+
 pub(crate) fn new_uuid_v7() -> String {
     uuid::Uuid::now_v7().to_string()
 }
 
 #[derive(Default, Clone)]
+
 pub(crate) struct Shared<T>(Arc<RwLock<T>>);
+
 impl<T> Shared<T> {
     pub(crate) fn new(value: T) -> Self {
         Self(Arc::new(RwLock::new(value)))
     }
+
     pub(crate) async fn get(&self) -> RwLockReadGuard<'_, T> {
         self.0.read().await
     }
+
     // pub(crate) async fn set(&self, value: T) {
     //     *self.0.write().await = value;
     // }
 }
 
 #[cfg(test)]
+
 mod tests {
+
     use super::{current_time, is_today, milliseconds_to_seconds};
 
     #[test]
+
     fn converts_milliseconds_to_seconds() {
         assert_eq!(milliseconds_to_seconds(1_999), 1);
+
         assert_eq!(milliseconds_to_seconds(1_000), 1);
+
         assert_eq!(milliseconds_to_seconds(999), 0);
     }
 
     #[test]
+
     fn recognizes_current_day() {
         assert!(is_today(current_time().timestamp()));
+
         assert!(!is_today(i64::MAX));
     }
 }

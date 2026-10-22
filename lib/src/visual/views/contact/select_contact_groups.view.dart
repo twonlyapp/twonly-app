@@ -1,10 +1,23 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/contact_groups.dart'
+    as rust_contact_groups;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contact_groups/table.dart'
+    as db_contact_groups;
+import 'package:twonly/core/database/app/contact_groups/table.dart';
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
@@ -41,27 +54,57 @@ class _SelectContactGroupsViewState extends State<SelectContactGroupsView> {
     final groupId = _groupId;
     if (groupId != null) {
       _subscriptions.add(
-        twonlyDB.groupsDao.watchGroup(groupId).listen((group) {
+        watchRustDatabase(
+          (control) => rust_groups.watchGroups(
+            input: db_groups.GroupQuery(
+              filter: db_groups.GroupFilter.id,
+              groupId: groupId,
+            ),
+            control: control,
+          ),
+        ).map((rows) => rows.isEmpty ? null : rows.single).listen((group) {
           if (mounted) setState(() => _group = group);
         }),
       );
     } else {
       _subscriptions.add(
-        twonlyDB.contactsDao.watchContact(widget.userId!).listen((contact) {
+        watchRustDatabase(
+          (control) => rust_contacts.watchContacts(
+            input: db_contacts.ContactQuery(
+              filter: db_contacts.ContactFilter.ids,
+              ids: Int64List.fromList([widget.userId!].toList()),
+            ),
+            control: control,
+          ),
+        ).map((rows) => rows.isEmpty ? null : rows.single).listen((contact) {
           if (mounted) setState(() => _contact = contact);
         }),
       );
     }
     _subscriptions.add(
-      twonlyDB.contactGroupsDao.watchAllContactGroups().listen((groups) {
+      watchRustDatabase(
+        (control) => rust_contact_groups.watchContactGroups(
+          filter: db_contact_groups.ContactGroupFilter.all,
+          control: control,
+        ),
+      ).listen((groups) {
         if (mounted) setState(() => _contactGroups = groups);
       }),
     );
     _subscriptions.add(
       (groupId != null
-              ? twonlyDB.contactGroupsDao.watchContactGroupIdsForGroup(groupId)
-              : twonlyDB.contactGroupsDao.watchContactGroupIdsForUser(
-                  widget.userId!,
+              ? watchRustDatabase(
+                  (control) => rust_contact_groups
+                      .watchContactGroupIds(groupId: groupId, control: control)
+                      .map((ids) => ids.map((id) => id.toInt()).toSet()),
+                )
+              : watchRustDatabase(
+                  (control) => rust_contact_groups
+                      .watchContactGroupIds(
+                        userId: widget.userId,
+                        control: control,
+                      )
+                      .map((ids) => ids.map((id) => id.toInt()).toSet()),
                 ))
           .listen((ids) {
             if (mounted) setState(() => _selectedIds = ids);
@@ -88,16 +131,18 @@ class _SelectContactGroupsViewState extends State<SelectContactGroupsView> {
     });
     final groupId = _groupId;
     if (groupId != null) {
-      await twonlyDB.contactGroupsDao.setGroupMembership(
-        contactGroup.id,
-        groupId,
-        !selected,
+      await rust_contact_groups.setContactGroupChat(
+        transaction: currentDatabaseSession(),
+        id: contactGroup.id,
+        groupId: groupId,
+        selected: !selected,
       );
     } else {
-      await twonlyDB.contactGroupsDao.setUserMembership(
-        contactGroup.id,
-        widget.userId!,
-        !selected,
+      await rust_contact_groups.setContactGroupUser(
+        transaction: currentDatabaseSession(),
+        id: contactGroup.id,
+        userId: widget.userId!,
+        selected: !selected,
       );
     }
   }

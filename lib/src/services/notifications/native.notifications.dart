@@ -3,7 +3,9 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart';
 import 'package:twonly/core/bridge/api.dart';
-import 'package:twonly/core/bridge/wrapper/app_database.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// Taps on notifications rendered natively (Android `MessagingStyle`) arrive
@@ -103,7 +105,7 @@ class NativeNotificationService {
   static void _startBadgeSync() {
     if (!Platform.isIOS || _outboxChanges != null) return;
     try {
-      _outboxChanges = RustAppDatabase.changes().listen(
+      _outboxChanges = watchRustDatabaseChanges().listen(
         (tables) {
           // An empty batch means Rust could not say what changed, so the
           // outbox has to be assumed stale as well.
@@ -123,14 +125,17 @@ class NativeNotificationService {
 
   /// Reads the pending event count from Rust and writes it to the app icon.
   static Future<void> refreshBadgeCount() async {
-    if (!Platform.isIOS) return;
+    if (!Platform.isIOS || AppState.isAppInBackground) return;
     try {
       final count = await RustApi.notificationBadgeCount();
+      if (AppState.isAppInBackground) return;
       await _channel.invokeMethod<void>('setBadgeCount', {
         _badgeCountKey: count,
       });
     } catch (e) {
-      Log.error('Could not update the app icon badge: $e');
+      if (!AppState.isAppInBackground) {
+        Log.error('Could not update the app icon badge: $e');
+      }
     }
   }
 

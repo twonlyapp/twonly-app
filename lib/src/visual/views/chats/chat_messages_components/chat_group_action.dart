@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/groups.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/src/model/group_enums.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class ChatGroupAction extends StatefulWidget {
@@ -54,14 +57,16 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
 
   Future<void> initAsync() async {
     if (widget.action.contactId != null) {
-      contact = await twonlyDB.contactsDao.getContactById(
-        widget.action.contactId!,
+      contact = await rust_contacts.getContact(
+        id: widget.action.contactId!,
+        transaction: currentDatabaseSession(),
       );
     }
 
     if (widget.action.affectedContactId != null) {
-      affectedContact = await twonlyDB.contactsDao.getContactById(
-        widget.action.affectedContactId!,
+      affectedContact = await rust_contacts.getContact(
+        id: widget.action.affectedContactId!,
+        transaction: currentDatabaseSession(),
       );
     }
 

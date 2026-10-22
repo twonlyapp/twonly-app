@@ -1,20 +1,25 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -159,7 +164,12 @@ class MemoriesCloudService {
       if (await RustApi.connectionState() != ApiConnectionState.authenticated) {
         return;
       }
-      final memories = await twonlyDB.mediaFilesDao.getMemoriesToBackup();
+      final memories = await rust_mediafiles.listMediaFiles(
+        input: const db_mediafiles.MediaQuery(
+          filter: db_mediafiles.MediaFilter.memoriesToBackup,
+        ),
+        transaction: currentDatabaseSession(),
+      );
       if (memories.isEmpty) {
         return;
       }
@@ -295,11 +305,10 @@ class MemoriesCloudService {
         return false;
       }
 
-      await twonlyDB.mediaFilesDao.updateMedia(
-        mediaFile.mediaId,
-        const MediaFilesCompanion(
-          cloudState: Value(CloudState.pending),
-        ),
+      await rust_mediafiles.updateMediaFiles(
+        id: mediaFile.mediaId,
+        patch: MediaFilePatch(cloudState: CloudState.pending.name),
+        transaction: currentDatabaseSession(),
       );
 
       final mediaKey = getRandomUint8List(32);
@@ -335,11 +344,10 @@ class MemoriesCloudService {
         RustApi.confirmMemoriesUpload(mediaId: mediaFile.mediaId),
       );
       if (confirmRes.isSuccess) {
-        await twonlyDB.mediaFilesDao.updateMedia(
-          mediaFile.mediaId,
-          const MediaFilesCompanion(
-            cloudState: Value(CloudState.uploaded),
-          ),
+        await rust_mediafiles.updateMediaFiles(
+          id: mediaFile.mediaId,
+          patch: MediaFilePatch(cloudState: CloudState.uploaded.name),
+          transaction: currentDatabaseSession(),
         );
         Log.info(
           'Cloud backup complete and confirmed for ${mediaFile.mediaId}',
@@ -355,11 +363,10 @@ class MemoriesCloudService {
       } else {
         Log.error(message, error: error, stackTrace: stackTrace);
       }
-      await twonlyDB.mediaFilesDao.updateMedia(
-        mediaFile.mediaId,
-        const MediaFilesCompanion(
-          cloudState: Value(CloudState.none),
-        ),
+      await rust_mediafiles.updateMediaFiles(
+        id: mediaFile.mediaId,
+        patch: MediaFilePatch(cloudState: CloudState.none.name),
+        transaction: currentDatabaseSession(),
       );
       return false;
     }

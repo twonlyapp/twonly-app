@@ -4,10 +4,18 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
@@ -40,7 +48,15 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
   void initState() {
     super.initState();
 
-    final stream = twonlyDB.contactsDao.watchAllAcceptedContacts();
+    final stream = watchRustDatabase(
+      (control) => rust_contacts.watchContacts(
+        input: db_contacts.ContactQuery(
+          filter: db_contacts.ContactFilter.accepted,
+          ids: Int64List(0),
+        ),
+        control: control,
+      ),
+    );
 
     contactSub = stream.listen((update) async {
       update.sort(
@@ -56,7 +72,15 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
 
   Future<void> initAsync() async {
     if (widget.groupId != null) {
-      final members = await twonlyDB.groupsDao.getGroupContact(widget.groupId!);
+      final members = joinedGroupContacts(
+        await rust_groups.getGroupContacts(
+          input: db_groups.GroupMembersQuery(
+            groupId: widget.groupId,
+            orderForChats: true,
+          ),
+          transaction: currentDatabaseSession(),
+        ),
+      ).map((row) => row.$1).toList(growable: false);
       for (final member in members) {
         alreadyInGroup.add(member.userId);
       }

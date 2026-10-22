@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "BEGIN EXCLUSIVE",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "35ad8bc5912f8f8f586a796f78ebe594a3204f1995bdb6cfc005c145faf4d42f"
+}

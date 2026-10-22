@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
-
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 
 class ChatFlameRestoredEntry extends StatelessWidget {
@@ -15,7 +14,7 @@ class ChatFlameRestoredEntry extends StatelessWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final BorderRadiusGeometry borderRadius;
   final BubbleInfo info;
 

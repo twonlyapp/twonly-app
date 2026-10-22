@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO app_metadata(key, value) VALUES ('next-owner', 'works')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "36692c687321b6ee544931d3ba9d2c2532e2acefe85b6661cba62d5ea813d52f"
+}

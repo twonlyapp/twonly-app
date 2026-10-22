@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE\n            FROM group_histories\n            WHERE action_at < (\n                SELECT CAST((? - g.delete_messages_after_milliseconds) / 1000 AS INTEGER)\n                FROM groups g\n                WHERE g.group_id = group_histories.group_id\n            )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "abec9d4a162c0e5140137932ca0083589de10525d51ec4ccf91cd8beab0c4fa8"
+}

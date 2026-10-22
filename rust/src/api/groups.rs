@@ -4,9 +4,8 @@
  */
 
 use crate::api::proto::client::EncryptedGroupState;
-use crate::api::proto::http_requests::update_group_state;
 use crate::api::proto::http_requests::{
-    AppendGroupState, GroupState, NewGroupState, UpdateGroupState,
+    update_group_state, AppendGroupState, GroupState, NewGroupState, UpdateGroupState,
 };
 use crate::bridge::api::RustApi;
 use crate::error::{Result, TwonlyError};
@@ -24,6 +23,7 @@ impl GroupApi {
             .send()
             .await
             .map_err(|e| TwonlyError::Generic(e.to_string()))?;
+
         if response.status() == reqwest::StatusCode::NOT_FOUND {
             return Ok(None);
         }
@@ -47,14 +47,13 @@ impl GroupApi {
     }
 
     pub(crate) async fn update_remote(
-        group: &GroupRecord,
-        version: u64,
-        state: &EncryptedGroupState,
-        add_admin: Option<Vec<u8>>,
+        group: &GroupRecord, version: u64, state: &EncryptedGroupState, add_admin: Option<Vec<u8>>,
         remove_admin: Option<Vec<u8>>,
     ) -> Result<()> {
         let identity = group.identity()?;
+
         let public_key = identity.identity_key().serialize().to_vec();
+
         let update = update_group_state::UpdateTbs {
             version_id: version + 1,
             encrypted_group_state: crypto::encrypt(group.state_key()?, &state.encode_to_vec())?,
@@ -63,12 +62,15 @@ impl GroupApi {
             add_admin,
             nonce: Self::get_challenge(&public_key).await?,
         };
+
         let mut rng = rand::rngs::StdRng::from_os_rng();
+
         let signature = identity
             .private_key()
             .calculate_signature(&update.encode_to_vec(), &mut rng)
             .map_err(|e| TwonlyError::Signal(e.to_string()))?
             .into_vec();
+
         update_state(UpdateGroupState {
             update: Some(update),
             signature,
@@ -80,7 +82,9 @@ impl GroupApi {
         let server = GroupApi::fetch_group_state(&group.group_id)
             .await?
             .ok_or_else(|| TwonlyError::Generic("group state does not exist".into()))?;
+
         let raw = crypto::decrypt(group.state_key()?, &server.encrypted_group_state)?;
+
         Ok((
             server.version_id,
             EncryptedGroupState::decode(raw.as_slice())
@@ -99,6 +103,7 @@ impl GroupApi {
         )
         .await
     }
+
     pub(crate) async fn append(value: AppendGroupState) -> Result<()> {
         success(
             client()?
@@ -117,12 +122,14 @@ impl GroupApi {
             .send()
             .await
             .map_err(|e| TwonlyError::Generic(e.to_string()))?;
+
         if !response.status().is_success() {
             return Err(TwonlyError::Generic(format!(
                 "group challenge returned {}",
                 response.status()
             )));
         }
+
         response
             .bytes()
             .await

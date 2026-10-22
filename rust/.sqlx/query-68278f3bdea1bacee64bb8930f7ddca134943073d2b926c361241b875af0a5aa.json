@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO contact_group_members(contact_group_id, group_id)\n                SELECT ?,\n                    group_id\n                FROM groups\n                WHERE group_id = ?\n                    AND is_direct_chat = 0\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "68278f3bdea1bacee64bb8930f7ddca134943073d2b926c361241b875af0a5aa"
+}

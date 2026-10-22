@@ -1,7 +1,12 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
@@ -157,9 +162,15 @@ class _MemoriesBackupDetailViewState extends State<MemoriesBackupDetailView> {
                             onPressed: isSyncing
                                 ? null
                                 : () async {
-                                    final memories = await twonlyDB
-                                        .mediaFilesDao
-                                        .getMemoriesToBackup();
+                                    final memories = await rust_mediafiles
+                                        .listMediaFiles(
+                                          input: const db_mediafiles.MediaQuery(
+                                            filter: db_mediafiles
+                                                .MediaFilter
+                                                .memoriesToBackup,
+                                          ),
+                                          transaction: currentDatabaseSession(),
+                                        );
                                     if (memories.isEmpty) {
                                       if (context.mounted) {
                                         showSnackbar(

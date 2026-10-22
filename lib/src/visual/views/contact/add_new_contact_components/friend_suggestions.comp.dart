@@ -1,10 +1,20 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/user_discovery.dart'
+    as rust_user_discovery;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/core/database/app/user_discovery/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/daos/user_discovery.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -61,22 +71,25 @@ class FriendSuggestionsComp extends StatelessWidget {
       return;
     }
 
-    final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
-      ContactsCompanion(
-        username: Value(user.username!),
-        userId: Value(userdata.userId),
-        requested: const Value(false),
-        blocked: const Value(false),
-        deletedByUser: const Value(false),
+    final added = await rust_contacts.upsertContact(
+      patch: ContactPatch(
+        username: user.username,
+        userId: userdata.userId,
+        requested: false,
+        blocked: false,
+        deletedByUser: false,
         joinedAt: userdata.joinedAt == null
-            ? const Value.absent()
-            : Value(
-                DateTime.fromMillisecondsSinceEpoch(
-                  userdata.joinedAt! * Duration.millisecondsPerSecond,
-                  isUtc: true,
+            ? null
+            : NullableInt(
+                value: databaseNullableSeconds(
+                  DateTime.fromMillisecondsSinceEpoch(
+                    userdata.joinedAt! * Duration.millisecondsPerSecond,
+                    isUtc: true,
+                  ),
                 ),
               ),
       ),
+      transaction: currentDatabaseSession(),
     );
 
     if (added > 0) {
@@ -88,11 +101,10 @@ class FriendSuggestionsComp extends StatelessWidget {
   }
 
   Future<void> _hideAnnouncedUser(int userId) async {
-    await twonlyDB.userDiscoveryDao.updateAnnouncedUser(
-      userId,
-      const UserDiscoveryAnnouncedUsersCompanion(
-        isHidden: Value(true),
-      ),
+    await rust_user_discovery.updateDiscoveryAnnouncement(
+      id: userId,
+      patch: const UserDiscoveryAnnouncedUserPatch(isHidden: true),
+      transaction: currentDatabaseSession(),
     );
   }
 
@@ -174,11 +186,10 @@ class FriendSuggestionsComp extends StatelessWidget {
         );
       }
 
-      await twonlyDB.userDiscoveryDao.updateAnnouncedUser(
-        user.announcedUserId,
-        const UserDiscoveryAnnouncedUsersCompanion(
-          wasAskedFriends: Value(true),
-        ),
+      await rust_user_discovery.updateDiscoveryAnnouncement(
+        id: user.announcedUserId,
+        patch: const UserDiscoveryAnnouncedUserPatch(wasAskedFriends: true),
+        transaction: currentDatabaseSession(),
       );
     }
   }
@@ -223,10 +234,15 @@ class FriendSuggestionsComp extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       StreamBuilder<List<Group>>(
-                        stream: twonlyDB.groupsDao
-                            .watchNonDirectGroupsForMember(
-                              user.announcedUserId,
+                        stream: watchRustDatabase(
+                          (control) => rust_groups.watchGroups(
+                            input: db_groups.GroupQuery(
+                              filter: db_groups.GroupFilter.nonDirectForContact,
+                              contactId: user.announcedUserId,
                             ),
+                            control: control,
+                          ),
+                        ),
                         builder: (context, snapshot) {
                           var text = friendsList;
                           if (snapshot.hasData && snapshot.data!.isNotEmpty) {

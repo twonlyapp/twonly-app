@@ -13,8 +13,8 @@ import UIKit
 /// Two mechanisms, because iOS offers no single one that covers both cases:
 ///
 /// * A `UIApplication` background task assertion, taken by Rust for the length
-///   of a preparation. It buys the roughly thirty seconds an app gets after
-///   being backgrounded, which is what an ordinary send needs.
+///   of a preparation. The execution allowance is finite and may expire;
+///   preparations must leave durable work for a subsequent run.
 /// * A `BGProcessingTask`, scheduled whenever the app goes away with work
 ///   still outstanding. The system runs it later, on its own schedule, and it
 ///   is the only thing that resumes a send after the app has been suspended for
@@ -25,6 +25,7 @@ enum BackgroundWork {
   /// Registered from `didFinishLaunchingWithOptions`. iOS requires every
   /// identifier to be registered before the app finishes launching.
   static func register() {
+    DatabaseExecutionCoordinator.register()
     BGTaskScheduler.shared.register(
       forTaskWithIdentifier: processingTaskIdentifier,
       using: nil
@@ -62,6 +63,11 @@ enum BackgroundWork {
       )
     else { return nil }
     let directory = container.appendingPathComponent("runtime", isDirectory: true)
+    // Flutter publishes this only after copying the complete legacy store,
+    // including WAL sidecars. Never create a competing empty database first.
+    guard FileManager.default.fileExists(
+      atPath: directory.appendingPathComponent(".runtime_storage_migrated_v1").path
+    ) else { return nil }
     do {
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
       return directory.path
@@ -75,29 +81,43 @@ enum BackgroundWork {
 
   private static func run(_ task: BGProcessingTask) {
     NativeErrorReporting.breadcrumb("outbox_flush_started")
-    // The system may reclaim the task at any point; ask Rust to stop by ending
-    // the run, and reschedule so the work is not simply dropped.
+    // Register before queueing: expiration while waiting must cancel this run,
+    // and a late expiration must never cancel a replacement worker.
+    let runID = twonly_background_run_create()
     let queue = DispatchQueue(label: "eu.twonly.outbox-flush", qos: .utility)
     var finished = false
+    let finishLock = NSLock()
     let finish: (Bool) -> Void = { success in
-      guard !finished else { return }
+      finishLock.lock()
+      guard !finished else {
+        finishLock.unlock()
+        return
+      }
       finished = true
+      finishLock.unlock()
       task.setTaskCompleted(success: success)
     }
     task.expirationHandler = {
       NativeErrorReporting.failure("outbox_flush_expired")
+      twonly_database_operation_cancel(runID)
       scheduleFlush()
-      finish(false)
+      // Completion belongs to the worker, after actual SQLite cleanup.
     }
+    // Begin draining before the system's expiration callback. This is a short
+    // work chunk, not an assumption about a guaranteed iOS execution grant.
+    let earlyStop = DispatchWorkItem { twonly_database_operation_cancel(runID) }
+    DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 15, execute: earlyStop)
     queue.async {
+      defer { earlyStop.cancel() }
       guard let directory = runtimeDirectory() else {
+        twonly_background_run_dispose(runID)
         NativeErrorReporting.failure("outbox_flush_storage")
         finish(false)
         return
       }
       let response = directory.withCString { databaseDirectory in
         directory.withCString { dataDirectory in
-          twonly_background_run(databaseDirectory, dataDirectory, nil)
+          twonly_background_run_with_id(runID, databaseDirectory, dataDirectory, nil)
         }
       }
       let json = response.map { pointer -> String in
@@ -121,15 +141,8 @@ enum BackgroundWork {
   }
 }
 
-/// The background task assertion Rust takes around a media preparation.
-///
-/// Called over the C ABI so the preparation does not have to know it is on iOS.
-/// Returns zero when no assertion could be taken, which Rust reads as "run
-/// unprotected" rather than as a failure.
-/// Rust calls this from one of its own worker threads, never from the main
-/// one, so `UIApplication` is reached through the main queue rather than
-/// directly. A `sync` hop cannot deadlock here for that same reason, and the
-/// caller needs the identifier back before it can start working.
+/// Serialize native admission and assertion termination with UIKit lifecycle
+/// notifications. Callers need admission's result before starting their work.
 private func onMain<T>(_ work: @escaping () -> T) -> T {
   if Thread.isMainThread {
     return work()
@@ -137,32 +150,94 @@ private func onMain<T>(_ work: @escaping () -> T) -> T {
   return DispatchQueue.main.sync(execute: work)
 }
 
-@_cdecl("twonly_begin_background_task")
-public func twonlyBeginBackgroundTask() -> UInt64 {
-  let identifier: UIBackgroundTaskIdentifier = onMain {
-    var identifier = UIBackgroundTaskIdentifier.invalid
-    identifier = UIApplication.shared.beginBackgroundTask(withName: "eu.twonly.media-preparation")
-    {
-      // The system is reclaiming the time. Ending the assertion here is
-      // required; the preparation itself is resumed by the flush task or by
-      // the next launch.
-      if identifier != .invalid {
-        UIApplication.shared.endBackgroundTask(identifier)
-        identifier = .invalid
-      }
-    }
-    return identifier
-  }
-  guard identifier != .invalid else { return 0 }
-  // A preparation that outlives its assertion has to be picked up later.
-  BackgroundWork.scheduleFlush()
-  return UInt64(identifier.rawValue)
-}
-
 @_cdecl("twonly_end_background_task")
 public func twonlyEndBackgroundTask(_ identifier: UInt64) {
-  guard identifier != 0, let raw = Int(exactly: identifier) else { return }
+  onMain { DatabaseExecutionCoordinator.end(identifier) }
+}
+
+@_cdecl("twonly_begin_database_operation")
+public func twonlyBeginDatabaseOperation(_ operation: UInt64) -> UInt64 {
   onMain {
-    UIApplication.shared.endBackgroundTask(UIBackgroundTaskIdentifier(rawValue: raw))
+    guard UIApplication.shared.applicationState == .active else { return 0 }
+    return DatabaseExecutionCoordinator.begin(operation: operation)
   }
+}
+
+/// All state and UIKit calls are confined to the main queue. Lease IDs are
+/// independent of UIKit IDs, so late Rust cleanup cannot end a newer assertion.
+private enum DatabaseExecutionCoordinator {
+  private static var assertion = UIBackgroundTaskIdentifier.invalid
+  private static var nextLease: UInt64 = 1
+  private static var leases: [UInt64: UInt64] = [:]
+  private static var expired = false
+  private static var observers: [NSObjectProtocol] = []
+
+  static func register() {
+    guard observers.isEmpty else { return }
+    let center = NotificationCenter.default
+    observers.append(center.addObserver(
+      forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main
+    ) { _ in
+      // Optional exports stop as soon as we leave the foreground, reserving
+      // the assertion's remaining budget for native SQLite cleanup.
+      twonly_database_set_foreground(false)
+      cancelDatabaseOperations()
+      BackgroundWork.scheduleFlush()
+    })
+    observers.append(center.addObserver(
+      forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+    ) { _ in
+      expired = false
+      twonly_database_set_foreground(true)
+    })
+    twonly_database_set_foreground(UIApplication.shared.applicationState == .active)
+  }
+
+  static func begin(operation: UInt64?) -> UInt64 {
+    dispatchPrecondition(condition: .onQueue(.main))
+    guard !expired else { return 0 }
+    if assertion == .invalid {
+      assertion = UIApplication.shared.beginBackgroundTask(withName: "eu.twonly.native-work") {
+        expire()
+      }
+      guard assertion != .invalid else { return 0 }
+    }
+    let lease = nextLease
+    nextLease &+= 1
+    leases[lease] = operation ?? 0
+    return lease
+  }
+
+  static func end(_ lease: UInt64) {
+    dispatchPrecondition(condition: .onQueue(.main))
+    guard leases.removeValue(forKey: lease) != nil else { return }
+    if leases.isEmpty { endAssertion() }
+  }
+
+  private static func cancelDatabaseOperations() {
+    for operation in leases.values where operation != 0 {
+      twonly_database_operation_cancel(operation)
+    }
+  }
+
+  private static func endAssertion() {
+    guard assertion != .invalid else { return }
+    let previous = assertion
+    assertion = .invalid
+    UIApplication.shared.endBackgroundTask(previous)
+  }
+
+  fileprivate static func expire() {
+    dispatchPrecondition(condition: .onQueue(.main))
+    expired = true
+    cancelDatabaseOperations()
+    // Expiration is an emergency terminal event, not extra cleanup time.
+    // Late lease releases become no-ops for this UIKit assertion.
+    endAssertion()
+  }
+}
+
+@_cdecl("twonly_database_is_foreground")
+public func twonlyDatabaseIsForeground() -> Bool {
+  onMain { UIApplication.shared.applicationState == .active }
 }

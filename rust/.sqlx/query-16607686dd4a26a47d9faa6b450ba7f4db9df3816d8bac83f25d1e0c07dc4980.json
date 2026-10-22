@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT id AS \"id!\",\n                message_id AS \"message_id!\",\n                contact_id AS \"contact_id?\",\n                content AS \"content?\",\n                created_at AS \"created_at!\"\n            FROM message_histories\n            WHERE message_id = ?\n            ORDER BY created_at DESC,\n                id DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "message_histories",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "message_id!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "message_histories",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id?",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "message_histories",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "content?",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "message_histories",
+            "name": "content"
+          }
+        }
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "message_histories",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "16607686dd4a26a47d9faa6b450ba7f4db9df3816d8bac83f25d1e0c07dc4980"
+}

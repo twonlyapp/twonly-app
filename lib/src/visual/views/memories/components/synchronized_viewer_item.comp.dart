@@ -1,10 +1,12 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/helpers/video_player_file.helper.dart';
 

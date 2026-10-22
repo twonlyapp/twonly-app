@@ -23,11 +23,12 @@ use crate::api::messages::incoming::messages::{
     process_encrypted_or_queue_error, queue_decryption_error, queue_sender_delivery_receipt,
     release_deferred_receipts, retransmit_queued_receipts, spawn_receipt_delivery,
 };
-use crate::api::proto::client as proto;
 use crate::api::proto::server_to_client::NewMessage;
-use crate::api::proto::{client_to_server, server_to_client};
+use crate::api::proto::{client as proto, client_to_server, server_to_client};
 use crate::context::Context;
-use crate::database::app::tables::{Contact, Group, Receipt};
+use crate::database::app::contacts::table::Contact;
+use crate::database::app::groups::native::Group;
+use crate::database::app::receipts::table::Receipt;
 use crate::error::{Result, TwonlyError};
 use crate::services::contacts::ContactService;
 use crate::services::groups::GroupService;
@@ -50,12 +51,14 @@ use std::sync::{Arc, LazyLock, Mutex, PoisonError, Weak};
 /// about to write. Waiting here keeps the duplicate off that connection until
 /// the first copy has committed, after which it takes the ordinary
 /// already-claimed path.
+
 static IN_FLIGHT_RECEIPTS: LazyLock<Mutex<HashMap<String, Weak<tokio::sync::Mutex<()>>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// The registry entry for one in-flight receipt. It keeps the only strong
 /// reference held by a handler that is not waiting, so dropping it once no
 /// other copy is queued takes the entry out of the registry again.
+
 struct InFlightReceipt {
     receipt_id: String,
     lock: Arc<tokio::sync::Mutex<()>>,
@@ -66,14 +69,18 @@ impl InFlightReceipt {
         let mut in_flight = IN_FLIGHT_RECEIPTS
             .lock()
             .unwrap_or_else(PoisonError::into_inner);
+
         let lock = in_flight
             .get(receipt_id)
             .and_then(Weak::upgrade)
             .unwrap_or_else(|| {
                 let lock = Arc::new(tokio::sync::Mutex::new(()));
+
                 in_flight.insert(receipt_id.to_owned(), Arc::downgrade(&lock));
+
                 lock
             });
+
         Self {
             receipt_id: receipt_id.to_owned(),
             lock,
@@ -86,6 +93,7 @@ impl Drop for InFlightReceipt {
         let mut in_flight = IN_FLIGHT_RECEIPTS
             .lock()
             .unwrap_or_else(PoisonError::into_inner);
+
         // Every other copy of this receipt holds a strong reference of its
         // own, and both taking one and removing the entry happen under this
         // lock, so being the last holder means nothing is queued behind us.
@@ -96,14 +104,14 @@ impl Drop for InFlightReceipt {
 }
 
 pub(crate) async fn handle_server_message(
-    ctx: &Arc<Context>,
-    kind: server_to_client::v0::Kind,
+    ctx: &Arc<Context>, kind: server_to_client::v0::Kind,
 ) -> Result<client_to_server::Response> {
     let ok = match kind {
         Kind::RequestNewPqcPreKeys(_) => match handle_request_new_pqc_prekeys(ctx).await {
             Ok(response) => response,
             Err(error) => {
                 tracing::warn!("failed to generate requested PQC prekeys: {error}");
+
                 ok::Ok::None(true)
             }
         },
@@ -111,6 +119,7 @@ pub(crate) async fn handle_server_message(
             if let Err(error) = handle_new_server_message(ctx, message).await {
                 tracing::warn!("failed to process client message: {error}");
             }
+
             ok::Ok::None(true)
         }
         Kind::NewMessages(messages) => {
@@ -120,6 +129,7 @@ pub(crate) async fn handle_server_message(
                     tracing::warn!("failed to process client message in batch: {error}");
                 }
             }
+
             ok::Ok::None(true)
         }
         Kind::PendingMessagesV2(batch) => {
@@ -127,12 +137,14 @@ pub(crate) async fn handle_server_message(
         }
         Kind::MailboxDrained(_) => {
             ctx.mark_mailbox_drained();
+
             ok::Ok::None(true)
         }
         other => {
             // Dart logged unknown unsolicited messages but still acknowledged
             // their envelope, preventing an infinite server redelivery loop.
             tracing::warn!("unsupported unsolicited server message: {other:?}");
+
             ok::Ok::None(true)
         }
     };
@@ -155,15 +167,17 @@ pub(crate) async fn handle_server_message(
 /// claim together with its plaintext one step ahead of the message itself,
 /// because the ratchet step decryption spends cannot be rolled back; a retry
 /// that finds that plaintext resumes from it instead of decrypting again.
+
 async fn acknowledge_pending_messages(
-    ctx: &Arc<Context>,
-    batch: server_to_client::PendingMessagesV2,
+    ctx: &Arc<Context>, batch: server_to_client::PendingMessagesV2,
 ) -> client_to_server::Response {
     let mut delivery_ids = Vec::with_capacity(batch.messages.len());
 
     for message in batch.messages {
         let delivery_id = message.delivery_id;
+
         let from_user_id = message.from_user_id;
+
         let result = handle_new_server_message(
             ctx,
             NewMessage {
@@ -190,6 +204,7 @@ async fn acknowledge_pending_messages(
                     from_user_id,
                     "dropping an unprocessable mailbox message: {error}"
                 );
+
                 delivery_ids.push(delivery_id);
             }
             // Anything else (storage, network, Signal state) may succeed later.
@@ -214,10 +229,10 @@ async fn acknowledge_pending_messages(
 }
 
 pub(crate) async fn handle_new_server_message(
-    ctx: &Arc<Context>,
-    server_message: NewMessage,
+    ctx: &Arc<Context>, server_message: NewMessage,
 ) -> Result<()> {
     let message = proto::Message::decode(server_message.body.as_slice())?;
+
     handle_decoded_server_message(ctx, server_message.from_user_id, message).await
 }
 
@@ -259,16 +274,16 @@ pub(crate) async fn handle_request_new_pqc_prekeys(
 ///
 /// A refused rate-limit claim also falls back to `UNKNOWN`: the session stays
 /// as it is and the message fails, rather than two clients trading resets.
+
 async fn reset_unusable_session(
-    ctx: &Arc<Context>,
-    from_user_id: i64,
-    error: &TwonlyError,
+    ctx: &Arc<Context>, from_user_id: i64, error: &TwonlyError,
 ) -> DecryptionErrorType {
     if !matches!(error, TwonlyError::SignalSessionUnusable(_)) {
         return DecryptionErrorType::Unknown;
     }
 
     let name = from_user_id.to_string();
+
     let rust_database = ctx.rust_db.read().await.clone();
 
     match SessionResetLimiter::claim(&rust_database.pool, &name, 1).await {
@@ -276,11 +291,13 @@ async fn reset_unusable_session(
         Ok(true) => {}
         Err(error) => {
             tracing::warn!(from_user_id, "could not claim a session reset: {error}");
+
             return DecryptionErrorType::Unknown;
         }
     }
 
     let engine = ctx.signal_engine.lock().await;
+
     let Some(engine) = engine.as_ref() else {
         return DecryptionErrorType::Unknown;
     };
@@ -291,10 +308,12 @@ async fn reset_unusable_session(
                 from_user_id,
                 "signal session could not decrypt and was reset; asking the peer for a new one"
             );
+
             DecryptionErrorType::SessionResetRequired
         }
         Err(error) => {
             tracing::warn!(from_user_id, "could not reset the signal session: {error}");
+
             DecryptionErrorType::Unknown
         }
     }
@@ -309,10 +328,9 @@ async fn reset_unusable_session(
 /// `establish_signal_session` writes through the pool, and the app database
 /// allows a single connection, so doing this under an open transaction would
 /// deadlock until the acquire timeout.
+
 async fn upgrade_legacy_session_to_v2(
-    ctx: &Arc<Context>,
-    database: &Arc<crate::database::app::AppDatabase>,
-    from_user_id: i64,
+    ctx: &Arc<Context>, database: &Arc<crate::database::app::AppDatabase>, from_user_id: i64,
 ) -> Result<()> {
     tracing::info!("Received legacy signal message; rejecting and upgrading session to v2");
 
@@ -353,6 +371,7 @@ async fn upgrade_legacy_session_to_v2(
 }
 
 /// How long a legacy peer is given to move to v2 before it is asked again.
+
 const LEGACY_UPGRADE_REQUEST_INTERVAL_SECS: i64 = 60 * 60;
 
 /// Claims the right to ask a legacy peer to move to v2, at most once per
@@ -365,12 +384,14 @@ const LEGACY_UPGRADE_REQUEST_INTERVAL_SECS: i64 = 60 * 60;
 /// resends would never end and would spend one of our one-time prekeys per
 /// round. Leaving the resends unanswered stops the loop: without a reply the
 /// old client does not send the message again.
+
 async fn claim_legacy_upgrade_request(
-    t: &mut Transaction<'_, Sqlite>,
-    contact_id: i64,
+    t: &mut Transaction<'_, Sqlite>, contact_id: i64,
 ) -> Result<bool> {
     let now = crate::utils::current_time().timestamp();
+
     let asked_before = now - LEGACY_UPGRADE_REQUEST_INTERVAL_SECS;
+
     let claimed = sqlx::query!(
         r#"
         INSERT INTO legacy_upgrade_requests(contact_id, requested_at)
@@ -386,6 +407,7 @@ async fn claim_legacy_upgrade_request(
     .await?
     .rows_affected()
         > 0;
+
     Ok(claimed)
 }
 
@@ -401,12 +423,12 @@ async fn claim_legacy_upgrade_request(
 /// Entry point for one inbound server message, whichever transport carried it.
 /// Public so tests can deliver the same message twice and prove a redelivery is
 /// handled rather than dropped.
+
 pub async fn handle_decoded_server_message(
-    ctx: &Arc<Context>,
-    from_user_id: i64,
-    message: proto::Message,
+    ctx: &Arc<Context>, from_user_id: i64, message: proto::Message,
 ) -> Result<()> {
     tracing::Span::current().record("receipt_id", &message.receipt_id);
+
     tracing::Span::current().record("user", from_user_id);
 
     if message.receipt_id.is_empty() {
@@ -420,9 +442,11 @@ pub async fn handle_decoded_server_message(
     // registry entry outlives the lock guard, so the receipt stays registered
     // for as long as anything is queued on it.
     let in_flight = InFlightReceipt::claim(&message.receipt_id);
+
     let _in_flight = in_flight.lock.lock().await;
 
     let message_type = Type::try_from(message.r#type)?;
+
     let is_encrypted_message = matches!(
         message_type,
         Type::Ciphertext | Type::PrekeyBundle | Type::CiphertextV2
@@ -487,6 +511,7 @@ pub async fn handle_decoded_server_message(
 
         if should_resend {
             tracing::info!("Queueing sender delivery receipt for retry");
+
             queue_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
         }
 
@@ -494,24 +519,29 @@ pub async fn handle_decoded_server_message(
 
         if should_resend {
             tracing::info!("Spawning receipt delivery for retry");
+
             spawn_receipt_delivery(ctx, message.receipt_id);
         }
 
         tracing::info!("Returning early because receipt was already claimed");
+
         return Ok(());
     }
 
     let mut withhold_delivery_receipt = false;
+
     let mut rebuild_session = false;
 
     match message_type {
         Type::SenderDeliveryReceipt => {
             tracing::info!("Received sender delivery receipt");
+
             handle_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
         }
         Type::Ciphertext | Type::PrekeyBundle => {
             if claim_legacy_upgrade_request(&mut t, from_user_id).await? {
                 tracing::info!("Asking the legacy peer to fetch our v2 prekey bundle");
+
                 queue_decryption_error(
                     &mut t,
                     from_user_id,
@@ -524,6 +554,7 @@ pub async fn handle_decoded_server_message(
                     "Leaving a legacy message unanswered; the peer was already asked to upgrade"
                 );
             }
+
             // Never acknowledged: the message was not read, so the sender must
             // not be told it was delivered.
             withhold_delivery_receipt = true;
@@ -537,7 +568,9 @@ pub async fn handle_decoded_server_message(
                             "V2 encrypted client message has no ciphertext".into(),
                         )
                     })?;
+
                     let engine = ctx.signal_engine.lock().await;
+
                     engine
                         .as_ref()
                         .ok_or(TwonlyError::SignalIdentityNotFound)?
@@ -545,6 +578,7 @@ pub async fn handle_decoded_server_message(
                         .await
                 }
             };
+
             match decrypted {
                 Ok(plaintext) => {
                     // Decryption consumed a ratchet step in the signal database,
@@ -554,6 +588,7 @@ pub async fn handle_decoded_server_message(
                     // session that can no longer decrypt the message.
                     Receipt::store_pending_plaintext(&mut t, &message.receipt_id, &plaintext)
                         .await?;
+
                     t.commit().await?;
 
                     let content =
@@ -562,7 +597,9 @@ pub async fn handle_decoded_server_message(
                                 "invalid decrypted client content: {error}"
                             ))
                         })?;
+
                     contact::prepare_contact_request(ctx, from_user_id, &content).await?;
+
                     t = database.pool.begin().await?;
 
                     // Decrypting proves the peer speaks v2, so drop any 'v1'
@@ -570,7 +607,8 @@ pub async fn handle_decoded_server_message(
                     // published a prekey bundle. Otherwise every receipt back to
                     // them would keep fetching a bundle the server does not have.
                     sqlx::query!(
-                        "UPDATE contacts SET signal_version = 'v2' WHERE user_id = ? AND signal_version != 'v2'",
+                        "UPDATE contacts SET signal_version = 'v2' WHERE user_id = ? AND \
+                         signal_version != 'v2'",
                         from_user_id,
                     )
                     .execute(&mut *t)
@@ -579,7 +617,8 @@ pub async fn handle_decoded_server_message(
                     // Decrypting means a session now exists, so anything parked
                     // for want of one can go out again.
                     sqlx::query!(
-                        "UPDATE receipts SET deferred_until_session = NULL WHERE contact_id = ? AND deferred_until_session IS NOT NULL",
+                        "UPDATE receipts SET deferred_until_session = NULL WHERE contact_id = ? \
+                         AND deferred_until_session IS NOT NULL",
                         from_user_id,
                     )
                     .execute(&mut *t)
@@ -611,7 +650,9 @@ pub async fn handle_decoded_server_message(
                         receipt_id = message.receipt_id,
                         "V2 decryption failed: {error}"
                     );
+
                     let error_type = reset_unusable_session(ctx, from_user_id, &error).await;
+
                     queue_decryption_error(
                         &mut t,
                         from_user_id,
@@ -619,15 +660,18 @@ pub async fn handle_decoded_server_message(
                         error_type as i32,
                     )
                     .await?;
+
                     withhold_delivery_receipt = true;
                 }
             }
         }
         Type::PlaintextContent => {
             tracing::info!("Handling plaintext content");
+
             let plaintext = message.plaintext_content.ok_or_else(|| {
                 TwonlyError::Generic("plaintext client message has no content".into())
             })?;
+
             rebuild_session =
                 handle_plaintext_content(ctx, &mut t, from_user_id, &message.receipt_id, plaintext)
                     .await?;
@@ -652,7 +696,8 @@ pub async fn handle_decoded_server_message(
     }
 
     let ctx = ctx.clone();
-    tokio::spawn(async move {
+
+    crate::database::lifecycle::spawn(async move {
         // The peer reset their session, so the parked receipt has to wait for a
         // session built from a fresh prekey bundle. `establish_signal_session`
         // releases it, and the flush below then sends it as a prekey message
@@ -680,6 +725,7 @@ pub async fn handle_decoded_server_message(
 /// it, so keeping it as the current state would only encrypt more messages
 /// they cannot read. `establish_signal_session` then installs a session built
 /// from their current prekey bundle and releases everything parked for it.
+
 async fn rebuild_session_after_peer_reset(ctx: &Arc<Context>, from_user_id: i64) -> Result<()> {
     let outcome = rebuild_session(ctx, from_user_id).await;
 
@@ -690,6 +736,7 @@ async fn rebuild_session_after_peer_reset(ctx: &Arc<Context>, from_user_id: i64)
     // are better than a receipt that waits for a peer who may never write
     // again.
     let database = ctx.app_db.read().await.clone();
+
     release_deferred_receipts(&database, from_user_id).await?;
 
     outcome
@@ -697,6 +744,7 @@ async fn rebuild_session_after_peer_reset(ctx: &Arc<Context>, from_user_id: i64)
 
 async fn rebuild_session(ctx: &Arc<Context>, from_user_id: i64) -> Result<()> {
     let name = from_user_id.to_string();
+
     let rust_database = ctx.rust_db.read().await.clone();
 
     // The same budget the receiving side spends, so a pair of clients that
@@ -707,7 +755,9 @@ async fn rebuild_session(ctx: &Arc<Context>, from_user_id: i64) -> Result<()> {
 
     {
         let engine = ctx.signal_engine.lock().await;
+
         let engine = engine.as_ref().ok_or(TwonlyError::SignalIdentityNotFound)?;
+
         engine.reset_session(&name, 1, false).await?;
     }
 
@@ -723,11 +773,13 @@ async fn rebuild_session(ctx: &Arc<Context>, from_user_id: i64) -> Result<()> {
         from_user_id,
         "rebuilt the signal session after a peer reset"
     );
+
     Ok(())
 }
 
 /// Whether the sender learns that a handled message arrived.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+
 pub(crate) enum Delivery {
     /// Queue the sender delivery receipt, which ends the sender's retries.
     Ack,
@@ -739,11 +791,9 @@ pub(crate) enum Delivery {
 /// Dispatches already-decrypted client-to-client content to its concrete
 /// feature module. Transport decoding and Signal decryption do not belong in
 /// this dispatcher.
+
 pub(crate) async fn handle_encrypted(
-    ctx: &Arc<Context>,
-    t: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    receipt_id: &str,
+    ctx: &Arc<Context>, t: &mut Transaction<'_, Sqlite>, from_user_id: i64, receipt_id: &str,
     content: proto::EncryptedContent,
 ) -> Result<Delivery> {
     // A story that arrives after its 24 hours is ignored whole: no row, no
@@ -751,11 +801,14 @@ pub(crate) async fn handle_encrypted(
     // expires there, which is what ends its retransmissions.
     if content.story.as_ref().is_some_and(story::is_expired) {
         tracing::info!("Ignoring a story that arrived after it expired");
+
         return Ok(Delivery::Withhold);
     }
 
     let notification_content = content.clone();
+
     handle_encrypted_inner(ctx, t, from_user_id, receipt_id, content).await?;
+
     crate::services::notifications::record_incoming_event(
         ctx,
         t,
@@ -764,14 +817,12 @@ pub(crate) async fn handle_encrypted(
         &notification_content,
     )
     .await?;
+
     Ok(Delivery::Ack)
 }
 
 async fn handle_encrypted_inner(
-    ctx: &Arc<Context>,
-    t: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    receipt_id: &str,
+    ctx: &Arc<Context>, t: &mut Transaction<'_, Sqlite>, from_user_id: i64, receipt_id: &str,
     content: proto::EncryptedContent,
 ) -> Result<()> {
     Receipt::mark_all_for_retry(t, from_user_id).await?;
@@ -781,6 +832,7 @@ async fn handle_encrypted_inner(
     }
 
     contact::check_for_profile_update(t, from_user_id, &content).await?;
+
     contact::check_for_custom_avatar_update(t, from_user_id, &content).await?;
 
     if content.ask_for_friend_promotions == Some(true) {
@@ -794,9 +846,11 @@ async fn handle_encrypted_inner(
     let type_kind = content_type_kind(&content);
 
     tracing::Span::current().record("kind", type_kind);
+
     if let Some(group_id) = content.group_id.as_deref() {
         tracing::Span::current().record("group_id", group_id);
     }
+
     tracing::info!("Handling incoming message: {type_kind}");
 
     if let Some(request) = content.contact_request {
@@ -866,6 +920,7 @@ async fn handle_encrypted_inner(
         // which has already been applied above. Failing it would only make the
         // server redeliver a message there is nothing left to do with.
         tracing::info!("Incoming message carried sender metadata only");
+
         return Ok(());
     };
 
@@ -903,6 +958,7 @@ async fn handle_encrypted_inner(
                 )
                 .execute(&mut **t)
                 .await?;
+
                 messages::queue_encrypted_content(
                     t,
                     from_user_id,
@@ -916,6 +972,7 @@ async fn handle_encrypted_inner(
                     false,
                 )
                 .await?;
+
                 return Ok(());
             }
         }
@@ -978,45 +1035,62 @@ async fn handle_encrypted_inner(
 }
 
 #[cfg(test)]
+
 mod tests {
+
     use super::*;
 
     #[tokio::test]
+
     async fn contact_request_lookup_does_not_hold_the_app_connection() -> anyhow::Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx = Context::init_for_testing(
             directory.path().join("database"),
             directory.path().join("data"),
         )
         .await?;
+
         crate::api::ApiRuntime::close(&ctx).await?;
+
         let database = ctx.app_db.read().await.clone();
+
         sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice')")
             .execute(&database.pool)
             .await?;
+
         let content = proto::EncryptedContent {
             contact_request: Some(proto::encrypted_content::ContactRequest {
                 r#type: proto::encrypted_content::contact_request::Type::Request as i32,
             }),
             ..Default::default()
         };
+
         // Resume after decryption, without needing a Signal session or server.
         let mut t = database.pool.begin().await?;
+
         Receipt::claim_received(&mut t, "contact-request").await?;
+
         Receipt::store_pending_plaintext(&mut t, "contact-request", &content.encode_to_vec())
             .await?;
+
         t.commit().await?;
 
         let client = crate::api::ApiRuntime::client(&ctx).await?;
+
         let _transport = client.ws_client.lock().await;
+
         let message = proto::Message {
             receipt_id: "contact-request".into(),
             r#type: Type::CiphertextV2 as i32,
             ..Default::default()
         };
+
         {
             let handling = handle_decoded_server_message(&ctx, 7, message);
+
             tokio::pin!(handling);
+
             // Drive handling until it waits for the deliberately stalled lookup.
             assert!(
                 tokio::time::timeout(std::time::Duration::from_millis(100), &mut handling,)
@@ -1032,45 +1106,58 @@ mod tests {
                 ),
             )
             .await??;
+
             assert_eq!(rows.rows[0].values[0].text_value.as_deref(), Some("alice"));
         }
+
         // Cancelling the lookup leaves the plaintext durable for redelivery.
         let mut t = database.pool.begin().await?;
+
         assert_eq!(
             Receipt::pending_plaintext(&mut t, "contact-request").await?,
             Some(content.encode_to_vec())
         );
+
         t.rollback().await?;
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn reactions_to_expired_messages_are_acknowledged_without_blocking_valid_reactions(
     ) -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx = Context::init_for_testing(
             directory.path().join("database"),
             directory.path().join("data"),
         )
         .await?;
+
         crate::user_config::UserConfig::save_json(
             &ctx,
             r#"{"userId":42,"username":"me","displayName":"Me"}"#,
         )?;
+
         let database = ctx.app_db.read().await.clone();
+
         for statement in [
             "INSERT INTO contacts(user_id, username) VALUES (7, 'alice')",
             "INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat')",
             "INSERT INTO group_members(group_id, contact_id) VALUES ('chat', 7)",
-            "INSERT INTO messages(message_id, group_id, type) VALUES ('expired', 'chat', 'text'), ('present', 'chat', 'text')",
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('expired', 'chat', 'text'), \
+             ('present', 'chat', 'text')",
             "DELETE FROM messages WHERE message_id = 'expired'",
         ] {
             sqlx::query(statement).execute(&database.pool).await?;
         }
 
         let mut messages = Vec::new();
+
         for (delivery_id, message_id) in [(1, "expired"), (2, "present")] {
             let receipt_id = format!("reaction-{message_id}");
+
             let content = proto::EncryptedContent {
                 group_id: Some("chat".into()),
                 reaction: Some(proto::encrypted_content::Reaction {
@@ -1080,12 +1167,17 @@ mod tests {
                 }),
                 ..Default::default()
             };
+
             // Resume plaintext left by an earlier attempt, as happens when a
             // database error rolls back handling after decryption committed.
             let mut t = database.pool.begin().await?;
+
             Receipt::claim_received(&mut t, &receipt_id).await?;
+
             Receipt::store_pending_plaintext(&mut t, &receipt_id, &content.encode_to_vec()).await?;
+
             t.commit().await?;
+
             messages.push(server_to_client::PendingMessageV2 {
                 delivery_id,
                 from_user_id: 7,
@@ -1097,43 +1189,57 @@ mod tests {
                 .encode_to_vec(),
             });
         }
+
         let response =
             acknowledge_pending_messages(&ctx, server_to_client::PendingMessagesV2 { messages })
                 .await;
+
         let Some(Response::Ok(response)) = response.response else {
             panic!("expected a mailbox acknowledgement");
         };
+
         let Some(ok::Ok::AcknowledgedPendingMessages(ack)) = response.ok else {
             panic!("expected acknowledged delivery IDs");
         };
+
         assert_eq!(ack.delivery_ids, vec![1, 2]);
+
         let reactions: Vec<String> = sqlx::query_scalar("SELECT message_id FROM reactions")
             .fetch_all(&database.pool)
             .await?;
+
         assert_eq!(reactions, vec!["present"]);
+
         let pending: i64 = sqlx::query_scalar(
             "SELECT COUNT(*) FROM received_receipts WHERE pending_plaintext IS NOT NULL",
         )
         .fetch_one(&database.pool)
         .await?;
+
         assert_eq!(pending, 0);
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn incoming_twonly_score_is_stored_and_missing_score_clears_it() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx = Context::init_for_testing(
             directory.path().join("database"),
             directory.path().join("data"),
         )
         .await?;
+
         let database = ctx.app_db.read().await.clone();
+
         sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice')")
             .execute(&database.pool)
             .await?;
 
         let mut transaction = database.pool.begin().await?;
+
         handle_encrypted_inner(
             &ctx,
             &mut transaction,
@@ -1145,14 +1251,18 @@ mod tests {
             },
         )
         .await?;
+
         transaction.commit().await?;
+
         let score: Option<i64> =
             sqlx::query_scalar("SELECT twonly_score FROM contacts WHERE user_id = 7")
                 .fetch_one(&database.pool)
                 .await?;
+
         assert_eq!(score, Some(23));
 
         let mut transaction = database.pool.begin().await?;
+
         handle_encrypted_inner(
             &ctx,
             &mut transaction,
@@ -1161,31 +1271,41 @@ mod tests {
             proto::EncryptedContent::default(),
         )
         .await?;
+
         transaction.commit().await?;
+
         let score: Option<i64> =
             sqlx::query_scalar("SELECT twonly_score FROM contacts WHERE user_id = 7")
                 .fetch_one(&database.pool)
                 .await?;
+
         assert_eq!(score, None);
 
         Ok(())
     }
 
     #[test]
+
     fn copies_of_one_receipt_share_a_lock_until_the_last_one_goes() {
         let receipt_id = "in-flight-registry-test";
 
         let first = InFlightReceipt::claim(receipt_id);
+
         let second = InFlightReceipt::claim(receipt_id);
+
         assert!(Arc::ptr_eq(&first.lock, &second.lock));
 
         // One copy leaving must not unregister a receipt another still holds.
         drop(second);
+
         let third = InFlightReceipt::claim(receipt_id);
+
         assert!(Arc::ptr_eq(&third.lock, &first.lock));
 
         drop(third);
+
         drop(first);
+
         assert!(!IN_FLIGHT_RECEIPTS
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
@@ -1195,21 +1315,29 @@ mod tests {
     /// An old client resends the same v1 message for every decryption error,
     /// so only the first one in an interval may be answered.
     #[tokio::test]
+
     async fn a_legacy_peer_is_asked_to_upgrade_once_per_interval() {
         let directory = tempfile::tempdir().unwrap();
+
         let path = directory.path().join("app.sqlite");
+
         let database = crate::database::app::AppDatabase::new(path.to_str().unwrap(), None, false)
             .await
             .unwrap();
+
         database.run_migrations().await.unwrap();
+
         sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice')")
             .execute(&database.pool)
             .await
             .unwrap();
 
         let mut t = database.pool.begin().await.unwrap();
+
         assert!(claim_legacy_upgrade_request(&mut t, 7).await.unwrap());
+
         assert!(!claim_legacy_upgrade_request(&mut t, 7).await.unwrap());
+
         t.commit().await.unwrap();
 
         // Once the interval has passed without the peer upgrading, it is asked
@@ -1219,9 +1347,13 @@ mod tests {
             .execute(&database.pool)
             .await
             .unwrap();
+
         let mut t = database.pool.begin().await.unwrap();
+
         assert!(claim_legacy_upgrade_request(&mut t, 7).await.unwrap());
+
         assert!(!claim_legacy_upgrade_request(&mut t, 7).await.unwrap());
+
         t.commit().await.unwrap();
     }
 }

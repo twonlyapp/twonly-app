@@ -1,8 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/recovery.dart' as rust_recovery;
+import 'package:twonly/core/database/app/recovery/table.dart' as db_recovery;
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/setup.passwordless_recovery.view.dart';
@@ -19,62 +22,32 @@ class _MissingRecoveryContactsCompState
     extends State<MissingRecoveryContactsComp> {
   bool _hasEnoughFriends = false;
   bool _loading = true;
-  StreamSubscription<List<Contact>>? _contactsSub;
+  StreamSubscription<int>? _contactsSub;
 
   @override
   void initState() {
     super.initState();
-    _checkFriends();
-    _contactsSub = twonlyDB.contactsDao.watchAllAcceptedContacts().listen((_) {
-      _checkFriends();
-    });
+    _contactsSub =
+        watchRustDatabase(
+          (control) => rust_recovery.watchRecoveryCount(
+            selection: db_recovery.RecoveryContacts.eligible,
+            control: control,
+          ),
+        ).listen((
+          count,
+        ) {
+          if (!mounted) return;
+          setState(() {
+            _hasEnoughFriends = count >= 4;
+            _loading = false;
+          });
+        });
   }
 
   @override
   void dispose() {
     _contactsSub?.cancel();
     super.dispose();
-  }
-
-  Future<void> _checkFriends() async {
-    final user = userService.currentUser;
-    if (user.currentSetupPage != null || user.passwordLessRecovery != null) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
-      return;
-    }
-
-    final kvs = await twonlyDB.select(twonlyDB.keyVerifications).get();
-    final urs = await (twonlyDB.select(
-      twonlyDB.userDiscoveryUserRelations,
-    )..where((u) => u.publicKeyVerifiedTimestamp.isNotNull())).get();
-
-    final verified = {
-      ...kvs.map((row) => row.contactId),
-      ...urs.map((row) => row.announcedUserId),
-    };
-
-    final contacts = await twonlyDB.contactsDao.getAllContacts();
-    var count = 0;
-    for (final c in contacts) {
-      if (verified.contains(c.userId) &&
-          c.accepted &&
-          !c.blocked &&
-          !c.accountDeleted &&
-          !c.deletedByUser) {
-        count++;
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        _hasEnoughFriends = count >= 4;
-        _loading = false;
-      });
-    }
   }
 
   Future<void> onTap() async {

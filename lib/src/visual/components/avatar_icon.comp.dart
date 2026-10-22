@@ -3,9 +3,19 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:flutter_svg/svg.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:vector_graphics/vector_graphics.dart';
 
@@ -209,30 +219,52 @@ class _AvatarIconState extends State<AvatarIcon> {
     if (widget.contacts != null) {
       _setAvatarContacts(widget.contacts!);
     } else if (widget.group != null) {
-      groupStream = twonlyDB.groupsDao
-          .watchGroupContact(widget.group!.groupId)
-          .listen((contacts) {
-            _avatarContacts = [];
-            for (final contact in contacts) {
-              _unrenderableAvatars.remove(_avatarCacheKey(contact));
-            }
-            if (contacts.length == 1) {
-              _avatarContacts.add(contacts.first);
-            } else {
-              _avatarContacts.addAll(contacts);
-            }
-            unawaited(_refreshAvatarFiles());
-            setState(() {});
-          });
+      groupStream =
+          watchRustDatabase(
+                (control) => rust_groups
+                    .watchGroupContacts(
+                      input: db_groups.GroupMembersQuery(
+                        groupId: widget.group!.groupId,
+                        orderForChats: true,
+                      ),
+                      control: control,
+                    )
+                    .map(joinedGroupContacts),
+              )
+              .map((rows) => rows.map((row) => row.$1).toList(growable: false))
+              .listen((
+                contacts,
+              ) {
+                _avatarContacts = [];
+                for (final contact in contacts) {
+                  _unrenderableAvatars.remove(_avatarCacheKey(contact));
+                }
+                if (contacts.length == 1) {
+                  _avatarContacts.add(contacts.first);
+                } else {
+                  _avatarContacts.addAll(contacts);
+                }
+                unawaited(_refreshAvatarFiles());
+                setState(() {});
+              });
     } else if (widget.myAvatar) {
       _userSub = userService.onUserUpdated.listen((_) {
         unawaited(_updateMyAvatar());
       });
       unawaited(_updateMyAvatar());
     } else if (widget.contactId != null) {
-      contactStream = twonlyDB.contactsDao
-          .watchContact(widget.contactId!)
-          .listen((contact) {
+      contactStream =
+          watchRustDatabase(
+            (control) => rust_contacts.watchContacts(
+              input: db_contacts.ContactQuery(
+                filter: db_contacts.ContactFilter.ids,
+                ids: Int64List.fromList([widget.contactId!].toList()),
+              ),
+              control: control,
+            ),
+          ).map((rows) => rows.isEmpty ? null : rows.single).listen((
+            contact,
+          ) {
             if (contact != null) {
               _unrenderableAvatars.remove(_avatarCacheKey(contact));
               _avatarContacts = [contact];

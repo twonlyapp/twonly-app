@@ -84,6 +84,9 @@ object NativeVideoCodec {
     external fun reportProgress(mediaId: String, percent: Int)
 
     @JvmStatic
+    external fun isCancelled(jobId: String): Boolean
+
+    @JvmStatic
     fun render(
         inputPath: String,
         overlayPath: String?,
@@ -202,10 +205,15 @@ object NativeVideoCodec {
 
         val completed = finished.await(RENDER_TIMEOUT_MINUTES, TimeUnit.MINUTES)
         if (!completed) {
-            handler.post { runCatching { transformer?.cancel() } }
+            val cancelled = CountDownLatch(1)
+            handler.post {
+                try { transformer?.cancel() } finally { cancelled.countDown() }
+            }
+            // Return only after the main-looper codec actually acknowledged stop.
+            cancelled.await()
             return false
         }
-        return succeeded && output.isFile && output.length() > 0
+        return !isCancelled(mediaId) && succeeded && output.isFile && output.length() > 0
     }
 
     /**
@@ -411,6 +419,11 @@ object NativeVideoCodec {
             object : Runnable {
                 override fun run() {
                     if (finished.count == 0L) return
+                    if (isCancelled(mediaId)) {
+                        transformer.cancel()
+                        finished.countDown()
+                        return
+                    }
                     runCatching {
                         if (transformer.getProgress(holder) == Transformer.PROGRESS_STATE_AVAILABLE) {
                             reportProgress(mediaId, holder.progress)

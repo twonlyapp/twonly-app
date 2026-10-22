@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT group_name AS \"group_name!\" FROM groups WHERE group_id = 'g'",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_name!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "group_name"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2906cd9d150ef3d9a5fcb8c201c67600cf3d6a9c4c277ea5364d1088b8521242"
+}

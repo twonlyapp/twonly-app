@@ -1,11 +1,25 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/contact_groups.dart'
+    as rust_contact_groups;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contact_groups/table.dart'
+    as db_contact_groups;
+import 'package:twonly/core/database/app/contact_groups/table.dart';
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/services/home_widget.service.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
@@ -109,13 +123,28 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
     if (contactGroup != null) unawaited(_loadWidgetUsage(contactGroup.id));
 
     _subscriptions.add(
-      twonlyDB.contactsDao.watchAllAcceptedContacts().listen((contacts) {
+      watchRustDatabase(
+        (control) => rust_contacts.watchContacts(
+          input: db_contacts.ContactQuery(
+            filter: db_contacts.ContactFilter.accepted,
+            ids: Int64List(0),
+          ),
+          control: control,
+        ),
+      ).listen((contacts) {
         if (!mounted) return;
         setState(() => _contacts = contacts);
       }),
     );
     _subscriptions.add(
-      twonlyDB.groupsDao.watchGroupsForChatList().listen((groups) {
+      watchRustDatabase(
+        (control) => rust_groups.watchGroups(
+          input: const db_groups.GroupQuery(
+            filter: db_groups.GroupFilter.chatList,
+          ),
+          control: control,
+        ),
+      ).listen((groups) {
         if (!mounted) return;
         final actualGroups = groups
             .where((group) => !group.isDirectChat && !group.deletedContent)
@@ -130,7 +159,16 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
       }),
     );
     _subscriptions.add(
-      twonlyDB.groupsDao.watchAllGroupMembers().listen((members) {
+      watchRustDatabase(
+        (control) => rust_groups
+            .watchGroupContacts(
+              input: const db_groups.GroupMembersQuery(
+                orderForChats: true,
+              ),
+              control: control,
+            )
+            .map(joinedGroupContacts),
+      ).listen((members) {
         if (!mounted) return;
         final names = <String, List<String>>{};
         final userIds = <String, Set<int>>{};
@@ -157,7 +195,10 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   }
 
   Future<void> _loadMembers(int contactGroupId) async {
-    final members = await twonlyDB.contactGroupsDao.getMembers(contactGroupId);
+    final members = await rust_contact_groups.getContactGroupMembers(
+      id: contactGroupId,
+      transaction: currentDatabaseSession(),
+    );
     if (!mounted) return;
     setState(() {
       _selectedUserIds
@@ -246,7 +287,23 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
     try {
       final id =
           widget.contactGroup?.id ??
-          await twonlyDB.contactGroupsDao.createContactGroup(
+          await rust_contact_groups.createContactGroup(
+            transaction: currentDatabaseSession(),
+            input: db_contact_groups.ContactGroupInput(
+              name: name,
+              emoji: _emoji,
+              textColor: _textColor,
+              backgroundColor: _backgroundColor,
+              showAsShortcut: _showAsShortcut,
+              showAsLabel: _showAsLabel,
+              shareStories: _shareStories,
+            ),
+          );
+      if (_isEditing) {
+        await rust_contact_groups.updateContactGroup(
+          transaction: currentDatabaseSession(),
+          id: id,
+          input: db_contact_groups.ContactGroupInput(
             name: name,
             emoji: _emoji,
             textColor: _textColor,
@@ -254,23 +311,14 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
             showAsShortcut: _showAsShortcut,
             showAsLabel: _showAsLabel,
             shareStories: _shareStories,
-          );
-      if (_isEditing) {
-        await twonlyDB.contactGroupsDao.updateContactGroup(
-          id: id,
-          name: name,
-          emoji: _emoji,
-          textColor: _textColor,
-          backgroundColor: _backgroundColor,
-          showAsShortcut: _showAsShortcut,
-          showAsLabel: _showAsLabel,
-          shareStories: _shareStories,
+          ),
         );
       }
-      await twonlyDB.contactGroupsDao.replaceMembers(
-        id,
-        userIds: _selectedUserIds,
-        groupIds: _selectedGroupIds,
+      await rust_contact_groups.replaceContactGroupMembers(
+        transaction: currentDatabaseSession(),
+        id: id,
+        userIds: Int64List.fromList(_selectedUserIds.toList()),
+        groupIds: _selectedGroupIds.toList(),
       );
       // A widget's configuration UI lists the groups from the manifest, so a
       // group that was just created or renamed is invisible to it until the
@@ -396,7 +444,10 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
       ),
     );
     if (confirmed != true) return;
-    await twonlyDB.contactGroupsDao.deleteContactGroup(contactGroup.id);
+    await rust_contact_groups.deleteContactGroup(
+      transaction: currentDatabaseSession(),
+      id: contactGroup.id,
+    );
     unawaited(HomeWidgetService.refreshManifest());
     if (mounted) Navigator.pop(context);
   }

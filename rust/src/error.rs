@@ -24,6 +24,7 @@ macro_rules! twonly_error {
 pub(crate) use twonly_error;
 
 #[derive(Error, Debug)]
+
 pub enum TwonlyError {
     #[error("global twonly is not initialized")]
     Initialization,
@@ -199,6 +200,7 @@ impl From<libsignal_protocol::SignalProtocolError> for TwonlyError {
         use libsignal_protocol::SignalProtocolError as Error;
 
         let message = error.to_string();
+
         match error {
             // libsignal collapses every failed candidate session into a single
             // `InvalidMessage`; the per-session causes ("post-quantum ratchet

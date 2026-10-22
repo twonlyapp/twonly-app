@@ -9,25 +9,32 @@
 
 use crate::{init_tracing, Tester};
 use rust_lib_twonly::bridge::api::ApiConnectionState;
-use rust_lib_twonly::database::app::tables::Group;
+use rust_lib_twonly::database::app::groups::native::Group;
 use rust_lib_twonly::services::contacts::ContactService;
 use rust_lib_twonly::services::groups::GroupService;
 use rust_lib_twonly::services::messages::MessageService;
 
 async fn ready_tester() -> anyhow::Result<Tester> {
     let mut tester = Tester::new().await?;
+
     tester.wait_until(ApiConnectionState::Connected).await?;
+
     tester.register_and_authenticate().await?;
+
     tester.wait_until(ApiConnectionState::Authenticated).await?;
+
     Ok(tester)
 }
 
 #[tokio::test]
+
 async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
     init_tracing();
 
     let mut tester_a = ready_tester().await?;
+
     let tester_b = ready_tester().await?;
+
     tracing::info!(
         a = tester_a.user_id,
         b = tester_b.user_id,
@@ -48,11 +55,17 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         let request = tester_b
             .wait_for_notification("contact_request", tester_a.user_id)
             .await?;
+
         assert_eq!(request.title, tester_a.username);
+
         assert_eq!(request.body, "wants to connect with you.");
+
         assert_eq!(request.sender_name, tester_a.username);
+
         assert!(!request.is_group);
+
         assert!(request.message_id.is_none());
+
         // No avatar has been shared yet, so the native layer must fall back to
         // a notification without an image instead of failing.
         assert!(request.avatar_path.is_none());
@@ -60,9 +73,11 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         ContactService::new(&tester_b.context)
             .accept_request(tester_a.user_id, true)
             .await?;
+
         let accepted = tester_a
             .wait_for_notification("accept_request", tester_b.user_id)
             .await?;
+
         assert_eq!(accepted.body, "is now connected with you.");
 
         tester_a
@@ -77,8 +92,11 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
     //
     {
         let batch = tester_b.notification_batch("en").await?;
+
         assert!(!batch.additions.is_empty());
+
         let badge_before = batch.badge_count;
+
         assert_eq!(
             badge_before,
             batch.additions.len() as i64,
@@ -90,13 +108,16 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
             .iter()
             .map(|addition| addition.event_id.clone())
             .collect();
+
         tester_b.acknowledge_notifications(&event_ids).await?;
 
         let after = tester_b.notification_batch("en").await?;
+
         assert!(
             after.additions.is_empty(),
             "acknowledged events must not be offered again"
         );
+
         assert_eq!(
             after.badge_count, badge_before,
             "delivery is not the same as the user having read the message"
@@ -105,11 +126,13 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         // Acknowledging the same batch twice happens whenever the native layer
         // is killed between scheduling and acknowledging.
         tester_b.acknowledge_notifications(&event_ids).await?;
+
         assert!(tester_b
             .notification_batch("en")
             .await?
             .additions
             .is_empty());
+
         tester_b.acknowledge_notifications(&[]).await?;
     }
 
@@ -119,19 +142,24 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
     //
     let first_message_id = {
         let message_id = MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), "Notify me".into(), None, None)
+            .insert_and_send_text(group_id.clone(), "Notify me".into(), None, None, None, None)
             .await?;
 
         let text = tester_b
             .wait_for_notification("text", tester_a.user_id)
             .await?;
+
         assert_eq!(text.body, "sent a message.");
+
         assert_eq!(text.message_id.as_deref(), Some(message_id.as_str()));
+
         assert_eq!(
             text.notification_id, message_id,
             "the notification id must be derived from the message so a redelivery replaces it"
         );
+
         assert_eq!(text.conversation_id.as_deref(), Some(group_id.as_str()));
+
         assert!(
             !text.is_group,
             "a direct chat must not be rendered as a group"
@@ -149,6 +177,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         // B sends marks it for retry again, so a receipt that still asked to
         // wake would alert B once more for a message they already have.
         tester_a.wait_for_message_ack_by_server(&message_id).await?;
+
         assert_eq!(
             tester_a.receipts_still_waking(&message_id).await?,
             0,
@@ -158,6 +187,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         tester_b
             .acknowledge_notifications(&[text.event_id.clone()])
             .await?;
+
         message_id
     };
 
@@ -169,12 +199,22 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
     //
     {
         let message_id = MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), "Open before alert".into(), None, None)
+            .insert_and_send_text(
+                group_id.clone(),
+                "Open before alert".into(),
+                None,
+                None,
+                None,
+                None,
+            )
             .await?;
+
         let notification = tester_b
             .wait_for_notification("text", tester_a.user_id)
             .await?;
+
         assert_eq!(notification.notification_id, message_id);
+
         let badge_before = tester_b.notification_batch("en").await?.badge_count;
 
         MessageService::new(&tester_b.context)
@@ -182,6 +222,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
             .await?;
 
         let after = tester_b.notification_batch("en").await?;
+
         assert!(
             after
                 .additions
@@ -189,6 +230,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
                 .all(|addition| addition.message_id.as_deref() != Some(message_id.as_str())),
             "an opened message must not be rendered as a notification"
         );
+
         assert_eq!(
             after.badge_count,
             badge_before - 1,
@@ -202,26 +244,38 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
     //
     {
         MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), "Zweite Nachricht".into(), None, None)
+            .insert_and_send_text(
+                group_id.clone(),
+                "Zweite Nachricht".into(),
+                None,
+                None,
+                None,
+                None,
+            )
             .await?;
+
         let pending = tester_b
             .wait_for_notification("text", tester_a.user_id)
             .await?;
 
         let german = tester_b.notification_batch("de-DE").await?;
+
         let german = german
             .additions
             .iter()
             .find(|addition| addition.event_id == pending.event_id)
             .expect("the pending event is rendered in every locale");
+
         assert_eq!(german.body, "hat eine Nachricht gesendet.");
 
         let unsupported = tester_b.notification_batch("fr").await?;
+
         let unsupported = unsupported
             .additions
             .iter()
             .find(|addition| addition.event_id == pending.event_id)
             .expect("an unsupported locale still yields a notification");
+
         assert_eq!(unsupported.body, "sent a message.");
 
         tester_b
@@ -239,12 +293,22 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
             Some("Alice Notify".into()),
             Some("<svg height='100' width='100'><circle cx='50' cy='50' r='40'/></svg>".into()),
         )?;
+
         MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), "Now with avatar".into(), None, None)
+            .insert_and_send_text(
+                group_id.clone(),
+                "Now with avatar".into(),
+                None,
+                None,
+                None,
+                None,
+            )
             .await?;
+
         tester_b
             .wait_for_contact_avatar_exists(tester_a.user_id)
             .await?;
+
         tester_b
             .wait_for_contact_display_name(tester_a.user_id, "Alice Notify")
             .await?;
@@ -252,8 +316,10 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         // The avatar is resolved when the batch is read, so it also decorates
         // events that were recorded before the profile arrived.
         let mut with_avatar = None;
+
         for _ in 0..100 {
             let batch = tester_b.notification_batch("en").await?;
+
             if let Some(addition) = batch
                 .additions
                 .into_iter()
@@ -261,14 +327,20 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
             {
                 if addition.avatar_path.is_some() {
                     with_avatar = Some(addition);
+
                     break;
                 }
             }
+
             tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         }
+
         let with_avatar = with_avatar.expect("a shared avatar must reach the notification batch");
+
         assert_eq!(with_avatar.title, "Alice Notify");
+
         let avatar_path = with_avatar.avatar_path.clone().unwrap();
+
         assert!(
             std::path::Path::new(&avatar_path).is_file(),
             "the rendered avatar must exist on disk at {avatar_path}"
@@ -290,23 +362,37 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
                 "Quoting you".into(),
                 Some(first_message_id.clone()),
                 None,
+                None,
+                None,
             )
             .await?;
+
         let reply = tester_b
             .wait_for_notification("response", tester_a.user_id)
             .await?;
+
         assert_eq!(reply.body, "has responded.");
+
         tester_b
             .acknowledge_notifications(&[reply.event_id.clone()])
             .await?;
 
         // B owns a message that A can react to.
         let owned_by_b = MessageService::new(&tester_b.context)
-            .insert_and_send_text(group_id.clone(), "React to this".into(), None, None)
+            .insert_and_send_text(
+                group_id.clone(),
+                "React to this".into(),
+                None,
+                None,
+                None,
+                None,
+            )
             .await?;
+
         tester_a
             .wait_for_text_message(&owned_by_b, tester_b.user_id, "React to this")
             .await?;
+
         tester_a
             .acknowledge_notifications(
                 &tester_a
@@ -322,11 +408,15 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         MessageService::new(&tester_a.context)
             .react(group_id.clone(), owned_by_b.clone(), "👍".into(), false)
             .await?;
+
         let reaction = tester_b
             .wait_for_notification("reaction", tester_a.user_id)
             .await?;
+
         assert_eq!(reaction.body, "has reacted with 👍 to your message.");
+
         assert_eq!(reaction.message_id.as_deref(), Some(owned_by_b.as_str()));
+
         tester_b
             .acknowledge_notifications(&[reaction.event_id.clone()])
             .await?;
@@ -335,15 +425,26 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         MessageService::new(&tester_a.context)
             .react(group_id.clone(), owned_by_b.clone(), "👍".into(), true)
             .await?;
+
         tester_b
             .wait_for_reaction_deleted(&owned_by_b, tester_a.user_id, "👍")
             .await?;
+
         MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), "After the removal".into(), None, None)
+            .insert_and_send_text(
+                group_id.clone(),
+                "After the removal".into(),
+                None,
+                None,
+                None,
+                None,
+            )
             .await?;
+
         let next = tester_b
             .wait_for_notification("text", tester_a.user_id)
             .await?;
+
         let pending_kinds: Vec<String> = tester_b
             .notification_batch("en")
             .await?
@@ -351,10 +452,12 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
             .into_iter()
             .map(|addition| addition.kind)
             .collect();
+
         assert!(
             !pending_kinds.contains(&"reaction".to_owned()),
             "removing a reaction must not raise a notification, got {pending_kinds:?}"
         );
+
         tester_b
             .acknowledge_notifications(&[next.event_id.clone()])
             .await?;
@@ -363,11 +466,20 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         // reacts to a message A wrote, so B -- who is only a bystander to it --
         // must hear nothing, however the reaction itself still reaches them.
         let owned_by_a = MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), "My own message".into(), None, None)
+            .insert_and_send_text(
+                group_id.clone(),
+                "My own message".into(),
+                None,
+                None,
+                None,
+                None,
+            )
             .await?;
+
         let own = tester_b
             .wait_for_notification("text", tester_a.user_id)
             .await?;
+
         tester_b
             .acknowledge_notifications(&[own.event_id.clone()])
             .await?;
@@ -375,9 +487,11 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         MessageService::new(&tester_a.context)
             .react(group_id.clone(), owned_by_a.clone(), "🎉".into(), false)
             .await?;
+
         tester_b
             .wait_for_reaction(&owned_by_a, tester_a.user_id, "🎉")
             .await?;
+
         let bystander_kinds: Vec<String> = tester_b
             .notification_batch("en")
             .await?
@@ -385,10 +499,11 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
             .into_iter()
             .map(|addition| addition.kind)
             .collect();
+
         assert!(
             !bystander_kinds.contains(&"reaction".to_owned()),
-            "a reaction to the sender's own message must not notify anybody else, \
-             got {bystander_kinds:?}"
+            "a reaction to the sender's own message must not notify anybody else, got \
+             {bystander_kinds:?}"
         );
     }
 
@@ -398,17 +513,21 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
     //
     let group_conversation_id = {
         let group_name = "Notify Group";
+
         GroupService::new(&tester_a.context)
             .create_group(group_name.into(), vec![tester_b.user_id])
             .await?;
+
         let group_conversation_id = {
             let database = tester_a.context.app_db.read().await.clone();
+
             sqlx::query_scalar!(
                 "SELECT group_id FROM groups WHERE is_direct_chat = 0 ORDER BY rowid DESC LIMIT 1"
             )
             .fetch_one(&database.pool)
             .await?
         };
+
         tester_b
             .wait_for_group_exists(&group_conversation_id, group_name)
             .await?;
@@ -416,6 +535,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         let added = tester_b
             .wait_for_notification("added_to_group", tester_a.user_id)
             .await?;
+
         assert_eq!(added.body, format!("has added you to \"{group_name}\""));
 
         MessageService::new(&tester_a.context)
@@ -424,17 +544,24 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
                 "Hello group".into(),
                 None,
                 None,
+                None,
+                None,
             )
             .await?;
+
         let group_text = tester_b
             .wait_for_notification("text", tester_a.user_id)
             .await?;
+
         assert_eq!(group_text.body, format!("sent a message in {group_name}."));
+
         assert!(group_text.is_group);
+
         assert_eq!(
             group_text.conversation_id.as_deref(),
             Some(group_conversation_id.as_str())
         );
+
         assert_eq!(group_text.conversation_name.as_deref(), Some(group_name));
 
         group_conversation_id
@@ -446,12 +573,14 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
     //
     {
         let before = tester_b.notification_batch("en").await?;
+
         let group_events: Vec<String> = before
             .additions
             .iter()
             .filter(|addition| addition.conversation_id.as_deref() == Some(&group_conversation_id))
             .map(|addition| addition.notification_id.clone())
             .collect();
+
         assert!(
             !group_events.is_empty(),
             "the group conversation must have pending notifications to clear"
@@ -460,6 +589,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         let removed = tester_b
             .clear_notification_conversation(&group_conversation_id)
             .await?;
+
         for notification_id in &group_events {
             assert!(
                 removed.contains(notification_id),
@@ -468,6 +598,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         }
 
         let after = tester_b.notification_batch("en").await?;
+
         assert!(
             after
                 .additions
@@ -476,6 +607,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
                     != Some(&group_conversation_id)),
             "a cleared conversation must not be offered again"
         );
+
         assert_eq!(
             after.badge_count,
             before.badge_count - removed.len() as i64,
@@ -496,21 +628,25 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
     //
     {
         let before = tester_b.notification_batch("en").await?;
+
         assert_eq!(
             tester_b.notification_badge_count().await?,
             before.badge_count
         );
 
         let removed = tester_b.clear_contact_request_notifications().await?;
+
         assert!(
             !removed.is_empty(),
             "the pending contact request must be reported for withdrawal"
         );
+
         assert_eq!(
             tester_b.notification_badge_count().await?,
             before.badge_count - removed.len() as i64,
             "acknowledging contact requests must reduce the badge"
         );
+
         assert!(tester_b
             .clear_contact_request_notifications()
             .await?
@@ -529,14 +665,24 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
             .iter()
             .map(|addition| addition.event_id.clone())
             .collect();
+
         tester_b.acknowledge_notifications(&acknowledge).await?;
+
         let badge_before = tester_b.notification_batch("en").await?.badge_count;
 
         tester_b.set_contact_blocked(tester_a.user_id, true).await?;
 
         let blocked_message_id = MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), "You blocked me".into(), None, None)
+            .insert_and_send_text(
+                group_id.clone(),
+                "You blocked me".into(),
+                None,
+                None,
+                None,
+                None,
+            )
             .await?;
+
         tester_b
             .wait_for_text_message(&blocked_message_id, tester_a.user_id, "You blocked me")
             .await?;
@@ -548,20 +694,33 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
             0,
             "a blocked contact must not reach the notification outbox"
         );
+
         let after = tester_b.notification_batch("en").await?;
+
         assert!(after.additions.is_empty());
+
         assert_eq!(after.badge_count, badge_before);
 
         // Unblocking restores notifications for later messages.
         tester_b
             .set_contact_blocked(tester_a.user_id, false)
             .await?;
+
         let unblocked_message_id = MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), "Unblocked again".into(), None, None)
+            .insert_and_send_text(
+                group_id.clone(),
+                "Unblocked again".into(),
+                None,
+                None,
+                None,
+                None,
+            )
             .await?;
+
         let unblocked = tester_b
             .wait_for_notification("text", tester_a.user_id)
             .await?;
+
         assert_eq!(
             unblocked.message_id.as_deref(),
             Some(unblocked_message_id.as_str())

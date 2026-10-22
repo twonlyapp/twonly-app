@@ -4,14 +4,13 @@
  */
 
 use super::messages::queue_encrypted_content;
-use crate::api::proto::client::encrypted_content;
-use crate::api::proto::client::EncryptedContent;
+use crate::api::proto::client::{encrypted_content, EncryptedContent};
 use crate::api::Server;
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
-use crate::database::app::tables::{
-    Contact, Group, GroupHistoryType, InsertGroupHistories, UpdateContact,
-};
+use crate::database::app::contacts::table::{Contact, UpdateContact};
+use crate::database::app::groups::history::{GroupHistoryType, InsertGroupHistories};
+use crate::database::app::groups::native::Group;
 use crate::error::{Result, TwonlyError};
 use crate::user_config::UserConfig;
 use encrypted_content::contact_request::Type;
@@ -21,13 +20,12 @@ use std::io::Write as _;
 use std::sync::{Arc, Mutex, OnceLock};
 
 static REQUESTED_PROFILES: OnceLock<Mutex<HashMap<i64, i64>>> = OnceLock::new();
+
 static REQUESTED_CUSTOM_AVATARS: OnceLock<Mutex<HashMap<i64, (i64, std::time::Instant)>>> =
     OnceLock::new();
 
 pub(crate) async fn check_for_custom_avatar_update(
-    t: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    content: &EncryptedContent,
+    t: &mut Transaction<'_, Sqlite>, from_user_id: i64, content: &EncryptedContent,
 ) -> Result<()> {
     if content.custom_avatar_protocol_version.unwrap_or_default()
         < crate::services::avatars::CUSTOM_AVATAR_PROTOCOL_VERSION
@@ -38,31 +36,39 @@ pub(crate) async fn check_for_custom_avatar_update(
     {
         return Ok(());
     }
+
     let Some(counter) = content.sender_custom_avatar_counter else {
         return Ok(());
     };
+
     if counter <= crate::services::avatars::applied_counter(t, from_user_id).await? {
         return Ok(());
     }
+
     let should_request = {
         let mut requested = REQUESTED_CUSTOM_AVATARS
             .get_or_init(|| Mutex::new(HashMap::new()))
             .lock()
             .unwrap();
+
         requested.retain(|_, (_, requested_at)| {
             requested_at.elapsed() < std::time::Duration::from_secs(120)
         });
+
         let previous = requested
             .get(&from_user_id)
             .map(|(counter, _)| *counter)
             .unwrap_or(-1);
+
         if counter > previous {
             requested.insert(from_user_id, (counter, std::time::Instant::now()));
+
             true
         } else {
             false
         }
     };
+
     if should_request {
         queue_encrypted_content(
             t,
@@ -85,13 +91,12 @@ pub(crate) async fn check_for_custom_avatar_update(
         )
         .await?;
     }
+
     Ok(())
 }
 
 pub(crate) async fn check_for_profile_update(
-    t: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    content: &EncryptedContent,
+    t: &mut Transaction<'_, Sqlite>, from_user_id: i64, content: &EncryptedContent,
 ) -> Result<()> {
     let Some(sender_profile_counter) = content.sender_profile_counter else {
         return Ok(());
@@ -114,10 +119,12 @@ pub(crate) async fn check_for_profile_update(
             .get_or_init(|| Mutex::new(HashMap::new()))
             .lock()
             .unwrap();
+
         let last_requested = requested.get(&from_user_id).copied().unwrap_or(0);
 
         if sender_profile_counter > last_requested {
             requested.insert(from_user_id, sender_profile_counter);
+
             true
         } else {
             false
@@ -150,10 +157,9 @@ pub(crate) async fn check_for_profile_update(
 /// Refreshes request metadata before inbound handling opens its transaction.
 /// A server lookup may take the full request timeout, and its error handling
 /// can itself write to the app database. Neither can hold its only connection.
+
 pub(crate) async fn prepare_contact_request(
-    ctx: &Arc<Context>,
-    from_user_id: i64,
-    content: &EncryptedContent,
+    ctx: &Arc<Context>, from_user_id: i64, content: &EncryptedContent,
 ) -> Result<()> {
     if !content
         .contact_request
@@ -164,14 +170,16 @@ pub(crate) async fn prepare_contact_request(
     }
 
     let database = ctx.app_db.read().await.clone();
+
     let auto_accept = sqlx::query_scalar::<_, bool>(
-        "SELECT blocked = 0 AND (accepted != 0 OR requested_by_user != 0) \
-         FROM contacts WHERE user_id = ?",
+        "SELECT blocked = 0 AND (accepted != 0 OR requested_by_user != 0) FROM contacts WHERE \
+         user_id = ?",
     )
     .bind(from_user_id)
     .fetch_optional(&database.pool)
     .await?
     .unwrap_or(false);
+
     if auto_accept {
         return Ok(());
     }
@@ -184,10 +192,12 @@ pub(crate) async fn prepare_contact_request(
             )));
         }
     };
+
     let username = String::from_utf8(
         user.username
             .ok_or_else(|| TwonlyError::Generic("user response has no username".into()))?,
     )?;
+
     sqlx::query(
         "UPDATE contacts SET username = ?, joined_at = COALESCE(?, joined_at) WHERE user_id = ?",
     )
@@ -196,21 +206,21 @@ pub(crate) async fn prepare_contact_request(
     .bind(from_user_id)
     .execute(&database.pool)
     .await?;
+
     Ok(())
 }
 
 pub(crate) async fn handle_contact_request(
-    ctx: &Arc<Context>,
-    tr: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
+    ctx: &Arc<Context>, tr: &mut Transaction<'_, Sqlite>, from_user_id: i64,
     request: encrypted_content::ContactRequest,
 ) -> Result<()> {
     match Type::try_from(request.r#type)? {
         Type::Request => {
             let contact = Contact::get_contact_by_id(tr, from_user_id).await?;
 
-            // Either the contact has accepted the fromUserId already: Then just blindly accept the request.
-            // Or the user has also requested fromUserId. This means that both user have requested each other (while been
+            // Either the contact has accepted the fromUserId already: Then just blindly
+            // accept the request. Or the user has also requested fromUserId.
+            // This means that both user have requested each other (while been
             // offline for example): In this case the contact can also be accepted blindly.
             let auto_accept = contact.as_ref().is_some_and(|contact| {
                 contact.blocked == 0 && (contact.accepted != 0 || contact.requested_by_user != 0)
@@ -292,15 +302,13 @@ pub(crate) async fn handle_contact_request(
                 .await?;
         }
     }
+
     Ok(())
 }
 
 pub(crate) async fn handle_contact_update(
-    ctx: &Arc<Context>,
-    tr: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    sender_profile_counter: Option<i64>,
-    update: encrypted_content::ContactUpdate,
+    ctx: &Arc<Context>, tr: &mut Transaction<'_, Sqlite>, from_user_id: i64,
+    sender_profile_counter: Option<i64>, update: encrypted_content::ContactUpdate,
 ) -> Result<()> {
     if update.r#type == encrypted_content::contact_update::Type::Request as i32 {
         let user = UserConfig::load_required_from(ctx)?;
@@ -311,7 +319,9 @@ pub(crate) async fn handle_contact_update(
             .map(|avatar| {
                 let mut encoder =
                     flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+
                 encoder.write_all(avatar.as_bytes())?;
+
                 encoder.finish()
             })
             .transpose()?;
@@ -321,6 +331,7 @@ pub(crate) async fn handle_contact_update(
         } else {
             None
         };
+
         queue_encrypted_content(
             tr,
             from_user_id,
@@ -345,6 +356,7 @@ pub(crate) async fn handle_contact_update(
             true,
         )
         .await?;
+
         return Ok(());
     }
 
@@ -353,6 +365,7 @@ pub(crate) async fn handle_contact_update(
     }
 
     let avatar_svg_compressed = update.avatar_svg_compressed.clone();
+
     if let Some(custom_avatar) = update.custom_avatar.clone() {
         match crate::services::avatars::apply_received(tr, from_user_id, custom_avatar).await {
             Ok(_) => {
@@ -392,9 +405,11 @@ pub(crate) async fn handle_contact_update(
             .insert(tr)
             .await?;
         }
+
         let old_display = previous
             .display_name
             .unwrap_or_else(|| previous.username.clone());
+
         if old_display != *display_name {
             InsertGroupHistories::new(
                 from_user_id,
@@ -434,30 +449,40 @@ pub(crate) async fn handle_contact_update(
 }
 
 #[cfg(test)]
+
 mod tests {
+
     use super::*;
 
     #[tokio::test]
+
     async fn contact_request_transaction_preserves_metadata_and_rolls_back() -> anyhow::Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx = Context::init_for_testing(
             directory.path().join("database"),
             directory.path().join("data"),
         )
         .await?;
+
         crate::api::ApiRuntime::close(&ctx).await?;
+
         let database = ctx.app_db.read().await.clone();
+
         sqlx::query(
-            "INSERT INTO contacts(user_id, username, joined_at, deleted_by_user) \
-             VALUES (7, 'alice', 123, 1)",
+            "INSERT INTO contacts(user_id, username, joined_at, deleted_by_user) VALUES (7, \
+             'alice', 123, 1)",
         )
         .execute(&database.pool)
         .await?;
+
         let client = crate::api::ApiRuntime::client(&ctx).await?;
+
         let _transport = client.ws_client.lock().await;
 
         for commit in [false, true] {
             let mut t = database.pool.begin().await?;
+
             tokio::time::timeout(
                 std::time::Duration::from_secs(1),
                 handle_contact_request(
@@ -470,22 +495,31 @@ mod tests {
                 ),
             )
             .await??;
+
             let contact = Contact::get_contact_by_id(&mut t, 7).await?.unwrap();
+
             assert_eq!(contact.username, "alice");
+
             assert_eq!(contact.joined_at, Some(123));
+
             assert_eq!(contact.requested, 1);
+
             assert_eq!(contact.deleted_by_user, 0);
+
             if commit {
                 t.commit().await?;
             } else {
                 t.rollback().await?;
             }
+
             let requested: i64 =
                 sqlx::query_scalar("SELECT requested FROM contacts WHERE user_id = 7")
                     .fetch_one(&database.pool)
                     .await?;
+
             assert_eq!(requested, i64::from(commit));
         }
+
         Ok(())
     }
 }

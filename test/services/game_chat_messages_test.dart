@@ -1,14 +1,20 @@
 import 'dart:typed_data';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/game_chat_messages.dart';
 
-Message message(String id, int seconds, {String? instance, bool card = false}) {
-  return Message(
+StoredMessage message(
+  String id,
+  int seconds, {
+  String? instance,
+  bool card = false,
+}) {
+  return StoredMessage(
     groupId: 'chat',
     messageId: id,
     type: card ? MessageType.webxdcApp.name : MessageType.text.name,
@@ -18,7 +24,9 @@ Message message(String id, int seconds, {String? instance, bool card = false}) {
         : AdditionalMessageData(
             webxdcOrigin: WebxdcOrigin(instanceId: instance, appId: 'chess'),
           ).writeToBuffer(),
-    createdAt: DateTime.fromMillisecondsSinceEpoch(seconds * 1000),
+    createdAtSeconds: databaseSeconds(
+      DateTime.fromMillisecondsSinceEpoch(seconds * 1000),
+    ),
     mediaStored: false,
     mediaReopened: false,
     isDeletedFromSender: false,
@@ -66,7 +74,7 @@ void main() {
     () {
       final card = message('card', 100, card: true);
       final malformed = message('malformed-info', 200).copyWith(
-        additionalMessageData: Value(Uint8List.fromList([255])),
+        additionalMessageData: NullableBytes(value: Uint8List.fromList([255])),
       );
       expect(arrangeGameMessages([card, malformed]), [card, malformed]);
     },

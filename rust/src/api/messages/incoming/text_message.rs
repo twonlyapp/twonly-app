@@ -5,7 +5,8 @@
 
 use crate::api::proto::client::encrypted_content;
 use crate::context::Context;
-use crate::database::app::tables::{Group, Message, MessageType, NewMessage};
+use crate::database::app::groups::native::Group;
+use crate::database::app::messages::native::{Message, MessageType, NewMessage};
 use crate::error::Result;
 use crate::services::mediafiles::MediaFileService;
 use crate::utils::{current_time, milliseconds_to_seconds};
@@ -13,9 +14,7 @@ use encrypted_content::message_update::Type;
 use sqlx::{Sqlite, Transaction};
 
 pub(crate) async fn handle_text_message(
-    t: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    group_id: &str,
+    t: &mut Transaction<'_, Sqlite>, from_user_id: i64, group_id: &str,
     message: encrypted_content::TextMessage,
 ) -> Result<()> {
     Message::check_message_owner(t, &message.sender_message_id, from_user_id).await?;
@@ -29,6 +28,7 @@ pub(crate) async fn handle_text_message(
                 // Keep the fallback text so an invalid attachment cannot make
                 // a reliable-mailbox message retry forever.
                 tracing::warn!(%error, "discarding invalid sticker attachment");
+
                 None
             }
         },
@@ -68,20 +68,20 @@ pub(crate) async fn handle_text_message(
     .await?;
 
     Group::increase_last_message_exchange(t, group_id, timestamp).await?;
+
     Group::record_text_or_media(t, group_id, timestamp).await?;
 
     Ok(())
 }
 
 pub(crate) async fn handle_message_update(
-    ctx: &std::sync::Arc<Context>,
-    t: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
+    ctx: &std::sync::Arc<Context>, t: &mut Transaction<'_, Sqlite>, from_user_id: i64,
     update: encrypted_content::MessageUpdate,
 ) -> Result<()> {
     let timestamp = milliseconds_to_seconds(update.timestamp);
 
     let update_type = Type::try_from(update.r#type)?;
+
     tracing::info!(?update_type, from_user_id, "update text message");
 
     match update_type {
@@ -107,6 +107,7 @@ pub(crate) async fn handle_message_update(
 
             // A story taken down before it was seen should not stay announced.
             let cleared_at = crate::utils::current_time().timestamp();
+
             sqlx::query!(
                 r#"UPDATE notification_outbox SET cleared_at = ?
                    WHERE message_id = ? AND kind = 'story' AND cleared_at IS NULL"#,
@@ -127,5 +128,6 @@ pub(crate) async fn handle_message_update(
             .await?;
         }
     }
+
     Ok(())
 }

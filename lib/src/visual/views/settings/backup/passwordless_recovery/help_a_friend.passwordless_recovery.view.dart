@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart'
-    show getContactDisplayName;
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -38,15 +41,24 @@ class _HelpAFriendPasswordlessRecoveryViewState
   @override
   void initState() {
     super.initState();
-    _contactSub = twonlyDB.contactsDao.watchAllAcceptedContacts().listen((
-      update,
-    ) {
-      if (mounted) {
-        setState(() {
-          _contacts = update;
+    _contactSub =
+        watchRustDatabase(
+          (control) => rust_contacts.watchContacts(
+            input: db_contacts.ContactQuery(
+              filter: db_contacts.ContactFilter.accepted,
+              ids: Int64List(0),
+            ),
+            control: control,
+          ),
+        ).listen((
+          update,
+        ) {
+          if (mounted) {
+            setState(() {
+              _contacts = update;
+            });
+          }
         });
-      }
-    });
   }
 
   @override

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM receipts WHERE receipt_id = 'soak-00'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "93824b59174cb4047a4e09aab54a9a6dc9fe51f5f350cae8e2bcadb23bf2904e"
+}

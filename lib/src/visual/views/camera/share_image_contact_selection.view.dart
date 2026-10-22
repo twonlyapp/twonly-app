@@ -3,14 +3,18 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/stories.dart' as stories;
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -92,8 +96,22 @@ class _ShareImageView extends State<ShareImageView> {
     super.initState();
 
     final groups = widget.sendToWidget
-        ? twonlyDB.groupsDao.watchGroupsAllowedForWidgetShare()
-        : twonlyDB.groupsDao.watchGroupsForShareImage();
+        ? watchRustDatabase(
+            (control) => rust_groups.watchGroups(
+              input: const db_groups.GroupQuery(
+                filter: db_groups.GroupFilter.widgetShare,
+              ),
+              control: control,
+            ),
+          )
+        : watchRustDatabase(
+            (control) => rust_groups.watchGroups(
+              input: const db_groups.GroupQuery(
+                filter: db_groups.GroupFilter.shareImage,
+              ),
+              control: control,
+            ),
+          );
     allGroupSub = groups.listen((allGroups) async {
       if (!mounted) return;
       if (widget.sendToWidget) {

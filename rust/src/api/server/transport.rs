@@ -4,7 +4,8 @@
  */
 
 use super::Server;
-use crate::api::{proto::client_to_server, ApiRuntime};
+use crate::api::proto::client_to_server;
+use crate::api::ApiRuntime;
 use crate::context::Context;
 use crate::error::Result;
 use prost::Message as _;
@@ -46,15 +47,13 @@ impl Server {
     }
 
     pub(super) async fn application(
-        ctx: &Arc<Context>,
-        value: client_to_server::application_data::ApplicationData,
+        ctx: &Arc<Context>, value: client_to_server::application_data::ApplicationData,
     ) -> Result<Vec<u8>> {
         ApiRuntime::request_authenticated(ctx, Self::application_request(value), None).await
     }
 
     pub(super) async fn application_for_contact(
-        ctx: &Arc<Context>,
-        value: client_to_server::application_data::ApplicationData,
+        ctx: &Arc<Context>, value: client_to_server::application_data::ApplicationData,
         contact_id: i64,
     ) -> Result<Vec<u8>> {
         ApiRuntime::request_authenticated(ctx, Self::application_request(value), Some(contact_id))
@@ -62,24 +61,24 @@ impl Server {
     }
 
     pub(super) async fn durable_application(
-        ctx: &Arc<Context>,
-        value: client_to_server::application_data::ApplicationData,
+        ctx: &Arc<Context>, value: client_to_server::application_data::ApplicationData,
         kind: &'static str,
     ) -> Result<Vec<u8>> {
         ApiRuntime::request_durable_authenticated(ctx, Self::application_request(value), kind).await
     }
 
     pub(super) async fn handshake(
-        ctx: &Arc<Context>,
-        value: client_to_server::handshake::Handshake,
+        ctx: &Arc<Context>, value: client_to_server::handshake::Handshake,
     ) -> Result<Vec<u8>> {
         let client = ApiRuntime::client(ctx).await?;
+
         if client
             .is_authenticated
             .load(std::sync::atomic::Ordering::Acquire)
         {
             client.close().await;
         }
+
         ApiRuntime::request_binary(ctx, Self::handshake_request(value)).await
     }
 }
@@ -88,6 +87,7 @@ impl Server {
     /// Asks the server to (re)start a mailbox drain. It answers immediately;
     /// the messages themselves arrive as unsolicited `PendingMessagesV2`
     /// batches, so this must not be treated as a delivery round trip.
+
     pub(crate) async fn request_pending_messages(ctx: &Arc<Context>) -> Result<()> {
         Self::application(
             ctx,

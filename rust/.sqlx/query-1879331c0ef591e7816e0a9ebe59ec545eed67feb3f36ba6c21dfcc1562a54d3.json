@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT DISTINCT group_id AS \"group_id!\",\n                media_id AS \"media_id!\"\n            FROM messages\n            WHERE media_id IS NOT NULL\n            ORDER BY group_id,\n                rowid\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "media_id!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "media_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "1879331c0ef591e7816e0a9ebe59ec545eed67feb3f36ba6c21dfcc1562a54d3"
+}

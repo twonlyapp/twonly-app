@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                UPDATE groups\n                SET last_message_exchange = ?\n                WHERE group_id = ?\n                    AND last_message_exchange < ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "bfbf30c4abef1abcf7e5796b5263304ecad6ed805b2add60321583689ec458fc"
+}

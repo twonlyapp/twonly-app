@@ -1,0 +1,52 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT m.message_id AS \"message_id!\",\n                gm.contact_id AS \"contact_id!\",\n                COALESCE(opened.action_at,m.opened_at) AS \"opened_at?\",\n                COALESCE(received.action_at,m.ack_by_user,opened.action_at,m.opened_at) AS \"received_at?\"\n            FROM messages m\n            JOIN group_members gm\n            ON gm.group_id = m.group_id\n            JOIN contacts c\n            ON c.user_id = gm.contact_id\n            LEFT JOIN message_actions received\n            ON received.message_id = m.message_id\n                AND received.contact_id = gm.contact_id\n                AND received.type = 'ackByUserAt'\n            LEFT JOIN message_actions opened\n            ON opened.message_id = m.message_id\n                AND opened.contact_id = gm.contact_id\n                AND opened.type = 'openedAt'\n            WHERE m.media_id = ?\n                AND m.is_story = 1\n                AND m.sender_id IS NULL\n            ORDER BY \"opened_at?\" IS NULL,\n                \"opened_at?\" DESC,\n                \"received_at?\" IS NULL,\n                \"received_at?\" DESC,\n                c.username,\n                m.message_id,\n                gm.contact_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "opened_at?",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "received_at?",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "22aba5327900f70a39fd7e07e5a9c8361e61354f64113af401085f36e0cf2415"
+}

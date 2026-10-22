@@ -5,9 +5,8 @@
 
 use crate::api::proto::client::{self as proto, encrypted_content};
 use crate::api::runtime::ApiRuntime;
-use crate::bridge::InitConfig;
 use crate::context::Context;
-use crate::database::app::tables::{FlameState, Group};
+use crate::database::app::groups::native::{FlameState, Group};
 use crate::database::app::AppDatabase;
 use crate::error::Result;
 use crate::user_config::UserConfig;
@@ -23,17 +22,25 @@ use std::sync::{Arc, LazyLock};
 // events that were already downloaded into the local notification outbox.
 // Keep Android's existing batch size unchanged.
 #[cfg(target_os = "ios")]
+
 const MAX_BATCH_SIZE: i64 = 40;
+
 #[cfg(not(target_os = "ios"))]
+
 const MAX_BATCH_SIZE: i64 = 100;
+
 const EN_ARB: &str = include_str!("../../../lib/src/localization/translations/en.arb");
+
 const DE_ARB: &str = include_str!("../../../lib/src/localization/translations/de.arb");
+
 const AR_ARB: &str = include_str!("../../../lib/src/localization/translations/ar.arb");
 
 static EN_TRANSLATIONS: LazyLock<HashMap<String, String>> =
     LazyLock::new(|| parse_arb(EN_ARB, "en"));
+
 static DE_TRANSLATIONS: LazyLock<HashMap<String, String>> =
     LazyLock::new(|| parse_arb(DE_ARB, "de"));
+
 static AR_TRANSLATIONS: LazyLock<HashMap<String, String>> =
     LazyLock::new(|| parse_arb(AR_ARB, "ar"));
 
@@ -42,27 +49,35 @@ static AR_TRANSLATIONS: LazyLock<HashMap<String, String>> =
 /// The update itself is hidden -- app state rather than something a person
 /// sent -- but an `info` is written to be read, and becomes a chat row of its
 /// own on arrival. That row is what the receiver is woken and notified for.
+
 fn webxdc_announcement(
-    message: &encrypted_content::AdditionalDataMessage,
-    user_id: i64,
+    message: &encrypted_content::AdditionalDataMessage, user_id: i64,
 ) -> Option<String> {
     let data = <proto::AdditionalMessageData as prost::Message>::decode(
         message.additional_message_data.as_deref()?,
     )
     .ok()?;
+
     let update = data.webxdc_update?;
+
     // Keep chat announcements shared, but only wake recipients selected by the app.
     let announcement = crate::services::webxdc::announcement(&update)?;
+
     match update.notify.as_deref() {
         None => Some(announcement),
         Some(raw) => {
             let recipients: std::collections::BTreeMap<String, String> =
                 serde_json::from_str(raw).ok()?;
+
             let address =
                 crate::services::webxdc::WebxdcService::address_for(&update.instance_id, user_id);
+
             let text = recipients.get(&address)?;
+
             let mut notification = update;
+
             notification.info = Some(text.clone());
+
             crate::services::webxdc::announcement(&notification)
         }
     }
@@ -73,9 +88,9 @@ fn webxdc_announcement(
 /// The two layers say different things and both matter here: the outer `None`
 /// means this device has no such message, while an inner `None` means this
 /// device wrote it, which is how an own message is stored.
+
 async fn message_sender(
-    transaction: &mut Transaction<'_, Sqlite>,
-    message_id: &str,
+    transaction: &mut Transaction<'_, Sqlite>, message_id: &str,
 ) -> Result<Option<Option<i64>>> {
     Ok(sqlx::query_scalar!(
         "SELECT sender_id FROM messages WHERE message_id = ?",
@@ -87,6 +102,7 @@ async fn message_sender(
 
 /// Whether `message_id` is one of this device's own story rows, which is what
 /// a reply, reaction or save aimed at the user's story points at.
+
 async fn is_own_story(transaction: &mut Transaction<'_, Sqlite>, message_id: &str) -> Result<bool> {
     Ok(sqlx::query_scalar!(
         r#"SELECT EXISTS(
@@ -101,6 +117,7 @@ async fn is_own_story(transaction: &mut Transaction<'_, Sqlite>, message_id: &st
 
 /// Whether `text` is nothing but emoji. A reaction to a story travels as a
 /// text quoting it, so this is what tells a reaction from a reply.
+
 fn is_emoji_only(text: &str) -> bool {
     fn pictographic(c: char) -> bool {
         matches!(
@@ -123,6 +140,7 @@ fn is_emoji_only(text: &str) -> bool {
                 | 0x3299
         )
     }
+
     // Joiners, variation selectors, skin tones, tags and keycap bases only
     // ever build an emoji out of the pictographs around them.
     fn component(c: char) -> bool {
@@ -133,7 +151,9 @@ fn is_emoji_only(text: &str) -> bool {
             || c == '#'
             || c == '*'
     }
+
     let text = text.trim();
+
     !text.is_empty()
         && text.chars().count() <= 16
         // A keycap is a digit or sign wrapped by U+20E3; that mark is what
@@ -149,9 +169,9 @@ fn is_emoji_only(text: &str) -> bool {
 /// device without leaving it anything to show reaches the user as a bare "You
 /// got a new message" -- which is why every arm here has to match something
 /// [`record_incoming_event`] will actually record.
+
 pub(crate) async fn should_wake_receiver(
-    transaction: &mut Transaction<'_, Sqlite>,
-    target_user_id: i64,
+    transaction: &mut Transaction<'_, Sqlite>, target_user_id: i64,
     content: &proto::EncryptedContent,
 ) -> Result<bool> {
     // A reaction concerns the person who wrote the message it lands on and
@@ -212,6 +232,7 @@ pub(crate) async fn should_wake_receiver(
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+
 pub struct NotificationAddition {
     pub event_id: String,
     pub notification_id: String,
@@ -234,6 +255,7 @@ pub struct NotificationAddition {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+
 pub struct NotificationBatch {
     pub additions: Vec<NotificationAddition>,
     pub removals: Vec<String>,
@@ -242,6 +264,7 @@ pub struct NotificationBatch {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+
 pub struct NotificationPresentation {
     pub title: String,
     pub body: String,
@@ -255,6 +278,7 @@ pub fn fallback_presentation(locale: &str) -> NotificationPresentation {
 }
 
 #[derive(Debug)]
+
 struct NotificationDraft {
     event_id: String,
     notification_id: String,
@@ -286,6 +310,7 @@ impl NotificationDraft {
         )
         .execute(&mut **transaction)
         .await?;
+
         Ok(())
     }
 }
@@ -293,11 +318,9 @@ impl NotificationDraft {
 /// Records the user-visible consequence of an encrypted message in the same
 /// transaction that commits that message. Transport retries are deduplicated
 /// by the receipt-derived event ID.
+
 pub(crate) async fn record_incoming_event(
-    ctx: &Context,
-    transaction: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    receipt_id: &str,
+    ctx: &Context, transaction: &mut Transaction<'_, Sqlite>, from_user_id: i64, receipt_id: &str,
     content: &proto::EncryptedContent,
 ) -> Result<()> {
     if content
@@ -307,6 +330,7 @@ pub(crate) async fn record_incoming_event(
     {
         return Ok(());
     }
+
     let blocked = sqlx::query_scalar!(
         "SELECT blocked FROM contacts WHERE user_id = ?",
         from_user_id
@@ -315,12 +339,15 @@ pub(crate) async fn record_incoming_event(
     .await?
     .unwrap_or(0)
         != 0;
+
     if blocked {
         return Ok(());
     }
 
     let conversation_id = content.group_id.clone();
+
     let now = current_time().timestamp();
+
     let draft = if let Some(message) = content.text_message.as_ref() {
         let is_live_location = message
             .additional_message_data
@@ -330,6 +357,7 @@ pub(crate) async fn record_incoming_event(
                 location.message_id == message.sender_message_id
                     && crate::services::live_location::validate(&location).is_ok()
             });
+
         let is_sticker = message
             .additional_message_data
             .as_deref()
@@ -339,12 +367,14 @@ pub(crate) async fn record_incoming_event(
                     .flatten()
             })
             .is_some();
+
         // An answer to the user's own story says so: an emoji is a reaction
         // to it, anything else a reply.
         let about_story = match message.quote_message_id.as_deref() {
             Some(quoted) => is_own_story(transaction, quoted).await?,
             None => false,
         };
+
         let (kind, reaction) = if is_live_location {
             ("live_location", None)
         } else {
@@ -359,6 +389,7 @@ pub(crate) async fn record_incoming_event(
                 (false, false, false) => ("text", None),
             }
         };
+
         Some(NotificationDraft {
             event_id: receipt_id.to_owned(),
             notification_id: message.sender_message_id.clone(),
@@ -371,6 +402,7 @@ pub(crate) async fn record_incoming_event(
         })
     } else if let Some(media) = content.media.as_ref() {
         let media_type = encrypted_content::media::Type::try_from(media.r#type)?;
+
         if media_type == encrypted_content::media::Type::Reupload {
             None
         } else {
@@ -382,6 +414,7 @@ pub(crate) async fn record_incoming_event(
                 encrypted_content::media::Type::Audio => "audio",
                 encrypted_content::media::Type::Reupload => unreachable!(),
             };
+
             Some(NotificationDraft {
                 event_id: receipt_id.to_owned(),
                 notification_id: media.sender_message_id.clone(),
@@ -400,15 +433,21 @@ pub(crate) async fn record_incoming_event(
         // two weeks, it stays quiet. A wake-up it declines is silenced by the
         // notification extension instead of showing the push's placeholder.
         let config = UserConfig::load_required_from(ctx)?;
+
         // The same chat `handle_story` filed the story under.
-        let chat =
-            crate::database::app::tables::Group::direct_chat_id(ctx.user_id().await?, from_user_id);
+        let chat = crate::database::app::groups::native::Group::direct_chat_id(
+            ctx.user_id().await?,
+            from_user_id,
+        );
+
         match story.media.as_ref() {
             Some(media) if story.notify && config.story_notifications => {
                 let filed = message_sender(transaction, &media.sender_message_id).await?
                     == Some(Some(from_user_id));
+
                 let recent =
                     crate::services::stories::exchanged_recently(transaction, &chat, now).await?;
+
                 (filed && recent).then(|| NotificationDraft {
                     event_id: receipt_id.to_owned(),
                     notification_id: media.sender_message_id.clone(),
@@ -429,19 +468,23 @@ pub(crate) async fn record_incoming_event(
         // which it does not when the update was dropped for an unknown
         // instance, a mismatched chat, or an app that is over budget.
         let self_id = UserConfig::load_required_from(ctx)?.user_id;
+
         let announcement = message
             .hidden
             .then(|| webxdc_announcement(message, self_id))
             .flatten();
+
         let message_id = if message.hidden {
             crate::services::webxdc::WebxdcService::info_message_id(&message.sender_message_id)
         } else {
             message.sender_message_id.clone()
         };
+
         let worth_an_alert = if message.hidden {
             let visible_instance = crate::services::webxdc::visibility::visible_instance(
                 std::path::Path::new(&ctx.config.data_dir),
             );
+
             let is_visible = visible_instance.is_some_and(|instance_id| {
                 message
                     .additional_message_data
@@ -452,12 +495,14 @@ pub(crate) async fn record_incoming_event(
                     .and_then(|data| data.webxdc_update)
                     .is_some_and(|update| update.instance_id == instance_id)
             });
+
             announcement.is_some()
                 && !is_visible
                 && message_sender(transaction, &message_id).await?.is_some()
         } else {
             true
         };
+
         worth_an_alert.then(|| NotificationDraft {
             event_id: receipt_id.to_owned(),
             notification_id: message.sender_message_id.clone(),
@@ -485,6 +530,7 @@ pub(crate) async fn record_incoming_event(
         } else {
             "reaction"
         };
+
         matches!(
             message_sender(transaction, &reaction.target_message_id).await?,
             Some(None)
@@ -501,6 +547,7 @@ pub(crate) async fn record_incoming_event(
         })
     } else if let Some(update) = content.media_update.as_ref() {
         let update_type = encrypted_content::media_update::Type::try_from(update.r#type)?;
+
         // Media status updates can arrive without a group ID. Associate the
         // alert with the original message so opening its chat clears it.
         let conversation_id = match conversation_id {
@@ -514,13 +561,16 @@ pub(crate) async fn record_incoming_event(
                 .await?
             }
         };
+
         let story = is_own_story(transaction, &update.target_message_id).await?;
+
         let kind = match update_type {
             encrypted_content::media_update::Type::Stored if story => Some("stored_story"),
             encrypted_content::media_update::Type::Stored => Some("stored_media"),
             encrypted_content::media_update::Type::Reopened => Some("reopened_media"),
             encrypted_content::media_update::Type::DecryptionError => None,
         };
+
         kind.map(|kind| NotificationDraft {
             event_id: receipt_id.to_owned(),
             notification_id: receipt_id.to_owned(),
@@ -533,11 +583,13 @@ pub(crate) async fn record_incoming_event(
         })
     } else if let Some(request) = content.contact_request.as_ref() {
         let request_type = encrypted_content::contact_request::Type::try_from(request.r#type)?;
+
         let kind = match request_type {
             encrypted_content::contact_request::Type::Request => Some("contact_request"),
             encrypted_content::contact_request::Type::Accept => Some("accept_request"),
             encrypted_content::contact_request::Type::Reject => None,
         };
+
         kind.map(|kind| NotificationDraft {
             event_id: receipt_id.to_owned(),
             notification_id: receipt_id.to_owned(),
@@ -566,14 +618,17 @@ pub(crate) async fn record_incoming_event(
     if let Some(draft) = draft {
         draft.insert(transaction).await?;
     }
+
     Ok(())
 }
 
 /// Reconcile old outbox rows and events recorded after their message was
 /// opened or deleted. Deleted messages can no longer be acknowledged in the
 /// UI, so their alerts must not keep inflating the badge.
+
 async fn clear_stale_messages(database: &Arc<AppDatabase>) -> Result<()> {
     let cleared_at = current_time().timestamp();
+
     sqlx::query(
         r#"
         UPDATE notification_outbox
@@ -602,17 +657,20 @@ async fn clear_stale_messages(database: &Arc<AppDatabase>) -> Result<()> {
     .bind(cleared_at)
     .execute(&database.pool)
     .await?;
+
     Ok(())
 }
 
 /// A turn update may have been queued before the recipient opened the game.
 /// Clear only alerts belonging to the visible instance; chat rows stay intact.
+
 async fn clear_visible_webxdc(ctx: &Context, database: &Arc<AppDatabase>) -> Result<()> {
     let Some(instance_id) = crate::services::webxdc::visibility::visible_instance(
         std::path::Path::new(&ctx.config.data_dir),
     ) else {
         return Ok(());
     };
+
     sqlx::query(
         "UPDATE notification_outbox SET cleared_at = ?
          WHERE cleared_at IS NULL AND kind = 'webxdc'
@@ -622,28 +680,37 @@ async fn clear_visible_webxdc(ctx: &Context, database: &Arc<AppDatabase>) -> Res
     .bind(instance_id)
     .execute(&database.pool)
     .await?;
+
     Ok(())
 }
 
 /// The number of events the user has not dealt with yet. iOS has no way to
 /// derive an app icon badge from the delivered alerts, so the running app has
 /// to push this value into `UNUserNotificationCenter` itself.
+
 pub async fn badge_count(ctx: &Arc<Context>) -> Result<i64> {
     let database = ctx.app_db.read().await.clone();
+
     clear_stale_messages(&database).await?;
+
     clear_visible_webxdc(ctx, &database).await?;
+
     let count = sqlx::query_scalar!(
         r#"SELECT COUNT(*) AS "count: i64" FROM notification_outbox WHERE cleared_at IS NULL"#
     )
     .fetch_one(&database.pool)
     .await?;
+
     Ok(count)
 }
 
 pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<NotificationBatch> {
     let database = ctx.app_db.read().await.clone();
+
     clear_stale_messages(&database).await?;
+
     clear_visible_webxdc(ctx, &database).await?;
+
     let rows = sqlx::query_as!(
         PendingRow,
         r#"
@@ -687,7 +754,9 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
         )
         .await?
     };
+
     let mut additions = Vec::with_capacity(rows.len());
+
     for mut row in rows {
         let flame_state = row
             .conversation_id
@@ -695,21 +764,28 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
             .and_then(|id| flame_states.get(id))
             .copied()
             .unwrap_or_default();
+
         let is_group = row.conversation_id.is_some() && row.is_direct_chat == 0;
+
         let sender_name = if is_group {
             row.conversation_name = row
                 .conversation_name
                 .map(|name| notification_display_name(&name, flame_state));
+
             row.sender_name.clone()
         } else {
             notification_display_name(&row.sender_name, flame_state)
         };
+
         let title = sender_name.clone();
+
         let body = localized_body(locale, &row);
+
         let text_messages_body = matches!(row.kind.as_str(), "text" | "response").then(|| {
             translation(locale, "notificationTextMessages")
                 .replace("{inGroup}", &group_suffix(locale, &row))
         });
+
         // A direct chat's stored name may predate a contact profile update.
         // Every native presentation should use the current resolved name.
         let conversation_name = if is_group {
@@ -717,6 +793,7 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
         } else {
             Some(sender_name.clone())
         };
+
         let avatar_path =
             match crate::services::avatars::ensure_contact_avatar_png(ctx, row.sender_id).await {
                 Ok(path) => path.map(|path| path.display().to_string()),
@@ -725,14 +802,17 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
                         sender_id = row.sender_id,
                         "failed to prepare notification avatar: {error}"
                     );
+
                     None
                 }
             };
+
         let avatar_path = avatar_path.or_else(|| {
             crate::services::avatars::notification_logo_path(ctx)
                 .ok()
                 .map(|path| path.display().to_string())
         });
+
         let conversation_avatar_path = if is_group {
             match crate::services::avatars::ensure_group_avatar_png(
                 ctx,
@@ -743,12 +823,14 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
                 Ok(path) => path.map(|path| path.display().to_string()),
                 Err(error) => {
                     tracing::warn!(%error, "failed to prepare group notification avatar");
+
                     None
                 }
             }
         } else {
             None
         };
+
         additions.push(NotificationAddition {
             event_id: row.event_id,
             notification_id: row.notification_id,
@@ -779,11 +861,14 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
 
 /// Both native renderers use this for the direct-chat sender or group name.
 /// Match FlameCounterWidget, using the same derived state as the app so expired
-/// counters disappear even before the next media exchange updates the stored row.
+/// counters disappear even before the next media exchange updates the stored
+/// row.
+
 fn notification_display_name(name: &str, state: FlameState) -> String {
     if state.counter < 1 {
         return name.to_owned();
     }
+
     let emoji = if state.counter % 365 == 0 {
         "🎂"
     } else if state.counter == 100 {
@@ -793,12 +878,15 @@ fn notification_display_name(name: &str, state: FlameState) -> String {
     } else {
         "🔥"
     };
+
     let counter = if state.counter == 100 {
         String::new()
     } else {
         state.counter.to_string()
     };
+
     let expiry = if state.is_expiring { "⌛" } else { "" };
+
     format!("{name} {counter}{emoji}{expiry}")
 }
 
@@ -808,13 +896,10 @@ fn notification_display_name(name: &str, state: FlameState) -> String {
 /// app — media downloads, widget upkeep, closing the socket — is deferred to
 /// [`finalize_wakeup`] so that none of it sits between the incoming message and
 /// the notification the user is waiting for.
-pub async fn process_wakeup(
-    config: InitConfig,
-    locale: &str,
-    deadline_ms: u64,
+
+pub(crate) async fn process_initialized(
+    ctx: &Arc<Context>, locale: &str, deadline_ms: u64,
 ) -> Result<NotificationBatch> {
-    Context::init_notification(config).await?;
-    let ctx = Context::get_static()?.clone();
     let locale = &app_locale(locale);
 
     // The FCM health check used to be fed by the Dart background isolate, which
@@ -827,19 +912,23 @@ pub async fn process_wakeup(
 
     let deadline = std::time::Duration::from_millis(deadline_ms.clamp(1_000, 28_000));
 
-    let completed = drain_wakeup_mailbox(&ctx, deadline).await?;
+    let completed = drain_wakeup_mailbox(ctx, deadline).await?;
 
     // Give concurrently acknowledged batches a small window to commit their
     // durable notification rows before the native caller renders the result.
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+
     let mut batch = pending_batch(&ctx, locale).await?;
+
     batch.completed = completed;
+
     tracing::info!(
         completed,
         additions = batch.additions.len(),
         removals = batch.removals.len(),
         "native push processing finished"
     );
+
     Ok(batch)
 }
 
@@ -847,7 +936,9 @@ async fn drain_wakeup_mailbox(ctx: &Arc<Context>, deadline: std::time::Duration)
     // Sample before connecting/nudging: even an empty mailbox can drain before
     // connect returns. One incoming message is not proof that the drain ended.
     let generation = ctx.mailbox_generation();
+
     ApiRuntime::client(ctx).await?.catch_up_after_push().await?;
+
     Ok(
         tokio::time::timeout(deadline, ctx.wait_for_mailbox_after(generation))
             .await
@@ -860,11 +951,16 @@ async fn drain_wakeup_mailbox(ctx: &Arc<Context>, deadline: std::time::Duration)
 /// step here is off the alert's critical path and the whole run is bounded by
 /// `deadline_ms` — an OS that reclaims the worker mid-way costs nothing that
 /// the next wake-up or app launch does not redo.
+
 pub async fn finalize_wakeup(deadline_ms: u64) -> Result<()> {
     let ctx = Context::get_static()?.clone();
+
     let owns_connection = ctx.is_notification_runtime();
+
     let deadline = std::time::Duration::from_millis(deadline_ms.min(28_000));
+
     let started = std::time::Instant::now();
+
     let remaining = || deadline.saturating_sub(started.elapsed());
 
     // In a killed-app notification process the spawned receive task only lives
@@ -874,6 +970,7 @@ pub async fn finalize_wakeup(deadline_ms: u64) -> Result<()> {
     // manifest below was not worth making.
     if owns_connection {
         let media_files = crate::services::mediafiles::MediaFileService::new(&ctx);
+
         match tokio::time::timeout(deadline.mul_f32(0.75), media_files.download_pending()).await {
             Ok(Err(error)) => tracing::warn!(%error, "background media download failed"),
             Err(error) => tracing::info!(%error, "background media download window elapsed"),
@@ -912,6 +1009,7 @@ pub async fn finalize_wakeup(deadline_ms: u64) -> Result<()> {
             Ok(Err(error)) => tracing::warn!(%error, "notification receipt flush failed"),
             Err(_) => tracing::info!("notification receipt flush window elapsed"),
         }
+
         // Bounded on its own rather than out of what is left: closing costs a
         // round trip at most, and a server that never answers the handshake
         // must not hold the worker open. The socket dies with the process
@@ -923,18 +1021,20 @@ pub async fn finalize_wakeup(deadline_ms: u64) -> Result<()> {
             tracing::info!("background socket did not close gracefully in time");
         }
     }
+
     Ok(())
 }
 
 /// Persists a token refresh from the native Android FCM callback. The normal
 /// authenticated Rust lifecycle uploads it and clears `update_fcm_token`.
-pub async fn store_fcm_token(config: InitConfig, token: String) -> Result<()> {
-    Context::init_notification(config).await?;
-    let ctx = Context::get_static()?;
+
+pub fn store_fcm_token(ctx: &Context, token: String) -> Result<()> {
     UserConfig::update(ctx, |user| {
         user.fcm_token = Some(token);
+
         user.update_fcm_token = true;
     })?;
+
     Ok(())
 }
 
@@ -942,27 +1042,37 @@ pub async fn acknowledge_batch(ctx: &Arc<Context>, event_ids: &[String]) -> Resu
     if event_ids.is_empty() {
         return Ok(());
     }
+
     let database = ctx.app_db.read().await.clone();
+
     let mut transaction = database.pool.begin().await?;
+
     let delivered_at = current_time().timestamp();
+
     for event_id in event_ids {
         sqlx::query!(
-            "UPDATE notification_outbox SET delivered_at = ? WHERE event_id = ? AND delivered_at IS NULL",
+            "UPDATE notification_outbox SET delivered_at = ? WHERE event_id = ? AND delivered_at \
+             IS NULL",
             delivered_at,
             event_id,
         )
         .execute(&mut *transaction)
         .await?;
     }
+
     transaction.commit().await?;
+
     Ok(())
 }
 
 /// Opening a chat acknowledges its activity, but media notifications remain
 /// until the corresponding media is actually opened.
+
 pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Result<Vec<String>> {
     let database = ctx.app_db.read().await.clone();
+
     let mut transaction = database.pool.begin().await?;
+
     // Recover the chat association for media status alerts recorded by older
     // versions, including alerts that have already been delivered.
     sqlx::query!(
@@ -977,7 +1087,9 @@ pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Re
     )
     .execute(&mut *transaction)
     .await?;
+
     let cleared_at = current_time().timestamp();
+
     let notification_ids = sqlx::query_scalar::<_, String>(
         r#"
         UPDATE notification_outbox SET cleared_at = ?
@@ -997,15 +1109,20 @@ pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Re
     .bind(conversation_id)
     .fetch_all(&mut *transaction)
     .await?;
+
     transaction.commit().await?;
+
     Ok(notification_ids)
 }
 
 /// Clears the contact-request notifications. They carry no conversation, so
 /// opening the request list is the only moment the user acknowledges them.
+
 pub async fn clear_contact_requests(ctx: &Arc<Context>) -> Result<Vec<String>> {
     let database = ctx.app_db.read().await.clone();
+
     let mut transaction = database.pool.begin().await?;
+
     let notification_ids = sqlx::query_scalar!(
         r#"
         SELECT notification_id FROM notification_outbox
@@ -1014,7 +1131,9 @@ pub async fn clear_contact_requests(ctx: &Arc<Context>) -> Result<Vec<String>> {
     )
     .fetch_all(&mut *transaction)
     .await?;
+
     let cleared_at = current_time().timestamp();
+
     sqlx::query!(
         r#"
         UPDATE notification_outbox SET cleared_at = ?
@@ -1024,17 +1143,18 @@ pub async fn clear_contact_requests(ctx: &Arc<Context>) -> Result<Vec<String>> {
     )
     .execute(&mut *transaction)
     .await?;
+
     transaction.commit().await?;
+
     Ok(notification_ids)
 }
 
 /// Clears only notifications representing the messages that were actually
 /// opened. Events that merely refer to the same message, such as reactions or
 /// media-status updates, remain independent notifications.
+
 pub(crate) async fn clear_opened_messages(
-    transaction: &mut Transaction<'_, Sqlite>,
-    message_ids: &[String],
-    cleared_at: i64,
+    transaction: &mut Transaction<'_, Sqlite>, message_ids: &[String], cleared_at: i64,
 ) -> Result<()> {
     for message_id in message_ids {
         sqlx::query(
@@ -1051,6 +1171,7 @@ pub(crate) async fn clear_opened_messages(
         .execute(&mut **transaction)
         .await?;
     }
+
     Ok(())
 }
 
@@ -1073,6 +1194,7 @@ struct PendingRow {
 fn parse_arb(source: &str, locale: &str) -> HashMap<String, String> {
     let values: HashMap<String, serde_json::Value> = serde_json::from_str(source)
         .unwrap_or_else(|error| panic!("bundled {locale}.arb is invalid: {error}"));
+
     values
         .into_iter()
         .filter_map(|(key, value)| value.as_str().map(|value| (key, value.to_owned())))
@@ -1081,6 +1203,7 @@ fn parse_arb(source: &str, locale: &str) -> HashMap<String, String> {
 
 /// The language picked in the app's settings, or the device's locale when the
 /// user left it on the system default or the configuration is not readable.
+
 pub fn app_locale(device_locale: &str) -> String {
     Context::get_static()
         .ok()
@@ -1095,11 +1218,13 @@ fn translation(locale: &str, key: &str) -> &'static str {
         .next()
         .unwrap_or("en")
         .to_ascii_lowercase();
+
     let translations = match language.as_str() {
         "de" => &*DE_TRANSLATIONS,
         "ar" => &*AR_TRANSLATIONS,
         _ => &*EN_TRANSLATIONS,
     };
+
     translations
         .get(key)
         .or_else(|| EN_TRANSLATIONS.get(key))
@@ -1167,19 +1292,19 @@ fn localized_body(locale: &str, row: &PendingRow) -> String {
 }
 
 pub(crate) fn notification_avatar_path(
-    ctx: &Context,
-    sender_id: i64,
-    profile_counter: i64,
-    svg: Option<&[u8]>,
+    ctx: &Context, sender_id: i64, profile_counter: i64, svg: Option<&[u8]>,
 ) -> Result<Option<PathBuf>> {
     crate::services::avatars::notification_avatar_path(ctx, sender_id, profile_counter, svg)
 }
 
 #[cfg(test)]
+
 mod tests {
+
     use super::*;
 
     #[tokio::test]
+
     async fn native_push_restores_a_stopped_shared_connection_and_waits_for_mailbox() -> Result<()>
     {
         use crate::api::runtime::ApiClient;
@@ -1188,13 +1313,17 @@ mod tests {
         use std::time::Duration;
 
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         ApiRuntime::close(&ctx).await?;
+
         // Reproduce the shared-process path: the context is not a dedicated
         // notification runtime, and Flutter's cached reachability is offline.
         assert!(!ctx.is_notification_runtime());
+
         let client = ApiClient::new(
             &ctx,
             ApiConfig {
@@ -1204,11 +1333,15 @@ mod tests {
                 can_use_login_token_for_auth: true,
             },
         );
+
         *ctx.api_client.get().unwrap().write().await = client.clone();
+
         client.set_network_available(false).await?;
+
         ctx.mark_mailbox_drained(); // An old drain must not finish this wake-up.
 
         let mut drain = Box::pin(drain_wakeup_mailbox(&ctx, Duration::from_secs(1)));
+
         // Poll the worker until it waits for the server, without running the
         // socket tasks. No external network or live server is needed.
         tokio::select! {
@@ -1216,31 +1349,43 @@ mod tests {
             result = &mut drain => panic!("mailbox completed before the server drained it: {result:?}"),
             () = std::future::ready(()) => {}
         }
+
         assert!(client.ws_client.lock().await.is_some());
+
         assert_eq!(*client.state.read().await, ApiConnectionState::Connecting);
+
         assert!(client.network_available.load(Ordering::Acquire));
+
         assert!(client.in_background.load(Ordering::Acquire));
+
         assert!(client.requested_background.load(Ordering::Acquire));
 
         // Empty mailboxes count as completed too; waiting for an incoming chat
         // message used to make duplicate pushes time out and retry needlessly.
         ctx.mark_mailbox_drained();
+
         assert!(drain.await?);
+
         client.close().await;
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn native_push_without_a_mailbox_drain_remains_retryable() -> Result<()> {
         use crate::api::runtime::ApiClient;
         use crate::bridge::api::{ApiConfig, ApiConnectionState};
         use std::time::Duration;
 
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         ApiRuntime::close(&ctx).await?;
+
         let client = ApiClient::new(
             &ctx,
             ApiConfig {
@@ -1250,20 +1395,27 @@ mod tests {
                 can_use_login_token_for_auth: true,
             },
         );
+
         *ctx.api_client.get().unwrap().write().await = client.clone();
+
         // An inert transport keeps this timeout test entirely offline.
         *client.ws_client.lock().await = Some(Arc::new(
             stream_tungstenite::WebSocketClient::builder("ws://127.0.0.1:1").build(),
         ));
+
         client.set_state(ApiConnectionState::Authenticated).await;
+
         ctx.mark_mailbox_drained();
 
         assert!(!drain_wakeup_mailbox(&ctx, Duration::from_millis(10)).await?);
+
         client.close().await;
+
         Ok(())
     }
 
     #[test]
+
     fn notification_names_match_the_app_flame_counter() {
         for (counter, is_best_friend, is_expiring, expected) in [
             (0, false, false, "Alice"),
@@ -1293,21 +1445,33 @@ mod tests {
     }
 
     #[tokio::test]
+
     async fn notification_batches_put_flames_on_direct_senders_and_group_names() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         let db = ctx.app_db.read().await.clone();
+
         for statement in [
-            "INSERT INTO contacts(user_id, username, display_name, nick_name) VALUES (7, 'alice', 'Alice', 'Ali')",
-            "INSERT INTO groups(group_id, group_name, is_direct_chat, flame_counter) VALUES ('direct', 'Old name', 1, 12), ('group', 'Friends', 0, 12)",
-            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, kind, created_at) VALUES ('direct', 'image', 'direct', 7, 'image', 1), ('group', 'text', 'group', 7, 'text', 2), ('request', 'request', NULL, 7, 'contact_request', 3)",
+            "INSERT INTO contacts(user_id, username, display_name, nick_name) VALUES (7, 'alice', \
+             'Alice', 'Ali')",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat, flame_counter) VALUES \
+             ('direct', 'Old name', 1, 12), ('group', 'Friends', 0, 12)",
+            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, \
+             sender_id, kind, created_at) VALUES ('direct', 'image', 'direct', 7, 'image', 1), \
+             ('group', 'text', 'group', 7, 'text', 2), ('request', 'request', NULL, 7, \
+             'contact_request', 3)",
         ] {
-            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&db.pool).await?;
+            sqlx::query(sqlx::AssertSqlSafe(statement))
+                .execute(&db.pool)
+                .await?;
         }
 
         let today = crate::utils::start_of_local_day()?;
+
         for (age_days, best_friend, expected, expected_group) in [
             (0, false, "Ali 12🔥", "Friends 12🔥"),
             (0, true, "Ali 12❤️‍🔥", "Friends 12🔥"),
@@ -1315,8 +1479,11 @@ mod tests {
             (3, false, "Ali", "Friends"),
         ] {
             let exchanged = today - age_days * 86_400 + 1;
+
             sqlx::query(
-                "UPDATE groups SET last_message_send = ?, last_message_received = ?, last_flame_counter_change = ?, also_best_friend = ?, total_media_counter = 100 WHERE group_id = 'direct'",
+                "UPDATE groups SET last_message_send = ?, last_message_received = ?, \
+                 last_flame_counter_change = ?, also_best_friend = ?, total_media_counter = 100 \
+                 WHERE group_id = 'direct'",
             )
             .bind(exchanged)
             .bind(exchanged)
@@ -1324,8 +1491,10 @@ mod tests {
             .bind(best_friend)
             .execute(&db.pool)
             .await?;
+
             sqlx::query(
-                "UPDATE groups SET last_message_send = ?, last_message_received = ?, last_flame_counter_change = ? WHERE group_id = 'group'",
+                "UPDATE groups SET last_message_send = ?, last_message_received = ?, \
+                 last_flame_counter_change = ? WHERE group_id = 'group'",
             )
             .bind(exchanged)
             .bind(exchanged)
@@ -1334,35 +1503,55 @@ mod tests {
             .await?;
 
             let batch = pending_batch(&ctx, "en").await?;
+
             assert_eq!(batch.additions.len(), 3);
+
             let direct = &batch.additions[0];
+
             assert_eq!(direct.sender_name, expected);
+
             assert_eq!(direct.title, expected);
+
             assert_eq!(direct.conversation_name.as_deref(), Some(expected));
+
             assert_eq!(direct.body, "sent an image.");
+
             assert_eq!(direct.event_id, "direct");
+
             assert_eq!(direct.notification_id, "image");
+
             let group = &batch.additions[1];
+
             assert_eq!(group.sender_name, "Ali");
+
             assert_eq!(group.title, "Ali");
+
             assert_eq!(group.conversation_name.as_deref(), Some(expected_group));
+
             assert_eq!(group.body, format!("sent a message in {expected_group}."));
+
             assert_eq!(
                 group.text_messages_body.as_deref(),
                 Some(format!("sent {{count}} messages in {expected_group}.").as_str()),
             );
+
             assert_eq!(batch.additions[2].sender_name, "Ali");
         }
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn deleting_messages_clears_badge_and_broadcasts_outbox_changes() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         let db = ctx.app_db.read().await.clone();
+
         sqlx::raw_sql(
             "INSERT INTO contacts(user_id, username) VALUES (7, 'alice');
              INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Alice');
@@ -1370,58 +1559,78 @@ mod tests {
              VALUES ('image-1', 'chat', 'media'), ('image-2', 'chat', 'media'),
                     ('image-3', 'chat', 'media'), ('image-4', 'chat', 'media'),
                     ('unopened', 'chat', 'media');
-             INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, message_id, kind, created_at, delivered_at)
+             INSERT INTO notification_outbox(event_id, notification_id, conversation_id, \
+             sender_id, message_id, kind, created_at, delivered_at)
              SELECT message_id, message_id, group_id, 7, message_id, 'image', 1,
                     CASE WHEN message_id IN ('image-1', 'image-2') THEN 1 END
              FROM messages;
-             INSERT INTO notification_outbox(event_id, notification_id, sender_id, kind, created_at)
+             INSERT INTO notification_outbox(event_id, notification_id, sender_id, kind, \
+             created_at)
              VALUES ('request', 'request', 7, 'contact_request', 1);",
         )
         .execute(&db.pool)
         .await?;
+
         assert_eq!(badge_count(&ctx).await?, 6);
 
         let mut changes = db.subscribe();
+
         sqlx::query("DELETE FROM messages WHERE message_id LIKE 'image-%'")
             .execute(&db.pool)
             .await?;
+
         let changed = tokio::time::timeout(std::time::Duration::from_secs(1), changes.recv())
             .await
             .unwrap()
             .unwrap();
+
         assert!(changed.tables.contains("notification_outbox"));
+
         // Assert the trigger worked before badge reconciliation can repair it.
         let cleared: i64 = sqlx::query_scalar(
             "SELECT COUNT(*) FROM notification_outbox WHERE cleared_at IS NOT NULL",
         )
         .fetch_one(&db.pool)
         .await?;
+
         assert_eq!(cleared, 4);
+
         assert_eq!(badge_count(&ctx).await?, 2);
+
         assert!(clear_conversation(&ctx, "chat").await?.is_empty());
+
         let batch = pending_batch(&ctx, "en").await?;
+
         assert_eq!(batch.badge_count, 2);
+
         assert_eq!(batch.additions.len(), 2);
+
         assert!(batch
             .additions
             .iter()
             .all(|n| n.event_id == "unopened" || n.event_id == "request"));
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn badge_and_batch_repair_legacy_deleted_message_notifications() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         let db = ctx.app_db.read().await.clone();
+
         sqlx::raw_sql(
             "INSERT INTO contacts(user_id, username) VALUES (7, 'alice');
              INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Alice');
              INSERT INTO messages(message_id, group_id, type, is_deleted_from_sender)
              VALUES ('tombstone', 'chat', 'media', 1), ('unopened', 'chat', 'media', 0);
-             INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, message_id, kind, created_at)
+             INSERT INTO notification_outbox(event_id, notification_id, conversation_id, \
+             sender_id, message_id, kind, created_at)
              VALUES ('image', 'image', 'chat', 7, 'missing-image', 'image', 1),
                     ('text', 'text', 'chat', 7, 'missing-text', 'text', 1),
                     ('reaction', 'reaction', 'chat', 7, 'missing-target', 'reaction', 1),
@@ -1431,95 +1640,136 @@ mod tests {
         )
         .execute(&db.pool)
         .await?;
+
         // Legacy rows may already have been delivered, or may still be pending.
         for delivered_at in [None, Some(1_i64)] {
             sqlx::query("UPDATE notification_outbox SET cleared_at = NULL, delivered_at = ?")
                 .bind(delivered_at)
                 .execute(&db.pool)
                 .await?;
+
             assert_eq!(badge_count(&ctx).await?, 2);
 
             // The extension's batch path must also repair the rows on its own.
             sqlx::query("UPDATE notification_outbox SET cleared_at = NULL")
                 .execute(&db.pool)
                 .await?;
+
             let batch = pending_batch(&ctx, "en").await?;
+
             assert_eq!(batch.badge_count, 2);
+
             assert_eq!(
                 batch.additions.len(),
                 if delivered_at.is_some() { 0 } else { 2 }
             );
         }
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn sender_and_chat_deletion_clear_notifications_transactionally() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         let db = ctx.app_db.read().await.clone();
+
         sqlx::raw_sql(
             "INSERT INTO contacts(user_id, username) VALUES (7, 'alice');
              INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Alice');
              INSERT INTO messages(message_id, group_id, type) VALUES ('image', 'chat', 'media');
-             INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, message_id, kind, created_at)
+             INSERT INTO notification_outbox(event_id, notification_id, conversation_id, \
+             sender_id, message_id, kind, created_at)
              VALUES ('image', 'image', 'chat', 7, 'image', 'image', 1),
                     ('reaction', 'reaction', 'chat', 7, 'image', 'reaction', 1);",
         )
         .execute(&db.pool)
         .await?;
+
         for statement in [
             "UPDATE messages SET is_deleted_from_sender = 1 WHERE message_id = 'image'",
             "DELETE FROM groups WHERE group_id = 'chat'",
         ] {
-            let mut changes = db.subscribe();
             let mut tx = db.pool.begin().await?;
+
+            let mut changes = db.subscribe();
+
             sqlx::query(sqlx::AssertSqlSafe(statement))
                 .execute(&mut *tx)
                 .await?;
+
             let remaining: i64 = sqlx::query_scalar(
                 "SELECT COUNT(*) FROM notification_outbox WHERE cleared_at IS NULL",
             )
             .fetch_one(&mut *tx)
             .await?;
+
             assert_eq!(remaining, 0);
+
             tx.rollback().await?;
+
             assert_eq!(badge_count(&ctx).await?, 2);
+
             assert!(matches!(
                 changes.try_recv(),
                 Err(tokio::sync::broadcast::error::TryRecvError::Empty)
             ));
         }
+
         sqlx::query("UPDATE messages SET is_deleted_from_sender = 1 WHERE message_id = 'image'")
             .execute(&db.pool)
             .await?;
+
         assert_eq!(badge_count(&ctx).await?, 0);
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn location_shares_notify_once_per_chat_and_updates_stay_silent() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+
         let db = ctx.app_db.read().await.clone();
+
         let mut tx = db.pool.begin().await?;
-        sqlx::query("INSERT INTO contacts(user_id, username, display_name, accepted) VALUES (7, 'alice', 'Alice', 1)")
-            .execute(&mut *tx).await?;
-        sqlx::query("INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('chat', 'Alice', 1), ('group', 'Friends', 0)")
-            .execute(&mut *tx).await?;
+
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, display_name, accepted) VALUES (7, 'alice', \
+             'Alice', 1)",
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('chat', 'Alice', \
+             1), ('group', 'Friends', 0)",
+        )
+        .execute(&mut *tx)
+        .await?;
+
         sqlx::query(
             "INSERT INTO group_members(group_id, contact_id) VALUES ('chat', 7), ('group', 7)",
         )
         .execute(&mut *tx)
         .await?;
+
         let mut message_ids = Vec::new();
+
         for group in ["chat", "group"] {
             let timestamp = current_time().timestamp_millis();
+
             let mut location = proto::LiveLocationData {
                 session_id: uuid::Uuid::new_v4().to_string(),
                 message_id: uuid::Uuid::new_v4().to_string(),
@@ -1527,11 +1777,13 @@ mod tests {
                 expires_at_ms: timestamp + 600_000,
                 ..Default::default()
             };
+
             let metadata = proto::AdditionalMessageData {
                 r#type: proto::additional_message_data::Type::LiveLocation as i32,
                 live_location: Some(location.clone()),
                 ..Default::default()
             };
+
             let message = encrypted_content::TextMessage {
                 sender_message_id: location.message_id.clone(),
                 text: "Live location".into(),
@@ -1539,12 +1791,15 @@ mod tests {
                 additional_message_data: Some(prost::Message::encode_to_vec(&metadata)),
                 ..Default::default()
             };
+
             let content = proto::EncryptedContent {
                 group_id: Some(group.into()),
                 text_message: Some(message),
                 ..Default::default()
             };
+
             assert!(should_wake_receiver(&mut tx, 42, &content).await?);
+
             crate::api::messages::incoming::handle_encrypted(
                 &ctx,
                 &mut tx,
@@ -1553,22 +1808,31 @@ mod tests {
                 content.clone(),
             )
             .await?;
+
             // A transport retry does not create another alert.
             crate::api::messages::incoming::handle_encrypted(&ctx, &mut tx, 7, group, content)
                 .await?;
+
             message_ids.push(location.message_id.clone());
 
             for stopped in [false, true] {
                 location.updated_at_ms += 1;
+
                 location.latitude = Some(52.52);
+
                 location.longitude = Some(13.405);
+
                 location.accuracy = Some(8.0);
+
                 location.fix_timestamp_ms = Some(timestamp);
+
                 location.stopped = stopped;
+
                 let metadata = proto::AdditionalMessageData {
                     live_location: Some(location.clone()),
                     ..metadata.clone()
                 };
+
                 let update = encrypted_content::AdditionalDataMessage {
                     sender_message_id: uuid::Uuid::new_v4().to_string(),
                     timestamp: location.updated_at_ms,
@@ -1576,12 +1840,15 @@ mod tests {
                     hidden: true,
                     additional_message_data: Some(prost::Message::encode_to_vec(&metadata)),
                 };
+
                 let content = proto::EncryptedContent {
                     group_id: Some(group.into()),
                     additional_data_message: Some(update),
                     ..Default::default()
                 };
+
                 assert!(!should_wake_receiver(&mut tx, 42, &content).await?);
+
                 crate::api::messages::incoming::handle_encrypted(
                     &ctx,
                     &mut tx,
@@ -1592,7 +1859,9 @@ mod tests {
                 .await?;
             }
         }
+
         tx.commit().await?;
+
         for (locale, direct_body, group_body) in [
             (
                 "en",
@@ -1611,13 +1880,20 @@ mod tests {
             ),
         ] {
             let batch = pending_batch(&ctx, locale).await?;
+
             assert_eq!(batch.additions.len(), 2);
+
             assert_eq!(batch.badge_count, 2);
+
             for addition in batch.additions {
                 assert_eq!(addition.title, "Alice");
+
                 assert_eq!(addition.kind, "live_location");
+
                 assert_eq!(addition.text_messages_body, None);
+
                 assert!(message_ids.contains(addition.message_id.as_ref().unwrap()));
+
                 assert_eq!(
                     addition.body,
                     if addition.is_group {
@@ -1628,39 +1904,55 @@ mod tests {
                 );
             }
         }
+
         let mut tx = db.pool.begin().await?;
+
         clear_opened_messages(&mut tx, &message_ids[..1], current_time().timestamp()).await?;
+
         tx.commit().await?;
+
         assert_eq!(pending_batch(&ctx, "en").await?.additions.len(), 1);
+
         // A chat may be opened before its push worker renders the alert.
         sqlx::query("UPDATE messages SET opened_at = ? WHERE message_id = ?")
             .bind(current_time().timestamp())
             .bind(&message_ids[1])
             .execute(&db.pool)
             .await?;
+
         assert!(pending_batch(&ctx, "en").await?.additions.is_empty());
+
         assert_eq!(badge_count(&ctx).await?, 0);
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn opening_chat_preserves_only_unopened_media_notifications() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         let database = ctx.app_db.read().await.clone();
+
         let mut tx = database.pool.begin().await?;
+
         sqlx::query("INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1)")
             .execute(&mut *tx)
             .await?;
+
         sqlx::query(
-            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('direct', 'Alice', 1), ('group', 'Friends', 0)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('direct', 'Alice', \
+             1), ('group', 'Friends', 0)",
         )
         .execute(&mut *tx)
         .await?;
 
         let media_kinds = ["twonly", "image", "video", "audio", "story"];
+
         let activity_kinds = [
             "text",
             "response",
@@ -1675,13 +1967,16 @@ mod tests {
             "stored_story",
             "added_to_group",
         ];
+
         for chat in ["direct", "group"] {
             for kind in media_kinds {
                 for opened in [false, true] {
                     for delivered in [false, true] {
                         let id = format!("{chat}-{kind}-{opened}-{delivered}");
+
                         sqlx::query(
-                            "INSERT INTO messages(message_id, group_id, sender_id, type, opened_at, is_story) VALUES (?, ?, 7, 'media', ?, ?)",
+                            "INSERT INTO messages(message_id, group_id, sender_id, type, \
+                             opened_at, is_story) VALUES (?, ?, 7, 'media', ?, ?)",
                         )
                         .bind(&id)
                         .bind(chat)
@@ -1689,8 +1984,11 @@ mod tests {
                         .bind(kind == "story")
                         .execute(&mut *tx)
                         .await?;
+
                         sqlx::query(
-                            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, message_id, kind, created_at, delivered_at) VALUES (?, ?, ?, 7, ?, ?, 1, ?)",
+                            "INSERT INTO notification_outbox(event_id, notification_id, \
+                             conversation_id, sender_id, message_id, kind, created_at, \
+                             delivered_at) VALUES (?, ?, ?, 7, ?, ?, 1, ?)",
                         )
                         .bind(&id)
                         .bind(&id)
@@ -1703,10 +2001,14 @@ mod tests {
                     }
                 }
             }
+
             for kind in activity_kinds {
                 let id = format!("{chat}-{kind}");
+
                 sqlx::query(
-                    "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, message_id, kind, created_at, delivered_at) VALUES (?, ?, ?, 7, ?, ?, 1, 1)",
+                    "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, \
+                     sender_id, message_id, kind, created_at, delivered_at) VALUES (?, ?, ?, 7, \
+                     ?, ?, 1, 1)",
                 )
                 .bind(&id)
                 .bind(&id)
@@ -1718,6 +2020,7 @@ mod tests {
                 .await?;
             }
         }
+
         tx.commit().await?;
 
         for chat in ["direct", "group"] {
@@ -1725,66 +2028,94 @@ mod tests {
                 .iter()
                 .map(|kind| format!("{chat}-{kind}"))
                 .collect::<Vec<_>>();
+
             for kind in media_kinds {
                 for delivered in [false, true] {
                     expected.push(format!("{chat}-{kind}-true-{delivered}"));
                 }
             }
+
             expected.sort();
+
             let mut removed = clear_conversation(&ctx, chat).await?;
+
             removed.sort();
+
             assert_eq!(removed, expected);
+
             assert!(clear_conversation(&ctx, chat).await?.is_empty());
 
             let remaining: Vec<String> = sqlx::query_scalar(
-                "SELECT notification_id FROM notification_outbox WHERE conversation_id = ? AND cleared_at IS NULL ORDER BY notification_id",
+                "SELECT notification_id FROM notification_outbox WHERE conversation_id = ? AND \
+                 cleared_at IS NULL ORDER BY notification_id",
             )
             .bind(chat)
             .fetch_all(&database.pool)
             .await?;
+
             let mut unopened = media_kinds
                 .iter()
                 .flat_map(|kind| {
                     [false, true].map(|delivered| format!("{chat}-{kind}-false-{delivered}"))
                 })
                 .collect::<Vec<_>>();
+
             unopened.sort();
+
             assert_eq!(remaining, unopened);
 
             if chat == "direct" {
                 let other_uncleared: i64 = sqlx::query_scalar(
-                    "SELECT COUNT(*) FROM notification_outbox WHERE conversation_id = 'group' AND cleared_at IS NULL",
+                    "SELECT COUNT(*) FROM notification_outbox WHERE conversation_id = 'group' AND \
+                     cleared_at IS NULL",
                 )
                 .fetch_one(&database.pool)
                 .await?;
+
                 assert_eq!(other_uncleared, 32);
             }
+
             let mut tx = database.pool.begin().await?;
+
             clear_opened_messages(&mut tx, &unopened, current_time().timestamp()).await?;
+
             tx.commit().await?;
         }
+
         assert_eq!(badge_count(&ctx).await?, 0);
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn opening_chat_clears_reopened_media_with_and_without_a_chat_id() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         let database = ctx.app_db.read().await.clone();
+
         let mut tx = database.pool.begin().await?;
+
         for statement in [
             "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1)",
-            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('chat', 'Alice', 1), ('other-chat', 'Other', 1)",
-            "INSERT INTO messages(message_id, group_id, type) VALUES ('image', 'chat', 'media'), ('other-image', 'other-chat', 'media')",
-            "INSERT INTO notification_outbox(event_id, notification_id, sender_id, message_id, kind, created_at, delivered_at) VALUES ('legacy', 'legacy-alert', 7, 'image', 'reopened_media', 1, 1), ('other', 'other-alert', 7, 'other-image', 'reopened_media', 1, 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('chat', 'Alice', \
+             1), ('other-chat', 'Other', 1)",
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('image', 'chat', 'media'), \
+             ('other-image', 'other-chat', 'media')",
+            "INSERT INTO notification_outbox(event_id, notification_id, sender_id, message_id, \
+             kind, created_at, delivered_at) VALUES ('legacy', 'legacy-alert', 7, 'image', \
+             'reopened_media', 1, 1), ('other', 'other-alert', 7, 'other-image', \
+             'reopened_media', 1, 1)",
         ] {
             sqlx::query(sqlx::AssertSqlSafe(statement))
                 .execute(&mut *tx)
                 .await?;
         }
+
         let content = proto::EncryptedContent {
             media_update: Some(encrypted_content::MediaUpdate {
                 r#type: encrypted_content::media_update::Type::Reopened as i32,
@@ -1792,75 +2123,117 @@ mod tests {
             }),
             ..Default::default()
         };
+
         record_incoming_event(&ctx, &mut tx, 7, "new-alert", &content).await?;
+
         tx.commit().await?;
 
         let before = pending_batch(&ctx, "en").await?;
+
         assert_eq!(before.badge_count, 3);
+
         assert_eq!(before.additions.len(), 1);
+
         assert_eq!(before.additions[0].kind, "reopened_media");
+
         assert_eq!(before.additions[0].conversation_id.as_deref(), Some("chat"));
 
         let mut removed = clear_conversation(&ctx, "chat").await?;
+
         removed.sort();
+
         assert_eq!(removed, vec!["legacy-alert", "new-alert"]);
+
         let after = pending_batch(&ctx, "en").await?;
+
         assert!(after.additions.is_empty());
+
         assert_eq!(after.badge_count, 1);
+
         assert!(clear_conversation(&ctx, "chat").await?.is_empty());
+
         assert_eq!(
             clear_conversation(&ctx, "other-chat").await?,
             vec!["other-alert"]
         );
+
         assert_eq!(badge_count(&ctx).await?, 0);
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn text_notification_counts_are_localized_without_changing_event_ids() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         let database = ctx.app_db.read().await.clone();
+
         for statement in [
             "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1)",
             "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('g', 'Friends', 0)",
-            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, kind, created_at) VALUES ('event', 'message', 'g', 7, 'text', 1)",
+            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, \
+             sender_id, kind, created_at) VALUES ('event', 'message', 'g', 7, 'text', 1)",
         ] {
-            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&database.pool).await?;
+            sqlx::query(sqlx::AssertSqlSafe(statement))
+                .execute(&database.pool)
+                .await?;
         }
+
         for (locale, expected) in [
             ("en", "sent {count} messages in Friends."),
             ("de", "hat {count} Nachrichten in Friends gesendet."),
             ("ar", "{count} رسائل جديدة في Friends."),
         ] {
             let batch = pending_batch(&ctx, locale).await?;
+
             assert_eq!(batch.additions.len(), 1);
+
             let addition = &batch.additions[0];
+
             assert_eq!(addition.text_messages_body.as_deref(), Some(expected));
+
             assert_eq!(addition.event_id, "event");
+
             assert_eq!(addition.notification_id, "message");
+
             assert_eq!(batch.badge_count, 1);
         }
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn direct_notification_titles_follow_current_contact_names_instead_of_stored_chat_names(
     ) -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         let db = ctx.app_db.read().await.clone();
+
         for statement in [
-            "INSERT INTO contacts(user_id, username, display_name, accepted) VALUES (7, 'tobi', 'Tobi ✌', 1)",
-            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('direct', 'Tobi ✌', 1), ('group', 'Friends', 0)",
-            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, kind, created_at) VALUES ('text', 'text', 'direct', 7, 'text', 1), ('image', 'image', 'direct', 7, 'image', 2), ('location', 'location', 'direct', 7, 'live_location', 3), ('group', 'group', 'group', 7, 'image', 4)",
+            "INSERT INTO contacts(user_id, username, display_name, accepted) VALUES (7, 'tobi', \
+             'Tobi ✌', 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('direct', 'Tobi ✌', \
+             1), ('group', 'Friends', 0)",
+            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, \
+             sender_id, kind, created_at) VALUES ('text', 'text', 'direct', 7, 'text', 1), \
+             ('image', 'image', 'direct', 7, 'image', 2), ('location', 'location', 'direct', 7, \
+             'live_location', 3), ('group', 'group', 'group', 7, 'image', 4)",
         ] {
-            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&db.pool).await?;
+            sqlx::query(sqlx::AssertSqlSafe(statement))
+                .execute(&db.pool)
+                .await?;
         }
+
         for (update, expected) in [
             (
                 "UPDATE contacts SET display_name = 'Tobi' WHERE user_id = 7",
@@ -1874,12 +2247,18 @@ mod tests {
             sqlx::query(sqlx::AssertSqlSafe(update))
                 .execute(&db.pool)
                 .await?;
+
             let batch = pending_batch(&ctx, "de").await?;
+
             assert_eq!(batch.additions.len(), 4);
+
             for addition in &batch.additions {
                 assert_eq!(addition.sender_name, expected);
+
                 assert_eq!(addition.title, expected);
+
                 assert!(!addition.body.contains(expected));
+
                 assert_eq!(
                     addition.conversation_name.as_deref(),
                     Some(if addition.is_group {
@@ -1890,37 +2269,55 @@ mod tests {
                 );
             }
         }
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn notification_batch_supplies_group_avatars_and_a_logo_for_missing_sender_avatars(
     ) -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         let db = ctx.app_db.read().await.clone();
+
         for statement in [
             "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1)",
             "INSERT INTO groups(group_id, group_name) VALUES ('g', 'Friends')",
             "INSERT INTO group_members(group_id, contact_id) VALUES ('g', 7)",
-            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, sender_id, kind, created_at) VALUES ('event', 'message', 'g', 7, 'text', 1)",
+            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, \
+             sender_id, kind, created_at) VALUES ('event', 'message', 'g', 7, 'text', 1)",
         ] {
-            sqlx::query(sqlx::AssertSqlSafe(statement)).execute(&db.pool).await?;
+            sqlx::query(sqlx::AssertSqlSafe(statement))
+                .execute(&db.pool)
+                .await?;
         }
+
         let batch = pending_batch(&ctx, "en").await?;
+
         let addition = &batch.additions[0];
+
         assert!(addition.is_group);
+
         let logo = crate::services::avatars::notification_logo_path(&ctx)?;
+
         assert_eq!(addition.avatar_path.as_deref(), logo.to_str());
+
         let group = addition.conversation_avatar_path.as_ref().unwrap();
+
         assert!(std::path::Path::new(group).exists());
+
         let json = serde_json::to_value(addition).unwrap();
+
         assert_eq!(
             json["conversation_avatar_path"].as_str(),
             Some(group.as_str())
         );
+
         Ok(())
     }
 
@@ -1935,6 +2332,7 @@ mod tests {
             }),
             ..Default::default()
         };
+
         proto::EncryptedContent {
             additional_data_message: Some(encrypted_content::AdditionalDataMessage {
                 sender_message_id: "message".into(),
@@ -1952,50 +2350,68 @@ mod tests {
     }
 
     #[test]
+
     fn an_app_announcement_is_what_a_hidden_update_is_worth_waking_for() {
         assert_eq!(
             announcement_of(&webxdc_update(Some("Alice is on turn"))).as_deref(),
             Some("Alice is on turn")
         );
+
         // A move carries no announcement, and neither does one that is only
         // whitespace once the chat row's own bounds are applied to it.
         assert!(announcement_of(&webxdc_update(None)).is_none());
+
         assert!(announcement_of(&webxdc_update(Some("  \u{200e} "))).is_none());
     }
 
     fn targeted_update(notify: &str) -> proto::EncryptedContent {
         let mut content = webxdc_update(Some("Dinner added"));
+
         let message = content.additional_data_message.as_mut().unwrap();
+
         let mut data = <proto::AdditionalMessageData as prost::Message>::decode(
             message.additional_message_data.as_deref().unwrap(),
         )
         .unwrap();
+
         data.webxdc_update.as_mut().unwrap().notify = Some(notify.to_owned());
+
         message.additional_message_data = Some(prost::Message::encode_to_vec(&data));
+
         content
     }
 
     #[tokio::test]
+
     async fn visible_game_moves_keep_chat_info_without_alerting_and_other_games_still_alert(
     ) -> Result<()> {
         use crate::services::webxdc::WebxdcService;
 
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         UserConfig::save_json(
             &ctx,
             r#"{"userId":42,"username":"ben","displayName":"Ben"}"#,
         )?;
+
         let database = ctx.app_db.read().await.clone();
+
         let data_dir = std::path::Path::new(&ctx.config.data_dir);
+
         let mut tx = database.pool.begin().await?;
+
         for statement in [
             "INSERT INTO contacts(user_id, username) VALUES (7, 'anna')",
             "INSERT INTO groups(group_id, group_name) VALUES ('g', 'Games')",
-            "INSERT INTO messages(message_id, group_id, type) VALUES ('connect4', 'g', 'webxdcApp'), ('mills', 'g', 'webxdcApp')",
-            "INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token) VALUES ('connect4', 'g', 'connect4', 1, 'connect4-origin'), ('mills', 'g', 'mills', 1, 'mills-origin')",
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('connect4', 'g', \
+             'webxdcApp'), ('mills', 'g', 'webxdcApp')",
+            "INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token) \
+             VALUES ('connect4', 'g', 'connect4', 1, 'connect4-origin'), ('mills', 'g', 'mills', \
+             1, 'mills-origin')",
         ] {
             sqlx::query(statement).execute(&mut *tx).await?;
         }
@@ -2006,6 +2422,7 @@ mod tests {
             ("connect4", "background-move", None),
         ] {
             ctx.webxdc_visibility.set(data_dir, visible)?;
+
             let update = proto::WebxdcUpdate {
                 instance_id: instance_id.into(),
                 payload: "{}".into(),
@@ -2016,12 +2433,15 @@ mod tests {
                 ),
                 ..Default::default()
             };
+
             WebxdcService::handle_incoming_update(&mut tx, message_id, "g", 7, &update, 1).await?;
+
             let data = proto::AdditionalMessageData {
                 r#type: proto::additional_message_data::Type::WebxdcUpdate as i32,
                 webxdc_update: Some(update),
                 ..Default::default()
             };
+
             let content = proto::EncryptedContent {
                 group_id: Some("g".into()),
                 additional_data_message: Some(encrypted_content::AdditionalDataMessage {
@@ -2032,9 +2452,13 @@ mod tests {
                 }),
                 ..Default::default()
             };
+
             assert!(should_wake_receiver(&mut tx, 42, &content).await?);
+
             assert!(!should_wake_receiver(&mut tx, 43, &content).await?);
+
             record_incoming_event(&ctx, &mut tx, 7, message_id, &content).await?;
+
             // Transport redelivery must not duplicate the announcement or alert.
             WebxdcService::handle_incoming_update(
                 &mut tx,
@@ -2045,24 +2469,32 @@ mod tests {
                 1,
             )
             .await?;
+
             record_incoming_event(&ctx, &mut tx, 7, message_id, &content).await?;
         }
+
         tx.commit().await?;
+
         let announcements: Vec<String> =
             sqlx::query_scalar("SELECT content FROM messages WHERE type = 'text'")
                 .fetch_all(&database.pool)
                 .await?;
+
         assert_eq!(
             announcements,
             vec!["Anna played a move. Ben is on turn"; 2],
             "only the latest announcement for each game stays in the chat",
         );
+
         let batch = pending_batch(&ctx, "en").await?;
+
         assert_eq!(batch.additions.len(), 2);
+
         assert!(batch
             .additions
             .iter()
             .all(|alert| alert.body == "Your turn"));
+
         assert!(batch
             .additions
             .iter()
@@ -2071,55 +2503,88 @@ mod tests {
         // Opening this game before a worker renders its queued turn clears only
         // that game's alert, including when both games live in the same chat.
         ctx.webxdc_visibility.set(data_dir, Some("connect4"))?;
+
         let batch = pending_batch(&ctx, "en").await?;
+
         assert_eq!(batch.additions.len(), 1);
+
         assert_eq!(batch.additions[0].event_id, "other-game-move");
+
         assert_eq!(batch.badge_count, 1);
+
         assert_eq!(badge_count(&ctx).await?, 1);
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn expense_notifications_only_wake_and_record_affected_members() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         UserConfig::save_json(
             &ctx,
             r#"{"userId":42,"username":"ben","displayName":"Ben"}"#,
         )?;
+
         let database = ctx.app_db.read().await.clone();
+
         let mut tx = database.pool.begin().await?;
+
         sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'anna')")
             .execute(&mut *tx)
             .await?;
+
         sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('g', 'Trip')")
             .execute(&mut *tx)
             .await?;
-        sqlx::query("INSERT INTO messages(message_id, group_id, sender_id, type, content) VALUES ('message-info', 'g', 7, 'text', 'Dinner added')").execute(&mut *tx).await?;
+
+        sqlx::query(
+            "INSERT INTO messages(message_id, group_id, sender_id, type, content) VALUES \
+             ('message-info', 'g', 7, 'text', 'Dinner added')",
+        )
+        .execute(&mut *tx)
+        .await?;
+
         let address = crate::services::webxdc::WebxdcService::address_for("instance", 42);
+
         let raw = serde_json::json!({address: "You share dinner: €20"}).to_string();
+
         let content = targeted_update(&raw);
+
         assert!(should_wake_receiver(&mut tx, 42, &content).await?);
+
         assert!(!should_wake_receiver(&mut tx, 43, &content).await?);
+
         record_incoming_event(&ctx, &mut tx, 7, "included", &content).await?;
+
         record_incoming_event(&ctx, &mut tx, 7, "included", &content).await?;
+
         for raw in ["{}", "null", "not JSON", r#"{"someone-else":"Dinner"}"#] {
             let content = targeted_update(raw);
+
             assert!(!should_wake_receiver(&mut tx, 42, &content).await?);
+
             record_incoming_event(&ctx, &mut tx, 7, "excluded", &content).await?;
         }
+
         let rows: Vec<(String, String)> =
             sqlx::query_as("SELECT event_id, content FROM notification_outbox")
                 .fetch_all(&mut *tx)
                 .await?;
+
         assert_eq!(
             rows,
             vec![("included".into(), "You share dinner: €20".into())]
         );
+
         // Older apps omit notify and retain their existing announcements.
         assert!(should_wake_receiver(&mut tx, 43, &webxdc_update(Some("Your turn"))).await?);
+
         Ok(())
     }
 
@@ -2142,42 +2607,53 @@ mod tests {
     }
 
     #[test]
+
     fn loads_notification_strings_from_arb_and_falls_back_to_english() {
         let row = pending_row("contact_request");
+
         assert_eq!(
             localized_body("de-DE", &row),
             "möchte sich mit dir vernetzen."
         );
+
         assert_eq!(localized_body("fr-FR", &row), "wants to connect with you.");
     }
 
     #[test]
+
     fn tells_a_reaction_from_a_reply() {
         for reaction in ["🔥", " ❤️ ", "👍🏽", "👨‍👩‍👧", "1️⃣", "🇩🇪", "😂😂"]
         {
             assert!(is_emoji_only(reaction), "{reaction:?} is a reaction");
         }
+
         for reply in ["", "nice", "nice 🔥", "12", "#", "🔥 wow"] {
             assert!(!is_emoji_only(reply), "{reply:?} is a reply");
         }
     }
 
     #[test]
+
     fn words_what_happened_to_a_story() {
         let mut reaction = pending_row("story_reaction");
+
         reaction.content = Some("🔥".into());
+
         assert_eq!(
             localized_body("en", &reaction),
             "has reacted with 🔥 to your story."
         );
+
         assert_eq!(
             localized_body("de", &reaction),
             "hat mit 🔥 auf deine Story reagiert."
         );
+
         assert_eq!(
             localized_body("en", &pending_row("story_reply")),
             "has replied to your story."
         );
+
         assert_eq!(
             localized_body("de", &pending_row("stored_story")),
             "hat deine Story gespeichert."
@@ -2185,27 +2661,36 @@ mod tests {
     }
 
     #[tokio::test]
+
     async fn answers_to_the_own_story_are_announced_as_such() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+
         UserConfig::save_json(
             &ctx,
             r#"{"userId":42,"username":"ben","displayName":"Ben"}"#,
         )?;
+
         let database = ctx.app_db.read().await.clone();
+
         let mut tx = database.pool.begin().await?;
+
         for statement in [
             "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'anna', 1)",
             "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('d', 'Anna', 1)",
-            "INSERT INTO messages(message_id, group_id, type, is_story) VALUES ('mine', 'd', 'media', 1)",
-            "INSERT INTO messages(message_id, group_id, type, content) VALUES ('plain', 'd', 'text', 'hi')",
+            "INSERT INTO messages(message_id, group_id, type, is_story) VALUES ('mine', 'd', \
+             'media', 1)",
+            "INSERT INTO messages(message_id, group_id, type, content) VALUES ('plain', 'd', \
+             'text', 'hi')",
         ] {
             sqlx::query(sqlx::AssertSqlSafe(statement))
                 .execute(&mut *tx)
                 .await?;
         }
+
         let text = |id: &str, text: &str, quote: &str| proto::EncryptedContent {
             group_id: Some("d".into()),
             text_message: Some(encrypted_content::TextMessage {
@@ -2216,9 +2701,13 @@ mod tests {
             }),
             ..Default::default()
         };
+
         record_incoming_event(&ctx, &mut tx, 7, "r1", &text("t1", "🔥", "mine")).await?;
+
         record_incoming_event(&ctx, &mut tx, 7, "r2", &text("t2", "love it", "mine")).await?;
+
         record_incoming_event(&ctx, &mut tx, 7, "r3", &text("t3", "🔥", "plain")).await?;
+
         let stored = proto::EncryptedContent {
             media_update: Some(encrypted_content::MediaUpdate {
                 r#type: encrypted_content::media_update::Type::Stored as i32,
@@ -2226,12 +2715,14 @@ mod tests {
             }),
             ..Default::default()
         };
+
         record_incoming_event(&ctx, &mut tx, 7, "r4", &stored).await?;
 
         let rows: Vec<(String, Option<String>)> =
             sqlx::query_as("SELECT kind, content FROM notification_outbox ORDER BY event_id")
                 .fetch_all(&mut *tx)
                 .await?;
+
         assert_eq!(
             rows,
             vec![
@@ -2242,23 +2733,30 @@ mod tests {
                 ("stored_story".into(), None),
             ]
         );
+
         Ok(())
     }
 
     #[test]
+
     fn announces_a_story_in_every_language() {
         let row = pending_row("story");
+
         assert_eq!(localized_body("en", &row), "posted a story.");
+
         assert_eq!(localized_body("de", &row), "hat eine Story gepostet.");
+
         assert_eq!(localized_body("ar", &row), "قصة جديدة.");
     }
 
     #[test]
+
     fn localizes_connection_fallback_notification() {
         assert_eq!(
             fallback_presentation("en-US").body,
             "You may have new messages."
         );
+
         assert_eq!(
             fallback_presentation("de-DE").body,
             "Du könntest neue Nachrichten haben."
@@ -2266,33 +2764,48 @@ mod tests {
     }
 
     #[test]
+
     fn an_app_announcement_is_shown_as_the_app_wrote_it() {
         let mut announcement = pending_row("webxdc");
+
         announcement.content = Some("Alice is on turn".into());
+
         // Not "sent a message", and not translated either: the app already
         // localised the sentence for the reader.
         assert_eq!(localized_body("en", &announcement), "Alice is on turn");
+
         assert_eq!(localized_body("de", &announcement), "Alice is on turn");
 
         // An app that manages to lose its own text still reads like a message
         // rather than an empty alert.
         announcement.content = None;
+
         assert_eq!(localized_body("en", &announcement), "sent a message.");
     }
 
     #[test]
+
     fn interpolates_group_and_reaction_placeholders() {
         let mut group = pending_row("text");
+
         group.conversation_id = Some("group".into());
+
         group.conversation_name = Some("Friends".into());
+
         group.is_direct_chat = 0;
+
         assert_eq!(localized_body("en", &group), "sent a message in Friends.");
+
         assert_eq!(localized_body("ar", &group), "رسالة جديدة في Friends.");
 
         let mut reaction = pending_row("reaction");
+
         reaction.content = Some("🔥".into());
+
         reaction.target_message_type = Some("media".into());
+
         reaction.target_media_type = Some("audio".into());
+
         assert_eq!(
             localized_body("de", &reaction),
             "hat mit 🔥 auf deine Sprachnachricht reagiert."

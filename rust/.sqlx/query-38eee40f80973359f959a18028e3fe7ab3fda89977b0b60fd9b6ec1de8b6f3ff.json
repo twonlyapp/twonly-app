@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE app_metadata SET value = value WHERE 0",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "38eee40f80973359f959a18028e3fe7ab3fda89977b0b60fd9b6ec1de8b6f3ff"
+}

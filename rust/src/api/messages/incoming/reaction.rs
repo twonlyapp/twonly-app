@@ -4,14 +4,14 @@
  */
 
 use crate::api::proto::client::encrypted_content;
-use crate::database::app::tables::{Group, MediaFile, Receipt};
+use crate::database::app::groups::native::Group;
+use crate::database::app::mediafiles::native::MediaFile;
+use crate::database::app::receipts::table::Receipt;
 use crate::error::Result;
 use sqlx::{Sqlite, Transaction};
 
 pub(crate) async fn handle_reaction(
-    t: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    group_id: &str,
+    t: &mut Transaction<'_, Sqlite>, from_user_id: i64, group_id: &str,
     reaction: encrypted_content::Reaction,
 ) -> Result<()> {
     // A delayed reaction may outlive the message's deletion timer. There is
@@ -22,6 +22,7 @@ pub(crate) async fn handle_reaction(
             .bind(&reaction.target_message_id)
             .fetch_one(&mut **t)
             .await?;
+
     if exists == 0 {
         tracing::info!(
             from_user_id,
@@ -29,6 +30,7 @@ pub(crate) async fn handle_reaction(
             message_id = reaction.target_message_id,
             "Ignoring a reaction whose target message is no longer stored"
         );
+
         return Ok(());
     }
 

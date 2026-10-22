@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    INSERT INTO pending_media_file_removals(media_id,media_type)\n                    SELECT media_id,\n                        type\n                    FROM media_files\n                    WHERE media_id = ?\n                    ON CONFLICT(media_id) DO UPDATE\n                    SET media_type = excluded.media_type\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "fe12c078385951240803609990cf41fee46c55d50e8b63a6675e5b79f8ba24a5"
+}

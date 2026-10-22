@@ -1,8 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/contact_groups.dart'
+    as rust_contact_groups;
+import 'package:twonly/core/database/app/contact_groups/table.dart'
+    as db_contact_groups;
+import 'package:twonly/core/database/app/contact_groups/table.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 const noContactGroupBackgroundColor = 0x00000000;
@@ -55,11 +59,19 @@ class _ContactGroupBadgesState extends State<ContactGroupBadges> {
       final groupId = widget.groupId;
       _subscription =
           (groupId != null
-                  ? twonlyDB.contactGroupsDao.watchVisibleGroupsForGroup(
-                      groupId,
+                  ? watchRustDatabase(
+                      (control) => rust_contact_groups.watchContactGroups(
+                        filter: db_contact_groups.ContactGroupFilter.group,
+                        groupId: groupId,
+                        control: control,
+                      ),
                     )
-                  : twonlyDB.contactGroupsDao.watchVisibleGroupsForUser(
-                      widget.userId!,
+                  : watchRustDatabase(
+                      (control) => rust_contact_groups.watchContactGroups(
+                        filter: db_contact_groups.ContactGroupFilter.user,
+                        userId: widget.userId,
+                        control: control,
+                      ),
                     ))
               .listen((contactGroups) {
                 if (mounted) setState(() => _contactGroups = contactGroups);
@@ -256,8 +268,20 @@ class ContactGroupsSubtitleBuilder extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<List<ContactGroup>>(
       stream: groupId != null
-          ? twonlyDB.contactGroupsDao.watchVisibleGroupsForGroup(groupId!)
-          : twonlyDB.contactGroupsDao.watchVisibleGroupsForUser(userId!),
+          ? watchRustDatabase(
+              (control) => rust_contact_groups.watchContactGroups(
+                filter: db_contact_groups.ContactGroupFilter.group,
+                groupId: groupId,
+                control: control,
+              ),
+            )
+          : watchRustDatabase(
+              (control) => rust_contact_groups.watchContactGroups(
+                filter: db_contact_groups.ContactGroupFilter.user,
+                userId: userId,
+                control: control,
+              ),
+            ),
       builder: (context, snapshot) {
         final contactGroups = snapshot.data ?? const [];
         Widget? subtitle;

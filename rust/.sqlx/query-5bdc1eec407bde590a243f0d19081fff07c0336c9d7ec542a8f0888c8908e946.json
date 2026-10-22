@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE FROM message_histories WHERE message_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "5bdc1eec407bde590a243f0d19081fff07c0336c9d7ec542a8f0888c8908e946"
+}

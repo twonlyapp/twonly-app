@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                SAVEPOINT app_scope\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "7aba4287813d9cbee5dadf7bfbc8b3fb3414b7685ac0c26d17721109ceecbaaa"
+}

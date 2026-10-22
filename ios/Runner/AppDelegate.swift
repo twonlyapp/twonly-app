@@ -22,13 +22,6 @@ import flutter_sharing_intent
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
-  override func applicationDidEnterBackground(_ application: UIApplication) {
-    // The app is about to be suspended, and the socket with it. Reserve a later
-    // slot so anything still queued is sent without the user coming back.
-    BackgroundWork.scheduleFlush()
-    super.applicationDidEnterBackground(application)
-  }
-
   override func application(
     _ application: UIApplication,
     handleEventsForBackgroundURLSession identifier: String,

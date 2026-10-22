@@ -11,17 +11,32 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
+import 'package:twonly/src/services/backup/backup_schedule.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 class BackupService {
   static final Mutex _protected = Mutex();
   static const _retryDelay = Duration(minutes: 15);
   static const _uploadTimeout = Duration(minutes: 10);
   static Timer? _retryTimer;
+  static final _schedule = BackupSchedule(
+    isVisible: () => !AppState.isAppInBackground,
+    perform: _performBackup,
+    loadForced: () async =>
+        (await KeyValueStore.get(
+          KeyValueKeys.forcedBackupPending,
+        ))?['pending'] ==
+        true,
+    saveForced: (force) => KeyValueStore.putAtomically(
+      KeyValueKeys.forcedBackupPending,
+      {'pending': force},
+    ),
+  );
+
+  static Future<void> resumePendingBackup() => _schedule.resume();
 
   static String _getIdentityBackupUrl(String backupId) =>
       '${RustApi.apiBaseUrl(protocol: 'https')}backup/identity/$backupId';
@@ -165,8 +180,22 @@ class BackupService {
     return false;
   }
 
-  static Future<void> makeBackup({bool force = false}) async {
-    await _protected.protect(() async {
+  static Future<void> makeBackup({bool force = false}) =>
+      _schedule.request(force: force);
+
+  static Future<bool> _performBackup(bool force) async {
+    return _protected.protect(() async {
+      // Recovery may have held the mutex across a background transition.
+      if (AppState.isAppInBackground) {
+        return false;
+      }
+      if (!userService.isUserCreated ||
+          !userService.currentUser.isBackupEnabled) {
+        return true;
+      }
+      if (await getBackupRecoveryData() != null) {
+        return false;
+      }
       final backup = await getData();
 
       final lastDay = clock.clock.now().subtract(const Duration(days: 1));
@@ -226,6 +255,10 @@ class BackupService {
           backup.archiveState != LastBackupUploadState.success ||
           backup.archiveLastSuccessFull == null ||
           backup.archiveLastSuccessFull!.isBefore(lastDay)) {
+        // Identity upload may have outlived the foreground session.
+        if (AppState.isAppInBackground) {
+          return false;
+        }
         Log.info('Creating a archive backup.');
         late final String backupArchive;
         late final String backupDownloadToken;
@@ -233,11 +266,14 @@ class BackupService {
           (backupDownloadToken, backupArchive) =
               await RustBackupArchive.createBackupArchive();
         } catch (e) {
+          if (AppState.isAppInBackground) {
+            return false;
+          }
           Log.warn('Creating archive backup failed: $e');
           backup.archiveState = LastBackupUploadState.failed;
           await _saveStatus(backup);
           _scheduleRetry();
-          return;
+          return false;
         }
         Log.info(
           'Archive backup has a size of ${File(backupArchive).statSync().size}.',
@@ -251,7 +287,7 @@ class BackupService {
           backup.archiveState = LastBackupUploadState.failed;
           await _saveStatus(backup);
           _scheduleRetry();
-          return;
+          return false;
         }
 
         final archive = File(backupArchive);
@@ -271,6 +307,7 @@ class BackupService {
         }
         await _saveStatus(backup);
       }
+      return true;
     });
   }
 
@@ -302,7 +339,7 @@ class BackupService {
           return error;
         }
 
-        Log.info('Restored identity.');
+        Log.info('Downloaded identity backup.');
 
         try {
           await RustBackupIdentity.restoreIdentityBackup(
@@ -322,7 +359,7 @@ class BackupService {
       }
 
       if (recoveryData.state == BackupRecoveryState.archiveBackupStarted) {
-        // The KeyManager was restored successfully, restore the archive now.
+        // The identity is staged; restore its matching archive now.
         onProgress?.call(RecoveryProgress.downloadingArchive);
         try {
           final downloadToken =
@@ -379,6 +416,11 @@ class BackupService {
     final userId = await RustKeyManager.getUserId();
     if (userId == null) return null;
 
+    // Select the current identity rather than a previous recovery attempt.
+    await RustKeyManager.importSerialized(
+      serializedBytes: await RustKeyManager.serialize(),
+    );
+
     final state = BackupRecovery(
       username: '',
       userId: userId,
@@ -408,7 +450,6 @@ class BackupService {
       password: password,
     );
 
-    await deleteLocalUserData(removeCredentials: true);
     await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
     return _nextBackupStage(onProgress: onProgress);
   }
@@ -426,11 +467,9 @@ class BackupService {
     )..state = BackupRecoveryState.archiveBackupStarted;
 
     onProgress?.call(RecoveryProgress.restoringIdentity);
-    await deleteLocalUserData(removeCredentials: true);
-
-    // Import KeyManager keys into secure storage & in-memory key manager
+    // Stage the recovered identity while preserving the current database keys.
     await RustKeyManager.importSerialized(serializedBytes: keyManagerBytes);
-    Log.info('Imported the recovered key manager.');
+    Log.info('Staged the recovered key manager.');
 
     await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
     Log.info('Stored the recovery state, entering the archive stage.');

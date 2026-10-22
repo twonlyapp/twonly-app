@@ -1,13 +1,24 @@
 import 'dart:convert';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/user_discovery.dart'
+    as rust_user_discovery;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/core/database/app/user_discovery/table.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -23,7 +34,7 @@ class ChatAskAFriendEntry extends StatefulWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final BorderRadiusGeometry borderRadius;
   final BubbleInfo info;
   final Map<int, Contact>? contactsById;
@@ -69,20 +80,28 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
     try {
       if (_isSent) {
         // Try getting from contacts
-        final contact = await twonlyDB.contactsDao.getContactById(userId);
+        final contact = await rust_contacts.getContact(
+          id: userId,
+          transaction: currentDatabaseSession(),
+        );
         if (contact != null) {
           _username = contact.displayName ?? contact.username;
         } else {
           // Try getting from announced users
-          final announced = await twonlyDB.userDiscoveryDao
-              .getAnnouncedUserById(userId);
+          final announced = await rust_user_discovery.getDiscoveryAnnouncement(
+            id: userId,
+            transaction: currentDatabaseSession(),
+          );
           if (announced != null && announced.username != null) {
             _username = announced.username;
           }
         }
       } else {
         // Receiver side: try contacts first
-        final contact = await twonlyDB.contactsDao.getContactById(userId);
+        final contact = await rust_contacts.getContact(
+          id: userId,
+          transaction: currentDatabaseSession(),
+        );
         if (contact != null) {
           _username = contact.displayName ?? contact.username;
         } else {
@@ -109,11 +128,10 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
 
   Future<void> _hideUser() async {
     if (_data == null || !_data!.hasAskAboutUserId()) return;
-    await twonlyDB.userDiscoveryDao.updateAnnouncedUser(
-      _data!.askAboutUserId.toInt(),
-      const UserDiscoveryAnnouncedUsersCompanion(
-        isHidden: Value(true),
-      ),
+    await rust_user_discovery.updateDiscoveryAnnouncement(
+      id: _data!.askAboutUserId.toInt(),
+      patch: const UserDiscoveryAnnouncedUserPatch(isHidden: true),
+      transaction: currentDatabaseSession(),
     );
   }
 
@@ -129,22 +147,25 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
         userdata = await RustApi.getUserById(userId: userId);
       } catch (_) {}
       if (userdata != null) {
-        await twonlyDB.contactsDao.insertOnConflictUpdate(
-          ContactsCompanion(
-            username: Value(utf8.decode(userdata.username)),
-            userId: Value(userdata.userId),
-            requested: const Value(false),
-            blocked: const Value(false),
-            deletedByUser: const Value(false),
+        await rust_contacts.upsertContact(
+          patch: ContactPatch(
+            username: utf8.decode(userdata.username),
+            userId: userdata.userId,
+            requested: false,
+            blocked: false,
+            deletedByUser: false,
             joinedAt: userdata.joinedAt == null
-                ? const Value.absent()
-                : Value(
-                    DateTime.fromMillisecondsSinceEpoch(
-                      userdata.joinedAt! * Duration.millisecondsPerSecond,
-                      isUtc: true,
+                ? null
+                : NullableInt(
+                    value: databaseNullableSeconds(
+                      DateTime.fromMillisecondsSinceEpoch(
+                        userdata.joinedAt! * Duration.millisecondsPerSecond,
+                        isUtc: true,
+                      ),
                     ),
                   ),
           ),
+          transaction: currentDatabaseSession(),
         );
         await RustApi.tryRequestContactById(
           contactId: userdata.userId,
@@ -186,7 +207,15 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
           children: [
             StreamBuilder<Contact?>(
               stream: widget.contactsById == null
-                  ? twonlyDB.contactsDao.watchContact(userId)
+                  ? watchRustDatabase(
+                      (control) => rust_contacts.watchContacts(
+                        input: db_contacts.ContactQuery(
+                          filter: db_contacts.ContactFilter.ids,
+                          ids: Int64List.fromList([userId].toList()),
+                        ),
+                        control: control,
+                      ),
+                    ).map((rows) => rows.isEmpty ? null : rows.single)
                   : Stream.value(widget.contactsById![userId]),
               builder: (context, snapshot) {
                 final contactInDb = snapshot.data;
@@ -284,7 +313,15 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
             ] else ...[
               StreamBuilder<Contact?>(
                 stream: widget.contactsById == null
-                    ? twonlyDB.contactsDao.watchContact(userId)
+                    ? watchRustDatabase(
+                        (control) => rust_contacts.watchContacts(
+                          input: db_contacts.ContactQuery(
+                            filter: db_contacts.ContactFilter.ids,
+                            ids: Int64List.fromList([userId].toList()),
+                          ),
+                          control: control,
+                        ),
+                      ).map((rows) => rows.isEmpty ? null : rows.single)
                     : Stream.value(widget.contactsById![userId]),
                 builder: (context, contactSnapshot) {
                   final contactInDb = contactSnapshot.data;
@@ -299,8 +336,12 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
                   }
 
                   return StreamBuilder<UserDiscoveryAnnouncedUser?>(
-                    stream: twonlyDB.userDiscoveryDao.watchAnnouncedUser(
-                      userId,
+                    stream: watchRustDatabase(
+                      (control) =>
+                          rust_user_discovery.watchDiscoveryAnnouncement(
+                            id: userId,
+                            control: control,
+                          ),
                     ),
                     builder: (context, userSnapshot) {
                       final announcedUser = userSnapshot.data;

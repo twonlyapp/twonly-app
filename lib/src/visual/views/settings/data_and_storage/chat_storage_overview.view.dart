@@ -1,10 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/mediafiles.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 
@@ -22,7 +23,11 @@ class _ChatStorageOverviewViewState extends State<ChatStorageOverviewView> {
   @override
   void initState() {
     super.initState();
-    _chatMediaFilesStream = twonlyDB.mediaFilesDao.watchMediaFilesByChat();
+    _chatMediaFilesStream = watchRustDatabase(
+      (control) => rust_mediafiles
+          .watchChatMediaFiles(control: control)
+          .map(chatMediaFiles),
+    );
   }
 
   @override

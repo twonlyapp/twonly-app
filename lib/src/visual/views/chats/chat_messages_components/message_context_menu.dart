@@ -1,22 +1,27 @@
 // ignore_for_file: inference_failure_on_function_invocation
 
 import 'package:clock/clock.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     as pb;
 import 'package:twonly/src/services/live_location.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
@@ -39,7 +44,7 @@ class MessageContextMenu extends StatelessWidget {
   });
   final Group group;
   final Widget child;
-  final Message message;
+  final StoredMessage message;
   final List<MemoryItem> galleryItems;
   final MediaFileService? mediaFileService;
   final VoidCallback onResponseTriggered;
@@ -114,9 +119,13 @@ class MessageContextMenu extends StatelessWidget {
         onlyReturnEncryptedData: false,
         blocking: true,
       );
-      await twonlyDB.messagesDao.updateMessageId(
-        message.messageId,
-        const MessagesCompanion(openedAt: Value(null)),
+      await rust_messages.updateMessages(
+        id: message.messageId,
+        byMedia: false,
+        patch: MessagePatch(
+          openedAt: NullableInt(value: databaseNullableSeconds(null)),
+        ),
+        transaction: currentDatabaseSession(),
       );
       return;
     }
@@ -177,10 +186,11 @@ class MessageContextMenu extends StatelessWidget {
                       as EmojiLayerData?;
               if (layer == null) return;
 
-              await twonlyDB.reactionsDao.updateMyReaction(
-                message.messageId,
-                layer.text,
-                false,
+              await rust_reactions.updateOwnReaction(
+                message: message.messageId,
+                emoji: layer.text,
+                remove: false,
+                transaction: currentDatabaseSession(),
               );
 
               await RustApi.sendEncryptedContentToGroup(
@@ -259,10 +269,9 @@ class MessageContextMenu extends StatelessWidget {
               await WebxdcService.deleteInstance(message.messageId);
             }
             if (action == 'delete_for_all') {
-              await twonlyDB.messagesDao.handleMessageDeletion(
-                null,
-                message.messageId,
-                clock.now(),
+              await rust_messages.deleteMessageFromSender(
+                id: message.messageId,
+                transaction: currentDatabaseSession(),
               );
               await RustApi.sendEncryptedContentToGroup(
                 groupId: message.groupId,
@@ -275,8 +284,9 @@ class MessageContextMenu extends StatelessWidget {
                 onlySendIfNoReceiptsAreOpen: false,
               );
             } else if (action == 'delete_for_me') {
-              await twonlyDB.messagesDao.deleteMessagesById(
-                message.messageId,
+              await rust_messages.deleteMessage(
+                id: message.messageId,
+                transaction: currentDatabaseSession(),
               );
             }
           },
@@ -308,7 +318,7 @@ class MessageContextMenu extends StatelessWidget {
 
 Future<String?> showDeleteMessageOptions(
   BuildContext context,
-  Message message,
+  StoredMessage message,
   Group group,
   List<MemoryItem> galleryItems,
 ) async {
@@ -418,7 +428,10 @@ Future<String?> showDeleteMessageOptions(
   );
 }
 
-Future<void> editTextMessage(BuildContext context, Message message) async {
+Future<void> editTextMessage(
+  BuildContext context,
+  StoredMessage message,
+) async {
   var newText = message.content;
   final controller = TextEditingController(text: message.content);
   await showModalBottomSheet<void>(
@@ -488,11 +501,12 @@ Future<void> editTextMessage(BuildContext context, Message message) async {
                                 newText != '') {
                               final timestamp = clock.now();
 
-                              await twonlyDB.messagesDao.handleTextEdit(
-                                null,
-                                message.messageId,
-                                newText!,
-                                timestamp,
+                              await rust_messages.editMessage(
+                                id: message.messageId,
+                                text: newText!,
+                                timestamp:
+                                    timestamp.millisecondsSinceEpoch ~/ 1000,
+                                transaction: currentDatabaseSession(),
                               );
                               await RustApi.sendEncryptedContentToGroup(
                                 groupId: message.groupId,

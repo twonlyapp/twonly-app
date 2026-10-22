@@ -2,16 +2,23 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:math' as math;
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/bridge/database/stickers.dart' as rust_stickers;
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -146,9 +153,14 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       selectedGroupIds.add(widget.sendToGroup!.groupId);
     }
 
-    _widgetGroupsSubscription = twonlyDB.groupsDao
-        .watchGroupsAllowedForWidgetShare()
-        .listen(_updateWidgetRecipientAvailability);
+    _widgetGroupsSubscription = watchRustDatabase(
+      (control) => rust_groups.watchGroups(
+        input: const db_groups.GroupQuery(
+          filter: db_groups.GroupFilter.widgetShare,
+        ),
+        control: control,
+      ),
+    ).listen(_updateWidgetRecipientAvailability);
     unawaited(_loadWidgetExplainerPreference());
     if (media.type == MediaType.image || media.type == MediaType.gif) {
       _loadInitialImage();
@@ -164,10 +176,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     isDisposed = true;
     layerStack.clear();
     videoController?.dispose();
-    twonlyDB.mediaFilesDao.updateAllMediaFiles(
-      const MediaFilesCompanion(
-        isDraftMedia: Value(false),
-      ),
+    rust_mediafiles.updateMediaFiles(
+      patch: const MediaFilePatch(isDraftMedia: false),
+      transaction: currentDatabaseSession(),
     );
     _imageLoadingTimer?.cancel();
     unawaited(_widgetGroupsSubscription.cancel());
@@ -501,7 +512,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         ),
       );
       unawaitedRustCall(
-        twonlyDB.stickersDao.recordUse(sticker.contentHash),
+        rust_stickers.recordStickerUse(
+          hash: sticker.contentHash,
+          transaction: currentDatabaseSession(),
+        ),
         'recordEditorStickerUse',
       );
       setState(() {

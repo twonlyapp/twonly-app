@@ -15,9 +15,7 @@ use std::sync::Arc;
 
 impl Server {
     pub async fn register_passwordless_recovery(
-        ctx: &Arc<Context>,
-        encrypted_server_key: Vec<u8>,
-        pin_unlock_token: Option<Vec<u8>>,
+        ctx: &Arc<Context>, encrypted_server_key: Vec<u8>, pin_unlock_token: Option<Vec<u8>>,
     ) -> Result<ServerResult<()>> {
         server_ok!(
             Self::application(
@@ -34,11 +32,8 @@ impl Server {
     }
 
     pub async fn get_server_key_for_passwordless_recovery(
-        ctx: &Arc<Context>,
-        user_id: i64,
-        server_key_protection: Vec<u8>,
-        pin_unlock_token: Option<Vec<u8>>,
-        pin_protection_key: Option<Vec<u8>>,
+        ctx: &Arc<Context>, user_id: i64, server_key_protection: Vec<u8>,
+        pin_unlock_token: Option<Vec<u8>>, pin_protection_key: Option<Vec<u8>>,
         email: Option<String>,
     ) -> Result<ServerResult<Vec<u8>>> {
         let bytes = Self::handshake(
@@ -62,9 +57,7 @@ impl Server {
     }
 
     pub async fn submit_recovery_share(
-        ctx: &Arc<Context>,
-        notification_id: String,
-        encrypted_message: Vec<u8>,
+        ctx: &Arc<Context>, notification_id: String, encrypted_message: Vec<u8>,
     ) -> Result<ServerResult<()>> {
         server_ok!(
             Self::application(
@@ -81,11 +74,8 @@ impl Server {
     }
 
     pub async fn register_passwordless_notification(
-        ctx: &Arc<Context>,
-        notification_id: String,
-        download_auth_token: Vec<u8>,
-        lang_code: String,
-        google_fcm: Option<String>,
+        ctx: &Arc<Context>, notification_id: String, download_auth_token: Vec<u8>,
+        lang_code: String, google_fcm: Option<String>,
     ) -> Result<ServerResult<()>> {
         server_ok!(
             Self::handshake(
@@ -104,9 +94,7 @@ impl Server {
     }
 
     pub async fn check_for_passwordless_notification(
-        ctx: &Arc<Context>,
-        notification_id: String,
-        download_auth_token: Vec<u8>,
+        ctx: &Arc<Context>, notification_id: String, download_auth_token: Vec<u8>,
         already_received_message_ids: Vec<i64>,
     ) -> Result<ServerResult<proto::server_to_client::response::PasswordlessNotificationMessages>>
     {

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO groups(group_id, group_name, is_direct_chat, joined_group)\n            VALUES ('mock_group_gallery', 'Mock Gallery Group', 0, 1)\n            ON CONFLICT(group_id) DO UPDATE SET group_name = excluded.group_name, joined_group = 1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "feadbc4716ea340bd1bd93937646c2a1ff147edc1ea7fb7cd64c112750946d3a"
+}

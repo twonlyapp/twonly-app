@@ -28,6 +28,7 @@ impl Server {
         ctx: &Arc<Context>,
     ) -> Result<ServerResult<server_to_client::response::PlanBallance>> {
         let bytes = Self::get_plan_balance(ctx).await?;
+
         decode_ok_value(bytes, |value| match value {
             server_to_client::response::ok::Ok::Planballance(balance) => Some(balance),
             _ => None,
@@ -39,10 +40,7 @@ impl Server {
     }
 
     pub async fn ipa_purchase(
-        ctx: &Arc<Context>,
-        product_id: String,
-        source: String,
-        verification_data: String,
+        ctx: &Arc<Context>, product_id: String, source: String, verification_data: String,
     ) -> Result<Vec<u8>> {
         Self::application(
             ctx,

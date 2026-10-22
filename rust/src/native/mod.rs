@@ -11,10 +11,12 @@
 //! None of them require the Flutter engine to be running.
 
 pub(crate) mod background;
+#[cfg(target_os = "ios")]
+pub(crate) mod background_execution;
 pub(crate) mod gallery;
 pub(crate) mod image;
-pub(crate) mod location;
 pub(crate) mod live_location;
+pub(crate) mod location;
 pub(crate) mod notifications;
 pub(crate) mod prepare;
 pub(crate) mod transfer;

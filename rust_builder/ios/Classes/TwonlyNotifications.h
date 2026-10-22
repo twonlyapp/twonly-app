@@ -30,7 +30,24 @@ char *twonly_notification_acknowledge(const char *event_ids_json);
    `twonly_notification_process` has been rendered; skipping it is safe. */
 char *twonly_notification_finalize(uint64_t deadline_ms);
 
+/* One deadline and owner across process/render/acknowledge/finalize. Create
+   before queueing. Finish also cancels/drains runs that never processed. */
+uint64_t twonly_notification_run_create(uint64_t budget_ms);
+char *twonly_notification_process_with_id(
+    uint64_t run,
+    const char *database_dir,
+    const char *data_dir,
+    const char *locale,
+    uint64_t deadline_ms
+);
+char *twonly_notification_acknowledge_with_id(uint64_t run, const char *event_ids_json);
+char *twonly_notification_finalize_with_id(uint64_t run, uint64_t deadline_ms);
+void twonly_notification_run_finish(uint64_t run);
+
 void twonly_notification_string_free(char *pointer);
+
+/* Opaque render generation; missing/finished jobs are cancelled. */
+bool twonly_video_is_cancelled(const char *job_id);
 
 /* Runs a native live-location state/update/stop operation. Release the JSON
    response with twonly_notification_string_free. No Flutter engine is needed. */
@@ -47,6 +64,22 @@ char *twonly_background_run(
 );
 
 void twonly_background_string_free(char *pointer);
+
+uint64_t twonly_background_run_create(void);
+void twonly_background_run_dispose(uint64_t run);
+char *twonly_background_run_with_id(
+    uint64_t run,
+    const char *database_dir,
+    const char *data_dir,
+    const char *media_id
+);
+
+/* Requests cancellation; the owned worker acknowledges completion only after
+   native SQLite and connection cleanup have finished. Safe from any thread. */
+void twonly_database_operation_cancel(uint64_t operation);
+
+/* Nonblocking scene/application state notification; cleanup is owned by Rust. */
+void twonly_database_set_foreground(bool active);
 
 /* Wakes foreground reconciliation after a native media request finishes.
    Returns false when no Flutter runtime is available; durable maintenance

@@ -9,13 +9,13 @@ use crate::utils::milliseconds_to_seconds;
 use sqlx::{Sqlite, Transaction};
 
 pub(crate) async fn handle_typing_indicator(
-    t: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    group_id: &str,
+    t: &mut Transaction<'_, Sqlite>, from_user_id: i64, group_id: &str,
     indicator: encrypted_content::TypingIndicator,
 ) -> Result<()> {
     let created_at = milliseconds_to_seconds(indicator.created_at);
+
     let typing = indicator.is_typing.then_some(created_at);
+
     sqlx::query!(
         r#"
         UPDATE group_members
@@ -29,5 +29,6 @@ pub(crate) async fn handle_typing_indicator(
     )
     .execute(&mut **t)
     .await?;
+
     Ok(())
 }

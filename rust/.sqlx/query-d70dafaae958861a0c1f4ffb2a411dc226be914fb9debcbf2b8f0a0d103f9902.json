@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO group_members (\n                group_id,\n                contact_id,\n                member_state,\n                group_public_key,\n                last_chat_opened,\n                last_type_indicator,\n                last_message,\n                created_at\n            ) VALUES (\n                ?,\n                ?,\n                ?,\n                ?,\n                ?,\n                ?,\n                ?,\n                COALESCE(?, CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER))\n            )\n            ON CONFLICT(group_id, contact_id) DO UPDATE SET\n                member_state = CASE WHEN ? THEN excluded.member_state ELSE group_members.member_state END,\n                group_public_key = CASE WHEN ? THEN excluded.group_public_key ELSE group_members.group_public_key\n                    END,\n                last_chat_opened = CASE WHEN ? THEN excluded.last_chat_opened ELSE group_members.last_chat_opened\n                    END,\n                last_type_indicator = CASE WHEN ? THEN excluded.last_type_indicator\n                    ELSE group_members.last_type_indicator END,\n                last_message = CASE WHEN ? THEN excluded.last_message ELSE group_members.last_message END,\n                created_at = CASE WHEN ? THEN excluded.created_at ELSE group_members.created_at END\n            WHERE ? OR ? OR ? OR ? OR ? OR ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 20
+    },
+    "nullable": []
+  },
+  "hash": "d70dafaae958861a0c1f4ffb2a411dc226be914fb9debcbf2b8f0a0d103f9902"
+}

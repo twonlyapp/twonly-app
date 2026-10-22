@@ -6,6 +6,7 @@ use libsignal_protocol::{
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[tokio::test]
+
 async fn libsignal_compatibility_test() -> Result<(), Box<dyn std::error::Error>> {
     let mut csprng = rand::rng();
 
@@ -13,14 +14,19 @@ async fn libsignal_compatibility_test() -> Result<(), Box<dyn std::error::Error>
     // 1. SETUP BOB (Receiver)
     // ==========================================
     let bob_identity = IdentityKeyPair::generate(&mut csprng);
+
     let bob_registration_id = 5678;
+
     let mut bob_store =
         InMemSignalProtocolStore::new(bob_identity.clone(), bob_registration_id).unwrap();
+
     let bob_address = ProtocolAddress::new("bob".to_string(), DeviceId::try_from(1).unwrap());
 
     // Bob generates PreKey
     let bob_pre_key_id = 1.into();
+
     let bob_pre_key_pair = KeyPair::generate(&mut csprng);
+
     bob_store
         .pre_key_store
         .save_pre_key(
@@ -31,19 +37,23 @@ async fn libsignal_compatibility_test() -> Result<(), Box<dyn std::error::Error>
 
     // Bob generates SignedPreKey
     let bob_signed_pre_key_id = 1.into();
+
     let bob_signed_pre_key_pair = KeyPair::generate(&mut csprng);
+
     let bob_signed_pre_key_sig = bob_identity
         .private_key()
         .calculate_signature_for_multipart_message(
             &[&bob_signed_pre_key_pair.public_key.serialize()],
             &mut csprng,
         )?;
+
     let timestamp = Timestamp::from_epoch_millis(
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_millis() as u64,
     );
+
     bob_store
         .signed_pre_key_store
         .save_signed_pre_key(
@@ -59,10 +69,12 @@ async fn libsignal_compatibility_test() -> Result<(), Box<dyn std::error::Error>
 
     // Bob generates KyberPreKey (Post-Quantum!)
     let bob_kyber_pre_key_id = 1.into();
+
     let bob_kyber_key_pair = libsignal_protocol::kem::KeyPair::generate(
         libsignal_protocol::kem::KeyType::Kyber1024,
         &mut csprng,
     );
+
     let bob_kyber_sig = bob_identity
         .private_key()
         .calculate_signature_for_multipart_message(
@@ -103,9 +115,12 @@ async fn libsignal_compatibility_test() -> Result<(), Box<dyn std::error::Error>
     // 2. SETUP ALICE (Sender)
     // ==========================================
     let alice_identity = IdentityKeyPair::generate(&mut csprng);
+
     let alice_registration_id = 1234;
+
     let mut alice_store =
         InMemSignalProtocolStore::new(alice_identity, alice_registration_id).unwrap();
+
     let alice_address = ProtocolAddress::new("alice".to_string(), DeviceId::try_from(1).unwrap());
 
     // Alice processes Bob's bundle
@@ -124,9 +139,11 @@ async fn libsignal_compatibility_test() -> Result<(), Box<dyn std::error::Error>
     // 3. EXCHANGE 100 MESSAGES
     // ==========================================
     let mut alice_to_bob = true;
+
     for i in 1..=100 {
         if alice_to_bob {
             let plaintext = format!("Message {} from Alice to Bob", i).into_bytes();
+
             let ciphertext = message_encrypt(
                 &plaintext,
                 &bob_address,
@@ -156,9 +173,11 @@ async fn libsignal_compatibility_test() -> Result<(), Box<dyn std::error::Error>
                 &mut csprng,
             )
             .await?;
+
             assert_eq!(plaintext, decrypted);
         } else {
             let plaintext = format!("Message {} from Bob to Alice", i).into_bytes();
+
             let ciphertext = message_encrypt(
                 &plaintext,
                 &alice_address,
@@ -184,6 +203,7 @@ async fn libsignal_compatibility_test() -> Result<(), Box<dyn std::error::Error>
                 &mut csprng,
             )
             .await?;
+
             assert_eq!(plaintext, decrypted);
         }
 

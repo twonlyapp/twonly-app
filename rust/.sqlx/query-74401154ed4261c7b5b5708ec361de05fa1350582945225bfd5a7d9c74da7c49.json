@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE media_files SET cloud_state = 'none'\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "74401154ed4261c7b5b5708ec361de05fa1350582945225bfd5a7d9c74da7c49"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                UPDATE media_files\n                SET created_at_month = ?\n                WHERE created_at = ? AND created_at_month IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "b40f8834a5b855b96f5e8930d23dd2600dcbc30b9c9675c2f65d811c6bcabe0b"
+}

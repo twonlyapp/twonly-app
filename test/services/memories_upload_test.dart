@@ -3,26 +3,30 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cryptography_plus/cryptography_plus.dart';
-import 'package:drift/drift.dart' show Value;
-import 'package:drift/native.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:logging/logging.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 
+import '../helpers/native_database.dart';
 import '../mocks/user_config.dart';
 
-class _MemoriesApi implements RustLibApi {
+class _MemoriesApi extends NativeTestApi {
   ApiConnectionState connectionState = ApiConnectionState.authenticated;
   int? originalDate;
   Object? error;
@@ -105,7 +109,6 @@ class _MemoriesApi implements RustLibApi {
 
 void main() {
   final api = _MemoriesApi();
-  late TwonlyDB database;
   late Directory support;
   late MemoriesCloudService service;
   late StreamSubscription<LogRecord> subscription;
@@ -113,14 +116,12 @@ void main() {
   final records = <LogRecord>[];
   const mediaId = 'd98369cc-0902-436a-a785-85507d1f39d2';
 
-  setUpAll(() => RustLib.initMock(api: api));
+  setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
 
   setUp(() async {
-    database = TwonlyDB(NativeDatabase.memory());
-    locator
-      ..registerSingleton<TwonlyDB>(database)
-      ..registerSingleton<UserService>(UserService());
+    await TestDatabase.create();
+    locator.registerSingleton<UserService>(UserService());
     userService.currentUser = testUserConfig(
       userId: 1,
       username: 'me',
@@ -151,15 +152,16 @@ void main() {
     records.clear();
     subscription = Logger.root.onRecord.listen(records.add);
 
-    final media = await database.mediaFilesDao.insertOrUpdateMedia(
-      MediaFilesCompanion.insert(
+    final media = await rust_mediafiles.upsertMediaFile(
+      patch: MediaFilePatch(
         mediaId: mediaId,
-        type: MediaType.image,
-        stored: const Value(true),
-        hasThumbnail: const Value(true),
+        type: MediaType.image.name,
+        stored: true,
+        hasThumbnail: true,
       ),
+      transaction: currentDatabaseSession(),
     );
-    final mediaService = MediaFileService(media!);
+    final mediaService = MediaFileService(media);
     mediaService.storedPath.writeAsBytesSync([1, 2, 3]);
     mediaService.thumbnailPath.writeAsBytesSync([4, 5, 6]);
   });
@@ -206,13 +208,17 @@ void main() {
     expect(api.confirmations, 1);
     expect(
       api.originalDate,
-      (await database.mediaFilesDao.getMediaFileById(
-            mediaId,
+      (await rust_mediafiles.getMediaFile(
+            id: mediaId,
+            transaction: currentDatabaseSession(),
           ))!.createdAt.millisecondsSinceEpoch ~/
           1000,
     );
     expect(
-      (await database.mediaFilesDao.getMediaFileById(mediaId))!.cloudState,
+      (await rust_mediafiles.getMediaFile(
+        id: mediaId,
+        transaction: currentDatabaseSession(),
+      ))!.cloudState,
       CloudState.uploaded,
     );
     expect(progress.any((p) => p?.currentUploadProgress == 1), isTrue);
@@ -222,7 +228,10 @@ void main() {
 
   test('repairs an existing oversized thumbnail before uploading', () async {
     final media = MediaFileService(
-      (await database.mediaFilesDao.getMediaFileById(mediaId))!,
+      (await rust_mediafiles.getMediaFile(
+        id: mediaId,
+        transaction: currentDatabaseSession(),
+      ))!,
     );
     media.thumbnailPath.writeAsBytesSync(Uint8List(400001));
     api.refreshThumbnail = (_) async {
@@ -242,7 +251,15 @@ void main() {
 
     expect(uploads, ['/thumbnail', '/full']);
     expect(api.confirmations, 1);
-    expect(await database.mediaFilesDao.getMemoriesToBackup(), isEmpty);
+    expect(
+      await rust_mediafiles.listMediaFiles(
+        input: const db_mediafiles.MediaQuery(
+          filter: db_mediafiles.MediaFilter.memoriesToBackup,
+        ),
+        transaction: currentDatabaseSession(),
+      ),
+      isEmpty,
+    );
     expect(media.storedPath.readAsBytesSync(), [1, 2, 3]);
   });
 
@@ -250,7 +267,10 @@ void main() {
     'failed thumbnail repair leaves backup queued without an S3 request',
     () async {
       final media = MediaFileService(
-        (await database.mediaFilesDao.getMediaFileById(mediaId))!,
+        (await rust_mediafiles.getMediaFile(
+          id: mediaId,
+          transaction: currentDatabaseSession(),
+        ))!,
       );
       media.thumbnailPath.writeAsBytesSync(Uint8List(400001));
       final client = MockClient((_) async {
@@ -263,7 +283,15 @@ void main() {
       expect(api.thumbnailRefreshes, 1);
       expect(api.requests, 0);
       expect(api.confirmations, 0);
-      expect(await database.mediaFilesDao.getMemoriesToBackup(), hasLength(1));
+      expect(
+        await rust_mediafiles.listMediaFiles(
+          input: const db_mediafiles.MediaQuery(
+            filter: db_mediafiles.MediaFilter.memoriesToBackup,
+          ),
+          transaction: currentDatabaseSession(),
+        ),
+        hasLength(1),
+      );
       expect(
         records.singleWhere((r) => r.error is StateError).error.toString(),
         contains('400001 bytes'),
@@ -281,7 +309,10 @@ void main() {
       (progress) => progress == null,
     );
     final media = MediaFileService(
-      (await database.mediaFilesDao.getMediaFileById(mediaId))!,
+      (await rust_mediafiles.getMediaFile(
+        id: mediaId,
+        transaction: currentDatabaseSession(),
+      ))!,
     );
     try {
       await media.storeMediaFile();
@@ -309,7 +340,15 @@ void main() {
       await http.runWithClient(service.checkUploads, () => client);
 
       expect(api.confirmations, 0);
-      expect(await database.mediaFilesDao.getMemoriesToBackup(), hasLength(1));
+      expect(
+        await rust_mediafiles.listMediaFiles(
+          input: const db_mediafiles.MediaQuery(
+            filter: db_mediafiles.MediaFilter.memoriesToBackup,
+          ),
+          transaction: currentDatabaseSession(),
+        ),
+        hasLength(1),
+      );
       final record = records.singleWhere(
         (record) => record.message == 'Error backing up memory $mediaId',
       );
@@ -323,7 +362,15 @@ void main() {
       await http.runWithClient(service.checkUploads, () => retryClient);
 
       expect(api.confirmations, 1);
-      expect(await database.mediaFilesDao.getMemoriesToBackup(), isEmpty);
+      expect(
+        await rust_mediafiles.listMediaFiles(
+          input: const db_mediafiles.MediaQuery(
+            filter: db_mediafiles.MediaFilter.memoriesToBackup,
+          ),
+          transaction: currentDatabaseSession(),
+        ),
+        isEmpty,
+      );
     },
   );
 
@@ -374,11 +421,19 @@ void main() {
         expect(records.where((r) => r.level >= Level.SEVERE), isEmpty);
         expect(api.confirmations, 0);
         expect(
-          (await database.mediaFilesDao.getMediaFileById(mediaId))!.cloudState,
+          (await rust_mediafiles.getMediaFile(
+            id: mediaId,
+            transaction: currentDatabaseSession(),
+          ))!.cloudState,
           CloudState.none,
         );
         expect(
-          await database.mediaFilesDao.getMemoriesToBackup(),
+          await rust_mediafiles.listMediaFiles(
+            input: const db_mediafiles.MediaQuery(
+              filter: db_mediafiles.MediaFilter.memoriesToBackup,
+            ),
+            transaction: currentDatabaseSession(),
+          ),
           hasLength(1),
         );
         expect(service.isProcessing, isFalse);
@@ -389,7 +444,15 @@ void main() {
         await http.runWithClient(service.checkUploads, () => retryClient);
 
         expect(api.confirmations, 1);
-        expect(await database.mediaFilesDao.getMemoriesToBackup(), isEmpty);
+        expect(
+          await rust_mediafiles.listMediaFiles(
+            input: const db_mediafiles.MediaQuery(
+              filter: db_mediafiles.MediaFilter.memoriesToBackup,
+            ),
+            transaction: currentDatabaseSession(),
+          ),
+          isEmpty,
+        );
       });
     }
   }
@@ -399,8 +462,7 @@ void main() {
     await subscription.cancel();
     Logger.root.level = previousLogLevel;
     await locator.unregister<UserService>();
-    await locator.unregister<TwonlyDB>();
-    await database.close();
+
     support.deleteSync(recursive: true);
   });
 
@@ -411,7 +473,15 @@ void main() {
 
     expect(api.requests, 0);
     expect(service.isProcessing, isFalse);
-    expect(await database.mediaFilesDao.getMemoriesToBackup(), hasLength(1));
+    expect(
+      await rust_mediafiles.listMediaFiles(
+        input: const db_mediafiles.MediaQuery(
+          filter: db_mediafiles.MediaFilter.memoriesToBackup,
+        ),
+        transaction: currentDatabaseSession(),
+      ),
+      hasLength(1),
+    );
 
     api.connectionState = ApiConnectionState.authenticated;
     final client = MockClient((_) async => http.Response('', 204));
@@ -419,13 +489,22 @@ void main() {
     await http.runWithClient(service.checkUploads, () => client);
 
     expect(api.confirmations, 1);
-    expect(await database.mediaFilesDao.getMemoriesToBackup(), isEmpty);
+    expect(
+      await rust_mediafiles.listMediaFiles(
+        input: const db_mediafiles.MediaQuery(
+          filter: db_mediafiles.MediaFilter.memoriesToBackup,
+        ),
+        transaction: currentDatabaseSession(),
+      ),
+      isEmpty,
+    );
   });
 
   test('pending upload from an interrupted run is retried', () async {
-    await database.mediaFilesDao.updateMedia(
-      mediaId,
-      const MediaFilesCompanion(cloudState: Value(CloudState.pending)),
+    await rust_mediafiles.updateMediaFiles(
+      id: mediaId,
+      patch: MediaFilePatch(cloudState: CloudState.pending.name),
+      transaction: currentDatabaseSession(),
     );
     final client = MockClient((_) async => http.Response('', 204));
     addTearDown(client.close);
@@ -434,7 +513,15 @@ void main() {
 
     expect(api.requests, 1);
     expect(api.confirmations, 1);
-    expect(await database.mediaFilesDao.getMemoriesToBackup(), isEmpty);
+    expect(
+      await rust_mediafiles.listMediaFiles(
+        input: const db_mediafiles.MediaQuery(
+          filter: db_mediafiles.MediaFilter.memoriesToBackup,
+        ),
+        transaction: currentDatabaseSession(),
+      ),
+      isEmpty,
+    );
   });
 
   for (final message in [
@@ -471,11 +558,19 @@ void main() {
         expect(service.isProcessing, isFalse);
         expect(service.currentProgress, isNull);
         expect(
-          (await database.mediaFilesDao.getMediaFileById(mediaId))!.cloudState,
+          (await rust_mediafiles.getMediaFile(
+            id: mediaId,
+            transaction: currentDatabaseSession(),
+          ))!.cloudState,
           CloudState.none,
         );
         expect(
-          await database.mediaFilesDao.getMemoriesToBackup(),
+          await rust_mediafiles.listMediaFiles(
+            input: const db_mediafiles.MediaQuery(
+              filter: db_mediafiles.MediaFilter.memoriesToBackup,
+            ),
+            transaction: currentDatabaseSession(),
+          ),
           hasLength(1),
         );
 

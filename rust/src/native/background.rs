@@ -12,37 +12,74 @@
 
 use crate::bridge::InitConfig;
 use crate::context::Context;
+use crate::database::lifecycle::{Lease, Operation};
 use crate::services::background::{self, Job, RunOutcome};
+use futures_util::FutureExt;
+use std::collections::HashMap;
 use std::ffi::{c_char, CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::{LazyLock, Mutex, MutexGuard};
+use std::time::Duration;
 
 /// One maintenance run at a time per process. Two concurrent runs would only
 /// contend on the same per-media locks and the same socket.
+
 static MAINTENANCE_WORKER: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
+
+static PENDING_RUNS: LazyLock<Mutex<HashMap<u64, Lease>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+// Debug media preparation has a deep async poll chain that exceeds Android's
+// WorkManager thread stack. Runtime::block_on polls its root future on the
+// calling thread, even with a multithreaded runtime.
+const MAINTENANCE_STACK_SIZE: usize = 8 * 1024 * 1024;
+
+fn run_on_worker_stack<T: Send + 'static>(
+    work: impl FnOnce() -> Result<T, String> + Send + 'static,
+) -> Result<T, String> {
+    std::thread::Builder::new()
+        .name("twonly-maintenance".into())
+        .stack_size(MAINTENANCE_STACK_SIZE)
+        .spawn(work)
+        .map_err(|error| format!("could not start maintenance thread: {error}"))?
+        .join()
+        .map_err(|_| "background maintenance panicked".to_owned())?
+}
 
 /// A native HTTP callback is only a hint to check the server's attachment
 /// state. It must not mark a 202 response as sent or initialize a runtime when
 /// Flutter is absent; durable maintenance handles that case later.
 #[unsafe(no_mangle)]
+
 pub extern "C" fn twonly_direct_media_transfer_finished() -> bool {
     catch_unwind(AssertUnwindSafe(|| {
         let Ok(ctx) = Context::get_static() else {
             return false;
         };
+
         if ctx.foreground_runtime().is_none() {
             return false;
         }
+
         crate::services::direct_media_upload::watch_pending_uploads(ctx);
+
         true
     }))
     .unwrap_or(false)
 }
 
-fn worker_lock() -> MutexGuard<'static, ()> {
-    MAINTENANCE_WORKER
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner())
+fn worker_lock(operation: &Operation) -> Result<MutexGuard<'static, ()>, String> {
+    loop {
+        operation.check().map_err(|error| error.to_string())?;
+
+        match MAINTENANCE_WORKER.try_lock() {
+            Ok(guard) => return Ok(guard),
+            Err(std::sync::TryLockError::Poisoned(error)) => return Ok(error.into_inner()),
+            Err(std::sync::TryLockError::WouldBlock) => {
+                std::thread::sleep(Duration::from_millis(5))
+            }
+        }
+    }
 }
 
 fn runtime() -> Result<tokio::runtime::Runtime, String> {
@@ -57,6 +94,7 @@ unsafe fn required_string(pointer: *const c_char, name: &str) -> Result<String, 
     if pointer.is_null() {
         return Err(format!("{name} is null"));
     }
+
     // SAFETY: Native callers promise a valid NUL-terminated string for the
     // duration of this synchronous function call.
     unsafe { CStr::from_ptr(pointer) }
@@ -69,6 +107,7 @@ unsafe fn optional_string(pointer: *const c_char) -> Option<String> {
     if pointer.is_null() {
         return None;
     }
+
     unsafe { CStr::from_ptr(pointer) }
         .to_str()
         .ok()
@@ -88,6 +127,7 @@ fn response_json(outcome: Option<RunOutcome>, error: Option<String>) -> *mut c_c
         ),
         (None, None) => r#"{"ok":false,"error":"missing background outcome"}"#.to_owned(),
     };
+
     CString::new(json)
         .expect("JSON serializers must escape interior NUL bytes")
         .into_raw()
@@ -99,29 +139,125 @@ fn response_json(outcome: Option<RunOutcome>, error: Option<String>) -> *mut c_c
 /// file is prepared. The returned pointer must be released with
 /// `twonly_background_string_free`.
 #[unsafe(no_mangle)]
+
 pub unsafe extern "C" fn twonly_background_run(
-    database_dir: *const c_char,
-    data_dir: *const c_char,
-    media_id: *const c_char,
+    database_dir: *const c_char, data_dir: *const c_char, media_id: *const c_char,
 ) -> *mut c_char {
+    let id = twonly_background_run_create();
+
+    unsafe { twonly_background_run_with_id(id, database_dir, data_dir, media_id) }
+}
+
+/// Register before enqueueing the OS worker so an early expiration is retained.
+#[unsafe(no_mangle)]
+
+pub extern "C" fn twonly_background_run_create() -> u64 {
+    create_run(crate::log::LogSource::Background)
+}
+
+fn create_run(source: crate::log::LogSource) -> u64 {
+    let budget = if cfg!(target_os = "ios") { 20 } else { 120 };
+
+    let lease = Lease::external(Operation::with_log_source(
+        Duration::from_secs(budget),
+        source,
+    ));
+
+    let id = lease.id();
+
+    PENDING_RUNS
+        .lock()
+        .unwrap_or_else(|error| error.into_inner())
+        .insert(id, lease);
+
+    id
+}
+
+/// Release a registered run that never reached its worker (for example when
+/// the App Group directory is unavailable). It cannot dispose an active run.
+#[unsafe(no_mangle)]
+
+pub extern "C" fn twonly_background_run_dispose(id: u64) {
+    PENDING_RUNS
+        .lock()
+        .unwrap_or_else(|error| error.into_inner())
+        .remove(&id);
+}
+
+#[unsafe(no_mangle)]
+
+pub unsafe extern "C" fn twonly_background_run_with_id(
+    id: u64, database_dir: *const c_char, data_dir: *const c_char, media_id: *const c_char,
+) -> *mut c_char {
+    let lease = PENDING_RUNS
+        .lock()
+        .unwrap_or_else(|error| error.into_inner())
+        .remove(&id);
+
+    let Some(lease) = lease else {
+        return response_json(
+            None,
+            Some("background run is closed or already started".into()),
+        );
+    };
+
+    let operation = lease.operation();
+
     let result = catch_unwind(AssertUnwindSafe(|| {
-        let _worker = worker_lock();
+        let _worker = worker_lock(&operation)?;
+
         let database_dir = unsafe { required_string(database_dir, "database_dir") }?;
+
         let data_dir = unsafe { required_string(data_dir, "data_dir") }?;
+
         let job = match unsafe { optional_string(media_id) } {
             Some(media_id) => Job::PrepareMedia(media_id),
             None => Job::Flush,
         };
-        runtime()?
-            .block_on(background::run(
-                InitConfig {
-                    database_dir,
-                    data_dir,
-                },
-                job,
-            ))
-            .map_err(|error| error.to_string())
+
+        // Own the input strings before crossing threads. Join synchronously so
+        // the worker lock and lease cover database cleanup and runtime shutdown.
+        run_on_worker_stack(move || {
+            runtime()?.block_on(operation.log_source().scope(async {
+                let _admission = crate::database::lifecycle::native_admission(&operation)
+                    .await.map_err(|error| error.to_string())?;
+                // Initialization is owned and awaited: abandoning a partially
+                // opened SQLCipher connection does not prove its locks are gone.
+                let initialized = AssertUnwindSafe(operation.scope(async {
+                    operation.check()?;
+                    Context::init_notification(InitConfig { database_dir, data_dir }).await
+                })).catch_unwind().await;
+                let context = Context::get_static().ok().cloned();
+                let result = match initialized {
+                    Ok(Ok(())) => {
+                        let ctx = context.as_ref().unwrap().clone();
+                        AssertUnwindSafe(operation.scope(async {
+                            tokio::select! {
+                                biased;
+                                _ = operation.until_cancelled() => operation.check().map(|_| unreachable!()),
+                                result = background::run(ctx, job) => result,
+                            }
+                        })).catch_unwind().await
+                    }
+                    Ok(Err(error)) => Ok(Err(error)),
+                    Err(panic) => Err(panic),
+                };
+                operation.cancel();
+                tracing::info!(operation_id = id, "background database cleanup started");
+                let cleanup = if let Some(context) = context {
+                    context.finish_native_databases(&operation).await
+                } else { Ok(()) };
+                operation.drain().await;
+                tracing::info!(operation_id = id, "background database cleanup finished");
+                cleanup.map_err(|error| error.to_string())?;
+                result.map_err(|_| "background maintenance panicked".to_owned())?
+                    .map_err(|error| error.to_string())
+            }))
+        })
     }));
+
+    // The lease remains registered through SQLx closure and runtime shutdown.
+    drop(lease);
 
     match result {
         Ok(Ok(outcome)) => response_json(Some(outcome), None),
@@ -132,6 +268,7 @@ pub unsafe extern "C" fn twonly_background_run(
 
 /// Releases a string returned by a Twonly background entry point.
 #[unsafe(no_mangle)]
+
 pub unsafe extern "C" fn twonly_background_string_free(pointer: *mut c_char) {
     if !pointer.is_null() {
         // SAFETY: The pointer was allocated by `CString::into_raw` above and
@@ -140,20 +277,141 @@ pub unsafe extern "C" fn twonly_background_string_free(pointer: *mut c_char) {
     }
 }
 
+#[cfg(test)]
+
+mod lifecycle_tests {
+
+    use super::*;
+
+    #[inline(never)]
+    fn use_large_stack() -> u8 {
+        let mut buffer = [0_u8; 2 * 1024 * 1024];
+        std::hint::black_box(&mut buffer);
+        buffer[0] = 42;
+        std::hint::black_box(&buffer);
+        buffer[0]
+    }
+
+    #[test]
+    fn maintenance_root_future_has_its_own_stack_and_finishes_before_returning() {
+        std::thread::Builder::new()
+            .stack_size(128 * 1024)
+            .spawn(|| {
+                let caller = std::thread::current().id();
+                let completed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+                let worker_completed = completed.clone();
+                let result = run_on_worker_stack(move || {
+                    assert_ne!(std::thread::current().id(), caller);
+                    let result = runtime()?.block_on(async { use_large_stack() });
+                    worker_completed.store(true, std::sync::atomic::Ordering::SeqCst);
+                    Ok(result)
+                });
+
+                assert_eq!(result.unwrap(), 42);
+                assert!(completed.load(std::sync::atomic::Ordering::SeqCst));
+            })
+            .unwrap()
+            .join()
+            .unwrap();
+    }
+
+    #[test]
+    fn maintenance_thread_errors_and_panics_are_reported() {
+        let error = run_on_worker_stack(|| Err::<(), _>("maintenance failed".to_owned()));
+        assert_eq!(error.unwrap_err(), "maintenance failed");
+
+        let panic = run_on_worker_stack::<()>(|| panic!("maintenance test panic"));
+        assert_eq!(panic.unwrap_err(), "background maintenance panicked");
+    }
+
+    unsafe fn read_response(pointer: *mut c_char) -> serde_json::Value {
+        let text = unsafe { CStr::from_ptr(pointer) }
+            .to_str()
+            .unwrap()
+            .to_owned();
+
+        unsafe { twonly_background_string_free(pointer) };
+
+        serde_json::from_str(&text).unwrap()
+    }
+
+    #[test]
+
+    fn expiration_before_worker_start_never_opens_the_database() {
+        let directory = tempfile::tempdir().unwrap();
+
+        let missing = directory.path().join("must-not-be-created");
+
+        let path = CString::new(missing.to_str().unwrap()).unwrap();
+
+        let id = twonly_background_run_create();
+
+        crate::database::lifecycle::twonly_database_operation_cancel(id);
+
+        let response = unsafe {
+            read_response(twonly_background_run_with_id(
+                id,
+                path.as_ptr(),
+                path.as_ptr(),
+                std::ptr::null(),
+            ))
+        };
+
+        assert_eq!(response["ok"], false);
+
+        assert!(response["error"].as_str().unwrap().contains("cancelled"));
+
+        assert!(!missing.exists());
+    }
+
+    #[test]
+
+    fn disposed_and_duplicate_worker_ids_cannot_run_or_cancel_a_later_worker() {
+        let old = twonly_background_run_create();
+
+        twonly_background_run_dispose(old);
+
+        let current = twonly_background_run_create();
+
+        crate::database::lifecycle::twonly_database_operation_cancel(old);
+
+        assert!(!PENDING_RUNS
+            .lock()
+            .unwrap()
+            .get(&current)
+            .unwrap()
+            .operation()
+            .cancelled());
+
+        let response = unsafe {
+            read_response(twonly_background_run_with_id(
+                old,
+                std::ptr::null(),
+                std::ptr::null(),
+                std::ptr::null(),
+            ))
+        };
+
+        assert_eq!(response["ok"], false);
+
+        twonly_background_run_dispose(current);
+    }
+}
+
 #[cfg(target_os = "android")]
+
 mod android_jni {
+
     use super::*;
     use jni::objects::{JClass, JString};
-    use jni::sys::jstring;
+    use jni::sys::{jboolean, jstring};
     use jni::JNIEnv;
 
     #[unsafe(no_mangle)]
+
     pub extern "system" fn Java_eu_twonly_directmedia_NativeMediaPrepareBridge_run(
-        mut env: JNIEnv<'_>,
-        _class: JClass<'_>,
-        database_dir: JString<'_>,
-        data_dir: JString<'_>,
-        media_id: JString<'_>,
+        mut env: JNIEnv<'_>, _class: JClass<'_>, database_dir: JString<'_>, data_dir: JString<'_>,
+        media_id: JString<'_>, foreground_service: jboolean,
     ) -> jstring {
         let result = (|| -> Result<String, String> {
             let java_string =
@@ -162,10 +420,13 @@ mod android_jni {
                         .map(Into::into)
                         .map_err(|error| format!("invalid Java string: {error}"))
                 };
+
             let database_dir = CString::new(java_string(&mut env, database_dir)?)
                 .map_err(|error| error.to_string())?;
+
             let data_dir = CString::new(java_string(&mut env, data_dir)?)
                 .map_err(|error| error.to_string())?;
+
             // A null Java string is the flush job, so it is not required here.
             let media_id = if media_id.is_null() {
                 None
@@ -175,9 +436,17 @@ mod android_jni {
                         .map_err(|error| error.to_string())?,
                 )
             };
+
+            let id = create_run(if foreground_service != 0 {
+                crate::log::LogSource::ForegroundService
+            } else {
+                crate::log::LogSource::Background
+            });
+
             // SAFETY: Each CString remains alive for the synchronous ABI call.
             let pointer = unsafe {
-                twonly_background_run(
+                twonly_background_run_with_id(
+                    id,
                     database_dir.as_ptr(),
                     data_dir.as_ptr(),
                     media_id
@@ -185,22 +454,28 @@ mod android_jni {
                         .map_or(std::ptr::null(), |value| value.as_ptr()),
                 )
             };
+
             if pointer.is_null() {
                 return Err("Rust maintenance worker returned null".into());
             }
+
             // SAFETY: The C ABI returns a valid owned CString.
             let json = unsafe { CStr::from_ptr(pointer) }
                 .to_string_lossy()
                 .into_owned();
+
             unsafe { twonly_background_string_free(pointer) };
+
             Ok(json)
         })();
+
         let json = result.unwrap_or_else(|error| {
             format!(
                 r#"{{"ok":false,"error":{}}}"#,
                 serde_json::to_string(&error).unwrap_or_else(|_| "null".into())
             )
         });
+
         env.new_string(json)
             .map(JString::into_raw)
             .unwrap_or(std::ptr::null_mut())

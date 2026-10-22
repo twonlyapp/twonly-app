@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:intl/intl.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -31,7 +36,16 @@ class _StorageContentsViewState extends State<StorageContentsView> {
   @override
   void initState() {
     super.initState();
-    _mediaFilesStream = twonlyDB.mediaFilesDao.watchAllStoredMediaFiles();
+    _mediaFilesStream = watchRustDatabase(
+      (control) => rust_mediafiles
+          .watchMediaFiles(
+            input: const db_mediafiles.MediaQuery(
+              filter: db_mediafiles.MediaFilter.stored,
+            ),
+            control: control,
+          )
+          .map(orderedMediaFiles),
+    );
   }
 
   void _toggleSelection(String mediaId) {

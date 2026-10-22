@@ -1,10 +1,17 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_location.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/webxdc_store.bottom_sheet.dart';
@@ -46,13 +53,24 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
         contactIds: Int64List.fromList(selectedContacts),
       );
       if (group.isDirectChat) {
-        final members = await twonlyDB.groupsDao.getGroupContact(
-          group.groupId,
-        );
+        final members = joinedGroupContacts(
+          await rust_groups.getGroupContacts(
+            input: db_groups.GroupMembersQuery(
+              groupId: group.groupId,
+              orderForChats: true,
+            ),
+            transaction: currentDatabaseSession(),
+          ),
+        ).map((row) => row.$1).toList(growable: false);
         if (members.isNotEmpty) {
-          await twonlyDB.contactsDao.updateContact(
-            members.first.userId,
-            const ContactsCompanion(askForFriendPromotions: Value(false)),
+          await rust_contacts.updateContact(
+            id: members.first.userId,
+            patch: ContactPatch(
+              askForFriendPromotions: NullableInt(
+                value: databaseNullableFlag(false),
+              ),
+            ),
+            transaction: currentDatabaseSession(),
           );
         }
       }

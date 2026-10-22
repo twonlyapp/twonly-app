@@ -2,14 +2,22 @@
 
 import 'dart:async';
 
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
@@ -39,21 +47,39 @@ class _StartNewChatView extends State<StartNewChatView> {
   void initState() {
     super.initState();
 
-    contactSub = twonlyDB.contactsDao.watchAllAcceptedContacts().listen((
-      update,
-    ) async {
-      update.sort(
-        (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)),
-      );
-      setState(() {
-        allContacts = update;
-      });
-      await filterUsers();
-    });
+    contactSub =
+        watchRustDatabase(
+          (control) => rust_contacts.watchContacts(
+            input: db_contacts.ContactQuery(
+              filter: db_contacts.ContactFilter.accepted,
+              ids: Int64List(0),
+            ),
+            control: control,
+          ),
+        ).listen((
+          update,
+        ) async {
+          update.sort(
+            (a, b) =>
+                getContactDisplayName(a).compareTo(getContactDisplayName(b)),
+          );
+          setState(() {
+            allContacts = update;
+          });
+          await filterUsers();
+        });
 
-    allNonDirectGroupsSub = twonlyDB.groupsDao
-        .watchGroupsForStartNewChat()
-        .listen((update) async {
+    allNonDirectGroupsSub =
+        watchRustDatabase(
+          (control) => rust_groups.watchGroups(
+            input: const db_groups.GroupQuery(
+              filter: db_groups.GroupFilter.startNewChat,
+            ),
+            control: control,
+          ),
+        ).listen((
+          update,
+        ) async {
           setState(() {
             allNonDirectGroups = update;
           });
@@ -98,17 +124,31 @@ class _StartNewChatView extends State<StartNewChatView> {
   }
 
   Future<void> _onTapUser(Contact user) async {
-    var directChat = await twonlyDB.groupsDao.getDirectChat(user.userId);
-    if (directChat == null) {
-      await twonlyDB.groupsDao.createNewDirectChat(
-        user.userId,
-        GroupsCompanion(
-          groupName: Value(
-            getContactDisplayName(user),
+    var directChat = await rust_groups
+        .listGroups(
+          input: db_groups.GroupQuery(
+            filter: db_groups.GroupFilter.directContact,
+            contactId: user.userId,
           ),
-        ),
+          transaction: currentDatabaseSession(),
+        )
+        .then((rows) => rows.isEmpty ? null : rows.single);
+    if (directChat == null) {
+      await rust_groups.createDirectGroup(
+        contact: user.userId,
+        ownId: userService.currentUser.userId,
+        patch: GroupPatch(groupName: getContactDisplayName(user)),
+        transaction: currentDatabaseSession(),
       );
-      directChat = await twonlyDB.groupsDao.getDirectChat(user.userId);
+      directChat = await rust_groups
+          .listGroups(
+            input: db_groups.GroupQuery(
+              filter: db_groups.GroupFilter.directContact,
+              contactId: user.userId,
+            ),
+            transaction: currentDatabaseSession(),
+          )
+          .then((rows) => rows.isEmpty ? null : rows.single);
     }
     if (!mounted) return;
     await Navigator.pushReplacement(

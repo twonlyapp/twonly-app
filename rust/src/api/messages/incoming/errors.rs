@@ -5,7 +5,7 @@
 
 use crate::api::proto::client::encrypted_content;
 use crate::context::Context;
-use crate::database::app::tables::UpdateContact;
+use crate::database::app::contacts::table::UpdateContact;
 use crate::error::Result;
 use crate::services::groups::GroupService;
 use encrypted_content::error_messages::Type;
@@ -13,13 +13,11 @@ use sqlx::{Sqlite, Transaction};
 use std::sync::Arc;
 
 pub(crate) async fn handle_error_message(
-    ctx: &Arc<Context>,
-    t: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    group_id: Option<&str>,
+    ctx: &Arc<Context>, t: &mut Transaction<'_, Sqlite>, from_user_id: i64, group_id: Option<&str>,
     error: encrypted_content::ErrorMessages,
 ) -> Result<()> {
     let error_type = Type::try_from(error.r#type)?;
+
     tracing::warn!(?error_type, from_user_id, "received client error message");
 
     match error_type {
@@ -53,9 +51,12 @@ pub(crate) async fn handle_error_message(
                 // The repair refreshes the group from the server and owns its
                 // own transaction, so it has to run once this one commits.
                 let ctx = ctx.clone();
+
                 let group_id = group_id.to_owned();
+
                 let related_receipt_id = error.related_receipt_id;
-                tokio::spawn(async move {
+
+                crate::database::lifecycle::spawn(async move {
                     if let Err(error) = GroupService::new(&ctx)
                         .handle_membership_error(from_user_id, group_id, related_receipt_id)
                         .await
@@ -67,5 +68,6 @@ pub(crate) async fn handle_error_message(
         }
         Type::SessionOutOfSync | Type::UnknownMessageType => {}
     }
+
     Ok(())
 }

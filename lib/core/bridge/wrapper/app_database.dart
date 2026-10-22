@@ -5,6 +5,7 @@
 
 import '../../database/app.dart';
 import '../../frb_generated.dart';
+import '../database.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 class LegacyMigrationReport {
@@ -62,8 +63,10 @@ class RustAppDatabase {
   /// An empty list means "assume every table changed". It is sent right
   /// after (re)subscribing, and whenever the broadcast channel drops
   /// notifications, so Dart never silently keeps stale rows on screen.
-  static Stream<List<String>> changes() => RustLib.instance.api
-      .crateBridgeWrapperAppDatabaseRustAppDatabaseChanges();
+  static Stream<List<String>> changes({required DatabaseWatch control}) =>
+      RustLib.instance.api.crateBridgeWrapperAppDatabaseRustAppDatabaseChanges(
+        control: control,
+      );
 
   static Future<SqlExecutionResult> execute({
     required String statement,
@@ -74,11 +77,22 @@ class RustAppDatabase {
         arguments: arguments,
       );
 
+  static Future<SqlExecutionResult> executeInSession({
+    required String statement,
+    required List<SqlValue> arguments,
+    required DatabaseSession session,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperAppDatabaseRustAppDatabaseExecuteInSession(
+        statement: statement,
+        arguments: arguments,
+        session: session,
+      );
+
   static Future<bool> legacyImportComplete() => RustLib.instance.api
       .crateBridgeWrapperAppDatabaseRustAppDatabaseLegacyImportComplete();
 
-  /// Imports the non-Signal tables from a Drift v25 database. The import is
-  /// transactional and idempotent. Drift must be closed while this runs.
+  /// Upgrades the historical database with frozen Rust-owned SQL, closes it,
+  /// then transactionally imports its application tables. Safe to retry.
   static Future<LegacyMigrationReport> migrateLegacyDatabase() => RustLib
       .instance
       .api
@@ -91,6 +105,19 @@ class RustAppDatabase {
     statement: statement,
     arguments: arguments,
   );
+
+  /// Raw SQL is retained for the historical oracle and bridge assertions.
+  /// Production commands use the typed database modules.
+  static Future<SqlRows> selectInSession({
+    required String statement,
+    required List<SqlValue> arguments,
+    required DatabaseSession session,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperAppDatabaseRustAppDatabaseSelectInSession(
+        statement: statement,
+        arguments: arguments,
+        session: session,
+      );
 
   @override
   int get hashCode => 0;

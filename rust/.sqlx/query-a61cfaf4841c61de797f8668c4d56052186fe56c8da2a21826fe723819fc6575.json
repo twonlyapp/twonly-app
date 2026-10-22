@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT message_id AS \"message_id!\",\n                contact_id AS \"contact_id!\",\n                type AS \"type!\",\n                action_at AS \"action_at!\"\n            FROM message_actions\n            WHERE message_id = ?\n            ORDER BY rowid\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "message_actions",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "message_actions",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "type!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "message_actions",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "action_at!",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "message_actions",
+            "name": "action_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a61cfaf4841c61de797f8668c4d56052186fe56c8da2a21826fe723819fc6575"
+}

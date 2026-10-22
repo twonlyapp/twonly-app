@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE groups\n            SET deleted_content = 1,\n                archived = 0,\n                pinned = 0,\n                draft_message = NULL\n            WHERE group_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "afadb5adaa7bef22aebc32396d8a45ae09d694b145cc94c06171639d86886515"
+}

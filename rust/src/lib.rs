@@ -9,7 +9,9 @@ pub mod bridge;
 pub mod context;
 pub mod database;
 mod error;
+
 pub use error::TwonlyError;
+
 mod frb_generated;
 mod keys;
 pub mod log;

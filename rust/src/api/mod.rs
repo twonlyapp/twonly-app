@@ -11,4 +11,5 @@ pub(super) mod server;
 
 #[doc(hidden)]
 pub use runtime::ApiRuntime;
-pub use server::{prekeys::PqcPreKeyInput, Server};
+pub use server::prekeys::PqcPreKeyInput;
+pub use server::Server;

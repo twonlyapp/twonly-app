@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logging/logging.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/intent/links.intent.dart';
 
 void main() {

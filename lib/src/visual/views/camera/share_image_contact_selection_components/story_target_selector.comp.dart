@@ -3,9 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show Int64List;
+import 'package:twonly/core/bridge/database/contact_groups.dart'
+    as rust_contact_groups;
 import 'package:twonly/core/bridge/stories.dart' as stories;
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/contact_groups/table.dart'
+    as db_contact_groups;
+import 'package:twonly/core/database/app/contact_groups/table.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/headline.element.dart';
 import 'package:twonly/src/visual/elements/my_chip.element.dart';
@@ -69,19 +73,25 @@ class _StoryTargetSelectorState extends State<StoryTargetSelector> {
   @override
   void initState() {
     super.initState();
-    _subscription = twonlyDB.contactGroupsDao.watchStoryContactGroups().listen((
-      contactGroups,
-    ) {
-      if (!mounted) return;
-      // A group that stopped sharing stories cannot stay selected.
-      final ids = contactGroups.map((group) => group.id).toSet();
-      final before = widget.target.contactGroupIds.length;
-      widget.target.contactGroupIds.retainAll(ids);
-      setState(
-        () => _contactGroups = inFirstSeenOrder(contactGroups, _order),
-      );
-      if (before != widget.target.contactGroupIds.length) _changed();
-    });
+    _subscription =
+        watchRustDatabase(
+          (control) => rust_contact_groups.watchContactGroups(
+            filter: db_contact_groups.ContactGroupFilter.stories,
+            control: control,
+          ),
+        ).listen((
+          contactGroups,
+        ) {
+          if (!mounted) return;
+          // A group that stopped sharing stories cannot stay selected.
+          final ids = contactGroups.map((group) => group.id).toSet();
+          final before = widget.target.contactGroupIds.length;
+          widget.target.contactGroupIds.retainAll(ids);
+          setState(
+            () => _contactGroups = inFirstSeenOrder(contactGroups, _order),
+          );
+          if (before != widget.target.contactGroupIds.length) _changed();
+        });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(_updateAudience());

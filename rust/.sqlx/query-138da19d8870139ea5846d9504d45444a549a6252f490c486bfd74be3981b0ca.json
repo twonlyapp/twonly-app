@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO messages(message_id, group_id, sender_id, type, content, opened_at,\n                    ack_by_server, ack_by_user, created_at)\n                VALUES (?, ?, ?, 'text', ?, ?, ?, ?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "138da19d8870139ea5846d9504d45444a549a6252f490c486bfd74be3981b0ca"
+}

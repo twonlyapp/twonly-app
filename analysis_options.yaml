@@ -24,7 +24,6 @@ analyzer:
     - "dependencies/**"
     - "pubspec.yaml"
     - "**.arb"
-    - "test/drift/**"
     - "**.g.dart"
     - build/**
     - android/**

@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT announced_user_id AS \"announced_user_id!\",\n                from_contact_id AS \"from_contact_id!\",\n                public_key_verified_timestamp AS \"public_key_verified_timestamp?\"\n            FROM user_discovery_user_relations ORDER BY rowid\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "announced_user_id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_user_relations",
+            "name": "announced_user_id"
+          }
+        }
+      },
+      {
+        "name": "from_contact_id!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_user_relations",
+            "name": "from_contact_id"
+          }
+        }
+      },
+      {
+        "name": "public_key_verified_timestamp?",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_user_relations",
+            "name": "public_key_verified_timestamp"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "46ddf08eed06e86ac2846adaf5b1892d70907c4feb55cc8ba984acdbe8cbbdba"
+}

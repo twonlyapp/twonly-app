@@ -20,6 +20,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import io.flutter.plugin.common.MethodChannel
 import eu.twonly.notifications.NotificationTapChannel
+import eu.twonly.notifications.NativeNotificationBridge
 import eu.twonly.webxdc.WebxdcChannel
 import eu.twonly.widget.WidgetRuntimeChannel
 import eu.twonly.location.NativeLocation
@@ -28,6 +29,16 @@ import android.Manifest
 import android.content.pm.PackageManager
 
 class MainActivity : FlutterFragmentActivity() {
+    override fun onStart() {
+        super.onStart()
+        NativeNotificationBridge.setApplicationActive(true)
+    }
+
+    override fun onStop() {
+        NativeNotificationBridge.setApplicationActive(false)
+        super.onStop()
+    }
+
     private val CHANNEL = "eu.twonly/photo_picker"
     private val emojiPaint = Paint()
     private var pendingResult: MethodChannel.Result? = null

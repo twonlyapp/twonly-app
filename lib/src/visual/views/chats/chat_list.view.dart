@@ -3,18 +3,43 @@ import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/core/bridge/database/contact_groups.dart'
+    as rust_contact_groups;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/key_verifications.dart'
+    as rust_key_verifications;
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
+import 'package:twonly/core/bridge/database/stories.dart' as rust_stories;
+import 'package:twonly/core/bridge/database/user_discovery.dart'
+    as rust_user_discovery;
+import 'package:twonly/core/database/app/contact_groups/table.dart';
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/key_verifications/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/reactions/table.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/daos/key_verification.dao.dart';
-import 'package:twonly/src/database/daos/stories.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -45,9 +70,9 @@ class _ChatListViewState extends State<ChatListView>
   StreamSubscription<List<MediaFile>>? _precacheSub;
   StreamSubscription<List<GroupMember>>? _typingMembersSub;
   StreamSubscription<List<(Contact, GroupMember)>>? _groupMembersSub;
-  StreamSubscription<List<Message>>? _unopenedMessagesSub;
-  StreamSubscription<List<(String, Reaction)>>? _reactionsSub;
-  StreamSubscription<List<Message>>? _latestMessagesSub;
+  StreamSubscription<List<StoredMessage>>? _unopenedMessagesSub;
+  StreamSubscription<List<(String, StoredReaction)>>? _reactionsSub;
+  StreamSubscription<List<StoredMessage>>? _latestMessagesSub;
   StreamSubscription<List<MediaFile>>? _chatListMediaSub;
   StreamSubscription<Map<String, VerificationStatus>>? _verificationSub;
   StreamSubscription<List<(int, ContactGroup)>>? _contactGroupsSub;
@@ -64,9 +89,9 @@ class _ChatListViewState extends State<ChatListView>
   Set<String> _typingGroupIds = {};
   List<GroupMember> _typingMembers = [];
   Map<String, List<Contact>> _contactsByGroup = {};
-  Map<String, List<Message>> _unopenedMessagesByGroup = {};
-  Map<String, Reaction> _lastReactionByGroup = {};
-  Map<String, Message> _lastMessageByGroup = {};
+  Map<String, List<StoredMessage>> _unopenedMessagesByGroup = {};
+  Map<String, StoredReaction> _lastReactionByGroup = {};
+  Map<String, StoredMessage> _lastMessageByGroup = {};
   Map<String, MediaFile> _chatListMediaById = {};
   Map<String, VerificationStatus> _verificationByGroup = {};
   Map<int, List<ContactGroup>> _contactGroupsByUser = {};
@@ -100,7 +125,14 @@ class _ChatListViewState extends State<ChatListView>
   }
 
   Future<void> initAsync() async {
-    final stream = twonlyDB.groupsDao.watchGroupsForChatList();
+    final stream = watchRustDatabase(
+      (control) => rust_groups.watchGroups(
+        input: const db_groups.GroupQuery(
+          filter: db_groups.GroupFilter.chatList,
+        ),
+        control: control,
+      ),
+    );
     _contactsSub = stream.listen((groups) {
       if (!mounted) return;
       setState(() {
@@ -113,91 +145,162 @@ class _ChatListViewState extends State<ChatListView>
       });
     });
 
-    _contactsCountSub = twonlyDB.contactsDao.watchAllAcceptedContacts().listen((
-      contacts,
-    ) {
-      if (!mounted) return;
-      _hasContacts.value = contacts.isNotEmpty;
-    });
-
-    _countContactRequestStream = twonlyDB.contactsDao
-        .watchContactsRequestedCount()
-        .listen((update) {
-          if (update != null) {
-            if (!mounted) return;
-            _countContactRequest = update;
-            _badgeCount.value = _countAnnouncedUsers + _countContactRequest;
-          }
+    _contactsCountSub =
+        watchRustDatabase(
+          (control) => rust_contacts.watchContacts(
+            input: db_contacts.ContactQuery(
+              filter: db_contacts.ContactFilter.accepted,
+              ids: Int64List(0),
+            ),
+            control: control,
+          ),
+        ).listen((
+          contacts,
+        ) {
+          if (!mounted) return;
+          _hasContacts.value = contacts.isNotEmpty;
         });
 
-    _countAnnouncedStream = twonlyDB.userDiscoveryDao
-        .watchNewAnnouncementsWithDataCount()
-        .listen((update) {
+    _countContactRequestStream =
+        watchRustDatabase(
+          (control) => rust_contacts.watchContactsCount(
+            metric: db_contacts.ContactCount.requested,
+            control: control,
+          ),
+        ).listen((update) {
+          if (!mounted) return;
+          _countContactRequest = update;
+          _badgeCount.value = _countAnnouncedUsers + _countContactRequest;
+        });
+
+    _countAnnouncedStream =
+        restartDatabaseWatch(
+          () => watchRustDatabase(
+            (control) => rust_user_discovery.watchDiscoveryCount(
+              threshold: userService.currentUser.userDiscoveryThreshold,
+              control: control,
+            ),
+          ),
+          userService.onUserUpdated,
+        ).listen((update) {
           if (!mounted) return;
           _countAnnouncedUsers = update;
           _badgeCount.value = _countAnnouncedUsers + _countContactRequest;
         });
 
-    _precacheSub = twonlyDB.messagesDao.watchUnopenedMediaFiles().listen((
-      mediaFiles,
-    ) {
-      if (!mounted) return;
-      for (final media in mediaFiles) {
-        if (!_precachedMediaIds.contains(media.mediaId)) {
-          _precachedMediaIds.add(media.mediaId);
-          final fileService = MediaFileService(media);
-          if (fileService.tempPath.existsSync()) {
-            precacheImage(
-              FileImage(fileService.tempPath),
-              context,
-            ).catchError((Object e, StackTrace st) {
-              Log.error('Failed to precache image in ChatListView: $e\n$st');
-            });
+    _precacheSub =
+        watchRustDatabase(
+          (control) => rust_messages
+              .watchUnopenedMedia(control: control)
+              .map(orderedMediaFiles),
+        ).listen((
+          mediaFiles,
+        ) {
+          if (!mounted) return;
+          for (final media in mediaFiles) {
+            if (!_precachedMediaIds.contains(media.mediaId)) {
+              _precachedMediaIds.add(media.mediaId);
+              final fileService = MediaFileService(media);
+              if (fileService.tempPath.existsSync()) {
+                precacheImage(
+                  FileImage(fileService.tempPath),
+                  context,
+                ).catchError((Object e, StackTrace st) {
+                  Log.error(
+                    'Failed to precache image in ChatListView: $e\n$st',
+                  );
+                });
+              }
+            }
           }
-        }
-      }
-    });
+        });
 
-    _typingMembersSub = twonlyDB.groupsDao.watchTypingGroupMembers().listen((
-      members,
-    ) {
-      if (!mounted) return;
-      _typingMembers = members;
-      _updateTypingGroupIds();
-    });
+    _typingMembersSub =
+        watchRustDatabase(
+          (control) => rust_groups.watchGroupMembers(
+            input: const db_groups.GroupMembersQuery(
+              typingOnly: true,
+            ),
+            control: control,
+          ),
+        ).listen((
+          members,
+        ) {
+          if (!mounted) return;
+          _typingMembers = members;
+          _updateTypingGroupIds();
+        });
     _typingUpdateTimer = Timer.periodic(
       const Duration(seconds: 1),
       (_) => _updateTypingGroupIds(),
     );
-    _groupMembersSub = twonlyDB.groupsDao.watchAllGroupMembers().listen((rows) {
-      if (!mounted) return;
-      final contactsByGroup = <String, List<Contact>>{};
-      for (final row in rows) {
-        contactsByGroup.putIfAbsent(row.$2.groupId, () => []).add(row.$1);
-      }
-      setState(() => _contactsByGroup = contactsByGroup);
-    });
-    _unopenedMessagesSub = twonlyDB.messagesDao
-        .watchAllMessagesNotOpened()
-        .listen((messages) {
+    _groupMembersSub =
+        watchRustDatabase(
+          (control) => rust_groups
+              .watchGroupContacts(
+                input: const db_groups.GroupMembersQuery(
+                  orderForChats: true,
+                ),
+                control: control,
+              )
+              .map(joinedGroupContacts),
+        ).listen((rows) {
           if (!mounted) return;
-          final byGroup = <String, List<Message>>{};
+          final contactsByGroup = <String, List<Contact>>{};
+          for (final row in rows) {
+            contactsByGroup.putIfAbsent(row.$2.groupId, () => []).add(row.$1);
+          }
+          setState(() => _contactsByGroup = contactsByGroup);
+        });
+    _unopenedMessagesSub =
+        watchRustDatabase(
+          (control) => rust_messages.watchMessages(
+            input: db_messages.MessageQuery(
+              filter: db_messages.MessageFilter.unopened,
+              nowMs: clock.now().millisecondsSinceEpoch,
+            ),
+            control: control,
+          ),
+        ).listen((
+          messages,
+        ) {
+          if (!mounted) return;
+          final byGroup = <String, List<StoredMessage>>{};
           for (final message in messages) {
             byGroup.putIfAbsent(message.groupId, () => []).add(message);
           }
           setState(() => _unopenedMessagesByGroup = byGroup);
         });
-    _reactionsSub = twonlyDB.reactionsDao.watchLatestReactionsByGroup().listen((
-      rows,
-    ) {
-      if (!mounted) return;
-      setState(
-        () => _lastReactionByGroup = {for (final row in rows) row.$1: row.$2},
-      );
-    });
-    _latestMessagesSub = twonlyDB.messagesDao
-        .watchLatestMessagesByGroup()
-        .listen((messages) {
+    _reactionsSub =
+        watchRustDatabase(
+          (control) => rust_reactions
+              .watchLatestGroupReactions(control: control)
+              .map(
+                (rows) => rows
+                    .map((row) => (row.groupId, row.reaction))
+                    .toList(growable: false),
+              ),
+        ).listen((
+          rows,
+        ) {
+          if (!mounted) return;
+          setState(
+            () =>
+                _lastReactionByGroup = {for (final row in rows) row.$1: row.$2},
+          );
+        });
+    _latestMessagesSub =
+        watchRustDatabase(
+          (control) => rust_messages.watchMessages(
+            input: db_messages.MessageQuery(
+              filter: db_messages.MessageFilter.latestByGroup,
+              nowMs: clock.now().millisecondsSinceEpoch,
+            ),
+            control: control,
+          ),
+        ).listen((
+          messages,
+        ) {
           if (!mounted) return;
           setState(
             () => _lastMessageByGroup = {
@@ -205,25 +308,52 @@ class _ChatListViewState extends State<ChatListView>
             },
           );
         });
-    _chatListMediaSub = twonlyDB.mediaFilesDao.watchChatListMediaFiles().listen(
-      (mediaFiles) {
-        if (!mounted) return;
-        setState(
-          () => _chatListMediaById = {
-            for (final mediaFile in mediaFiles) mediaFile.mediaId: mediaFile,
+    _chatListMediaSub =
+        watchRustDatabase(
+          (control) => rust_mediafiles
+              .watchMediaFiles(
+                input: const db_mediafiles.MediaQuery(
+                  filter: db_mediafiles.MediaFilter.chatList,
+                ),
+                control: control,
+              )
+              .map(orderedMediaFiles),
+        ).listen(
+          (mediaFiles) {
+            if (!mounted) return;
+            setState(
+              () => _chatListMediaById = {
+                for (final mediaFile in mediaFiles)
+                  mediaFile.mediaId: mediaFile,
+              },
+            );
           },
         );
-      },
-    );
-    _verificationSub = twonlyDB.keyVerificationDao
-        .watchAllGroupsVerificationStatus()
-        .listen((statuses) {
-          if (!mounted) return;
-          setState(() => _verificationByGroup = statuses);
-        });
-    _contactGroupsSub = twonlyDB.contactGroupsDao
-        .watchAllVisibleUserGroups()
-        .listen((
+    _verificationSub =
+        watchRustDatabase(
+              (control) => rust_key_verifications.watchGroupsVerification(
+                control: control,
+              ),
+            )
+            .map((rows) => {for (final row in rows) row.groupId: row.status})
+            .listen((statuses) {
+              if (!mounted) return;
+              setState(() => _verificationByGroup = statuses);
+            });
+    _contactGroupsSub =
+        watchRustDatabase(
+          (control) => rust_contact_groups
+              .watchContactGroupLabels(forUsers: true, control: control)
+              .map((labels) {
+                final groups = {
+                  for (final group in labels.groups) group.id: group,
+                };
+                return [
+                  for (final member in labels.members)
+                    (member.userId!, groups[member.contactGroupId]!),
+                ];
+              }),
+        ).listen((
           rows,
         ) {
           if (!mounted) return;
@@ -233,30 +363,63 @@ class _ChatListViewState extends State<ChatListView>
           }
           setState(() => _contactGroupsByUser = contactGroups);
         });
-    _chatContactGroupsSub = twonlyDB.contactGroupsDao
-        .watchAllVisibleChatGroups()
-        .listen((rows) {
+    _chatContactGroupsSub =
+        watchRustDatabase(
+          (control) => rust_contact_groups
+              .watchContactGroupLabels(forUsers: false, control: control)
+              .map((labels) {
+                final groups = {
+                  for (final group in labels.groups) group.id: group,
+                };
+                return [
+                  for (final member in labels.members)
+                    (member.groupId!, groups[member.contactGroupId]!),
+                ];
+              }),
+        ).listen(
+          (rows) {
+            if (!mounted) return;
+            final contactGroups = <String, List<ContactGroup>>{};
+            for (final row in rows) {
+              contactGroups.putIfAbsent(row.$1, () => []).add(row.$2);
+            }
+            setState(() => _contactGroupsByGroup = contactGroups);
+          },
+        );
+    _storiesSub =
+        (() {
+          final cutoff =
+              clock.now().subtract(storyLifetime).millisecondsSinceEpoch ~/
+              1000;
+          return watchRustDatabase(
+            (control) => rust_stories
+                .watchReceivedStories(cutoff: cutoff, control: control)
+                .map(receivedStoryItems),
+          );
+        })().listen((items) {
           if (!mounted) return;
-          final contactGroups = <String, List<ContactGroup>>{};
-          for (final row in rows) {
-            contactGroups.putIfAbsent(row.$1, () => []).add(row.$2);
+          final byGroup = <String, List<StoryItem>>{};
+          for (final item in items) {
+            byGroup.putIfAbsent(item.message.groupId, () => []).add(item);
           }
-          setState(() => _contactGroupsByGroup = contactGroups);
+          setState(() => _storiesByGroup = byGroup);
+          _scheduleReceivedStoryExpiry();
         });
-    _storiesSub = twonlyDB.storiesDao.watchReceivedStoryItems().listen((items) {
-      if (!mounted) return;
-      final byGroup = <String, List<StoryItem>>{};
-      for (final item in items) {
-        byGroup.putIfAbsent(item.message.groupId, () => []).add(item);
-      }
-      setState(() => _storiesByGroup = byGroup);
-      _scheduleReceivedStoryExpiry();
-    });
-    _ownStoriesSub = twonlyDB.storiesDao.watchOwnStoryItems().listen((items) {
-      if (!mounted) return;
-      setState(() => _ownStories = items);
-      _scheduleOwnStoryExpiry();
-    });
+    _ownStoriesSub =
+        (() {
+          final cutoff =
+              clock.now().subtract(storyLifetime).millisecondsSinceEpoch ~/
+              1000;
+          return watchRustDatabase(
+            (control) => rust_stories
+                .watchOwnStories(cutoff: cutoff, control: control)
+                .map(ownStoryItems),
+          );
+        })().listen((items) {
+          if (!mounted) return;
+          setState(() => _ownStories = items);
+          _scheduleOwnStoryExpiry();
+        });
   }
 
   List<OwnStoryItem> get _activeOwnStories {
@@ -384,7 +547,7 @@ class _ChatListViewState extends State<ChatListView>
   Map<String, MediaFile> _mediaForGroup(String groupId) {
     final mediaIds = <String>{
       for (final message
-          in _unopenedMessagesByGroup[groupId] ?? const <Message>[])
+          in _unopenedMessagesByGroup[groupId] ?? const <StoredMessage>[])
         if (message.mediaId != null) message.mediaId!,
       if (_lastMessageByGroup[groupId]?.mediaId != null)
         _lastMessageByGroup[groupId]!.mediaId!,

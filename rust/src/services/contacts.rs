@@ -10,7 +10,8 @@ use crate::api::proto::server_to_client;
 use crate::api::Server;
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
-use crate::database::app::tables::{Contact, Group, UpdateContact};
+use crate::database::app::contacts::table::{Contact, UpdateContact};
+use crate::database::app::groups::native::Group;
 use crate::error::{Result, TwonlyError};
 use crate::signal::engine::FrbPreKeyBundle;
 use crate::user_config::UserConfig;
@@ -40,7 +41,9 @@ impl ContactService {
         self.process_user_prekey_bundle(&user).await?;
 
         let database = self.ctx.app_db.read().await.clone();
+
         let mut transaction = database.pool.begin().await?;
+
         UpdateContact::builder()
             .user_id(user.user_id)
             .username(username)
@@ -51,6 +54,7 @@ impl ContactService {
             .build()
             .insert_on_conflict_update(&mut transaction)
             .await?;
+
         if let Some(joined_at) = user.joined_at {
             sqlx::query("UPDATE contacts SET joined_at = ? WHERE user_id = ?")
                 .bind(joined_at)
@@ -58,6 +62,7 @@ impl ContactService {
                 .execute(&mut *transaction)
                 .await?;
         }
+
         transaction.commit().await?;
 
         self.send_contact_request(
@@ -72,8 +77,10 @@ impl ContactService {
     ///
     /// A session built from an inbound prekey message is enough to encrypt for
     /// the peer, even when the server holds no prekey bundle for them.
+
     pub(crate) async fn has_v2_session(&self, user_id: i64) -> Result<bool> {
         let rust_database = self.ctx.rust_db.read().await.clone();
+
         Ok(sqlx::query_scalar!(
             "SELECT EXISTS(SELECT 1 FROM signal_sessions WHERE name = ? AND device_id = 1)",
             user_id.to_string(),
@@ -84,9 +91,7 @@ impl ContactService {
     }
 
     pub(crate) async fn establish_signal_session(
-        &self,
-        user_id: i64,
-        expected_public_key: Option<Vec<u8>>,
+        &self, user_id: i64, expected_public_key: Option<Vec<u8>>,
     ) -> Result<()> {
         let user = match Server::get_user_by_id(&self.ctx, user_id).await? {
             ServerResult::Ok(user) => user,
@@ -97,6 +102,7 @@ impl ContactService {
                 if code == crate::api::proto::error::ErrorCode::UserIdNotFound as i32 {
                     return Err(TwonlyError::PeerAccountDeleted(user_id));
                 }
+
                 return Err(TwonlyError::Generic(format!(
                     "Could not load prekey bundle for user {user_id}: server error {code}"
                 )));
@@ -108,6 +114,7 @@ impl ContactService {
                 .public_identity_key
                 .as_ref()
                 .ok_or(TwonlyError::ApiResponseMissingField("public_identity_key"))?;
+
             if server_key != &expected_key {
                 return Err(TwonlyError::Generic(format!(
                     "Public identity key mismatch for user {user_id}"
@@ -118,29 +125,29 @@ impl ContactService {
         self.process_user_prekey_bundle(&user).await?;
 
         let database = self.ctx.app_db.read().await.clone();
+
         // The server answered with a bundle, so a previous `UserIdNotFound`
         // (or a manual mark) must not keep the contact blocked.
         sqlx::query(
-            "UPDATE contacts SET signal_version = 'v2', account_deleted = 0, \
-             joined_at = COALESCE(?, joined_at) WHERE user_id = ?",
+            "UPDATE contacts SET signal_version = 'v2', account_deleted = 0, joined_at = \
+             COALESCE(?, joined_at) WHERE user_id = ?",
         )
         .bind(user.joined_at)
         .bind(user_id)
         .execute(&database.pool)
         .await?;
+
         release_deferred_receipts(&database, user_id).await?;
 
         Ok(())
     }
 
     pub(crate) async fn request_by_id(
-        &self,
-        user_id: i64,
-        expected_public_key: Vec<u8>,
-        blocking: bool,
+        &self, user_id: i64, expected_public_key: Vec<u8>, blocking: bool,
     ) -> Result<()> {
         self.establish_signal_session(user_id, Some(expected_public_key))
             .await?;
+
         self.send_contact_request(
             user_id,
             encrypted_content::contact_request::Type::Request,
@@ -150,14 +157,15 @@ impl ContactService {
     }
 
     async fn process_user_prekey_bundle(
-        &self,
-        user: &server_to_client::response::UserData,
+        &self, user: &server_to_client::response::UserData,
     ) -> Result<()> {
         let missing = TwonlyError::ApiResponseMissingField;
+
         let pqc_bundle = user
             .pqc_bundle
             .as_ref()
             .ok_or(TwonlyError::PeerHasNoPrekeyBundle(user.user_id))?;
+
         let identity_key = user
             .public_identity_key
             .clone()
@@ -176,6 +184,7 @@ impl ContactService {
                 )
             } else {
                 let prekey = user.prekeys.first();
+
                 (
                     prekey.map(|value| value.id as u32),
                     prekey.map(|value| value.prekey.clone()),
@@ -209,12 +218,15 @@ impl ContactService {
                 },
             )
             .await?;
+
         Ok(())
     }
 
     pub async fn accept_request(&self, contact_id: i64, blocking: bool) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
+
         let mut transaction = database.pool.begin().await?;
+
         let contact = Contact::get_contact_by_id(&mut transaction, contact_id)
             .await?
             .ok_or_else(|| TwonlyError::Generic("contact request does not exist".into()))?;
@@ -236,6 +248,7 @@ impl ContactService {
             .await?;
 
         Group::create_direct_chat(&self.ctx, &mut transaction, contact).await?;
+
         transaction.commit().await?;
 
         self.send_contact_request(
@@ -290,7 +303,9 @@ impl ContactService {
             .map(|avatar| {
                 let mut encoder =
                     flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+
                 encoder.write_all(avatar.as_bytes())?;
+
                 encoder.finish()
             })
             .transpose()?;
@@ -319,9 +334,7 @@ impl ContactService {
     }
 
     async fn send_contact_request(
-        &self,
-        contact_id: i64,
-        request_type: encrypted_content::contact_request::Type,
+        &self, contact_id: i64, request_type: encrypted_content::contact_request::Type,
         blocking: bool,
     ) -> Result<()> {
         // Recorded here rather than at the call sites so no path can send a
@@ -329,13 +342,16 @@ impl ContactService {
         // from an unsolicited one.
         if request_type == encrypted_content::contact_request::Type::Request {
             let database = self.ctx.app_db.read().await.clone();
+
             let mut transaction = database.pool.begin().await?;
+
             UpdateContact::builder()
                 .user_id(contact_id)
                 .requested_by_user(true)
                 .build()
                 .update(&mut transaction)
                 .await?;
+
             transaction.commit().await?;
         }
 
@@ -354,6 +370,7 @@ impl ContactService {
             .blocking(blocking)
             .call()
             .await?;
+
         Ok(())
     }
 }

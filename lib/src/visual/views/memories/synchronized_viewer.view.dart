@@ -1,14 +1,21 @@
 import 'dart:math';
-import 'package:drift/drift.dart' show Value;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
@@ -133,9 +140,10 @@ class _SynchronizedImageViewerScreenState
       }
     });
 
-    await twonlyDB.mediaFilesDao.updateMedia(
-      mediaId,
-      MediaFilesCompanion(isFavorite: Value(isFavoriteNow)),
+    await rust_mediafiles.updateMediaFiles(
+      id: mediaId,
+      patch: MediaFilePatch(isFavorite: isFavoriteNow),
+      transaction: currentDatabaseSession(),
     );
   }
 
@@ -275,7 +283,17 @@ class _SynchronizedImageViewerScreenState
       showDragHandle: true,
       isScrollControlled: true,
       builder: (_) => StreamBuilder<MediaFile?>(
-        stream: twonlyDB.mediaFilesDao.watchMedia(media.mediaFile.mediaId),
+        stream: watchRustDatabase(
+          (control) => rust_mediafiles
+              .watchMediaFiles(
+                input: db_mediafiles.MediaQuery(
+                  filter: db_mediafiles.MediaFilter.ids,
+                  ids: [media.mediaFile.mediaId].toList(),
+                ),
+                control: control,
+              )
+              .map(orderedMediaFiles),
+        ).map((rows) => rows.isEmpty ? null : rows.single),
         initialData: media.mediaFile,
         builder: (_, snapshot) =>
             MemoryDetailsSheet(media: snapshot.data ?? media.mediaFile),

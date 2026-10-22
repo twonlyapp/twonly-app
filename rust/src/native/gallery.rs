@@ -14,12 +14,9 @@ use crate::native::location::LocationFix;
 use std::path::Path;
 
 #[cfg(target_os = "ios")]
+
 pub(crate) fn save(
-    path: &Path,
-    is_video: bool,
-    _name: &str,
-    created_at_millis: i64,
-    location: Option<LocationFix>,
+    path: &Path, is_video: bool, _name: &str, created_at_millis: i64, location: Option<LocationFix>,
 ) -> Result<()> {
     use std::ffi::CString;
     use std::os::raw::c_char;
@@ -29,21 +26,27 @@ pub(crate) fn save(
 
     let path = CString::new(path.as_os_str().as_encoded_bytes())
         .map_err(|_| TwonlyError::Generic("gallery path contains a NUL byte".into()))?;
+
     let symbol = c"twonly_save_to_gallery";
+
     let callback = unsafe { libc::dlsym(libc::RTLD_DEFAULT, symbol.as_ptr()) };
+
     if callback.is_null() {
         return Err(TwonlyError::Generic(
             "iOS gallery export is unavailable".into(),
         ));
     }
+
     // SAFETY: the Swift @_cdecl declaration has this exact stable C ABI signature.
     let callback: SaveToGallery = unsafe { std::mem::transmute(callback) };
+
     // SAFETY: Swift copies the string before this call returns.
     let fix = location.unwrap_or(LocationFix {
         latitude: 0.0,
         longitude: 0.0,
         accuracy: -1.0,
     });
+
     if unsafe {
         callback(
             path.as_ptr(),
@@ -64,29 +67,32 @@ pub(crate) fn save(
 }
 
 #[cfg(target_os = "android")]
+
 pub(crate) fn save(
-    path: &Path,
-    is_video: bool,
-    name: &str,
-    created_at_millis: i64,
-    location: Option<LocationFix>,
+    path: &Path, is_video: bool, name: &str, created_at_millis: i64, location: Option<LocationFix>,
 ) -> Result<()> {
     use crate::native::transfer::android::{gallery_class, jni_env};
     use jni::objects::{JObject, JValue};
 
     let class = gallery_class()?;
+
     let mut env = jni_env()?;
+
     let string = |value: &str| {
         env.new_string(value)
             .map_err(|error| TwonlyError::Generic(error.to_string()))
     };
+
     let path = JObject::from(string(&path.to_string_lossy())?);
+
     let name = JObject::from(string(name)?);
+
     let fix = location.unwrap_or(LocationFix {
         latitude: 0.0,
         longitude: 0.0,
         accuracy: -1.0,
     });
+
     let call = env
         .call_static_method(
             class,
@@ -104,10 +110,13 @@ pub(crate) fn save(
             ],
         )
         .and_then(|value| value.z());
+
     if env.exception_check().unwrap_or(false) {
         let _ = env.exception_describe();
+
         let _ = env.exception_clear();
     }
+
     if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
         Ok(())
     } else {
@@ -118,11 +127,9 @@ pub(crate) fn save(
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
+
 pub(crate) fn save(
-    _path: &Path,
-    _is_video: bool,
-    _name: &str,
-    _created_at_millis: i64,
+    _path: &Path, _is_video: bool, _name: &str, _created_at_millis: i64,
     _location: Option<LocationFix>,
 ) -> Result<()> {
     Err(TwonlyError::Generic(

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/media_enums.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_details.bottom_sheet.dart';
 
 MediaFile _media({double? latitude, double? longitude, String? status}) =>
     MediaFile(
       mediaId: 'capture',
-      type: MediaType.image,
-      cloudState: CloudState.none,
+      typeName: MediaType.image.name,
+      cloudStateName: CloudState.none.name,
       requiresAuthentication: false,
       stored: true,
       isDraftMedia: false,
@@ -18,7 +19,7 @@ MediaFile _media({double? latitude, double? longitude, String? status}) =>
       hasCropAnalyzed: false,
       hasThumbnail: false,
       galleryExportPending: false,
-      createdAt: DateTime(2026, 10, 9, 14, 35),
+      createdAtSeconds: databaseSeconds(DateTime(2026, 10, 9, 14, 35)),
       sizeInBytes: 1024,
       locationLatitude: latitude,
       locationLongitude: longitude,

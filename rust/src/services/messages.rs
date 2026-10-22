@@ -9,7 +9,8 @@ use crate::api::messages::incoming::messages::{
 use crate::api::messages::outgoing::{decorate_content, send_c2c_message_to_contact};
 use crate::api::proto::client::{self as proto, encrypted_content};
 use crate::context::Context;
-use crate::database::app::tables::{Contact, Group};
+use crate::database::app::contacts::table::Contact;
+use crate::database::app::groups::native::Group;
 use crate::error::{Result, TwonlyError};
 use crate::user_config::UserConfig;
 use prost::Message as _;
@@ -25,23 +26,29 @@ impl MessageService {
     }
 
     pub async fn send_to_group(
-        &self,
-        group_id: String,
-        encrypted_content: Vec<u8>,
-        message_id: Option<String>,
+        &self, group_id: String, encrypted_content: Vec<u8>, message_id: Option<String>,
         only_send_if_no_receipts_are_open: bool,
     ) -> Result<()> {
         let mut content = proto::EncryptedContent::decode(encrypted_content.as_slice())?;
+
         content.group_id = Some(group_id.clone());
+
         let database = self.ctx.app_db.read().await.clone();
+
         if message_id.is_some()
             || content.reaction.is_some()
             || content.media.is_some()
             || content.text_message.is_some()
         {
-            sqlx::query!("UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER), deleted_content = 0 WHERE group_id = ?", group_id)
-                .execute(&database.pool).await?;
+            sqlx::query!(
+                "UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER), \
+                 deleted_content = 0 WHERE group_id = ?",
+                group_id
+            )
+            .execute(&database.pool)
+            .await?;
         }
+
         let members = sqlx::query_scalar!(
             r#"SELECT contact_id FROM group_members
                WHERE group_id = ? AND (member_state IS NULL OR member_state != 'leftGroup')"#,
@@ -49,7 +56,9 @@ impl MessageService {
         )
         .fetch_all(&database.pool)
         .await?;
+
         let bytes = content.encode_to_vec();
+
         for contact_id in members {
             send_c2c_message_to_contact()
                 .ctx(&self.ctx)
@@ -60,6 +69,7 @@ impl MessageService {
                 .call()
                 .await?;
         }
+
         Ok(())
     }
 
@@ -75,24 +85,30 @@ impl MessageService {
     /// message asks user discovery for a version, which needs it initialized,
     /// and initializing it writes through the pool. Callers with a message id
     /// go through [`Self::send_to_group`], which sends outside a transaction.
+
     pub async fn send_to_group_in_transaction(
-        &self,
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
-        group_id: String,
-        encrypted_content: Vec<u8>,
-        message_id: Option<String>,
+        &self, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: String,
+        encrypted_content: Vec<u8>, message_id: Option<String>,
         only_send_if_no_receipts_are_open: bool,
     ) -> Result<()> {
         let mut content = proto::EncryptedContent::decode(encrypted_content.as_slice())?;
+
         content.group_id = Some(group_id.clone());
+
         if message_id.is_some()
             || content.reaction.is_some()
             || content.media.is_some()
             || content.text_message.is_some()
         {
-            sqlx::query!("UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER) WHERE group_id = ?", group_id)
-                .execute(&mut **t).await?;
+            sqlx::query!(
+                "UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER) \
+                 WHERE group_id = ?",
+                group_id
+            )
+            .execute(&mut **t)
+            .await?;
         }
+
         // Members are filtered here rather than in SQL so an excluded one can be
         // named. A member the sender believes has left is absent from every
         // group message, and silently: a membership row the group has moved
@@ -106,6 +122,7 @@ impl MessageService {
         .await?;
 
         let mut members = Vec::with_capacity(rows.len());
+
         for row in rows {
             if row.member_state.as_deref() == Some("leftGroup") {
                 tracing::info!(
@@ -113,8 +130,10 @@ impl MessageService {
                     contact_id = row.contact_id,
                     "not sending to a group member recorded as having left"
                 );
+
                 continue;
             }
+
             members.push(row.contact_id);
         }
 
@@ -125,10 +144,12 @@ impl MessageService {
         );
 
         let bytes = content.encode_to_vec();
+
         let mut receipt_ids = Vec::new();
 
         for contact_id in members {
             let mut contact_content = proto::EncryptedContent::decode(bytes.as_slice())?;
+
             decorate_content(
                 &self.ctx,
                 t,
@@ -145,6 +166,7 @@ impl MessageService {
                 )
                 .fetch_one(&mut **t)
                 .await?;
+
                 if count > 10 {
                     tracing::info!(
                         group_id,
@@ -152,16 +174,20 @@ impl MessageService {
                         open_receipts = count,
                         "not sending to a group member with too many open receipts"
                     );
+
                     continue;
                 }
             }
 
             let mut retry_count = 0_i64;
+
             let mut last_retry = None;
+
             // A resend of a message the server already took has already pushed
             // this member once. The replacement receipt must not ask for a
             // second alert about the same message.
             let mut already_woken = false;
+
             if let Some(msg_id) = &message_id {
                 let previous = sqlx::query!(
                     r#"SELECT COUNT(*) AS "count!: i64", MAX(last_retry) AS last_retry,
@@ -172,9 +198,13 @@ impl MessageService {
                 )
                 .fetch_one(&mut **t)
                 .await?;
+
                 retry_count = previous.count;
+
                 last_retry = previous.last_retry;
+
                 already_woken = previous.acknowledged.is_some();
+
                 sqlx::query!(
                     "DELETE FROM receipts WHERE contact_id = ? AND message_id = ?",
                     contact_id,
@@ -209,12 +239,14 @@ impl MessageService {
         // needed: a committed update can be sent immediately.
         for receipt_id in receipt_ids {
             let ctx = self.ctx.clone();
-            tokio::spawn(async move {
+
+            crate::database::lifecycle::spawn(async move {
                 if let Err(error) = send_queued_receipt(&ctx, &receipt_id).await {
                     tracing::warn!(receipt_id, "queued group message send failed: {error}");
                 }
             });
         }
+
         Ok(())
     }
 
@@ -228,29 +260,31 @@ impl MessageService {
     /// `additional_message_data` records where the text came from when the
     /// sender did not type it -- today, the webxdc app that produced it. It is
     /// stored beside the message so the chat can say so on both devices.
+
     pub async fn insert_and_send_text(
-        &self,
-        group_id: String,
-        text: String,
-        quote_message_id: Option<String>,
-        additional_message_data: Option<Vec<u8>>,
-        message_id: Option<String>,
+        &self, group_id: String, text: String, quote_message_id: Option<String>,
+        additional_message_data: Option<Vec<u8>>, message_id: Option<String>,
         timestamp_ms: Option<i64>,
     ) -> Result<String> {
         if let Some(data) = additional_message_data.as_deref() {
             crate::services::stickers::validate_additional_if_sticker(data)?;
         }
+
         let database = self.ctx.app_db.read().await.clone();
+
         let message_id = message_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+
         let timestamp = timestamp_ms.unwrap_or_else(|| chrono::Utc::now().timestamp_millis());
 
         let mut t = database.pool.begin().await?;
+
         sqlx::query!(
             "UPDATE groups SET draft_message = NULL WHERE group_id = ?",
             group_id
         )
         .execute(&mut *t)
         .await?;
+
         sqlx::query!(
             r#"INSERT INTO messages(group_id, message_id, type, content, quotes_message_id,
                                     additional_message_data, created_at)
@@ -264,7 +298,9 @@ impl MessageService {
         )
         .execute(&mut *t)
         .await?;
+
         Group::record_text_or_media(&mut t, &group_id, timestamp / 1000).await?;
+
         // The commit hook installed on the connection publishes `groups` and
         // `messages` on its own, so the chat list is already on its way.
         t.commit().await?;
@@ -286,8 +322,10 @@ impl MessageService {
         // network send is: the bubble stays unacknowledged until a retry sweep
         // gets it through.
         let ctx = self.ctx.clone();
+
         let sent_message_id = message_id.clone();
-        tokio::spawn(async move {
+
+        crate::database::lifecycle::spawn(async move {
             if let Err(error) = Self::new(&ctx)
                 .send_to_group(group_id, content, Some(sent_message_id.clone()), false)
                 .await
@@ -309,16 +347,16 @@ impl MessageService {
     /// sent: no row is written, so it cannot show up in a chat or be swept up
     /// by the deletion timer, and the receiving side neither notifies nor wakes
     /// for it.
+
     pub async fn insert_and_send_additional_data(
-        &self,
-        group_id: String,
-        message_type: String,
-        additional_data: Vec<u8>,
-        hidden: bool,
+        &self, group_id: String, message_type: String, additional_data: Vec<u8>, hidden: bool,
     ) -> Result<String> {
         let database = self.ctx.app_db.read().await.clone();
+
         let message_id = uuid::Uuid::new_v4().to_string();
+
         let timestamp = chrono::Utc::now().timestamp_millis();
+
         if !hidden {
             sqlx::query!(
                 r#"INSERT INTO messages(group_id, message_id, type, additional_message_data, created_at)
@@ -332,6 +370,7 @@ impl MessageService {
             .execute(&database.pool)
             .await?;
         }
+
         self.send_to_group(
             group_id,
             proto::EncryptedContent {
@@ -358,17 +397,19 @@ impl MessageService {
             false,
         )
         .await?;
+
         Ok(message_id)
     }
 
     pub async fn insert_and_send_contact_share(
-        &self,
-        group_id: String,
-        contact_ids: Vec<i64>,
+        &self, group_id: String, contact_ids: Vec<i64>,
     ) -> Result<String> {
         let app = self.ctx.app_db.read().await.clone();
+
         let signal = self.ctx.rust_db.read().await.clone();
+
         let mut contacts = Vec::new();
+
         for contact_id in contact_ids {
             let contact = sqlx::query!(
                 "SELECT username, display_name FROM contacts WHERE user_id = ?",
@@ -376,16 +417,20 @@ impl MessageService {
             )
             .fetch_optional(&app.pool)
             .await?;
+
             let identity = sqlx::query_scalar!(
                 "SELECT identity_key FROM signal_identities WHERE name = ?",
                 contact_id.to_string()
             )
             .fetch_optional(&signal.pool)
             .await?;
+
             let Some(contact) = contact else {
                 tracing::warn!("skipping unknown contact {contact_id} in contact share");
+
                 continue;
             };
+
             // A contact without a locally known identity key is still worth
             // sharing: the recipient only needs the user id to add them. The
             // key is what lets the recipient inherit the trust edge, so an
@@ -393,17 +438,20 @@ impl MessageService {
             if identity.is_none() {
                 tracing::info!("sharing contact {contact_id} without an identity key");
             }
+
             contacts.push(proto::SharedContact {
                 user_id: contact_id,
                 public_identity_key: identity.unwrap_or_default(),
                 display_name: contact.display_name.unwrap_or(contact.username),
             });
         }
+
         if contacts.is_empty() {
             return Err(TwonlyError::Generic(
                 "none of the selected contacts could be shared".into(),
             ));
         }
+
         let data = proto::AdditionalMessageData {
             r#type: proto::additional_message_data::Type::Contacts as i32,
             link: None,
@@ -419,14 +467,13 @@ impl MessageService {
             live_location: None,
         }
         .encode_to_vec();
+
         self.insert_and_send_additional_data(group_id, "contacts".into(), data, false)
             .await
     }
 
     pub async fn insert_and_send_ask_about_user(
-        &self,
-        contact_id: i64,
-        ask_about_user_id: i64,
+        &self, contact_id: i64, ask_about_user_id: i64,
     ) -> Result<String> {
         let local_user_id = self
             .ctx
@@ -435,14 +482,21 @@ impl MessageService {
             .await
             .user_id
             .ok_or_else(|| TwonlyError::Generic("local user ID is unavailable".into()))?;
+
         let group_id = Group::direct_chat_id(local_user_id, contact_id);
+
         let database = self.ctx.app_db.read().await.clone();
+
         let mut transaction = database.pool.begin().await?;
+
         let contact = Contact::get_contact_by_id(&mut transaction, contact_id)
             .await?
             .ok_or_else(|| TwonlyError::Generic("contact does not exist".into()))?;
+
         Group::create_direct_chat(&self.ctx, &mut transaction, contact).await?;
+
         transaction.commit().await?;
+
         let data = proto::AdditionalMessageData {
             r#type: proto::additional_message_data::Type::AskAboutUser as i32,
             link: None,
@@ -458,6 +512,7 @@ impl MessageService {
             live_location: None,
         }
         .encode_to_vec();
+
         self.insert_and_send_additional_data(group_id, "askAboutUser".into(), data, false)
             .await
     }
@@ -466,6 +521,7 @@ impl MessageService {
         if !UserConfig::load_from(&self.ctx)?.is_some_and(|config| config.typing_indicators) {
             return Ok(());
         }
+
         self.send_to_group(
             group_id,
             proto::EncryptedContent {
@@ -483,10 +539,7 @@ impl MessageService {
     }
 
     pub async fn edit_text(
-        &self,
-        group_id: String,
-        message_id: String,
-        text: String,
+        &self, group_id: String, message_id: String, text: String,
     ) -> Result<()> {
         self.send_to_group(
             group_id,
@@ -508,11 +561,7 @@ impl MessageService {
     }
 
     pub async fn react(
-        &self,
-        group_id: String,
-        message_id: String,
-        emoji: String,
-        remove: bool,
+        &self, group_id: String, message_id: String, emoji: String, remove: bool,
     ) -> Result<()> {
         self.send_to_group(
             group_id,
@@ -555,7 +604,9 @@ impl MessageService {
         if message_ids.is_empty() {
             return Ok(());
         }
+
         let timestamp = chrono::Utc::now().timestamp_millis();
+
         let content = proto::EncryptedContent {
             message_update: Some(encrypted_content::MessageUpdate {
                 r#type: encrypted_content::message_update::Type::Opened as i32,
@@ -566,14 +617,18 @@ impl MessageService {
             }),
             ..Default::default()
         };
+
         send_c2c_message_to_contact()
             .ctx(&self.ctx)
             .contact_id(contact_id)
             .encrypted_content(content.encode_to_vec())
             .call()
             .await?;
+
         let database = self.ctx.app_db.read().await.clone();
+
         let mut transaction = database.pool.begin().await?;
+
         for message_id in &message_ids {
             sqlx::query!(
                 "UPDATE messages SET opened_at = ?, opened_by_all = ? WHERE message_id = ?",
@@ -584,13 +639,16 @@ impl MessageService {
             .execute(&mut *transaction)
             .await?;
         }
+
         crate::services::notifications::clear_opened_messages(
             &mut transaction,
             &message_ids,
             timestamp / 1000,
         )
         .await?;
+
         transaction.commit().await?;
+
         Ok(())
     }
 
@@ -604,23 +662,32 @@ impl MessageService {
 }
 
 #[cfg(test)]
+
 mod pending_text_tests {
+
     use super::*;
 
     #[tokio::test]
+
     async fn persists_the_pending_bubbles_identity_and_timestamp() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx = Context::init_for_testing(
             directory.path().join("database"),
             directory.path().join("data"),
         )
         .await?;
+
         let database = ctx.app_db.read().await.clone();
+
         sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat')")
             .execute(&database.pool)
             .await?;
+
         let id = uuid::Uuid::new_v4().to_string();
+
         let timestamp = 1_790_000_000_000_i64;
+
         let returned_id = MessageService::new(&ctx)
             .insert_and_send_text(
                 "chat".into(),
@@ -631,22 +698,30 @@ mod pending_text_tests {
                 Some(timestamp),
             )
             .await?;
+
         assert_eq!(returned_id, id);
+
         let (stored_id, content, created_at): (String, String, i64) = sqlx::query_as(
             "SELECT message_id, content, created_at FROM messages WHERE group_id = 'chat'",
         )
         .fetch_one(&database.pool)
         .await?;
+
         assert_eq!(stored_id, id);
+
         assert_eq!(content, "Immediate message");
+
         assert_eq!(created_at, timestamp / 1000);
 
         // Existing callers still let Rust allocate the identity and timestamp.
         let generated_id = MessageService::new(&ctx)
             .insert_and_send_text("chat".into(), "Another".into(), None, None, None, None)
             .await?;
+
         assert_ne!(generated_id, id);
+
         assert!(uuid::Uuid::parse_str(&generated_id).is_ok());
+
         Ok(())
     }
 }

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO messages(\n                    message_id, group_id, type, created_at, opened_by_all, is_story, media_stored\n                )\n                VALUES ('expired-message', 'expiry', 'text', 1, 1, 0, 0),\n                    ('current-message', 'expiry', 'text', 1, NULL, 0, 0),\n                    ('expired-story', 'expiry', 'text', 1, NULL, 1, 0),\n                    ('saved-story', 'expiry', 'text', 1, NULL, 1, 1)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "9df1bd905d5425590617cd5c16907b8ac38da6b97550446145316c801c8c7a06"
+}

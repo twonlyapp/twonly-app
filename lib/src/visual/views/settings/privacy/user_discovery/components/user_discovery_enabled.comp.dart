@@ -2,11 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/user_discovery/types.pb.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -32,9 +37,19 @@ class _UserDiscoveryEnabledCompState extends State<UserDiscoveryEnabledComp> {
   @override
   void initState() {
     super.initState();
-    _contactsGettingAnnouncedStream = twonlyDB.contactsDao
-        .watchContactsAnnouncedViaUserDiscovery()
-        .listen((contacts) {
+    _contactsGettingAnnouncedStream =
+        watchRustDatabase(
+          (control) => rust_contacts.watchContacts(
+            input: db_contacts.ContactQuery(
+              filter: db_contacts.ContactFilter.discovery,
+              ids: Int64List(0),
+              requiredSendImages: userService.currentUser.requiredSendImages,
+              manualApproval:
+                  userService.currentUser.userDiscoveryRequiresManualApproval,
+            ),
+            control: control,
+          ),
+        ).listen((contacts) {
           setState(() {
             _contactsGettingAnnounced = contacts;
           });

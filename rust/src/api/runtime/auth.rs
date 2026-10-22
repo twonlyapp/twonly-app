@@ -27,6 +27,7 @@ use tokio::sync::broadcast;
 ///
 /// Not to be confused with `UserConfig::app_version`, which is the local
 /// migration id and stays a purely client side concern.
+
 pub(crate) const APP_VERSION: &str = env!("TWONLY_APP_VERSION");
 
 pub(crate) struct ApiAuthHandshaker {
@@ -41,14 +42,14 @@ impl ApiAuthHandshaker {
     async fn get_identity(&self) -> Result<(Option<i64>, i64, String)> {
         let user = UserConfig::load_from(&self.context)?
             .ok_or_else(|| TwonlyError::Generic("User configuration not found".into()))?;
+
         let device_id = user.device_id;
+
         Ok((Some(user.user_id), device_id, APP_VERSION.to_string()))
     }
 
     async fn request_handshake(
-        &self,
-        sender: &mut dyn HandshakeSender,
-        receiver: &mut dyn HandshakeReceiver,
+        &self, sender: &mut dyn HandshakeSender, receiver: &mut dyn HandshakeReceiver,
         handshake: client_to_server::handshake::Handshake,
     ) -> std::result::Result<server_to_client::response::ok::Ok, HandshakeError> {
         let request = client_to_server::ClientToServer {
@@ -80,6 +81,7 @@ impl ApiAuthHandshaker {
 
         let ok_res =
             decode_ok(bytes.to_vec()).map_err(|e| HandshakeError::Protocol(e.to_string()))?;
+
         let ok = match ok_res {
             ServerResult::Ok(val) => val,
             ServerResult::ErrorCode(code) => {
@@ -91,9 +93,12 @@ impl ApiAuthHandshaker {
                     if let Some(client) = self.api_client.upgrade() {
                         // Closing the socket has to wait for this handshake to
                         // return, so it cannot be awaited from inside it.
-                        tokio::spawn(async move { client.reject_permanently(kind).await });
+                        crate::database::lifecycle::spawn(async move {
+                            client.reject_permanently(kind).await
+                        });
                     }
                 }
+
                 return Err(HandshakeError::Protocol(format!(
                     "Server returned error code: {}",
                     code
@@ -103,20 +108,19 @@ impl ApiAuthHandshaker {
 
         if let server_to_client::response::ok::Ok::Authenticated(authenticated) = &ok {
             persist_plan(&self.context, &authenticated.plan).await;
+
             let _ = self.events.send(ApiEvent {
                 kind: ApiEventKind::PlanUpdated,
                 state: None,
                 message: Some(authenticated.plan.clone()),
             });
         }
+
         Ok(ok)
     }
 
     async fn authenticate_with_login_token(
-        &self,
-        sender: &mut dyn HandshakeSender,
-        receiver: &mut dyn HandshakeReceiver,
-        user_id: i64,
+        &self, sender: &mut dyn HandshakeSender, receiver: &mut dyn HandshakeReceiver, user_id: i64,
     ) -> Result<()> {
         let login_token = self
             .context
@@ -126,7 +130,9 @@ impl ApiAuthHandshaker {
             .main_key
             .get_login_token()
             .to_vec();
+
         let (_, device_id, app_version) = self.get_identity().await?;
+
         let handshake = client_to_server::handshake::Handshake::AuthenticateWithLoginToken(
             client_to_server::handshake::AuthenticateWithLoginToken {
                 user_id,
@@ -137,6 +143,7 @@ impl ApiAuthHandshaker {
                 supports_mailbox_v2: Some(true),
             },
         );
+
         self.request_handshake(sender, receiver, handshake)
             .await
             .map(|_| ())
@@ -144,19 +151,20 @@ impl ApiAuthHandshaker {
     }
 
     async fn authenticate_with_legacy_token(
-        &self,
-        sender: &mut dyn HandshakeSender,
-        receiver: &mut dyn HandshakeReceiver,
-        user_id: i64,
+        &self, sender: &mut dyn HandshakeSender, receiver: &mut dyn HandshakeReceiver, user_id: i64,
     ) -> Result<bool> {
         use base64::Engine as _;
+
         let Some(encoded) = self.context.secure_storage.read("api_auth_token")? else {
             return Ok(false);
         };
+
         let auth_token = base64::engine::general_purpose::STANDARD
             .decode(encoded)
             .map_err(|error| TwonlyError::Generic(format!("invalid stored auth token: {error}")))?;
+
         let (_, device_id, app_version) = self.get_identity().await?;
+
         let handshake = client_to_server::handshake::Handshake::Authenticate(
             client_to_server::handshake::Authenticate {
                 user_id,
@@ -167,6 +175,7 @@ impl ApiAuthHandshaker {
                 supports_mailbox_v2: Some(true),
             },
         );
+
         match self.request_handshake(sender, receiver, handshake).await {
             Ok(_) => Ok(true),
             Err(error) => {
@@ -181,10 +190,7 @@ impl ApiAuthHandshaker {
     }
 
     async fn obtain_legacy_auth_token(
-        &self,
-        sender: &mut dyn HandshakeSender,
-        receiver: &mut dyn HandshakeReceiver,
-        user_id: i64,
+        &self, sender: &mut dyn HandshakeSender, receiver: &mut dyn HandshakeReceiver, user_id: i64,
     ) -> Result<()> {
         use base64::Engine as _;
         use libsignal_protocol::IdentityKeyPair;
@@ -199,11 +205,13 @@ impl ApiAuthHandshaker {
             )
             .await
             .map_err(|e| TwonlyError::Generic(e.to_string()))?;
+
         let server_to_client::response::ok::Ok::Authchallenge(challenge) = challenge else {
             return Err(TwonlyError::Generic(
                 "auth challenge response has unexpected payload".into(),
             ));
         };
+
         let serialized_identity = self
             .context
             .key_manager
@@ -214,13 +222,17 @@ impl ApiAuthHandshaker {
             .ok_or(TwonlyError::SignalIdentityNotFound)?
             .identity_key_pair_structure
             .clone();
+
         let identity = IdentityKeyPair::try_from(serialized_identity.as_slice())
             .map_err(|error| TwonlyError::Signal(error.to_string()))?;
+
         let mut rng = rand::rngs::StdRng::from_os_rng();
+
         let signature = identity
             .private_key()
             .calculate_signature_for_multipart_message(&[challenge.as_slice()], &mut rng)
             .map_err(|error| TwonlyError::Signal(error.to_string()))?;
+
         let token = self
             .request_handshake(
                 sender,
@@ -234,22 +246,23 @@ impl ApiAuthHandshaker {
             )
             .await
             .map_err(|e| TwonlyError::Generic(e.to_string()))?;
+
         let server_to_client::response::ok::Ok::Authtoken(token) = token else {
             return Err(TwonlyError::Generic(
                 "auth-token response has unexpected payload".into(),
             ));
         };
+
         self.context.secure_storage.write(
             "api_auth_token",
             &base64::engine::general_purpose::STANDARD.encode(token),
         )?;
+
         Ok(())
     }
 
     async fn migrate_to_login_token(
-        &self,
-        sender: &mut dyn HandshakeSender,
-        receiver: &mut dyn HandshakeReceiver,
+        &self, sender: &mut dyn HandshakeSender, receiver: &mut dyn HandshakeReceiver,
     ) -> Result<()> {
         let token = self
             .context
@@ -259,9 +272,11 @@ impl ApiAuthHandshaker {
             .main_key
             .get_login_token()
             .to_vec();
+
         let application = client_to_server::application_data::ApplicationData::SetLoginToken(
             client_to_server::application_data::SetLoginToken { login_token: token },
         );
+
         let request = client_to_server::ClientToServer {
             v: Some(client_to_server::client_to_server::V::V0(
                 client_to_server::V0 {
@@ -274,24 +289,30 @@ impl ApiAuthHandshaker {
                 },
             )),
         };
+
         sender
             .send_msg(tungstenite::Message::Binary(request.encode_to_vec().into()))
             .await
             .map_err(|e| TwonlyError::Generic(e.to_string()))?;
+
         let msg = receiver
             .recv_msg()
             .await
             .map_err(|e| TwonlyError::Generic(e.to_string()))?
             .unwrap();
+
         let bytes = match msg {
             tungstenite::Message::Binary(b) => b,
             _ => return Err(TwonlyError::Generic("Expected binary message".into())),
         };
+
         match decode_ok(bytes.to_vec())? {
             ServerResult::Ok(_) => {}
             ServerResult::ErrorCode(code) => return Err(TwonlyError::Api(code)),
         }
+
         self.context.secure_storage.delete("api_auth_token")?;
+
         let _ = self.events.send(ApiEvent {
             kind: ApiEventKind::LoginTokenMigrated,
             state: None,
@@ -305,12 +326,14 @@ impl ApiAuthHandshaker {
         let Some(client) = self.api_client.upgrade() else {
             return;
         };
+
         if !client
             .set_state_for_generation(self.generation, ApiConnectionState::Authenticated)
             .await
         {
             return;
         }
+
         client.request_catch_up().await;
 
         let _ = self.events.send(ApiEvent {
@@ -318,16 +341,16 @@ impl ApiAuthHandshaker {
             state: Some(ApiConnectionState::Authenticated),
             message: None,
         });
+
         schedule_post_authentication(&self.context, self.in_background);
     }
 }
 
 #[async_trait]
+
 impl Handshaker for ApiAuthHandshaker {
     async fn handshake(
-        &self,
-        sender: &mut dyn HandshakeSender,
-        receiver: &mut dyn HandshakeReceiver,
+        &self, sender: &mut dyn HandshakeSender, receiver: &mut dyn HandshakeReceiver,
         _context: &ConnectionContext,
     ) -> std::result::Result<(), HandshakeError> {
         let user = match UserConfig::load_from(&self.context)
@@ -336,6 +359,7 @@ impl Handshaker for ApiAuthHandshaker {
             Some(u) => u,
             None => {
                 tracing::info!("ApiAuthHandshaker skipped: user config is not present");
+
                 return Ok(());
             }
         };
@@ -347,11 +371,15 @@ impl Handshaker for ApiAuthHandshaker {
             .await
             .user_id
             .filter(|user_id| *user_id > 0);
+
         let Some(user_id) = user_id else {
             tracing::info!("ApiAuthHandshaker skipped: KeyManager has no registered user ID");
+
             return Ok(());
         };
+
         let can_use_login_token = user.can_use_login_token_for_auth;
+
         let app_version = user.app_version;
 
         if let Some(client) = self.api_client.upgrade() {
@@ -370,11 +398,14 @@ impl Handshaker for ApiAuthHandshaker {
             {
                 Ok(()) => {
                     tracing::info!("ApiAuthHandshaker: authenticated with login token");
+
                     self.authentication_succeeded().await;
+
                     return Ok(());
                 }
                 Err(error) => {
                     tracing::error!("ApiAuthHandshaker: login token auth failed ({})", error);
+
                     return Err(HandshakeError::Protocol(error.to_string()));
                 }
             }
@@ -385,7 +416,9 @@ impl Handshaker for ApiAuthHandshaker {
                 .unwrap_or(false)
         {
             tracing::info!("ApiAuthHandshaker: authenticated with legacy token");
+
             self.authentication_succeeded().await;
+
             return Ok(());
         }
 
@@ -423,6 +456,7 @@ impl Handshaker for ApiAuthHandshaker {
         }
 
         self.authentication_succeeded().await;
+
         Ok(())
     }
 
@@ -438,6 +472,7 @@ impl Handshaker for ApiAuthHandshaker {
 /// `PurchasesProvider`, which re-reads it on every connection state change and
 /// would otherwise overwrite the plan it was just told about with the `Free`
 /// default.
+
 async fn persist_plan(context: &Context, plan: &str) {
     // A reconnect reports the same plan almost every time, and every write
     // pushes a config update into Flutter, so only changes are worth storing.
@@ -447,43 +482,52 @@ async fn persist_plan(context: &Context, plan: &str) {
     ) {
         return;
     }
+
     let updated = match UserConfig::update(context, |config| {
         config.subscription_plan = plan.to_owned();
     }) {
         Ok(config) => config,
         Err(error) => {
             tracing::warn!("could not persist the subscription plan: {error}");
+
             return;
         }
     };
+
     if let Ok(callbacks) = crate::bridge::callbacks::get_callbacks() {
         (callbacks.api.user_config_changed)(updated).await;
     }
 }
 
 impl ApiClient {
-    // publish_plan method logic moved inside Handshaker temporarily, but ApiClient should still have it if needed.
+    // publish_plan method logic moved inside Handshaker temporarily, but ApiClient
+    // should still have it if needed.
     pub(crate) async fn publish_plan(&self, plan: String) -> Result<()> {
         if let Some(context) = self.context.upgrade() {
             persist_plan(&context, &plan).await;
         }
+
         let _ = self.events.send(ApiEvent {
             kind: ApiEventKind::PlanUpdated,
             state: None,
             message: Some(plan),
         });
+
         Ok(())
     }
 }
 
 #[cfg(test)]
+
 mod tests {
+
     use super::APP_VERSION;
 
     /// The server splits the reported version on '.' and parses every segment
     /// as a number, so a suffix like "0.5.2-beta" would silently be read as
     /// 0.5.0 and could fall below the configured minimum version.
     #[test]
+
     fn app_version_is_a_plain_dotted_version() {
         let segments: Vec<&str> = APP_VERSION.split('.').collect();
 
@@ -491,6 +535,7 @@ mod tests {
             !segments.is_empty() && segments.len() <= 3,
             "unexpected app version {APP_VERSION}"
         );
+
         for segment in segments {
             assert!(
                 segment.parse::<u32>().is_ok(),
@@ -501,8 +546,10 @@ mod tests {
 
     /// Guards the `pubspec.yaml` parsing in `build.rs`.
     #[test]
+
     fn app_version_matches_the_pubspec() {
         let pubspec = std::fs::read_to_string("../pubspec.yaml").expect("read ../pubspec.yaml");
+
         let version = pubspec
             .lines()
             .find_map(|line| line.strip_prefix("version: "))

@@ -6,20 +6,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart' show SharedFile;
 import 'package:provider/provider.dart';
-import 'package:twonly/core/bridge/api.dart' as rust_api;
-import 'package:twonly/core/bridge/stories.dart' as stories;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/intent/links.intent.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
@@ -52,8 +55,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    AppState.isAppInBackground = false;
+    AppState.isAppInBackground =
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
     WidgetsBinding.instance.addObserver(this);
+    unawaited(NativeNotificationService.refreshBadgeCount());
     // This stays subscribed on routes that do not contain a home view, such
     // as settings. The home view consumes the sender after navigation/unlock.
     _widgetLinkSub = AppLinks().uriLinkStream.listen((uri) {
@@ -68,42 +73,28 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       AppState.isAppInBackground = false;
-      twonlyDB.markUpdated();
-      // Serialize pause/resume updates and refresh reachability after a real
-      // background transition before Rust replaces its suspended socket.
-      unawaited(
-        apiService.setBackground(false),
-      );
-      // The notification service extension wrote to the outbox while the app
-      // was suspended, and its Rust change broadcast never reached this
-      // process, so the badge has to be re-read on the way back in.
-      unawaited(NativeNotificationService.refreshBadgeCount());
-      // Home-screen configuration may have changed while the app was away.
-      if (userService.isUserCreated) {
-        unawaited(HomeWidgetService.syncPermissions());
-      }
-      // A story may have expired while the app was away.
-      unawaitedRustCall(stories.purgeExpiredStories(), 'purgeExpiredStories');
+      unawaited(_resumeDatabaseServices());
     } else if (state == AppLifecycleState.paused) {
       AppState.isAppInBackground = true;
       unawaited(
         apiService.setBackground(true),
       );
-      // Anything this session downloaded rewrote the widget manifest, but
-      // WidgetKit still shows the timeline it built earlier. Leaving the app is
-      // the moment the home screen becomes visible again.
-      // Republish names and selectable people changed during this session.
-      if (userService.isUserCreated) {
-        unawaited(HomeWidgetService.refreshManifest());
-      }
     } else if (state == AppLifecycleState.detached) {
-      // Last chance before the engine goes away: hand anything still unsent to
-      // the OS, which delivers it once there is a network again whether or not
-      // this process is ever started back up. A no-op when `paused` already
-      // did it.
-      unawaited(
-        rust_api.RustApi.handOutboxToOs(),
-      );
+      AppState.isAppInBackground = true;
+      unawaited(apiService.setBackground(true));
+    }
+  }
+
+  Future<void> _resumeDatabaseServices() async {
+    // Native resume reopens both pools and rebinds Signal before any badge,
+    // snapshot, widget or expiry query is allowed to run.
+    await apiService.setBackground(false);
+    if (AppState.isAppInBackground) return;
+    unawaited(BackupService.resumePendingBackup());
+    refreshDatabaseSubscriptions();
+    unawaited(NativeNotificationService.refreshBadgeCount());
+    if (userService.isUserCreated) {
+      unawaited(HomeWidgetService.syncPermissions());
     }
   }
 
@@ -244,7 +235,10 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     _showOnboarding = !onboardingState.hasOnboardingFinished;
     if (userService.isUserCreated) {
       if (_initialPage != 0) {
-        final count = await twonlyDB.contactsDao.getContactsCount();
+        final count = await rust_contacts.countContacts(
+          metric: db_contacts.ContactCount.all,
+          transaction: currentDatabaseSession(),
+        );
         if (count == 0) {
           _initialPage = 0;
         }

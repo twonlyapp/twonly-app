@@ -1,11 +1,16 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/key_verifications.dart'
+    as rust_key_verifications;
 import 'package:twonly/core/bridge/wrapper/signal.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/contact_enums.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/verification_success_dialog.comp.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
@@ -39,9 +44,13 @@ class _ManualVerificationViewState extends State<ManualVerificationView> {
     if (_isSaving) return;
     setState(() => _isSaving = true);
 
-    await twonlyDB.keyVerificationDao.addKeyVerification(
-      widget.contact.userId,
-      VerificationType.manual,
+    await rust_key_verifications.changeKeyVerification(
+      contact: widget.contact.userId,
+      kind: VerificationType.manual.name,
+      updateDiscovery: userService.currentUser.isUserDiscoveryEnabled,
+      verifiedAt: clock.now().millisecondsSinceEpoch,
+      callbackId: isolateCallbackId,
+      transaction: currentDatabaseSession(),
     );
 
     if (!mounted) return;
@@ -244,9 +253,9 @@ class _SafetyNumberError extends StatelessWidget {
                 Text(
                   title!,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
               const SizedBox(height: 12),

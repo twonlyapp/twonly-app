@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/app.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/visual/views/camera/camera_qr_scanner.view.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/archived_chats.view.dart';

@@ -2,9 +2,11 @@ import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
+import 'package:twonly/core/bridge/database/stickers.dart' as rust_stickers;
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
@@ -52,7 +54,10 @@ class _StickerPreviewDialogState extends State<_StickerPreviewDialog> {
 
   Future<void> _loadStoredState() async {
     try {
-      final local = await twonlyDB.stickersDao.getByHash(_contentHash);
+      final local = await rust_stickers.getSticker(
+        hash: _contentHash,
+        transaction: currentDatabaseSession(),
+      );
       if (!mounted) return;
       setState(() {
         _stored = local != null;
@@ -75,7 +80,10 @@ class _StickerPreviewDialogState extends State<_StickerPreviewDialog> {
     });
     try {
       if (_stored || widget.collectionOnly) {
-        await twonlyDB.stickersDao.remove(_contentHash);
+        await rust_stickers.removeSticker(
+          hash: _contentHash,
+          transaction: currentDatabaseSession(),
+        );
       } else {
         await StickerService.saveReceived(widget.sticker);
       }

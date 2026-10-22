@@ -1,20 +1,22 @@
 import 'dart:io';
 
-import 'package:drift/drift.dart' hide isNotNull, isNull;
-import 'package:drift/native.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 
+import '../helpers/native_database.dart';
 import '../mocks/platform_channels.dart';
 import '../mocks/user_config.dart';
 
@@ -31,7 +33,6 @@ void main() {
 
   setUpAll(() async {
     Log.init();
-    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     final dylibPath =
         '${Directory.current.path}/rust/target/debug/librust_lib_twonly.dylib';
     if (File(dylibPath).existsSync()) {
@@ -65,10 +66,8 @@ void main() {
       dbFile.deleteSync();
     }
 
+    await TestDatabase.create();
     locator
-      ..registerSingleton<TwonlyDB>(
-        TwonlyDB(NativeDatabase(dbFile)),
-      )
       ..registerSingleton<UserService>(UserService())
       ..registerSingleton<ApiService>(MockApiService());
 
@@ -85,9 +84,7 @@ void main() {
   });
 
   tearDown(() async {
-    try {
-      await twonlyDB.close();
-    } catch (_) {}
+    try {} catch (_) {}
   });
 
   tearDownAll(() async {
@@ -100,11 +97,13 @@ void main() {
 
   group('PasswordlessRecoveryService - enablePasswordlessRecovery', () {
     test('works with SecondFactorType.none', () async {
-      await twonlyDB.contactsDao.insertOnConflictUpdate(
-        ContactsCompanion.insert(userId: const Value(2), username: 'friend_2'),
+      await rust_contacts.upsertContact(
+        patch: const ContactPatch(userId: 2, username: 'friend_2'),
+        transaction: currentDatabaseSession(),
       );
-      await twonlyDB.contactsDao.insertOnConflictUpdate(
-        ContactsCompanion.insert(userId: const Value(3), username: 'friend_3'),
+      await rust_contacts.upsertContact(
+        patch: const ContactPatch(userId: 3, username: 'friend_3'),
+        transaction: currentDatabaseSession(),
       );
 
       final success =
@@ -117,8 +116,14 @@ void main() {
 
       expect(success, isTrue);
 
-      final c2 = await twonlyDB.contactsDao.getContactById(2);
-      final c3 = await twonlyDB.contactsDao.getContactById(3);
+      final c2 = await rust_contacts.getContact(
+        id: 2,
+        transaction: currentDatabaseSession(),
+      );
+      final c3 = await rust_contacts.getContact(
+        id: 3,
+        transaction: currentDatabaseSession(),
+      );
 
       expect(c2?.recoveryIsTrustedFriend, isTrue);
       expect(c3?.recoveryIsTrustedFriend, isTrue);
@@ -129,8 +134,9 @@ void main() {
     });
 
     test('works with SecondFactorType.email', () async {
-      await twonlyDB.contactsDao.insertOnConflictUpdate(
-        ContactsCompanion.insert(userId: const Value(2), username: 'friend_2'),
+      await rust_contacts.upsertContact(
+        patch: const ContactPatch(userId: 2, username: 'friend_2'),
+        transaction: currentDatabaseSession(),
       );
 
       final success =
@@ -143,14 +149,18 @@ void main() {
 
       expect(success, isTrue);
 
-      final c2 = await twonlyDB.contactsDao.getContactById(2);
+      final c2 = await rust_contacts.getContact(
+        id: 2,
+        transaction: currentDatabaseSession(),
+      );
       expect(c2?.recoveryIsTrustedFriend, isTrue);
       expect(c2?.recoverySecretShare, isNotNull);
     });
 
     test('works with SecondFactorType.pin', () async {
-      await twonlyDB.contactsDao.insertOnConflictUpdate(
-        ContactsCompanion.insert(userId: const Value(2), username: 'friend_2'),
+      await rust_contacts.upsertContact(
+        patch: const ContactPatch(userId: 2, username: 'friend_2'),
+        transaction: currentDatabaseSession(),
       );
 
       final success =
@@ -163,21 +173,26 @@ void main() {
 
       expect(success, isTrue);
 
-      final c2 = await twonlyDB.contactsDao.getContactById(2);
+      final c2 = await rust_contacts.getContact(
+        id: 2,
+        transaction: currentDatabaseSession(),
+      );
       expect(c2?.recoveryIsTrustedFriend, isTrue);
       expect(c2?.recoverySecretShare, isNotNull);
     });
 
     test('sends delete messages to old trusted friends', () async {
-      await twonlyDB.contactsDao.insertOnConflictUpdate(
-        ContactsCompanion.insert(
-          userId: const Value(2),
+      await rust_contacts.upsertContact(
+        patch: const ContactPatch(
+          userId: 2,
           username: 'friend_2',
-          recoveryIsTrustedFriend: const Value(true),
+          recoveryIsTrustedFriend: true,
         ),
+        transaction: currentDatabaseSession(),
       );
-      await twonlyDB.contactsDao.insertOnConflictUpdate(
-        ContactsCompanion.insert(userId: const Value(3), username: 'friend_3'),
+      await rust_contacts.upsertContact(
+        patch: const ContactPatch(userId: 3, username: 'friend_3'),
+        transaction: currentDatabaseSession(),
       );
 
       final success =
@@ -192,7 +207,10 @@ void main() {
 
       // Verify old friend got a delete message
 
-      final oldFriend = await twonlyDB.contactsDao.getContactById(2);
+      final oldFriend = await rust_contacts.getContact(
+        id: 2,
+        transaction: currentDatabaseSession(),
+      );
       expect(oldFriend?.recoveryIsTrustedFriend, isFalse);
     });
   });

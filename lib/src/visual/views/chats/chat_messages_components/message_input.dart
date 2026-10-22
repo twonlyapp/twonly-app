@@ -3,17 +3,26 @@ import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:clock/clock.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/core/database/app/stickers/table.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:twonly/src/visual/components/sticker_picker.dart';
@@ -49,7 +58,7 @@ class MessageInput extends StatefulWidget {
 
   final Group group;
   final FocusNode textFieldFocus;
-  final Message? quotesMessage;
+  final StoredMessage? quotesMessage;
   final SendChatMessage onMessageSend;
   final ValueChanged<ChatInputPanel> onPanelChanged;
   final ChatInputPanel panel;
@@ -177,11 +186,14 @@ class _MessageInputState extends State<MessageInput>
     // Persist draft message on close
     final draftText = _textFieldController.text;
     unawaited(
-      twonlyDB.groupsDao.updateGroup(
-        widget.group.groupId,
-        GroupsCompanion(
-          draftMessage: Value(draftText.isEmpty ? null : draftText),
+      rust_groups.updateGroup(
+        id: widget.group.groupId,
+        patch: GroupPatch(
+          draftMessage: NullableText(
+            value: draftText.isEmpty ? null : draftText,
+          ),
         ),
+        transaction: currentDatabaseSession(),
       ),
     );
     _textFieldController.dispose();
@@ -408,15 +420,24 @@ class _MessageInputState extends State<MessageInput>
       _showSparks = false;
     });
     if (widget.group.isDirectChat) {
-      final members = await twonlyDB.groupsDao.getGroupContact(
-        widget.group.groupId,
-      );
-      if (members.isNotEmpty) {
-        await twonlyDB.contactsDao.updateContact(
-          members.first.userId,
-          const ContactsCompanion(
-            askForFriendPromotions: Value(false),
+      final members = joinedGroupContacts(
+        await rust_groups.getGroupContacts(
+          input: db_groups.GroupMembersQuery(
+            groupId: widget.group.groupId,
+            orderForChats: true,
           ),
+          transaction: currentDatabaseSession(),
+        ),
+      ).map((row) => row.$1).toList(growable: false);
+      if (members.isNotEmpty) {
+        await rust_contacts.updateContact(
+          id: members.first.userId,
+          patch: ContactPatch(
+            askForFriendPromotions: NullableInt(
+              value: databaseNullableFlag(false),
+            ),
+          ),
+          transaction: currentDatabaseSession(),
         );
       }
     }
@@ -424,9 +445,15 @@ class _MessageInputState extends State<MessageInput>
 
   Future<void> _loadContactId() async {
     if (widget.group.isDirectChat) {
-      final members = await twonlyDB.groupsDao.getGroupContact(
-        widget.group.groupId,
-      );
+      final members = joinedGroupContacts(
+        await rust_groups.getGroupContacts(
+          input: db_groups.GroupMembersQuery(
+            groupId: widget.group.groupId,
+            orderForChats: true,
+          ),
+          transaction: currentDatabaseSession(),
+        ),
+      ).map((row) => row.$1).toList(growable: false);
       if (members.isNotEmpty && mounted) {
         setState(() {
           _contactId = members.first.userId;

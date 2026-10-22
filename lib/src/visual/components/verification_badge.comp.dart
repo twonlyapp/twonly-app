@@ -2,11 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/key_verifications.dart'
+    as rust_key_verifications;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/key_verifications/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/key_verification.dao.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/contact_enums.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
 
@@ -115,7 +123,15 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
     var contact = widget.contact;
 
     if (group?.isDirectChat == true) {
-      final members = await twonlyDB.groupsDao.getGroupContact(group!.groupId);
+      final members = joinedGroupContacts(
+        await rust_groups.getGroupContacts(
+          input: db_groups.GroupMembersQuery(
+            groupId: group!.groupId,
+            orderForChats: true,
+          ),
+          transaction: currentDatabaseSession(),
+        ),
+      ).map((row) => row.$1).toList(growable: false);
       if (members.isNotEmpty) {
         contact = members.first;
         group = null;
@@ -123,34 +139,58 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
     }
 
     if (group != null) {
-      _streamAllVerified = twonlyDB.keyVerificationDao
-          .watchAllGroupMembersVerified(group.groupId)
-          .listen((update) {
-            if (!mounted) return;
-            setState(() {
-              _isVerified = false;
-              _isSharedVerified = false;
-              _verifiedByTransferredTrustCount = 0;
-              if (update == VerificationStatus.trusted) {
-                _isVerified = true;
-              }
-              if (update == VerificationStatus.partialTrusted) {
-                _verifiedByTransferredTrustCount = 10;
-              }
-            });
-          });
+      final watchedGroupId = group.groupId;
+      _streamAllVerified =
+          watchRustDatabase(
+                (control) => rust_key_verifications.watchGroupsVerification(
+                  group: watchedGroupId,
+                  control: control,
+                ),
+              )
+              .map(
+                (rows) => rows.isEmpty
+                    ? VerificationStatus.notTrusted
+                    : rows.single.status,
+              )
+              .listen((update) {
+                if (!mounted) return;
+                setState(() {
+                  _isVerified = false;
+                  _isSharedVerified = false;
+                  _verifiedByTransferredTrustCount = 0;
+                  if (update == VerificationStatus.trusted) {
+                    _isVerified = true;
+                  }
+                  if (update == VerificationStatus.partialTrusted) {
+                    _verifiedByTransferredTrustCount = 10;
+                  }
+                });
+              });
     } else if (contact != null) {
-      _streamContactVerification = twonlyDB.keyVerificationDao
-          .watchContactVerification(contact.userId)
-          .listen((update) {
+      final watchedContactId = contact.userId;
+      _streamContactVerification =
+          watchRustDatabase(
+            (control) => rust_key_verifications
+                .watchContactVerifications(
+                  contact: watchedContactId,
+                  control: control,
+                )
+                .map(contactVerifications),
+          ).listen((update) {
             if (!mounted) return;
             _keyVerifications = update;
             _updateVerificationCounts();
           });
 
-      _streamTransferredTrust = twonlyDB.keyVerificationDao
-          .watchTransferredTrustVerifications(contact.userId)
-          .listen((update) {
+      _streamTransferredTrust =
+          watchRustDatabase(
+            (control) => rust_key_verifications
+                .watchTransferredVerifications(
+                  contact: watchedContactId,
+                  control: control,
+                )
+                .map(transferredVerifications),
+          ).listen((update) {
             if (!mounted) return;
             _transferredTrust = update;
             _updateVerificationCounts();

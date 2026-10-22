@@ -1,17 +1,26 @@
 import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:drift/drift.dart' hide Column;
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/avatar_preference.comp.dart';
 
-class _AvatarApi implements RustLibApi {
+import '../../helpers/native_database.dart';
+
+class _AvatarApi extends NativeTestApi {
   late String photo;
   late String illustrated;
 
@@ -19,7 +28,10 @@ class _AvatarApi implements RustLibApi {
   Future<String?> crateBridgeApiRustApiEnsureAvatarPng({
     required int contactId,
   }) async {
-    final contact = await twonlyDB.contactsDao.getContactById(contactId);
+    final contact = await rust_contacts.getContact(
+      id: contactId,
+      transaction: currentDatabaseSession(),
+    );
     return contact?.preferPhotoAvatar == false ? illustrated : photo;
   }
 
@@ -30,34 +42,23 @@ class _AvatarApi implements RustLibApi {
 void main() {
   final api = _AvatarApi();
   late Directory directory;
-  setUpAll(() => RustLib.initMock(api: api));
+  setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
   setUp(() async {
     await locator.reset();
-    locator.registerSingleton<TwonlyDB>(
-      TwonlyDB.forTesting(
-        DatabaseConnection(
-          NativeDatabase.memory(),
-          closeStreamsSynchronously: true,
-        ),
+    await TestDatabase.create();
+    await testDatabase.insert(
+      ContactPatch(
+        userId: 7,
+        username: 'peer',
+        avatarSvgCompressed: NullableBytes(value: Uint8List.fromList([1])),
       ),
     );
-    await twonlyDB.customStatement(
-      'CREATE TABLE received_custom_avatars(contact_id INTEGER PRIMARY KEY, webp BLOB)',
-    );
-    await twonlyDB
-        .into(twonlyDB.contacts)
-        .insert(
-          ContactsCompanion.insert(
-            userId: const Value(7),
-            username: 'peer',
-            avatarSvgCompressed: Value(Uint8List.fromList([1])),
-          ),
-        );
-    await twonlyDB.customStatement(
-      'INSERT INTO received_custom_avatars VALUES (7, ?)',
+    await testDatabase.customStatement(
+      'INSERT INTO received_custom_avatars(contact_id, webp, sha256, width, height) VALUES (7, ?, ?, 1, 1)',
       [
         Uint8List.fromList([1]),
+        Uint8List(32),
       ],
     );
     directory = await Directory.systemTemp.createTemp('twonly-avatar-test-');
@@ -70,7 +71,6 @@ void main() {
       ).copy('${directory.path}/illustrated.png')).path;
   });
   tearDown(() async {
-    await twonlyDB.close();
     await locator.reset();
     await directory.delete(recursive: true);
   });
@@ -80,7 +80,15 @@ void main() {
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
       body: StreamBuilder<Contact?>(
-        stream: twonlyDB.contactsDao.watchContact(7),
+        stream: watchRustDatabase(
+          (control) => rust_contacts.watchContacts(
+            input: db_contacts.ContactQuery(
+              filter: db_contacts.ContactFilter.ids,
+              ids: Int64List.fromList([7].toList()),
+            ),
+            control: control,
+          ),
+        ).map((rows) => rows.isEmpty ? null : rows.single),
         builder: (context, snapshot) => snapshot.data == null
             ? const SizedBox()
             : Column(
@@ -97,30 +105,78 @@ void main() {
     'choice is persisted and an already displayed avatar switches both ways',
     (tester) async {
       await tester.pumpWidget(app());
-      await tester.pumpAndSettle();
+      await pumpNative(
+        tester,
+        until: () => find.byType(Image).evaluate().isNotEmpty,
+      );
       expect(
         (tester.widget<Image>(find.byType(Image)).image as FileImage).file.path,
         api.photo,
       );
+      await pumpNative(
+        tester,
+        until: () => find.text('Avatar').evaluate().isNotEmpty,
+      );
       await tester.tap(find.text('Avatar'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Illustrated avatar'));
-      await tester.pumpAndSettle();
+      final lang = AppLocalizations.of(
+        tester.element(find.byType(AvatarPreferenceTile)),
+      )!;
+      await tester.tap(find.text(lang.customAvatarSvgTab));
+      await pumpNative(tester);
       expect(
-        (await twonlyDB.contactsDao.getContactById(7))!.preferPhotoAvatar,
+        (await runNative(
+          tester,
+          () => rust_contacts.getContact(
+            id: 7,
+            transaction: currentDatabaseSession(),
+          ),
+        ))!.preferPhotoAvatar,
         isFalse,
+      );
+      await pumpNative(
+        tester,
+        until: () {
+          final images = tester.widgetList<Image>(find.byType(Image));
+          return images.any(
+            (image) =>
+                image.image is FileImage &&
+                (image.image as FileImage).file.path == api.illustrated,
+          );
+        },
       );
       expect(
         (tester.widget<Image>(find.byType(Image)).image as FileImage).file.path,
         api.illustrated,
       );
+      await pumpNative(
+        tester,
+        until: () => find.text('Avatar').evaluate().isNotEmpty,
+      );
       await tester.tap(find.text('Avatar'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Photo avatar'));
-      await tester.pumpAndSettle();
+      await tester.tap(find.text(lang.customAvatarPhotoTab));
+      await pumpNative(tester);
       expect(
-        (await twonlyDB.contactsDao.getContactById(7))!.preferPhotoAvatar,
+        (await runNative(
+          tester,
+          () => rust_contacts.getContact(
+            id: 7,
+            transaction: currentDatabaseSession(),
+          ),
+        ))!.preferPhotoAvatar,
         isTrue,
+      );
+      await pumpNative(
+        tester,
+        until: () {
+          final images = tester.widgetList<Image>(find.byType(Image));
+          return images.any(
+            (image) =>
+                image.image is FileImage &&
+                (image.image as FileImage).file.path == api.photo,
+          );
+        },
       );
       expect(
         (tester.widget<Image>(find.byType(Image)).image as FileImage).file.path,
@@ -130,21 +186,28 @@ void main() {
   );
 
   testWidgets('choice is hidden when a photo is not shared', (tester) async {
-    await twonlyDB.customStatement('DELETE FROM received_custom_avatars');
+    await runNative(
+      tester,
+      () => testDatabase.customStatement('DELETE FROM received_custom_avatars'),
+    );
     await tester.pumpWidget(app());
-    await tester.pumpAndSettle();
+    await pumpNative(tester);
     expect(find.text('Avatar'), findsNothing);
   });
 
   testWidgets('choice is hidden when an illustrated avatar is not shared', (
     tester,
   ) async {
-    await twonlyDB.contactsDao.updateContact(
-      7,
-      const ContactsCompanion(avatarSvgCompressed: Value(null)),
+    await runNative(
+      tester,
+      () => rust_contacts.updateContact(
+        id: 7,
+        patch: const ContactPatch(avatarSvgCompressed: NullableBytes()),
+        transaction: currentDatabaseSession(),
+      ),
     );
     await tester.pumpWidget(app());
-    await tester.pumpAndSettle();
+    await pumpNative(tester);
     expect(find.text('Avatar'), findsNothing);
   });
 }

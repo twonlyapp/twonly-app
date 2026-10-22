@@ -1,5 +1,3 @@
-import 'package:drift/drift.dart' show DatabaseConnection, Value;
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,25 +5,30 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twonly/core/bridge.dart' show FlameState;
+import 'package:twonly/core/bridge/database.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input.dart';
 import 'package:twonly/src/visual/views/shared/select_contacts.view.dart';
 
+import '../../helpers/native_database.dart';
 import '../../mocks/user_config.dart';
 
-class _PickerApi implements RustLibApi {
+class _PickerApi extends NativeTestApi {
   @override
-  Stream<List<String>> crateBridgeWrapperAppDatabaseRustAppDatabaseChanges() =>
-      const Stream.empty();
+  Stream<List<String>> crateBridgeWrapperAppDatabaseRustAppDatabaseChanges({
+    required DatabaseWatch control,
+  }) => const Stream.empty();
 
   @override
   Future<FlameState> crateBridgeGroupsFlameState({
@@ -46,9 +49,9 @@ void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
   late Group group;
 
-  setUpAll(() {
+  setUpAll(() async {
     AppEnvironment.initTesting();
-    RustLib.initMock(api: _PickerApi());
+    await initializeNativeDatabase(api: _PickerApi());
     binding.defaultBinaryMessenger.setMockMethodCallHandler(
       const MethodChannel('simform_audio_waveforms'),
       (_) async => null,
@@ -59,16 +62,8 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await locator.reset();
-    locator
-      ..registerSingleton<TwonlyDB>(
-        TwonlyDB.forTesting(
-          DatabaseConnection(
-            NativeDatabase.memory(),
-            closeStreamsSynchronously: true,
-          ),
-        ),
-      )
-      ..registerSingleton<UserService>(UserService());
+    await TestDatabase.create();
+    locator.registerSingleton<UserService>(UserService());
     userService.currentUser = testUserConfig(
       userId: 1,
       username: 'me',
@@ -77,18 +72,21 @@ void main() {
       currentSetupPage: null,
       appVersion: 180,
     )..typingIndicators = false;
-    await twonlyDB.groupsDao.createNewGroup(
-      GroupsCompanion.insert(
+    await rust_groups.upsertGroup(
+      patch: const GroupPatch(
         groupId: 'chat',
         groupName: 'Chat',
-        isDirectChat: const Value(true),
+        isDirectChat: true,
       ),
+      transaction: currentDatabaseSession(),
     );
-    group = (await twonlyDB.groupsDao.getGroup('chat'))!;
+    group = (await rust_groups.getGroup(
+      id: 'chat',
+      transaction: currentDatabaseSession(),
+    ))!;
   });
 
   tearDown(() async {
-    await twonlyDB.close();
     await locator.reset();
   });
 

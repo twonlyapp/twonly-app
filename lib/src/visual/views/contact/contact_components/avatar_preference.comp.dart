@@ -1,8 +1,11 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 
@@ -17,7 +20,12 @@ class AvatarPreferenceTile extends StatelessWidget {
       return const SizedBox.shrink();
     }
     return StreamBuilder<bool>(
-      stream: twonlyDB.contactsDao.watchHasPhotoAvatar(contact.userId),
+      stream: watchRustDatabase(
+        (control) => rust_contacts.watchContactPhoto(
+          id: contact.userId,
+          control: control,
+        ),
+      ),
       builder: (context, snapshot) {
         if (snapshot.data != true) return const SizedBox.shrink();
         final preferPhoto = contact.preferPhotoAvatar ?? true;
@@ -60,9 +68,14 @@ class AvatarPreferenceTile extends StatelessWidget {
               ),
             );
             if (selected == null || selected == preferPhoto) return;
-            await twonlyDB.contactsDao.updateContact(
-              contact.userId,
-              ContactsCompanion(preferPhotoAvatar: Value(selected)),
+            await rust_contacts.updateContact(
+              id: contact.userId,
+              patch: ContactPatch(
+                preferPhotoAvatar: NullableInt(
+                  value: databaseNullableFlag(selected),
+                ),
+              ),
+              transaction: currentDatabaseSession(),
             );
           },
         );

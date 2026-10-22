@@ -1,0 +1,22 @@
+{
+  "all_ids": [2, 1, 3],
+  "shortcut_ids": [1, 2],
+  "story_ids": [1, 2],
+  "user_7_ids": [2, 1],
+  "chat_ids": [2, 1],
+  "visible_user_links": ["1:7", "1:8", "2:7"],
+  "visible_chat_links": ["1:group", "2:group"],
+  "member_targets": ["group:group", "user:7", "user:8"],
+  "group": {
+    "id": 1,
+    "name": "Beta",
+    "emoji": null,
+    "text_color": 4278190080,
+    "background_color": 0,
+    "show_as_shortcut": true,
+    "show_as_label": true,
+    "share_stories": true,
+    "usage_counter": 2,
+    "created_at": 1700000000
+  }
+}

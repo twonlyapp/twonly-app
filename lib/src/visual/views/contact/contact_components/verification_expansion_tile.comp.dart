@@ -4,11 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:twonly/core/bridge/database/key_verifications.dart'
+    as rust_key_verifications;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/key_verifications/table.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/contact_enums.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
@@ -39,17 +47,29 @@ class _VerificationExpansionTileCompState
   @override
   void initState() {
     super.initState();
-    _streamKeyVerifications = twonlyDB.keyVerificationDao
-        .watchContactVerification(widget.contact.userId)
-        .listen((update) {
+    _streamKeyVerifications =
+        watchRustDatabase(
+          (control) => rust_key_verifications
+              .watchContactVerifications(
+                contact: widget.contact.userId,
+                control: control,
+              )
+              .map(contactVerifications),
+        ).listen((update) {
           if (!mounted) return;
           setState(() {
             _keyVerifications = update;
           });
         });
-    _streamTransferredTrust = twonlyDB.keyVerificationDao
-        .watchTransferredTrustVerifications(widget.contact.userId)
-        .listen((update) {
+    _streamTransferredTrust =
+        watchRustDatabase(
+          (control) => rust_key_verifications
+              .watchTransferredVerifications(
+                contact: widget.contact.userId,
+                control: control,
+              )
+              .map(transferredVerifications),
+        ).listen((update) {
           if (!mounted) return;
           setState(() {
             _transferredTrust = update;
@@ -173,11 +193,14 @@ class _VerificationExpansionTileCompState
                         context.lang.deleteVerificationBody,
                       );
                       if (confirm) {
-                        await twonlyDB.keyVerificationDao
-                            .deleteKeyVerificationById(
-                              kv.verificationId,
-                              widget.contact.userId,
-                            );
+                        await rust_key_verifications.changeKeyVerification(
+                          contact: widget.contact.userId,
+                          verificationId: kv.verificationId,
+                          updateDiscovery:
+                              userService.currentUser.isUserDiscoveryEnabled,
+                          callbackId: isolateCallbackId,
+                          transaction: currentDatabaseSession(),
+                        );
                       }
                     },
                   ),

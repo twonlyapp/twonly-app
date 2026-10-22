@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "RELEASE app_scope",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "6600d4aae081ef1febb7e6bc90eb0832cb9387d814e3b9c81d3c89a5930abcba"
+}

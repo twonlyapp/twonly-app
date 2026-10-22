@@ -1,20 +1,29 @@
 import 'dart:io';
 
-import 'package:drift/drift.dart' hide Column;
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database/contact_groups.dart'
+    as rust_contact_groups;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contact_groups/table.dart'
+    as db_contact_groups;
+import 'package:twonly/core/database/app/contact_groups/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/contact/contact_group_settings.view.dart';
 
-class _AvatarApi implements RustLibApi {
+import '../helpers/native_database.dart';
+
+class _AvatarApi extends NativeTestApi {
   final paths = <int, String>{};
 
   @override
@@ -32,21 +41,16 @@ class _AvatarApi implements RustLibApi {
 void main() {
   final api = _AvatarApi();
   late Directory directory;
-  late TwonlyDB database;
+  late TestDatabase database;
   late ContactGroup contactGroup;
 
-  setUpAll(() => RustLib.initMock(api: api));
+  setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
 
   setUp(() async {
     await locator.reset();
-    database = TwonlyDB.forTesting(
-      DatabaseConnection(
-        NativeDatabase.memory(),
-        closeStreamsSynchronously: true,
-      ),
-    );
-    locator.registerSingleton<TwonlyDB>(database);
+    database = await TestDatabase.create();
+
     directory = await Directory.systemTemp.createTemp('contact-group-test-');
     AppEnvironment.initTesting(customSupportDir: directory.path);
     for (final id in [7, 8, 9]) {
@@ -69,22 +73,27 @@ void main() {
     ]) {
       await database.customStatement(statement);
     }
-    final id = await database.contactGroupsDao.createContactGroup(
-      name: 'Favorites',
-      textColor: 0xFF000000,
-      backgroundColor: 0,
-      showAsShortcut: false,
-      showAsLabel: true,
-      shareStories: false,
+    final id = await rust_contact_groups.createContactGroup(
+      transaction: currentDatabaseSession(),
+      input: const db_contact_groups.ContactGroupInput(
+        name: 'Favorites',
+        textColor: 0xFF000000,
+        backgroundColor: 0,
+        showAsShortcut: false,
+        showAsLabel: true,
+        shareStories: false,
+      ),
     );
-    await database.contactGroupsDao.replaceMembers(
-      id,
-      userIds: [7],
-      groupIds: ['old-team'],
+    await rust_contact_groups.replaceContactGroupMembers(
+      transaction: currentDatabaseSession(),
+      id: id,
+      userIds: Int64List.fromList([7].toList()),
+      groupIds: ['old-team'].toList(),
     );
-    contactGroup = await (database.select(
-      database.contactGroups,
-    )..where((group) => group.id.equals(id))).getSingle();
+    contactGroup = (await rust_contact_groups.getContactGroup(
+      id: id,
+      transaction: currentDatabaseSession(),
+    ))!;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           const MethodChannel('eu.twonly/runtime_storage'),
@@ -93,7 +102,6 @@ void main() {
   });
 
   tearDown(() async {
-    await database.close();
     await locator.reset();
     await directory.delete(recursive: true);
     AppEnvironment.initTesting();
@@ -104,14 +112,7 @@ void main() {
         );
   });
 
-  Future<void> settle(WidgetTester tester) async {
-    for (var i = 0; i < 3; i++) {
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)),
-      );
-      await tester.pump(const Duration(milliseconds: 500));
-    }
-  }
+  Future<void> settle(WidgetTester tester) => pumpNative(tester);
 
   Future<void> pumpEditor(WidgetTester tester) async {
     await tester.binding.setSurfaceSize(const Size(800, 2200));
@@ -188,9 +189,13 @@ void main() {
 
     await tester.enterText(find.byType(TextField).last, '');
     await settle(tester);
-    await database.groupsDao.updateGroup(
-      'team',
-      const GroupsCompanion(groupName: Value('A team')),
+    await runNative(
+      tester,
+      () => rust_groups.updateGroup(
+        id: 'team',
+        patch: const GroupPatch(groupName: 'A team'),
+        transaction: currentDatabaseSession(),
+      ),
     );
     await settle(tester);
     expect(avatarPaths(tester, 'A team'), [api.paths[8], api.paths[7]]);
@@ -200,18 +205,29 @@ void main() {
 
   testWidgets('archive changes update the open member list', (tester) async {
     await pumpEditor(tester);
-    await database.groupsDao.updateGroup(
-      'bob',
-      const GroupsCompanion(archived: Value(true)),
+    await runNative(
+      tester,
+      () => rust_groups.updateGroup(
+        id: 'bob',
+        patch: const GroupPatch(archived: true),
+        transaction: currentDatabaseSession(),
+      ),
     );
     await settle(tester);
     expect(memberTile('Bob'), findsNothing);
 
-    await database.groupsDao.updateGroup(
-      'bob',
-      const GroupsCompanion(archived: Value(false)),
+    await runNative(
+      tester,
+      () => rust_groups.updateGroup(
+        id: 'bob',
+        patch: const GroupPatch(archived: false),
+        transaction: currentDatabaseSession(),
+      ),
     );
-    await settle(tester);
+    await pumpNative(
+      tester,
+      until: () => avatarPaths(tester, 'Bob').isNotEmpty,
+    );
     expect(avatarPaths(tester, 'Bob'), [api.paths[8]]);
   });
 
@@ -222,7 +238,13 @@ void main() {
     await tester.tap(find.text('Bob'));
     await tester.tap(find.byType(MyButton));
     await settle(tester);
-    final members = await database.contactGroupsDao.getMembers(contactGroup.id);
+    final members = await runNative(
+      tester,
+      () => rust_contact_groups.getContactGroupMembers(
+        id: contactGroup.id,
+        transaction: currentDatabaseSession(),
+      ),
+    );
     expect(
       members
           .where((member) => member.userId != null)

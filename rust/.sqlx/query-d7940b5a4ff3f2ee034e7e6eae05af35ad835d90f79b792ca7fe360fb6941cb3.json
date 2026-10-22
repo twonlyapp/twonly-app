@@ -1,0 +1,110 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT instance_id AS \"instance_id!\",\n                group_id AS \"group_id!\",\n                app_id AS \"app_id!\",\n                version AS \"version!\",\n                bundle_sha256 AS \"bundle_sha256?\",\n                origin_token AS \"origin_token!\",\n                summary AS \"summary?\",\n                document AS \"document?\"\n            FROM webxdc_instances\n            WHERE instance_id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "instance_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "instance_id"
+          }
+        }
+      },
+      {
+        "name": "group_id!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "app_id!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "app_id"
+          }
+        }
+      },
+      {
+        "name": "version!",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "name": "bundle_sha256?",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "bundle_sha256"
+          }
+        }
+      },
+      {
+        "name": "origin_token!",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "origin_token"
+          }
+        }
+      },
+      {
+        "name": "summary?",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "summary"
+          }
+        }
+      },
+      {
+        "name": "document?",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "document"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "d7940b5a4ff3f2ee034e7e6eae05af35ad835d90f79b792ca7fe360fb6941cb3"
+}

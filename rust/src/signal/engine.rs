@@ -51,13 +51,11 @@ pub struct FrbPqcPreKey {
 }
 
 fn create_safety_number(
-    local_id: &str,
-    local_key_bytes: &[u8],
-    remote_id: &str,
-    remote_key_bytes: &[u8],
+    local_id: &str, local_key_bytes: &[u8], remote_id: &str, remote_key_bytes: &[u8],
 ) -> Result<String> {
     let local_key = IdentityKey::decode(local_key_bytes)
         .map_err(|error| TwonlyError::Signal(error.to_string()))?;
+
     let remote_key = IdentityKey::decode(remote_key_bytes)
         .map_err(|error| TwonlyError::Signal(error.to_string()))?;
 
@@ -76,11 +74,13 @@ fn create_safety_number(
 impl RustSignalEngine {
     pub async fn on_connected(&self, ctx: &Arc<crate::context::Context>) -> Result<()> {
         let base = UserConfig::load_required_from(ctx)?;
+
         let now = current_time().with_timezone(&Utc);
 
         let refresh_signed = base
             .signal_last_signed_pre_key_updated
             .is_none_or(|last| last < now - Duration::hours(48));
+
         let refresh_pqc = base
             .signal_last_pqc_pre_keys_uploaded
             .is_none_or(|last| last < now - Duration::days(7));
@@ -90,6 +90,7 @@ impl RustSignalEngine {
         }
 
         let bundle = self.generate_bundle().await?;
+
         if refresh_signed {
             Server::update_signed_pre_key(
                 ctx,
@@ -98,10 +99,12 @@ impl RustSignalEngine {
                 bundle.signed_pre_key_signature.clone(),
             )
             .await?;
+
             UserConfig::update(ctx, |config| {
                 config.signal_last_signed_pre_key_updated = Some(now);
             })?;
         }
+
         if refresh_pqc {
             Server::upload_pqc_pre_keys(
                 ctx,
@@ -116,18 +119,22 @@ impl RustSignalEngine {
                 Vec::new(),
             )
             .await?;
+
             UserConfig::update(ctx, |config| {
                 config.signal_last_pqc_pre_keys_uploaded = Some(now);
             })?;
         }
+
         Ok(())
     }
 
     pub async fn new(local_name: String) -> Result<Self> {
         let twonly = get_twonly_flutter()?;
+
         let pool = twonly.rust_db.read().await.pool.clone();
 
         let km = twonly.key_manager.lock().await;
+
         let signal_identity = km
             .signal_identity
             .as_ref()
@@ -150,9 +157,7 @@ impl RustSignalEngine {
     }
 
     pub fn new_with_pool(
-        pool: sqlx::SqlitePool,
-        identity_key_pair_bytes: Vec<u8>,
-        local_registration_id: u32,
+        pool: sqlx::SqlitePool, identity_key_pair_bytes: Vec<u8>, local_registration_id: u32,
         local_name: String,
     ) -> Result<Self> {
         let identity_key_pair = IdentityKeyPair::try_from(&identity_key_pair_bytes[..])
@@ -168,23 +173,27 @@ impl RustSignalEngine {
 
     pub async fn get_identity_key(&self) -> Result<Vec<u8>> {
         let store = self.store.lock().await;
+
         let key_pair = store
             .identity_store
             .get_identity_key_pair()
             .assert_send()
             .await
             .map_err(|e| TwonlyError::Signal(e.to_string()))?;
+
         Ok(key_pair.identity_key().serialize().to_vec())
     }
 
     pub async fn get_contact_identity_key(&self, name: &str) -> Result<Option<Vec<u8>>> {
         let store = self.store.lock().await;
+
         let identity = sqlx::query_scalar!(
             r#"SELECT identity_key FROM signal_identities WHERE name = ?"#,
             name,
         )
         .fetch_optional(&store.pool)
         .await?;
+
         Ok(identity)
     }
 
@@ -209,15 +218,20 @@ impl RustSignalEngine {
     }
 
     #[cfg(test)]
+
     fn generate_identity_key_pair() -> Result<Vec<u8>> {
         let mut csprng = rand::rngs::StdRng::from_os_rng();
+
         let key_pair = IdentityKeyPair::generate(&mut csprng);
+
         Ok(key_pair.serialize().to_vec())
     }
 
     pub async fn generate_bundle(&self) -> Result<FrbPreKeyBundle> {
         let mut store_guard = self.store.lock().await;
+
         let store = &mut *store_guard;
+
         let mut csprng = rand::rngs::StdRng::from_os_rng();
 
         let pre_key_id: u32 = {
@@ -226,6 +240,7 @@ impl RustSignalEngine {
             )
             .fetch_one(&store.pool)
             .await?;
+
             if id > 16_777_215 {
                 1
             } else {
@@ -237,6 +252,7 @@ impl RustSignalEngine {
             let id = sqlx::query_scalar!(
                 r#"SELECT COALESCE(MAX(signed_pre_key_id), 0) AS "id!: u32" FROM signal_signed_pre_keys"#,
             ).fetch_one(&store.pool).await?;
+
             if id > 16_777_215 {
                 1
             } else {
@@ -248,6 +264,7 @@ impl RustSignalEngine {
             let id = sqlx::query_scalar!(
                 r#"SELECT COALESCE(MAX(kyber_pre_key_id), 0) AS "id!: u32" FROM signal_kyber_pre_keys"#,
             ).fetch_one(&store.pool).await?;
+
             if id > 16_777_215 {
                 1
             } else {
@@ -256,6 +273,7 @@ impl RustSignalEngine {
         };
 
         let pre_key_pair = libsignal_protocol::KeyPair::generate(&mut csprng);
+
         store
             .pre_key_store
             .save_pre_key(
@@ -267,6 +285,7 @@ impl RustSignalEngine {
             .map_err(|e| TwonlyError::Signal(e.to_string()))?;
 
         let signed_pre_key_pair = libsignal_protocol::KeyPair::generate(&mut csprng);
+
         let signature = store
             .identity_store
             .get_identity_key_pair()
@@ -279,12 +298,14 @@ impl RustSignalEngine {
                 &mut csprng,
             )
             .map_err(|e| TwonlyError::Signal(e.to_string()))?;
+
         let timestamp = Timestamp::from_epoch_millis(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .map_err(|e| TwonlyError::Signal(e.to_string()))?
                 .as_millis() as u64,
         );
+
         store
             .signed_pre_key_store
             .save_signed_pre_key(
@@ -304,6 +325,7 @@ impl RustSignalEngine {
             libsignal_protocol::kem::KeyType::Kyber1024,
             &mut csprng,
         );
+
         let kyber_signature = store
             .identity_store
             .get_identity_key_pair()
@@ -316,9 +338,11 @@ impl RustSignalEngine {
                 &mut csprng,
             )
             .map_err(|e| TwonlyError::Signal(e.to_string()))?;
+
         let kyber_sig_arr: [u8; 64] = kyber_signature[..]
             .try_into()
             .map_err(|e: std::array::TryFromSliceError| TwonlyError::Signal(e.to_string()))?;
+
         store
             .kyber_pre_key_store
             .save_kyber_pre_key(
@@ -364,8 +388,11 @@ impl RustSignalEngine {
 
     pub async fn generate_pqc_prekeys(&self) -> Result<Vec<FrbPqcPreKey>> {
         let mut store_guard = self.store.lock().await;
+
         let store = &mut *store_guard;
+
         let mut csprng = rand::rngs::StdRng::from_os_rng();
+
         let mut prekeys = vec![];
 
         let timestamp = Timestamp::from_epoch_millis(
@@ -403,7 +430,9 @@ impl RustSignalEngine {
 
         for _ in 0..30 {
             kyber_pre_key_id += 1;
+
             pre_key_id += 1;
+
             let kyber_key_pair = libsignal_protocol::kem::KeyPair::generate(
                 libsignal_protocol::kem::KeyType::Kyber1024,
                 &mut csprng,
@@ -464,17 +493,17 @@ impl RustSignalEngine {
     }
 
     pub async fn process_prekey_bundle(
-        &self,
-        name: String,
-        device_id: u32,
-        bundle: FrbPreKeyBundle,
+        &self, name: String, device_id: u32, bundle: FrbPreKeyBundle,
     ) -> Result<()> {
         let mut store_guard = self.store.lock().await;
+
         let store = &mut *store_guard;
 
         let d_id = DeviceId::try_from(device_id)
             .map_err(|_| TwonlyError::Generic(format!("Invalid device id: {}", device_id)))?;
+
         let remote_address = ProtocolAddress::new(name, d_id);
+
         let local_address = ProtocolAddress::new(
             self.local_name.clone(),
             DeviceId::try_from(1)
@@ -549,16 +578,20 @@ impl RustSignalEngine {
     /// still in flight from the peer undecryptable.
     ///
     /// Returns whether a session existed.
+
     pub async fn reset_session(&self, name: &str, device_id: u32, hard: bool) -> Result<bool> {
         let mut store_guard = self.store.lock().await;
+
         let store = &mut *store_guard;
 
         let d_id = DeviceId::try_from(device_id)
             .map_err(|_| TwonlyError::Generic(format!("Invalid device id: {}", device_id)))?;
+
         let address = ProtocolAddress::new(name.to_owned(), d_id);
 
         if hard {
             let device_id_value: u32 = device_id;
+
             let deleted = sqlx::query!(
                 r#"DELETE FROM signal_sessions WHERE name = ? AND device_id = ?"#,
                 name,
@@ -567,7 +600,9 @@ impl RustSignalEngine {
             .execute(&store.pool)
             .await?
             .rows_affected();
+
             tracing::warn!(name, device_id, "deleted the signal session");
+
             return Ok(deleted != 0);
         }
 
@@ -596,21 +631,22 @@ impl RustSignalEngine {
             .map_err(|e| TwonlyError::Signal(e.to_string()))?;
 
         tracing::warn!(name, device_id, "archived the signal session for a reset");
+
         Ok(true)
     }
 
     pub async fn encrypt_message(
-        &self,
-        name: String,
-        device_id: u32,
-        plaintext: Vec<u8>,
+        &self, name: String, device_id: u32, plaintext: Vec<u8>,
     ) -> Result<Vec<u8>> {
         let mut store_guard = self.store.lock().await;
+
         let store = &mut *store_guard;
 
         let d_id = DeviceId::try_from(device_id)
             .map_err(|_| TwonlyError::Generic(format!("Invalid device id: {}", device_id)))?;
+
         let remote_address = ProtocolAddress::new(name, d_id);
+
         let local_address = ProtocolAddress::new(
             self.local_name.clone(),
             DeviceId::try_from(1)
@@ -618,6 +654,7 @@ impl RustSignalEngine {
         );
 
         let mut csprng = rand::rngs::StdRng::from_os_rng();
+
         let now = SystemTime::now();
 
         let ciphertext = message_encrypt(
@@ -634,25 +671,28 @@ impl RustSignalEngine {
         .map_err(|e| TwonlyError::Signal(e.to_string()))?;
 
         let serialized = ciphertext.serialize();
+
         let mut res = Vec::with_capacity(serialized.len() + 1);
+
         res.extend_from_slice(serialized);
+
         res.push(ciphertext.message_type() as u8);
 
         Ok(res)
     }
 
     pub async fn decrypt_message(
-        &self,
-        name: String,
-        device_id: u32,
-        ciphertext: Vec<u8>,
+        &self, name: String, device_id: u32, ciphertext: Vec<u8>,
     ) -> Result<Vec<u8>> {
         let mut store_guard = self.store.lock().await;
+
         let store = &mut *store_guard;
 
         let d_id = DeviceId::try_from(device_id)
             .map_err(|_| TwonlyError::Generic(format!("Invalid device id: {}", device_id)))?;
+
         let remote_address = ProtocolAddress::new(name, d_id);
+
         let local_address = ProtocolAddress::new(
             self.local_name.clone(),
             DeviceId::try_from(1)
@@ -672,6 +712,7 @@ impl RustSignalEngine {
             CiphertextMessageType::Whisper => {
                 let message = SignalMessage::try_from(ciphertext)
                     .map_err(|e| TwonlyError::Signal(e.to_string()))?;
+
                 libsignal_protocol::message_decrypt_signal(
                     &message,
                     &remote_address,
@@ -690,6 +731,7 @@ impl RustSignalEngine {
             CiphertextMessageType::PreKey => {
                 let message = PreKeySignalMessage::try_from(ciphertext)
                     .map_err(|e| TwonlyError::Signal(e.to_string()))?;
+
                 libsignal_protocol::message_decrypt_prekey(
                     &message,
                     &remote_address,
@@ -715,40 +757,50 @@ impl RustSignalEngine {
 }
 
 #[cfg(test)]
+
 mod tests {
+
     use super::*;
     use libsignal_protocol::IdentityKeyPair;
     use rand::rngs::StdRng;
     use tempfile::tempdir;
 
     #[test]
+
     fn safety_number_matches_signal_format_and_is_symmetric() {
         let alice_key =
             hex::decode("0506863bc66d02b40d27b8d49ca7c09e9239236f9d7d25d6fcca5ce13c7064d868")
                 .unwrap();
+
         let bob_key =
             hex::decode("05f781b6fb32fed9ba1cf2de978d4d5da28dc34046ae814402b5c0dbd96fda907b")
                 .unwrap();
 
         let alice =
             create_safety_number("+14152222222", &alice_key, "+14153333333", &bob_key).unwrap();
+
         let bob =
             create_safety_number("+14153333333", &bob_key, "+14152222222", &alice_key).unwrap();
 
         assert_eq!(alice, bob);
+
         assert_eq!(
             alice,
             "300354477692869396892869876765458257569162576843440918079131"
         );
+
         assert_eq!(alice.len(), 60);
+
         assert!(alice.bytes().all(|byte| byte.is_ascii_digit()));
     }
 
     async fn create_test_engine(name: &str) -> (RustSignalEngine, tempfile::TempDir) {
         let dir = tempdir().unwrap();
+
         let db_path = dir.path().join(format!("{}.db", name));
 
         let _db_url = format!("sqlite://{}?mode=rwc", db_path.to_str().unwrap());
+
         // create the file manually just to be sure
         std::fs::File::create(&db_path).unwrap();
 
@@ -759,10 +811,13 @@ mod tests {
         )
         .await
         .unwrap();
+
         db.run_migrations().await.unwrap();
+
         let pool = db.pool.clone();
 
         let mut csprng = StdRng::from_os_rng();
+
         let identity_key_pair = IdentityKeyPair::generate(&mut csprng);
 
         let store =
@@ -778,20 +833,28 @@ mod tests {
     }
 
     #[tokio::test]
+
     async fn test_generate_pqc_prekeys() {
         let (engine, _dir) = create_test_engine("alice").await;
+
         let prekeys = engine.generate_pqc_prekeys().await.unwrap();
+
         assert_eq!(prekeys.len(), 30);
+
         for prekey in prekeys {
             assert!(prekey.ecc_pre_key.len() > 0);
+
             assert!(prekey.kyber_pre_key.len() > 0);
+
             assert!(prekey.kyber_pre_key_signature.len() > 0);
         }
     }
 
     #[tokio::test]
+
     async fn test_v2_end_to_end_encryption() {
         let (alice_engine, _alice_dir) = create_test_engine("alice").await;
+
         let (bob_engine, _bob_dir) = create_test_engine("bob").await;
 
         // Bob generates a V2 bundle
@@ -819,6 +882,7 @@ mod tests {
 
         // Alice encrypts a message
         let plaintext = b"Hello Post-Quantum World!";
+
         let ciphertext = alice_engine
             .encrypt_message("bob".to_string(), 1, plaintext.to_vec())
             .await
@@ -834,18 +898,22 @@ mod tests {
     }
 
     /// Encrypts on one engine and decrypts on the other.
+
     async fn ping(from: &RustSignalEngine, to: &RustSignalEngine, text: &str) -> Result<Vec<u8>> {
         let ciphertext = from
             .encrypt_message(to.local_name.clone(), 1, text.as_bytes().to_vec())
             .await?;
+
         to.decrypt_message(from.local_name.clone(), 1, ciphertext)
             .await
     }
 
     /// Overwrites a peer's session record, the way restoring a backup puts an
     /// older signal database back in place.
+
     async fn restore_session(engine: &RustSignalEngine, name: &str, record: &[u8]) {
         let store = engine.store.lock().await;
+
         sqlx::query!(
             "UPDATE signal_sessions SET record_bytes = ? WHERE name = ? AND device_id = 1",
             record,
@@ -858,6 +926,7 @@ mod tests {
 
     async fn session_record(engine: &RustSignalEngine, name: &str) -> Vec<u8> {
         let store = engine.store.lock().await;
+
         sqlx::query_scalar!(
             "SELECT record_bytes FROM signal_sessions WHERE name = ? AND device_id = 1",
             name,
@@ -871,8 +940,10 @@ mod tests {
     /// session cannot be decrypted with again, the failure is reported as such,
     /// and a reset plus a fresh prekey bundle brings the pair back.
     #[tokio::test]
+
     async fn a_restored_session_is_reported_unusable_and_recovers_after_a_reset() {
         let (alice, _alice_dir) = create_test_engine("alice").await;
+
         let (bob, _bob_dir) = create_test_engine("bob").await;
 
         alice
@@ -881,6 +952,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(ping(&alice, &bob, "one").await.unwrap(), b"one");
+
         assert_eq!(ping(&bob, &alice, "two").await.unwrap(), b"two");
 
         // The state a backup taken at this point would carry.
@@ -890,6 +962,7 @@ mod tests {
         // step whose private key it never held.
         for _ in 0..3 {
             ping(&alice, &bob, "before").await.unwrap();
+
             ping(&bob, &alice, "before").await.unwrap();
         }
 
@@ -899,10 +972,12 @@ mod tests {
             .encrypt_message("bob".to_string(), 1, b"after the restore".to_vec())
             .await
             .unwrap();
+
         let error = bob
             .decrypt_message("alice".to_string(), 1, ciphertext.clone())
             .await
             .expect_err("a rewound session cannot open a message from the peer's current chain");
+
         assert!(
             matches!(error, TwonlyError::SignalSessionUnusable(_)),
             "a diverged ratchet has to be classified as unusable, got: {error:?}"
@@ -918,21 +993,26 @@ mod tests {
         // Bob retires his half and asks Alice for a new session; Alice retires
         // hers and builds one from Bob's current bundle.
         assert!(bob.reset_session("alice", 1, false).await.unwrap());
+
         assert!(alice.reset_session("bob", 1, false).await.unwrap());
+
         alice
             .process_prekey_bundle("bob".to_string(), 1, bob.generate_bundle().await.unwrap())
             .await
             .unwrap();
 
         assert_eq!(ping(&alice, &bob, "after").await.unwrap(), b"after");
+
         assert_eq!(ping(&bob, &alice, "back").await.unwrap(), b"back");
     }
 
     /// Archiving keeps the states a peer may still be sending on, so messages
     /// that crossed the reset in flight are not lost with it.
     #[tokio::test]
+
     async fn a_reset_still_decrypts_messages_sent_before_it() {
         let (alice, _alice_dir) = create_test_engine("alice").await;
+
         let (bob, _bob_dir) = create_test_engine("bob").await;
 
         alice
@@ -962,7 +1042,9 @@ mod tests {
             .encrypt_message("bob".to_string(), 1, b"dropped".to_vec())
             .await
             .unwrap();
+
         assert!(bob.reset_session("alice", 1, true).await.unwrap());
+
         assert!(bob
             .decrypt_message("alice".to_string(), 1, in_flight)
             .await
@@ -975,8 +1057,10 @@ mod tests {
     /// The user-initiated reset: the record is gone, nothing encrypts for the
     /// peer until a fresh bundle builds a new session, and that one works.
     #[tokio::test]
+
     async fn hard_reset_deletes_and_allows_rebuilding_a_contact_session() {
         let (alice, _alice_dir) = create_test_engine("alice").await;
+
         let (bob, _bob_dir) = create_test_engine("bob").await;
 
         alice
@@ -985,7 +1069,9 @@ mod tests {
             .unwrap();
 
         assert!(alice.reset_session("bob", 1, true).await.unwrap());
+
         assert!(!alice.reset_session("bob", 1, true).await.unwrap());
+
         assert!(alice
             .encrypt_message("bob".to_string(), 1, b"missing".to_vec())
             .await
@@ -1002,8 +1088,10 @@ mod tests {
     /// A message decrypted twice is a duplicate, for prekey and whisper
     /// messages alike, and never reported as an unusable session.
     #[tokio::test]
+
     async fn decrypting_a_message_twice_reports_a_duplicate() {
         let (alice, _alice_dir) = create_test_engine("alice").await;
+
         let (bob, _bob_dir) = create_test_engine("bob").await;
 
         alice
@@ -1015,17 +1103,21 @@ mod tests {
             .encrypt_message("bob".to_string(), 1, b"first".to_vec())
             .await
             .unwrap();
+
         assert_eq!(
             prekey_message.last(),
             Some(&(CiphertextMessageType::PreKey as u8))
         );
+
         bob.decrypt_message("alice".to_string(), 1, prekey_message.clone())
             .await
             .unwrap();
+
         let error = bob
             .decrypt_message("alice".to_string(), 1, prekey_message)
             .await
             .unwrap_err();
+
         assert!(
             matches!(error, TwonlyError::SignalDuplicateMessage(_)),
             "{error}"
@@ -1033,21 +1125,26 @@ mod tests {
 
         // After Bob's reply Alice no longer needs a PreKey message.
         ping(&bob, &alice, "reply").await.unwrap();
+
         let whisper_message = alice
             .encrypt_message("bob".to_string(), 1, b"second".to_vec())
             .await
             .unwrap();
+
         assert_eq!(
             whisper_message.last(),
             Some(&(CiphertextMessageType::Whisper as u8))
         );
+
         bob.decrypt_message("alice".to_string(), 1, whisper_message.clone())
             .await
             .unwrap();
+
         let error = bob
             .decrypt_message("alice".to_string(), 1, whisper_message)
             .await
             .unwrap_err();
+
         assert!(
             matches!(error, TwonlyError::SignalDuplicateMessage(_)),
             "{error}"
@@ -1055,6 +1152,7 @@ mod tests {
     }
 
     #[tokio::test]
+
     async fn test_twonly_api_100_messages() -> std::result::Result<(), Box<dyn std::error::Error>> {
         use crate::database::signal::Database;
 
@@ -1062,13 +1160,16 @@ mod tests {
 
         // 1. Setup in-memory databases
         let alice_db = Database::new(&"sqlite::memory:".to_string(), None, false).await?;
+
         alice_db.run_migrations().await?;
 
         let bob_db = Database::new(&"sqlite::memory:".to_string(), None, false).await?;
+
         bob_db.run_migrations().await?;
 
         // 2. Setup Alice and Bob identity keys
         let alice_identity_bytes = RustSignalEngine::generate_identity_key_pair()?;
+
         let bob_identity_bytes = RustSignalEngine::generate_identity_key_pair()?;
 
         // 3. Initialize engines with the DB pools
@@ -1078,6 +1179,7 @@ mod tests {
             1234,
             "alice".to_string(),
         )?;
+
         let bob_engine = RustSignalEngine::new_with_pool(
             bob_db.pool.clone(),
             bob_identity_bytes,
@@ -1095,6 +1197,7 @@ mod tests {
 
         // 6. Exchange 100 messages
         let mut alice_to_bob = true;
+
         for i in 1..=100 {
             if alice_to_bob {
                 let plaintext = format!("Message {} from Alice to Bob", i).into_bytes();
@@ -1121,6 +1224,7 @@ mod tests {
 
                 assert_eq!(plaintext, decrypted);
             }
+
             alice_to_bob = !alice_to_bob;
         }
 

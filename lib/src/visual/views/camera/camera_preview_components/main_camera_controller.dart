@@ -3,18 +3,20 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart'
     show PasswordlessRecoveryService;
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
@@ -162,7 +164,6 @@ class MainCameraController {
   }
 
   Future<void> _selectCamera(int sCameraId, bool init, int sessionId) async {
-
     // Start checking microphone permission concurrently
     final micPermissionFuture = Permission.microphone.isGranted;
 
@@ -568,9 +569,10 @@ class MainCameraController {
             final contact = result.contact;
 
             if (contact?.blocked ?? false) {
-              await twonlyDB.contactsDao.updateContact(
-                contact!.userId,
-                const ContactsCompanion(blocked: Value(false)),
+              await rust_contacts.updateContact(
+                id: contact!.userId,
+                patch: const ContactPatch(blocked: false),
+                transaction: currentDatabaseSession(),
               );
             }
 

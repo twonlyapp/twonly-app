@@ -3,8 +3,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/core/bridge/groups.dart' as rust_groups;
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';

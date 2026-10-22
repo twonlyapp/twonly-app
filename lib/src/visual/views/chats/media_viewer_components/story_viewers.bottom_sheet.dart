@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/stories.dart' as rust_stories;
 import 'package:twonly/core/bridge/stories.dart' as stories;
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/daos/stories.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
@@ -54,12 +55,22 @@ class _StoryViewersBottomSheetState extends State<StoryViewersBottomSheet> {
   @override
   void initState() {
     super.initState();
-    _viewersSub = twonlyDB.storiesDao
-        .watchStoryViewers(widget.mediaFile.mediaId)
-        .listen((viewers) {
-          if (!mounted) return;
-          setState(() => _viewers = viewers);
-        });
+    _viewersSub =
+        watchRustDatabase(
+          (control) => rust_stories
+              .watchStoryViewers(
+                media: widget.mediaFile.mediaId,
+                control: control,
+              )
+              .map(storyViewers),
+        ).listen(
+          (
+            viewers,
+          ) {
+            if (!mounted) return;
+            setState(() => _viewers = viewers);
+          },
+        );
   }
 
   @override

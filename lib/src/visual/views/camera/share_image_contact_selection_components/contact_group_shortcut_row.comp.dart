@@ -2,8 +2,15 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/contact_groups.dart'
+    as rust_contact_groups;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contact_groups/table.dart'
+    as db_contact_groups;
+import 'package:twonly/core/database/app/contact_groups/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_chip.element.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/first_seen_order.dart';
@@ -36,9 +43,15 @@ class _ContactGroupShortcutRowState extends State<ContactGroupShortcutRow> {
   @override
   void initState() {
     super.initState();
-    _subscription = twonlyDB.contactGroupsDao
-        .watchShortcutContactGroups()
-        .listen((contactGroups) {
+    _subscription =
+        watchRustDatabase(
+          (control) => rust_contact_groups.watchContactGroups(
+            filter: db_contact_groups.ContactGroupFilter.shortcuts,
+            control: control,
+          ),
+        ).listen((
+          contactGroups,
+        ) {
           if (!mounted) return;
           setState(
             () => _contactGroups = inFirstSeenOrder(contactGroups, _order),
@@ -64,15 +77,24 @@ class _ContactGroupShortcutRowState extends State<ContactGroupShortcutRow> {
   }
 
   Future<Set<String>> _resolveTargets(ContactGroup contactGroup) async {
-    final members = await twonlyDB.contactGroupsDao.getMembers(contactGroup.id);
+    final members = await rust_contact_groups.getContactGroupMembers(
+      id: contactGroup.id,
+      transaction: currentDatabaseSession(),
+    );
     final targetGroupIds = <String>{};
     for (final member in members) {
       if (member.groupId != null) {
         targetGroupIds.add(member.groupId!);
       } else if (member.userId != null) {
-        final directChat = await twonlyDB.groupsDao.getDirectChat(
-          member.userId!,
-        );
+        final directChat = await rust_groups
+            .listGroups(
+              input: db_groups.GroupQuery(
+                filter: db_groups.GroupFilter.directContact,
+                contactId: member.userId,
+              ),
+              transaction: currentDatabaseSession(),
+            )
+            .then((rows) => rows.isEmpty ? null : rows.single);
         if (directChat != null) targetGroupIds.add(directChat.groupId);
       }
     }
@@ -107,7 +129,10 @@ class _ContactGroupShortcutRowState extends State<ContactGroupShortcutRow> {
       }
       return;
     }
-    await twonlyDB.contactGroupsDao.incrementUsage(contactGroup.id);
+    await rust_contact_groups.incrementContactGroupUsage(
+      transaction: currentDatabaseSession(),
+      id: contactGroup.id,
+    );
     for (final groupId in widget.selectedGroupIds.toList()) {
       widget.updateSelectedGroupIds(groupId, false);
     }

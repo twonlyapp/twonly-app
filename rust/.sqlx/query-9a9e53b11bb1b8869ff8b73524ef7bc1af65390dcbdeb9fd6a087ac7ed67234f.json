@@ -1,0 +1,134 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    SELECT id, name, emoji, text_color AS color, background_color AS background,\n                        show_as_shortcut AS \"shortcut!: bool\", show_as_label AS \"label!: bool\",\n                        share_stories AS \"stories!: bool\", usage_counter AS usage, created_at AS created\n                    FROM contact_groups ORDER BY id\n                ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "emoji",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "emoji"
+          }
+        }
+      },
+      {
+        "name": "color",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "text_color"
+          }
+        }
+      },
+      {
+        "name": "background",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "background_color"
+          }
+        }
+      },
+      {
+        "name": "shortcut!: bool",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "show_as_shortcut"
+          }
+        }
+      },
+      {
+        "name": "label!: bool",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "show_as_label"
+          }
+        }
+      },
+      {
+        "name": "stories!: bool",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "share_stories"
+          }
+        }
+      },
+      {
+        "name": "usage",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "usage_counter"
+          }
+        }
+      },
+      {
+        "name": "created",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9a9e53b11bb1b8869ff8b73524ef7bc1af65390dcbdeb9fd6a087ac7ed67234f"
+}

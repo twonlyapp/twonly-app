@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contact_groups SET name = 'wrong content'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "dba2d807f2912ccde89fc77337ac525e047d8344be63d2add7c15f723f0a1707"
+}

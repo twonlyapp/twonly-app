@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 
@@ -25,7 +27,14 @@ class _ReduceFlamesViewState extends State<ReduceFlamesView> {
   void initState() {
     super.initState();
 
-    final stream = twonlyDB.groupsDao.watchGroupsForChatList();
+    final stream = watchRustDatabase(
+      (control) => rust_groups.watchGroups(
+        input: const db_groups.GroupQuery(
+          filter: db_groups.GroupFilter.chatList,
+        ),
+        control: control,
+      ),
+    );
 
     groupSub = stream.listen((update) async {
       if (backupFlames.isEmpty) {
@@ -70,11 +79,12 @@ class _ReduceFlamesViewState extends State<ReduceFlamesView> {
                   onPressed: () async {
                     for (final backupGroup in backupFlames) {
                       if (changedGroupIds.contains(backupGroup.groupId)) {
-                        await twonlyDB.groupsDao.updateGroup(
-                          backupGroup.groupId,
-                          GroupsCompanion(
-                            flameCounter: Value(backupGroup.flameCounter),
+                        await rust_groups.updateGroup(
+                          id: backupGroup.groupId,
+                          patch: GroupPatch(
+                            flameCounter: backupGroup.flameCounter,
                           ),
+                          transaction: currentDatabaseSession(),
                         );
                       }
                     }
@@ -105,11 +115,12 @@ class _ReduceFlamesViewState extends State<ReduceFlamesView> {
                         trailing: OutlinedButton(
                           onPressed: () {
                             changedGroupIds.add(group.groupId);
-                            twonlyDB.groupsDao.updateGroup(
-                              group.groupId,
-                              GroupsCompanion(
-                                flameCounter: Value(group.flameCounter - 1),
+                            rust_groups.updateGroup(
+                              id: group.groupId,
+                              patch: GroupPatch(
+                                flameCounter: group.flameCounter - 1,
                               ),
+                              transaction: currentDatabaseSession(),
                             );
                           },
                           child: const Text('-1'),

@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT contact_id AS \"value!\"\n            FROM key_verifications\n            UNION\n            SELECT announced_user_id AS user_id\n            FROM user_discovery_user_relations\n            WHERE public_key_verified_timestamp IS NOT NULL\n            ORDER BY user_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "key_verifications",
+            "name": "contact_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5cb593d47892d0d45c2587a00284df06bcf482a1bbfe1b855abe8688916b7be1"
+}

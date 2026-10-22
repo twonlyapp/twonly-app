@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT ur.from_contact_id AS \"contact_id!\",\n                ur.public_key_verified_timestamp AS \"verified_at!\"\n            FROM user_discovery_user_relations ur\n            WHERE ur.announced_user_id = ?\n                AND ur.from_contact_id != ?\n                AND ur.public_key_verified_timestamp IS NOT NULL\n                AND EXISTS (\n                SELECT 1\n                FROM key_verifications kv\n                WHERE kv.contact_id = ur.from_contact_id\n            )\n            ORDER BY ur.from_contact_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_user_relations",
+            "name": "from_contact_id"
+          }
+        }
+      },
+      {
+        "name": "verified_at!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_user_relations",
+            "name": "public_key_verified_timestamp"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "6040282513d4bf134665ef501dd4a40e3c204e217b7fe4b374b4c0833ba02808"
+}

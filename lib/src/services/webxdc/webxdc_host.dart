@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/webxdc.dart' as rust_webxdc;
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/shared/select_contacts.view.dart';
@@ -136,7 +140,7 @@ class WebxdcHost {
     _closeView = close;
     _deliveredSerial = 0;
     unawaited(_updateSubscription?.cancel());
-    _updateSubscription = WebxdcService.watchUpdates().listen(
+    _updateSubscription = WebxdcService.watchUpdates(instanceId).listen(
       (_) => unawaited(_pushPendingUpdates()),
     );
   }
@@ -416,7 +420,15 @@ class WebxdcHost {
     if (selected == null || selected.isEmpty) return;
 
     for (final contactId in selected) {
-      final group = await twonlyDB.groupsDao.getDirectChat(contactId);
+      final group = await rust_groups
+          .listGroups(
+            input: db_groups.GroupQuery(
+              filter: db_groups.GroupFilter.directContact,
+              contactId: contactId,
+            ),
+            transaction: currentDatabaseSession(),
+          )
+          .then((rows) => rows.isEmpty ? null : rows.single);
       if (group == null) continue;
       await RustApi.insertAndSendText(
         groupId: group.groupId,

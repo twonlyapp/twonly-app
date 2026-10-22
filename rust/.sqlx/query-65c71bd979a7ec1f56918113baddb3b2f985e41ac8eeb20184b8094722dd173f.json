@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO stickers(content_hash, webp, width, height)\n            VALUES (?, ?, ?, ?)\n            ON CONFLICT(content_hash) DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "65c71bd979a7ec1f56918113baddb3b2f985e41ac8eeb20184b8094722dd173f"
+}

@@ -10,18 +10,32 @@ import eu.twonly.R
 import eu.twonly.NativeErrorReporting
 import eu.twonly.widget.TwonlyWidgetProvider
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicLong
 import org.json.JSONArray
 
 class TwonlyNotificationWorker(
     appContext: Context,
     params: WorkerParameters,
 ) : Worker(appContext, params) {
+    private val activeRun = AtomicLong(0)
+
+    override fun onStopped() {
+        NativeNotificationBridge.cancelRun(activeRun.get())
+        super.onStopped()
+    }
+
     override fun doWork(): Result {
         NativeErrorReporting.breadcrumb(applicationContext, "notification_processing_started")
+        val run = NativeNotificationBridge.createRun(RUN_BUDGET_MS)
+        if (run == 0L) return Result.retry()
+        activeRun.set(run)
+        // onStopped can race registration, before it can observe activeRun.
+        if (isStopped) NativeNotificationBridge.cancelRun(run)
         return try {
             val directory = applicationContext.filesDir.absolutePath
             val response = NativeNotificationResponse.parse(
-                NativeNotificationBridge.process(
+                NativeNotificationBridge.processWithId(
+                    run,
                     directory,
                     directory,
                     Locale.getDefault().toLanguageTag(),
@@ -38,7 +52,7 @@ class TwonlyNotificationWorker(
                 // Rust could not reach the mailbox. Show the generic alert so a
                 // high-priority wake-up still produces a notification, and retry.
                 response.fallback?.let(::showFallback)
-                return settle(retry = true)
+                return settle(run, retry = true)
             }
 
             val manager = NotificationManagerCompat.from(applicationContext)
@@ -49,7 +63,7 @@ class TwonlyNotificationWorker(
                 } else emptyList()
             }
             if (delivered.isNotEmpty()) {
-                NativeNotificationBridge.acknowledge(JSONArray(delivered).toString())
+                NativeNotificationBridge.acknowledge(run, JSONArray(delivered).toString())
                 NotificationTapChannel.notificationArrived()
                 // Real notifications supersede a placeholder from an earlier attempt.
                 manager.cancel(FALLBACK_ID)
@@ -58,24 +72,28 @@ class TwonlyNotificationWorker(
             // An empty batch is the normal outcome of a duplicate wake-up or of
             // traffic that is not user visible, so it must not retry. Only an
             // undrained mailbox is worth another attempt.
-            settle(retry = !batch.completed)
+            settle(run, retry = !batch.completed)
         } catch (error: Throwable) {
             NativeErrorReporting.failure(applicationContext, "notification_processing", error)
             Log.e(TAG, "Native notification processing failed", error)
             if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
+        } finally {
+            // Even retry and exception paths must stop the socket/tasks and
+            // wait for SQLite cleanup before WorkManager sees completion.
+            NativeNotificationBridge.finishRun(run)
+            activeRun.compareAndSet(run, 0)
         }
     }
 
     // Ends the attempt, running the deferred wake-up work first when no further
     // attempt is coming. The notification is already on screen by then, so media
-    // downloads, widget upkeep, and the socket shutdown no longer sit between
-    // the message and the alert. A retry skips it and keeps the connection for
-    // the next attempt.
-    private fun settle(retry: Boolean): Result {
+    // downloads and widget upkeep no longer delay rendering. Every attempt,
+    // including a retry, closes its run in doWork's finally block.
+    private fun settle(run: Long, retry: Boolean): Result {
         if (retry && runAttemptCount < MAX_RETRIES) return Result.retry()
         try {
             val finalized = NativeNotificationResponse.parse(
-                NativeNotificationBridge.finalizeWakeup(FINALIZE_DEADLINE_MS),
+                NativeNotificationBridge.finalizeWakeup(run, FINALIZE_DEADLINE_MS),
             )
             if (finalized.widgetRefresh) TwonlyWidgetProvider.refreshAll(applicationContext)
         } catch (error: Throwable) {
@@ -128,5 +146,6 @@ class TwonlyNotificationWorker(
         // the batch, and everything deferred behind it gets its own window.
         const val PROCESS_DEADLINE_MS = 20_000L
         const val FINALIZE_DEADLINE_MS = 25_000L
+        const val RUN_BUDGET_MS = 55_000L
     }
 }

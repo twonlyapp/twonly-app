@@ -1,10 +1,11 @@
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
@@ -29,8 +30,12 @@ class GroupContextMenu extends StatelessWidget {
           ContextMenuItem(
             title: context.lang.contextMenuArchiveUser,
             onTap: () async {
-              const update = GroupsCompanion(archived: Value(true));
-              await twonlyDB.groupsDao.updateGroup(group.groupId, update);
+              const update = GroupPatch(archived: true);
+              await rust_groups.updateGroup(
+                id: group.groupId,
+                patch: update,
+                transaction: currentDatabaseSession(),
+              );
             },
             icon: Icons.archive_outlined,
           ),
@@ -38,8 +43,12 @@ class GroupContextMenu extends StatelessWidget {
           ContextMenuItem(
             title: context.lang.contextMenuUndoArchiveUser,
             onTap: () async {
-              const update = GroupsCompanion(archived: Value(false));
-              await twonlyDB.groupsDao.updateGroup(group.groupId, update);
+              const update = GroupPatch(archived: false);
+              await rust_groups.updateGroup(
+                id: group.groupId,
+                patch: update,
+                transaction: currentDatabaseSession(),
+              );
             },
             icon: Icons.unarchive_outlined,
           ),
@@ -57,8 +66,12 @@ class GroupContextMenu extends StatelessWidget {
                 ? context.lang.contextMenuUnpin
                 : context.lang.contextMenuPin,
             onTap: () async {
-              final update = GroupsCompanion(pinned: Value(!group.pinned));
-              await twonlyDB.groupsDao.updateGroup(group.groupId, update);
+              final update = GroupPatch(pinned: !group.pinned);
+              await rust_groups.updateGroup(
+                id: group.groupId,
+                patch: update,
+                transaction: currentDatabaseSession(),
+              );
             },
             icon: group.pinned
                 ? FontAwesomeIcons.thumbtackSlash
@@ -74,7 +87,10 @@ class GroupContextMenu extends StatelessWidget {
               navigator.context.lang.groupContextMenuDeleteGroup,
             );
             if (ok) {
-              await twonlyDB.messagesDao.deleteMessagesByGroupId(group.groupId);
+              await rust_messages.clearChatMessages(
+                group: group.groupId,
+                transaction: currentDatabaseSession(),
+              );
             }
           },
         ),

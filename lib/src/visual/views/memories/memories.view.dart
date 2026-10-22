@@ -1,11 +1,14 @@
 import 'dart:async';
-import 'package:drift/drift.dart' show Value;
+
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
@@ -406,9 +409,10 @@ class MemoriesViewState extends State<MemoriesView>
       (setProgress) async {
         for (var i = 0; i < selectedList.length; i++) {
           final mediaId = selectedList[i];
-          await twonlyDB.mediaFilesDao.updateMedia(
-            mediaId,
-            MediaFilesCompanion(isFavorite: Value(targetFav)),
+          await rust_mediafiles.updateMediaFiles(
+            id: mediaId,
+            patch: MediaFilePatch(isFavorite: targetFav),
+            transaction: currentDatabaseSession(),
           );
           setProgress((i + 1) / selectedList.length);
         }

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                UPDATE media_files\n                SET pre_progressing_process = ?\n                WHERE media_id = ?\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "37f8354042f8b9c988d3ad4593b33cd6fce2c3b2144733699b4b24a368e05f47"
+}

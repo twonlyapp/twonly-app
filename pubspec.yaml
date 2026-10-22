@@ -57,8 +57,6 @@ dependencies:
   json_annotation: ^4.9.0 # google.dev
   protobuf: ^6.0.0 # google.dev
   scrollable_positioned_list: ^0.3.8 # google.dev
-  drift: ^2.32.0
-  drift_flutter: ^0.3.0
   get_it: ^9.2.1
   maplibre_gl: ^0.27.1 # maplibre.org
 
@@ -179,7 +177,6 @@ dependency_overrides:
 
 dev_dependencies:
   build_runner: ^2.4.15
-  drift_dev: ^2.25.2
   flutter_launcher_icons: ^0.14.1
   flutter_lints: ^6.0.0
   vector_graphics_compiler: ^1.2.0

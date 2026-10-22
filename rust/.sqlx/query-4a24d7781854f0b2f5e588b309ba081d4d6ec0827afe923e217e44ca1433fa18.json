@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM live_location_targets WHERE 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "4a24d7781854f0b2f5e588b309ba081d4d6ec0827afe923e217e44ca1433fa18"
+}

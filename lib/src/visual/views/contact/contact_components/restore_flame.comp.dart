@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
@@ -39,7 +42,15 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
       widget.contactId,
       userService.currentUser.userId,
     );
-    final stream = twonlyDB.groupsDao.watchGroup(_groupId);
+    final stream = watchRustDatabase(
+      (control) => rust_groups.watchGroups(
+        input: db_groups.GroupQuery(
+          filter: db_groups.GroupFilter.id,
+          groupId: _groupId,
+        ),
+        control: control,
+      ),
+    ).map((rows) => rows.isEmpty ? null : rows.single);
     _groupSub = stream.listen((update) async {
       // Whether a restore is still on offer depends on today as much as on the
       // row, so Rust decides it; the row change is only the cue to ask again.

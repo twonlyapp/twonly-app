@@ -4,6 +4,7 @@ use crate::services::live_location;
 use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize)]
+
 pub struct LiveLocationSession {
     pub session_id: String,
     pub expires_at_ms: i64,
@@ -11,12 +12,12 @@ pub struct LiveLocationSession {
 }
 
 pub async fn start_live_location(
-    group_ids: Vec<String>,
-    duration_seconds: i64,
-    text: String,
+    group_ids: Vec<String>, duration_seconds: i64, text: String,
 ) -> Result<LiveLocationSession> {
     let ctx = Context::get_static()?;
+
     live_location::state(ctx).await?;
+
     live_location::start(ctx, group_ids, duration_seconds, text).await
 }
 

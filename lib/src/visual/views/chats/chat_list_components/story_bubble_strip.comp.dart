@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/daos/stories.dao.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/story_preview.comp.dart';
 

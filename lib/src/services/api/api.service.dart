@@ -8,6 +8,7 @@ import 'package:twonly/src/services/api/connection_lifecycle.dart';
 import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// The ApiProvider is responsible for communicating with the server.
@@ -83,16 +84,7 @@ class ApiService {
     await FcmNotificationService.initFCMAfterAuthenticated();
 
     if (!AppState.isAppInBackground) {
-      unawaitedRustCall(
-        rust_api.RustApi.reuploadPendingMedia(),
-        'reuploadPendingMedia',
-      );
-      unawaitedRustCall(
-        rust_api.RustApi.refreshContactJoinedDates(),
-        'refreshContactJoinedDates',
-      );
-
-      twonlyDB.markUpdated();
+      refreshDatabaseSubscriptions();
       // resetUserDiscoveryRequestUpdates();
       memoriesCloudService.init();
     }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/recovery.dart' as rust_recovery;
+import 'package:twonly/core/database/app/recovery/table.dart' as db_recovery;
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/settings.passwordless_recovery.view.dart';
 
@@ -10,12 +11,15 @@ class PasswordLessRecoveryStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Contact>>(
-      stream: (twonlyDB.select(
-        twonlyDB.contacts,
-      )..where((t) => t.recoveryIsTrustedFriend.equals(true))).watch(),
+    return StreamBuilder<int>(
+      stream: watchRustDatabase(
+        (control) => rust_recovery.watchRecoveryCount(
+          selection: db_recovery.RecoveryContacts.trusted,
+          control: control,
+        ),
+      ),
       builder: (context, snapshot) {
-        final trustedFriendsCount = snapshot.data?.length ?? 0;
+        final trustedFriendsCount = snapshot.data ?? 0;
 
         return Card(
           elevation: 0,
@@ -52,9 +56,7 @@ class PasswordLessRecoveryStatus extends StatelessWidget {
                         Text(
                           context.lang.passwordlessRecovery,
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -62,9 +64,7 @@ class PasswordLessRecoveryStatus extends StatelessWidget {
                             trustedFriendsCount,
                           ),
                           style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: context.color.onSurfaceVariant,
-                              ),
+                              ?.copyWith(color: context.color.onSurfaceVariant),
                         ),
                       ],
                     ),

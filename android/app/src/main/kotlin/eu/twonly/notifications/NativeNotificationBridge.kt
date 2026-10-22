@@ -9,7 +9,20 @@ internal object NativeNotificationBridge {
     external fun logPushReceived(dataDirectory: String, messageId: String, sentAtMs: Long)
 
     @JvmStatic
-    external fun process(
+    external fun setApplicationActive(active: Boolean)
+
+    @JvmStatic
+    external fun createRun(budgetMs: Long): Long
+
+    @JvmStatic
+    external fun cancelRun(run: Long)
+
+    @JvmStatic
+    external fun finishRun(run: Long)
+
+    @JvmStatic
+    external fun processWithId(
+        run: Long,
         databaseDirectory: String,
         dataDirectory: String,
         locale: String,
@@ -17,10 +30,10 @@ internal object NativeNotificationBridge {
     ): String
 
     @JvmStatic
-    external fun acknowledge(eventIdsJson: String): String
+    external fun acknowledge(run: Long, eventIdsJson: String): String
 
     @JvmStatic
-    external fun finalizeWakeup(deadlineMs: Long): String
+    external fun finalizeWakeup(run: Long, deadlineMs: Long): String
 
     @JvmStatic
     external fun storeFcmToken(

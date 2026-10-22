@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/verification_badge_info.comp.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';

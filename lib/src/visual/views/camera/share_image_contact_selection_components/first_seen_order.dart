@@ -1,4 +1,4 @@
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/contact_groups/table.dart';
 
 /// Keeps a row of contact group chips in the order they first appeared.
 /// Groups arrive most used first and choosing one counts as a use, so taking

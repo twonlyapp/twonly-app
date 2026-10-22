@@ -29,7 +29,7 @@ class AppEnvironment {
       if (sharedSupportDir == null || sharedSupportDir.isEmpty) {
         throw StateError('The iOS runtime App Group is unavailable.');
       }
-      await _migrateToSharedSupportDirectory(
+      await migrateToSharedSupportDirectory(
         Directory(privateSupportDir),
         Directory(sharedSupportDir),
       );
@@ -41,21 +41,55 @@ class AppEnvironment {
     _isInitialized = true;
   }
 
-  static Future<void> _migrateToSharedSupportDirectory(
+  /// Bootstraps the shared store before Rust opens either database. Native
+  /// workers wait for the completion marker, including after an interruption.
+  static Future<void> migrateToSharedSupportDirectory(
     Directory source,
     Directory destination,
   ) async {
     await destination.create(recursive: true);
     final marker = File('${destination.path}/.runtime_storage_migrated_v1');
-    if (marker.existsSync() || !source.existsSync()) return;
+    if (marker.existsSync()) return;
 
-    await for (final entity in source.list(followLinks: false)) {
-      await _copyEntity(entity, destination.path);
+    final pending = File('${destination.path}/.runtime_storage_migrating_v1');
+    final pendingTemporary = File('${pending.path}.tmp');
+    final sourcePath = source.absolute.path;
+    if (pending.existsSync()) {
+      if (await pending.readAsString() != sourcePath) {
+        throw StateError(
+          'The shared runtime migration belongs to another source.',
+        );
+      }
+    } else {
+      final entries = await destination.list(followLinks: false).toList();
+      // WidgetKit may record placements before the first app launch. It does
+      // not open SQLite, and its independent configuration must be preserved.
+      if (entries.any(
+        (entry) =>
+            entry.path != pendingTemporary.path &&
+            entry.path != '${destination.path}/widget',
+      )) {
+        throw StateError(
+          'The shared runtime contains data without a migration marker. '
+          'Both stores have been preserved.',
+        );
+      }
+      await pendingTemporary.writeAsString(sourcePath, flush: true);
+      await pendingTemporary.rename(pending.path);
     }
-    await marker.writeAsString(
+
+    if (source.existsSync()) {
+      await for (final entity in source.list(followLinks: false)) {
+        await _copyEntity(entity, destination.path);
+      }
+    }
+    final completed = File('${marker.path}.tmp');
+    await completed.writeAsString(
       DateTime.now().toUtc().toIso8601String(),
       flush: true,
     );
+    await completed.rename(marker.path);
+    await pending.delete();
   }
 
   static Future<void> _copyEntity(

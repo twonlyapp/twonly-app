@@ -1,49 +1,64 @@
-//! Native location workers use the existing notification runtime without Flutter.
+//! Native location workers use the existing notification runtime without
+//! Flutter.
+
 use crate::bridge::InitConfig;
-use crate::context::Context;
+use crate::error::TwonlyError;
 use crate::services::live_location;
 use serde::Deserialize;
-use std::ffi::{CStr, CString, c_char};
-use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::ffi::{c_char, CStr, CString};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 
 #[derive(Deserialize)]
+
 struct Request {
     action: String,
     session_id: Option<String>,
     fix: Option<(f64, f64, f64, i64)>,
 }
 
-fn run(directory: String, request: String) -> String {
+fn run(directory: String, request: String, source: crate::log::LogSource) -> String {
     let result = catch_unwind(AssertUnwindSafe(|| -> Result<serde_json::Value, String> {
         let request: Request = serde_json::from_str(&request).map_err(|e| e.to_string())?;
-        crate::native::notifications::runtime()?.block_on(async move {
-            Context::init_notification(InitConfig {
+
+        crate::native::notifications::native_job(
+            InitConfig {
                 database_dir: directory.clone(),
                 data_dir: directory,
-            })
-            .await
-            .map_err(|e| e.to_string())?;
-            let ctx = Context::get_static().map_err(|e| e.to_string())?;
-            if request.action == "stop" {
-                live_location::stop(ctx, request.session_id.as_deref().ok_or("Missing session")?)
-                    .await
-                    .map_err(|e| e.to_string())?;
-            } else if request.action == "update" {
-                live_location::update(
-                    ctx,
-                    request.session_id.as_deref().ok_or("Missing session")?,
-                    request.fix,
-                    false,
-                )
-                .await
-                .map_err(|e| e.to_string())?;
-            } else if request.action != "state" {
-                return Err("Unknown location action".into());
-            }
-            let session = live_location::state(ctx).await.map_err(|e| e.to_string())?;
-            Ok(serde_json::json!({"ok":true,"session":session}))
-        })
+            },
+            std::time::Duration::from_secs(5),
+            source,
+            move |ctx| async move {
+                if request.action == "stop" {
+                    live_location::stop(
+                        &ctx,
+                        request
+                            .session_id
+                            .as_deref()
+                            .ok_or_else(|| TwonlyError::Generic("Missing session".into()))?,
+                    )
+                    .await?;
+                } else if request.action == "update" {
+                    live_location::update(
+                        &ctx,
+                        request
+                            .session_id
+                            .as_deref()
+                            .ok_or_else(|| TwonlyError::Generic("Missing session".into()))?,
+                        request.fix,
+                        false,
+                    )
+                    .await?;
+                } else if request.action != "state" {
+                    return Err(TwonlyError::Generic("Unknown location action".into()));
+                }
+
+                let session = live_location::state(&ctx).await?;
+
+                Ok(serde_json::json!({"ok":true,"session":session}))
+            },
+        )
     }));
+
     match result {
         Ok(Ok(value)) => value.to_string(),
         Ok(Err(error)) => serde_json::json!({"ok":false,"error":error}).to_string(),
@@ -54,9 +69,9 @@ fn run(directory: String, request: String) -> String {
 /// Both input strings remain valid until return. Free the result with the
 /// existing `twonly_notification_string_free` ABI.
 #[unsafe(no_mangle)]
+
 pub unsafe extern "C" fn twonly_live_location_run(
-    directory: *const c_char,
-    request: *const c_char,
+    directory: *const c_char, request: *const c_char,
 ) -> *mut c_char {
     let json = if directory.is_null() || request.is_null() {
         r#"{"ok":false,"error":"Missing location request"}"#.into()
@@ -69,8 +84,10 @@ pub unsafe extern "C" fn twonly_live_location_run(
             unsafe { CStr::from_ptr(request) }
                 .to_string_lossy()
                 .into_owned(),
+            crate::log::LogSource::Background,
         )
     };
+
     CString::new(json)
         .expect("JSON escapes NUL bytes")
         .into_raw()
@@ -78,11 +95,10 @@ pub unsafe extern "C" fn twonly_live_location_run(
 
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
+
 pub extern "system" fn Java_eu_twonly_location_NativeLiveLocationBridge_run(
-    mut env: jni::JNIEnv<'_>,
-    _class: jni::objects::JClass<'_>,
-    directory: jni::objects::JString<'_>,
-    request: jni::objects::JString<'_>,
+    mut env: jni::JNIEnv<'_>, _class: jni::objects::JClass<'_>,
+    directory: jni::objects::JString<'_>, request: jni::objects::JString<'_>,
 ) -> jni::sys::jstring {
     let strings = (|| -> std::result::Result<(String, String), jni::errors::Error> {
         Ok((
@@ -90,10 +106,14 @@ pub extern "system" fn Java_eu_twonly_location_NativeLiveLocationBridge_run(
             env.get_string(&request)?.into(),
         ))
     })();
+
     let json = match strings {
-        Ok((directory, request)) => run(directory, request),
+        Ok((directory, request)) => {
+            run(directory, request, crate::log::LogSource::ForegroundService)
+        }
         Err(_) => r#"{"ok":false,"error":"Invalid JNI request"}"#.into(),
     };
+
     env.new_string(json)
         .map(|s| s.into_raw())
         .unwrap_or(std::ptr::null_mut())

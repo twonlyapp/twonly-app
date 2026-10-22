@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/location_metadata.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
@@ -87,7 +90,12 @@ class _PrivacyViewState extends State<PrivacyView> {
           ListTile(
             title: Text(context.lang.settingsPrivacyBlockUsers),
             subtitle: StreamBuilder(
-              stream: twonlyDB.contactsDao.watchContactsBlocked(),
+              stream: watchRustDatabase(
+                (control) => rust_contacts.watchContactsCount(
+                  metric: db_contacts.ContactCount.blocked,
+                  control: control,
+                ),
+              ),
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data != null) {
                   return Text(

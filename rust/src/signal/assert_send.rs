@@ -10,6 +10,7 @@ use std::task::{Context, Poll};
 pub struct AssertSendFuture<F>(F);
 
 unsafe impl<F> Send for AssertSendFuture<F> {}
+
 unsafe impl<F> Sync for AssertSendFuture<F> {}
 
 impl<F: Future> Future for AssertSendFuture<F> {

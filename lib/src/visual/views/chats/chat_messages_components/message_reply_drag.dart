@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 
 class MessageReplyDrag extends StatefulWidget {
   const MessageReplyDrag({
@@ -13,7 +13,7 @@ class MessageReplyDrag extends StatefulWidget {
     super.key,
   });
   final Widget child;
-  final Message message;
+  final StoredMessage message;
   final VoidCallback onResponseTriggered;
 
   @override

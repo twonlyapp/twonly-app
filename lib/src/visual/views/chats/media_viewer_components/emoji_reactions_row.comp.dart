@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/reaction_buttons.comp.dart';
 
@@ -32,10 +34,11 @@ Future<void> sendReaction(
     );
     return;
   }
-  await twonlyDB.reactionsDao.updateMyReaction(
-    messageId,
-    emoji,
-    false,
+  await rust_reactions.updateOwnReaction(
+    message: messageId,
+    emoji: emoji,
+    remove: false,
+    transaction: currentDatabaseSession(),
   );
   await RustApi.sendEncryptedContentToGroup(
     groupId: groupId,

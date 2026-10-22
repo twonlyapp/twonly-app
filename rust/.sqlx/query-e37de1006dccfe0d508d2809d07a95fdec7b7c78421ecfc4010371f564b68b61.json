@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT EXISTS(\n                SELECT 1\n                FROM received_custom_avatars\n                WHERE contact_id = ?\n                    AND webp IS NOT NULL\n            ) AS \"value!: bool\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e37de1006dccfe0d508d2809d07a95fdec7b7c78421ecfc4010371f564b68b61"
+}

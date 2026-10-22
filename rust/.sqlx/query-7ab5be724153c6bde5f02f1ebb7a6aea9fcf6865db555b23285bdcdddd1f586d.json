@@ -1,0 +1,410 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT f.media_id AS \"media_id!\",\n                f.type AS \"type!\",\n                f.upload_state AS \"upload_state?\",\n                f.cloud_state AS \"cloud_state!\",\n                f.blurhash AS \"blurhash?\",\n                f.download_state AS \"download_state?\",\n                f.requires_authentication AS \"requires_authentication!: bool\",\n                f.stored AS \"stored!: bool\",\n                f.is_draft_media AS \"is_draft_media!: bool\",\n                f.is_widget_media AS \"is_widget_media!: bool\",\n                f.is_favorite AS \"is_favorite!: bool\",\n                f.has_crop_analyzed AS \"has_crop_analyzed!: bool\",\n                f.pre_progressing_process AS \"pre_progressing_process?\",\n                f.reupload_requested_by AS \"reupload_requested_by?\",\n                f.display_limit_in_milliseconds AS \"display_limit_in_milliseconds?\",\n                f.remove_audio AS \"remove_audio?: bool\",\n                f.trim_start_ms AS \"trim_start_ms?\",\n                f.trim_end_ms AS \"trim_end_ms?\",\n                f.download_token AS \"download_token?\",\n                f.encryption_key AS \"encryption_key?\",\n                f.encryption_mac AS \"encryption_mac?\",\n                f.encryption_nonce AS \"encryption_nonce?\",\n                f.stored_file_hash AS \"stored_file_hash?\",\n                f.has_thumbnail AS \"has_thumbnail!: bool\",\n                f.size_in_bytes AS \"size_in_bytes?\",\n                f.location_latitude AS \"location_latitude?\",\n                f.location_longitude AS \"location_longitude?\",\n                f.location_accuracy AS \"location_accuracy?\",\n                f.location_status AS \"location_status?\",\n                f.location_deadline_at AS \"location_deadline_at?\",\n                f.gallery_export_pending AS \"gallery_export_pending!: bool\",\n                f.created_at AS \"created_at!\",\n                f.created_at_month AS \"created_at_month?\"\n            FROM messages m\n            JOIN media_files f\n            ON f.media_id = m.media_id\n            WHERE m.opened_at IS NULL\n                AND m.is_widget_media = 0\n                AND (m.is_story = 0\n                    OR m.media_stored = 1\n            )\n                AND m.type = 'media'\n                AND f.download_state = 'ready'\n                AND f.type IN ('image','gif')\n            ORDER BY m.rowid\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "type!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "upload_state?",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "upload_state"
+          }
+        }
+      },
+      {
+        "name": "cloud_state!",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "cloud_state"
+          }
+        }
+      },
+      {
+        "name": "blurhash?",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "blurhash"
+          }
+        }
+      },
+      {
+        "name": "download_state?",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "download_state"
+          }
+        }
+      },
+      {
+        "name": "requires_authentication!: bool",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "requires_authentication"
+          }
+        }
+      },
+      {
+        "name": "stored!: bool",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "stored"
+          }
+        }
+      },
+      {
+        "name": "is_draft_media!: bool",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "is_draft_media"
+          }
+        }
+      },
+      {
+        "name": "is_widget_media!: bool",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "is_widget_media"
+          }
+        }
+      },
+      {
+        "name": "is_favorite!: bool",
+        "ordinal": 10,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "is_favorite"
+          }
+        }
+      },
+      {
+        "name": "has_crop_analyzed!: bool",
+        "ordinal": 11,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "has_crop_analyzed"
+          }
+        }
+      },
+      {
+        "name": "pre_progressing_process?",
+        "ordinal": 12,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "pre_progressing_process"
+          }
+        }
+      },
+      {
+        "name": "reupload_requested_by?",
+        "ordinal": 13,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "reupload_requested_by"
+          }
+        }
+      },
+      {
+        "name": "display_limit_in_milliseconds?",
+        "ordinal": 14,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "display_limit_in_milliseconds"
+          }
+        }
+      },
+      {
+        "name": "remove_audio?: bool",
+        "ordinal": 15,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "remove_audio"
+          }
+        }
+      },
+      {
+        "name": "trim_start_ms?",
+        "ordinal": 16,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "trim_start_ms"
+          }
+        }
+      },
+      {
+        "name": "trim_end_ms?",
+        "ordinal": 17,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "trim_end_ms"
+          }
+        }
+      },
+      {
+        "name": "download_token?",
+        "ordinal": 18,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "download_token"
+          }
+        }
+      },
+      {
+        "name": "encryption_key?",
+        "ordinal": 19,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "encryption_key"
+          }
+        }
+      },
+      {
+        "name": "encryption_mac?",
+        "ordinal": 20,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "encryption_mac"
+          }
+        }
+      },
+      {
+        "name": "encryption_nonce?",
+        "ordinal": 21,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "encryption_nonce"
+          }
+        }
+      },
+      {
+        "name": "stored_file_hash?",
+        "ordinal": 22,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "stored_file_hash"
+          }
+        }
+      },
+      {
+        "name": "has_thumbnail!: bool",
+        "ordinal": 23,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "has_thumbnail"
+          }
+        }
+      },
+      {
+        "name": "size_in_bytes?",
+        "ordinal": 24,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "size_in_bytes"
+          }
+        }
+      },
+      {
+        "name": "location_latitude?",
+        "ordinal": 25,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_latitude"
+          }
+        }
+      },
+      {
+        "name": "location_longitude?",
+        "ordinal": 26,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_longitude"
+          }
+        }
+      },
+      {
+        "name": "location_accuracy?",
+        "ordinal": 27,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_accuracy"
+          }
+        }
+      },
+      {
+        "name": "location_status?",
+        "ordinal": 28,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_status"
+          }
+        }
+      },
+      {
+        "name": "location_deadline_at?",
+        "ordinal": 29,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_deadline_at"
+          }
+        }
+      },
+      {
+        "name": "gallery_export_pending!: bool",
+        "ordinal": 30,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "gallery_export_pending"
+          }
+        }
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 31,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "created_at_month?",
+        "ordinal": 32,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "created_at_month"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "7ab5be724153c6bde5f02f1ebb7a6aea9fcf6865db555b23285bdcdddd1f586d"
+}

@@ -1,17 +1,23 @@
 import 'dart:io';
 
-import 'package:drift/drift.dart' show Value;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 
-class _MemoriesApi implements RustLibApi {
+import '../helpers/native_database.dart';
+
+class _MemoriesApi extends NativeTestApi {
   final cloudDeletes = <String>[];
   final fileRemovals = <String>[];
   Exception? cloudError;
@@ -37,15 +43,14 @@ class _MemoriesApi implements RustLibApi {
 
 void main() {
   final api = _MemoriesApi();
-  late TwonlyDB database;
   late Directory support;
 
-  setUpAll(() => RustLib.initMock(api: api));
+  setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
 
   setUp(() async {
-    database = TwonlyDB(NativeDatabase.memory());
-    locator.registerSingleton<TwonlyDB>(database);
+    await TestDatabase.create();
+
     support = Directory.systemTemp.createTempSync('memories-deletion-test-');
     AppEnvironment.initTesting(customSupportDir: support.path);
     api
@@ -55,22 +60,21 @@ void main() {
   });
 
   tearDown(() async {
-    await locator.unregister<TwonlyDB>();
-    await database.close();
     support.deleteSync(recursive: true);
   });
 
   Future<MediaFileService> memory(CloudState cloudState) async {
-    final file = await database.mediaFilesDao.insertOrUpdateMedia(
-      MediaFilesCompanion.insert(
+    final file = await rust_mediafiles.upsertMediaFile(
+      patch: MediaFilePatch(
         mediaId: 'missing-image',
-        type: MediaType.image,
-        stored: const Value(true),
-        hasThumbnail: const Value(true),
-        cloudState: Value(cloudState),
+        type: MediaType.image.name,
+        stored: true,
+        hasThumbnail: true,
+        cloudState: cloudState.name,
       ),
+      transaction: currentDatabaseSession(),
     );
-    return MediaFileService(file!);
+    return MediaFileService(file);
   }
 
   test(
@@ -86,11 +90,23 @@ void main() {
       expect(api.cloudDeletes, isEmpty);
       expect(api.fileRemovals, ['missing-image']);
       expect(
-        await database.mediaFilesDao.getMediaFileById('missing-image'),
+        await rust_mediafiles.getMediaFile(
+          id: 'missing-image',
+          transaction: currentDatabaseSession(),
+        ),
         isNull,
       );
       expect(
-        await database.mediaFilesDao.watchAllStoredMediaFiles().first,
+        await watchRustDatabase(
+          (control) => rust_mediafiles
+              .watchMediaFiles(
+                input: const db_mediafiles.MediaQuery(
+                  filter: db_mediafiles.MediaFilter.stored,
+                ),
+                control: control,
+              )
+              .map(orderedMediaFiles),
+        ).first,
         isEmpty,
       );
     },
@@ -106,7 +122,10 @@ void main() {
       expect(api.cloudDeletes, ['missing-image']);
       expect(api.fileRemovals, ['missing-image']);
       expect(
-        await database.mediaFilesDao.getMediaFileById('missing-image'),
+        await rust_mediafiles.getMediaFile(
+          id: 'missing-image',
+          transaction: currentDatabaseSession(),
+        ),
         isNull,
       );
     });
@@ -129,7 +148,10 @@ void main() {
       expect(api.fileRemovals, isEmpty);
       expect(media.thumbnailPath.existsSync(), isTrue);
       expect(
-        await database.mediaFilesDao.getMediaFileById('missing-image'),
+        await rust_mediafiles.getMediaFile(
+          id: 'missing-image',
+          transaction: currentDatabaseSession(),
+        ),
         isNotNull,
       );
     });
@@ -143,15 +165,25 @@ void main() {
 
         await MemoriesService.deleteMemory(media, completely: false);
 
-        final file = await database.mediaFilesDao.getMediaFileById(
-          'missing-image',
+        final file = await rust_mediafiles.getMediaFile(
+          id: 'missing-image',
+          transaction: currentDatabaseSession(),
         );
         expect(file!.stored, isFalse);
         expect(file.cloudState, state);
         expect(api.cloudDeletes, isEmpty);
         expect(api.fileRemovals, isEmpty);
         expect(
-          await database.mediaFilesDao.watchAllStoredMediaFiles().first,
+          await watchRustDatabase(
+            (control) => rust_mediafiles
+                .watchMediaFiles(
+                  input: const db_mediafiles.MediaQuery(
+                    filter: db_mediafiles.MediaFilter.stored,
+                  ),
+                  control: control,
+                )
+                .map(orderedMediaFiles),
+          ).first,
           state == CloudState.uploaded ? hasLength(1) : isEmpty,
         );
       },

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/elements/my_icon_button.element.dart';
@@ -23,7 +23,7 @@ class MediaViewerBottomNavigationBar extends StatelessWidget {
   });
 
   final MediaFileService? currentMedia;
-  final Message? currentMessage;
+  final StoredMessage? currentMessage;
   final bool imageSaving;
   final bool imageSaved;
   final bool showShortReactions;

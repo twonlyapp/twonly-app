@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    UPDATE receipts SET receipt_id = CASE WHEN ? THEN ? ELSE receipt_id END,\n                    contact_id = CASE WHEN ? THEN ? ELSE contact_id END,\n                    message_id = CASE WHEN ? THEN ? ELSE message_id END,\n                    message = CASE WHEN ? THEN ? ELSE message END,\n                    contact_will_sends_receipt = CASE WHEN ? THEN ? ELSE contact_will_sends_receipt END,\n                    will_be_retried_by_media_upload = CASE WHEN ? THEN ? ELSE will_be_retried_by_media_upload END,\n                    mark_for_retry = CASE WHEN ? THEN ? ELSE mark_for_retry END,\n                    mark_for_retry_after_accepted = CASE WHEN ? THEN ? ELSE mark_for_retry_after_accepted END,\n                    ack_by_server_at = CASE WHEN ? THEN ? ELSE ack_by_server_at END,\n                    retry_count = CASE WHEN ? THEN ? ELSE retry_count END,\n                    last_retry = CASE WHEN ? THEN ? ELSE last_retry END,\n                    created_at = CASE WHEN ? THEN ? ELSE created_at END\n                WHERE message_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 25
+    },
+    "nullable": []
+  },
+  "hash": "853299e2b0620f47320f7ce7ebe66b9aefc4a9bfe56cd162c8c90817014bae43"
+}

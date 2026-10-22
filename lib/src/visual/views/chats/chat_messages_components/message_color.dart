@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/src/model/media_enums.dart';
+import 'package:twonly/src/model/message_enums.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 Color getMessageColorFromType(
-  Message message,
+  StoredMessage message,
   MediaFile? mediaFile,
   BuildContext context,
 ) {

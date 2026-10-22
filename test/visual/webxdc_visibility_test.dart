@@ -1,15 +1,14 @@
-import 'package:drift/drift.dart' show DatabaseConnection;
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/webxdc/webxdc_host.dart';
 import 'package:twonly/src/visual/views/webxdc/webxdc_app.view.dart';
 
-class _WebxdcApi implements RustLibApi {
+import '../helpers/native_database.dart';
+
+class _WebxdcApi extends NativeTestApi {
   final visibleInstances = <String?>[];
 
   @override
@@ -28,19 +27,12 @@ class _WebxdcApi implements RustLibApi {
 
 void main() {
   final api = _WebxdcApi();
-  setUpAll(() => RustLib.initMock(api: api));
+  setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
   setUp(() async {
     api.visibleInstances.clear();
     await locator.reset();
-    locator.registerSingleton<TwonlyDB>(
-      TwonlyDB.forTesting(
-        DatabaseConnection(
-          NativeDatabase.memory(),
-          closeStreamsSynchronously: true,
-        ),
-      ),
-    );
+    await TestDatabase.create();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           SystemChannels.platform_views,
@@ -50,7 +42,7 @@ void main() {
   tearDown(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform_views, null);
-    await twonlyDB.close();
+
     await locator.reset();
   });
 

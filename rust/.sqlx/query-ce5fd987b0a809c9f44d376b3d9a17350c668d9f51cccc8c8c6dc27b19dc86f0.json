@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO app_metadata(key, value) VALUES ('cancelled-borrow', 'must-not-run')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "ce5fd987b0a809c9f44d376b3d9a17350c668d9f51cccc8c8c6dc27b19dc86f0"
+}

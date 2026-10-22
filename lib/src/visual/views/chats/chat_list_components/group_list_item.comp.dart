@@ -4,15 +4,31 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
+import 'package:twonly/core/bridge/database/stories.dart' as rust_stories;
+import 'package:twonly/core/database/app/contact_groups/table.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/key_verifications/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/reactions/table.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/key_verification.dao.dart';
-import 'package:twonly/src/database/daos/stories.dao.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/services/mediafiles/media_download_policy.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
@@ -43,9 +59,9 @@ class GroupListItemComp extends StatefulWidget {
   final Group group;
   final bool? isTyping;
   final List<Contact>? contacts;
-  final List<Message>? unopenedMessages;
-  final Reaction? lastReaction;
-  final Message? lastMessage;
+  final List<StoredMessage>? unopenedMessages;
+  final StoredReaction? lastReaction;
+  final StoredMessage? lastMessage;
   final Map<String, MediaFile>? mediaFiles;
   final bool useSharedSummary;
   final VerificationStatus? verificationStatus;
@@ -59,15 +75,15 @@ class GroupListItemComp extends StatefulWidget {
 }
 
 class _UserListItem extends State<GroupListItemComp> {
-  Message? _currentMessage;
+  StoredMessage? _currentMessage;
 
-  List<Message> _messagesNotOpened = [];
-  StreamSubscription<List<Message>>? _messagesNotOpenedStream;
+  List<StoredMessage> _messagesNotOpened = [];
+  StreamSubscription<List<StoredMessage>>? _messagesNotOpenedStream;
 
-  Message? _lastMessage;
-  Reaction? _lastReaction;
-  StreamSubscription<Message?>? _lastMessageStream;
-  StreamSubscription<Reaction?>? _lastReactionStream;
+  StoredMessage? _lastMessage;
+  StoredReaction? _lastReaction;
+  StreamSubscription<StoredMessage?>? _lastMessageStream;
+  StreamSubscription<StoredReaction?>? _lastReactionStream;
   StreamSubscription<List<MediaFile>>? _lastMediaFilesStream;
   Contact? _directContact;
   StreamSubscription<List<Contact>>? _directContactStream;
@@ -75,7 +91,7 @@ class _UserListItem extends State<GroupListItemComp> {
   StreamSubscription<List<StoryItem>>? _storyItemsStream;
   final StoryExpiryTimer _storyExpiry = StoryExpiryTimer();
 
-  List<Message> _previewMessages = [];
+  List<StoredMessage> _previewMessages = [];
   final List<MediaFile> _previewMediaFiles = [];
   bool _hasNonOpenedMediaFile = false;
   bool _receiverDeletedAccount = false;
@@ -145,9 +161,21 @@ class _UserListItem extends State<GroupListItemComp> {
 
   Future<void> initStreams() async {
     if (widget.storyItems == null && widget.group.isDirectChat) {
-      _storyItemsStream = twonlyDB.storiesDao
-          .watchReceivedStoryItemsForGroup(widget.group.groupId)
-          .listen((items) {
+      _storyItemsStream =
+          (() {
+            final cutoff =
+                clock.now().subtract(storyLifetime).millisecondsSinceEpoch ~/
+                1000;
+            return watchRustDatabase(
+              (control) => rust_stories
+                  .watchReceivedStories(
+                    cutoff: cutoff,
+                    group: widget.group.groupId,
+                    control: control,
+                  )
+                  .map(receivedStoryItems),
+            );
+          })().listen((items) {
             if (!mounted) return;
             setState(() => _storyItems = items);
             _scheduleStoryExpiry();
@@ -155,8 +183,17 @@ class _UserListItem extends State<GroupListItemComp> {
     }
 
     if (!widget.useSharedSummary) {
-      final lastMsgStream = await twonlyDB.messagesDao.watchLastMessage(
-        widget.group.groupId,
+      final lastMsgStream = await Future.value(
+        watchRustDatabase(
+          (control) => rust_messages.watchMessages(
+            input: db_messages.MessageQuery(
+              filter: db_messages.MessageFilter.last,
+              groupId: widget.group.groupId,
+              nowMs: clock.now().millisecondsSinceEpoch,
+            ),
+            control: control,
+          ),
+        ).map((rows) => rows.isEmpty ? null : rows.single),
       );
       if (!mounted) return;
       _lastMessageStream = lastMsgStream.listen((update) {
@@ -165,9 +202,13 @@ class _UserListItem extends State<GroupListItemComp> {
     }
 
     if (!widget.useSharedSummary) {
-      _lastReactionStream = twonlyDB.reactionsDao
-          .watchLastReactions(widget.group.groupId)
-          .listen((update) {
+      _lastReactionStream =
+          watchRustDatabase(
+            (control) => rust_reactions.watchLastReaction(
+              group: widget.group.groupId,
+              control: control,
+            ),
+          ).listen((update) {
             if (!mounted) return;
             setState(() {
               _lastReaction = update;
@@ -178,17 +219,34 @@ class _UserListItem extends State<GroupListItemComp> {
     if (widget.useSharedSummary) {
       _messagesNotOpened = widget.unopenedMessages!;
     } else {
-      _messagesNotOpenedStream = twonlyDB.messagesDao
-          .watchMessageNotOpened(widget.group.groupId)
-          .listen((update) {
+      _messagesNotOpenedStream =
+          watchRustDatabase(
+            (control) => rust_messages.watchMessages(
+              input: db_messages.MessageQuery(
+                filter: db_messages.MessageFilter.unopened,
+                groupId: widget.group.groupId,
+                nowMs: clock.now().millisecondsSinceEpoch,
+              ),
+              control: control,
+            ),
+          ).listen((update) {
             _updateState(_lastMessage, update);
           });
     }
 
     if (!widget.useSharedSummary) {
-      _lastMediaFilesStream = twonlyDB.mediaFilesDao
-          .watchMediaFilesForGroup(widget.group.groupId)
-          .listen((mediaFiles) {
+      _lastMediaFilesStream =
+          watchRustDatabase(
+            (control) => rust_mediafiles
+                .watchMediaFiles(
+                  input: db_mediafiles.MediaQuery(
+                    filter: db_mediafiles.MediaFilter.group,
+                    groupId: widget.group.groupId,
+                  ),
+                  control: control,
+                )
+                .map(orderedMediaFiles),
+          ).listen((mediaFiles) {
             if (!mounted) return;
             for (final mediaFile in mediaFiles) {
               final index = _previewMediaFiles.indexWhere(
@@ -205,21 +263,38 @@ class _UserListItem extends State<GroupListItemComp> {
     if (widget.contacts != null) {
       // Contact data is shared by the parent chat list.
     } else if (widget.group.isDirectChat) {
-      _directContactStream = twonlyDB.groupsDao
-          .watchGroupContact(widget.group.groupId)
-          .listen((contacts) {
-            if (!mounted) return;
-            if (contacts.isNotEmpty) {
-              setState(() {
-                _directContact = contacts.first;
-                _receiverDeletedAccount = _directContact!.accountDeleted;
+      _directContactStream =
+          watchRustDatabase(
+                (control) => rust_groups
+                    .watchGroupContacts(
+                      input: db_groups.GroupMembersQuery(
+                        groupId: widget.group.groupId,
+                        orderForChats: true,
+                      ),
+                      control: control,
+                    )
+                    .map(joinedGroupContacts),
+              )
+              .map((rows) => rows.map((row) => row.$1).toList(growable: false))
+              .listen((contacts) {
+                if (!mounted) return;
+                if (contacts.isNotEmpty) {
+                  setState(() {
+                    _directContact = contacts.first;
+                    _receiverDeletedAccount = _directContact!.accountDeleted;
+                  });
+                }
               });
-            }
-          });
     } else {
-      final groupContacts = await twonlyDB.groupsDao.getGroupContact(
-        widget.group.groupId,
-      );
+      final groupContacts = joinedGroupContacts(
+        await rust_groups.getGroupContacts(
+          input: db_groups.GroupMembersQuery(
+            groupId: widget.group.groupId,
+            orderForChats: true,
+          ),
+          transaction: currentDatabaseSession(),
+        ),
+      ).map((row) => row.$1).toList(growable: false);
       if (!mounted) return;
       if (groupContacts.length == 1) {
         _receiverDeletedAccount = groupContacts.first.accountDeleted;
@@ -228,8 +303,8 @@ class _UserListItem extends State<GroupListItemComp> {
   }
 
   void _updateState(
-    Message? newLastMessage,
-    List<Message> newMessagesNotOpened,
+    StoredMessage? newLastMessage,
+    List<StoredMessage> newMessagesNotOpened,
   ) {
     if (!mounted) return;
     if (newLastMessage == null) {
@@ -296,8 +371,9 @@ class _UserListItem extends State<GroupListItemComp> {
     for (final message in _previewMessages) {
       if (message.mediaId != null &&
           !_previewMediaFiles.any((t) => t.mediaId == message.mediaId)) {
-        final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
-          message.mediaId!,
+        final mediaFile = await rust_mediafiles.getMediaFile(
+          id: message.mediaId!,
+          transaction: currentDatabaseSession(),
         );
         if (mediaFile != null) {
           missing.add(mediaFile);
@@ -331,7 +407,10 @@ class _UserListItem extends State<GroupListItemComp> {
           .firstOrNull;
       final mediaFile = message == null
           ? null
-          : await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
+          : await rust_mediafiles.getMediaFile(
+              id: message.mediaId!,
+              transaction: currentDatabaseSession(),
+            );
       if (mediaFile != null && mediaFile.type != MediaType.audio) {
         if (mediaFile.downloadState == DownloadState.pending) {
           await startDownloadMedia(mediaFile, true);
@@ -413,9 +492,15 @@ class _UserListItem extends State<GroupListItemComp> {
       await context.push(Routes.chatsStory(active.first.senderId));
       return;
     }
-    final contacts = await twonlyDB.groupsDao.getGroupContact(
-      widget.group.groupId,
-    );
+    final contacts = joinedGroupContacts(
+      await rust_groups.getGroupContacts(
+        input: db_groups.GroupMembersQuery(
+          groupId: widget.group.groupId,
+          orderForChats: true,
+        ),
+        transaction: currentDatabaseSession(),
+      ),
+    ).map((row) => row.$1).toList(growable: false);
     if (!mounted || contacts.isEmpty) return;
     await context.push(Routes.profileContact(contacts.first.userId));
   }

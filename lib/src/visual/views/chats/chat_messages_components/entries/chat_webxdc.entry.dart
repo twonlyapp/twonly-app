@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc_host.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -25,7 +25,7 @@ class ChatWebxdcEntry extends StatefulWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final BorderRadiusGeometry borderRadius;
   final BubbleInfo info;
 
@@ -40,9 +40,9 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
   /// rebuilds -- which any incoming message causes -- and each new one starts
   /// out empty, so the card would blank out and the icon would visibly reload
   /// every time anything else in the chat changed.
-  StreamSubscription<WebxdcInstance?>? _subscription;
-  WebxdcInstance? _instance;
-  WebxdcApp? _app;
+  StreamSubscription<WebxdcCardInstance?>? _subscription;
+  WebxdcCardInstance? _instance;
+  WebxdcCardApp? _app;
 
   @override
   void initState() {
@@ -87,7 +87,7 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
     ).listen(_onInstance);
   }
 
-  Future<void> _onInstance(WebxdcInstance? instance) async {
+  Future<void> _onInstance(WebxdcCardInstance? instance) async {
     if (!mounted) return;
     setState(() => _instance = instance);
     if (instance == null) return;
@@ -118,7 +118,7 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
 
   /// Downloading and verifying the bundle happens here and nowhere else: a
   /// message arriving in a chat never causes a fetch, only this tap does.
-  Future<void> _start(BuildContext context, WebxdcInstance instance) async {
+  Future<void> _start(BuildContext context, WebxdcCardInstance instance) async {
     final messenger = ScaffoldMessenger.of(context);
     final unavailable = context.lang.webxdcUnavailable;
     final languages = readerLanguages(context);
@@ -134,8 +134,8 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
 
   Widget _card(
     BuildContext context,
-    WebxdcInstance instance,
-    WebxdcApp? app,
+    WebxdcCardInstance instance,
+    WebxdcCardApp? app,
   ) {
     final subtitle = instance.document ?? instance.summary;
     // The card sits on a message bubble, whose color is the same in either

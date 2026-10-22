@@ -1,15 +1,25 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/wrapper/signal.dart';
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/contact_enums.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -48,18 +58,34 @@ class _ContactViewState extends State<ContactView> {
   @override
   void initState() {
     super.initState();
-    _streamContact = twonlyDB.contactsDao.watchContact(widget.userId).listen((
-      update,
-    ) {
-      if (update != null) {
-        setState(() {
-          _contact = update;
+    _streamContact =
+        watchRustDatabase(
+          (control) => rust_contacts.watchContacts(
+            input: db_contacts.ContactQuery(
+              filter: db_contacts.ContactFilter.ids,
+              ids: Int64List.fromList([widget.userId].toList()),
+            ),
+            control: control,
+          ),
+        ).map((rows) => rows.isEmpty ? null : rows.single).listen((
+          update,
+        ) {
+          if (update != null) {
+            setState(() {
+              _contact = update;
+            });
+          }
         });
-      }
-    });
-    _streamMemberOfGroups = twonlyDB.groupsDao
-        .watchContactGroupMember(widget.userId)
-        .listen((groups) async {
+    _streamMemberOfGroups =
+        watchRustDatabase(
+          (control) => rust_groups.watchGroupMembers(
+            input: db_groups.GroupMembersQuery(
+              contactId: widget.userId,
+              activeOnly: false,
+            ),
+            control: control,
+          ),
+        ).listen((groups) async {
           if (!mounted) return;
           setState(() {
             _memberOfGroups = groups;
@@ -77,9 +103,15 @@ class _ContactViewState extends State<ContactView> {
   Future<void> handleUserRemoveRequest(Contact contact) async {
     var delete = true;
     for (final groupM in _memberOfGroups) {
-      final group = await twonlyDB.groupsDao.getGroup(groupM.groupId);
+      final group = await rust_groups.getGroup(
+        id: groupM.groupId,
+        transaction: currentDatabaseSession(),
+      );
       if (group?.deletedContent ?? false) {
-        await twonlyDB.groupsDao.deleteGroup(group!.groupId);
+        await rust_groups.deleteGroup(
+          id: group!.groupId,
+          transaction: currentDatabaseSession(),
+        );
       } else {
         delete = false;
       }
@@ -99,7 +131,10 @@ class _ContactViewState extends State<ContactView> {
       context.lang.contactRemoveBody,
     );
     if (remove) {
-      await twonlyDB.contactsDao.deleteContactByUserId(contact.userId);
+      await rust_contacts.deleteContact(
+        id: contact.userId,
+        transaction: currentDatabaseSession(),
+      );
       if (mounted) {
         Navigator.popUntil(context, (route) => route.isFirst);
       }
@@ -113,9 +148,13 @@ class _ContactViewState extends State<ContactView> {
       context.lang.contactBlockBody,
     );
     if (block) {
-      const update = ContactsCompanion(blocked: Value(true));
+      const update = ContactPatch(blocked: true);
       if (context.mounted) {
-        await twonlyDB.contactsDao.updateContact(contact.userId, update);
+        await rust_contacts.updateContact(
+          id: contact.userId,
+          patch: update,
+          transaction: currentDatabaseSession(),
+        );
       }
       if (mounted) {
         Navigator.popUntil(context, (route) => route.isFirst);
@@ -293,9 +332,15 @@ class _ContactViewState extends State<ContactView> {
             icon: FontAwesomeIcons.solidComments,
             text: context.lang.contactViewMessage,
             onTap: () async {
-              final group = await twonlyDB.groupsDao.getDirectChat(
-                contact.userId,
-              );
+              final group = await rust_groups
+                  .listGroups(
+                    input: db_groups.GroupQuery(
+                      filter: db_groups.GroupFilter.directContact,
+                      contactId: contact.userId,
+                    ),
+                    transaction: currentDatabaseSession(),
+                  )
+                  .then((rows) => rows.isEmpty ? null : rows.single);
               if (group != null && context.mounted) {
                 await context.push(
                   Routes.chatsMessages(group.groupId),
@@ -312,10 +357,13 @@ class _ContactViewState extends State<ContactView> {
               final nickName = await showNicknameChangeDialog(context, contact);
 
               if (context.mounted && nickName != null && nickName != '') {
-                final update = ContactsCompanion(nickName: Value(nickName));
-                await twonlyDB.contactsDao.updateContact(
-                  contact.userId,
-                  update,
+                final update = ContactPatch(
+                  nickName: NullableText(value: nickName),
+                );
+                await rust_contacts.updateContact(
+                  id: contact.userId,
+                  patch: update,
+                  transaction: currentDatabaseSession(),
                 );
               }
             },
@@ -405,8 +453,10 @@ class _ContactViewState extends State<ContactView> {
                     await RustApi.establishSignalSession(
                       contactId: contact.userId,
                     );
-                    final updatedContact = await twonlyDB.contactsDao
-                        .getContactById(contact.userId);
+                    final updatedContact = await rust_contacts.getContact(
+                      id: contact.userId,
+                      transaction: currentDatabaseSession(),
+                    );
                     final isV2 =
                         updatedContact?.signalVersion == SignalVersion.v2;
 

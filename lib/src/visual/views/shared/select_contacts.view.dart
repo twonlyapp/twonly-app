@@ -4,10 +4,16 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/recovery.dart' as rust_recovery;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
@@ -70,7 +76,15 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
       _alreadySelected.clear();
     }
 
-    final stream = twonlyDB.contactsDao.watchAllAcceptedContacts();
+    final stream = watchRustDatabase(
+      (control) => rust_contacts.watchContacts(
+        input: db_contacts.ContactQuery(
+          filter: db_contacts.ContactFilter.accepted,
+          ids: Int64List(0),
+        ),
+        control: control,
+      ),
+    );
 
     contactSub = stream.listen((update) async {
       update.sort(
@@ -86,16 +100,14 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
   }
 
   Future<void> _loadVerifiedContacts() async {
-    final kvs = await twonlyDB.select(twonlyDB.keyVerifications).get();
-    final urs = await (twonlyDB.select(
-      twonlyDB.userDiscoveryUserRelations,
-    )..where((u) => u.publicKeyVerifiedTimestamp.isNotNull())).get();
-
+    final ids = (await rust_recovery.verifiedContactIds(
+      transaction: currentDatabaseSession(),
+    )).map((id) => id.toInt()).toList();
     if (!mounted) return;
     setState(() {
       verifiedUserIds
-        ..addAll(kvs.map((row) => row.contactId))
-        ..addAll(urs.map((row) => row.announcedUserId));
+        ..clear()
+        ..addAll(ids);
     });
     await filterUsers();
   }

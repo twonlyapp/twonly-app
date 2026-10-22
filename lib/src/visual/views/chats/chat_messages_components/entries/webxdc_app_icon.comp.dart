@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/webxdc/table.dart';
 
 /// One `MemoryImage` per app version, kept for the life of the process.
 ///
@@ -22,7 +22,7 @@ class WebxdcAppIcon extends StatelessWidget {
     super.key,
   });
 
-  final WebxdcApp? app;
+  final WebxdcCardApp? app;
   final double size;
   final double radius;
 
@@ -50,7 +50,7 @@ class WebxdcAppIcon extends StatelessWidget {
   }
 }
 
-MemoryImage? _providerFor(WebxdcApp? app) {
+MemoryImage? _providerFor(WebxdcCardApp? app) {
   if (app == null) return null;
   final icon = app.icon;
   if (icon == null || icon.isEmpty) return null;

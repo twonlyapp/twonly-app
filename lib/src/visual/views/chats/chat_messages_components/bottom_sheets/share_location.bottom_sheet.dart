@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/core/bridge/live_location.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/src/services/live_location.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';

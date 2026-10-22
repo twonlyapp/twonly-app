@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT COALESCE(MAX(serial), 0) AS \"value!\"\n            FROM webxdc_updates\n            WHERE instance_id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "65efed30f9fc1235a6bd49ce29c1527e571d5c6c651beb2bd7fc5c53da4487d4"
+}

@@ -61,11 +61,16 @@ class NewsService {
   File get _cacheFile =>
       File(join(AppEnvironment.supportDir, 'news_feed.json'));
 
-  Future<void> init() async {
+  Future<void> init({http.Client? client}) async {
     try {
       await loadCache();
     } catch (e) {
       Log.error('Failed to load news cache: $e');
+    }
+    final lastDownload = lastDownloadedAt;
+    if (lastDownload == null ||
+        DateTime.now().difference(lastDownload) >= const Duration(days: 7)) {
+      await fetchFeed(client: client);
     }
   }
 

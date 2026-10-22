@@ -20,9 +20,10 @@ use crate::api::proto::http_requests::{append_group_state, AppendGroupState, New
 use crate::api::server::Server;
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
-use crate::database::app::tables::{
-    Contact, GetGroupPublicKey, GetMissingGroupPublicKeys, GetUnjoinedGroups, Group, InsertGroup,
-    InsertGroupHistory, InsertGroupMember, UpdateContact, UpdateGroup, UpdateGroupMemberState,
+use crate::database::app::contacts::table::{Contact, UpdateContact};
+use crate::database::app::groups::native::{
+    GetGroupPublicKey, GetMissingGroupPublicKeys, GetUnjoinedGroups, Group, InsertGroup,
+    InsertGroupHistory, InsertGroupMember, UpdateGroup, UpdateGroupMemberState,
 };
 use crate::error::{Result, TwonlyError};
 use crate::services::messages::MessageService;
@@ -40,6 +41,7 @@ const DEFAULT_DELETE_MS: i64 = 86_400_000;
 /// again. A peer that cannot answer -- an old client, a member who never comes
 /// online -- would otherwise be re-asked on every reconnect and every group
 /// update.
+
 const PUBLIC_KEY_REQUEST_INTERVAL: Duration = Duration::from_secs(24 * 60 * 60);
 
 pub struct GroupService {
@@ -57,6 +59,7 @@ pub struct GroupService {
 ///
 /// Acquire this *before* a database connection and never while holding one:
 /// the reverse order deadlocks against the one-connection pool.
+
 static GROUP_STATE_LOCKS: LazyLock<Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
@@ -65,14 +68,17 @@ fn group_state_lock(group_id: &str) -> Arc<tokio::sync::Mutex<()>> {
         Ok(locks) => locks,
         Err(poisoned) => poisoned.into_inner(),
     };
+
     locks.entry(group_id.to_owned()).or_default().clone()
 }
 
 /// How many versions a group-state update chases before it gives up.
+
 const STATE_UPDATE_ATTEMPTS: usize = 3;
 
 /// The admin rights a state update grants or revokes alongside the new state.
 #[derive(Default)]
+
 struct AdminKeys {
     add: Option<Vec<u8>>,
     remove: Option<Vec<u8>>,
@@ -84,6 +90,7 @@ struct AdminKeys {
 /// copy of the state; whoever pushes first wins, and the losers' rejections
 /// are of no consequence. It is carried out of the inbound transaction because
 /// pushing it is a network round trip and the app database has one connection.
+
 struct PendingCompaction {
     group: GroupRecord,
     version_id: u64,
@@ -95,6 +102,7 @@ struct PendingCompaction {
 /// Process-local on purpose: the point is to keep one session from re-asking a
 /// silent peer on every reconnect, not to remember the attempt across restarts.
 /// `force` bypasses it, so the user can always retry by opening the group.
+
 static PUBLIC_KEY_REQUESTS: LazyLock<Mutex<HashMap<(String, i64), Instant>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
@@ -104,37 +112,48 @@ static PUBLIC_KEY_REQUESTS: LazyLock<Mutex<HashMap<(String, i64), Instant>>> =
 /// keep a busy group from refetching its state on every inbound message while
 /// the server still reports the member as gone, not to remember across
 /// restarts.
+
 static STALE_MEMBERSHIP_REFRESHES: LazyLock<Mutex<HashMap<String, Instant>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// Shortest gap between two refreshes prompted by the same group.
+
 const STALE_MEMBERSHIP_REFRESH_INTERVAL: Duration = Duration::from_secs(300);
 
 /// Records a refresh and reports whether it should be fetched at all.
+
 fn claim_stale_membership_refresh(group_id: &str) -> bool {
     let mut refreshes = match STALE_MEMBERSHIP_REFRESHES.lock() {
         Ok(refreshes) => refreshes,
         Err(poisoned) => poisoned.into_inner(),
     };
+
     let now = Instant::now();
+
     if refreshes
         .get(group_id)
         .is_some_and(|at| now.duration_since(*at) < STALE_MEMBERSHIP_REFRESH_INTERVAL)
     {
         return false;
     }
+
     refreshes.insert(group_id.to_owned(), now);
+
     true
 }
 
 /// Records a request and reports whether it should be sent at all.
+
 fn claim_public_key_request(group_id: &str, contact_id: i64, force: bool) -> bool {
     let mut requests = match PUBLIC_KEY_REQUESTS.lock() {
         Ok(requests) => requests,
         Err(poisoned) => poisoned.into_inner(),
     };
+
     let key = (group_id.to_owned(), contact_id);
+
     let now = Instant::now();
+
     if !force
         && requests
             .get(&key)
@@ -142,17 +161,18 @@ fn claim_public_key_request(group_id: &str, contact_id: i64, force: bool) -> boo
     {
         return false;
     }
+
     requests.insert(key, now);
+
     true
 }
 
 /// Claims a membership repair by rotating the receipt it refers to. A delayed
 /// error for an already retried or acknowledged receipt must not create a new
 /// invitation. Check the group too: receipt ownership alone is not sufficient.
+
 async fn retry_membership_receipt(
-    t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
-    from_user_id: i64,
-    group_id: &str,
+    t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, from_user_id: i64, group_id: &str,
     related_receipt_id: &str,
 ) -> Result<bool> {
     let message = sqlx::query_scalar!(
@@ -162,13 +182,17 @@ async fn retry_membership_receipt(
     )
     .fetch_optional(&mut **t)
     .await?;
+
     let Some(message) = message else {
         return Ok(false);
     };
+
     let envelope = proto::Message::decode(message.as_slice())?;
+
     let Some(content) = envelope.encrypted_content else {
         return Ok(false);
     };
+
     if EncryptedContent::decode(content.as_slice())?
         .group_id
         .as_deref()
@@ -178,6 +202,7 @@ async fn retry_membership_receipt(
     }
 
     let new_receipt_id = new_uuid_v4();
+
     sqlx::query!(
         r#"UPDATE receipts
                SET receipt_id = ?,
@@ -192,40 +217,51 @@ async fn retry_membership_receipt(
     )
     .execute(&mut **t)
     .await?;
+
     Ok(true)
 }
 
 impl GroupService {
     pub async fn on_connected(&self) -> Result<()> {
         self.fetch_group_states_for_unjoined_groups().await?;
+
         self.fetch_missing_group_public_keys(None, false).await?;
+
         self.sync_flame_counters(None).await
     }
 
     /// Tells each peer where their shared streak stands. Normally at most once
     /// per day per chat; `force_for_group` overrides that guard and asks the
     /// peer to take our value, which is how a restore reaches the other side.
+
     pub(crate) async fn sync_flame_counters(&self, force_for_group: Option<&str>) -> Result<()> {
         let db = self.ctx.app_db.read().await.clone();
+
         let groups = Group::flame_sync_candidates(&db.pool).await?;
+
         if groups.is_empty() {
             return Ok(());
         }
 
         let best_friend_id = Group::best_friend_group_id(&db.pool).await?;
+
         let states = Group::flame_states(&db.pool, None).await?;
+
         let now = current_time().timestamp();
+
         let start_today = start_of_local_day()?;
 
         for group in groups {
             let Some(changed) = group.last_flame_counter_change else {
                 continue;
             };
+
             let forced = force_for_group == Some(group.group_id.as_str());
 
             if changed < start_today {
                 continue;
             }
+
             if !forced
                 && group
                     .last_flame_sync
@@ -235,9 +271,11 @@ impl GroupService {
             }
 
             let is_best_friend = best_friend_id.as_deref() == Some(group.group_id.as_str());
+
             // The stored column can still hold a streak that today's derivation
             // has already let expire, so send what the user actually sees.
             let counter = states.get(&group.group_id).map_or(0, |state| state.counter);
+
             if counter <= 2 && !is_best_friend {
                 continue;
             }
@@ -262,15 +300,20 @@ impl GroupService {
 
             Group::set_last_flame_sync(&db.pool, &group.group_id, now).await?;
         }
+
         Ok(())
     }
 
     /// Puts a lost streak back, tells the chat it happened, and pushes the
     /// restored value to the peer so both sides agree again.
+
     pub(crate) async fn restore_flames(&self, group_id: String) -> Result<bool> {
         let database = self.ctx.app_db.read().await.clone();
+
         let mut transaction = database.pool.begin().await?;
+
         let restored = Group::restore_flames(&mut transaction, &group_id).await?;
+
         transaction.commit().await?;
 
         let Some(restored) = restored else {
@@ -303,6 +346,7 @@ impl GroupService {
             .await?;
 
         self.sync_flame_counters(Some(&group_id)).await?;
+
         Ok(true)
     }
 
@@ -315,16 +359,16 @@ impl GroupService {
     /// Owns its transaction instead of borrowing the inbound one: the refresh
     /// below reaches the group server, which must not happen while the single
     /// app-database connection is held.
+
     pub(crate) async fn handle_membership_error(
-        &self,
-        from_user_id: i64,
-        group_id: String,
-        related_receipt_id: String,
+        &self, from_user_id: i64, group_id: String, related_receipt_id: String,
     ) -> Result<()> {
         let _ = self.fetch_group_state(group_id.clone()).await;
 
         let database = self.ctx.app_db.read().await.clone();
+
         let mut transaction = database.pool.begin().await?;
+
         let t = &mut transaction;
 
         if !retry_membership_receipt(t, from_user_id, &group_id, &related_receipt_id).await? {
@@ -334,10 +378,12 @@ impl GroupService {
                 related_receipt_id,
                 "ignoring an obsolete or unrelated group membership error"
             );
+
             return Ok(());
         }
 
         let group = GroupRecord::load_in_transaction(t, &group_id).await?;
+
         let is_still_member = sqlx::query_scalar!(
             r#"SELECT EXISTS(
                 SELECT 1 FROM group_members
@@ -369,21 +415,29 @@ impl GroupService {
         }
 
         transaction.commit().await?;
+
         Ok(())
     }
 
     pub async fn create_group(&self, group_name: String, member_ids: Vec<i64>) -> Result<bool> {
         let local = self.ctx.user_id().await?;
+
         let group_id = new_uuid_v4();
+
         let mut key = vec![0; 32];
+
         rand::rng().fill_bytes(&mut key);
+
         let mut rng = rand::rngs::StdRng::from_os_rng();
+
         let identity = libsignal_protocol::IdentityKeyPair::generate(&mut rng);
+
         let members: Vec<i64> = std::iter::once(local)
             .chain(member_ids.iter().copied())
             .collect::<BTreeSet<_>>()
             .into_iter()
             .collect();
+
         let group_state = EncryptedGroupState {
             member_ids: members,
             admin_ids: vec![local],
@@ -401,8 +455,11 @@ impl GroupService {
         .await?;
 
         let db = self.ctx.app_db.read().await.clone();
+
         let mut tr = db.pool.begin().await?;
+
         let serialized_identity = identity.serialize().to_vec();
+
         InsertGroup::builder()
             .group_id(group_id.clone())
             .group_name(group_name.clone())
@@ -411,6 +468,7 @@ impl GroupService {
             .build()
             .execute(&mut tr)
             .await?;
+
         for id in member_ids {
             InsertGroupMember::builder()
                 .group_id(group_id.clone())
@@ -420,8 +478,11 @@ impl GroupService {
                 .execute(&mut tr)
                 .await?;
         }
+
         Self::history(&mut tr, &group_id, "createdGroup", None, None, None).await?;
+
         tr.commit().await?;
+
         MessageService::new(&self.ctx)
             .send_to_group(
                 group_id.clone(),
@@ -438,6 +499,7 @@ impl GroupService {
                 true,
             )
             .await?;
+
         Ok(true)
     }
 
@@ -448,17 +510,22 @@ impl GroupService {
     /// holding it across network I/O starves every other database user until
     /// the acquire timeout and surfaces as `pool timed out while waiting for an
     /// open connection`.
+
     pub async fn fetch_group_state(&self, group_id: String) -> Result<bool> {
         let lock = group_state_lock(&group_id);
+
         let _guard = lock.lock().await;
 
         let server = GroupApi::fetch_group_state(&group_id).await?;
 
         let database = self.ctx.app_db.read().await.clone();
+
         let mut t = database.pool.begin().await?;
+
         let (updated, compaction) = self
             .apply_fetched_group_state(&mut t, &group_id, server)
             .await?;
+
         t.commit().await?;
 
         if let Some(compaction) = compaction {
@@ -484,7 +551,8 @@ impl GroupService {
         // flushes them here -- this is not an inbound-message path -- and they
         // would otherwise wait for the next reconnect.
         let ctx = self.ctx.clone();
-        tokio::spawn(async move {
+
+        crate::database::lifecycle::spawn(async move {
             if let Err(error) = retransmit_queued_receipts(&ctx).await {
                 tracing::warn!("failed to flush messages queued by a group refresh: {error}");
             }
@@ -497,13 +565,13 @@ impl GroupService {
     /// only: the admin-side compaction of leave-appends is handed back to the
     /// caller instead of sent from here, because it is a network round trip
     /// and this runs while the caller holds the app database's one connection.
+
     async fn apply_fetched_group_state(
-        &self,
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
-        group_id: &str,
+        &self, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: &str,
         server: Option<crate::api::proto::http_requests::GroupState>,
     ) -> Result<(bool, Option<PendingCompaction>)> {
         let group = GroupRecord::load_in_transaction(t, group_id).await?;
+
         let Some(server) = server else {
             UpdateGroup::builder()
                 .group_id(group_id.to_owned())
@@ -511,15 +579,23 @@ impl GroupService {
                 .build()
                 .execute(t)
                 .await?;
+
             return Ok((false, None));
         };
+
         let state_key = group.state_key()?;
+
         let raw = crypto::decrypt(state_key, &server.encrypted_group_state)?;
+
         let mut group_state = EncryptedGroupState::decode(raw.as_slice())
             .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+
         let local_user_id = self.ctx.user_id().await?;
+
         let local_public_key = group.identity()?.identity_key().serialize();
+
         let mut appended_changes = false;
+
         // Every step below that touches `appended` skips the entry instead of
         // returning. The group server accepts appends without checking group
         // membership, and it stores them forever, so one malformed entry would
@@ -528,56 +604,73 @@ impl GroupService {
             let Some(tbs) = &appended.append_tbs else {
                 continue;
             };
+
             // Resolve the author first: an append signed by a key that is not a
             // member of this group is dropped before any of its bytes are parsed.
             let leaving_id = if tbs.public_key.as_slice() == local_public_key.as_ref() {
                 Some(local_user_id)
             } else {
                 sqlx::query_scalar!(
-                    "SELECT contact_id FROM group_members WHERE group_id = ? AND group_public_key = ?",
+                    "SELECT contact_id FROM group_members WHERE group_id = ? AND group_public_key \
+                     = ?",
                     group_id,
                     tbs.public_key,
                 )
                 .fetch_optional(&mut **t)
                 .await?
             };
+
             let Some(leaving_id) = leaving_id else {
                 tracing::warn!(group_id, "ignored group-state append from a non-member");
+
                 continue;
             };
+
             let Ok(public_key) = libsignal_protocol::PublicKey::try_from(tbs.public_key.as_slice())
             else {
                 tracing::warn!(group_id, "ignored group-state append with an unusable key");
+
                 continue;
             };
+
             if !public_key.verify_signature(&tbs.encode_to_vec(), &appended.signature) {
                 tracing::warn!(
                     group_id,
                     "ignored group-state append with invalid signature"
                 );
+
                 continue;
             }
+
             let raw = match crypto::decrypt(state_key, &tbs.encrypted_group_state_append) {
                 Ok(raw) => raw,
                 Err(error) => {
                     tracing::warn!(group_id, %error, "ignored undecryptable group-state append");
+
                     continue;
                 }
             };
+
             let Ok(append) = EncryptedAppendedGroupState::decode(raw.as_slice()) else {
                 tracing::warn!(
                     group_id,
                     "ignored group-state append with an invalid payload"
                 );
+
                 continue;
             };
+
             if append.r#type != encrypted_appended_group_state::Type::LeftGroup as i32 {
                 continue;
             }
+
             group_state.member_ids.retain(|id| *id != leaving_id);
+
             group_state.admin_ids.retain(|id| *id != leaving_id);
+
             appended_changes = true;
         }
+
         let compaction =
             (appended_changes & group_state.admin_ids.contains(&local_user_id)).then(|| {
                 PendingCompaction {
@@ -586,8 +679,10 @@ impl GroupService {
                     state: group_state.clone(),
                 }
             });
+
         self.apply_state(t, group_id, server.version_id as i64, &group_state)
             .await?;
+
         Ok((true, compaction))
     }
 
@@ -604,21 +699,25 @@ impl GroupService {
     ///
     /// `change` returning `None` means there is nothing left to write, which
     /// this reports back as `false`.
+
     async fn update_state_with_retry(
-        &self,
-        group: &GroupRecord,
+        &self, group: &GroupRecord,
         mut change: impl FnMut(&mut EncryptedGroupState) -> Result<Option<AdminKeys>>,
     ) -> Result<bool> {
         let mut attempt = 1;
+
         loop {
             let (version, mut state) = GroupApi::load_state(group).await?;
+
             let Some(keys) = change(&mut state)? else {
                 return Ok(false);
             };
+
             match GroupApi::update_remote(group, version, &state, keys.add, keys.remove).await {
                 Ok(()) => return Ok(true),
                 Err(TwonlyError::GroupStateConflict) if attempt < STATE_UPDATE_ATTEMPTS => {
                     attempt += 1;
+
                     tracing::info!(
                         group_id = group.group_id,
                         attempt,
@@ -632,11 +731,14 @@ impl GroupService {
 
     pub async fn update_group_name(&self, group_id: String, name: String) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
+
         self.update_state_with_retry(&g, |state| {
             state.group_name = name.clone();
+
             Ok(Some(AdminKeys::default()))
         })
         .await?;
+
         self.announce(
             &group_id,
             "updatedGroupName",
@@ -645,7 +747,9 @@ impl GroupService {
             None,
         )
         .await?;
+
         let mut tr = db.pool.begin().await?;
+
         Self::history(
             &mut tr,
             &group_id,
@@ -655,20 +759,27 @@ impl GroupService {
             None,
         )
         .await?;
+
         tr.commit().await?;
+
         self.fetch_group_state(group_id).await
     }
 
     pub async fn update_chat_deletion_time(&self, group_id: String, ms: i64) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
+
         self.update_state_with_retry(&g, |state| {
             state.delete_messages_after_milliseconds = Some(ms);
+
             Ok(Some(AdminKeys::default()))
         })
         .await?;
+
         self.announce(&group_id, "changeDisplayMaxTime", None, None, Some(ms))
             .await?;
+
         let mut tr = db.pool.begin().await?;
+
         Self::history(
             &mut tr,
             &group_id,
@@ -678,23 +789,24 @@ impl GroupService {
             Some(ms),
         )
         .await?;
+
         tr.commit().await?;
+
         self.fetch_group_state(group_id).await
     }
 
     /// Resolves the group public key a member signs its group-state appends
     /// with. Our own key lives in the group record; everyone else's arrives
     /// through `group_join` and may still be missing.
+
     async fn member_public_key(
-        &self,
-        db: &Arc<crate::database::app::AppDatabase>,
-        group: &GroupRecord,
-        group_id: &str,
+        &self, db: &Arc<crate::database::app::AppDatabase>, group: &GroupRecord, group_id: &str,
         contact_id: i64,
     ) -> Result<Vec<u8>> {
         if contact_id == self.ctx.user_id().await? {
             return Ok(group.identity()?.identity_key().serialize().to_vec());
         }
+
         GetGroupPublicKey::builder()
             .group_id(group_id.to_owned())
             .contact_id(contact_id)
@@ -709,10 +821,7 @@ impl GroupService {
     }
 
     pub async fn manage_admin(
-        &self,
-        group_id: String,
-        contact_id: i64,
-        remove: bool,
+        &self, group_id: String, contact_id: i64, remove: bool,
     ) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
 
@@ -725,44 +834,59 @@ impl GroupService {
         } else {
             "promoteToAdmin"
         };
+
         self.update_state_with_retry(&g, |state| {
             if remove {
                 state.admin_ids.retain(|x| *x != contact_id)
             } else if !state.admin_ids.contains(&contact_id) {
                 state.admin_ids.push(contact_id)
             };
+
             Ok(Some(AdminKeys {
                 add: (!remove).then(|| public_key.clone()),
                 remove: remove.then(|| public_key.clone()),
             }))
         })
         .await?;
+
         self.announce(&group_id, kind, Some(contact_id), None, None)
             .await?;
+
         let mut tr = db.pool.begin().await?;
+
         Self::history(&mut tr, &group_id, kind, Some(contact_id), None, None).await?;
+
         tr.commit().await?;
+
         self.fetch_group_state(group_id).await
     }
 
     pub async fn add_members(&self, group_id: String, ids: Vec<i64>) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
+
         self.update_state_with_retry(&g, |state| {
             for id in &ids {
                 if !state.member_ids.contains(id) {
                     state.member_ids.push(*id)
                 }
             }
+
             Ok(Some(AdminKeys::default()))
         })
         .await?;
+
         let identity = g.identity()?;
+
         for id in ids {
             self.announce(&group_id, "addMember", Some(id), None, None)
                 .await?;
+
             let mut tr = db.pool.begin().await?;
+
             Self::history(&mut tr, &group_id, "addMember", Some(id), None, None).await?;
+
             tr.commit().await?;
+
             send_c2c_message_to_contact()
                 .ctx(&self.ctx)
                 .contact_id(id)
@@ -781,6 +905,7 @@ impl GroupService {
                 .call()
                 .await?;
         }
+
         self.fetch_group_state(group_id).await
     }
 
@@ -790,8 +915,10 @@ impl GroupService {
     /// signing rights, so a plain member can be removed without it. That
     /// matters: a key that never arrived would otherwise make the member
     /// unremovable.
+
     pub async fn remove_member(&self, group_id: String, contact_id: i64) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
+
         // Looked up before the state is read so the change below stays a plain
         // function of it. A member who is not an admin never has this key
         // consulted, which is what keeps one that never arrived from making
@@ -800,35 +927,46 @@ impl GroupService {
             .member_public_key(&db, &g, &group_id, contact_id)
             .await
             .ok();
+
         let removed = self
             .update_state_with_retry(&g, |state| {
                 if !state.member_ids.contains(&contact_id) {
                     return Ok(None);
                 }
+
                 state.member_ids.retain(|x| *x != contact_id);
+
                 let was_admin = state.admin_ids.contains(&contact_id);
+
                 state.admin_ids.retain(|x| *x != contact_id);
+
                 if !was_admin {
                     return Ok(Some(AdminKeys::default()));
                 }
+
                 let revoked = public_key.clone().ok_or_else(|| {
                     TwonlyError::Generic(format!(
                         "group public key for contact {contact_id} not found"
                     ))
                 })?;
+
                 Ok(Some(AdminKeys {
                     add: None,
                     remove: Some(revoked),
                 }))
             })
             .await?;
+
         if !removed {
             // Somebody else already took them out of the group.
             return Ok(true);
         }
+
         self.announce(&group_id, "removedMember", Some(contact_id), None, None)
             .await?;
+
         let mut tr = db.pool.begin().await?;
+
         Self::history(
             &mut tr,
             &group_id,
@@ -838,14 +976,19 @@ impl GroupService {
             None,
         )
         .await?;
+
         tr.commit().await?;
+
         self.fetch_group_state(group_id).await
     }
 
     pub async fn leave_group(&self, group_id: String) -> Result<bool> {
         let (db, group) = self.load_group(&group_id).await?;
+
         let user_id = self.ctx.user_id().await?;
+
         let identity = group.identity()?;
+
         let public_key = identity.identity_key().serialize().to_vec();
 
         // The append is addressed to the version the server holds right now,
@@ -855,8 +998,10 @@ impl GroupService {
         // current version. Reading it here is also what decides which of the
         // two ways out of a group applies.
         let mut attempt = 1;
+
         loop {
             let (version, group_state) = GroupApi::load_state(&group).await?;
+
             if group_state.admin_ids.contains(&user_id) {
                 return self.remove_member(group_id, user_id).await;
             }
@@ -864,6 +1009,7 @@ impl GroupService {
             let append = EncryptedAppendedGroupState {
                 r#type: encrypted_appended_group_state::Type::LeftGroup as i32,
             };
+
             let append_tbs = append_group_state::AppendTbs {
                 encrypted_group_state_append: crypto::encrypt(
                     group.state_key()?,
@@ -873,12 +1019,15 @@ impl GroupService {
                 group_id: group_id.clone(),
                 nonce: GroupApi::get_challenge(&public_key).await?,
             };
+
             let mut rng = rand::rngs::StdRng::from_os_rng();
+
             let signature = identity
                 .private_key()
                 .calculate_signature(&append_tbs.encode_to_vec(), &mut rng)
                 .map_err(|error| TwonlyError::Signal(error.to_string()))?
                 .into_vec();
+
             match GroupApi::append(AppendGroupState {
                 signature,
                 append_tbs: Some(append_tbs),
@@ -889,6 +1038,7 @@ impl GroupService {
                 Ok(()) => break,
                 Err(TwonlyError::GroupStateConflict) if attempt < STATE_UPDATE_ATTEMPTS => {
                     attempt += 1;
+
                     tracing::info!(
                         group_id,
                         attempt,
@@ -901,15 +1051,20 @@ impl GroupService {
 
         self.announce(&group_id, "leftGroup", None, None, None)
             .await?;
+
         let mut tr = db.pool.begin().await?;
+
         Self::history(&mut tr, &group_id, "leftGroup", None, None, None).await?;
+
         UpdateGroup::builder()
             .group_id(group_id.clone())
             .left_group(true)
             .build()
             .execute(&mut tr)
             .await?;
+
         tr.commit().await?;
+
         Ok(true)
     }
 
@@ -923,12 +1078,16 @@ impl GroupService {
                 )));
             }
         };
+
         let username = String::from_utf8(
             user.username
                 .ok_or_else(|| TwonlyError::Generic("user response has no username".into()))?,
         )?;
+
         let database = self.ctx.app_db.read().await.clone();
+
         let mut tr = database.pool.begin().await?;
+
         UpdateContact::builder()
             .user_id(contact_id)
             .username(username)
@@ -936,7 +1095,9 @@ impl GroupService {
             .build()
             .insert_on_conflict_update(&mut tr)
             .await?;
+
         tr.commit().await?;
+
         Ok(true)
     }
 
@@ -948,16 +1109,20 @@ impl GroupService {
     /// Announcing first would reach that one member and leave every other
     /// member unable to promote or remove us. The announcement still runs when
     /// the refresh fails, so an offline group server costs reach, not delivery.
+
     pub fn spawn_state_refresh_and_announce(ctx: &Arc<Context>, group_id: String) {
         let ctx = ctx.clone();
-        tokio::spawn(async move {
+
+        crate::database::lifecycle::spawn(async move {
             let service = Self::new(&ctx);
+
             if let Err(error) = service.fetch_group_state(group_id.clone()).await {
                 tracing::warn!(
                     group_id,
                     "group state refresh before announce failed: {error}"
                 );
             }
+
             if let Err(error) = service.announce_group_public_key(&group_id).await {
                 tracing::warn!(group_id, "group public key announcement failed: {error}");
             }
@@ -965,12 +1130,17 @@ impl GroupService {
     }
 
     /// Sends our group public key to every current member of `group_id`.
+
     async fn announce_group_public_key(&self, group_id: &str) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
+
         let mut transaction = database.pool.begin().await?;
+
         self.broadcast_group_public_key(&mut transaction, group_id)
             .await?;
+
         transaction.commit().await?;
+
         Ok(())
     }
 
@@ -994,6 +1164,7 @@ impl GroupService {
     /// state is refetched rather than the message being taken as permission to
     /// rejoin them; if the server agrees they are gone, nothing changes and the
     /// interval keeps a busy group from asking again.
+
     pub fn spawn_stale_membership_refresh(ctx: &Arc<Context>, group_id: String, contact_id: i64) {
         if !claim_stale_membership_refresh(&group_id) {
             return;
@@ -1002,20 +1173,24 @@ impl GroupService {
         tracing::info!(
             group_id,
             contact_id,
-            "a group member recorded as having left is still writing to the group; \
-             refreshing the group state"
+            "a group member recorded as having left is still writing to the group; refreshing the \
+             group state"
         );
+
         Self::spawn_state_refresh(ctx, Some(group_id));
     }
 
     pub fn spawn_state_refresh(ctx: &Arc<Context>, group_id: Option<String>) {
         let ctx = ctx.clone();
-        tokio::spawn(async move {
+
+        crate::database::lifecycle::spawn(async move {
             let service = Self::new(&ctx);
+
             let result = match group_id {
                 Some(group_id) => service.fetch_group_state(group_id).await.map(|_| ()),
                 None => service.fetch_group_states_for_unjoined_groups().await,
             };
+
             if let Err(error) = result {
                 tracing::warn!("scheduled group state refresh failed: {error}");
             }
@@ -1023,9 +1198,7 @@ impl GroupService {
     }
 
     pub async fn broadcast_group_public_key(
-        &self,
-        tr: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
-        group_id: &str,
+        &self, tr: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: &str,
     ) -> Result<()> {
         let group = sqlx::query!(
             "SELECT my_group_private_key FROM groups WHERE group_id = ?",
@@ -1047,6 +1220,7 @@ impl GroupService {
                         }),
                         ..Default::default()
                     };
+
                     let _ = MessageService::new(&self.ctx)
                         .send_to_group_in_transaction(
                             tr,
@@ -1059,6 +1233,7 @@ impl GroupService {
                 }
             }
         }
+
         Ok(())
     }
 
@@ -1067,17 +1242,21 @@ impl GroupService {
     /// The ids are read on their own connection and each group is then
     /// refreshed by [`Self::fetch_group_state`], so no connection is held
     /// across the per-group round-trips.
+
     pub async fn fetch_group_states_for_unjoined_groups(&self) -> Result<()> {
         let db = self.ctx.app_db.read().await.clone();
+
         let ids = GetUnjoinedGroups::builder()
             .build()
             .fetch_all(&db.pool)
             .await?;
+
         for id in ids {
             if let Err(e) = self.fetch_group_state(id.clone()).await {
                 tracing::warn!(group_id = id, "group state refresh failed: {e}")
             }
         }
+
         Ok(())
     }
 
@@ -1088,21 +1267,23 @@ impl GroupService {
     /// appends. Pass a `group_id` to limit the sweep to one group, and `force`
     /// to ignore [`PUBLIC_KEY_REQUEST_INTERVAL`] -- the group view does, so the
     /// user always has a way to retry by hand.
+
     pub async fn fetch_missing_group_public_keys(
-        &self,
-        group_id: Option<String>,
-        force: bool,
+        &self, group_id: Option<String>, force: bool,
     ) -> Result<()> {
         let db = self.ctx.app_db.read().await.clone();
+
         let rows = GetMissingGroupPublicKeys::builder()
             .maybe_group_id(group_id)
             .build()
             .fetch_all(&db.pool)
             .await?;
+
         for row in rows {
             if !claim_public_key_request(&row.group_id, row.contact_id, force) {
                 continue;
             }
+
             send_c2c_message_to_contact()
                 .ctx(&self.ctx)
                 .contact_id(row.contact_id)
@@ -1117,6 +1298,7 @@ impl GroupService {
                 .call()
                 .await?;
         }
+
         Ok(())
     }
 
@@ -1125,19 +1307,21 @@ impl GroupService {
     /// [`Self::fetch_missing_group_public_keys`] sends immediately, which needs
     /// its own database access and so cannot run while a transaction holds the
     /// single app-database connection.
+
     async fn queue_missing_group_public_key_requests(
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
-        group_id: &str,
+        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: &str,
     ) -> Result<()> {
         let rows = GetMissingGroupPublicKeys::builder()
             .group_id(group_id.to_owned())
             .build()
             .fetch_all_in_transaction(t)
             .await?;
+
         for row in rows {
             if !claim_public_key_request(&row.group_id, row.contact_id, false) {
                 continue;
             }
+
             queue_encrypted_content(
                 t,
                 row.contact_id,
@@ -1150,26 +1334,24 @@ impl GroupService {
             )
             .await?;
         }
+
         Ok(())
     }
 
     // --- Private helpers ---
 
     async fn load_group(
-        &self,
-        group_id: &str,
+        &self, group_id: &str,
     ) -> Result<(Arc<crate::database::app::AppDatabase>, GroupRecord)> {
         let db = self.ctx.app_db.read().await.clone();
+
         let row = GroupRecord::load(&db.pool, group_id).await?;
+
         Ok((db, row))
     }
 
     async fn announce(
-        &self,
-        group_id: &str,
-        action: &str,
-        affected: Option<i64>,
-        name: Option<String>,
+        &self, group_id: &str, action: &str, affected: Option<i64>, name: Option<String>,
         delete_ms: Option<i64>,
     ) -> Result<()> {
         MessageService::new(&self.ctx)
@@ -1192,12 +1374,8 @@ impl GroupService {
     }
 
     async fn history(
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
-        group_id: &str,
-        kind: &str,
-        affected: Option<i64>,
-        name: Option<&str>,
-        delete_ms: Option<i64>,
+        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: &str, kind: &str,
+        affected: Option<i64>, name: Option<&str>, delete_ms: Option<i64>,
     ) -> Result<()> {
         InsertGroupHistory::builder()
             .group_id(group_id.to_string())
@@ -1208,18 +1386,18 @@ impl GroupService {
             .build()
             .execute(t)
             .await?;
+
         Ok(())
     }
 
     async fn apply_state(
-        &self,
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
-        group_id: &str,
-        version: i64,
+        &self, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: &str, version: i64,
         group_state: &EncryptedGroupState,
     ) -> Result<()> {
         let local_user_id = self.ctx.user_id().await?;
+
         let joined = group_state.member_ids.contains(&local_user_id);
+
         let admin = group_state.admin_ids.contains(&local_user_id);
 
         UpdateGroup::builder()
@@ -1258,9 +1436,11 @@ impl GroupService {
                         )));
                     }
                 };
+
                 let username = String::from_utf8(user.username.ok_or_else(|| {
                     TwonlyError::Generic("user response has no username".into())
                 })?)?;
+
                 UpdateContact::builder()
                     .user_id(contact_id)
                     .username(username)
@@ -1298,25 +1478,33 @@ impl GroupService {
 }
 
 #[cfg(test)]
+
 mod membership_repair_tests {
+
     use super::*;
     use crate::database::app::AppDatabase;
 
     #[tokio::test]
+
     async fn only_the_current_receipt_for_that_contact_and_group_can_trigger_repair() -> Result<()>
     {
         let directory = tempfile::tempdir()?;
+
         let db = AppDatabase::new(
             directory.path().join("app.sqlite").to_str().unwrap(),
             None,
             false,
         )
         .await?;
+
         db.run_migrations().await?;
+
         sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice'), (8, 'bob')")
             .execute(&db.pool)
             .await?;
+
         let mut t = db.pool.begin().await?;
+
         let receipt_id = queue_encrypted_content(
             &mut t,
             7,
@@ -1330,37 +1518,54 @@ mod membership_repair_tests {
             true,
         )
         .await?;
+
         t.commit().await?;
 
         let mut t = db.pool.begin().await?;
+
         assert!(!retry_membership_receipt(&mut t, 8, "chat", &receipt_id).await?);
+
         assert!(!retry_membership_receipt(&mut t, 7, "other", &receipt_id).await?);
+
         assert!(!retry_membership_receipt(&mut t, 7, "chat", "missing").await?);
+
         assert!(retry_membership_receipt(&mut t, 7, "chat", &receipt_id).await?);
+
         // A failed repair transaction leaves the original receipt repairable.
         t.rollback().await?;
 
         let mut t = db.pool.begin().await?;
+
         assert!(retry_membership_receipt(&mut t, 7, "chat", &receipt_id).await?);
+
         t.commit().await?;
 
         let mut t = db.pool.begin().await?;
+
         // Distinct incoming error IDs can still refer to the same old receipt.
         // Those must not generate another invitation or rotate it again.
         for _ in 0..69 {
             assert!(!retry_membership_receipt(&mut t, 7, "chat", &receipt_id).await?);
         }
+
         t.commit().await?;
+
         let receipts: Vec<(String, i64, Option<i64>, Option<i64>)> = sqlx::query_as(
             "SELECT receipt_id, retry_count, ack_by_server_at, mark_for_retry FROM receipts",
         )
         .fetch_all(&db.pool)
         .await?;
+
         assert_eq!(receipts.len(), 1);
+
         assert_ne!(receipts[0].0, receipt_id);
+
         assert_eq!(receipts[0].1, 1);
+
         assert!(receipts[0].2.is_none());
+
         assert!(receipts[0].3.is_some());
+
         Ok(())
     }
 }

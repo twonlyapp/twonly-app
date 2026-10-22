@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO media_files(media_id, type, stored, created_at, created_at_month)\n                VALUES (?, 'image', 1, ?, ?)\n                ON CONFLICT(media_id) DO UPDATE\n                SET type = 'image', stored = 1,\n                    created_at = excluded.created_at, created_at_month = excluded.created_at_month\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "066533903be9c49a436a89699b1747fc7323bb0470975255ec774a6f5401260d"
+}

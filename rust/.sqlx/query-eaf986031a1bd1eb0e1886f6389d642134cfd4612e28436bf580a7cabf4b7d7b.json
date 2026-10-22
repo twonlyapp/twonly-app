@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO reactions(message_id, emoji, sender_id)\n                SELECT ?,\n                    ?,\n                    NULL\n                WHERE EXISTS(\n                    SELECT 1\n                    FROM messages\n                    WHERE message_id = ?\n                )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "eaf986031a1bd1eb0e1886f6389d642134cfd4612e28436bf580a7cabf4b7d7b"
+}

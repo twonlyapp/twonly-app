@@ -94,11 +94,10 @@ void main() {
       return http.Response.bytes(utf8.encode(rssXml), 200);
     });
 
-    await newsServiceInstance.init();
     expect(newsServiceInstance.hasLoadedBefore, isFalse);
     expect(newsServiceInstance.unreadCountNotifier.value, 0);
 
-    await newsServiceInstance.fetchFeed(client: mockClient);
+    await newsServiceInstance.init(client: mockClient);
 
     expect(newsServiceInstance.hasLoadedBefore, isTrue);
     expect(newsServiceInstance.entries.length, 1);
@@ -116,8 +115,7 @@ void main() {
       return http.Response.bytes(utf8.encode(rssXml), 200);
     });
 
-    await newsServiceInstance.init();
-    await newsServiceInstance.fetchFeed(client: mockClient1);
+    await newsServiceInstance.init(client: mockClient1);
 
     expect(newsServiceInstance.unreadCountNotifier.value, 0);
 
@@ -140,8 +138,7 @@ void main() {
       return http.Response.bytes(utf8.encode(rssXml), 200);
     });
 
-    await newsServiceInstance.init();
-    await newsServiceInstance.fetchFeed(client: mockClient1);
+    await newsServiceInstance.init(client: mockClient1);
 
     final mockClient2 = MockClient((request) async {
       return http.Response.bytes(utf8.encode(rssXmlWithTwoItems), 200);
@@ -159,8 +156,7 @@ void main() {
       return http.Response.bytes(utf8.encode(rssXml), 200);
     });
 
-    await newsServiceInstance.init();
-    await newsServiceInstance.fetchFeed(client: mockClient);
+    await newsServiceInstance.init(client: mockClient);
 
     final newServiceInstance = NewsService();
     await newServiceInstance.init();

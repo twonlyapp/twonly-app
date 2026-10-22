@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO app_metadata(key, value) VALUES ('io-baseline', 'acknowledged')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "b09542c44b90f7f3b76a11cd83b46af95939af1d30a41e908b281fbbc769d4bc"
+}

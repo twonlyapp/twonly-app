@@ -32,15 +32,15 @@ class MediaPrepareWorker(
         NativeErrorReporting.breadcrumb(applicationContext, "media_preparation_started")
         val mediaId = inputData.getString(MEDIA_ID)
         return try {
-            if (mediaId != null) {
+            val foregroundService = if (mediaId != null) {
                 // Only a user-visible send justifies a foreground service; the
                 // periodic flush runs as ordinary background work.
                 setForegroundWhenAllowed(foregroundInfo())
-            }
+            } else false
             if (isStopped) return Result.retry()
             val directory = applicationContext.filesDir.absolutePath
             val response = JSONObject(
-                NativeMediaPrepareBridge.run(directory, directory, mediaId),
+                NativeMediaPrepareBridge.run(directory, directory, mediaId, foregroundService),
             )
             if (response.optBoolean("ok", false)) {
                 // A bounded mailbox/outbox drain can also leave work behind.

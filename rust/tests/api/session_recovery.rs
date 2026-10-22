@@ -4,34 +4,45 @@ use rust_lib_twonly::api::messages::incoming::handle_decoded_server_message;
 use rust_lib_twonly::api::messages::outgoing::send_c2c_message_to_contact;
 use rust_lib_twonly::api::proto::client::{self as proto, encrypted_content};
 use rust_lib_twonly::bridge::api::ApiConnectionState;
-use rust_lib_twonly::database::app::tables::{Group, Receipt};
+use rust_lib_twonly::database::app::groups::native::Group;
+use rust_lib_twonly::database::app::receipts::table::Receipt;
 use rust_lib_twonly::services::contacts::ContactService;
 use rust_lib_twonly::services::messages::MessageService;
 
 async fn create_authenticated_tester() -> anyhow::Result<Tester> {
     let mut tester = Tester::new().await?;
+
     tester.wait_until(ApiConnectionState::Connected).await?;
+
     tester.register_and_authenticate().await?;
+
     tester.wait_until(ApiConnectionState::Authenticated).await?;
+
     Ok(tester)
 }
 
 #[tokio::test]
+
 async fn test_signal_session_auto_recovery_on_missing_session() -> anyhow::Result<()> {
     init_tracing();
+
     let tester_a = create_authenticated_tester().await?;
+
     let tester_b = create_authenticated_tester().await?;
 
     // Connect contacts A and B
     ContactService::new(&tester_a.context)
         .request_by_username(tester_b.username.clone(), true)
         .await?;
+
     tester_b
         .wait_for_contact_state(tester_a.user_id, false, true)
         .await?;
+
     ContactService::new(&tester_b.context)
         .accept_request(tester_a.user_id, true)
         .await?;
+
     tester_a
         .wait_for_contact_state(tester_b.user_id, true, false)
         .await?;
@@ -40,8 +51,16 @@ async fn test_signal_session_auto_recovery_on_missing_session() -> anyhow::Resul
 
     // Initial message
     let msg1_id = MessageService::new(&tester_a.context)
-        .insert_and_send_text(group_id.clone(), "Initial message".into(), None, None)
+        .insert_and_send_text(
+            group_id.clone(),
+            "Initial message".into(),
+            None,
+            None,
+            None,
+            None,
+        )
         .await?;
+
     tester_b
         .wait_for_text_message(&msg1_id, tester_a.user_id, "Initial message")
         .await?;
@@ -49,6 +68,7 @@ async fn test_signal_session_auto_recovery_on_missing_session() -> anyhow::Resul
     // Tester A deletes the Signal session from its database
     {
         let rust_db_a = tester_a.context.rust_db.read().await.clone();
+
         sqlx::query!(
             "DELETE FROM signal_sessions WHERE name = ?",
             tester_b.user_id.to_string(),
@@ -59,9 +79,17 @@ async fn test_signal_session_auto_recovery_on_missing_session() -> anyhow::Resul
 
     // Tester A sends a second message.
     // `encrypt_v2_with_session_recovery` should catch the missing session error,
-    // fetch Tester B's prekey bundle from the server, rebuild the session, and deliver.
+    // fetch Tester B's prekey bundle from the server, rebuild the session, and
+    // deliver.
     let msg2_id = MessageService::new(&tester_a.context)
-        .insert_and_send_text(group_id.clone(), "Recovered message".into(), None, None)
+        .insert_and_send_text(
+            group_id.clone(),
+            "Recovered message".into(),
+            None,
+            None,
+            None,
+            None,
+        )
         .await?;
 
     tester_b
@@ -76,28 +104,43 @@ async fn test_signal_session_auto_recovery_on_missing_session() -> anyhow::Resul
 /// the receiver must request a reset and receive the re-encrypted message over
 /// the fresh prekey session without user intervention.
 #[tokio::test]
+
 async fn test_signal_session_recovers_after_receiver_sessions_are_purged() -> anyhow::Result<()> {
     init_tracing();
+
     let tester_a = create_authenticated_tester().await?;
+
     let tester_b = create_authenticated_tester().await?;
 
     ContactService::new(&tester_a.context)
         .request_by_username(tester_b.username.clone(), true)
         .await?;
+
     tester_b
         .wait_for_contact_state(tester_a.user_id, false, true)
         .await?;
+
     ContactService::new(&tester_b.context)
         .accept_request(tester_a.user_id, true)
         .await?;
+
     tester_a
         .wait_for_contact_state(tester_b.user_id, true, false)
         .await?;
 
     let group_id = Group::direct_chat_id(tester_a.user_id, tester_b.user_id);
+
     let initial_id = MessageService::new(&tester_a.context)
-        .insert_and_send_text(group_id.clone(), "Before session purge".into(), None, None)
+        .insert_and_send_text(
+            group_id.clone(),
+            "Before session purge".into(),
+            None,
+            None,
+            None,
+            None,
+        )
         .await?;
+
     tester_b
         .wait_for_text_message(&initial_id, tester_a.user_id, "Before session purge")
         .await?;
@@ -105,9 +148,11 @@ async fn test_signal_session_recovers_after_receiver_sessions_are_purged() -> an
     // This is the Signal-state result of restoring an archive: B retains its
     // identity and prekeys, but no peer session survives.
     let rust_db_b = tester_b.context.rust_db.read().await.clone();
+
     sqlx::query!("DELETE FROM signal_sessions")
         .execute(&rust_db_b.pool)
         .await?;
+
     sqlx::query!("DELETE FROM signal_session_resets")
         .execute(&rust_db_b.pool)
         .await?;
@@ -116,8 +161,16 @@ async fn test_signal_session_recovers_after_receiver_sessions_are_purged() -> an
     // session, A rebuilds from B's current bundle, and the queued plaintext is
     // re-encrypted and delivered over a PreKey message.
     let recovered_id = MessageService::new(&tester_a.context)
-        .insert_and_send_text(group_id.clone(), "After session purge".into(), None, None)
+        .insert_and_send_text(
+            group_id.clone(),
+            "After session purge".into(),
+            None,
+            None,
+            None,
+            None,
+        )
         .await?;
+
     tester_b
         .wait_for_text_message(&recovered_id, tester_a.user_id, "After session purge")
         .await?;
@@ -126,8 +179,16 @@ async fn test_signal_session_recovers_after_receiver_sessions_are_purged() -> an
     // well, proving that the repair converged rather than only delivering the
     // retried message.
     let reply_id = MessageService::new(&tester_b.context)
-        .insert_and_send_text(group_id, "Reply after session purge".into(), None, None)
+        .insert_and_send_text(
+            group_id,
+            "Reply after session purge".into(),
+            None,
+            None,
+            None,
+            None,
+        )
         .await?;
+
     tester_a
         .wait_for_text_message(&reply_id, tester_b.user_id, "Reply after session purge")
         .await?;
@@ -140,20 +201,26 @@ async fn test_signal_session_recovers_after_receiver_sessions_are_purged() -> an
 /// receiver has to retire its session, the sender has to build a new one from
 /// a fresh prekey bundle, and the parked message has to arrive over it.
 #[tokio::test]
+
 async fn test_signal_session_reset_after_a_restored_backup() -> anyhow::Result<()> {
     init_tracing();
+
     let tester_a = create_authenticated_tester().await?;
+
     let tester_b = create_authenticated_tester().await?;
 
     ContactService::new(&tester_a.context)
         .request_by_username(tester_b.username.clone(), true)
         .await?;
+
     tester_b
         .wait_for_contact_state(tester_a.user_id, false, true)
         .await?;
+
     ContactService::new(&tester_b.context)
         .accept_request(tester_a.user_id, true)
         .await?;
+
     tester_a
         .wait_for_contact_state(tester_b.user_id, true, false)
         .await?;
@@ -161,15 +228,25 @@ async fn test_signal_session_reset_after_a_restored_backup() -> anyhow::Result<(
     let group_id = Group::direct_chat_id(tester_a.user_id, tester_b.user_id);
 
     let message_id = MessageService::new(&tester_a.context)
-        .insert_and_send_text(group_id.clone(), "Before the backup".into(), None, None)
+        .insert_and_send_text(
+            group_id.clone(),
+            "Before the backup".into(),
+            None,
+            None,
+            None,
+            None,
+        )
         .await?;
+
     tester_b
         .wait_for_text_message(&message_id, tester_a.user_id, "Before the backup")
         .await?;
 
     // The session state a backup taken at this point would hold.
     let name_a = tester_a.user_id.to_string();
+
     let rust_db_b = tester_b.context.rust_db.read().await.clone();
+
     let backup = sqlx::query_scalar!(
         "SELECT record_bytes FROM signal_sessions WHERE name = ? AND device_id = 1",
         name_a,
@@ -180,14 +257,31 @@ async fn test_signal_session_reset_after_a_restored_backup() -> anyhow::Result<(
     // Both sides ratchet on, past the step the archive was taken at.
     for round in 0..2 {
         let from_b = MessageService::new(&tester_b.context)
-            .insert_and_send_text(group_id.clone(), format!("B {round}"), None, None)
+            .insert_and_send_text(
+                group_id.clone(),
+                format!("B {round}"),
+                None,
+                None,
+                None,
+                None,
+            )
             .await?;
+
         tester_a
             .wait_for_text_message(&from_b, tester_b.user_id, &format!("B {round}"))
             .await?;
+
         let from_a = MessageService::new(&tester_a.context)
-            .insert_and_send_text(group_id.clone(), format!("A {round}"), None, None)
+            .insert_and_send_text(
+                group_id.clone(),
+                format!("A {round}"),
+                None,
+                None,
+                None,
+                None,
+            )
             .await?;
+
         tester_b
             .wait_for_text_message(&from_a, tester_a.user_id, &format!("A {round}"))
             .await?;
@@ -206,8 +300,16 @@ async fn test_signal_session_reset_after_a_restored_backup() -> anyhow::Result<(
     // session and asks A for a new one, A rebuilds from B's prekey bundle and
     // sends the parked message over it.
     let message_id = MessageService::new(&tester_a.context)
-        .insert_and_send_text(group_id.clone(), "After the restore".into(), None, None)
+        .insert_and_send_text(
+            group_id.clone(),
+            "After the restore".into(),
+            None,
+            None,
+            None,
+            None,
+        )
         .await?;
+
     tester_b
         .wait_for_text_message(&message_id, tester_a.user_id, "After the restore")
         .await?;
@@ -219,8 +321,11 @@ async fn test_signal_session_reset_after_a_restored_backup() -> anyhow::Result<(
             "Reply on the new session".into(),
             None,
             None,
+            None,
+            None,
         )
         .await?;
+
     tester_a
         .wait_for_text_message(&message_id, tester_b.user_id, "Reply on the new session")
         .await?;
@@ -237,25 +342,32 @@ async fn test_signal_session_reset_after_a_restored_backup() -> anyhow::Result<(
 /// ambiguity loses the message, and answers the peer with nothing, so they
 /// resend the same receipt indefinitely.
 #[tokio::test]
+
 async fn test_a_claimed_but_unhandled_message_is_delivered_on_redelivery() -> anyhow::Result<()> {
     init_tracing();
+
     let tester_a = create_authenticated_tester().await?;
+
     let tester_b = create_authenticated_tester().await?;
 
     ContactService::new(&tester_a.context)
         .request_by_username(tester_b.username.clone(), true)
         .await?;
+
     tester_b
         .wait_for_contact_state(tester_a.user_id, false, true)
         .await?;
+
     ContactService::new(&tester_b.context)
         .accept_request(tester_a.user_id, true)
         .await?;
+
     tester_a
         .wait_for_contact_state(tester_b.user_id, true, false)
         .await?;
 
     let group_id = Group::direct_chat_id(tester_a.user_id, tester_b.user_id);
+
     let sender_message_id = uuid::Uuid::new_v4().to_string();
 
     // A encrypts the message without sending it, so the test controls when B
@@ -271,6 +383,7 @@ async fn test_a_claimed_but_unhandled_message_is_delivered_on_redelivery() -> an
         }),
         ..Default::default()
     };
+
     let encoded = send_c2c_message_to_contact()
         .ctx(&tester_a.context)
         .contact_id(tester_b.user_id)
@@ -279,19 +392,24 @@ async fn test_a_claimed_but_unhandled_message_is_delivered_on_redelivery() -> an
         .call()
         .await?
         .expect("the encrypted message is returned rather than sent");
+
     let message = proto::Message::decode(encoded.as_slice())?;
 
     // B claims the receipt and handles nothing, exactly as a decryption that
     // failed leaves it.
     {
         let database = tester_b.context.app_db.read().await.clone();
+
         let mut t = database.pool.begin().await?;
+
         assert!(Receipt::claim_received(&mut t, &message.receipt_id).await?);
+
         t.commit().await?;
     }
 
     // The claim must not swallow it: this content has never been handled.
     handle_decoded_server_message(&tester_b.context, tester_a.user_id, message.clone()).await?;
+
     tester_b
         .wait_for_text_message(
             &sender_message_id,
@@ -304,13 +422,16 @@ async fn test_a_claimed_but_unhandled_message_is_delivered_on_redelivery() -> an
     // looks like: the ratchet has consumed it, so it is acknowledged rather
     // than delivered a second time.
     handle_decoded_server_message(&tester_b.context, tester_a.user_id, message).await?;
+
     let database = tester_b.context.app_db.read().await.clone();
+
     let copies = sqlx::query_scalar!(
         "SELECT COUNT(*) FROM messages WHERE message_id = ?",
         sender_message_id,
     )
     .fetch_one(&database.pool)
     .await?;
+
     assert_eq!(copies, 1, "a redelivered message must not be stored twice");
 
     Ok(())

@@ -1,10 +1,11 @@
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/utils/database_values.dart';
 
 /// Only automatic info rows use this ID suffix. Text a person shares from an
 /// app also has an origin, but remains an ordinary message in the conversation.
-String? gameAnnouncementInstance(Message message) {
+String? gameAnnouncementInstance(StoredMessage message) {
   final data = message.additionalMessageData;
   if (message.type != MessageType.text.name ||
       !message.messageId.endsWith('-info') ||
@@ -22,9 +23,9 @@ String? gameAnnouncementInstance(Message message) {
 /// Put the refreshed card immediately before its latest announcement, even
 /// when other messages share their timestamp. Older loaded pages may still
 /// contain a replaced info row until the next database read; hide those too.
-List<Message> arrangeGameMessages(List<Message> chronological) {
-  final latest = <String, Message>{};
-  final cards = <String, Message>{};
+List<StoredMessage> arrangeGameMessages(List<StoredMessage> chronological) {
+  final latest = <String, StoredMessage>{};
+  final cards = <String, StoredMessage>{};
   for (final message in chronological) {
     final instance = gameAnnouncementInstance(message);
     if (instance != null) latest[instance] = message;
@@ -32,7 +33,7 @@ List<Message> arrangeGameMessages(List<Message> chronological) {
       cards[message.messageId] = message;
     }
   }
-  final result = <Message>[];
+  final result = <StoredMessage>[];
   for (final message in chronological) {
     if (message.type == MessageType.webxdcApp.name &&
         latest.containsKey(message.messageId)) {

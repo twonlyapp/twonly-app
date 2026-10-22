@@ -1,0 +1,122 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n            group_history_id AS \"group_history_id!\",\n                    group_id AS \"group_id!\",\n                    contact_id AS \"contact_id?\",\n                    affected_contact_id AS \"affected_contact_id?\",\n                    old_group_name AS \"old_group_name?\",\n                    new_group_name AS \"new_group_name?\",\n                    new_delete_messages_after_milliseconds AS \"new_delete_messages_after_milliseconds?\",\n                    type AS \"type!\",\n                    action_at AS \"action_at!\"\n                FROM group_histories\n                WHERE group_id = ?\n                    AND (? IS NULL\n                        OR action_at >= ?\n                )\n                ORDER BY action_at,\n                    rowid\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_history_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_histories",
+            "name": "group_history_id"
+          }
+        }
+      },
+      {
+        "name": "group_id!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_histories",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id?",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_histories",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "affected_contact_id?",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_histories",
+            "name": "affected_contact_id"
+          }
+        }
+      },
+      {
+        "name": "old_group_name?",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_histories",
+            "name": "old_group_name"
+          }
+        }
+      },
+      {
+        "name": "new_group_name?",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_histories",
+            "name": "new_group_name"
+          }
+        }
+      },
+      {
+        "name": "new_delete_messages_after_milliseconds?",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_histories",
+            "name": "new_delete_messages_after_milliseconds"
+          }
+        }
+      },
+      {
+        "name": "type!",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_histories",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "action_at!",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_histories",
+            "name": "action_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "c60b89430321fecea364b82aa7d1c33809785597a00ff019662c2ffb1d9dc2bc"
+}

@@ -1,34 +1,36 @@
 import 'dart:io';
 
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart' show FaIcon;
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/components/story_preview.comp.dart';
 
+import '../../helpers/native_database.dart';
+
 void main() {
-  late TwonlyDB database;
+  late TestDatabase database;
   late Directory support;
 
   setUp(() async {
     support = Directory.systemTemp.createTempSync('story_preview_test');
     AppEnvironment.initTesting(customSupportDir: support.path);
-    database = TwonlyDB(NativeDatabase.memory());
+    database = await TestDatabase.create();
     await database.customStatement(
       "INSERT INTO media_files(media_id, type) VALUES ('img', 'image'), ('vid', 'video')",
     );
   });
 
   tearDown(() async {
-    await database.close();
     support.deleteSync(recursive: true);
   });
 
-  Future<MediaFile> media(String id) async =>
-      (await database.mediaFilesDao.getMediaFileById(id))!;
+  Future<MediaFile> media(String id) async => (await rust_mediafiles
+      .getMediaFile(id: id, transaction: currentDatabaseSession()))!;
 
   /// The file behind the preview, past the downscaling it is loaded with.
   String shownFile(WidgetTester tester) {

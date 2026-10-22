@@ -1,17 +1,18 @@
 import 'dart:collection';
 
-import 'package:drift/drift.dart' hide isNotNull;
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/core/database/app/contact_groups/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/elements/my_chip.element.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/contact_group_shortcut_row.comp.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/first_seen_order.dart';
+
+import '../helpers/native_database.dart';
 
 class _LightSettings extends SettingsChangeProvider {
   @override
@@ -27,7 +28,7 @@ ContactGroup contactGroup(int id) => ContactGroup(
   showAsLabel: true,
   shareStories: false,
   usageCounter: 0,
-  createdAt: DateTime(2026),
+  createdAtSeconds: databaseSeconds(DateTime(2026)),
 );
 
 void main() {
@@ -57,17 +58,12 @@ void main() {
   });
 
   group('ContactGroupShortcutRow', () {
-    late TwonlyDB database;
+    late TestDatabase database;
 
     setUp(() async {
       await locator.reset();
-      database = TwonlyDB.forTesting(
-        DatabaseConnection(
-          NativeDatabase.memory(),
-          closeStreamsSynchronously: true,
-        ),
-      );
-      locator.registerSingleton<TwonlyDB>(database);
+      database = await TestDatabase.create();
+
       await database.customStatement(
         "INSERT INTO groups(group_id, group_name) VALUES ('a1', 'A1'), "
         "('a2', 'A2'), ('b1', 'B1')",
@@ -83,8 +79,6 @@ void main() {
         "(1, 'a1'), (1, 'a2'), (2, 'b1')",
       );
     });
-
-    tearDown(() => database.close());
 
     Future<HashSet<String>> pump(
       WidgetTester tester, {

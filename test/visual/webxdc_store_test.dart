@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/bridge/webxdc.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/frb_generated.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/webxdc_store.bottom_sheet.dart';
 
 class _StoreApi implements RustLibApi {
@@ -51,8 +52,8 @@ void main() {
                   archived: false,
                   pinned: false,
                   deletedContent: false,
-                  createdAt: DateTime(2026),
-                  lastMessageExchange: DateTime(2026),
+                  createdAtSeconds: databaseSeconds(DateTime(2026)),
+                  lastMessageExchangeSeconds: databaseSeconds(DateTime(2026)),
                 ),
               ),
             ),

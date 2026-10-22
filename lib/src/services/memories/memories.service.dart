@@ -2,16 +2,30 @@ import 'dart:async';
 
 import 'package:blurhash_dart/blurhash_dart.dart' as bh;
 import 'package:clock/clock.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_flashbacks.model.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -86,16 +100,20 @@ class MemoriesService {
         }
       }
       await media.fullMediaRemoval();
-      await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
+      await rust_mediafiles.deleteMediaFile(
+        id: file.mediaId,
+        transaction: currentDatabaseSession(),
+      );
     } else {
       if (media.storedPath.existsSync()) {
         await media.storedPath.delete();
       }
       // The gallery watches database state, so deleting a file alone leaves
       // a stale tile behind, including when the file was already missing.
-      await twonlyDB.mediaFilesDao.updateMedia(
-        file.mediaId,
-        const MediaFilesCompanion(stored: Value(false)),
+      await rust_mediafiles.updateMediaFiles(
+        id: file.mediaId,
+        patch: const MediaFilePatch(stored: false),
+        transaction: currentDatabaseSession(),
       );
     }
   }
@@ -147,11 +165,21 @@ class MemoriesService {
             .whereType<String>()
             .toList();
 
-        final mediaFiles = await twonlyDB.mediaFilesDao.getMediaFilesByIds(
-          mediaIds,
+        final mediaFiles = await rust_mediafiles.listMediaFiles(
+          input: db_mediafiles.MediaQuery(
+            filter: db_mediafiles.MediaFilter.ids,
+            ids: mediaIds.toList(),
+          ),
+          transaction: currentDatabaseSession(),
         );
 
-        final allContacts = await twonlyDB.contactsDao.getAllContacts();
+        final allContacts = await rust_contacts.listContacts(
+          input: db_contacts.ContactQuery(
+            filter: db_contacts.ContactFilter.all,
+            ids: Int64List(0),
+          ),
+          transaction: currentDatabaseSession(),
+        );
         final contactMap = {for (final c in allContacts) c.userId: c};
         final mediaIdToSender = <String, Contact?>{};
 
@@ -236,12 +264,26 @@ class MemoriesService {
     try {
       // Start DB subscription first so files with existing thumbnails are shown immediately.
       await _dbSubscription?.cancel();
-      _dbSubscription = twonlyDB.mediaFilesDao
-          .watchAllStoredMediaFiles()
-          .listen(_onMediaFilesChanged);
+      _dbSubscription =
+          watchRustDatabase(
+            (control) => rust_mediafiles
+                .watchMediaFiles(
+                  input: const db_mediafiles.MediaQuery(
+                    filter: db_mediafiles.MediaFilter.stored,
+                  ),
+                  control: control,
+                )
+                .map(orderedMediaFiles),
+          ).listen(
+            _onMediaFilesChanged,
+          );
 
-      final pendingFiles = await twonlyDB.mediaFilesDao
-          .getAllMediaFilesPendingMigration();
+      final pendingFiles = await rust_mediafiles.listMediaFiles(
+        input: const db_mediafiles.MediaQuery(
+          filter: db_mediafiles.MediaFilter.pendingMigration,
+        ),
+        transaction: currentDatabaseSession(),
+      );
 
       if (pendingFiles.isNotEmpty) {
         _currentState = _currentState.copyWith(
@@ -269,9 +311,10 @@ class MemoriesService {
           if (!mediaService.mediaFile.hasThumbnail) {
             if (mediaService.thumbnailPath.existsSync() &&
                 mediaService.thumbnailPath.lengthSync() > 0) {
-              await twonlyDB.mediaFilesDao.updateMedia(
-                mediaFile.mediaId,
-                const MediaFilesCompanion(hasThumbnail: Value(true)),
+              await rust_mediafiles.updateMediaFiles(
+                id: mediaFile.mediaId,
+                patch: const MediaFilePatch(hasThumbnail: true),
+                transaction: currentDatabaseSession(),
               );
             } else if (mediaFile.type != MediaType.audio) {
               await mediaService.createThumbnail();
@@ -329,9 +372,12 @@ class MemoriesService {
               final bytes = await imageFile.readAsBytes();
               final blurhash = await compute(_calculateBlurhash, bytes);
               if (blurhash != null) {
-                await twonlyDB.mediaFilesDao.updateMedia(
-                  mediaFile.mediaId,
-                  MediaFilesCompanion(blurhash: Value(blurhash)),
+                await rust_mediafiles.updateMediaFiles(
+                  id: mediaFile.mediaId,
+                  patch: MediaFilePatch(
+                    blurhash: NullableText(value: blurhash),
+                  ),
+                  transaction: currentDatabaseSession(),
                 );
               }
             }
@@ -372,10 +418,21 @@ class MemoriesService {
   Future<void> _processMediaFilesStream(List<MediaFile> mediaFiles) async {
     try {
       final mediaIds = mediaFiles.map((m) => m.mediaId).toList();
-      final allMessages = await twonlyDB.messagesDao.getMessagesByMediaIds(
-        mediaIds,
+      final allMessages = await rust_messages.listMessages(
+        input: db_messages.MessageQuery(
+          filter: db_messages.MessageFilter.mediaIds,
+          ids: mediaIds.toList(),
+          nowMs: clock.now().millisecondsSinceEpoch,
+        ),
+        transaction: currentDatabaseSession(),
       );
-      final allContacts = await twonlyDB.contactsDao.getAllContacts();
+      final allContacts = await rust_contacts.listContacts(
+        input: db_contacts.ContactQuery(
+          filter: db_contacts.ContactFilter.all,
+          ids: Int64List(0),
+        ),
+        transaction: currentDatabaseSession(),
+      );
 
       final contactMap = {for (final c in allContacts) c.userId: c};
       final mediaIdToSenderContact = <String, Contact>{};

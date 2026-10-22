@@ -7,15 +7,21 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/release_notes.comp.dart';
@@ -225,7 +231,15 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     try {
       final group = tap.senderId == null
           ? null
-          : await twonlyDB.groupsDao.getDirectChat(tap.senderId!);
+          : await rust_groups
+                .listGroups(
+                  input: db_groups.GroupQuery(
+                    filter: db_groups.GroupFilter.directContact,
+                    contactId: tap.senderId,
+                  ),
+                  transaction: currentDatabaseSession(),
+                )
+                .then((rows) => rows.isEmpty ? null : rows.single);
       if (!mounted) return;
       routerProvider.go(
         group == null ? Routes.chats : Routes.chatsMessages(group.groupId),
@@ -301,7 +315,15 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       }
     }
 
-    final draftMedia = await twonlyDB.mediaFilesDao.getDraftMediaFile();
+    final draftMedia = await (() async {
+      final files = await rust_mediafiles.listMediaFiles(
+        input: const db_mediafiles.MediaQuery(
+          filter: db_mediafiles.MediaFilter.draft,
+        ),
+        transaction: currentDatabaseSession(),
+      );
+      return files.isEmpty ? null : files.single;
+    })();
     if (draftMedia != null) {
       await _openEditor(MediaFileService(draftMedia));
     }

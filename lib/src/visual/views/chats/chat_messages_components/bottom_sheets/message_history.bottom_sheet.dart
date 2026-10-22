@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
 
@@ -11,15 +14,15 @@ class MessageHistoryView extends StatelessWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final Group group;
   final List<MessageHistory> changes;
 
   @override
   Widget build(BuildContext context) {
-    final json = message.toJson();
-    json['createdAt'] = message.modifiedAt;
-    final currentMessage = Message.fromJson(json);
+    final currentMessage = message.copyWith(
+      createdAt: message.modifiedAt ?? message.createdAt,
+    );
     return SingleChildScrollView(
       child: Container(
         padding: EdgeInsets.zero,
@@ -58,10 +61,10 @@ class MessageHistoryView extends StatelessWidget {
                   ),
                   ...changes.map(
                     (change) {
-                      final json = message.toJson();
-                      json['content'] = change.content;
-                      json['createdAt'] = change.createdAt;
-                      final msgChanged = Message.fromJson(json);
+                      final msgChanged = message.copyWith(
+                        content: NullableText(value: change.content),
+                        createdAt: change.createdAt,
+                      );
                       return ChatListEntry(
                         group: group,
                         message: msgChanged,

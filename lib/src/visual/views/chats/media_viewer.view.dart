@@ -2,23 +2,35 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:clock/clock.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mutex/mutex.dart';
 import 'package:screen_protector/screen_protector.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/bridge/database/stories.dart' as rust_stories;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/daos/stories.dao.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart'
-    show DownloadState, MediaType;
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/services/mediafiles/media_download_policy.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
@@ -61,7 +73,7 @@ class MediaViewerView extends StatefulWidget {
 
   final Group? group;
 
-  final Message? initialMessage;
+  final StoredMessage? initialMessage;
   final StorySource? story;
   @override
   State<MediaViewerView> createState() => _MediaViewerViewState();
@@ -81,7 +93,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   VoidCallback? _videoListener;
 
   MediaFileService? currentMedia;
-  Message? currentMessage;
+  StoredMessage? currentMessage;
 
   DateTime? canBeSeenUntil;
   final ValueNotifier<double> progress = ValueNotifier(0);
@@ -98,8 +110,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   StreamSubscription<MediaFile?>? downloadStateListener;
 
-  List<Message> allMediaFiles = [];
-  StreamSubscription<List<Message>>? _subscription;
+  List<StoredMessage> allMediaFiles = [];
+  StreamSubscription<List<StoredMessage>>? _subscription;
   TextEditingController textMessageController = TextEditingController();
 
   final HashSet<String> _alreadyOpenedMediaIds = HashSet();
@@ -149,11 +161,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     final draftText = textMessageController.text;
     if (!_isStory) {
       unawaited(
-        twonlyDB.groupsDao.updateGroup(
-          widget.group!.groupId,
-          GroupsCompanion(
-            draftMessage: Value(draftText.isEmpty ? null : draftText),
+        rust_groups.updateGroup(
+          id: widget.group!.groupId,
+          patch: GroupPatch(
+            draftMessage: NullableText(
+              value: draftText.isEmpty ? null : draftText,
+            ),
           ),
+          transaction: currentDatabaseSession(),
         ),
       );
     }
@@ -180,13 +195,26 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   Future<void> _loadStory() async {
     final story = widget.story!;
     final now = clock.now();
-    var playlist = <Message>[];
+    var playlist = <StoredMessage>[];
     var start = 0;
     if (story.own) {
-      final items = await twonlyDB.storiesDao.watchOwnStoryItems().first;
+      final items = await (() {
+        final cutoff =
+            clock.now().subtract(storyLifetime).millisecondsSinceEpoch ~/ 1000;
+        return watchRustDatabase(
+          (control) => rust_stories
+              .watchOwnStories(cutoff: cutoff, control: control)
+              .map(ownStoryItems),
+        );
+      })().first;
       for (final item in items.where((item) => item.isActiveAt(now))) {
-        final rows = await twonlyDB.messagesDao.getMessagesByMediaId(
-          item.mediaFile.mediaId,
+        final rows = await rust_messages.listMessages(
+          input: db_messages.MessageQuery(
+            filter: db_messages.MessageFilter.mediaIds,
+            ids: [item.mediaFile.mediaId].toList(),
+            nowMs: clock.now().millisecondsSinceEpoch,
+          ),
+          transaction: currentDatabaseSession(),
         );
         final row = rows
             .where((row) => row.isStory && row.senderId == null)
@@ -196,16 +224,34 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       if (mounted) _currentMediaSender = context.lang.storyMine;
     } else {
       final contactId = story.contactId!;
-      playlist = (await twonlyDB.storiesDao.getReceivedStoryItems(contactId))
-          .where((item) => item.isActiveAt(now))
-          .map((item) => item.message)
-          .toList();
+      playlist =
+          receivedStoryItems(
+                await rust_stories.getReceivedStories(
+                  contact: contactId,
+                  cutoff:
+                      clock
+                          .now()
+                          .subtract(storyLifetime)
+                          .millisecondsSinceEpoch ~/
+                      1000,
+                  transaction: currentDatabaseSession(),
+                ),
+              )
+              .where((item) => item.isActiveAt(now))
+              .map((item) => item.message)
+              .toList();
       start = playlist.indexWhere((message) => message.openedAt == null);
       if (start < 0) start = 0;
-      final contact = await twonlyDB.contactsDao.getContactById(contactId);
+      final contact = await rust_contacts.getContact(
+        id: contactId,
+        transaction: currentDatabaseSession(),
+      );
       if (contact != null) _currentMediaSender = getContactDisplayName(contact);
       if (playlist.isNotEmpty) {
-        _group = await twonlyDB.groupsDao.getGroup(playlist.first.groupId);
+        _group = await rust_groups.getGroup(
+          id: playlist.first.groupId,
+          transaction: currentDatabaseSession(),
+        );
       }
     }
     final initial = story.initialMediaId;
@@ -221,9 +267,19 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future<void> listenForUnopenedMedia(bool firstRun) async {
-    _subscription = twonlyDB.messagesDao
-        .watchMediaNotOpened(widget.group!.groupId)
-        .listen((messages) async {
+    _subscription =
+        watchRustDatabase(
+          (control) => rust_messages.watchMessages(
+            input: db_messages.MessageQuery(
+              filter: db_messages.MessageFilter.mediaUnopened,
+              groupId: widget.group!.groupId,
+              nowMs: clock.now().millisecondsSinceEpoch,
+            ),
+            control: control,
+          ),
+        ).listen((
+          messages,
+        ) async {
           await _messageUpdateLock.protect(() async {
             for (final msg in messages) {
               if (msg.isWidgetMedia) {
@@ -301,7 +357,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       if (allMediaFiles.isEmpty && _isStory) {
         if (mounted) Navigator.pop(context);
       } else if (allMediaFiles.isEmpty) {
-        final group = await twonlyDB.groupsDao.getGroup(widget.group!.groupId);
+        final group = await rust_groups.getGroup(
+          id: widget.group!.groupId,
+          transaction: currentDatabaseSession(),
+        );
         if (mounted) {
           if (group != null &&
               group.draftMessage != null &&
@@ -365,9 +424,17 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       showSendTextMessageInput = false;
     });
 
-    final stream = twonlyDB.mediaFilesDao.watchMedia(
-      allMediaFiles.first.mediaId!,
-    );
+    final stream = watchRustDatabase(
+      (control) => rust_mediafiles
+          .watchMediaFiles(
+            input: db_mediafiles.MediaQuery(
+              filter: db_mediafiles.MediaFilter.ids,
+              ids: [allMediaFiles.first.mediaId!].toList(),
+            ),
+            control: control,
+          )
+          .map(orderedMediaFiles),
+    ).map((rows) => rows.isEmpty ? null : rows.single);
 
     var downloadTriggered = false;
 
@@ -388,8 +455,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         });
         if (!downloadTriggered) {
           downloadTriggered = true;
-          final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
-            allMediaFiles.first.mediaId!,
+          final mediaFile = await rust_mediafiles.getMediaFile(
+            id: allMediaFiles.first.mediaId!,
+            transaction: currentDatabaseSession(),
           );
           if (mediaFile == null) {
             // DB record gone — skip to next or exit.
@@ -502,8 +570,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   Future<void> _updateSenderInfo() async {
     final group = widget.group;
     if (currentMessage == null || group == null || group.isDirectChat) return;
-    final sender = await twonlyDB.contactsDao.getContactById(
-      currentMessage!.senderId!,
+    final sender = await rust_contacts.getContact(
+      id: currentMessage!.senderId!,
+      transaction: currentDatabaseSession(),
     );
     if (mounted && sender != null) {
       _currentMediaSender =
@@ -520,9 +589,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     if (!_isStory &&
         userService.currentUser.automaticallyMarkEqualMediaFilesAsOpened &&
         mediaLocal.mediaFile.storedFileHash != null) {
-      final messageIds = await twonlyDB.mediaFilesDao.getMessageIdsByMediaHash(
-        mediaLocal.mediaFile.storedFileHash!,
-        currentMessage!.senderId!,
+      final messageIds = await rust_mediafiles.mediaMessageIdsByHash(
+        hash: mediaLocal.mediaFile.storedFileHash!,
+        sender: currentMessage!.senderId!,
+        transaction: currentDatabaseSession(),
       );
 
       if (!messageIds.contains(currentMessage!.messageId)) {
@@ -651,11 +721,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       imageSaving = true;
     });
     await media.storeMediaFile();
-    await twonlyDB.messagesDao.updateMessageId(
-      msg.messageId,
-      const MessagesCompanion(
-        mediaStored: Value(true),
-      ),
+    await rust_messages.updateMessages(
+      id: msg.messageId,
+      byMedia: false,
+      patch: const MessagePatch(mediaStored: true),
+      transaction: currentDatabaseSession(),
     );
     await RustApi.sendEncryptedContentToGroup(
       groupId: msg.groupId,

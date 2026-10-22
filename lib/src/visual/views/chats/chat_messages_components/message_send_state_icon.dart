@@ -4,12 +4,17 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/reactions/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
+import 'package:twonly/src/model/message_enums.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
@@ -25,7 +30,7 @@ enum MessageSendState {
   sending,
 }
 
-MessageSendState messageSendStateFromMessage(Message msg) {
+MessageSendState messageSendStateFromMessage(StoredMessage msg) {
   if (msg.senderId == null) {
     if (msg.openedByAll != null || msg.openedAt != null) {
       return MessageSendState.sendOpened;
@@ -56,9 +61,9 @@ class MessageSendStateIcon extends StatefulWidget {
     this.lastReaction,
     this.mainAxisAlignment = MainAxisAlignment.end,
   });
-  final List<Message> messages;
+  final List<StoredMessage> messages;
   final List<MediaFile> mediaFiles;
-  final Reaction? lastReaction;
+  final StoredReaction? lastReaction;
   final MainAxisAlignment mainAxisAlignment;
   final bool canBeReopened;
   final Group? group;
@@ -114,8 +119,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
     if (pendingIds.isEmpty || widget.group?.isDirectChat == false) {
       return _buildStatus(context, const {});
     }
-    _deliveryActions ??= twonlyDB.messagesDao.watchDeliveryActionsForMessages(
-      pendingIds,
+    _deliveryActions ??= watchRustDatabase(
+      (control) => rust_messages.watchDeliveryActions(
+        ids: pendingIds.toList(),
+        control: control,
+      ),
     );
     return StreamBuilder<List<MessageAction>>(
       stream: _deliveryActions,

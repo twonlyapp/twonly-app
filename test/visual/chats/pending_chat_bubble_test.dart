@@ -2,21 +2,27 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
-import 'package:drift/drift.dart' show DatabaseConnection, Value;
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twonly/core/bridge.dart' show FlameState;
+import 'package:twonly/core/bridge/database.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/core/database/app/stickers/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
@@ -24,15 +30,17 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_sticker.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input.dart';
 
+import '../../helpers/native_database.dart';
 import '../../mocks/user_config.dart';
 
-class _OutgoingApi implements RustLibApi {
-  final List<Message> requests = [];
+class _OutgoingApi extends NativeTestApi {
+  final List<StoredMessage> requests = [];
   final List<Completer<String>> completions = [];
 
   @override
-  Stream<List<String>> crateBridgeWrapperAppDatabaseRustAppDatabaseChanges() =>
-      const Stream.empty();
+  Stream<List<String>> crateBridgeWrapperAppDatabaseRustAppDatabaseChanges({
+    required DatabaseWatch control,
+  }) => const Stream.empty();
 
   @override
   Future<FlameState> crateBridgeGroupsFlameState({
@@ -55,7 +63,7 @@ class _OutgoingApi implements RustLibApi {
     int? timestampMs,
   }) {
     requests.add(
-      Message(
+      StoredMessage(
         groupId: groupId,
         messageId: messageId!,
         type: 'text',
@@ -67,7 +75,9 @@ class _OutgoingApi implements RustLibApi {
         isDeletedFromSender: false,
         isWidgetMedia: false,
         isStory: false,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(timestampMs!),
+        createdAtSeconds: databaseSeconds(
+          DateTime.fromMillisecondsSinceEpoch(timestampMs!),
+        ),
       ),
     );
     final completion = Completer<String>();
@@ -84,9 +94,9 @@ void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
   late Group group;
 
-  setUpAll(() {
+  setUpAll(() async {
     AppEnvironment.initTesting();
-    RustLib.initMock(api: api);
+    await initializeNativeDatabase(api: api);
     binding.defaultBinaryMessenger.setMockMethodCallHandler(
       const MethodChannel('simform_audio_waveforms'),
       (_) async => null,
@@ -99,16 +109,8 @@ void main() {
     api.requests.clear();
     api.completions.clear();
     await locator.reset();
-    locator
-      ..registerSingleton<TwonlyDB>(
-        TwonlyDB.forTesting(
-          DatabaseConnection(
-            NativeDatabase.memory(),
-            closeStreamsSynchronously: true,
-          ),
-        ),
-      )
-      ..registerSingleton<UserService>(UserService());
+    await TestDatabase.create();
+    locator.registerSingleton<UserService>(UserService());
     userService.currentUser = testUserConfig(
       userId: 1,
       username: 'me',
@@ -117,18 +119,21 @@ void main() {
       currentSetupPage: null,
       appVersion: 180,
     )..typingIndicators = false;
-    await twonlyDB.groupsDao.createNewGroup(
-      GroupsCompanion.insert(
+    await rust_groups.upsertGroup(
+      patch: const GroupPatch(
         groupId: 'chat',
         groupName: 'Chat',
-        isDirectChat: const Value(true),
+        isDirectChat: true,
       ),
+      transaction: currentDatabaseSession(),
     );
-    group = (await twonlyDB.groupsDao.getGroup('chat'))!;
+    group = (await rust_groups.getGroup(
+      id: 'chat',
+      transaction: currentDatabaseSession(),
+    ))!;
   });
 
   tearDown(() async {
-    await twonlyDB.close();
     await locator.reset();
   });
 
@@ -168,13 +173,15 @@ void main() {
           ).readAsBytesSync();
           final now = DateTime.now();
           sticker = LocalSticker(
-            contentHash: sha256.convert(bytes).toString(),
             webp: bytes,
-            width: 64,
-            height: 64,
-            usageCount: 0,
-            createdAt: now,
-            lastUsedAt: now,
+            metadata: StickerMetadata(
+              contentHash: sha256.convert(bytes).toString(),
+              width: 64,
+              height: 64,
+              usageCount: 0,
+              createdAt: databaseSeconds(now),
+              lastUsedAt: databaseSeconds(now),
+            ),
           );
         }
         if (isSticker) {
@@ -206,9 +213,13 @@ void main() {
         expect(find.byType(ThreeRotatingDots), findsOneWidget);
         expect(api.completions.single.isCompleted, isFalse);
         expect(
-          await twonlyDB.messagesDao
-              .getMessageById(message.messageId)
-              .getSingleOrNull(),
+          await runNative(
+            tester,
+            () => rust_messages.getMessage(
+              id: message.messageId,
+              transaction: currentDatabaseSession(),
+            ),
+          ),
           isNull,
         );
         if (isSticker) expect(find.byType(ChatStickerEntry), findsOneWidget);
@@ -233,7 +244,7 @@ void main() {
         final originalSize = tester.getSize(bubble);
         final originalPosition = tester.getTopLeft(bubble);
 
-        await twonlyDB.into(twonlyDB.messages).insert(message);
+        await runNative(tester, () => testDatabase.insert(message));
         await flush(tester);
         if (!isSticker) {
           // The stored row can also arrive before the bridge result.
@@ -251,9 +262,19 @@ void main() {
         expect(tester.getTopLeft(bubble), originalPosition);
         expect(find.byType(ThreeRotatingDots), findsOneWidget);
 
-        await (twonlyDB.update(twonlyDB.messages)
-              ..where((row) => row.messageId.equals(message.messageId)))
-            .write(MessagesCompanion(ackByServer: Value(DateTime.now())));
+        await runNative(
+          tester,
+          () => rust_messages.updateMessages(
+            id: message.messageId,
+            byMedia: false,
+            patch: MessagePatch(
+              ackByServer: NullableInt(
+                value: databaseNullableSeconds(DateTime.now()),
+              ),
+            ),
+            transaction: currentDatabaseSession(),
+          ),
+        );
         await flush(tester);
         expect(find.byType(ThreeRotatingDots), findsNothing);
         expect(
@@ -288,7 +309,7 @@ void main() {
     await tester.pump();
     expect(bubble, findsOneWidget);
     expect(api.requests.last, message);
-    await twonlyDB.into(twonlyDB.messages).insert(message);
+    await runNative(tester, () => testDatabase.insert(message));
     api.completions.last.complete(message.messageId);
     await flush(tester);
     expect(bubble, findsOneWidget);

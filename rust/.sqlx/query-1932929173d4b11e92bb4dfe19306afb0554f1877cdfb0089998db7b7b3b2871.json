@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                        SELECT EXISTS(\n                            SELECT 1\n                            FROM groups\n                            WHERE group_id = ?\n                                AND last_message_send IS NOT NULL\n                                AND last_message_received IS NOT NULL\n                        ) AS \"value!: bool\"\n                    ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1932929173d4b11e92bb4dfe19306afb0554f1877cdfb0089998db7b7b3b2871"
+}

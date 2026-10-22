@@ -1,27 +1,29 @@
 import 'dart:async';
 import 'dart:convert' show base64Url, utf8;
+import 'dart:typed_data';
 
 import 'package:cryptography_plus/cryptography_plus.dart'
     show Hkdf, Hmac, Mac, SecretBox, SecretKey, Xchacha20;
-import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show Int64List;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/recovery.dart' as rust_recovery;
 import 'package:twonly/core/bridge/wrapper.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/recovery/table.dart' as db_recovery;
 import 'package:twonly/core/user_config.dart' show PasswordlessRecoveryConfig;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart'
-    show getContactDisplayName;
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/user.service.dart';
-
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -159,14 +161,14 @@ class PasswordlessRecoveryService {
     required int threshold,
   }) async {
     // 1. Get all currently trusted friends contacts and send them delete messages
-    final oldTrustedFriends = await (twonlyDB.select(
-      twonlyDB.contacts,
-    )..where((t) => t.recoveryIsTrustedFriend.equals(true))).get();
+    final trustedFriendIdsBeforeReset = (await rust_recovery.recoveryFriendIds(
+      transaction: currentDatabaseSession(),
+    )).map((id) => id.toInt()).toList();
 
-    for (final contact in oldTrustedFriends) {
+    for (final contactId in trustedFriendIdsBeforeReset) {
       try {
         await RustApi.sendEncryptedContent(
-          contactId: contact.userId,
+          contactId: contactId,
           content: pb.EncryptedContent(
             passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
               delete: true,
@@ -178,14 +180,16 @@ class PasswordlessRecoveryService {
         );
       } catch (e) {
         Log.error(
-          'Failed to send delete PasswordLessRecovery message to contact ${contact.userId}: $e',
+          'Failed to send delete PasswordLessRecovery message to contact $contactId: $e',
         );
       }
     }
 
     // 1. Reset current recovery data to ensure a clean state
 
-    await twonlyDB.contactsDao.resetRecoveryDataForAllContacts();
+    await rust_contacts.resetContactsRecovery(
+      transaction: currentDatabaseSession(),
+    );
     await UserService.update((u) => u.passwordLessRecovery = null);
 
     final config = PasswordlessRecoveryConfig(threshold: threshold);
@@ -315,18 +319,20 @@ class PasswordlessRecoveryService {
     // Publish the configuration only after every share is committed. A
     // connection heartbeat must never see a partially configured helper list
     // and then postpone sending the remaining shares for 24 hours.
-    await twonlyDB.transaction(() async {
-      for (final contactId in trustedFriendIds) {
-        await twonlyDB.contactsDao.updateContact(
-          contactId,
-          ContactsCompanion(
-            recoveryIsTrustedFriend: const Value(true),
-            recoveryLastHeartbeat: const Value(null),
-            recoverySecretShare: Value(shares.removeLast()),
+    final reversedShares = shares.reversed.toList(growable: false);
+    if (trustedFriendIds.length != reversedShares.length) {
+      throw ArgumentError('Recovery share count does not match contacts');
+    }
+    await rust_recovery.storeRecoveryShares(
+      shares: [
+        for (var i = 0; i < trustedFriendIds.length; i++)
+          db_recovery.RecoveryShare(
+            contactId: trustedFriendIds[i],
+            secret: reversedShares[i],
           ),
-        );
-      }
-    });
+      ],
+      transaction: currentDatabaseSession(),
+    );
 
     await UserService.update((u) => u.passwordLessRecovery = config);
 
@@ -479,10 +485,10 @@ class PasswordlessRecoveryService {
     final config = userService.currentUser.passwordLessRecovery;
     if (config == null) return;
 
-    final oldTrustedFriends = await (twonlyDB.select(
-      twonlyDB.contacts,
-    )..where((t) => t.recoveryIsTrustedFriend.equals(true))).get();
-    final trustedFriendIds = oldTrustedFriends.map((e) => e.userId).toList();
+    final trustedFriendIdsBeforeReset = (await rust_recovery.recoveryFriendIds(
+      transaction: currentDatabaseSession(),
+    )).map((id) => id.toInt()).toList();
+    final trustedFriendIds = trustedFriendIdsBeforeReset;
 
     if (trustedFriendIds.isEmpty) return;
 
@@ -502,10 +508,10 @@ class PasswordlessRecoveryService {
       );
     } else {
       // It's PIN, we can't migrate it because we don't have the PIN. We delete it so the user has to do it again.
-      for (final contact in oldTrustedFriends) {
+      for (final contactId in trustedFriendIdsBeforeReset) {
         try {
           await RustApi.sendEncryptedContent(
-            contactId: contact.userId,
+            contactId: contactId,
             content: pb.EncryptedContent(
               passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
                 delete: true,
@@ -517,12 +523,14 @@ class PasswordlessRecoveryService {
           );
         } catch (e) {
           Log.error(
-            'Failed to send delete PasswordLessRecovery message to contact ${contact.userId}: $e',
+            'Failed to send delete PasswordLessRecovery message to contact $contactId: $e',
           );
         }
       }
 
-      await twonlyDB.contactsDao.resetRecoveryDataForAllContacts();
+      await rust_contacts.resetContactsRecovery(
+        transaction: currentDatabaseSession(),
+      );
       await UserService.update((u) => u.passwordLessRecovery = null);
     }
   }

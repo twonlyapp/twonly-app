@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT announced_user_id AS \"announced_user_id!\",\n                from_contact_id AS \"from_contact_id!\",\n                public_key_verified_timestamp AS \"public_key_verified_timestamp?\"\n            FROM user_discovery_user_relations r\n            WHERE announced_user_id IN (\n                SELECT value\n                FROM json_each(?)\n            )\n                AND EXISTS(\n                SELECT 1\n                FROM contacts c\n                WHERE c.user_id = r.from_contact_id\n                    AND c.accepted = 1\n                    AND c.blocked = 0\n                    AND c.deleted_by_user = 0\n                    AND c.account_deleted = 0\n            )\n            ORDER BY r.rowid\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "announced_user_id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_user_relations",
+            "name": "announced_user_id"
+          }
+        }
+      },
+      {
+        "name": "from_contact_id!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_user_relations",
+            "name": "from_contact_id"
+          }
+        }
+      },
+      {
+        "name": "public_key_verified_timestamp?",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_user_relations",
+            "name": "public_key_verified_timestamp"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "45d69d07f3aba0189ebe53882e392140e382764281d7cd47c99a56d8eddf453d"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE FROM received_receipts WHERE created_at < ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "6648b85300b85167f27dddc78cf6b96666ce3414500d2f34fb5ec51d4ddf9240"
+}

@@ -93,6 +93,23 @@ class KeyValueStore {
     });
   }
 
+  /// Persist coordination state before acting on it. Rename prevents a process
+  /// exit during writing from truncating the previous state; errors propagate.
+  static Future<void> putAtomically(
+    String key,
+    Map<String, dynamic> value,
+  ) => _exclusive(key, () async {
+    final file = await _getFilePath(key);
+    final pending = File('${file.path}.pending');
+    await file.parent.create(recursive: true);
+    try {
+      await pending.writeAsString(jsonEncode(value), flush: true);
+      await pending.rename(file.path);
+    } finally {
+      if (pending.existsSync()) await pending.delete();
+    }
+  });
+
   static Future<T> update<T>({
     required String key,
     required FutureOr<void> Function(T value) update,

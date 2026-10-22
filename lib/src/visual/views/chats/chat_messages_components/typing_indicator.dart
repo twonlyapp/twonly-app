@@ -3,9 +3,14 @@ import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
@@ -63,8 +68,15 @@ class _TypingIndicatorState extends State<TypingIndicator> {
       filterOpenUsers(_groupMembers);
     });
 
-    final membersStream = twonlyDB.groupsDao.watchGroupMembers(
-      widget.group.groupId,
+    final membersStream = watchRustDatabase(
+      (control) => rust_groups
+          .watchGroupContacts(
+            input: db_groups.GroupMembersQuery(
+              groupId: widget.group.groupId,
+            ),
+            control: control,
+          )
+          .map(joinedGroupContacts),
     );
     membersSub = membersStream.listen((update) {
       filterOpenUsers(update.map((m) => m.$2).toList());

@@ -1,14 +1,18 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/groups.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/group_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
@@ -38,17 +42,26 @@ class _SelectChatDeletionTimeListTitleState
   @override
   void initState() {
     super.initState();
-    groupSub = twonlyDB.groupsDao.watchGroup(widget.groupId).listen((update) {
-      if (update == null) return;
-      group = update;
+    groupSub =
+        watchRustDatabase(
+          (control) => rust_groups.watchGroups(
+            input: db_groups.GroupQuery(
+              filter: db_groups.GroupFilter.id,
+              groupId: widget.groupId,
+            ),
+            control: control,
+          ),
+        ).map((rows) => rows.isEmpty ? null : rows.single).listen((update) {
+          if (update == null) return;
+          group = update;
 
-      final selected = _getOptions().indexWhere(
-        (t) => t.$1 == update.deleteMessagesAfterMilliseconds,
-      );
-      setState(() {
-        _selectedDeletionTime = selected % _getOptions().length;
-      });
-    });
+          final selected = _getOptions().indexWhere(
+            (t) => t.$1 == update.deleteMessagesAfterMilliseconds,
+          );
+          setState(() {
+            _selectedDeletionTime = selected % _getOptions().length;
+          });
+        });
   }
 
   @override
@@ -80,20 +93,18 @@ class _SelectChatDeletionTimeListTitleState
 
     if (group!.deleteMessagesAfterMilliseconds != selected) {
       if (group!.isDirectChat) {
-        await twonlyDB.groupsDao.updateGroup(
-          group!.groupId,
-          GroupsCompanion(
-            deleteMessagesAfterMilliseconds: Value(selected),
-          ),
+        await rust_groups.updateGroup(
+          id: group!.groupId,
+          patch: GroupPatch(deleteMessagesAfterMilliseconds: selected),
+          transaction: currentDatabaseSession(),
         );
-        await twonlyDB.groupsDao.insertGroupAction(
-          GroupHistoriesCompanion(
-            groupId: Value(group!.groupId),
-            type: const Value(GroupActionType.changeDisplayMaxTime),
-            newDeleteMessagesAfterMilliseconds: Value(
-              selected,
-            ),
+        await rust_groups.insertGroupHistory(
+          patch: GroupHistoryPatch(
+            groupId: group!.groupId,
+            type: GroupActionType.changeDisplayMaxTime.name,
+            newDeleteMessagesAfterMilliseconds: NullableInt(value: selected),
           ),
+          transaction: currentDatabaseSession(),
         );
         await RustApi.sendEncryptedContentToGroup(
           groupId: group!.groupId,

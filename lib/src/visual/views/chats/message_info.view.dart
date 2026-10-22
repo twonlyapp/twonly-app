@@ -5,11 +5,23 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/recipient_status_row.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
@@ -24,7 +36,7 @@ class MessageInfoView extends StatefulWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final Group group;
   final List<MemoryItem> galleryItems;
 
@@ -60,8 +72,10 @@ class _MessageInfoViewState extends State<MessageInfoView> {
   }
 
   Future<void> initAsync() async {
-    final streamActions = twonlyDB.messagesDao.watchMessageActions(
-      widget.message.messageId,
+    final streamActions = watchRustDatabase(
+      (control) => rust_messages
+          .watchMessageActions(id: widget.message.messageId, control: control)
+          .map(messageActionsWithContacts),
     );
     actionsStream = streamActions.listen((update) {
       if (!mounted) return;
@@ -70,9 +84,20 @@ class _MessageInfoViewState extends State<MessageInfoView> {
       });
     });
 
-    final streamGroup = twonlyDB.messagesDao.watchMembersByGroupId(
-      widget.message.groupId,
-    );
+    final streamGroup =
+        watchRustDatabase(
+          (control) => rust_groups
+              .watchGroupContacts(
+                input: db_groups.GroupMembersQuery(
+                  groupId: widget.message.groupId,
+                  activeOnly: false,
+                ),
+                control: control,
+              )
+              .map(joinedGroupContacts),
+        ).map(
+          (rows) => rows.map((row) => (row.$2, row.$1)).toList(growable: false),
+        );
     groupMemberStream = streamGroup.listen((update) {
       if (!mounted) return;
       setState(() {
@@ -80,8 +105,11 @@ class _MessageInfoViewState extends State<MessageInfoView> {
       });
     });
 
-    final streamHistory = twonlyDB.messagesDao.watchMessageHistory(
-      widget.message.messageId,
+    final streamHistory = watchRustDatabase(
+      (control) => rust_messages.watchMessageHistory(
+        id: widget.message.messageId,
+        control: control,
+      ),
     );
     historyStream = streamHistory.listen((update) {
       if (!mounted) return;
@@ -92,7 +120,17 @@ class _MessageInfoViewState extends State<MessageInfoView> {
 
     final mediaId = widget.message.mediaId;
     if (mediaId != null) {
-      final streamMedia = twonlyDB.mediaFilesDao.watchMedia(mediaId);
+      final streamMedia = watchRustDatabase(
+        (control) => rust_mediafiles
+            .watchMediaFiles(
+              input: db_mediafiles.MediaQuery(
+                filter: db_mediafiles.MediaFilter.ids,
+                ids: [mediaId].toList(),
+              ),
+              control: control,
+            )
+            .map(orderedMediaFiles),
+      ).map((rows) => rows.isEmpty ? null : rows.single);
       mediaFileStream = streamMedia.listen((update) {
         if (!mounted) return;
         setState(() {

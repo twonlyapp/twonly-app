@@ -8,35 +8,45 @@ use rust_lib_twonly::services::contacts::ContactService;
 
 async fn create_authenticated_tester() -> anyhow::Result<Tester> {
     let mut tester = Tester::new().await?;
+
     tester.wait_until(ApiConnectionState::Connected).await?;
+
     tester.register_and_authenticate().await?;
+
     tester.wait_until(ApiConnectionState::Authenticated).await?;
+
     Ok(tester)
 }
 
 #[tokio::test]
+
 async fn test_passwordless_recovery_share_heartbeat_and_delete() -> anyhow::Result<()> {
     init_tracing();
 
     let tester_a = create_authenticated_tester().await?;
+
     let tester_b = create_authenticated_tester().await?;
 
     // Connect contacts A and B
     ContactService::new(&tester_a.context)
         .request_by_username(tester_b.username.clone(), true)
         .await?;
+
     tester_b
         .wait_for_contact_state(tester_a.user_id, false, true)
         .await?;
+
     ContactService::new(&tester_b.context)
         .accept_request(tester_a.user_id, true)
         .await?;
+
     tester_a
         .wait_for_contact_state(tester_b.user_id, true, false)
         .await?;
 
     // 1. Tester A sends recovery share to Tester B
     let secret_share = vec![10, 20, 30, 40];
+
     let recovery_content = proto::EncryptedContent {
         passwordless_recovery: Some(encrypted_content::PasswordLessRecovery {
             recovery_secret_share: Some(secret_share.clone()),
@@ -58,11 +68,14 @@ async fn test_passwordless_recovery_share_heartbeat_and_delete() -> anyhow::Resu
         .wait_for_recovery_contacts_share(tester_a.user_id)
         .await?;
 
-    // Configure Tester A's contact record for Tester B to track expected share for heartbeat verification
+    // Configure Tester A's contact record for Tester B to track expected share for
+    // heartbeat verification
     {
         let db_a = tester_a.context.app_db.read().await.clone();
+
         sqlx::query!(
-            "UPDATE contacts SET recovery_secret_share = ?, recovery_is_trusted_friend = 1 WHERE user_id = ?",
+            "UPDATE contacts SET recovery_secret_share = ?, recovery_is_trusted_friend = 1 WHERE \
+             user_id = ?",
             secret_share,
             tester_b.user_id,
         )
