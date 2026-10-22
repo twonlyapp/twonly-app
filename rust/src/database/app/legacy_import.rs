@@ -36,7 +36,7 @@ impl AppDatabase {
     pub(crate) async fn repair_direct_chat_contacts(&self) -> Result<()> {
         let mut transaction = self.pool.begin().await?;
         sqlx::raw_sql(include_str!(
-            "migrations/0045_repair_direct_chat_contacts.sql"
+            "migrations/0046_repair_direct_chat_contacts.sql"
         ))
         .execute(&mut *transaction)
         .await?;
