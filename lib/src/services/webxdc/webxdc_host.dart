@@ -40,32 +40,9 @@ class WebxdcHost {
   static int _deliveredSerial = 0;
   static VoidCallback? _closeView;
 
-  /// Whether this device composites the webview with Hybrid Composition++.
-  ///
-  /// HCPP hands the webview to the system compositor through `SurfaceControl`
-  /// rather than merging the raster and platform threads, which is what keeps a
-  /// route transition smooth while an app is on screen -- the predictive back
-  /// gesture above all, since it transforms the whole outgoing route on every
-  /// frame of the drag. It needs the engine opt-in in the manifest and Vulkan
-  /// on API 34 or newer, so the answer belongs to the device rather than to the
-  /// app being opened and is asked once, here. Everything else falls back to
-  /// the texture path, which composites the webview like any other layer.
-  static bool hybridComposition = false;
-
   static void initialize() {
     _channel.setMethodCallHandler(_handleNativeCall);
     WebxdcWebviewStorage.clear = _clearOrigin;
-    unawaited(_probeHybridComposition());
-  }
-
-  static Future<void> _probeHybridComposition() async {
-    if (defaultTargetPlatform != TargetPlatform.android) return;
-    try {
-      hybridComposition = await HybridAndroidViewController.checkIfSupported();
-    } catch (error) {
-      // An engine built without the opt-in does not answer this at all.
-      hybridComposition = false;
-    }
   }
 
   /// Stops the running app while its screen animates away, and starts it again

@@ -27,16 +27,21 @@ class _WebxdcApi extends NativeTestApi {
 
 void main() {
   final api = _WebxdcApi();
+  final platformCalls = <MethodCall>[];
   setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
   setUp(() async {
     api.visibleInstances.clear();
+    platformCalls.clear();
     await locator.reset();
     await TestDatabase.create();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           SystemChannels.platform_views,
-          (_) async => null,
+          (call) async {
+            platformCalls.add(call);
+            return null;
+          },
         );
   });
   tearDown(() async {
@@ -45,6 +50,51 @@ void main() {
 
     await locator.reset();
   });
+
+  testWidgets(
+    'Android forwards page taps after the opening transition has settled',
+    (tester) async {
+      final navigator = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navigator,
+          home: const Scaffold(body: Text('Chat')),
+        ),
+      );
+      navigator.currentState!.push<void>(
+        MaterialPageRoute(
+          builder: (_) => const WebxdcAppView(
+            launch: WebxdcLaunch(
+              instanceId: 'game',
+              appId: 'game',
+              origin: 'origin',
+              title: 'Game',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final surface = find.byType(AndroidViewSurface);
+      await tester.tap(surface);
+      await tester.pump();
+
+      final touches = platformCalls
+          .where((call) => call.method == 'touch')
+          .map((call) => call.arguments as List<Object?>)
+          .toList();
+      expect(touches, hasLength(2));
+      expect(touches.map((event) => event[3]), [0, 1]); // Down, up.
+      final create = platformCalls.singleWhere(
+        (call) => call.method == 'create',
+      );
+      final parameters = create.arguments as Map<Object?, Object?>;
+      expect(touches.every((event) => event[0] == parameters['id']), isTrue);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
 
   for (final appId in ['backend-uploaded-game', 'expenses']) {
     testWidgets(
@@ -99,7 +149,10 @@ void main() {
         await tester.pumpWidget(const SizedBox.shrink());
         expect(api.visibleInstances.last, isNull);
       },
-      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+      variant: const TargetPlatformVariant({
+        TargetPlatform.android,
+        TargetPlatform.iOS,
+      }),
     );
   }
 }

@@ -148,31 +148,17 @@ class _WebxdcSurface extends StatelessWidget {
         hitTestBehavior: PlatformViewHitTestBehavior.opaque,
       ),
       onCreatePlatformView: (params) {
-        // Hybrid Composition++ wherever the device runs it: the webview is
-        // handed to the system compositor, so an animation over it no longer
-        // drags the platform thread along. Everywhere else the texture path,
-        // which composites the webview like any other layer and drops to plain
-        // hybrid composition on its own when a page needs a real surface.
-        // Plain hybrid composition is not asked for here: it merges the raster
-        // and platform threads for as long as the app is on screen, and every
-        // frame of the closing animation then pays for it.
-        final controller = WebxdcHost.hybridComposition
-            ? PlatformViewsService.initHybridAndroidView(
-                id: params.id,
-                viewType: _viewType,
-                layoutDirection: TextDirection.ltr,
-                creationParams: parameters,
-                creationParamsCodec: const StandardMessageCodec(),
-                onFocus: () => params.onFocusChanged(true),
-              )
-            : PlatformViewsService.initSurfaceAndroidView(
-                id: params.id,
-                viewType: _viewType,
-                layoutDirection: TextDirection.ltr,
-                creationParams: parameters,
-                creationParamsCodec: const StandardMessageCodec(),
-                onFocus: () => params.onFocusChanged(true),
-              );
+        // Keep the WebView in the native view hierarchy. The texture path can
+        // stall WebView rendering while Flutter is idle. HCPP stays disabled
+        // in the manifest because Flutter 3.47.3 can abort in that compositor.
+        final controller = PlatformViewsService.initExpensiveAndroidView(
+          id: params.id,
+          viewType: _viewType,
+          layoutDirection: TextDirection.ltr,
+          creationParams: parameters,
+          creationParamsCodec: const StandardMessageCodec(),
+          onFocus: () => params.onFocusChanged(true),
+        );
         return controller
           ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
           ..create();

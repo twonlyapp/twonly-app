@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.PermissionRequest
@@ -71,6 +73,7 @@ class WebxdcView(
         private const val MAX_IMPORT_BYTES = 32 * 1024 * 1024
 
         private var current: WebxdcView? = null
+        private val main = Handler(Looper.getMainLooper())
 
         /**
          * `https` rather than a custom scheme, so the page is a secure context
@@ -89,7 +92,9 @@ class WebxdcView(
         fun setPaused(instanceId: String, paused: Boolean) {
             val view = current ?: return
             if (view.instanceId != instanceId) return
-            view.webView.post { view.setPaused(paused) }
+            main.post {
+                if (current === view) view.setPaused(paused)
+            }
         }
 
         /**
@@ -165,16 +170,13 @@ class WebxdcView(
         // the view, which is the last frame of the closing animation and the
         // one place the cost is visible.
         webView.onPause()
-        webView.post {
-            // Timers are a process-wide setting, so they are handed back before
-            // this view goes: the next app opened must not start frozen.
-            webView.resumeTimers()
-            webView.destroy()
-        }
+        // Flutter has already detached this view. View.post would hold this
+        // callback until reattachment, which never happens after disposal.
+        main.post { webView.destroy() }
     }
 
     /**
-     * Rendering and timers, stopped while the route is animating away.
+     * Rendering, stopped while the route is animating away.
      *
      * A game redraws every frame it is given, and those are exactly the frames
      * the transition needs. Nothing is lost by this: the page keeps its state,
@@ -183,11 +185,11 @@ class WebxdcView(
     private fun setPaused(paused: Boolean) {
         if (paused) {
             webView.onPause()
-            webView.pauseTimers()
         } else {
             webView.onResume()
-            webView.resumeTimers()
         }
+        // Never pauseTimers(): it also stops layout, parsing and JavaScript
+        // in every other WebView, including the next game opened.
     }
 
     private fun quote(value: String): String = JSONObject.quote(value)
