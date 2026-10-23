@@ -94,9 +94,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   /// "the clip ends here" while null keeps the recording's own end.
   Duration? _trimEnd;
 
-  /// The cutter lies over the video, so it can be put away to see the frame
-  /// underneath it. Open to begin with, otherwise nothing says it is there.
-  bool _trimmerVisible = true;
+  /// The cutter stays hidden until the user opens it with the toolbar icon.
+  bool _trimmerVisible = false;
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
   Timer? _imageLoadingTimer;
