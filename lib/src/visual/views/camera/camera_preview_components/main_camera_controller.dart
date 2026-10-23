@@ -568,6 +568,19 @@ class MainCameraController {
             final profile = result.profile;
             final contact = result.contact;
 
+            if (result.status == QrCodeLinkStatus.contactRequested) {
+              final context = cameraPreviewKey.currentContext;
+              if (context != null && context.mounted) {
+                unawaited(HapticFeedback.heavyImpact());
+                showSnackbar(
+                  context,
+                  context.lang.requestedUserToastText(profile!.username),
+                  level: SnackbarLevel.success,
+                );
+              }
+              continue;
+            }
+
             if (contact?.blocked ?? false) {
               await rust_contacts.updateContact(
                 id: contact!.userId,

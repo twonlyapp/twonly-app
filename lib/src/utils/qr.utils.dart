@@ -16,12 +16,14 @@ import 'package:twonly/src/model/contact_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 
 enum QrCodeLinkStatus {
   invalid,
   ownProfile,
   newContact,
+  contactRequested,
   verified,
   keyMismatch,
   missingSession,
@@ -42,6 +44,15 @@ class QrCodeLinkResult {
 
 class QrCodeUtils {
   static String linkPrefix = 'https://me.twonly.eu/qr/#';
+
+  static bool hasFreshVerificationToken(PublicProfile profile) {
+    if (!profile.hasTimestamp() ||
+        profile.secretVerificationToken.length != 16) {
+      return false;
+    }
+    final age = clock.now().millisecondsSinceEpoch - profile.timestamp.toInt();
+    return age >= 0 && age <= const Duration(minutes: 5).inMilliseconds;
+  }
 
   static Future<String> publicProfileLink() async {
     final publicIdentityKey = await RustSignal.getUserPublicKey();
@@ -101,6 +112,31 @@ class QrCodeUtils {
         );
       }
 
+      if ((contact == null || (!contact.accepted && !contact.blocked)) &&
+          hasFreshVerificationToken(profile)) {
+        if (contact != null) {
+          final storedPublicKey = await RustSignal.getContactPublicKey(
+            contactId: contact.userId,
+          );
+          if (storedPublicKey != null &&
+              !profile.publicIdentityKey.equals(storedPublicKey.toList())) {
+            return QrCodeLinkResult(
+              status: QrCodeLinkStatus.keyMismatch,
+              profile: profile,
+              contact: contact,
+            );
+          }
+        }
+        // The token owner validates the proof and sends an acceptance. The
+        // normal incoming acceptance creates our chat only after validation.
+        final success = await addNewContactFromPublicProfile(profile);
+        return QrCodeLinkResult(
+          status: success
+              ? QrCodeLinkStatus.contactRequested
+              : QrCodeLinkStatus.error,
+          profile: profile,
+        );
+      }
       if (contact == null) {
         return QrCodeLinkResult(
           status: QrCodeLinkStatus.newContact,

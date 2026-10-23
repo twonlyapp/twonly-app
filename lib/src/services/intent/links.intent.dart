@@ -56,6 +56,8 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
     if (!context.mounted) return false;
 
     switch (result.status) {
+      case QrCodeLinkStatus.contactRequested:
+        break;
       case QrCodeLinkStatus.newContact:
         await context.navPush(
           AddContactViaQrLinkView(
