@@ -15,7 +15,10 @@ class DefaultEmojiPickerView extends EmojiPickerView {
     super.state,
     super.showSearchBar, {
     super.key,
+    this.scrollController,
   });
+
+  final ScrollController? scrollController;
 
   @override
   State<DefaultEmojiPickerView> createState() => _DefaultEmojiPickerViewState();
@@ -25,7 +28,9 @@ class _DefaultEmojiPickerViewState extends State<DefaultEmojiPickerView>
     with TickerProviderStateMixin, SkinToneOverlayStateMixin {
   late TabController _tabController;
   late PageController _legacyPageController;
-  final _scrollController = ScrollController();
+  final _internalScrollController = ScrollController();
+  ScrollController get _scrollController =>
+      widget.scrollController ?? _internalScrollController;
   final _utils = EmojiPickerUtils();
 
   List<double> _categoryOffsets = const [];
@@ -61,6 +66,12 @@ class _DefaultEmojiPickerViewState extends State<DefaultEmojiPickerView>
   @override
   void didUpdateWidget(covariant DefaultEmojiPickerView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.scrollController != widget.scrollController) {
+      (oldWidget.scrollController ?? _internalScrollController).removeListener(
+        _onEmojiScroll,
+      );
+      _scrollController.addListener(_onEmojiScroll);
+    }
     if (identical(oldWidget.state, widget.state)) {
       return;
     }
@@ -151,7 +162,7 @@ class _DefaultEmojiPickerViewState extends State<DefaultEmojiPickerView>
     _tabController.dispose();
     _legacyPageController.dispose();
     _scrollController.removeListener(_onEmojiScroll);
-    _scrollController.dispose();
+    _internalScrollController.dispose();
     super.dispose();
   }
 

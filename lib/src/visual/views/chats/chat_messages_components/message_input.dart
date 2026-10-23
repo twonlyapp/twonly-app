@@ -823,7 +823,14 @@ class _MessageInputState extends State<MessageInput>
               setState(() {});
             },
             config: Config(
-              height: _emojiPickerHeight,
+              height: _emojiPickerHeight.clamp(
+                0,
+                MediaQuery.sizeOf(context).height / 2,
+              ),
+              resizeConfig: ResizeConfig(
+                expandOnScroll: true,
+                maxHeight: MediaQuery.sizeOf(context).height / 2,
+              ),
               locale: Localizations.localeOf(context),
               emojiTextStyle: TextStyle(
                 fontSize: 24 * (Platform.isIOS ? 1.2 : 1),

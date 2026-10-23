@@ -4,6 +4,7 @@
  * Copyright (c) 2024 Stefan Humm
  */
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -287,6 +288,127 @@ void main() {
       await tester.pump();
 
       expect(tester.getSize(picker).height, 256);
+    });
+
+    testWidgets('Scrolling expands the picker before moving emoji', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomCenter,
+              child: EmojiPicker(
+                config: Config(
+                  checkPlatformCompatibility: false,
+                  resizeConfig: ResizeConfig(
+                    expandOnScroll: true,
+                    maxHeight: 420,
+                  ),
+                  categoryViewConfig: CategoryViewConfig(
+                    recentTabBehavior: RecentTabBehavior.NONE,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final picker = find.byKey(const Key('emojiPickerResizableContainer'));
+      final grid = find.byKey(const Key('emojiScrollView'));
+      final position = tester
+          .state<ScrollableState>(
+            find.descendant(of: grid, matching: find.byType(Scrollable)),
+          )
+          .position;
+      final initialOffset = position.pixels;
+      final gesture = await tester.startGesture(tester.getCenter(grid));
+      await gesture.moveBy(const Offset(0, -20));
+      await gesture.moveBy(const Offset(0, -80));
+      await tester.pump();
+
+      expect(tester.getSize(picker).height, greaterThan(256));
+      expect(tester.getSize(picker).height, lessThan(420));
+      expect(position.pixels, initialOffset);
+
+      // Continue the same gesture through the height limit into the list.
+      await gesture.moveBy(const Offset(0, -200));
+      await tester.pump();
+      expect(tester.getSize(picker).height, 420);
+      expect(position.pixels, greaterThan(initialOffset));
+      final expandedOffset = position.pixels;
+
+      await gesture.moveBy(const Offset(0, 40));
+      await tester.pump();
+      expect(tester.getSize(picker).height, 420);
+      expect(position.pixels, lessThan(expandedOffset));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      // The handle can still shrink it, and wheel scrolling expands it again.
+      await tester.drag(
+        find.byKey(const Key('emojiPickerDragHandle')),
+        const Offset(0, 100),
+      );
+      await tester.pumpAndSettle();
+      final smallerHeight = tester.getSize(picker).height;
+      final offsetBeforeWheel = position.pixels;
+      await tester.sendEventToBinding(
+        PointerScrollEvent(
+          position: tester.getCenter(grid),
+          scrollDelta: const Offset(0, 40),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getSize(picker).height, smallerHeight + 40);
+      expect(position.pixels, offsetBeforeWheel);
+    });
+
+    testWidgets('A short fling expands without scrolling emoji early', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomCenter,
+              child: EmojiPicker(
+                config: Config(
+                  checkPlatformCompatibility: false,
+                  resizeConfig: ResizeConfig(
+                    expandOnScroll: true,
+                    maxHeight: 500,
+                  ),
+                  categoryViewConfig: CategoryViewConfig(
+                    recentTabBehavior: RecentTabBehavior.NONE,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final grid = find.byKey(const Key('emojiScrollView'));
+      final position = tester
+          .state<ScrollableState>(
+            find.descendant(of: grid, matching: find.byType(Scrollable)),
+          )
+          .position;
+      final initialOffset = position.pixels;
+      await tester.fling(grid, const Offset(0, -80), 1000);
+      await tester.pumpAndSettle();
+
+      final height = tester
+          .getSize(
+            find.byKey(const Key('emojiPickerResizableContainer')),
+          )
+          .height;
+      expect(height, greaterThan(256));
+      expect(height, lessThan(500));
+      expect(position.pixels, initialOffset);
     });
 
     testWidgets('Drag handle can be hidden', (tester) async {
