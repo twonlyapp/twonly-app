@@ -187,6 +187,22 @@ pub(crate) async fn should_wake_receiver(
         None => false,
     };
 
+    // Keep broadcasting save updates so group members can retain their copy,
+    // but only wake the author of the original media.
+    let media_update_wakes_receiver = match content.media_update.as_ref() {
+        Some(update) => match encrypted_content::media_update::Type::try_from(update.r#type) {
+            Ok(encrypted_content::media_update::Type::Stored) => {
+                message_sender(transaction, &update.target_message_id)
+                    .await?
+                    .flatten()
+                    == Some(target_user_id)
+            }
+            Ok(encrypted_content::media_update::Type::Reopened) => true,
+            _ => false,
+        },
+        None => false,
+    };
+
     Ok(content.text_message.is_some()
         || content
             .additional_data_message
@@ -207,17 +223,7 @@ pub(crate) async fn should_wake_receiver(
         // The sender decided, and wrote into the story, that this is the first
         // item in a day; `record_incoming_event` announces exactly those.
         || content.story.as_ref().is_some_and(|story| story.notify)
-        || content
-            .media_update
-            .as_ref()
-            .and_then(|value| encrypted_content::media_update::Type::try_from(value.r#type).ok())
-            .is_some_and(|kind| {
-                matches!(
-                    kind,
-                    encrypted_content::media_update::Type::Stored
-                        | encrypted_content::media_update::Type::Reopened
-                )
-            })
+        || media_update_wakes_receiver
         || content
             .contact_request
             .as_ref()
@@ -547,6 +553,17 @@ pub(crate) async fn record_incoming_event(
         })
     } else if let Some(update) = content.media_update.as_ref() {
         let update_type = encrypted_content::media_update::Type::try_from(update.r#type)?;
+
+        // Other group members still process the hidden update and store the
+        // media when available, but the save notification concerns its author.
+        if update_type == encrypted_content::media_update::Type::Stored
+            && !matches!(
+                message_sender(transaction, &update.target_message_id).await?,
+                Some(None)
+            )
+        {
+            return Ok(());
+        }
 
         // Media status updates can arrive without a group ID. Associate the
         // alert with the original message so opening its chat clears it.
@@ -2658,6 +2675,86 @@ mod tests {
             localized_body("de", &pending_row("stored_story")),
             "hat deine Story gespeichert."
         );
+    }
+
+    #[tokio::test]
+
+    async fn stored_media_only_wakes_and_notifies_its_original_sender() -> Result<()> {
+        use crate::api::messages::incoming::messages::queue_encrypted_content;
+
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'saver'), (42, 'author'), \
+             (43, 'member')",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES \
+             ('direct', 'Direct', 1), ('group', 'Group', 0)",
+        ] {
+            sqlx::query(statement).execute(&mut *tx).await?;
+        }
+
+        for chat in ["direct", "group"] {
+            for (target, sender, notify) in [
+                ("own", None, true),
+                ("received", Some(42_i64), false),
+                ("unknown", None, false),
+            ] {
+                let message_id = format!("{chat}-{target}");
+                if target != "unknown" {
+                    sqlx::query(
+                        "INSERT INTO messages(message_id, group_id, sender_id, type) \
+                         VALUES (?, ?, ?, 'media')",
+                    )
+                    .bind(&message_id)
+                    .bind(chat)
+                    .bind(sender)
+                    .execute(&mut *tx)
+                    .await?;
+                }
+
+                // Legacy updates without a chat ID must obey the same rule.
+                for group_id in [Some(chat.to_owned()), None] {
+                    let content = proto::EncryptedContent {
+                        group_id,
+                        media_update: Some(encrypted_content::MediaUpdate {
+                            r#type: encrypted_content::media_update::Type::Stored as i32,
+                            target_message_id: message_id.clone(),
+                        }),
+                        ..Default::default()
+                    };
+
+                    for recipient in [7, 42, 43] {
+                        let receipt_id =
+                            queue_encrypted_content(&mut tx, recipient, content.clone(), true)
+                                .await?;
+                        let wake: bool = sqlx::query_scalar(
+                            "SELECT wake_receiver FROM receipts WHERE receipt_id = ?",
+                        )
+                        .bind(&receipt_id)
+                        .fetch_one(&mut *tx)
+                        .await?;
+                        assert_eq!(wake, sender == Some(recipient), "{message_id}, {recipient}");
+                    }
+
+                    let event_id = format!("{message_id}-{}", content.group_id.is_some());
+                    record_incoming_event(&ctx, &mut tx, 7, &event_id, &content).await?;
+                    let kind: Option<String> = sqlx::query_scalar(
+                        "SELECT kind FROM notification_outbox WHERE event_id = ?",
+                    )
+                    .bind(event_id)
+                    .fetch_optional(&mut *tx)
+                    .await?;
+                    assert_eq!(kind.as_deref(), notify.then_some("stored_media"));
+                }
+            }
+        }
+
+        Ok(())
     }
 
     #[tokio::test]

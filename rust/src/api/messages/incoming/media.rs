@@ -29,7 +29,7 @@ fn spawn_media_download(ctx: &Arc<Context>, media_id: String) {
     });
 }
 
-/// The receiver kept the media, so the sender keeps its own copy too.
+/// A group member kept the media, so every member keeps an available copy too.
 
 fn spawn_media_store(ctx: &Arc<Context>, media_id: String) {
     let ctx = ctx.clone();
@@ -368,6 +368,97 @@ mod tests {
 
     use super::*;
     use prost::Message as _;
+
+    #[tokio::test]
+    async fn stored_group_media_is_kept_silently_by_other_members() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":43,"username":"member","displayName":"Member","storeMediaFilesInGallery":false}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'saver'), (42, 'author')",
+            "INSERT INTO groups(group_id, group_name) VALUES ('group', 'Group')",
+            "INSERT INTO media_files(media_id, type, download_state) \
+             VALUES ('available', 'image', 'ready'), ('missing', 'image', 'ready')",
+            "INSERT INTO messages(message_id, group_id, sender_id, type, media_id) \
+             VALUES ('available', 'group', 42, 'media', 'available'), \
+             ('missing', 'group', 42, 'media', 'missing')",
+        ] {
+            sqlx::query(statement).execute(&mut *tx).await?;
+        }
+
+        let files = MediaFileService::new(&ctx);
+        let path = files.temp_path("available", "image");
+        MediaFileService::ensure_parent(&path)?;
+        image::RgbImage::from_pixel(8, 6, image::Rgb([12, 34, 56]))
+            .save_with_format(&path, image::ImageFormat::Png)?;
+
+        for message_id in ["available", "missing"] {
+            super::super::handle_encrypted(
+                &ctx,
+                &mut tx,
+                7,
+                message_id,
+                EncryptedContent {
+                    group_id: Some("group".into()),
+                    media_update: Some(encrypted_content::MediaUpdate {
+                        r#type: MediaUpdateType::Stored as i32,
+                        target_message_id: message_id.into(),
+                    }),
+                    ..Default::default()
+                },
+            )
+            .await?;
+        }
+        tx.commit().await?;
+
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            loop {
+                let stored: bool = sqlx::query_scalar(
+                    "SELECT stored FROM media_files WHERE media_id = 'available'",
+                )
+                .fetch_one(&database.pool)
+                .await?;
+                if stored {
+                    break Ok::<_, crate::error::TwonlyError>(());
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            }
+        })
+        .await??;
+
+        assert!(files.stored_path("available", "image").is_file());
+        let stored_messages: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE media_stored = 1")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(stored_messages, 2);
+        let missing_stored: bool =
+            sqlx::query_scalar("SELECT stored FROM media_files WHERE media_id = 'missing'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert!(!missing_stored);
+        assert_eq!(crate::services::notifications::badge_count(&ctx).await?, 0);
+        let alerts: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM notification_outbox")
+            .fetch_one(&database.pool)
+            .await?;
+        assert_eq!(alerts, 0);
+        let messages: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM messages")
+            .fetch_one(&database.pool)
+            .await?;
+        assert_eq!(
+            messages, 2,
+            "save updates must not add visible chat messages"
+        );
+
+        Ok(())
+    }
 
     #[tokio::test]
 
