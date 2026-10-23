@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:clock/clock.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
-import 'package:logging/logging.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -18,58 +16,28 @@ import 'package:twonly/src/utils/keyvalue.dart';
 import '../mocks/user_config.dart';
 
 class _BackupApi implements RustLibApi {
-  late String archivePath;
-  int archiveCreates = 0;
+  final calls = <bool>[];
+  Future<bool> Function(bool)? upload;
 
   @override
-  String crateBridgeApiRustApiApiBaseUrl({required String protocol}) =>
-      '$protocol://backup.example/';
-
-  @override
-  Future<String?>
-  crateBridgeWrapperBackupRustBackupIdentityGetBackupId() async => 'backup-id';
-
-  @override
-  Future<Uint8List>
-  crateBridgeWrapperBackupRustBackupIdentityGetIdentityBackupBytes() async =>
-      Uint8List.fromList([1, 2, 3]);
-
-  @override
-  Future<(String, String)>
-  crateBridgeWrapperBackupRustBackupArchiveCreateBackupArchive() async {
-    archiveCreates++;
-    return ('download-token', archivePath);
+  Future<bool> crateBridgeWrapperBackupRustBackupArchiveUploadBackup({
+    required bool force,
+  }) async {
+    calls.add(force);
+    return upload?.call(force) ?? true;
   }
-
-  @override
-  Future<Map<String, String>>
-  crateBridgeApiRustApiAuthenticationHeaders() async => {
-    'Authorization': 'test',
-  };
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _UploadClient extends MockClient {
-  _UploadClient(super.handler);
-
-  bool closed = false;
-
-  @override
-  void close() {
-    closed = true;
-    super.close();
-  }
-}
-
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const channel = MethodChannel('eu.twonly/backup_schedule');
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   final api = _BackupApi();
   late Directory directory;
-  late DateTime lastSuccess;
-  late Level? previousLogLevel;
-  late StreamSubscription<LogRecord> logSubscription;
-  final records = <LogRecord>[];
   final retryTimers = <Timer>[];
 
   setUpAll(() => RustLib.initMock(api: api));
@@ -77,46 +45,44 @@ void main() {
 
   setUp(() async {
     AppState.isAppInBackground = false;
+    messenger.setMockMethodCallHandler(
+      channel,
+      (_) async => {'state': 'scheduled'},
+    );
     await locator.reset();
-    final user = UserService()
-      ..isUserCreated = true
-      ..currentUser = (testUserConfig(
-        userId: 1,
-        username: 'backup',
-        displayName: 'Backup',
-        subscriptionPlan: 'Free',
-        currentSetupPage: null,
-        appVersion: 1,
-      )..isBackupEnabled = true);
-    locator.registerSingleton<UserService>(user);
-    api.archiveCreates = 0;
+    locator.registerSingleton<UserService>(
+      UserService()
+        ..isUserCreated = true
+        ..currentUser = (testUserConfig(
+          userId: 1,
+          username: 'backup',
+          displayName: 'Backup',
+          subscriptionPlan: 'Free',
+          currentSetupPage: null,
+          appVersion: 1,
+        )..isBackupEnabled = true),
+    );
+    api.calls.clear();
+    api.upload = null;
     directory = Directory.systemTemp.createTempSync('twonly-backup-upload-');
     AppEnvironment.initTesting(
       customCacheDir: directory.path,
       customSupportDir: directory.path,
     );
-    api.archivePath = '${directory.path}/archive.bin';
-    await File(api.archivePath).writeAsBytes([4, 5, 6]);
-    lastSuccess = DateTime.now();
-    previousLogLevel = Logger.root.level;
-    Logger.root.level = Level.ALL;
-    records.clear();
-    logSubscription = Logger.root.onRecord.listen(records.add);
   });
 
   tearDown(() async {
     AppState.isAppInBackground = true;
+    messenger.setMockMethodCallHandler(channel, null);
     for (final timer in retryTimers) {
       timer.cancel();
     }
     retryTimers.clear();
-    await logSubscription.cancel();
-    Logger.root.level = previousLogLevel;
     await directory.delete(recursive: true);
   });
 
-  Future<void> upload(_UploadClient client) => runZoned(
-    () => http.runWithClient(BackupService.makeBackup, () => client),
+  Future<void> request({bool force = false}) => runZoned(
+    () => BackupService.makeBackup(force: force),
     zoneSpecification: ZoneSpecification(
       createTimer: (self, parent, zone, duration, callback) {
         final timer = parent.createTimer(zone, duration, callback);
@@ -126,137 +92,247 @@ void main() {
     ),
   );
 
+  test('explicit requests wait for resume and preserve force', () async {
+    AppState.isAppInBackground = true;
+    await request(force: true);
+    expect(api.calls, isEmpty);
+    AppState.isAppInBackground = false;
+    await BackupService.resumePendingBackup();
+    expect(api.calls, [true]);
+  });
+
+  test('manual backups delegate to the shared native uploader', () async {
+    await request(force: true);
+    expect(api.calls, [true]);
+    expect(
+      (await KeyValueStore.get(KeyValueKeys.forcedBackupPending))?['pending'],
+      isFalse,
+    );
+  });
+
   test(
-    'a background request waits for resume before creating an archive',
+    'native failures retain forced intent and schedule another attempt',
     () async {
-      final status = CurrentBackupStatus()
-        ..identityState = LastBackupUploadState.success
-        ..identityLastSuccessFull = lastSuccess
-        ..archiveState = LastBackupUploadState.failed;
-      await KeyValueStore.put(KeyValueKeys.currentBackupState, status.toJson());
-      AppState.isAppInBackground = true;
-      final client = _UploadClient((_) async => http.Response('', 200));
-      await upload(client);
-      expect(api.archiveCreates, 0);
-      expect(client.closed, isFalse);
-      AppState.isAppInBackground = false;
-      await http.runWithClient(BackupService.resumePendingBackup, () => client);
-      expect(api.archiveCreates, 1);
+      api.upload = (_) async => false;
+      await request(force: true);
+      expect(retryTimers, hasLength(1));
       expect(
-        (await BackupService.getData()).archiveState,
-        LastBackupUploadState.success,
+        (await KeyValueStore.get(KeyValueKeys.forcedBackupPending))?['pending'],
+        isTrue,
       );
-      expect(client.closed, isTrue);
+      api.upload = (_) async => true;
+      await BackupService.resumePendingBackup();
+      expect(api.calls, [true, true]);
+      expect(
+        (await KeyValueStore.get(KeyValueKeys.forcedBackupPending))?['pending'],
+        isFalse,
+      );
     },
   );
 
-  for (final identity in [true, false]) {
-    final kind = identity ? 'Identity' : 'Archive';
+  test('native cancellation leaves the request retryable', () async {
+    api.upload = (_) async => throw StateError('cancelled');
+    await request(force: true);
+    expect(retryTimers, hasLength(1));
+    api.upload = (_) async => true;
+    await BackupService.resumePendingBackup();
+    expect(api.calls, [true, true]);
+  });
 
-    group('$kind backup upload', () {
-      setUp(() async {
-        final status = CurrentBackupStatus()
-          ..identityState = LastBackupUploadState.success
-          ..identityLastSuccessFull = lastSuccess
-          ..archiveState = LastBackupUploadState.success
-          ..archiveLastSuccessFull = lastSuccess;
-        if (identity) {
-          status.identityState = LastBackupUploadState.failed;
-        } else {
-          status.archiveState = LastBackupUploadState.failed;
-        }
-        await KeyValueStore.put(
-          KeyValueKeys.currentBackupState,
-          status.toJson(),
-        );
-      });
-
-      Future<void> expectFailure({Object? error, int statusCode = 200}) async {
-        final client = _UploadClient((request) async {
-          expect(request.method, identity ? 'PUT' : 'POST');
-          if (error is Error) throw error;
-          if (error is Exception) throw error;
-          return http.Response('', statusCode);
-        });
-        await upload(client);
-
-        final status = await BackupService.getData();
-        expect(
-          identity ? status.identityState : status.archiveState,
-          LastBackupUploadState.failed,
-        );
-        expect(
-          identity ? status.archiveState : status.identityState,
-          LastBackupUploadState.success,
-        );
-        expect(status.identityLastSuccessFull, lastSuccess);
-        expect(status.archiveLastSuccessFull, lastSuccess);
-        expect(client.closed, isTrue);
-        expect(retryTimers, hasLength(1));
-      }
-
-      for (final error in <Object>[
-        const SocketException('Network unreachable'),
-        http.ClientException('Connection closed before full header'),
-        TimeoutException('Upload timed out'),
-      ]) {
-        test('${error.runtimeType} warns and schedules a retry', () async {
-          await expectFailure(error: error);
-          final record = records.singleWhere(
-            (record) => record.message == '$kind backup upload failed.',
-          );
-          expect(record.level, Level.WARNING);
-          expect(record.error, same(error));
-          expect(record.stackTrace, isNotNull);
-          expect(
-            records.where((record) => record.level >= Level.SEVERE),
-            isEmpty,
-          );
-
-          // A failed upload remains eligible without force, and a successful
-          // retry records success and closes the replacement client.
-          final retryClient = _UploadClient(
-            (_) async => http.Response('', 200),
-          );
-          await upload(retryClient);
-          final status = await BackupService.getData();
-          expect(
-            identity ? status.identityState : status.archiveState,
-            LastBackupUploadState.success,
-          );
-          expect(
-            identity
-                ? status.identityLastSuccessFull
-                : status.archiveLastSuccessFull,
-            isNot(lastSuccess),
-          );
-          expect(retryClient.closed, isTrue);
-        });
-      }
-
-      for (final error in <Object>[
-        StateError('Unexpected upload failure'),
-        const HandshakeException('Certificate verification failed'),
-      ]) {
-        test('${error.runtimeType} remains an error', () async {
-          await expectFailure(error: error);
-          final record = records.singleWhere(
-            (record) => record.message == '$kind backup upload failed.',
-          );
-          expect(record.level, Level.SHOUT);
-          expect(record.error, same(error));
-          expect(record.stackTrace, isNotNull);
-        });
-      }
-
-      test('server rejection remains an error', () async {
-        await expectFailure(statusCode: 500);
-        final record = records.singleWhere(
-          (record) =>
-              record.message == '$kind backup upload failed with status 500.',
-        );
-        expect(record.level, Level.SHOUT);
-      });
+  test('backups stay disabled while recovery is pending', () async {
+    await KeyValueStore.put(KeyValueKeys.backupRecoveryState, {
+      'username': 'backup',
+      'password': 'password',
+      'userId': 1,
+      'state': 'identityBackupStarted',
     });
-  }
+    await request();
+    expect(api.calls, isEmpty);
+    await KeyValueStore.delete(KeyValueKeys.backupRecoveryState);
+    await BackupService.resumePendingBackup();
+    expect(api.calls, [false]);
+  });
+
+  test('disabled backups do not call native uploads', () async {
+    userService.currentUser.isBackupEnabled = false;
+    await request(force: true);
+    expect(api.calls, isEmpty);
+  });
+  Future<void> saveStatus(DateTime now, {int archiveHours = 1}) =>
+      KeyValueStore.put(
+        KeyValueKeys.currentBackupState,
+        (CurrentBackupStatus()
+              ..identityState = LastBackupUploadState.success
+              ..identityLastSuccessFull = now.subtract(const Duration(days: 1))
+              ..archiveState = LastBackupUploadState.success
+              ..archiveLastSuccessFull = now.subtract(
+                Duration(hours: archiveHours),
+              ))
+            .toJson(),
+      );
+
+  test(
+    'startup leaves routine due uploads to a healthy background job',
+    () async {
+      final now = DateTime.utc(2030, 10, 23);
+      await saveStatus(now, archiveHours: 25);
+      await withClock(
+        Clock.fixed(now),
+        BackupService.checkStartupBackupFallback,
+      );
+      expect(api.calls, isEmpty);
+    },
+  );
+
+  test(
+    'startup runs an overdue backup in the foreground without forcing fresh uploads',
+    () async {
+      final now = DateTime.utc(2030, 10, 23);
+      await saveStatus(now, archiveHours: 48);
+      await withClock(
+        Clock.fixed(now),
+        BackupService.checkStartupBackupFallback,
+      );
+      expect(api.calls, [false]);
+    },
+  );
+
+  test('a due backup falls back if the native scheduler is missing', () async {
+    messenger.setMockMethodCallHandler(
+      channel,
+      (_) async => {'state': 'notScheduled'},
+    );
+    final now = DateTime.utc(2030, 10, 23);
+    await saveStatus(now, archiveHours: 25);
+    await withClock(Clock.fixed(now), BackupService.checkStartupBackupFallback);
+    expect(api.calls, [false]);
+  });
+
+  test('backgrounded startup defers its fallback check until resume', () async {
+    final now = DateTime.utc(2030, 10, 23);
+    await saveStatus(now, archiveHours: 48);
+    AppState.isAppInBackground = true;
+    await withClock(Clock.fixed(now), BackupService.checkStartupBackupFallback);
+    expect(api.calls, isEmpty);
+    AppState.isAppInBackground = false;
+    await withClock(Clock.fixed(now), BackupService.resumePendingBackup);
+    expect(api.calls, [false]);
+    await withClock(Clock.fixed(now), BackupService.resumePendingBackup);
+    expect(api.calls, [false]);
+  });
+
+  test(
+    'a pause during the OS query rechecks current backup status on resume',
+    () async {
+      final now = DateTime.utc(2030, 10, 23);
+      await saveStatus(now, archiveHours: 48);
+      messenger.setMockMethodCallHandler(channel, (_) async {
+        AppState.isAppInBackground = true;
+        return {'state': 'scheduled'};
+      });
+      await withClock(
+        Clock.fixed(now),
+        BackupService.checkStartupBackupFallback,
+      );
+      expect(api.calls, isEmpty);
+      // The native worker succeeds before the next foreground session.
+      await saveStatus(now);
+      messenger.setMockMethodCallHandler(
+        channel,
+        (_) async => {'state': 'scheduled'},
+      );
+      AppState.isAppInBackground = false;
+      await withClock(Clock.fixed(now), BackupService.resumePendingBackup);
+      expect(api.calls, isEmpty);
+    },
+  );
+
+  test(
+    'startup preserves the initial grace period across repeated launches',
+    () async {
+      final now = DateTime.utc(2030, 10, 23);
+      await withClock(
+        Clock.fixed(now),
+        BackupService.checkStartupBackupFallback,
+      );
+      expect(api.calls, isEmpty);
+      await withClock(
+        Clock.fixed(now.add(const Duration(hours: 47))),
+        BackupService.checkStartupBackupFallback,
+      );
+      expect(api.calls, isEmpty);
+      final stored = await KeyValueStore.get(
+        KeyValueKeys.backupFallbackMonitoring,
+      );
+      expect(stored?['since'], now.toIso8601String());
+      await withClock(
+        Clock.fixed(now.add(const Duration(hours: 48))),
+        BackupService.checkStartupBackupFallback,
+      );
+      expect(api.calls, [false]);
+    },
+  );
+
+  test(
+    'startup never backs up disabled accounts or an active recovery',
+    () async {
+      userService.currentUser.isBackupEnabled = false;
+      await BackupService.checkStartupBackupFallback();
+      expect(api.calls, isEmpty);
+      userService.currentUser.isBackupEnabled = true;
+      await KeyValueStore.put(KeyValueKeys.backupRecoveryState, {
+        'username': 'backup',
+        'password': 'password',
+        'userId': 1,
+        'state': 'identityBackupStarted',
+      });
+      await BackupService.checkStartupBackupFallback();
+      expect(api.calls, isEmpty);
+    },
+  );
+  test(
+    'a foreground request started during the startup check prevents another backup',
+    () async {
+      final now = DateTime.utc(2030, 10, 23);
+      await saveStatus(now, archiveHours: 48);
+      final queried = Completer<void>();
+      final finishQuery = Completer<void>();
+      messenger.setMockMethodCallHandler(channel, (_) async {
+        queried.complete();
+        await finishQuery.future;
+        return {'state': 'scheduled'};
+      });
+      final fallback = withClock(
+        Clock.fixed(now),
+        BackupService.checkStartupBackupFallback,
+      );
+      await queried.future;
+      await BackupService.makeBackup();
+      finishQuery.complete();
+      await fallback;
+      expect(api.calls, [false]);
+    },
+  );
+  test(
+    'startup does not queue another upload behind a running foreground backup',
+    () async {
+      final now = DateTime.utc(2030, 10, 23);
+      await saveStatus(now, archiveHours: 48);
+      final started = Completer<void>();
+      final finish = Completer<bool>();
+      api.upload = (_) {
+        started.complete();
+        return finish.future;
+      };
+      final manual = BackupService.makeBackup();
+      await started.future;
+      await withClock(
+        Clock.fixed(now),
+        BackupService.checkStartupBackupFallback,
+      );
+      finish.complete(true);
+      await manual;
+      expect(api.calls, [false]);
+    },
+  );
 }

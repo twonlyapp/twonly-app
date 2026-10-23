@@ -18,6 +18,7 @@ class BootCompletedReceiver : BroadcastReceiver() {
             return
         }
         DirectMediaPrepare.ensurePeriodicFlush()
+        eu.twonly.backup.BackupWorker.ensureScheduled(context)
         DirectMediaPrepare.flushNow()
     }
 }

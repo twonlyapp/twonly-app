@@ -570,36 +570,7 @@ impl RustApi {
     }
 
     pub async fn authentication_headers() -> Result<HashMap<String, String>> {
-        use base64::Engine as _;
-
-        let ctx = Context::get_static()?;
-
-        let user = UserConfig::load_required_from(ctx)?;
-
-        let mut headers = HashMap::new();
-
-        if user.can_use_login_token_for_auth {
-            let login_token = ctx.key_manager.lock().await.main_key.get_login_token();
-
-            headers.insert("x-twonly-user-id".into(), format!("{:016X}", user.user_id));
-
-            headers.insert("x-twonly-login-token".into(), hex::encode(login_token));
-        } else {
-            let encoded = ctx
-                .secure_storage
-                .read("api_auth_token")?
-                .ok_or_else(|| TwonlyError::Generic("API auth token is not defined".into()))?;
-
-            let auth_token = base64::engine::general_purpose::STANDARD
-                .decode(encoded)
-                .map_err(|error| {
-                    TwonlyError::Generic(format!("invalid stored API auth token: {error}"))
-                })?;
-
-            headers.insert("x-twonly-auth-token".into(), hex::encode(auth_token));
-        }
-
-        Ok(headers)
+        crate::api::http::authentication_headers(Context::get_static()?).await
     }
 
     #[frb(sync)]

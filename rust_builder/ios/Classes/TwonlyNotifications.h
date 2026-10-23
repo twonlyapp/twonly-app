@@ -66,6 +66,12 @@ char *twonly_background_run(
 void twonly_background_string_free(char *pointer);
 
 uint64_t twonly_background_run_create(void);
+uint64_t twonly_backup_run_create(void);
+char *twonly_backup_run_with_id(
+    uint64_t run,
+    const char *database_dir,
+    const char *data_dir
+);
 void twonly_background_run_dispose(uint64_t run);
 char *twonly_background_run_with_id(
     uint64_t run,

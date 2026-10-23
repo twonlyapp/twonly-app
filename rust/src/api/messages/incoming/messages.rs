@@ -1017,6 +1017,18 @@ pub(crate) async fn handle_sender_delivery_receipt(
         .execute(&mut **transaction)
         .await?;
 
+        // OS-owned dispatch can deliver without a websocket send ever recording
+        // server acceptance. A recipient's receipt proves delivery, so advance
+        // the aggregate state too before removing the outbox entry.
+        sqlx::query!(
+            "UPDATE messages SET ack_by_server = COALESCE(ack_by_server, \
+             CAST(strftime('%s', 'now') AS INTEGER)) \
+             WHERE message_id = ? AND sender_id IS NULL",
+            message_id,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
         MediaFile::handle_response_from_receiver(transaction, &message_id).await?;
     }
 
@@ -1091,6 +1103,127 @@ pub async fn handle_plaintext_content(
 mod tests {
 
     use super::*;
+
+    #[tokio::test]
+    async fn recipient_receipts_finish_native_dispatch_without_server_acknowledgement() -> Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'peer'), (8, 'other');
+             INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat');
+             INSERT INTO messages(message_id, group_id, type, ack_by_server)
+             VALUES ('native', 'chat', 'text', NULL), ('socket', 'chat', 'text', 123);
+             INSERT INTO receipts(receipt_id, contact_id, message_id, message)
+             VALUES ('native-receipt', 7, 'native', x'00'),
+                    ('socket-receipt', 7, 'socket', x'00');",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        let before = chrono::Utc::now().timestamp();
+        let mut transaction = database.pool.begin().await?;
+        // A different contact cannot advance or consume the queued receipt.
+        handle_sender_delivery_receipt(&mut transaction, 8, "native-receipt").await?;
+        let untouched: Option<i64> =
+            sqlx::query_scalar("SELECT ack_by_server FROM messages WHERE message_id = 'native'")
+                .fetch_one(&mut *transaction)
+                .await?;
+        assert_eq!(untouched, None);
+
+        for receipt in ["native-receipt", "socket-receipt", "native-receipt"] {
+            handle_sender_delivery_receipt(&mut transaction, 7, receipt).await?;
+        }
+        transaction.commit().await?;
+
+        let native_ack: i64 =
+            sqlx::query_scalar("SELECT ack_by_server FROM messages WHERE message_id = 'native'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert!((before..=chrono::Utc::now().timestamp()).contains(&native_ack));
+        let socket_ack: i64 =
+            sqlx::query_scalar("SELECT ack_by_server FROM messages WHERE message_id = 'socket'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(socket_ack, 123);
+        let delivered: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM message_actions WHERE type = 'ackByUserAt' AND contact_id = 7",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(delivered, 2);
+        let pending: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM receipts")
+            .fetch_one(&database.pool)
+            .await?;
+        assert_eq!(pending, 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn migration_repairs_delivered_rows_and_preserves_pending_and_incoming_messages(
+    ) -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let database = crate::database::app::AppDatabase::new(
+            directory.path().join("app.sqlite").to_str().unwrap(),
+            None,
+            false,
+        )
+        .await?;
+        database.run_migrations().await?;
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'peer');
+             INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat');
+             INSERT INTO messages(message_id, group_id, type, sender_id, ack_by_server)
+             VALUES ('delivered', 'chat', 'text', NULL, NULL),
+                    ('sent', 'chat', 'text', NULL, NULL),
+                    ('opened', 'chat', 'text', NULL, NULL),
+                    ('known', 'chat', 'text', NULL, 50),
+                    ('pending', 'chat', 'text', NULL, NULL),
+                    ('failed', 'chat', 'text', NULL, NULL),
+                    ('incoming', 'chat', 'text', 7, NULL);
+             INSERT INTO message_actions(message_id, contact_id, type, action_at)
+             VALUES ('delivered', 7, 'ackByUserAt', 100),
+                    ('delivered', 7, 'openedAt', 200),
+                    ('sent', 7, 'ackByServerAt', 90),
+                    ('opened', 7, 'openedAt', 200),
+                    ('known', 7, 'ackByUserAt', 100),
+                    ('failed', 7, 'sendFailed', 100),
+                    ('incoming', 7, 'ackByUserAt', 100);",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        for _ in 0..2 {
+            sqlx::raw_sql(include_str!(
+                "../../../database/app/migrations/0047_repair_delivered_message_status.sql"
+            ))
+            .execute(&database.pool)
+            .await?;
+            let rows: Vec<(String, Option<i64>)> = sqlx::query_as(
+                "SELECT message_id, ack_by_server FROM messages ORDER BY message_id",
+            )
+            .fetch_all(&database.pool)
+            .await?;
+            assert_eq!(
+                rows,
+                vec![
+                    ("delivered".into(), Some(100)),
+                    ("failed".into(), None),
+                    ("incoming".into(), None),
+                    ("known".into(), Some(50)),
+                    ("opened".into(), Some(200)),
+                    ("pending".into(), None),
+                    ("sent".into(), Some(90)),
+                ]
+            );
+        }
+        Ok(())
+    }
 
     #[tokio::test]
 

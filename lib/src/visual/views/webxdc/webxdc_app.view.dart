@@ -148,17 +148,26 @@ class _WebxdcSurface extends StatelessWidget {
         hitTestBehavior: PlatformViewHitTestBehavior.opaque,
       ),
       onCreatePlatformView: (params) {
-        // Keep the WebView in the native view hierarchy. The texture path can
-        // stall WebView rendering while Flutter is idle. HCPP stays disabled
-        // in the manifest because Flutter 3.47.3 can abort in that compositor.
-        final controller = PlatformViewsService.initExpensiveAndroidView(
-          id: params.id,
-          viewType: _viewType,
-          layoutDirection: TextDirection.ltr,
-          creationParams: parameters,
-          creationParamsCodec: const StandardMessageCodec(),
-          onFocus: () => params.onFocusChanged(true),
-        );
+        // HCPP keeps the game's rendering separate from Flutter's raster
+        // thread. Devices without HCPP use texture composition, with legacy
+        // hybrid composition as its fallback when a page needs a real surface.
+        final controller = WebxdcHost.hybridComposition
+            ? PlatformViewsService.initHybridAndroidView(
+                id: params.id,
+                viewType: _viewType,
+                layoutDirection: TextDirection.ltr,
+                creationParams: parameters,
+                creationParamsCodec: const StandardMessageCodec(),
+                onFocus: () => params.onFocusChanged(true),
+              )
+            : PlatformViewsService.initSurfaceAndroidView(
+                id: params.id,
+                viewType: _viewType,
+                layoutDirection: TextDirection.ltr,
+                creationParams: parameters,
+                creationParamsCodec: const StandardMessageCodec(),
+                onFocus: () => params.onFocusChanged(true),
+              );
         return controller
           ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
           ..create();

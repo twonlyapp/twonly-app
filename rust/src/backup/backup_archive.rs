@@ -254,15 +254,22 @@ impl BackupArchive {
         let ctx = ctx.clone();
 
         crate::database::lifecycle::run(move |operation| async move {
-            let _exclusive = tokio::select! {
-                biased;
-                _ = operation.until_cancelled() => return operation.check().map(|_| unreachable!()),
-                guard = BACKUP_OPERATIONS.lock() => guard,
-            };
-
-            Self::create_backup_owned(&ctx, operation).await
+            Self::create_backup_with_operation(&ctx, operation).await
         })
         .await
+    }
+
+    /// A scheduled task already owns an OS execution grant. Reuse its lease
+    /// instead of requesting foreground admission from UIKit.
+    pub(crate) async fn create_backup_with_operation(
+        ctx: &Arc<Context>, operation: crate::database::lifecycle::Operation,
+    ) -> Result<(String, PathBuf)> {
+        let _exclusive = tokio::select! {
+            biased;
+            _ = operation.until_cancelled() => return operation.check().map(|_| unreachable!()),
+            guard = BACKUP_OPERATIONS.lock() => guard,
+        };
+        Self::create_backup_owned(ctx, operation).await
     }
 
     async fn create_backup_owned(

@@ -282,8 +282,5 @@ Future<void> postStartupTasks() async {
   unawaited(HomeWidgetService.syncPermissions());
 
   unawaited(newsService.init());
-
-  // Delayed tasks (Wait for app to settle)
-  await Future.delayed(const Duration(minutes: 2));
-  unawaited(BackupService.makeBackup());
+  unawaited(BackupService.checkStartupBackupFallback());
 }

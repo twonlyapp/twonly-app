@@ -19,5 +19,6 @@ class MyApplication : FlutterApplication() {
         // started by a push or by WorkManager itself must keep the flush alive
         // just as much as one the user opened.
         DirectMediaPrepare.ensurePeriodicFlush()
+        eu.twonly.backup.BackupWorker.ensureScheduled(this)
     }
 }

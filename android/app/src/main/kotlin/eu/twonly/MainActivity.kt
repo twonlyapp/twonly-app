@@ -104,6 +104,10 @@ class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
+        if (!flutterEngine.plugins.has(eu.twonly.backup.BackupScheduleChannel::class.java)) {
+            flutterEngine.plugins.add(eu.twonly.backup.BackupScheduleChannel())
+        }
+
         if (!flutterEngine.plugins.has(ErrorReportingChannel::class.java)) {
             flutterEngine.plugins.add(ErrorReportingChannel())
         }

@@ -64,10 +64,10 @@
                 <data android:mimeType="video/*" />
             </intent-filter>
         </activity>
-        <!-- Flutter 3.47.3 has an HCPP transaction-list race that aborts in
-             PlatformViewsController2.onEndFrame (flutter/flutter#192606).
-             The webxdc WebView uses standard hybrid composition instead. -->
-        <meta-data android:name="io.flutter.embedding.android.EnableHcpp" android:value="false" />
+        <!-- Use HCPP for responsive embedded webxdc games on supported devices.
+             Flutter 3.47.x still has the transaction-list crash tracked in
+             flutter/flutter#192606; this opt-in accepts that engine limitation. -->
+        <meta-data android:name="io.flutter.embedding.android.EnableHcpp" android:value="true" />
 
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

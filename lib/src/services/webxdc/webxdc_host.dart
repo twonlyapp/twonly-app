@@ -40,9 +40,23 @@ class WebxdcHost {
   static int _deliveredSerial = 0;
   static VoidCallback? _closeView;
 
+  /// Whether the engine supports HCPP on this device, with the manifest opt-in.
+  /// Other devices use texture composition for the embedded WebView.
+  static bool hybridComposition = false;
+
   static void initialize() {
     _channel.setMethodCallHandler(_handleNativeCall);
     WebxdcWebviewStorage.clear = _clearOrigin;
+    unawaited(_probeHybridComposition());
+  }
+
+  static Future<void> _probeHybridComposition() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      hybridComposition = await HybridAndroidViewController.checkIfSupported();
+    } catch (error) {
+      hybridComposition = false;
+    }
   }
 
   /// Stops the running app while its screen animates away, and starts it again

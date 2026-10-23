@@ -41,6 +41,9 @@ class UserService {
         updateUser(user);
 
         if (config == user) {
+          // Another runtime may already have saved the requested value. Keep
+          // this isolate and its listeners in sync even when no write is needed.
+          await userService._applyRustUserConfig(config);
           return;
         }
 

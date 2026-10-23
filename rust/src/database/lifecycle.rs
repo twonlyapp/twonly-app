@@ -458,9 +458,18 @@ where
     F: FnOnce(Operation) -> W + Send + 'static,
     W: Future<Output = Result<T>> + Send + 'static,
 {
+    run_with_budget(Duration::from_secs(120), work).await
+}
+
+pub(crate) async fn run_with_budget<T, F, W>(budget: Duration, work: F) -> Result<T>
+where
+    T: Send + 'static,
+    F: FnOnce(Operation) -> W + Send + 'static,
+    W: Future<Output = Result<T>> + Send + 'static,
+{
     // A background transition cancels immediately on iOS. This independent
     // cap also bounds an export if the platform callback is unavailable.
-    let operation = Operation::new(Duration::from_secs(120));
+    let operation = Operation::new(budget);
 
     let lease = Lease::admit(operation.clone())?;
 

@@ -95,6 +95,7 @@
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>eu.twonly.outbox-flush</string>
+		<string>eu.twonly.backup</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

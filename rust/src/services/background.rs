@@ -104,6 +104,8 @@ async fn purge_expired_data(ctx: &Arc<Context>) -> Result<()> {
 /// What a maintenance run should do.
 
 pub enum Job {
+    /// Automatic backups get their own OS grant, separate from message work.
+    Backup,
     /// Prepare one media file and hand it to the OS uploader. This is the job
     /// scheduled the moment the user hits send.
     PrepareMedia(String),
@@ -126,6 +128,21 @@ pub struct RunOutcome {
 /// same idempotent one the app runs itself, guarded by the same locks.
 
 pub(crate) async fn run(ctx: Arc<Context>, job: Job) -> Result<RunOutcome> {
+    if matches!(job, Job::Backup) {
+        // An automatic job must never export databases during a visible app
+        // session. A later scheduler retry gets a fresh execution allowance.
+        let completed = if ctx.is_flutter_runtime() {
+            false
+        } else {
+            let operation = crate::database::lifecycle::Operation::current()
+                .expect("native background jobs own an operation");
+            crate::backup::upload::run(&ctx, false, &operation).await?
+        };
+        return Ok(RunOutcome {
+            pending_uploads: !completed,
+            pending_messages: false,
+        });
+    }
     if let Err(error) = crate::services::mediafiles::cleanup_pending_file_removals(&ctx).await {
         tracing::warn!(%error, "pending media file cleanup will be retried");
     }
@@ -163,6 +180,7 @@ pub(crate) async fn run(ctx: Arc<Context>, job: Job) -> Result<RunOutcome> {
     }
 
     match &job {
+        Job::Backup => unreachable!(),
         Job::PrepareMedia(media_id) => {
             MediaUploadService::new(&ctx).start_upload(media_id).await?;
         }

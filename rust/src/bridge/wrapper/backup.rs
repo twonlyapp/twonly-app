@@ -88,6 +88,19 @@ impl RustBackupIdentity {
 }
 
 impl RustBackupArchive {
+    /// Manual backups share status, upload handling and serialization with
+    /// scheduled native backups.
+    pub async fn upload_backup(force: bool) -> Result<bool> {
+        let ctx = Context::get_static()?.clone();
+        // Keep the existing ten-minute allowance per HTTP upload. The lease
+        // still cancels immediately when UIKit backgrounds or expires it.
+        crate::database::lifecycle::run_with_budget(
+            std::time::Duration::from_secs(22 * 60),
+            move |operation| async move { crate::backup::upload::run(&ctx, force, &operation).await },
+        )
+        .await
+    }
+
     pub async fn storage_info() -> Result<BackupStorageInfo> {
         BackupArchive::storage_info(Context::get_static()?).await
     }

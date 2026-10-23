@@ -78,3 +78,30 @@ mod tests {
         server.join().unwrap();
     }
 }
+
+/// Credentials for uploads from either Flutter or an OS-owned runtime.
+pub(crate) async fn authentication_headers(
+    ctx: &crate::context::Context,
+) -> crate::error::Result<std::collections::HashMap<String, String>> {
+    use crate::error::TwonlyError;
+    use base64::Engine as _;
+    let user = crate::user_config::UserConfig::load_required_from(ctx)?;
+    let mut headers = std::collections::HashMap::new();
+    if user.can_use_login_token_for_auth {
+        let login_token = ctx.key_manager.lock().await.main_key.get_login_token();
+        headers.insert("x-twonly-user-id".into(), format!("{:016X}", user.user_id));
+        headers.insert("x-twonly-login-token".into(), hex::encode(login_token));
+    } else {
+        let encoded = ctx
+            .secure_storage
+            .read("api_auth_token")?
+            .ok_or_else(|| TwonlyError::Generic("API auth token is not defined".into()))?;
+        let auth_token = base64::engine::general_purpose::STANDARD
+            .decode(encoded)
+            .map_err(|error| {
+                TwonlyError::Generic(format!("invalid stored API auth token: {error}"))
+            })?;
+        headers.insert("x-twonly-auth-token".into(), hex::encode(auth_token));
+    }
+    Ok(headers)
+}

@@ -27,6 +27,13 @@ class RustBackupArchive {
   static Future<BackupStorageInfo> storageInfo() => RustLib.instance.api
       .crateBridgeWrapperBackupRustBackupArchiveStorageInfo();
 
+  /// Manual backups share status, upload handling and serialization with
+  /// scheduled native backups.
+  static Future<bool> uploadBackup({required bool force}) => RustLib
+      .instance
+      .api
+      .crateBridgeWrapperBackupRustBackupArchiveUploadBackup(force: force);
+
   @override
   int get hashCode => 0;
 

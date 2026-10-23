@@ -60,6 +60,7 @@ import flutter_sharing_intent
     WebxdcHostChannel.register(with: engineBridge.pluginRegistry)
     NativeLocationPermission.register(with: engineBridge.pluginRegistry)
     NativeErrorReportingChannel.register(with: engineBridge.pluginRegistry)
+    NativeBackupScheduleChannel.register(with: engineBridge.pluginRegistry)
   }
 
   override func userNotificationCenter(

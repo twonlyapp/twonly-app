@@ -45,6 +45,8 @@ class MessageInfoView extends StatefulWidget {
 }
 
 class _MessageInfoViewState extends State<MessageInfoView> {
+  StreamSubscription<List<StoredMessage>>? messageStream;
+  StreamSubscription<void>? userStream;
   StreamSubscription<List<(MessageAction, Contact)>>? actionsStream;
   StreamSubscription<List<MessageHistory>>? historyStream;
   StreamSubscription<List<(GroupMember, Contact)>>? groupMemberStream;
@@ -55,15 +57,22 @@ class _MessageInfoViewState extends State<MessageInfoView> {
   List<(GroupMember, Contact)> groupMembers = [];
   MediaFile? mediaFile;
   int? mediaSizeInBytes;
+  late StoredMessage message;
 
   @override
   void initState() {
     super.initState();
+    message = widget.message;
+    userStream = userService.onUserUpdated.listen((_) {
+      if (mounted) setState(() {});
+    });
     initAsync();
   }
 
   @override
   void dispose() {
+    messageStream?.cancel();
+    userStream?.cancel();
     actionsStream?.cancel();
     historyStream?.cancel();
     groupMemberStream?.cancel();
@@ -72,6 +81,21 @@ class _MessageInfoViewState extends State<MessageInfoView> {
   }
 
   Future<void> initAsync() async {
+    messageStream =
+        watchRustDatabase(
+          (control) => rust_messages.watchMessages(
+            input: MessageQuery(
+              filter: MessageFilter.ids,
+              ids: [widget.message.messageId],
+              nowMs: DateTime.now().millisecondsSinceEpoch,
+            ),
+            control: control,
+          ),
+        ).listen((update) {
+          if (!mounted || update.isEmpty) return;
+          setState(() => message = update.single);
+        });
+
     final streamActions = watchRustDatabase(
       (control) => rust_messages
           .watchMessageActions(id: widget.message.messageId, control: control)
@@ -236,7 +260,7 @@ class _MessageInfoViewState extends State<MessageInfoView> {
               children: [
                 ChatListEntry(
                   group: widget.group,
-                  message: widget.message,
+                  message: message,
                   galleryItems: widget.galleryItems,
                 ),
                 Positioned.fill(
@@ -252,12 +276,11 @@ class _MessageInfoViewState extends State<MessageInfoView> {
               ],
             ),
             Text(
-              '${context.lang.sent}: ${friendlyDateTime(context, widget.message.createdAt)}',
+              '${context.lang.sent}: ${friendlyDateTime(context, message.createdAt)}',
             ),
-            if (widget.message.senderId != null &&
-                widget.message.ackByServer != null)
+            if (message.senderId != null && message.ackByServer != null)
               Text(
-                '${context.lang.received}: ${friendlyDateTime(context, widget.message.ackByServer!)}',
+                '${context.lang.received}: ${friendlyDateTime(context, message.ackByServer!)}',
               ),
             if (mediaSizeInBytes != null)
               Text(

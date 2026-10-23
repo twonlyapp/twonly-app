@@ -18,6 +18,7 @@ import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/pro_badge.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/settings/backup/backup_utils.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/backup_schedule.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/recovery_card.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/memories_backup_detail.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/status.passwordless_recovery.comp.dart';
@@ -254,6 +255,9 @@ class _BackupViewState extends State<BackupView> {
                           }
                         },
                 ),
+
+                if (userService.currentUser.isDeveloper)
+                  const BackupScheduleTile(),
 
                 const SizedBox(height: 32),
                 Center(

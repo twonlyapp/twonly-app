@@ -28,11 +28,14 @@ class _WebxdcApi extends NativeTestApi {
 void main() {
   final api = _WebxdcApi();
   final platformCalls = <MethodCall>[];
+  final hcppCalls = <MethodCall>[];
   setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
   setUp(() async {
     api.visibleInstances.clear();
     platformCalls.clear();
+    hcppCalls.clear();
+    WebxdcHost.hybridComposition = false;
     await locator.reset();
     await TestDatabase.create();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -40,6 +43,22 @@ void main() {
           SystemChannels.platform_views,
           (call) async {
             platformCalls.add(call);
+            if (call.method == 'create') return 0;
+            if (call.method == 'resize') {
+              final arguments = call.arguments as Map<Object?, Object?>;
+              return {
+                'width': arguments['width'],
+                'height': arguments['height'],
+              };
+            }
+            return null;
+          },
+        );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          SystemChannels.platform_views_2,
+          (call) async {
+            hcppCalls.add(call);
             return null;
           },
         );
@@ -47,54 +66,61 @@ void main() {
   tearDown(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform_views, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform_views_2, null);
+    WebxdcHost.hybridComposition = false;
 
     await locator.reset();
   });
 
-  testWidgets(
-    'Android forwards page taps after the opening transition has settled',
-    (tester) async {
-      final navigator = GlobalKey<NavigatorState>();
-      await tester.pumpWidget(
-        MaterialApp(
-          navigatorKey: navigator,
-          home: const Scaffold(body: Text('Chat')),
-        ),
-      );
-      navigator.currentState!.push<void>(
-        MaterialPageRoute(
-          builder: (_) => const WebxdcAppView(
-            launch: WebxdcLaunch(
-              instanceId: 'game',
-              appId: 'game',
-              origin: 'origin',
-              title: 'Game',
+  for (final hcpp in [false, true]) {
+    testWidgets(
+      'Android ${hcpp ? 'HCPP' : 'texture'} forwards page taps after the opening transition has settled',
+      (tester) async {
+        WebxdcHost.hybridComposition = hcpp;
+        final navigator = GlobalKey<NavigatorState>();
+        await tester.pumpWidget(
+          MaterialApp(
+            navigatorKey: navigator,
+            home: const Scaffold(body: Text('Chat')),
+          ),
+        );
+        navigator.currentState!.push<void>(
+          MaterialPageRoute(
+            builder: (_) => const WebxdcAppView(
+              launch: WebxdcLaunch(
+                instanceId: 'game',
+                appId: 'game',
+                origin: 'origin',
+                title: 'Game',
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      final surface = find.byType(AndroidViewSurface);
-      await tester.tap(surface);
-      await tester.pump();
+        final surface = find.byType(AndroidViewSurface);
+        await tester.tap(surface);
+        await tester.pump();
 
-      final touches = platformCalls
-          .where((call) => call.method == 'touch')
-          .map((call) => call.arguments as List<Object?>)
-          .toList();
-      expect(touches, hasLength(2));
-      expect(touches.map((event) => event[3]), [0, 1]); // Down, up.
-      final create = platformCalls.singleWhere(
-        (call) => call.method == 'create',
-      );
-      final parameters = create.arguments as Map<Object?, Object?>;
-      expect(touches.every((event) => event[0] == parameters['id']), isTrue);
+        final calls = hcpp ? hcppCalls : platformCalls;
+        final touches = calls
+            .where((call) => call.method == 'touch')
+            .map((call) => call.arguments as List<Object?>)
+            .toList();
+        expect(touches, hasLength(2));
+        expect(touches.map((event) => event[3]), [0, 1]); // Down, up.
+        final create = calls.singleWhere(
+          (call) => call.method == 'create',
+        );
+        final parameters = create.arguments as Map<Object?, Object?>;
+        expect(touches.every((event) => event[0] == parameters['id']), isTrue);
 
-      await tester.pumpWidget(const SizedBox.shrink());
-    },
-    variant: TargetPlatformVariant.only(TargetPlatform.android),
-  );
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
+  }
 
   for (final appId in ['backend-uploaded-game', 'expenses']) {
     testWidgets(

@@ -15,7 +15,7 @@ use crate::context::Context;
 use crate::database::lifecycle::{Lease, Operation};
 use crate::services::background::{self, Job, RunOutcome};
 use futures_util::FutureExt;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::{c_char, CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::{LazyLock, Mutex, MutexGuard};
@@ -28,6 +28,15 @@ static MAINTENANCE_WORKER: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(())
 
 static PENDING_RUNS: LazyLock<Mutex<HashMap<u64, Lease>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
+
+static BACKUP_RUNS: LazyLock<Mutex<HashSet<u64>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
+
+/// Optional exports yield their database admission to message delivery.
+pub(crate) fn cancel_backup_runs() {
+    for id in BACKUP_RUNS.lock().unwrap().iter().copied() {
+        crate::database::lifecycle::twonly_database_operation_cancel(id);
+    }
+}
 
 // Debug media preparation has a deep async poll chain that exceeds Android's
 // WorkManager thread stack. Runtime::block_on polls its root future on the
@@ -158,6 +167,10 @@ pub extern "C" fn twonly_background_run_create() -> u64 {
 fn create_run(source: crate::log::LogSource) -> u64 {
     let budget = if cfg!(target_os = "ios") { 20 } else { 120 };
 
+    create_run_with_budget(source, budget)
+}
+
+fn create_run_with_budget(source: crate::log::LogSource, budget: u64) -> u64 {
     let lease = Lease::external(Operation::with_log_source(
         Duration::from_secs(budget),
         source,
@@ -178,16 +191,47 @@ fn create_run(source: crate::log::LogSource) -> u64 {
 #[unsafe(no_mangle)]
 
 pub extern "C" fn twonly_background_run_dispose(id: u64) {
-    PENDING_RUNS
+    let pending = PENDING_RUNS
         .lock()
         .unwrap_or_else(|error| error.into_inner())
         .remove(&id);
+    if pending.is_some() {
+        BACKUP_RUNS.lock().unwrap().remove(&id);
+    }
 }
 
 #[unsafe(no_mangle)]
 
 pub unsafe extern "C" fn twonly_background_run_with_id(
     id: u64, database_dir: *const c_char, data_dir: *const c_char, media_id: *const c_char,
+) -> *mut c_char {
+    cancel_backup_runs();
+    let job = match unsafe { optional_string(media_id) } {
+        Some(media_id) => Job::PrepareMedia(media_id),
+        None => Job::Flush,
+    };
+    unsafe { run_job_with_id(id, database_dir, data_dir, job) }
+}
+
+/// Backups have a processing grant, rather than the short message drain grant.
+#[unsafe(no_mangle)]
+pub extern "C" fn twonly_backup_run_create() -> u64 {
+    let mut backups = BACKUP_RUNS.lock().unwrap();
+    let budget = if cfg!(target_os = "ios") { 120 } else { 9 * 60 };
+    let id = create_run_with_budget(crate::log::LogSource::Background, budget);
+    backups.insert(id);
+    id
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn twonly_backup_run_with_id(
+    id: u64, database_dir: *const c_char, data_dir: *const c_char,
+) -> *mut c_char {
+    unsafe { run_job_with_id(id, database_dir, data_dir, Job::Backup) }
+}
+
+unsafe fn run_job_with_id(
+    id: u64, database_dir: *const c_char, data_dir: *const c_char, job: Job,
 ) -> *mut c_char {
     let lease = PENDING_RUNS
         .lock()
@@ -209,11 +253,6 @@ pub unsafe extern "C" fn twonly_background_run_with_id(
         let database_dir = unsafe { required_string(database_dir, "database_dir") }?;
 
         let data_dir = unsafe { required_string(data_dir, "data_dir") }?;
-
-        let job = match unsafe { optional_string(media_id) } {
-            Some(media_id) => Job::PrepareMedia(media_id),
-            None => Job::Flush,
-        };
 
         // Own the input strings before crossing threads. Join synchronously so
         // the worker lock and lease cover database cleanup and runtime shutdown.
@@ -258,6 +297,7 @@ pub unsafe extern "C" fn twonly_background_run_with_id(
 
     // The lease remains registered through SQLx closure and runtime shutdown.
     drop(lease);
+    BACKUP_RUNS.lock().unwrap().remove(&id);
 
     match result {
         Ok(Ok(outcome)) => response_json(Some(outcome), None),
@@ -282,6 +322,34 @@ pub unsafe extern "C" fn twonly_background_string_free(pointer: *mut c_char) {
 mod lifecycle_tests {
 
     use super::*;
+
+    #[test]
+    fn delivery_cancels_backup_admission_without_cancelling_message_work() {
+        let backup = twonly_backup_run_create();
+        let message = twonly_background_run_create();
+        cancel_backup_runs();
+        assert!(!PENDING_RUNS
+            .lock()
+            .unwrap()
+            .get(&message)
+            .unwrap()
+            .operation()
+            .cancelled());
+        let directory = tempfile::tempdir().unwrap();
+        let missing = directory.path().join("must-not-be-created");
+        let path = CString::new(missing.to_str().unwrap()).unwrap();
+        let response = unsafe {
+            read_response(twonly_backup_run_with_id(
+                backup,
+                path.as_ptr(),
+                path.as_ptr(),
+            ))
+        };
+        assert_eq!(response["ok"], false);
+        assert!(response["error"].as_str().unwrap().contains("cancelled"));
+        assert!(!missing.exists());
+        twonly_background_run_dispose(message);
+    }
 
     #[inline(never)]
     fn use_large_stack() -> u8 {
@@ -406,6 +474,48 @@ mod android_jni {
     use jni::objects::{JClass, JString};
     use jni::sys::{jboolean, jstring};
     use jni::{Env, EnvUnowned};
+
+    #[unsafe(no_mangle)]
+    pub extern "system" fn Java_eu_twonly_backup_NativeBackupBridge_create(
+        _env: EnvUnowned<'_>, _class: JClass<'_>,
+    ) -> jni::sys::jlong {
+        twonly_backup_run_create() as jni::sys::jlong
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "system" fn Java_eu_twonly_backup_NativeBackupBridge_cancel(
+        _env: EnvUnowned<'_>, _class: JClass<'_>, id: jni::sys::jlong,
+    ) {
+        crate::database::lifecycle::twonly_database_operation_cancel(id as u64);
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "system" fn Java_eu_twonly_backup_NativeBackupBridge_run(
+        mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, id: jni::sys::jlong,
+        directory: JString<'_>,
+    ) -> jstring {
+        unowned_env
+            .with_env(|env| {
+                let directory = directory.try_to_string(env)?;
+                let directory = CString::new(directory).expect("Android directory contains no NUL");
+                let pointer = unsafe {
+                    twonly_backup_run_with_id(id as u64, directory.as_ptr(), directory.as_ptr())
+                };
+                let json = unsafe { CStr::from_ptr(pointer) }
+                    .to_string_lossy()
+                    .into_owned();
+                unsafe { twonly_background_string_free(pointer) };
+                jni::objects::JString::from_str(env, json).map(JString::into_raw)
+            })
+            .resolve::<jni::errors::LogErrorAndDefault>()
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "system" fn Java_eu_twonly_backup_NativeBackupBridge_dispose(
+        _env: EnvUnowned<'_>, _class: JClass<'_>, id: jni::sys::jlong,
+    ) {
+        twonly_background_run_dispose(id as u64);
+    }
 
     #[unsafe(no_mangle)]
 
