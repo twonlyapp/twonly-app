@@ -60,54 +60,56 @@ pub(crate) fn current(timeout: Duration) -> Result<Option<LocationFix>> {
 #[cfg(target_os = "android")]
 
 pub(crate) fn current(timeout: Duration) -> Result<Option<LocationFix>> {
-    use crate::native::transfer::android::{jni_env, location_class};
+    use crate::native::transfer::android::{location_class, with_env};
     use jni::objects::JString;
 
     let class = location_class()?;
 
-    let mut env = jni_env()?;
+    with_env(|env| {
+        let value = env
+            .call_static_method(
+                class,
+                jni::jni_str!("current"),
+                jni::jni_sig!("(J)Ljava/lang/String;"),
+                &[jni::objects::JValue::Long(
+                    timeout.as_millis().min(i64::MAX as u128) as i64,
+                )],
+            )
+            .and_then(|value| value.l());
 
-    let value = env
-        .call_static_method(
-            class,
-            "current",
-            "(J)Ljava/lang/String;",
-            &[jni::objects::JValue::Long(
-                timeout.as_millis().min(i64::MAX as u128) as i64,
-            )],
-        )
-        .and_then(|value| value.l());
+        if env.exception_check() {
+            let _ = env.exception_describe();
 
-    if env.exception_check().unwrap_or(false) {
-        let _ = env.exception_describe();
+            let _ = env.exception_clear();
+        }
 
-        let _ = env.exception_clear();
-    }
+        let value = value.map_err(|error| TwonlyError::Generic(error.to_string()))?;
 
-    let value = value.map_err(|error| TwonlyError::Generic(error.to_string()))?;
+        if value.is_null() {
+            return Ok(None);
+        }
 
-    if value.is_null() {
-        return Ok(None);
-    }
+        let value = JString::cast_local(env, value)
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
 
-    let json: String = env
-        .get_string(&JString::from(value))
-        .map_err(|error| TwonlyError::Generic(error.to_string()))?
-        .into();
+        let json = value
+            .try_to_string(env)
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
 
-    let values: Vec<f64> = serde_json::from_str(&json)?;
+        let values: Vec<f64> = serde_json::from_str(&json)?;
 
-    if values.len() != 3 {
-        return Err(TwonlyError::Generic(
-            "Android returned an invalid location".into(),
-        ));
-    }
+        if values.len() != 3 {
+            return Err(TwonlyError::Generic(
+                "Android returned an invalid location".into(),
+            ));
+        }
 
-    Ok(Some(LocationFix {
-        latitude: values[0],
-        longitude: values[1],
-        accuracy: values[2],
-    }))
+        Ok(Some(LocationFix {
+            latitude: values[0],
+            longitude: values[1],
+            accuracy: values[2],
+        }))
+    })
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]

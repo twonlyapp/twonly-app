@@ -2,7 +2,7 @@
 
 `u2netp.onnx` is the source U²-Net portrait/object segmentation model. Android
 ships the equivalent, portable `u2netp.nnef.tar` graph with only `tract-nnef`
-(pinned to 0.23.8). The ONNX importer is a development dependency; the facade,
+(pinned to 0.23.9). The ONNX importer is a development dependency; the facade,
 CLI helpers and extra operator registries are excluded from production builds.
 The model and inference runtime are excluded from iOS builds. iOS uses Apple
 Vision foreground instance masks (iOS 17 or later), followed by the same Rust
@@ -33,7 +33,7 @@ against the original ONNX inference pipeline, with an absolute tolerance of
 `1e-5`, and rejects non-finite output values.
 
 - NNEF artifact size: 4,790,272 bytes
-- NNEF SHA-256: `51f72210a9541ecbfb460bde4426cfdd321de603ef140180c3c54dd1da094106`
+- NNEF SHA-256: `b2a8817ff77fc8248429eeb26694296e406cae308e8e0ecdc28d19c41c6fcf4d`
 
 When replacing the source model or tract version, regenerate the artifact,
 review the comparison test, and update the digests here and in the Android

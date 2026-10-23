@@ -4,6 +4,7 @@
  */
 
 pub(crate) mod groups;
+pub(crate) mod http;
 pub mod messages;
 pub mod proto;
 pub(super) mod runtime;

@@ -9,7 +9,9 @@ use std::string::FromUtf8Error;
 use thiserror::Error;
 use zip::result::ZipError;
 
-pub type Result<T> = core::result::Result<T, TwonlyError>;
+// Match the standard Result shape while defaulting to our application error.
+// One-argument bridge results retain their existing Dart string exceptions.
+pub type Result<T, E = TwonlyError> = core::result::Result<T, E>;
 
 macro_rules! twonly_error {
     ($message:expr) => {

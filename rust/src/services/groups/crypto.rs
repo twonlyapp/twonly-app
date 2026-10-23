@@ -5,7 +5,7 @@
 
 use crate::api::proto::client::EncryptedGroupStateEnvelop;
 use crate::error::{Result, TwonlyError};
-use chacha20poly1305::aead::{Aead, AeadCore, KeyInit, OsRng};
+use chacha20poly1305::aead::{Aead, Generate, KeyInit};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
 use prost::Message;
 
@@ -17,7 +17,7 @@ pub(crate) fn encrypt(key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>> {
     let cipher = ChaCha20Poly1305::new_from_slice(key)
         .map_err(|_| TwonlyError::Generic("invalid group state key".into()))?;
 
-    let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng);
+    let nonce = Nonce::generate();
 
     let mut sealed = cipher
         .encrypt(&nonce, plaintext)
@@ -51,14 +51,14 @@ pub(crate) fn decrypt(key: &[u8], envelope: &[u8]) -> Result<Vec<u8>> {
     let cipher = ChaCha20Poly1305::new_from_slice(key)
         .map_err(|_| TwonlyError::Generic("invalid group state key".into()))?;
 
-    let nonce = Nonce::from_slice(&envelope.nonce);
+    let nonce = Nonce::try_from(envelope.nonce.as_slice()).expect("nonce length was checked");
 
     let mut sealed = envelope.encrypted_group_state;
 
     sealed.extend(envelope.mac);
 
     cipher
-        .decrypt(nonce, sealed.as_ref())
+        .decrypt(&nonce, sealed.as_ref())
         .map_err(|_| TwonlyError::Generic("group state authentication failed".into()))
 }
 
@@ -67,6 +67,23 @@ pub(crate) fn decrypt(key: &[u8], envelope: &[u8]) -> Result<Vec<u8>> {
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn legacy_chacha20poly1305_group_state_remains_readable() {
+        // Ciphertext and tag recorded with chacha20poly1305 0.10.1.
+        let mut sealed =
+            hex::decode("901c9cb68777a5c2af077b48e094d0b00a6b5f177b4c95623e9cdfc70f20056b5514")
+                .unwrap();
+        let mac = sealed.split_off(sealed.len() - TAG_SIZE);
+        let envelope = EncryptedGroupStateEnvelop {
+            nonce: vec![9; NONCE_SIZE],
+            encrypted_group_state: sealed,
+            mac,
+        }
+        .encode_to_vec();
+
+        assert_eq!(decrypt(&[7; 32], &envelope).unwrap(), b"legacy group state");
+    }
 
     #[test]
 

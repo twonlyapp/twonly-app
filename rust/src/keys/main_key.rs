@@ -4,10 +4,10 @@
  */
 
 use crate::error::Result;
-use aes_gcm::aead::rand_core::RngCore;
-use aes_gcm::aead::{Aead, AeadCore, KeyInit, OsRng};
-use aes_gcm::{Aes256Gcm, Key, Nonce};
+use aes_gcm::aead::{Aead, Generate, KeyInit};
+use aes_gcm::{Aes256Gcm, Nonce};
 use hkdf::Hkdf;
+use rand::TryRngCore;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use zeroize::{Zeroize, ZeroizeOnDrop};
@@ -35,7 +35,9 @@ impl MainKey {
     pub fn generate() -> Self {
         let mut main_key = [0u8; 32];
 
-        OsRng.fill_bytes(&mut main_key);
+        rand::rngs::OsRng
+            .try_fill_bytes(&mut main_key)
+            .expect("OS randomness unavailable");
 
         Self { main_key }
     }
@@ -119,11 +121,9 @@ impl MainKey {
     fn encrypt_with_info(&self, info: &[u8], payload: &[u8]) -> Vec<u8> {
         let derived_key = self.derive_key(info);
 
-        let key = Key::<Aes256Gcm>::from_slice(&derived_key);
+        let cipher = Aes256Gcm::new(&derived_key.into());
 
-        let cipher = Aes256Gcm::new(key);
-
-        let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
+        let nonce = Nonce::generate();
 
         let ciphertext = cipher
             .encrypt(&nonce, payload)
@@ -143,16 +143,14 @@ impl MainKey {
 
         let derived_key = self.derive_key(info);
 
-        let key = Key::<Aes256Gcm>::from_slice(&derived_key);
+        let cipher = Aes256Gcm::new(&derived_key.into());
 
-        let cipher = Aes256Gcm::new(key);
-
-        let nonce = Nonce::from_slice(&encrypted_data[..12]);
+        let nonce = Nonce::try_from(&encrypted_data[..12]).expect("nonce length was checked");
 
         let ciphertext = &encrypted_data[12..];
 
         Ok(cipher
-            .decrypt(nonce, ciphertext)
+            .decrypt(&nonce, ciphertext)
             .map_err(|_| "Decryption failure".to_string())?)
     }
 }
@@ -162,6 +160,37 @@ impl MainKey {
 mod tests {
 
     use super::*;
+
+    // These values were recorded before upgrading hkdf/sha2 and aes-gcm.
+    // Existing database keys and encrypted backups must survive the upgrade.
+    #[test]
+    fn legacy_keys_and_backup_remain_compatible() {
+        let key = MainKey { main_key: [42; 32] };
+
+        assert_eq!(
+            hex::encode(key.get_login_token()),
+            "00af5a5969df9abd87ca3784c1ad6c23fa1756c4782da78ca89ce936fd985d58"
+        );
+        assert_eq!(
+            key.get_database_key(DatabaseKey::AppDb),
+            "ddc7b95d030dbe2d30e2fc539107165d53ef3be3c8d971ff6d295e942b48adb7"
+        );
+        assert_eq!(
+            key.get_database_key(DatabaseKey::RustDb),
+            "6233c4153db21d36c8c7ef59eb79c14a9735d727d49b86e986bba0afbda703c6"
+        );
+
+        let encrypted = hex::decode(concat!(
+            "090909090909090909090909",
+            "44a37d0ea17e12f1f349ad678ba5ba7a083b5cc4fbded2fecdb75c249f5efb280c6c9b22b1"
+        ))
+        .unwrap();
+
+        assert_eq!(
+            key.decrypt_backup(&encrypted).unwrap(),
+            b"legacy backup payload"
+        );
+    }
 
     #[test]
 

@@ -55,43 +55,42 @@ pub(crate) fn begin(media_id: &str) -> Preparation {
 mod android {
 
     use crate::error::{Result, TwonlyError};
-    use crate::native::transfer::android::jni_env;
+    use crate::native::transfer::android::with_env;
     use jni::objects::{JObject, JValue};
 
     pub(super) fn schedule(media_id: &str) -> Result<()> {
         let prepare = crate::native::transfer::android::prepare_class()?;
 
-        let mut env = jni_env()?;
+        with_env(|env| {
+            let media_id = jni::objects::JString::from_str(env, media_id)
+                .map_err(|error| TwonlyError::Generic(error.to_string()))?;
 
-        let media_id = env
-            .new_string(media_id)
-            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+            let media_id = JObject::from(media_id);
 
-        let media_id = JObject::from(media_id);
+            let call = env
+                .call_static_method(
+                    prepare,
+                    jni::jni_str!("schedule"),
+                    jni::jni_sig!("(Ljava/lang/String;)Z"),
+                    &[JValue::Object(&media_id)],
+                )
+                .and_then(|value| value.z());
 
-        let call = env
-            .call_static_method(
-                prepare,
-                "schedule",
-                "(Ljava/lang/String;)Z",
-                &[JValue::Object(&media_id)],
-            )
-            .and_then(|value| value.z());
+            // A pending Java exception would be raised as a fatal error when this
+            // thread next enters the VM, taking the process with it.
+            if env.exception_check() {
+                let _ = env.exception_describe();
 
-        // A pending Java exception would be raised as a fatal error when this
-        // thread next enters the VM, taking the process with it.
-        if env.exception_check().unwrap_or(false) {
-            let _ = env.exception_describe();
+                let _ = env.exception_clear();
+            }
 
-            let _ = env.exception_clear();
-        }
-
-        if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
-            Ok(())
-        } else {
-            Err(TwonlyError::Generic(
-                "Android rejected the media preparation job".into(),
-            ))
-        }
+            if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
+                Ok(())
+            } else {
+                Err(TwonlyError::Generic(
+                    "Android rejected the media preparation job".into(),
+                ))
+            }
+        })
     }
 }

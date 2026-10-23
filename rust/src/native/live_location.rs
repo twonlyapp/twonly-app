@@ -97,24 +97,27 @@ pub unsafe extern "C" fn twonly_live_location_run(
 #[unsafe(no_mangle)]
 
 pub extern "system" fn Java_eu_twonly_location_NativeLiveLocationBridge_run(
-    mut env: jni::JNIEnv<'_>, _class: jni::objects::JClass<'_>,
+    mut unowned_env: jni::EnvUnowned<'_>, _class: jni::objects::JClass<'_>,
     directory: jni::objects::JString<'_>, request: jni::objects::JString<'_>,
 ) -> jni::sys::jstring {
-    let strings = (|| -> std::result::Result<(String, String), jni::errors::Error> {
-        Ok((
-            env.get_string(&directory)?.into(),
-            env.get_string(&request)?.into(),
-        ))
-    })();
+    unowned_env
+        .with_env(|env| {
+            Ok::<_, jni::errors::Error>({
+                let strings = (|| -> std::result::Result<(String, String), jni::errors::Error> {
+                    Ok((directory.try_to_string(env)?, request.try_to_string(env)?))
+                })();
 
-    let json = match strings {
-        Ok((directory, request)) => {
-            run(directory, request, crate::log::LogSource::ForegroundService)
-        }
-        Err(_) => r#"{"ok":false,"error":"Invalid JNI request"}"#.into(),
-    };
+                let json = match strings {
+                    Ok((directory, request)) => {
+                        run(directory, request, crate::log::LogSource::ForegroundService)
+                    }
+                    Err(_) => r#"{"ok":false,"error":"Invalid JNI request"}"#.into(),
+                };
 
-    env.new_string(json)
-        .map(|s| s.into_raw())
-        .unwrap_or(std::ptr::null_mut())
+                jni::objects::JString::from_str(env, json)
+                    .map(|s| s.into_raw())
+                    .unwrap_or(std::ptr::null_mut())
+            })
+        })
+        .resolve::<jni::errors::LogErrorAndDefault>()
 }

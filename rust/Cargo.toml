@@ -21,8 +21,8 @@ sqlite-wal = []
 dev-api = []
 
 [dependencies]
-flutter_rust_bridge = { version = "=2.12.0", features = ["chrono"] }
-thiserror = "2.0.18"
+flutter_rust_bridge = { version = "=2.13.0", features = ["chrono"] }
+thiserror = "2.0.21"
 # Pinned upstream SQLx accepts libsqlite3-sys 0.38, including the SQLCipher WAL fix.
 sqlx = { git = "https://github.com/launchbadge/sqlx", rev = "36f3a5c1c7a3e939ca80ec38f42a4b60aab9061b", default-features = false, features = [
     "runtime-tokio",
@@ -36,72 +36,74 @@ sqlx = { git = "https://github.com/launchbadge/sqlx", rev = "36f3a5c1c7a3e939ca8
 libsqlite3-sys = { version = "=0.38.2", features = [
     "bundled-sqlcipher-vendored-openssl",
 ] }
-tokio = { version = "1.44", features = ["macros", "rt-multi-thread", "sync", "time"] }
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "sync", "time"] }
 tracing = "0.1.44"
 tracing-log = "0.2"
 prost = "0.14.1"
-blahaj = "0.6.0"
-serde_json = "1.0"
-base64 = "0.22.1"
-hmac = "0.12.1"
-hkdf = "0.12.4"
-sha2 = "0.10.8"
-aes-gcm = "0.10.3"
-chacha20poly1305 = "0.10.1"
+blahaj = "0.7.0"
+serde_json = "1.0.154"
+base64 = "0.23.1"
+hmac = "0.13.0"
+hkdf = "0.13.0"
+sha2 = "0.11.1"
+aes-gcm = "0.11.1"
+chacha20poly1305 = "0.11.0"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 paste = "1.0.15"
 serde = { version = "1.0", features = ["derive"] }
-zeroize = { version = "1.8", features = ["derive"] }
+zeroize = { version = "1.9.1", features = ["derive"] }
 hex = "0.4.3"
-keyring-core = "1"
+keyring-core = "1.0.1"
 postcard = { version = "1.0", features = ["alloc"] }
 chrono = { version = "0.4", features = ["serde"] }
-zip = { version = "2.2.2", default-features = false, features = ["deflate-flate2", "flate2"] }
+zip = { version = "9.0.5", default-features = false, features = ["deflate-flate2"] }
 scrypt = { version = "0.12", default-features = false }
 walkdir = "2.5.0"
 libsignal-protocol = { git = "https://github.com/signalapp/libsignal", version = "0.1.0", rev = "44a6dd8fc9f9d6903b32842b80b3894a75678418" }
-rand08 = { version = "0.8.5", package = "rand" }
-rand = "0.9.4"
-uuid = { version = "1", features = ["v4", "v7"] }
-flate2 = "1"
-resvg = { version = "0.45", default-features = false, features = ["text"] }
-reqwest = { version = "0.12", default-features = false, features = [
-    "rustls-tls",
+rand08 = { version = "0.8.8", package = "rand" }
+# Keep the RNG traits compatible with libsignal-protocol.
+rand = "0.9.5"
+uuid = { version = "1.28.0", features = ["v4", "v7"] }
+flate2 = "1.1.10"
+resvg = { version = "0.48.1", default-features = false, features = ["text"] }
+reqwest = { version = "0.13.5", default-features = false, features = [
+    "rustls-no-provider",
 ] }
-async-trait = "0.1.91"
-futures-util = "0.3.31"
-rustls = { version = "0.23.43", default-features = false, features = [
+async-trait = "0.1.92"
+futures-util = "0.3.34"
+rustls = { version = "0.23.46", default-features = false, features = [
     "ring",
     "std",
 ] }
-tokio-util = "0.7.16"
-bon = "3.9.3"
+webpki-roots = "1"
+tokio-util = "0.7.20"
+bon = "3.10.3"
 stream-tungstenite = "0.6.1"
 image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "gif", "bmp", "webp"] }
 webp = "0.3.1"
 [target.'cfg(unix)'.dependencies]
-libc = "0.2"
+libc = "0.2.191"
 
 [target.'cfg(target_os = "ios")'.dependencies]
 # iOS backend: Requires the 'protected' feature for Data Protection Keychain
-apple-native-keyring-store = { version = "1", features = ["protected"] }
+apple-native-keyring-store = { version = "1.0.2", features = ["protected"] }
 [target.'cfg(target_os = "android")'.dependencies]
 # Only Android ships the sticker model and inference runtime. Import ONNX at
 # development time; the app only needs the smaller NNEF runtime. Pin the
 # internal tract API and converted model to the same version.
-tract-nnef = { version = "=0.23.8", default-features = false }
+tract-nnef = { version = "=0.23.9", default-features = false }
 # Android backend: Interfaces with the Android Keystore
 android-native-keyring-store = "1"
-jni = "0.21.1"
+jni = "0.22.4"
 
 [dev-dependencies]
-tokio = { version = "1.44", features = ["test-util"] }
+tokio = { version = "1.54.1", features = ["test-util"] }
 anyhow = "1.0.104"
 pretty_env_logger = "0.5.0"
 tempfile = "3.27.0"
 # Model conversion and inference equivalence tests; excluded from app builds.
-tract-onnx = { version = "=0.23.8", default-features = false }
-tract-nnef = { version = "=0.23.8", default-features = false }
+tract-onnx = { version = "=0.23.9", default-features = false }
+tract-nnef = { version = "=0.23.9", default-features = false }
 
 
 [build-dependencies]

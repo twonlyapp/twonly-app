@@ -10,7 +10,7 @@ use crate::bridge::api::{ApiEvent, ApiEventKind, RustApi};
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
 use crate::services::media_upload::MediaUploadService;
-use chacha20poly1305::aead::{AeadInPlace, KeyInit};
+use chacha20poly1305::aead::{AeadInOut, KeyInit};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce, Tag};
 use prost::Message as _;
 use sha2::{Digest, Sha256};
@@ -332,7 +332,9 @@ impl MediaFileService {
             hex::encode(token)
         );
 
-        let response = reqwest::Client::new()
+        let response = crate::api::http::client_builder()
+            .build()
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?
             .get(url)
             .timeout(Duration::from_secs(30))
             .send()
@@ -394,13 +396,13 @@ impl MediaFileService {
             return Err(TwonlyError::Generic("invalid media encryption MAC".into()));
         }
 
-        let nonce = Nonce::from_slice(nonce);
+        let nonce = Nonce::try_from(nonce).expect("nonce length was checked");
 
-        let tag = Tag::from_slice(mac);
+        let tag = Tag::try_from(mac).expect("tag length was checked");
 
         let mut bytes = std::fs::read(encrypted_path)?;
 
-        cipher.decrypt_in_place_detached(nonce, b"", &mut bytes, tag)?;
+        cipher.decrypt_inout_detached(&nonce, b"", bytes.as_mut_slice().into(), &tag)?;
 
         let temp_path = self.temp_path(&media.media_id, &media.media_type);
 

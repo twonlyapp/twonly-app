@@ -1749,15 +1749,13 @@ mod tests {
 
             for index in 0..source.len() {
                 let mut entry = source.by_index(index).unwrap();
+                let name = entry.name().unwrap().into_owned();
 
-                if entry.name() == excluded_name
-                    || entry.name() == BACKUP_MANIFEST_FILE
-                    || !entry.is_file()
-                {
+                if name == excluded_name || name == BACKUP_MANIFEST_FILE || !entry.is_file() {
                     continue;
                 }
 
-                writer.start_file(entry.name(), options).unwrap();
+                writer.start_file(name, options).unwrap();
 
                 copy(&mut entry, &mut writer).unwrap();
             }

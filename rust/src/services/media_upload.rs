@@ -27,6 +27,7 @@ use prost::Message as _;
 use rand::RngCore;
 use sqlx::FromRow;
 use std::collections::HashMap;
+use std::io::Read;
 use std::path::Path;
 use std::sync::{Arc, LazyLock, Mutex as SyncMutex};
 use tokio::sync::{Mutex, Semaphore};
@@ -1081,7 +1082,23 @@ impl MediaUploadService {
 
             let mut hasher = <sha2::Sha256 as sha2::Digest>::new();
 
-            let size = std::io::copy(&mut file, &mut hasher)? as i64;
+            let mut size = 0_i64;
+            let mut buffer = [0_u8; 64 * 1024];
+
+            loop {
+                let read = match file.read(&mut buffer) {
+                    Ok(read) => read,
+                    Err(error) if error.kind() == std::io::ErrorKind::Interrupted => continue,
+                    Err(error) => return Err(error.into()),
+                };
+
+                if read == 0 {
+                    break;
+                }
+
+                sha2::Digest::update(&mut hasher, &buffer[..read]);
+                size += read as i64;
+            }
 
             let hash = <sha2::Sha256 as sha2::Digest>::finalize(hasher).to_vec();
 
@@ -2253,6 +2270,48 @@ pub(crate) fn parse_reupload_requested_by(value: Option<&str>) -> Vec<i64> {
 mod tests {
 
     use super::*;
+
+    #[tokio::test]
+    async fn stored_metadata_hashes_empty_and_multiple_buffer_files() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
+            .await?;
+        let database = ctx.app_db.read().await.clone();
+
+        sqlx::query("INSERT INTO media_files(media_id, type) VALUES ('hash-fixture', 'video')")
+            .execute(&database.pool)
+            .await?;
+
+        let path = temp.path().join("stored.bin");
+        let service = MediaUploadService::new(&ctx);
+
+        for (bytes, expected_hash) in [
+            (
+                Vec::new(),
+                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            ),
+            (
+                (0..(2 * 65536 + 17)).map(|i| (i % 251) as u8).collect(),
+                "1ec3437cee3cccf3647e130524ade52848571960a3340ae33573beef17d330b3",
+            ),
+        ] {
+            std::fs::write(&path, &bytes)?;
+            service
+                .refresh_stored_metadata("hash-fixture", &path)
+                .await?;
+
+            let (size, hash): (i64, Vec<u8>) = sqlx::query_as(
+                "SELECT size_in_bytes, stored_file_hash FROM media_files WHERE media_id = 'hash-fixture'",
+            )
+            .fetch_one(&database.pool)
+            .await?;
+
+            assert_eq!(size as usize, bytes.len());
+            assert_eq!(hex::encode(hash), expected_hash);
+        }
+
+        Ok(())
+    }
 
     #[tokio::test]
 

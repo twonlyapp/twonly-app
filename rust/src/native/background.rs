@@ -405,79 +405,85 @@ mod android_jni {
     use super::*;
     use jni::objects::{JClass, JString};
     use jni::sys::{jboolean, jstring};
-    use jni::JNIEnv;
+    use jni::{Env, EnvUnowned};
 
     #[unsafe(no_mangle)]
 
     pub extern "system" fn Java_eu_twonly_directmedia_NativeMediaPrepareBridge_run(
-        mut env: JNIEnv<'_>, _class: JClass<'_>, database_dir: JString<'_>, data_dir: JString<'_>,
-        media_id: JString<'_>, foreground_service: jboolean,
+        mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, database_dir: JString<'_>,
+        data_dir: JString<'_>, media_id: JString<'_>, foreground_service: jboolean,
     ) -> jstring {
-        let result = (|| -> Result<String, String> {
-            let java_string =
-                |env: &mut JNIEnv<'_>, value: JString<'_>| -> Result<String, String> {
-                    env.get_string(&value)
-                        .map(Into::into)
-                        .map_err(|error| format!("invalid Java string: {error}"))
-                };
+        unowned_env
+            .with_env(|env| {
+                Ok::<_, jni::errors::Error>({
+                    let result = (|| -> Result<String, String> {
+                        let java_string =
+                            |env: &mut Env<'_>, value: JString<'_>| -> Result<String, String> {
+                                value
+                                    .try_to_string(env)
+                                    .map_err(|error| format!("invalid Java string: {error}"))
+                            };
 
-            let database_dir = CString::new(java_string(&mut env, database_dir)?)
-                .map_err(|error| error.to_string())?;
+                        let database_dir = CString::new(java_string(env, database_dir)?)
+                            .map_err(|error| error.to_string())?;
 
-            let data_dir = CString::new(java_string(&mut env, data_dir)?)
-                .map_err(|error| error.to_string())?;
+                        let data_dir = CString::new(java_string(env, data_dir)?)
+                            .map_err(|error| error.to_string())?;
 
-            // A null Java string is the flush job, so it is not required here.
-            let media_id = if media_id.is_null() {
-                None
-            } else {
-                Some(
-                    CString::new(java_string(&mut env, media_id)?)
-                        .map_err(|error| error.to_string())?,
-                )
-            };
+                        // A null Java string is the flush job, so it is not required here.
+                        let media_id = if media_id.is_null() {
+                            None
+                        } else {
+                            Some(
+                                CString::new(java_string(env, media_id)?)
+                                    .map_err(|error| error.to_string())?,
+                            )
+                        };
 
-            let id = create_run(if foreground_service != 0 {
-                crate::log::LogSource::ForegroundService
-            } else {
-                crate::log::LogSource::Background
-            });
+                        let id = create_run(if foreground_service {
+                            crate::log::LogSource::ForegroundService
+                        } else {
+                            crate::log::LogSource::Background
+                        });
 
-            // SAFETY: Each CString remains alive for the synchronous ABI call.
-            let pointer = unsafe {
-                twonly_background_run_with_id(
-                    id,
-                    database_dir.as_ptr(),
-                    data_dir.as_ptr(),
-                    media_id
-                        .as_ref()
-                        .map_or(std::ptr::null(), |value| value.as_ptr()),
-                )
-            };
+                        // SAFETY: Each CString remains alive for the synchronous ABI call.
+                        let pointer = unsafe {
+                            twonly_background_run_with_id(
+                                id,
+                                database_dir.as_ptr(),
+                                data_dir.as_ptr(),
+                                media_id
+                                    .as_ref()
+                                    .map_or(std::ptr::null(), |value| value.as_ptr()),
+                            )
+                        };
 
-            if pointer.is_null() {
-                return Err("Rust maintenance worker returned null".into());
-            }
+                        if pointer.is_null() {
+                            return Err("Rust maintenance worker returned null".into());
+                        }
 
-            // SAFETY: The C ABI returns a valid owned CString.
-            let json = unsafe { CStr::from_ptr(pointer) }
-                .to_string_lossy()
-                .into_owned();
+                        // SAFETY: The C ABI returns a valid owned CString.
+                        let json = unsafe { CStr::from_ptr(pointer) }
+                            .to_string_lossy()
+                            .into_owned();
 
-            unsafe { twonly_background_string_free(pointer) };
+                        unsafe { twonly_background_string_free(pointer) };
 
-            Ok(json)
-        })();
+                        Ok(json)
+                    })();
 
-        let json = result.unwrap_or_else(|error| {
-            format!(
-                r#"{{"ok":false,"error":{}}}"#,
-                serde_json::to_string(&error).unwrap_or_else(|_| "null".into())
-            )
-        });
+                    let json = result.unwrap_or_else(|error| {
+                        format!(
+                            r#"{{"ok":false,"error":{}}}"#,
+                            serde_json::to_string(&error).unwrap_or_else(|_| "null".into())
+                        )
+                    });
 
-        env.new_string(json)
-            .map(JString::into_raw)
-            .unwrap_or(std::ptr::null_mut())
+                    jni::objects::JString::from_str(env, json)
+                        .map(JString::into_raw)
+                        .unwrap_or(std::ptr::null_mut())
+                })
+            })
+            .resolve::<jni::errors::LogErrorAndDefault>()
     }
 }

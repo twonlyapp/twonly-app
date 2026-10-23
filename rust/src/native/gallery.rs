@@ -71,59 +71,59 @@ pub(crate) fn save(
 pub(crate) fn save(
     path: &Path, is_video: bool, name: &str, created_at_millis: i64, location: Option<LocationFix>,
 ) -> Result<()> {
-    use crate::native::transfer::android::{gallery_class, jni_env};
+    use crate::native::transfer::android::{gallery_class, with_env};
     use jni::objects::{JObject, JValue};
 
     let class = gallery_class()?;
 
-    let mut env = jni_env()?;
+    with_env(|env| {
+        let mut string = |value: &str| {
+            jni::objects::JString::from_str(env, value)
+                .map_err(|error| TwonlyError::Generic(error.to_string()))
+        };
 
-    let string = |value: &str| {
-        env.new_string(value)
-            .map_err(|error| TwonlyError::Generic(error.to_string()))
-    };
+        let path = JObject::from(string(&path.to_string_lossy())?);
 
-    let path = JObject::from(string(&path.to_string_lossy())?);
+        let name = JObject::from(string(name)?);
 
-    let name = JObject::from(string(name)?);
+        let fix = location.unwrap_or(LocationFix {
+            latitude: 0.0,
+            longitude: 0.0,
+            accuracy: -1.0,
+        });
 
-    let fix = location.unwrap_or(LocationFix {
-        latitude: 0.0,
-        longitude: 0.0,
-        accuracy: -1.0,
-    });
+        let call = env
+            .call_static_method(
+                class,
+                jni::jni_str!("save"),
+                jni::jni_sig!("(Ljava/lang/String;ZLjava/lang/String;JZDDD)Z"),
+                &[
+                    JValue::Object(&path),
+                    JValue::Bool(is_video),
+                    JValue::Object(&name),
+                    JValue::Long(created_at_millis),
+                    JValue::Bool(location.is_some()),
+                    JValue::Double(fix.latitude),
+                    JValue::Double(fix.longitude),
+                    JValue::Double(fix.accuracy),
+                ],
+            )
+            .and_then(|value| value.z());
 
-    let call = env
-        .call_static_method(
-            class,
-            "save",
-            "(Ljava/lang/String;ZLjava/lang/String;JZDDD)Z",
-            &[
-                JValue::Object(&path),
-                JValue::Bool(u8::from(is_video)),
-                JValue::Object(&name),
-                JValue::Long(created_at_millis),
-                JValue::Bool(u8::from(location.is_some())),
-                JValue::Double(fix.latitude),
-                JValue::Double(fix.longitude),
-                JValue::Double(fix.accuracy),
-            ],
-        )
-        .and_then(|value| value.z());
+        if env.exception_check() {
+            let _ = env.exception_describe();
 
-    if env.exception_check().unwrap_or(false) {
-        let _ = env.exception_describe();
+            let _ = env.exception_clear();
+        }
 
-        let _ = env.exception_clear();
-    }
-
-    if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
-        Ok(())
-    } else {
-        Err(TwonlyError::Generic(
-            "Android could not save to the photo library".into(),
-        ))
-    }
+        if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
+            Ok(())
+        } else {
+            Err(TwonlyError::Generic(
+                "Android could not save to the photo library".into(),
+            ))
+        }
+    })
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]

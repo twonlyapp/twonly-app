@@ -93,7 +93,7 @@ impl WebxdcStore {
     }
 
     fn client() -> Result<reqwest::Client> {
-        reqwest::Client::builder()
+        crate::api::http::client_builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
             .map_err(|error| TwonlyError::Generic(error.to_string()))

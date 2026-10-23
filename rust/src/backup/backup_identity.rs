@@ -5,8 +5,7 @@
 
 use crate::error::{Result, TwonlyError};
 use crate::keys::{BackupPasswordKeys, KeyManager};
-use aes_gcm::aead::rand_core::RngCore;
-use aes_gcm::aead::{Aead, KeyInit, OsRng};
+use aes_gcm::aead::{Aead, Generate, KeyInit};
 use aes_gcm::{Aes256Gcm, Nonce};
 
 pub(crate) struct BackupIdentity();
@@ -19,21 +18,15 @@ impl BackupIdentity {
 
         let serialized_bytes = key_manager.to_bytes()?;
 
-        let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&keys.encryption_key);
+        let cipher = Aes256Gcm::new(&keys.encryption_key.into());
 
-        let cipher = Aes256Gcm::new(key);
+        let nonce = Nonce::generate();
 
-        let mut nonce_bytes = [0u8; 12];
-
-        OsRng.fill_bytes(&mut nonce_bytes);
-
-        let nonce = Nonce::from_slice(&nonce_bytes);
-
-        let ciphertext = cipher.encrypt(nonce, serialized_bytes.as_slice())?;
+        let ciphertext = cipher.encrypt(&nonce, serialized_bytes.as_slice())?;
 
         let mut encrypted_bytes = vec![];
 
-        encrypted_bytes.extend_from_slice(&nonce_bytes);
+        encrypted_bytes.extend_from_slice(&nonce);
 
         encrypted_bytes.extend_from_slice(&ciphertext);
 
@@ -51,13 +44,11 @@ impl BackupIdentity {
 
         let (nonce_bytes, ciphertext) = encrypted_bytes.split_at(12);
 
-        let nonce = Nonce::from_slice(nonce_bytes);
+        let nonce = Nonce::try_from(nonce_bytes).expect("nonce length was checked");
 
-        let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&backup_password_keys.encryption_key);
+        let cipher = Aes256Gcm::new(&backup_password_keys.encryption_key.into());
 
-        let cipher = Aes256Gcm::new(key);
-
-        let decrypted_bytes = zeroize::Zeroizing::new(cipher.decrypt(nonce, ciphertext)?);
+        let decrypted_bytes = zeroize::Zeroizing::new(cipher.decrypt(&nonce, ciphertext)?);
 
         KeyManager::from_bytes(&decrypted_bytes)
     }

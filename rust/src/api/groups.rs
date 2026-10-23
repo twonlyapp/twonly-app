@@ -143,7 +143,7 @@ fn url(path: &str) -> String {
 }
 
 fn client() -> Result<reqwest::Client> {
-    reqwest::Client::builder()
+    crate::api::http::client_builder()
         .timeout(std::time::Duration::from_secs(10))
         .build()
         .map_err(|e| TwonlyError::Generic(e.to_string()))

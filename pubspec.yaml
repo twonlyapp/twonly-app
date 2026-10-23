@@ -81,7 +81,7 @@ dependencies:
   google_mlkit_barcode_scanning: ^0.14.1
   rust_lib_twonly:
     path: rust_builder
-  flutter_rust_bridge: 2.12.0
+  flutter_rust_bridge: 2.13.0
 
 ## --- Start Managed Dependencies --- 
   audio_waveforms: ^2.0.2

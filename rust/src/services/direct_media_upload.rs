@@ -12,7 +12,7 @@ use crate::error::{Result, TwonlyError};
 use crate::native::transfer;
 use crate::services::media_upload::{media_lock, parse_reupload_requested_by, MediaReuploadTarget};
 use crate::services::stories::{STORY_ANNOUNCE_RECENT_EXCHANGE_SECONDS, STORY_LIFETIME_SECONDS};
-use chacha20poly1305::aead::{AeadInPlace, KeyInit};
+use chacha20poly1305::aead::{AeadInOut, KeyInit};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
 use futures_util::{stream, StreamExt};
 use prost::Message;
@@ -400,7 +400,9 @@ impl DirectMediaUploadService {
     pub fn new(ctx: &Arc<Context>) -> Self {
         Self {
             ctx: ctx.clone(),
-            client: reqwest::Client::new(),
+            client: crate::api::http::client_builder()
+                .build()
+                .expect("HTTP client initialization failed"),
         }
     }
 
@@ -1447,8 +1449,10 @@ impl DirectMediaUploadService {
         let cipher = ChaCha20Poly1305::new_from_slice(key)
             .map_err(|_| TwonlyError::Generic("invalid media encryption key".into()))?;
 
+        let nonce = Nonce::try_from(nonce).expect("nonce length was checked");
+
         let tag = cipher
-            .encrypt_in_place_detached(Nonce::from_slice(nonce), b"", &mut encrypted)
+            .encrypt_inout_detached(&nonce, b"", encrypted.as_mut_slice().into())
             .map_err(|_| TwonlyError::Generic("media encryption failed".into()))?;
 
         if let Some(parent) = encrypted_path.parent() {

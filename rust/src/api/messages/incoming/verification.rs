@@ -9,7 +9,7 @@ use crate::context::Context;
 use crate::database::app::key_verifications::table::{KeyVerificationType, NewKeyVerification};
 use crate::error::Result;
 use crate::user_config::UserConfig;
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, KeyInit, Mac};
 use sha2::Sha256;
 use sqlx::{Sqlite, Transaction};
 use std::sync::Arc;

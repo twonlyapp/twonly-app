@@ -193,7 +193,7 @@ async fn test_story_lifecycle_between_clients() -> anyhow::Result<()> {
         .encode_simple(false, 80.0)
         .map_err(|error| anyhow::anyhow!("could not encode media fixture: {error:?}"))?;
 
-    std::fs::write(&plaintext_path, plaintext.as_ref())?;
+    std::fs::write(&plaintext_path, &*plaintext)?;
 
     let all = StoryAudience {
         all: true,

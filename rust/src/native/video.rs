@@ -287,61 +287,64 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
     let progress_runtime = remember_runtime(&request.media_id)
         .ok_or_else(|| TwonlyError::Generic("Video rendering requires an owned runtime".into()))?;
 
-    use crate::native::transfer::android::{jni_env, video_codec_class};
+    use crate::native::transfer::android::{video_codec_class, with_env};
     use jni::objects::{JObject, JValue};
 
     let class = video_codec_class()?;
 
-    let mut env = jni_env()?;
+    with_env(|env| {
+        let mut string = |value: &str| {
+            jni::objects::JString::from_str(env, value)
+                .map_err(|error| TwonlyError::Generic(error.to_string()))
+        };
 
-    let string = |value: &str| {
-        env.new_string(value)
-            .map_err(|error| TwonlyError::Generic(error.to_string()))
-    };
+        let input = JObject::from(string(&request.input.to_string_lossy())?);
 
-    let input = JObject::from(string(&request.input.to_string_lossy())?);
+        let output = JObject::from(string(&request.output.to_string_lossy())?);
 
-    let output = JObject::from(string(&request.output.to_string_lossy())?);
+        let media_id = JObject::from(string(&progress_runtime.id)?);
 
-    let media_id = JObject::from(string(&progress_runtime.id)?);
+        let overlay = match request.overlay.as_ref() {
+            Some(path) => JObject::from(string(&path.to_string_lossy())?),
+            None => JObject::null(),
+        };
 
-    let overlay = match request.overlay.as_ref() {
-        Some(path) => JObject::from(string(&path.to_string_lossy())?),
-        None => JObject::null(),
-    };
+        let call = env
+            .call_static_method(
+                class,
+                jni::jni_str!("render"),
+                jni::jni_sig!(
+                    "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJJLjava/lang/String;\
+                     )Z"
+                ),
+                &[
+                    JValue::Object(&input),
+                    JValue::Object(&overlay),
+                    JValue::Object(&output),
+                    JValue::Bool(request.remove_audio),
+                    JValue::Long(request.trim_start_or_negative()),
+                    JValue::Long(request.trim_end_or_negative()),
+                    JValue::Object(&media_id),
+                ],
+            )
+            .and_then(|value| value.z());
 
-    let call = env
-        .call_static_method(
-            class,
-            "render",
-            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJJLjava/lang/String;)Z",
-            &[
-                JValue::Object(&input),
-                JValue::Object(&overlay),
-                JValue::Object(&output),
-                JValue::Bool(u8::from(request.remove_audio)),
-                JValue::Long(request.trim_start_or_negative()),
-                JValue::Long(request.trim_end_or_negative()),
-                JValue::Object(&media_id),
-            ],
-        )
-        .and_then(|value| value.z());
+        // A pending Java exception would abort the process once this thread returns
+        // to the VM, so it is cleared and reported as a plain error instead.
+        if env.exception_check() {
+            let _ = env.exception_describe();
 
-    // A pending Java exception would abort the process once this thread returns
-    // to the VM, so it is cleared and reported as a plain error instead.
-    if env.exception_check().unwrap_or(false) {
-        let _ = env.exception_describe();
+            let _ = env.exception_clear();
+        }
 
-        let _ = env.exception_clear();
-    }
-
-    if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
-        Ok(())
-    } else {
-        Err(TwonlyError::Generic(
-            "Android could not render the video".into(),
-        ))
-    }
+        if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
+            Ok(())
+        } else {
+            Err(TwonlyError::Generic(
+                "Android could not render the video".into(),
+            ))
+        }
+    })
 }
 
 /// Progress reported by the Android renderer while `render` is blocked.
@@ -349,33 +352,44 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
 #[unsafe(no_mangle)]
 
 pub extern "system" fn Java_eu_twonly_media_NativeVideoCodec_isCancelled(
-    mut env: jni::JNIEnv, _class: jni::objects::JClass, job_id: jni::objects::JString,
+    mut unowned_env: jni::EnvUnowned, _class: jni::objects::JClass, job_id: jni::objects::JString,
 ) -> jni::sys::jboolean {
-    u8::from(
-        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            env.get_string(&job_id)
-                .map_or(true, |id| is_cancelled(&id.to_string_lossy()))
-        }))
-        .unwrap_or(true),
-    )
+    unowned_env
+        .with_env(|env| {
+            Ok::<_, jni::errors::Error>({
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    job_id
+                        .try_to_string(env)
+                        .map_or(true, |id| is_cancelled(&id))
+                }))
+                .unwrap_or(true)
+            })
+        })
+        .resolve::<jni::errors::LogErrorAndDefault>()
 }
 
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
 
 pub extern "system" fn Java_eu_twonly_media_NativeVideoCodec_reportProgress(
-    mut env: jni::JNIEnv, _class: jni::objects::JClass, media_id: jni::objects::JString,
-    percent: jni::sys::jint,
+    mut unowned_env: jni::EnvUnowned, _class: jni::objects::JClass,
+    media_id: jni::objects::JString, percent: jni::sys::jint,
 ) {
-    // This runs on Android's main looper. Unwinding back into the VM would
-    // abort the process, so a panic can only cost this one progress update.
-    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        let Ok(media_id) = env.get_string(&media_id) else {
-            return;
-        };
+    unowned_env
+        .with_env(|env| {
+            Ok::<_, jni::errors::Error>({
+                // This runs on Android's main looper. Unwinding back into the VM would
+                // abort the process, so a panic can only cost this one progress update.
+                let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    let Ok(media_id) = media_id.try_to_string(env) else {
+                        return;
+                    };
 
-        report_progress(&media_id.to_string_lossy(), i64::from(percent));
-    }));
+                    report_progress(&media_id, i64::from(percent));
+                }));
+            })
+        })
+        .resolve::<jni::errors::LogErrorAndDefault>()
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -475,44 +489,44 @@ pub(crate) fn extract_frame(input: &Path, output: &Path) -> Result<()> {
 #[cfg(target_os = "android")]
 
 pub(crate) fn extract_frame(input: &Path, output: &Path) -> Result<()> {
-    use crate::native::transfer::android::{jni_env, video_codec_class};
+    use crate::native::transfer::android::{video_codec_class, with_env};
     use jni::objects::{JObject, JValue};
 
     let class = video_codec_class()?;
 
-    let mut env = jni_env()?;
+    with_env(|env| {
+        let mut string = |value: &str| {
+            jni::objects::JString::from_str(env, value)
+                .map_err(|error| TwonlyError::Generic(error.to_string()))
+        };
 
-    let string = |value: &str| {
-        env.new_string(value)
-            .map_err(|error| TwonlyError::Generic(error.to_string()))
-    };
+        let input = JObject::from(string(&input.to_string_lossy())?);
 
-    let input = JObject::from(string(&input.to_string_lossy())?);
+        let output = JObject::from(string(&output.to_string_lossy())?);
 
-    let output = JObject::from(string(&output.to_string_lossy())?);
+        let call = env
+            .call_static_method(
+                class,
+                jni::jni_str!("extractFrame"),
+                jni::jni_sig!("(Ljava/lang/String;Ljava/lang/String;)Z"),
+                &[JValue::Object(&input), JValue::Object(&output)],
+            )
+            .and_then(|value| value.z());
 
-    let call = env
-        .call_static_method(
-            class,
-            "extractFrame",
-            "(Ljava/lang/String;Ljava/lang/String;)Z",
-            &[JValue::Object(&input), JValue::Object(&output)],
-        )
-        .and_then(|value| value.z());
+        if env.exception_check() {
+            let _ = env.exception_describe();
 
-    if env.exception_check().unwrap_or(false) {
-        let _ = env.exception_describe();
+            let _ = env.exception_clear();
+        }
 
-        let _ = env.exception_clear();
-    }
-
-    if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
-        Ok(())
-    } else {
-        Err(TwonlyError::Generic(
-            "Android could not extract a video frame".into(),
-        ))
-    }
+        if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
+            Ok(())
+        } else {
+            Err(TwonlyError::Generic(
+                "Android could not extract a video frame".into(),
+            ))
+        }
+    })
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]

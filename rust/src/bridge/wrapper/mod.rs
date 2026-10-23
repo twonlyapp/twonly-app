@@ -40,3 +40,25 @@ impl RustUtils {
         Ok(secret)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::RustUtils;
+
+    #[test]
+    fn legacy_recovery_shares_remain_readable() {
+        // Three-of-three recovery shares generated with blahaj 0.6.0.
+        let shares = [
+            "01f628b0f2432c02dd8a33522605b7749ad6cd3191e7e4",
+            "02885fae5838d951c1157bce6d2536721f5a68cc1ba938",
+            "03121279cb188c736efa2bf33d45f37fa5ffc09ef82ba8",
+        ]
+        .map(|share| hex::decode(share).unwrap())
+        .to_vec();
+
+        assert_eq!(
+            RustUtils::recover_secret(shares, 3).unwrap(),
+            b"legacy recovery secret"
+        );
+    }
+}

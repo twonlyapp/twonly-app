@@ -297,6 +297,9 @@ async fn test_outgoing_images_are_encoded_to_webp_by_rust() -> anyhow::Result<()
 }
 
 async fn abandon_attachment(attachment_id: &str, capability: &[u8]) -> anyhow::Result<()> {
+    // This test constructs its own client rather than the app's configured one.
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
     let url = format!(
         "{}v2/attachments/{attachment_id}/abandon",
         rust_lib_twonly::bridge::api::RustApi::api_base_url("https".into())

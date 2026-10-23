@@ -106,7 +106,7 @@ async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
         .encode_simple(false, 80.0)
         .map_err(|error| anyhow::anyhow!("could not encode media fixture: {error:?}"))?;
 
-    std::fs::write(&plaintext_path, plaintext.as_ref())?;
+    std::fs::write(&plaintext_path, &*plaintext)?;
 
     let media_content = proto::EncryptedContent {
         group_id: Some(group_id.clone()),

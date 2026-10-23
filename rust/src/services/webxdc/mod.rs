@@ -19,7 +19,7 @@ use crate::api::proto::client as proto;
 use crate::context::Context;
 use crate::database::app::messages::native::{MessageType, NewMessage};
 use crate::error::{Result, TwonlyError};
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, KeyInit, Mac};
 use sha2::{Digest, Sha256};
 use sqlx::{Sqlite, Transaction};
 use std::sync::Arc;
@@ -1497,7 +1497,7 @@ impl WebxdcService {
     /// while the same user in two different chats does not.
 
     pub fn address_for(instance_id: &str, user_id: i64) -> String {
-        let mut mac = <Hmac<Sha256> as Mac>::new_from_slice(instance_id.as_bytes())
+        let mut mac = Hmac::<Sha256>::new_from_slice(instance_id.as_bytes())
             .expect("hmac accepts keys of any length");
 
         mac.update(&user_id.to_be_bytes());
@@ -2528,6 +2528,8 @@ mod tests {
 
     fn addresses_are_stable_per_instance_and_differ_across_instances() {
         let a = WebxdcService::address_for("instance-a", 42);
+
+        assert_eq!(a, "c46ce99818ddcffb@twonly");
 
         assert_eq!(a, WebxdcService::address_for("instance-a", 42));
 

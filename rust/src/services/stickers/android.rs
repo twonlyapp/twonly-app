@@ -13,7 +13,7 @@ use tract_nnef::prelude::*;
 
 const MODEL_BYTES: &[u8] = include_bytes!("../../../models/u2netp.nnef.tar");
 
-const MODEL_SHA256: &str = "51f72210a9541ecbfb460bde4426cfdd321de603ef140180c3c54dd1da094106";
+const MODEL_SHA256: &str = "b2a8817ff77fc8248429eeb26694296e406cae308e8e0ecdc28d19c41c6fcf4d";
 
 const MODEL_EDGE: u32 = 320;
 

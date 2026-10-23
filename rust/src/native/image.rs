@@ -107,49 +107,47 @@ pub(crate) fn decode_to_png(input: &Path, output: &Path) -> Result<()> {
 #[cfg(target_os = "android")]
 
 pub(crate) fn decode_to_png(input: &Path, output: &Path) -> Result<()> {
-    use crate::native::transfer::android::{jni_env, media_codec_class};
+    use crate::native::transfer::android::{media_codec_class, with_env};
     use jni::objects::{JObject, JValue};
 
     let class = media_codec_class()?;
 
-    let mut env = jni_env()?;
+    with_env(|env| {
+        let input = jni::objects::JString::from_str(env, input.to_string_lossy().as_ref())
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
 
-    let input = env
-        .new_string(input.to_string_lossy().as_ref())
-        .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+        let output = jni::objects::JString::from_str(env, output.to_string_lossy().as_ref())
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
 
-    let output = env
-        .new_string(output.to_string_lossy().as_ref())
-        .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+        let input = JObject::from(input);
 
-    let input = JObject::from(input);
+        let output = JObject::from(output);
 
-    let output = JObject::from(output);
+        let call = env
+            .call_static_method(
+                class,
+                jni::jni_str!("decodeToPng"),
+                jni::jni_sig!("(Ljava/lang/String;Ljava/lang/String;)Z"),
+                &[JValue::Object(&input), JValue::Object(&output)],
+            )
+            .and_then(|value| value.z());
 
-    let call = env
-        .call_static_method(
-            class,
-            "decodeToPng",
-            "(Ljava/lang/String;Ljava/lang/String;)Z",
-            &[JValue::Object(&input), JValue::Object(&output)],
-        )
-        .and_then(|value| value.z());
+        // A pending Java exception would abort the process once this thread returns
+        // to the VM, so it is cleared and reported as a plain error instead.
+        if env.exception_check() {
+            let _ = env.exception_describe();
 
-    // A pending Java exception would abort the process once this thread returns
-    // to the VM, so it is cleared and reported as a plain error instead.
-    if env.exception_check().unwrap_or(false) {
-        let _ = env.exception_describe();
+            let _ = env.exception_clear();
+        }
 
-        let _ = env.exception_clear();
-    }
-
-    if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
-        Ok(())
-    } else {
-        Err(TwonlyError::Generic(
-            "Android could not decode this image".into(),
-        ))
-    }
+        if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
+            Ok(())
+        } else {
+            Err(TwonlyError::Generic(
+                "Android could not decode this image".into(),
+            ))
+        }
+    })
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]

@@ -403,20 +403,20 @@ mod android_jni {
     use super::*;
     use jni::objects::{JClass, JString};
     use jni::sys::{jboolean, jlong, jstring};
-    use jni::JNIEnv;
+    use jni::{Env, EnvUnowned};
 
     #[unsafe(no_mangle)]
 
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_setApplicationActive(
-        _env: JNIEnv<'_>, _class: JClass<'_>, active: jboolean,
+        _env: EnvUnowned<'_>, _class: JClass<'_>, active: jboolean,
     ) {
-        crate::database::lifecycle::foreground::twonly_database_set_foreground(active != 0);
+        crate::database::lifecycle::foreground::twonly_database_set_foreground(active);
     }
 
     #[unsafe(no_mangle)]
 
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_createRun(
-        _env: JNIEnv<'_>, _class: JClass<'_>, budget_ms: jlong,
+        _env: EnvUnowned<'_>, _class: JClass<'_>, budget_ms: jlong,
     ) -> jlong {
         twonly_notification_run_create(budget_ms.max(1) as u64) as jlong
     }
@@ -424,7 +424,7 @@ mod android_jni {
     #[unsafe(no_mangle)]
 
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_cancelRun(
-        _env: JNIEnv<'_>, _class: JClass<'_>, id: jlong,
+        _env: EnvUnowned<'_>, _class: JClass<'_>, id: jlong,
     ) {
         twonly_database_operation_cancel(id as u64);
     }
@@ -432,19 +432,19 @@ mod android_jni {
     #[unsafe(no_mangle)]
 
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_finishRun(
-        _env: JNIEnv<'_>, _class: JClass<'_>, id: jlong,
+        _env: EnvUnowned<'_>, _class: JClass<'_>, id: jlong,
     ) {
         twonly_notification_run_finish(id as u64);
     }
 
-    fn java_string(env: &mut JNIEnv<'_>, value: JString<'_>) -> Result<String, String> {
-        env.get_string(&value)
-            .map(Into::into)
+    fn java_string(env: &mut Env<'_>, value: JString<'_>) -> Result<String, String> {
+        value
+            .try_to_string(env)
             .map_err(|error| format!("invalid Java string: {error}"))
     }
 
-    fn return_string(env: &mut JNIEnv<'_>, value: String) -> jstring {
-        env.new_string(value)
+    fn return_string(env: &mut Env<'_>, value: String) -> jstring {
+        jni::objects::JString::from_str(env, value)
             .map(JString::into_raw)
             .unwrap_or(std::ptr::null_mut())
     }
@@ -452,154 +452,190 @@ mod android_jni {
     #[unsafe(no_mangle)]
 
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_logPushReceived(
-        mut env: JNIEnv<'_>, _class: JClass<'_>, data_dir: JString<'_>, message_id: JString<'_>,
-        sent_at_ms: jlong,
+        mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, data_dir: JString<'_>,
+        message_id: JString<'_>, sent_at_ms: jlong,
     ) {
-        let _ = catch_unwind(AssertUnwindSafe(|| {
-            if let (Ok(data_dir), Ok(message_id)) = (
-                java_string(&mut env, data_dir),
-                java_string(&mut env, message_id),
-            ) {
-                log_push_received(&data_dir, &message_id, sent_at_ms);
-            }
-        }));
+        unowned_env
+            .with_env(|env| {
+                Ok::<_, jni::errors::Error>({
+                    let _ = catch_unwind(AssertUnwindSafe(|| {
+                        if let (Ok(data_dir), Ok(message_id)) =
+                            (java_string(env, data_dir), java_string(env, message_id))
+                        {
+                            log_push_received(&data_dir, &message_id, sent_at_ms);
+                        }
+                    }));
+                })
+            })
+            .resolve::<jni::errors::LogErrorAndDefault>()
     }
 
     #[unsafe(no_mangle)]
 
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_processWithId(
-        mut env: JNIEnv<'_>, _class: JClass<'_>, id: jlong, database_dir: JString<'_>,
+        mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, id: jlong, database_dir: JString<'_>,
         data_dir: JString<'_>, locale: JString<'_>, deadline_ms: jlong,
     ) -> jstring {
-        let result = (|| {
-            let database_dir = CString::new(java_string(&mut env, database_dir)?)
-                .map_err(|error| error.to_string())?;
+        unowned_env
+            .with_env(|env| {
+                Ok::<_, jni::errors::Error>({
+                    let result = (|| {
+                        let database_dir = CString::new(java_string(env, database_dir)?)
+                            .map_err(|error| error.to_string())?;
 
-            let data_dir = CString::new(java_string(&mut env, data_dir)?)
-                .map_err(|error| error.to_string())?;
+                        let data_dir = CString::new(java_string(env, data_dir)?)
+                            .map_err(|error| error.to_string())?;
 
-            let locale =
-                CString::new(java_string(&mut env, locale)?).map_err(|error| error.to_string())?;
+                        let locale = CString::new(java_string(env, locale)?)
+                            .map_err(|error| error.to_string())?;
 
-            // SAFETY: Each CString remains alive for the synchronous ABI call.
-            let pointer = unsafe {
-                twonly_notification_process_with_id(
-                    id as u64,
-                    database_dir.as_ptr(),
-                    data_dir.as_ptr(),
-                    locale.as_ptr(),
-                    deadline_ms.max(0) as u64,
-                )
-            };
+                        // SAFETY: Each CString remains alive for the synchronous ABI call.
+                        let pointer = unsafe {
+                            twonly_notification_process_with_id(
+                                id as u64,
+                                database_dir.as_ptr(),
+                                data_dir.as_ptr(),
+                                locale.as_ptr(),
+                                deadline_ms.max(0) as u64,
+                            )
+                        };
 
-            if pointer.is_null() {
-                return Err("Rust notification worker returned null".into());
-            }
+                        if pointer.is_null() {
+                            return Err("Rust notification worker returned null".into());
+                        }
 
-            // SAFETY: The C ABI returns a valid owned CString.
-            let json = unsafe { CStr::from_ptr(pointer) }
-                .to_string_lossy()
-                .into_owned();
+                        // SAFETY: The C ABI returns a valid owned CString.
+                        let json = unsafe { CStr::from_ptr(pointer) }
+                            .to_string_lossy()
+                            .into_owned();
 
-            unsafe { twonly_notification_string_free(pointer) };
+                        unsafe { twonly_notification_string_free(pointer) };
 
-            Ok(json)
-        })();
+                        Ok(json)
+                    })();
 
-        return_string(
-            &mut env,
-            result.unwrap_or_else(|error: String| {
-                format!(
-                    r#"{{"ok":false,"batch":null,"fallback":null,"error":{}}}"#,
-                    serde_json::to_string(&error).unwrap_or_else(|_| "null".into())
-                )
-            }),
-        )
+                    return_string(
+                        env,
+                        result.unwrap_or_else(|error: String| {
+                            format!(
+                                r#"{{"ok":false,"batch":null,"fallback":null,"error":{}}}"#,
+                                serde_json::to_string(&error).unwrap_or_else(|_| "null".into())
+                            )
+                        }),
+                    )
+                })
+            })
+            .resolve::<jni::errors::LogErrorAndDefault>()
     }
 
     #[unsafe(no_mangle)]
 
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_finalizeWakeup(
-        mut env: JNIEnv<'_>, _class: JClass<'_>, id: jlong, deadline_ms: jlong,
+        mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, id: jlong, deadline_ms: jlong,
     ) -> jstring {
-        let pointer =
-            unsafe { twonly_notification_finalize_with_id(id as u64, deadline_ms.max(0) as u64) };
+        unowned_env
+            .with_env(|env| {
+                Ok::<_, jni::errors::Error>({
+                    let pointer = unsafe {
+                        twonly_notification_finalize_with_id(id as u64, deadline_ms.max(0) as u64)
+                    };
 
-        let json = if pointer.is_null() {
-            r#"{"ok":false,"error":"Rust notification finalization returned null"}"#.to_owned()
-        } else {
-            // SAFETY: The C ABI returns a valid owned CString.
-            let json = unsafe { CStr::from_ptr(pointer) }
-                .to_string_lossy()
-                .into_owned();
+                    let json = if pointer.is_null() {
+                        r#"{"ok":false,"error":"Rust notification finalization returned null"}"#
+                            .to_owned()
+                    } else {
+                        // SAFETY: The C ABI returns a valid owned CString.
+                        let json = unsafe { CStr::from_ptr(pointer) }
+                            .to_string_lossy()
+                            .into_owned();
 
-            unsafe { twonly_notification_string_free(pointer) };
+                        unsafe { twonly_notification_string_free(pointer) };
 
-            json
-        };
+                        json
+                    };
 
-        return_string(&mut env, json)
+                    return_string(env, json)
+                })
+            })
+            .resolve::<jni::errors::LogErrorAndDefault>()
     }
 
     #[unsafe(no_mangle)]
 
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_acknowledge(
-        mut env: JNIEnv<'_>, _class: JClass<'_>, id: jlong, event_ids_json: JString<'_>,
+        mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, id: jlong, event_ids_json: JString<'_>,
     ) -> jstring {
-        let result = (|| {
-            let event_ids_json = CString::new(java_string(&mut env, event_ids_json)?)
-                .map_err(|error| error.to_string())?;
+        unowned_env
+            .with_env(|env| {
+                Ok::<_, jni::errors::Error>({
+                    let result = (|| {
+                        let event_ids_json = CString::new(java_string(env, event_ids_json)?)
+                            .map_err(|error| error.to_string())?;
 
-            let pointer = unsafe {
-                twonly_notification_acknowledge_with_id(id as u64, event_ids_json.as_ptr())
-            };
+                        let pointer = unsafe {
+                            twonly_notification_acknowledge_with_id(
+                                id as u64,
+                                event_ids_json.as_ptr(),
+                            )
+                        };
 
-            if pointer.is_null() {
-                return Err("Rust notification acknowledgement returned null".into());
-            }
+                        if pointer.is_null() {
+                            return Err("Rust notification acknowledgement returned null".into());
+                        }
 
-            let json = unsafe { CStr::from_ptr(pointer) }
-                .to_string_lossy()
-                .into_owned();
+                        let json = unsafe { CStr::from_ptr(pointer) }
+                            .to_string_lossy()
+                            .into_owned();
 
-            unsafe { twonly_notification_string_free(pointer) };
+                        unsafe { twonly_notification_string_free(pointer) };
 
-            Ok(json)
-        })();
+                        Ok(json)
+                    })();
 
-        return_string(&mut env, result.unwrap_or_else(|error: String| error))
+                    return_string(env, result.unwrap_or_else(|error: String| error))
+                })
+            })
+            .resolve::<jni::errors::LogErrorAndDefault>()
     }
 
     #[unsafe(no_mangle)]
 
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_storeFcmToken(
-        mut env: JNIEnv<'_>, _class: JClass<'_>, database_dir: JString<'_>, data_dir: JString<'_>,
-        token: JString<'_>,
+        mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, database_dir: JString<'_>,
+        data_dir: JString<'_>, token: JString<'_>,
     ) -> jstring {
-        let result = (|| {
-            let config = InitConfig {
-                database_dir: java_string(&mut env, database_dir)?,
-                data_dir: java_string(&mut env, data_dir)?,
-            };
+        unowned_env
+            .with_env(|env| {
+                Ok::<_, jni::errors::Error>({
+                    let result = (|| {
+                        let config = InitConfig {
+                            database_dir: java_string(env, database_dir)?,
+                            data_dir: java_string(env, data_dir)?,
+                        };
 
-            let token = java_string(&mut env, token)?;
+                        let token = java_string(env, token)?;
 
-            native_job(
-                config,
-                Duration::from_secs(10),
-                crate::log::LogSource::Notification,
-                move |context| async move { notifications::store_fcm_token(&context, token) },
-            )
-        })();
+                        native_job(
+                            config,
+                            Duration::from_secs(10),
+                            crate::log::LogSource::Notification,
+                            move |context| async move {
+                                notifications::store_fcm_token(&context, token)
+                            },
+                        )
+                    })();
 
-        let response = match result {
-            Ok(()) => r#"{"ok":true}"#.to_owned(),
-            Err(error) => format!(
-                r#"{{"ok":false,"error":{}}}"#,
-                serde_json::to_string(&error).unwrap_or_else(|_| "null".into())
-            ),
-        };
+                    let response = match result {
+                        Ok(()) => r#"{"ok":true}"#.to_owned(),
+                        Err(error) => format!(
+                            r#"{{"ok":false,"error":{}}}"#,
+                            serde_json::to_string(&error).unwrap_or_else(|_| "null".into())
+                        ),
+                    };
 
-        return_string(&mut env, response)
+                    return_string(env, response)
+                })
+            })
+            .resolve::<jni::errors::LogErrorAndDefault>()
     }
 }
