@@ -38,7 +38,7 @@ void main() {
   tearDown(() async => locator.reset());
 
   testWidgets(
-    'option-grid drags scroll the header and return to the preview on a small screen',
+    'compact editor keeps category icons small and updates the preview',
     (tester) async {
       tester.view.physicalSize = const Size(360, 600);
       tester.view.devicePixelRatio = 1;
@@ -56,42 +56,38 @@ void main() {
       await tester.tapAt(tester.getCenter(find.text('Customize')));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      final nested = tester.state<NestedScrollViewState>(
-        find.byType(NestedScrollView),
-      );
-      expect(nested.outerController.offset, 0);
-      var customizerRebuilds = 0;
-      final previousOnRebuild = debugOnRebuildDirtyWidget;
-      addTearDown(() => debugOnRebuildDirtyWidget = previousOnRebuild);
-      debugOnRebuildDirtyWidget = (element, builtOnce) {
-        previousOnRebuild?.call(element, builtOnce);
-        if (element.widget is AvatarMakerCustomizer) customizerRebuilds++;
-      };
-      await tester.drag(find.byType(GridView).first, const Offset(0, -250));
-      await tester.pumpAndSettle();
-      debugOnRebuildDirtyWidget = previousOnRebuild;
-      // Collapsing the header must not rebuild all option grids per frame.
-      expect(customizerRebuilds, lessThanOrEqualTo(1));
-      expect(nested.outerController.offset, greaterThan(0));
       final customizer = tester.widget<AvatarMakerCustomizer>(
         find.byType(AvatarMakerCustomizer),
       );
-      expect(customizer.scaffoldHeight, greaterThan(300));
+      expect(
+        tester.getSize(find.byType(AvatarMakerCustomizer)),
+        const Size(342, 240),
+      );
+      final categoryIcons = find.descendant(
+        of: find.byType(TabBar),
+        matching: find.byType(SvgPicture),
+      );
+      expect(categoryIcons, findsNWidgets(12));
+      for (final icon in categoryIcons.evaluate()) {
+        expect(tester.getSize(find.byWidget(icon.widget)).height, 24);
+      }
       final controller = customizer.controller!;
       final initialSvg = controller.displayedAvatarSVG;
+      final option = find
+          .descendant(
+            of: find.byType(GridView).first,
+            matching: find.byType(InkWell),
+          )
+          .first;
+      await tester.ensureVisible(option);
+      await tester.pumpAndSettle();
       await tester.tap(
-        find
-            .descendant(
-              of: find.byType(GridView).first,
-              matching: find.byType(InkWell),
-            )
-            .first,
+        option,
       );
       await tester.pumpAndSettle();
       expect(controller.displayedAvatarSVG, isNot(initialSvg));
-      await tester.drag(find.byType(GridView).first, const Offset(0, 700));
+      await tester.ensureVisible(find.byType(AvatarMakerAvatar));
       await tester.pumpAndSettle();
-      expect(nested.outerController.offset, 0);
       final preview = tester.widget<SvgPicture>(
         find.descendant(
           of: find.byType(AvatarMakerAvatar),

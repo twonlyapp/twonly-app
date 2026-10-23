@@ -262,6 +262,20 @@ impl RustApi {
             .await
     }
 
+    /// Uses an existing cutout without running foreground extraction again.
+    pub async fn create_custom_avatar_from_sticker(
+        webp: Vec<u8>, accepted_contacts_only: bool,
+    ) -> Result<avatars::CustomAvatarInfo> {
+        let avatar = crate::database::lifecycle::spawn_blocking(move || {
+            avatars::create_custom_avatar_from_sticker(&webp)
+        })
+        .await
+        .map_err(|error| TwonlyError::Generic(format!("avatar creation task failed: {error}")))??;
+
+        avatars::store_own_custom_avatar(Context::get_static()?, avatar, accepted_contacts_only)
+            .await
+    }
+
     pub async fn set_custom_avatar_audience(
         accepted_contacts_only: bool,
     ) -> Result<avatars::CustomAvatarInfo> {

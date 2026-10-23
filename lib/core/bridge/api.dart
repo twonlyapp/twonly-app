@@ -361,6 +361,15 @@ class RustApi {
     acceptedContactsOnly: acceptedContactsOnly,
   );
 
+  /// Uses an existing cutout without running foreground extraction again.
+  static Future<CustomAvatarInfo> createCustomAvatarFromSticker({
+    required List<int> webp,
+    required bool acceptedContactsOnly,
+  }) => RustLib.instance.api.crateBridgeApiRustApiCreateCustomAvatarFromSticker(
+    webp: webp,
+    acceptedContactsOnly: acceptedContactsOnly,
+  );
+
   /// Creates a transparent, message-sized sticker from a local image. Model
   /// inference and image encoding are CPU-heavy, so neither runs on Tokio's
   /// async worker threads.

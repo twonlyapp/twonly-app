@@ -4,10 +4,12 @@ import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/database/app/stickers/table.dart';
 import 'package:twonly/core/services/avatars.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/memories/sticker_source_picker.view.dart';
@@ -50,12 +52,45 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
       ),
     );
     if (!mounted || path == null) return;
-    setState(() => _processingCustomAvatar = true);
-    try {
-      final avatar = await RustApi.createCustomAvatar(
+    await _saveCustomAvatar(
+      () => RustApi.createCustomAvatar(
         imagePath: path,
         acceptedContactsOnly: _customAvatar?.acceptedContactsOnly ?? true,
-      );
+      ),
+    );
+  }
+
+  Future<void> _chooseStickerAvatar() async {
+    if (_processingCustomAvatar) return;
+    final sticker = await showModalBottomSheet<LocalSticker>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: context.color.surfaceContainer,
+      builder: (context) => SafeArea(
+        child: SizedBox(
+          height: 400,
+          child: StickerPicker(
+            selectCreatedSticker: true,
+            onStickerSelected: (sticker) => Navigator.pop(context, sticker),
+          ),
+        ),
+      ),
+    );
+    if (!mounted || sticker == null) return;
+    await _saveCustomAvatar(
+      () => RustApi.createCustomAvatarFromSticker(
+        webp: sticker.webp,
+        acceptedContactsOnly: _customAvatar?.acceptedContactsOnly ?? true,
+      ),
+    );
+  }
+
+  Future<void> _saveCustomAvatar(
+    Future<CustomAvatarInfo> Function() create,
+  ) async {
+    setState(() => _processingCustomAvatar = true);
+    try {
+      final avatar = await create();
       if (!mounted) return;
       setState(() => _customAvatar = avatar);
       userService.triggerUserUpdate();
@@ -268,32 +303,46 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
               ),
             ),
             const SizedBox(height: 20),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 12,
-              runSpacing: 12,
+            Row(
               children: [
-                MyButton(
-                  variant: MyButtonVariant.secondaryMiddle,
-                  onPressed: _processingCustomAvatar
-                      ? null
-                      : _chooseCustomAvatar,
-                  child: Text(
-                    hasPhoto
-                        ? context.lang.customAvatarReplace
-                        : context.lang.customAvatarCreate,
-                  ),
-                ),
-                if (hasPhoto)
-                  MyButton(
-                    variant: MyButtonVariant.errorMiddle,
+                Expanded(
+                  child: MyButton(
+                    variant: MyButtonVariant.secondaryDense,
                     onPressed: _processingCustomAvatar
                         ? null
-                        : _removeCustomAvatar,
-                    child: Text(context.lang.customAvatarRemove),
+                        : _chooseStickerAvatar,
+                    child: Text(context.lang.stickers),
                   ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: MyButton(
+                    variant: MyButtonVariant.secondaryDense,
+                    onPressed: _processingCustomAvatar
+                        ? null
+                        : _chooseCustomAvatar,
+                    child: Text(
+                      hasPhoto
+                          ? context.lang.customAvatarReplace
+                          : context.lang.customAvatarCreate,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
               ],
             ),
+            if (hasPhoto) ...[
+              const SizedBox(height: 12),
+              Center(
+                child: MyButton(
+                  variant: MyButtonVariant.errorMiddle,
+                  onPressed: _processingCustomAvatar
+                      ? null
+                      : _removeCustomAvatar,
+                  child: Text(context.lang.customAvatarRemove),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -410,95 +459,83 @@ class _SvgAvatarEditorViewState extends State<_SvgAvatarEditorView> {
       },
       child: Scaffold(
         appBar: AppBar(title: Text(context.lang.customAvatarSvgTab)),
-        body: SafeArea(
-          top: false,
-          // The nested body changes height as the preview scrolls away. Build
-          // the customizer from the stable viewport constraints so that those
-          // layout changes don't rebuild its SVG grids on every scroll frame.
-          child: LayoutBuilder(
-            builder: (context, constraints) => NestedScrollView(
-              headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                SliverToBoxAdapter(
-                  child: Column(
+        body: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                RepaintBoundary(
+                  child: AvatarMakerAvatar(
+                    radius: 130,
+                    backgroundColor: Colors.transparent,
+                    controller: _avatarMakerController,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 10,
+                    alignment: WrapAlignment.center,
                     children: [
-                      RepaintBoundary(
-                        child: AvatarMakerAvatar(
-                          radius: 130,
-                          backgroundColor: Colors.transparent,
-                          controller: _avatarMakerController,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Wrap(
-                          spacing: 12,
-                          runSpacing: 10,
-                          alignment: WrapAlignment.center,
+                      MyButton(
+                        variant: MyButtonVariant.primaryDense,
+                        onPressed: _storeAvatarAndExit,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            MyButton(
-                              variant: MyButtonVariant.primaryDense,
-                              onPressed: _storeAvatarAndExit,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const FaIcon(
-                                    FontAwesomeIcons.floppyDisk,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(context.lang.avatarSaveChangesStore),
-                                ],
-                              ),
+                            const FaIcon(
+                              FontAwesomeIcons.floppyDisk,
+                              size: 16,
                             ),
-                            MyButton(
-                              variant: MyButtonVariant.secondaryDense,
-                              onPressed: _avatarMakerController
-                                  .randomizedSelectedOptions,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const FaIcon(
-                                    FontAwesomeIcons.shuffle,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(context.lang.avatarCustomizeRandomize),
-                                ],
-                              ),
-                            ),
-                            MyButton(
-                              variant: MyButtonVariant.secondaryDense,
-                              onPressed: _avatarMakerController.restoreState,
-                              onLongPress:
-                                  _avatarMakerController.clearCustomizations,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const FaIcon(
-                                    FontAwesomeIcons.rotateLeft,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(context.lang.avatarCustomizeReset),
-                                ],
-                              ),
-                            ),
+                            const SizedBox(width: 6),
+                            Text(context.lang.avatarSaveChangesStore),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      MyButton(
+                        variant: MyButtonVariant.secondaryDense,
+                        onPressed:
+                            _avatarMakerController.randomizedSelectedOptions,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const FaIcon(FontAwesomeIcons.shuffle, size: 16),
+                            const SizedBox(width: 6),
+                            Text(context.lang.avatarCustomizeRandomize),
+                          ],
+                        ),
+                      ),
+                      MyButton(
+                        variant: MyButtonVariant.secondaryDense,
+                        onPressed: _avatarMakerController.restoreState,
+                        onLongPress: _avatarMakerController.clearCustomizations,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const FaIcon(
+                              FontAwesomeIcons.rotateLeft,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(context.lang.avatarCustomizeReset),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ],
-              body: Center(
-                child: AvatarMakerCustomizer(
-                  scaffoldWidth: min(600, constraints.maxWidth),
-                  scaffoldHeight: constraints.maxHeight,
-                  theme: _theme(context),
-                  controller: _avatarMakerController,
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 30),
+                  child: AvatarMakerCustomizer(
+                    scaffoldWidth: min(
+                      600,
+                      MediaQuery.of(context).size.width * 0.95,
+                    ),
+                    theme: _theme(context),
+                    controller: _avatarMakerController,
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),

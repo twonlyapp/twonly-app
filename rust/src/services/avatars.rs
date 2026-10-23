@@ -62,6 +62,29 @@ pub(crate) fn create_custom_avatar(source: &Path) -> Result<stickers::StickerOut
     let decoded = image::load_from_memory_with_format(&cutout.webp, image::ImageFormat::WebP)
         .map_err(|error| TwonlyError::Generic(format!("invalid generated avatar: {error}")))?;
 
+    fit_custom_avatar(decoded)
+}
+
+pub(crate) fn create_custom_avatar_from_sticker(webp: &[u8]) -> Result<stickers::StickerOutput> {
+    if webp.is_empty() || webp.len() > stickers::MAX_STICKER_BYTES {
+        return Err(TwonlyError::Generic("invalid avatar sticker size".into()));
+    }
+
+    let decoder = image::codecs::webp::WebPDecoder::new(Cursor::new(webp))
+        .map_err(|error| TwonlyError::Generic(format!("invalid avatar sticker: {error}")))?;
+    let (width, height) = decoder.dimensions();
+    if width == 0 || height == 0 || width > 300 || height > 300 {
+        return Err(TwonlyError::Generic(
+            "invalid avatar sticker dimensions".into(),
+        ));
+    }
+    let decoded = DynamicImage::from_decoder(decoder)
+        .map_err(|error| TwonlyError::Generic(format!("invalid avatar sticker: {error}")))?;
+
+    fit_custom_avatar(decoded)
+}
+
+fn fit_custom_avatar(decoded: DynamicImage) -> Result<stickers::StickerOutput> {
     let fitted = decoded.thumbnail(270, 270).to_rgba8();
 
     let mut canvas = RgbaImage::from_pixel(300, 300, Rgba([0, 0, 0, 0]));
@@ -858,6 +881,41 @@ mod tests {
     use std::io::Write;
 
     const SVG: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="20"><rect width="10" height="20" fill="red"/></svg>"#;
+
+    #[test]
+    fn saved_sticker_becomes_avatar_without_foreground_extraction() {
+        let source = DynamicImage::ImageRgba8(RgbaImage::from_fn(300, 150, |x, _| {
+            if x < 100 {
+                Rgba([0, 0, 0, 0])
+            } else {
+                Rgba([200, 50, 20, 255])
+            }
+        }));
+        let webp = media_codec::encode_webp(&source, 90.0).unwrap();
+        let avatar = create_custom_avatar_from_sticker(&webp).unwrap();
+        assert_eq!((avatar.width, avatar.height), (300, 300));
+        assert!(avatar.webp.len() <= stickers::MAX_STICKER_BYTES);
+        assert_eq!(avatar.sha256, Sha256::digest(&avatar.webp).to_vec());
+
+        let decoded = image::load_from_memory(&avatar.webp).unwrap().to_rgba8();
+        assert_eq!(decoded.get_pixel(30, 150)[3], 0);
+        assert_eq!(decoded.get_pixel(200, 150)[3], 255);
+        assert_eq!(decoded.get_pixel(200, 230)[3], 0);
+        assert_eq!(decoded.get_pixel(0, 0)[3], 0);
+    }
+
+    #[test]
+    fn avatar_sticker_rejects_invalid_size_format_and_dimensions() {
+        assert!(create_custom_avatar_from_sticker(&[]).is_err());
+        assert!(
+            create_custom_avatar_from_sticker(&vec![0; stickers::MAX_STICKER_BYTES + 1]).is_err()
+        );
+        assert!(create_custom_avatar_from_sticker(b"invalid WebP").is_err());
+        let oversized =
+            DynamicImage::ImageRgba8(RgbaImage::from_pixel(301, 1, Rgba([1, 2, 3, 255])));
+        let webp = media_codec::encode_webp(&oversized, 90.0).unwrap();
+        assert!(create_custom_avatar_from_sticker(&webp).is_err());
+    }
 
     #[test]
 

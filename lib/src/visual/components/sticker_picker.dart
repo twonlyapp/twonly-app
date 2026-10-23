@@ -11,13 +11,13 @@ import 'package:twonly/src/visual/views/memories/sticker_source_picker.view.dart
 
 class StickerPicker extends StatefulWidget {
   const StickerPicker({
-    required this.onEmojiPressed,
     required this.onStickerSelected,
+    this.onEmojiPressed,
     this.selectCreatedSticker = false,
     super.key,
   });
 
-  final VoidCallback onEmojiPressed;
+  final VoidCallback? onEmojiPressed;
   final ValueChanged<LocalSticker> onStickerSelected;
   final bool selectCreatedSticker;
 
@@ -63,31 +63,50 @@ class _StickerPickerState extends State<StickerPicker> {
           final isLoading = !snapshot.hasData && !snapshot.hasError;
           final stickers = snapshot.data ?? const <LocalSticker>[];
           final hasStickers = stickers.isNotEmpty;
+          final addButton = hasStickers
+              ? IconButton(
+                  key: const Key('stickerPickerHeaderAdd'),
+                  tooltip: context.lang.createSticker,
+                  padding: const EdgeInsets.only(bottom: 2),
+                  onPressed: _creating ? null : _createSticker,
+                  icon: _creating
+                      ? const ThreeRotatingDots(size: 22)
+                      : Icon(
+                          Icons.add_photo_alternate_outlined,
+                          color: color.secondary,
+                        ),
+                )
+              : null;
           return Column(
             children: [
-              PickerBottomBar(
-                backgroundColor: color.surfaceContainer,
-                buttonIconColor: color.secondary,
-                emojiButtonLabel: 'Emoji',
-                stickerButtonLabel: context.lang.sticker,
-                showStickerButton: true,
-                stickerSelected: true,
-                onEmojiButtonPressed: widget.onEmojiPressed,
-                trailing: hasStickers
-                    ? IconButton(
-                        key: const Key('stickerPickerHeaderAdd'),
-                        tooltip: context.lang.createSticker,
-                        padding: const EdgeInsets.only(bottom: 2),
-                        onPressed: _creating ? null : _createSticker,
-                        icon: _creating
-                            ? const ThreeRotatingDots(size: 22)
-                            : Icon(
-                                Icons.add_photo_alternate_outlined,
-                                color: color.secondary,
-                              ),
-                      )
-                    : null,
-              ),
+              if (widget.onEmojiPressed != null)
+                PickerBottomBar(
+                  backgroundColor: color.surfaceContainer,
+                  buttonIconColor: color.secondary,
+                  emojiButtonLabel: 'Emoji',
+                  stickerButtonLabel: context.lang.sticker,
+                  showStickerButton: true,
+                  stickerSelected: true,
+                  onEmojiButtonPressed: widget.onEmojiPressed,
+                  trailing: addButton,
+                )
+              else
+                SizedBox(
+                  height: 48,
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 48),
+                      Expanded(
+                        child: Text(
+                          context.lang.stickers,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      SizedBox(width: 48, child: addButton),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: isLoading
                     ? const Center(child: ThreeRotatingDots(size: 26))
