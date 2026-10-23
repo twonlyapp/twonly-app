@@ -51,25 +51,23 @@ platform :android do
       UI.important("CHANGELOG.md not found at #{changelog_path}. Using default description.")
     end
 
+    github_properties_path = File.expand_path("../android/key.github.properties", __dir__)
+    unless File.file?(github_properties_path)
+      UI.user_error!("Missing android/key.github.properties. The fdroid lane requires the GitHub release signing configuration.")
+    end
+
     if options[:skip_build].to_s == "true"
       UI.message("Reusing existing release APKs without rebuilding...")
     else
-      # Handle key.properties swapping if key.github.properties exists
+      # Use the required GitHub release signing configuration for the build.
       key_properties_path = File.expand_path("../android/key.properties", __dir__)
-      github_properties_path = File.expand_path("../android/key.github.properties", __dir__)
       backup_properties_path = File.expand_path("../android/key.properties.backup", __dir__)
 
-      swapped_properties = false
-      if File.exist?(github_properties_path)
-        UI.message("Found key.github.properties. Swapping in for the build...")
-        if File.exist?(key_properties_path)
-          FileUtils.cp(key_properties_path, backup_properties_path)
-        end
-        FileUtils.cp(github_properties_path, key_properties_path)
-        swapped_properties = true
-      else
-        UI.message("No key.github.properties found. Building with default key.properties...")
+      UI.message("Found key.github.properties. Swapping in for the build...")
+      if File.exist?(key_properties_path)
+        FileUtils.cp(key_properties_path, backup_properties_path)
       end
+      FileUtils.cp(github_properties_path, key_properties_path)
 
       begin
         # Build the Android application
@@ -78,15 +76,12 @@ platform :android do
           sh("flutter build apk --release --split-per-abi")
         end
       ensure
-        # Restore original key.properties if swapped
-        if swapped_properties
-          UI.message("Restoring original key.properties...")
-          if File.exist?(backup_properties_path)
-            FileUtils.cp(backup_properties_path, key_properties_path)
-            FileUtils.rm(backup_properties_path)
-          else
-            FileUtils.rm_f(key_properties_path)
-          end
+        UI.message("Restoring original key.properties...")
+        if File.exist?(backup_properties_path)
+          FileUtils.cp(backup_properties_path, key_properties_path)
+          FileUtils.rm(backup_properties_path)
+        else
+          FileUtils.rm_f(key_properties_path)
         end
       end
     end
@@ -100,6 +95,35 @@ platform :android do
     end
     
     UI.message("Found APKs to upload: #{apks.join(', ')}")
+
+    # Verify every APK before creating a release or publishing any assets.
+    local_properties_path = File.expand_path("../android/local.properties", __dir__)
+    local_sdk = File.file?(local_properties_path) ? File.read(local_properties_path)[/^sdk\.dir=(.+)$/, 1]&.strip : nil
+    sdk_roots = [local_sdk, ENV["ANDROID_HOME"], ENV["ANDROID_SDK_ROOT"]].compact.reject(&:empty?)
+    apksigner_candidates = sdk_roots.flat_map do |sdk_root|
+      Dir.glob(File.join(sdk_root, "build-tools", "*", "apksigner"))
+         .sort_by { |path| File.basename(File.dirname(path)).split(".").map(&:to_i) }.reverse
+    end
+    apksigner_candidates.concat(ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).map { |dir| File.join(dir, "apksigner") })
+    apksigner = apksigner_candidates.find { |path| File.file?(path) && File.executable?(path) }
+    unless apksigner
+      UI.user_error!("Could not find apksigner. Install Android SDK build-tools and configure android/local.properties, ANDROID_HOME, or ANDROID_SDK_ROOT.")
+    end
+
+    expected_certificate = "e3c44d568c67f932ac8c3390998ab95ee8ff2d7a073c24e3667793e6eacd770a"
+    apks.each do |apk_path|
+      verification = sh(apksigner, "verify", "--print-certs", apk_path, log: false) do |status, output, _command|
+        unless status.success?
+          UI.user_error!("APK signature verification failed for #{File.basename(apk_path)}: #{output}")
+        end
+        output
+      end
+      certificates = verification.scan(/^Signer #\d+ certificate SHA-256 digest: ([0-9a-fA-F:]+)\s*$/)
+                                 .flatten.map { |digest| digest.delete(":").downcase }
+      unless certificates == [expected_certificate]
+        UI.user_error!("Unexpected signing certificate for #{File.basename(apk_path)}. Expected SHA-256 #{expected_certificate}; found #{certificates.inspect}.")
+      end
+    end
 
     # gh streams large APK uploads without Fastlane's Excon write timeout.
     # It uses GITHUB_TOKEN/GH_TOKEN or the existing gh login without logging a token.
