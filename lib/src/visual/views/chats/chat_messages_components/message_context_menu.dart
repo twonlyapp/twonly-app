@@ -11,7 +11,6 @@ import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
@@ -26,7 +25,6 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
-import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/visual/views/chats/message_info.view.dart';
@@ -48,51 +46,6 @@ class MessageContextMenu extends StatelessWidget {
   final List<MemoryItem> galleryItems;
   final MediaFileService? mediaFileService;
   final VoidCallback onResponseTriggered;
-
-  Future<void> createStickerFromMedia(BuildContext context) async {
-    final media = mediaFileService;
-    if (media == null) return;
-    final candidates = [media.storedPath, media.tempPath, media.originalPath];
-    final source = candidates.where((file) => file.existsSync()).firstOrNull;
-    if (source == null) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.lang.stickerCreateFailed)),
-      );
-      return;
-    }
-    final navigator = Navigator.of(context);
-    final loadingRoute = DialogRoute<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const PopScope(
-        canPop: false,
-        child: Dialog(
-          child: Padding(
-            padding: EdgeInsets.all(32),
-            child: ThreeRotatingDots(size: 32),
-          ),
-        ),
-      ),
-    );
-    navigator.push(loadingRoute);
-    String result;
-    try {
-      await StickerService.createFromPath(source.path);
-      if (!context.mounted) return;
-      result = context.lang.stickerAdded;
-    } on Object {
-      if (!context.mounted) return;
-      result = context.lang.stickerCreateFailed;
-    } finally {
-      if (loadingRoute.isActive) navigator.removeRoute(loadingRoute);
-    }
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result)),
-      );
-    }
-  }
 
   Future<void> reopenMediaFile(BuildContext context) async {
     if (message.senderId == null) {
@@ -207,20 +160,12 @@ class MessageContextMenu extends StatelessWidget {
             },
             icon: FontAwesomeIcons.faceLaugh,
           ),
-        if ((!message.isWidgetMedia || message.senderId == null) &&
+        if (!message.isWidgetMedia &&
             (mediaFileService?.canBeOpenedAgain ?? false))
           ContextMenuItem(
             title: context.lang.contextMenuViewAgain,
             onTap: () => reopenMediaFile(navigator.context),
             icon: FontAwesomeIcons.clockRotateLeft,
-          ),
-        if (!message.isDeletedFromSender &&
-            mediaFileService?.mediaFile.type == MediaType.image &&
-            (mediaFileService?.mediaFile.stored ?? false))
-          ContextMenuItem(
-            title: context.lang.createSticker,
-            onTap: () => createStickerFromMedia(navigator.context),
-            icon: FontAwesomeIcons.wandMagicSparkles,
           ),
         if (!message.isDeletedFromSender)
           ContextMenuItem(
