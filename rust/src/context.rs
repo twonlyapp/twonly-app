@@ -64,6 +64,8 @@ pub struct Context {
     /// bundle on the server (or has just published one). Per context rather
     /// than process-wide so two accounts in one process check independently.
     pub(crate) pqc_bundle_verified: AtomicBool,
+    /// Serializes publication and bounds checks prompted by stale ciphertext.
+    pub(crate) prekey_publication: Mutex<Option<std::time::Instant>>,
     /// Coalesces overlapping flushes of this account's receipt queue. Per
     /// context for the same reason: a flush scans one app database, so a claim
     /// held for one account must not silence another account's flush.
@@ -186,6 +188,7 @@ impl Context {
             mailbox_generation: AtomicU64::new(0),
             mailbox_drained: Notify::new(),
             pqc_bundle_verified: AtomicBool::new(false),
+            prekey_publication: Mutex::new(None),
             queued_receipt_flush: Default::default(),
             media_preprocessing: Mutex::new(()),
             media_retransmission: Mutex::new(()),
@@ -448,6 +451,7 @@ impl Context {
                         mailbox_generation: AtomicU64::new(0),
                         mailbox_drained: Notify::new(),
                         pqc_bundle_verified: AtomicBool::new(false),
+                        prekey_publication: Mutex::new(None),
                         queued_receipt_flush: Default::default(),
                         media_preprocessing: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
@@ -513,6 +517,7 @@ impl Context {
                         mailbox_generation: AtomicU64::new(0),
                         mailbox_drained: Notify::new(),
                         pqc_bundle_verified: AtomicBool::new(false),
+                        prekey_publication: Mutex::new(None),
                         queued_receipt_flush: Default::default(),
                         media_preprocessing: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
@@ -1018,6 +1023,8 @@ impl Context {
         };
 
         *self.signal_engine.lock().await = engine;
+        self.pqc_bundle_verified.store(false, Ordering::Release);
+        *self.prekey_publication.lock().await = None;
 
         Ok(())
     }

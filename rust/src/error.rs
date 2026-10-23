@@ -181,6 +181,16 @@ pub enum TwonlyError {
     #[error("Signal session is unusable: {0}")]
     SignalSessionUnusable(String),
 
+    /// Local private prekeys are missing or malformed. Repair our published
+    /// bundle before asking the peer to build another session from it.
+    #[error("local Signal prekey is unavailable: {0}")]
+    SignalPreKeyUnavailable(String),
+
+    /// Storage failure is retryable and must never reset a healthy session or
+    /// acknowledge an envelope whose decryption did not become durable.
+    #[error("Signal storage failed: {0}")]
+    SignalStorage(String),
+
     /// The peer sent a message this session already ratcheted past. The
     /// session is healthy; the message is simply a duplicate and must not
     /// trigger a reset.
@@ -215,13 +225,15 @@ impl From<libsignal_protocol::SignalProtocolError> for TwonlyError {
             Error::InvalidMessage(..)
             | Error::SessionNotFound(..)
             | Error::InvalidSessionStructure(..)
-            | Error::InvalidRegistrationId(..)
+            | Error::InvalidRegistrationId(..) => TwonlyError::SignalSessionUnusable(message),
             // A restored backup can lack the private prekey for a bundle the
             // server still hands out, so inbound sessions built from it can
             // never be opened either.
-            | Error::InvalidPreKeyId
-            | Error::InvalidSignedPreKeyId
-            | Error::InvalidKyberPreKeyId => TwonlyError::SignalSessionUnusable(message),
+            Error::InvalidPreKeyId | Error::InvalidSignedPreKeyId | Error::InvalidKyberPreKeyId => {
+                TwonlyError::SignalPreKeyUnavailable(message)
+            }
+
+            Error::ApplicationCallbackError(..) => TwonlyError::SignalStorage(message),
 
             Error::DuplicatedMessage(..) => TwonlyError::SignalDuplicateMessage(message),
 

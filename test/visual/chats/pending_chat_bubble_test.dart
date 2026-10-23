@@ -36,6 +36,25 @@ import '../../mocks/user_config.dart';
 class _OutgoingApi extends NativeTestApi {
   final List<StoredMessage> requests = [];
   final List<Completer<String>> completions = [];
+  bool failMessageWatch = false;
+  Completer<void>? messageWatchGate;
+
+  @override
+  Stream<List<StoredMessage>> crateBridgeDatabaseMessagesWatchMessages({
+    required MessageQuery input,
+    required DatabaseWatch control,
+  }) async* {
+    if (failMessageWatch) {
+      failMessageWatch = false;
+      throw StateError('Conversation query failed');
+    }
+    final gate = messageWatchGate;
+    if (gate != null) await gate.future;
+    yield* super.crateBridgeDatabaseMessagesWatchMessages(
+      input: input,
+      control: control,
+    );
+  }
 
   @override
   Stream<List<String>> crateBridgeWrapperAppDatabaseRustAppDatabaseChanges({
@@ -106,8 +125,11 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    api.requests.clear();
-    api.completions.clear();
+    api
+      ..requests.clear()
+      ..completions.clear()
+      ..failMessageWatch = false
+      ..messageWatchGate = null;
     await locator.reset();
     await TestDatabase.create();
     locator.registerSingleton<UserService>(UserService());
@@ -160,6 +182,63 @@ void main() {
     );
     await flush(tester);
   }
+
+  testWidgets('conversation waits visibly for its first message snapshot', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    api.messageWatchGate = gate;
+    await openChat(tester);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    gate.complete();
+    await pumpNative(
+      tester,
+      until: () => find.byType(CircularProgressIndicator).evaluate().isEmpty,
+    );
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await flush(tester);
+    await tester.pump(const Duration(milliseconds: 1));
+  });
+
+  testWidgets(
+    'failed initial conversation query can retry and load stored messages',
+    (tester) async {
+      await runNative(
+        tester,
+        () => testDatabase.insert(
+          StoredMessage(
+            groupId: 'chat',
+            messageId: 'existing',
+            type: 'text',
+            content: 'Already stored',
+            mediaStored: false,
+            mediaReopened: false,
+            isDeletedFromSender: false,
+            isWidgetMedia: false,
+            isStory: false,
+            createdAtSeconds: databaseSeconds(DateTime.now()),
+          ),
+        ),
+      );
+      api.failMessageWatch = true;
+      await openChat(tester);
+      expect(find.text('Try again'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Try again'));
+      await pumpNative(
+        tester,
+        until: () => find.byKey(const Key('existing')).evaluate().isNotEmpty,
+      );
+      expect(find.byKey(const Key('existing')), findsOneWidget);
+      expect(find.text('Try again'), findsNothing);
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await flush(tester);
+      await tester.pump(const Duration(milliseconds: 1));
+    },
+  );
 
   for (final isSticker in [false, true]) {
     testWidgets(

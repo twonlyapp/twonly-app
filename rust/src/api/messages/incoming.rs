@@ -278,7 +278,10 @@ pub(crate) async fn handle_request_new_pqc_prekeys(
 async fn reset_unusable_session(
     ctx: &Arc<Context>, from_user_id: i64, error: &TwonlyError,
 ) -> DecryptionErrorType {
-    if !matches!(error, TwonlyError::SignalSessionUnusable(_)) {
+    if !matches!(
+        error,
+        TwonlyError::SignalSessionUnusable(_) | TwonlyError::SignalPreKeyUnavailable(_)
+    ) {
         return DecryptionErrorType::Unknown;
     }
 
@@ -647,11 +650,22 @@ pub async fn handle_decoded_server_message(
                         "acknowledging a message this session already handled: {reason}"
                     );
                 }
+                Err(error @ TwonlyError::SignalStorage(_)) => return Err(error),
                 Err(error) => {
                     tracing::warn!(
                         receipt_id = message.receipt_id,
                         "V2 decryption failed: {error}"
                     );
+
+                    if matches!(error, TwonlyError::SignalPreKeyUnavailable(_)) {
+                        // Do not pin the app writer while checking/publishing
+                        // keys over the network. The per-receipt lock still
+                        // excludes another handler for this same envelope.
+                        t.rollback().await?;
+                        crate::api::Server::repair_pqc_bundle(ctx).await?;
+                        t = database.pool.begin().await?;
+                        Receipt::claim_received(&mut t, &message.receipt_id).await?;
+                    }
 
                     let error_type = reset_unusable_session(ctx, from_user_id, &error).await;
 

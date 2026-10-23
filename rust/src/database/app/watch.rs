@@ -10,6 +10,22 @@ use tokio::sync::broadcast::error::RecvError;
 use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
 
+fn transient(error: &crate::TwonlyError) -> bool {
+    match error {
+        crate::TwonlyError::SqliteError(sqlx::Error::PoolTimedOut | sqlx::Error::PoolClosed) => {
+            true
+        }
+        crate::TwonlyError::SqliteError(sqlx::Error::Database(error)) => {
+            error.code().is_some_and(|code| {
+                // Extended SQLite BUSY/LOCKED codes retain the primary low byte.
+                code.parse::<i32>()
+                    .is_ok_and(|code| matches!(code & 0xff, 5 | 6))
+            })
+        }
+        _ => false,
+    }
+}
+
 pub async fn snapshots<T, Q, F, E>(
     databases: Arc<RwLock<Arc<AppDatabase>>>, dependencies: &'static [&'static str],
     cancellation: CancellationToken, query: Q, emit: E,
@@ -61,8 +77,14 @@ where
             };
 
             let value = match result {
-                Err(crate::TwonlyError::SqliteError(sqlx::Error::PoolClosed)) => continue,
                 Err(_) if operations.suspended() => continue,
+                Err(error) if transient(&error) => {
+                    tracing::warn!(%error, "database watch will retry after temporary storage failure");
+                    tokio::select! {
+                        _ = cancellation.cancelled() => return Ok(()),
+                        _ = tokio::time::sleep(Duration::from_millis(250)) => continue,
+                    }
+                }
                 other => other?,
             };
 
@@ -85,6 +107,7 @@ where
                                 _ = cancellation.cancelled() => return Ok(()),
                                 result = latest.poll_external_changes() => {
                                     if let Err(error) = result {
+                                        if transient(&error) { continue 'evaluate; }
                                         if !latest.pool.is_closed() && !latest.operations.suspended() { return Err(error); }
                                     }
                                 }
@@ -113,6 +136,52 @@ mod refresh_tests {
 
     use super::*;
     use sqlx::SqlitePool;
+
+    #[tokio::test]
+    async fn temporary_pool_failure_retries_without_losing_the_watch() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let directory = tempfile::tempdir().unwrap();
+        let database = Arc::new(
+            AppDatabase::new(
+                directory.path().join("retry.sqlite").to_str().unwrap(),
+                None,
+                false,
+            )
+            .await
+            .unwrap(),
+        );
+        database.run_migrations().await.unwrap();
+        let databases = Arc::new(RwLock::new(database.clone()));
+        let attempts = Arc::new(AtomicUsize::new(0));
+        let counted = attempts.clone();
+        let cancellation = CancellationToken::new();
+        let (sent, mut received) = tokio::sync::mpsc::unbounded_channel();
+        let watch = tokio::spawn(snapshots(
+            databases,
+            &["contacts"],
+            cancellation.clone(),
+            move |_| {
+                let attempt = counted.fetch_add(1, Ordering::SeqCst);
+                async move {
+                    if attempt == 0 {
+                        return Err(sqlx::Error::PoolTimedOut.into());
+                    }
+                    Ok(42)
+                }
+            },
+            move |value| sent.send(value).is_ok(),
+        ));
+        assert_eq!(
+            tokio::time::timeout(Duration::from_secs(2), received.recv())
+                .await
+                .unwrap(),
+            Some(42)
+        );
+        assert_eq!(attempts.load(Ordering::SeqCst), 2);
+        cancellation.cancel();
+        watch.await.unwrap().unwrap();
+        database.close().await;
+    }
 
     #[tokio::test]
 

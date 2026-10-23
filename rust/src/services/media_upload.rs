@@ -510,6 +510,17 @@ impl MediaUploadService {
     }
 
     async fn start_upload_locked(&self, media_id: &str) -> Result<()> {
+        // The iOS notification extension has no Runner upload callback. Keep
+        // the durable request pending; the foreground startup sweep resumes
+        // it once Runner can schedule the native transfer.
+        if cfg!(target_os = "ios") && self.ctx.is_notification_runtime() {
+            tracing::debug!(
+                media_id,
+                "deferring media upload until the application resumes"
+            );
+            return Ok(());
+        }
+
         let Some(media) = self.load(media_id).await? else {
             return Ok(());
         };

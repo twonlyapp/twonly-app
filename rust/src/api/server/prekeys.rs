@@ -5,10 +5,11 @@
 
 use super::Server;
 use crate::api::proto::{client_to_server, server_to_client};
-use crate::api::runtime::helpers::decode_ok_value;
+use crate::api::runtime::helpers::{decode_ok, decode_ok_value};
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
+use crate::user_config::UserConfig;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
@@ -21,22 +22,35 @@ pub struct PqcPreKeyInput {
 }
 
 impl Server {
-    /// Publishes a signed PQC prekey when the server holds none for this
-    /// account.
-    ///
-    /// The bundle is otherwise only published by the registration handshake, so
-    /// an account created before that existed keeps no `pqc_bundle` and no code
-    /// path ever creates one. Peers then cannot open a session with it at all,
-    /// and every message they queue for us fails forever. Checking once per
-    /// connection lets such an account heal itself.
-
+    /// Verify that the server's bundle can actually be opened by this device.
     pub async fn ensure_pqc_bundle_published(ctx: &Arc<Context>) -> Result<()> {
+        let mut checked = ctx.prekey_publication.lock().await;
         if ctx.pqc_bundle_verified.load(Ordering::Acquire) {
             return Ok(());
         }
+        Self::verify_pqc_bundle(ctx).await?;
+        ctx.pqc_bundle_verified.store(true, Ordering::Release);
+        *checked = Some(std::time::Instant::now());
+        Ok(())
+    }
 
+    /// Run outside the incoming app-database transaction. Old ciphertext can
+    /// name a retired key even after repair, so coalesce its repeated checks.
+    pub(crate) async fn repair_pqc_bundle(ctx: &Arc<Context>) -> Result<()> {
+        let mut checked = ctx.prekey_publication.lock().await;
+        if ctx.pqc_bundle_verified.load(Ordering::Acquire)
+            && checked.is_some_and(|last| last.elapsed() < std::time::Duration::from_secs(60))
+        {
+            return Ok(());
+        }
+        Self::verify_pqc_bundle(ctx).await?;
+        ctx.pqc_bundle_verified.store(true, Ordering::Release);
+        *checked = Some(std::time::Instant::now());
+        Ok(())
+    }
+
+    async fn verify_pqc_bundle(ctx: &Arc<Context>) -> Result<()> {
         let user_id = ctx.user_id().await?;
-
         let bytes = Self::application(
             ctx,
             client_to_server::application_data::ApplicationData::GetUserById(
@@ -44,28 +58,45 @@ impl Server {
             ),
         )
         .await?;
-
         let user = match decode_ok_value(bytes, |value| match value {
             server_to_client::response::ok::Ok::Userdata(user) => Some(user),
             _ => None,
         })? {
             ServerResult::Ok(user) => user,
-            ServerResult::ErrorCode(code) => {
-                return Err(TwonlyError::Generic(format!(
-                    "could not read back this account to check its prekey bundle: server error \
-                     {code}"
-                )));
-            }
+            ServerResult::ErrorCode(code) => return Err(TwonlyError::Api(code)),
         };
-
-        if user.pqc_bundle.is_none() {
-            tracing::info!("server holds no PQC prekey bundle for this account; publishing one");
-
+        let matches = {
+            let engine = ctx.signal_engine.lock().await;
+            engine
+                .as_ref()
+                .ok_or(TwonlyError::SignalIdentityNotFound)?
+                .matches_published_bundle(&user)
+                .await?
+        };
+        if !matches {
+            tracing::warn!(
+                "published Signal bundle has no matching local private keys; replacing it"
+            );
             Self::generate_and_upload_pqc_pre_keys(ctx).await?;
         }
+        Ok(())
+    }
 
-        ctx.pqc_bundle_verified.store(true, Ordering::Release);
-
+    /// Rotate both signed keys together, without holding the Signal engine
+    /// mutex across a server request (an incoming transaction may need it).
+    pub(crate) async fn maintain_prekeys(ctx: &Arc<Context>) -> Result<()> {
+        let _publication = ctx.prekey_publication.lock().await;
+        let config = UserConfig::load_required_from(ctx)?;
+        let now = crate::utils::current_time().with_timezone(&chrono::Utc);
+        if config
+            .signal_last_signed_pre_key_updated
+            .is_none_or(|last| last < now - chrono::Duration::hours(48))
+            || config
+                .signal_last_pqc_pre_keys_uploaded
+                .is_none_or(|last| last < now - chrono::Duration::days(7))
+        {
+            Self::generate_and_upload_pqc_pre_keys(ctx).await?;
+        }
         Ok(())
     }
 
@@ -97,7 +128,7 @@ impl Server {
 
         drop(engine);
 
-        Self::upload_pqc_pre_keys(
+        let response = Self::upload_pqc_pre_keys(
             ctx,
             bundle.identity_key,
             i64::from(bundle.registration_id),
@@ -109,7 +140,17 @@ impl Server {
             bundle.kyber_pre_key_signature,
             prekeys,
         )
-        .await
+        .await?;
+        match decode_ok(response.clone())? {
+            ServerResult::Ok(_) => {}
+            ServerResult::ErrorCode(code) => return Err(TwonlyError::Api(code)),
+        }
+        let now = crate::utils::current_time().with_timezone(&chrono::Utc);
+        UserConfig::update(ctx, |config| {
+            config.signal_last_signed_pre_key_updated = Some(now);
+            config.signal_last_pqc_pre_keys_uploaded = Some(now);
+        })?;
+        Ok(response)
     }
 
     pub async fn update_signed_pre_key(

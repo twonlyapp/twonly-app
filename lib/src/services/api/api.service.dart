@@ -95,11 +95,19 @@ class ApiService {
       return;
     }
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
-      _,
+      results,
     ) {
-      unawaited(_connectionLifecycle.networkChanged());
+      unawaited(_networkChanged(results));
     });
-    await _connectionLifecycle.networkChanged();
+    await _networkChanged(await Connectivity().checkConnectivity());
+  }
+
+  Future<void> _networkChanged(List<ConnectivityResult> results) {
+    // The initial query and stream often report the same route. Preserve real
+    // Wi-Fi/mobile changes while coalescing identical startup notifications.
+    final types = results.map((result) => result.index).toSet().toList()
+      ..sort();
+    return _connectionLifecycle.networkChanged(identity: types.join(','));
   }
 
   Future<void> dispose() async {

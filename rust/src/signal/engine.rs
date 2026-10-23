@@ -3,10 +3,7 @@
  *
  */
 
-use crate::api::server::Server;
 use crate::error::{Result, TwonlyError};
-use crate::user_config::UserConfig;
-use chrono::{Duration, Utc};
 use libsignal_protocol::{
     message_encrypt, process_prekey_bundle, CiphertextMessageType, DeviceId, Fingerprint,
     GenericSignedPreKey, IdentityKey, IdentityKeyPair, IdentityKeyStore, KyberPreKeyId,
@@ -20,8 +17,7 @@ use tokio::sync::Mutex;
 use crate::bridge::get_twonly_flutter;
 use crate::signal::assert_send::AssertSendFutureExt;
 use crate::signal::store::DbSignalProtocolStore;
-use crate::utils::current_time;
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng};
 
 pub(crate) struct RustSignalEngine {
     store: Arc<Mutex<DbSignalProtocolStore>>,
@@ -50,6 +46,33 @@ pub struct FrbPqcPreKey {
     pub kyber_pre_key_signature: Vec<u8>,
 }
 
+// MAX(id) is not an allocator: one-time ECC keys are removed after use, and
+// restored snapshots rewind every counter. Random positive i32 IDs also avoid
+// two processes independently choosing the same next ID. The store refuses to
+// overwrite a different key if a concurrent allocation still collides.
+async fn unused_prekey_id(
+    pool: &sqlx::SqlitePool, kind: &str, rng: &mut rand::rngs::StdRng,
+) -> Result<u32> {
+    let query = match kind {
+        "ecc" => "SELECT EXISTS(SELECT 1 FROM signal_pre_keys WHERE pre_key_id = ?)",
+        "signed" => {
+            "SELECT EXISTS(SELECT 1 FROM signal_signed_pre_keys WHERE signed_pre_key_id = ?)"
+        }
+        "kyber" => "SELECT EXISTS(SELECT 1 FROM signal_kyber_pre_keys WHERE kyber_pre_key_id = ?)",
+        _ => unreachable!("unknown local prekey store"),
+    };
+    loop {
+        let id = rng.random_range(1..=i32::MAX as u32);
+        if !sqlx::query_scalar::<_, bool>(query)
+            .bind(id)
+            .fetch_one(pool)
+            .await?
+        {
+            return Ok(id);
+        }
+    }
+}
+
 fn create_safety_number(
     local_id: &str, local_key_bytes: &[u8], remote_id: &str, remote_key_bytes: &[u8],
 ) -> Result<String> {
@@ -72,60 +95,101 @@ fn create_safety_number(
 }
 
 impl RustSignalEngine {
-    pub async fn on_connected(&self, ctx: &Arc<crate::context::Context>) -> Result<()> {
-        let base = UserConfig::load_required_from(ctx)?;
-
-        let now = current_time().with_timezone(&Utc);
-
-        let refresh_signed = base
-            .signal_last_signed_pre_key_updated
-            .is_none_or(|last| last < now - Duration::hours(48));
-
-        let refresh_pqc = base
-            .signal_last_pqc_pre_keys_uploaded
-            .is_none_or(|last| last < now - Duration::days(7));
-
-        if !refresh_signed && !refresh_pqc {
-            return Ok(());
-        }
-
-        let bundle = self.generate_bundle().await?;
-
-        if refresh_signed {
-            Server::update_signed_pre_key(
-                ctx,
-                i64::from(bundle.signed_pre_key_id),
-                bundle.signed_pre_key_public.clone(),
-                bundle.signed_pre_key_signature.clone(),
-            )
+    /// A nonempty server bundle can still refer to keys lost in a restore.
+    /// Compare public material and parse the private records, rather than
+    /// treating a successful account lookup as proof we can receive messages.
+    pub(crate) async fn matches_published_bundle(
+        &self, user: &crate::api::proto::server_to_client::response::UserData,
+    ) -> Result<bool> {
+        let store = self.store.lock().await;
+        let identity = store
+            .identity_store
+            .get_identity_key_pair()
+            .assert_send()
             .await?;
-
-            UserConfig::update(ctx, |config| {
-                config.signal_last_signed_pre_key_updated = Some(now);
-            })?;
-        }
-
-        if refresh_pqc {
-            Server::upload_pqc_pre_keys(
-                ctx,
-                bundle.identity_key,
-                i64::from(bundle.registration_id),
-                i64::from(bundle.signed_pre_key_id),
-                bundle.signed_pre_key_public,
-                bundle.signed_pre_key_signature,
-                i64::from(bundle.kyber_pre_key_id),
-                bundle.kyber_pre_key_public,
-                bundle.kyber_pre_key_signature,
-                Vec::new(),
-            )
+        let registration = store
+            .identity_store
+            .get_local_registration_id()
+            .assert_send()
             .await?;
-
-            UserConfig::update(ctx, |config| {
-                config.signal_last_pqc_pre_keys_uploaded = Some(now);
-            })?;
+        if user.public_identity_key.as_deref() != Some(identity.identity_key().serialize().as_ref())
+            || user.registration_id != Some(i64::from(registration))
+        {
+            return Ok(false);
         }
-
-        Ok(())
+        let Some(bundle) = user.pqc_bundle.as_ref() else {
+            return Ok(false);
+        };
+        let signed = sqlx::query_scalar::<_, Vec<u8>>(
+            "SELECT record_bytes FROM signal_signed_pre_keys WHERE signed_pre_key_id = ?",
+        )
+        .bind(bundle.ecc_signed_prekey_id)
+        .fetch_optional(&store.pool)
+        .await?;
+        let Some(signed) = signed
+            .and_then(|bytes| libsignal_protocol::SignedPreKeyRecord::deserialize(&bytes).ok())
+        else {
+            return Ok(false);
+        };
+        if signed.key_pair().is_err()
+            || signed.public_key()?.serialize().as_ref() != bundle.ecc_signed_prekey.as_slice()
+            || signed.signature()? != bundle.ecc_signed_prekey_signature
+        {
+            return Ok(false);
+        }
+        let kyber = sqlx::query_scalar::<_, Vec<u8>>(
+            "SELECT record_bytes FROM signal_kyber_pre_keys WHERE kyber_pre_key_id = ?",
+        )
+        .bind(bundle.kyber_signed_prekey_id)
+        .fetch_optional(&store.pool)
+        .await?;
+        let Some(kyber) =
+            kyber.and_then(|bytes| libsignal_protocol::KyberPreKeyRecord::deserialize(&bytes).ok())
+        else {
+            return Ok(false);
+        };
+        if kyber.key_pair().is_err()
+            || kyber.public_key()?.serialize().as_ref() != bundle.kyber_signed_prekey.as_slice()
+            || kyber.signature()? != bundle.kyber_signed_prekey_signature
+        {
+            return Ok(false);
+        }
+        if let Some(prekey) = &bundle.prekey {
+            let ecc = sqlx::query_scalar::<_, Vec<u8>>(
+                "SELECT record_bytes FROM signal_pre_keys WHERE pre_key_id = ?",
+            )
+            .bind(prekey.ecc_pre_key_id)
+            .fetch_optional(&store.pool)
+            .await?;
+            let Some(ecc) =
+                ecc.and_then(|bytes| libsignal_protocol::PreKeyRecord::deserialize(&bytes).ok())
+            else {
+                return Ok(false);
+            };
+            if ecc.key_pair().is_err()
+                || ecc.public_key()?.serialize().as_ref() != prekey.ecc_pre_key.as_slice()
+            {
+                return Ok(false);
+            }
+            let kyber = sqlx::query_scalar::<_, Vec<u8>>(
+                "SELECT record_bytes FROM signal_kyber_pre_keys WHERE kyber_pre_key_id = ?",
+            )
+            .bind(prekey.kyber_pre_key_id)
+            .fetch_optional(&store.pool)
+            .await?;
+            let Some(kyber) = kyber
+                .and_then(|bytes| libsignal_protocol::KyberPreKeyRecord::deserialize(&bytes).ok())
+            else {
+                return Ok(false);
+            };
+            if kyber.key_pair().is_err()
+                || kyber.public_key()?.serialize().as_ref() != prekey.kyber_pre_key.as_slice()
+                || kyber.signature()? != prekey.kyber_pre_key_signature
+            {
+                return Ok(false);
+            }
+        }
+        Ok(true)
     }
 
     pub async fn new(local_name: String) -> Result<Self> {
@@ -234,43 +298,9 @@ impl RustSignalEngine {
 
         let mut csprng = rand::rngs::StdRng::from_os_rng();
 
-        let pre_key_id: u32 = {
-            let id = sqlx::query_scalar!(
-                r#"SELECT COALESCE(MAX(pre_key_id), 0) AS "id!: u32" FROM signal_pre_keys"#,
-            )
-            .fetch_one(&store.pool)
-            .await?;
-
-            if id > 16_777_215 {
-                1
-            } else {
-                id + 1
-            }
-        };
-
-        let signed_pre_key_id: u32 = {
-            let id = sqlx::query_scalar!(
-                r#"SELECT COALESCE(MAX(signed_pre_key_id), 0) AS "id!: u32" FROM signal_signed_pre_keys"#,
-            ).fetch_one(&store.pool).await?;
-
-            if id > 16_777_215 {
-                1
-            } else {
-                id + 1
-            }
-        };
-
-        let kyber_pre_key_id: u32 = {
-            let id = sqlx::query_scalar!(
-                r#"SELECT COALESCE(MAX(kyber_pre_key_id), 0) AS "id!: u32" FROM signal_kyber_pre_keys"#,
-            ).fetch_one(&store.pool).await?;
-
-            if id > 16_777_215 {
-                1
-            } else {
-                id + 1
-            }
-        };
+        let pre_key_id = unused_prekey_id(&store.pool, "ecc", &mut csprng).await?;
+        let signed_pre_key_id = unused_prekey_id(&store.pool, "signed", &mut csprng).await?;
+        let kyber_pre_key_id = unused_prekey_id(&store.pool, "kyber", &mut csprng).await?;
 
         let pre_key_pair = libsignal_protocol::KeyPair::generate(&mut csprng);
 
@@ -402,36 +432,9 @@ impl RustSignalEngine {
                 .as_millis() as u64,
         );
 
-        let mut kyber_pre_key_id: u32 = {
-            let id = sqlx::query_scalar!(
-                r#"SELECT COALESCE(MAX(kyber_pre_key_id), 0) AS "id!: u32" FROM signal_kyber_pre_keys"#,
-            ).fetch_one(&store.pool).await?;
-
-            if id > 16_777_215 {
-                1
-            } else {
-                id
-            }
-        };
-
-        let mut pre_key_id: u32 = {
-            let id = sqlx::query_scalar!(
-                r#"SELECT COALESCE(MAX(pre_key_id), 0) AS "id!: u32" FROM signal_pre_keys"#,
-            )
-            .fetch_one(&store.pool)
-            .await?;
-
-            if id > 16_777_215 {
-                1
-            } else {
-                id
-            }
-        };
-
         for _ in 0..30 {
-            kyber_pre_key_id += 1;
-
-            pre_key_id += 1;
+            let kyber_pre_key_id = unused_prekey_id(&store.pool, "kyber", &mut csprng).await?;
+            let pre_key_id = unused_prekey_id(&store.pool, "ecc", &mut csprng).await?;
 
             let kyber_key_pair = libsignal_protocol::kem::KeyPair::generate(
                 libsignal_protocol::kem::KeyType::Kyber1024,
@@ -848,6 +851,167 @@ mod tests {
 
             assert!(prekey.kyber_pre_key_signature.len() > 0);
         }
+    }
+
+    fn published_bundle(
+        bundle: &FrbPreKeyBundle,
+    ) -> crate::api::proto::server_to_client::response::UserData {
+        use crate::api::proto::server_to_client::response::{PqcBundle, UserData};
+        UserData {
+            public_identity_key: Some(bundle.identity_key.clone()),
+            registration_id: Some(i64::from(bundle.registration_id)),
+            pqc_bundle: Some(PqcBundle {
+                ecc_signed_prekey_id: i64::from(bundle.signed_pre_key_id),
+                ecc_signed_prekey: bundle.signed_pre_key_public.clone(),
+                ecc_signed_prekey_signature: bundle.signed_pre_key_signature.clone(),
+                kyber_signed_prekey_id: i64::from(bundle.kyber_pre_key_id),
+                kyber_signed_prekey: bundle.kyber_pre_key_public.clone(),
+                kyber_signed_prekey_signature: bundle.kyber_pre_key_signature.clone(),
+                prekey: None,
+            }),
+            ..Default::default()
+        }
+    }
+
+    #[tokio::test]
+    async fn published_bundle_requires_matching_private_records_not_just_an_existing_bundle() {
+        let (engine, _dir) = create_test_engine("bob").await;
+        let bundle = engine.generate_bundle().await.unwrap();
+        let user = published_bundle(&bundle);
+        assert!(engine.matches_published_bundle(&user).await.unwrap());
+        let mut wrong = user.clone();
+        wrong.pqc_bundle.as_mut().unwrap().ecc_signed_prekey[1] ^= 1;
+        assert!(!engine.matches_published_bundle(&wrong).await.unwrap());
+        let mut wrong_identity = user.clone();
+        wrong_identity.public_identity_key.as_mut().unwrap()[1] ^= 1;
+        assert!(!engine
+            .matches_published_bundle(&wrong_identity)
+            .await
+            .unwrap());
+        let pool = engine.store.lock().await.pool.clone();
+        sqlx::query("DELETE FROM signal_signed_pre_keys")
+            .execute(&pool)
+            .await
+            .unwrap();
+        assert!(!engine.matches_published_bundle(&user).await.unwrap());
+        let repaired = engine.generate_bundle().await.unwrap();
+        assert!(engine
+            .matches_published_bundle(&published_bundle(&repaired))
+            .await
+            .unwrap());
+        sqlx::query("UPDATE signal_kyber_pre_keys SET record_bytes = x'00'")
+            .execute(&pool)
+            .await
+            .unwrap();
+        assert!(!engine
+            .matches_published_bundle(&published_bundle(&repaired))
+            .await
+            .unwrap());
+    }
+
+    #[tokio::test]
+    async fn private_prekeys_cannot_be_overwritten_by_another_generator() {
+        let (engine, _dir) = create_test_engine("bob").await;
+        let bundle = engine.generate_bundle().await.unwrap();
+        let mut store = engine.store.lock().await;
+        let original = store
+            .signed_pre_key_store
+            .get_signed_pre_key(bundle.signed_pre_key_id.into())
+            .await
+            .unwrap();
+        let replacement = libsignal_protocol::SignedPreKeyRecord::new(
+            bundle.signed_pre_key_id.into(),
+            Timestamp::from_epoch_millis(1),
+            &libsignal_protocol::KeyPair::generate(&mut StdRng::from_os_rng()),
+            &[0; 64],
+        );
+        let error = store
+            .signed_pre_key_store
+            .save_signed_pre_key(bundle.signed_pre_key_id.into(), &replacement)
+            .await
+            .unwrap_err();
+        assert!(matches!(
+            TwonlyError::from(error),
+            TwonlyError::SignalStorage(_)
+        ));
+        let retained = store
+            .signed_pre_key_store
+            .get_signed_pre_key(bundle.signed_pre_key_id.into())
+            .await
+            .unwrap();
+        assert_eq!(original.serialize().unwrap(), retained.serialize().unwrap());
+        store
+            .signed_pre_key_store
+            .save_signed_pre_key(bundle.signed_pre_key_id.into(), &original)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn storage_failure_does_not_masquerade_as_a_missing_prekey_or_broken_session() {
+        let (alice, _alice_dir) = create_test_engine("alice").await;
+        let (bob, _bob_dir) = create_test_engine("bob").await;
+        alice
+            .process_prekey_bundle("bob".into(), 1, bob.generate_bundle().await.unwrap())
+            .await
+            .unwrap();
+        let ciphertext = alice
+            .encrypt_message("bob".into(), 1, b"persist me".to_vec())
+            .await
+            .unwrap();
+        bob.store.lock().await.pool.close().await;
+        let error = bob
+            .decrypt_message("alice".into(), 1, ciphertext)
+            .await
+            .unwrap_err();
+        assert!(matches!(error, TwonlyError::SignalStorage(_)), "{error:?}");
+    }
+
+    #[tokio::test]
+    async fn missing_signed_prekey_is_reported_as_local_key_repair() {
+        let (alice, _alice_dir) = create_test_engine("alice").await;
+        let (bob, _bob_dir) = create_test_engine("bob").await;
+        alice
+            .process_prekey_bundle("bob".into(), 1, bob.generate_bundle().await.unwrap())
+            .await
+            .unwrap();
+        let ciphertext = alice
+            .encrypt_message("bob".into(), 1, b"retry after publication".to_vec())
+            .await
+            .unwrap();
+        let pool = bob.store.lock().await.pool.clone();
+        sqlx::query("DELETE FROM signal_signed_pre_keys")
+            .execute(&pool)
+            .await
+            .unwrap();
+        let error = bob
+            .decrypt_message("alice".into(), 1, ciphertext)
+            .await
+            .unwrap_err();
+        assert!(
+            matches!(error, TwonlyError::SignalPreKeyUnavailable(_)),
+            "{error:?}"
+        );
+        // Repair publication first, then let the sender retire its old half
+        // and re-encrypt its retained plaintext using the repaired bundle.
+        let repaired = bob.generate_bundle().await.unwrap();
+        assert!(bob
+            .matches_published_bundle(&published_bundle(&repaired))
+            .await
+            .unwrap());
+        alice.reset_session("bob", 1, false).await.unwrap();
+        alice
+            .process_prekey_bundle("bob".into(), 1, repaired)
+            .await
+            .unwrap();
+        assert_eq!(
+            ping(&alice, &bob, "retry after publication").await.unwrap(),
+            b"retry after publication"
+        );
+        assert_eq!(
+            ping(&bob, &alice, "reply after repair").await.unwrap(),
+            b"reply after repair"
+        );
     }
 
     #[tokio::test]

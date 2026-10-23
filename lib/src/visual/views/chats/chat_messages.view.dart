@@ -98,14 +98,24 @@ class _ChatSubscriptions {
   StreamSubscription<List<StoredReaction>>? reactions;
   StreamSubscription<List<MessageAction>>? messageActions;
 
-  void cancelAll() {
-    group?.cancel();
-    messages?.cancel();
-    groupActions?.cancel();
-    contacts?.cancel();
-    media?.cancel();
-    reactions?.cancel();
-    messageActions?.cancel();
+  Future<void> cancelAll() async {
+    final pending = <Future<void>>[
+      if (group != null) group!.cancel(),
+      if (messages != null) messages!.cancel(),
+      if (groupActions != null) groupActions!.cancel(),
+      if (contacts != null) contacts!.cancel(),
+      if (media != null) media!.cancel(),
+      if (reactions != null) reactions!.cancel(),
+      if (messageActions != null) messageActions!.cancel(),
+    ];
+    group = null;
+    messages = null;
+    groupActions = null;
+    contacts = null;
+    media = null;
+    reactions = null;
+    messageActions = null;
+    await Future.wait(pending);
   }
 }
 
@@ -131,6 +141,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   final _pendingMessages = PendingChatMessages();
   final ValueNotifier<int> _messageDataVersion = ValueNotifier(0);
 
+  int _chatLoadGeneration = 0;
+  bool _loadingMessages = true;
+  bool _chatLoadFailed = false;
   Group? _group;
   List<Contact> _groupContacts = [];
   StoredMessage? quotesMessage;
@@ -157,12 +170,14 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     _group = widget.initialGroup;
     textFieldFocus = FocusNode();
     itemPositionsListener.itemPositions.addListener(_loadOlderWhenNeeded);
-    initStreams();
+    unawaited(initStreams());
   }
 
   @override
   void dispose() {
-    _subscriptions.cancelAll();
+    _chatLoadGeneration++;
+    _loadedMessagesRevision++;
+    unawaited(_subscriptions.cancelAll());
     _messageDataVersion.dispose();
     itemPositionsListener.itemPositions.removeListener(_loadOlderWhenNeeded);
     _nextTypingIndicator?.cancel();
@@ -266,7 +281,64 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     }
   }
 
+  void _chatLoadingFailed(Object error, [StackTrace? stackTrace]) {
+    Log.error(
+      'Could not load conversation ${widget.groupId}',
+      error: error,
+      stackTrace: stackTrace,
+    );
+    if (!mounted) return;
+    setState(() {
+      _chatLoadFailed = true;
+      _loadingMessages = false;
+    });
+  }
+
+  Future<void> _retryChatLoading() async {
+    _chatLoadGeneration++;
+    _loadedMessagesRevision++;
+    setState(() {
+      _chatLoadFailed = false;
+      _loadingMessages = _data.allMessages.isEmpty;
+    });
+    _nextTypingIndicator?.cancel();
+    await _subscriptions.cancelAll();
+    if (mounted) await initStreams();
+  }
+
+  Widget _chatLoadingStatus() => Center(
+    child: _chatLoadFailed
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(context.lang.errorInternalError),
+              TextButton.icon(
+                onPressed: _retryChatLoading,
+                icon: const Icon(Icons.refresh),
+                label: Text(context.lang.manualVerificationRetry),
+              ),
+            ],
+          )
+        : const CircularProgressIndicator.adaptive(),
+  );
+
   Future<void> initStreams() async {
+    final generation = ++_chatLoadGeneration;
+    try {
+      await _initStreams(generation);
+    } catch (error, stackTrace) {
+      if (mounted && generation == _chatLoadGeneration) {
+        _chatLoadingFailed(error, stackTrace);
+      }
+    }
+  }
+
+  Future<void> _initStreams(int generation) async {
+    bool active() => mounted && generation == _chatLoadGeneration;
+    void failed(Object error, [StackTrace? stackTrace]) {
+      if (active()) _chatLoadingFailed(error, stackTrace);
+    }
+
     final groupStream = watchRustDatabase(
       (control) => rust_groups.watchGroups(
         input: db_groups.GroupQuery(
@@ -277,12 +349,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       ),
     ).map((rows) => rows.isEmpty ? null : rows.single);
     _subscriptions.group = groupStream.listen((newGroup) {
-      if (newGroup == null) return;
-      if (!mounted) return;
+      if (!active()) return;
+      if (newGroup == null) {
+        failed(StateError('Conversation is unavailable'));
+        return;
+      }
       setState(() {
         _group = newGroup;
       });
-    });
+    }, onError: failed);
 
     final msgStream = await Future.value(
       watchRustDatabase(
@@ -296,14 +371,25 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         ),
       ),
     );
+    if (!active()) return;
     _subscriptions.messages = msgStream.listen((update) async {
+      if (!active()) return;
       _data.latestMessages = update;
       if (_data.olderMessages.isEmpty) {
         _hasMoreMessages = update.length == _messagePageSize;
       }
-      await _applyLoadedMessages(reportOpened: true);
-      _animationState.hasReceivedFirstBatch = true;
-    });
+      try {
+        await _applyLoadedMessages(reportOpened: true);
+        if (!active()) return;
+        _animationState.hasReceivedFirstBatch = true;
+        setState(() {
+          _loadingMessages = false;
+          _chatLoadFailed = false;
+        });
+      } catch (error, stackTrace) {
+        failed(error, stackTrace);
+      }
+    }, onError: failed);
 
     final groupContacts = joinedGroupContacts(
       await rust_groups.getGroupContacts(
@@ -314,6 +400,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         transaction: currentDatabaseSession(),
       ),
     ).map((row) => row.$1).toList(growable: false);
+    if (!active()) return;
     if (mounted) {
       setState(() {
         _groupContacts = groupContacts;
@@ -877,7 +964,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       // Drawing nothing leaves the pushed route black until the group row
       // arrives, which is plainly visible whenever the database is busy. The
       // empty app bar keeps the back button reachable during that wait.
-      return Scaffold(appBar: AppBar(), body: const SizedBox.shrink());
+      return Scaffold(appBar: AppBar(), body: _chatLoadingStatus());
     }
     final group = _group!;
     return GestureDetector(
@@ -959,93 +1046,106 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
               Expanded(
                 child: ValueListenableBuilder<int>(
                   valueListenable: _messageDataVersion,
-                  builder: (context, _, _) => Align(
-                    alignment: Alignment.topCenter,
-                    child: ChatMessageActionScope(
-                      ackedMessageIds: _data.ackedMessageIds,
-                      failedMessageIds: _data.failedMessageIds,
-                      child: ScrollablePositionedList.builder(
-                        reverse: true,
-                        itemCount: _data.chatItems.length + 1 + 1,
-                        itemScrollController: itemScrollController,
-                        itemPositionsListener: itemPositionsListener,
-                        itemBuilder: (context, i) {
-                          if (i == 0) {
-                            return userService.currentUser.typingIndicators
-                                ? TypingIndicator(group: group)
-                                : Container();
-                          }
-                          i -= 1;
-                          if (i == _data.chatItems.length) {
-                            return Padding(
-                              key: Key('overview_${group.groupId}'),
-                              padding: const EdgeInsets.only(top: 10),
-                              child: InChatGroupOverview(
-                                group: group,
-                              ),
-                            );
-                          }
-                          if (_data.chatItems[i].isDate) {
-                            return ChatDateChip(
-                              item: _data.chatItems[i],
-                            );
-                          } else if (_data.chatItems[i].isGroupAction) {
-                            return ChatGroupAction(
-                              key: Key(
-                                _data.chatItems[i].groupAction!.groupHistoryId,
-                              ),
-                              action: _data.chatItems[i].groupAction!,
-                              contactsById: _data.contactsById,
-                            );
-                          } else {
-                            final chatMessage = _data.chatItems[i].message!;
-                            return BlinkWidget(
-                              key: Key('blink_${chatMessage.messageId}'),
-                              enabled: focusedScrollItem == i,
-                              child: AnimatedNewMessage(
-                                key: Key('anim_${chatMessage.messageId}'),
-                                messageId: chatMessage.messageId,
-                                animateIds: _animationState.animateMessageIds,
-                                isOwnMessage: chatMessage.senderId == null,
-                                child: ChatListEntry(
-                                  key: Key(chatMessage.messageId),
-                                  message: _data.chatItems[i].message!,
-                                  nextMessage: (i > 0)
-                                      ? _data.chatItems[i - 1].message
-                                      : null,
-                                  prevMessage:
-                                      ((i + 1) < _data.chatItems.length)
-                                      ? _data.chatItems[i + 1].message
-                                      : null,
-                                  group: group,
-                                  galleryItems: _data.galleryItems,
-                                  userIdToContact: _data.contactsById,
-                                  mediaFile: chatMessage.mediaId == null
-                                      ? null
-                                      : _data.mediaFilesById[chatMessage
-                                            .mediaId],
-                                  reactions:
-                                      _data.reactionsByMessageId[chatMessage
-                                          .messageId] ??
-                                      const [],
-                                  messagesById: _data.messagesById,
-                                  mediaFilesById: _data.mediaFilesById,
-                                  useSharedData: true,
-                                  scrollToMessage: scrollToMessage,
-                                  onResponseTriggered: () {
-                                    setState(() {
-                                      quotesMessage = chatMessage;
-                                    });
-                                    textFieldFocus?.requestFocus();
-                                  },
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                  ),
+                  builder: (context, _, _) =>
+                      (_loadingMessages || _chatLoadFailed) &&
+                          _data.allMessages.isEmpty
+                      ? _chatLoadingStatus()
+                      : Align(
+                          alignment: Alignment.topCenter,
+                          child: ChatMessageActionScope(
+                            ackedMessageIds: _data.ackedMessageIds,
+                            failedMessageIds: _data.failedMessageIds,
+                            child: ScrollablePositionedList.builder(
+                              reverse: true,
+                              itemCount: _data.chatItems.length + 1 + 1,
+                              itemScrollController: itemScrollController,
+                              itemPositionsListener: itemPositionsListener,
+                              itemBuilder: (context, i) {
+                                if (i == 0) {
+                                  return userService
+                                          .currentUser
+                                          .typingIndicators
+                                      ? TypingIndicator(group: group)
+                                      : Container();
+                                }
+                                i -= 1;
+                                if (i == _data.chatItems.length) {
+                                  return Padding(
+                                    key: Key('overview_${group.groupId}'),
+                                    padding: const EdgeInsets.only(top: 10),
+                                    child: InChatGroupOverview(
+                                      group: group,
+                                    ),
+                                  );
+                                }
+                                if (_data.chatItems[i].isDate) {
+                                  return ChatDateChip(
+                                    item: _data.chatItems[i],
+                                  );
+                                } else if (_data.chatItems[i].isGroupAction) {
+                                  return ChatGroupAction(
+                                    key: Key(
+                                      _data
+                                          .chatItems[i]
+                                          .groupAction!
+                                          .groupHistoryId,
+                                    ),
+                                    action: _data.chatItems[i].groupAction!,
+                                    contactsById: _data.contactsById,
+                                  );
+                                } else {
+                                  final chatMessage =
+                                      _data.chatItems[i].message!;
+                                  return BlinkWidget(
+                                    key: Key('blink_${chatMessage.messageId}'),
+                                    enabled: focusedScrollItem == i,
+                                    child: AnimatedNewMessage(
+                                      key: Key('anim_${chatMessage.messageId}'),
+                                      messageId: chatMessage.messageId,
+                                      animateIds:
+                                          _animationState.animateMessageIds,
+                                      isOwnMessage:
+                                          chatMessage.senderId == null,
+                                      child: ChatListEntry(
+                                        key: Key(chatMessage.messageId),
+                                        message: _data.chatItems[i].message!,
+                                        nextMessage: (i > 0)
+                                            ? _data.chatItems[i - 1].message
+                                            : null,
+                                        prevMessage:
+                                            ((i + 1) < _data.chatItems.length)
+                                            ? _data.chatItems[i + 1].message
+                                            : null,
+                                        group: group,
+                                        galleryItems: _data.galleryItems,
+                                        userIdToContact: _data.contactsById,
+                                        mediaFile: chatMessage.mediaId == null
+                                            ? null
+                                            : _data.mediaFilesById[chatMessage
+                                                  .mediaId],
+                                        reactions:
+                                            _data
+                                                .reactionsByMessageId[chatMessage
+                                                .messageId] ??
+                                            const [],
+                                        messagesById: _data.messagesById,
+                                        mediaFilesById: _data.mediaFilesById,
+                                        useSharedData: true,
+                                        scrollToMessage: scrollToMessage,
+                                        onResponseTriggered: () {
+                                          setState(() {
+                                            quotesMessage = chatMessage;
+                                          });
+                                          textFieldFocus?.requestFocus();
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                        ),
                 ),
               ),
               if (quotesMessage != null)

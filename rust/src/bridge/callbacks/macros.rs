@@ -61,7 +61,11 @@ macro_rules! callback_generator {
                 if lock.is_none() {
                     *lock = Some(std::collections::HashMap::new());
                 }
-                lock.as_mut().unwrap().insert(callback_id, callbacks);
+                // Only the current Flutter isolate owns UI callbacks. A hot
+                // restart must not leave closures pointing at a dead Dart port.
+                let callbacks_by_id = lock.as_mut().unwrap();
+                callbacks_by_id.clear();
+                callbacks_by_id.insert(callback_id, callbacks);
             }
         }
     };

@@ -12,6 +12,14 @@ use libsignal_protocol::{
 };
 use sqlx::SqlitePool;
 
+#[derive(Debug, thiserror::Error)]
+#[error("{0}")]
+struct StorageError(String);
+
+fn storage_error(method: &'static str, error: impl std::fmt::Display) -> SignalProtocolError {
+    SignalProtocolError::ApplicationCallbackError(method, Box::new(StorageError(error.to_string())))
+}
+
 pub struct DbSignalProtocolStore {
     pub identity_store: DbIdentityKeyStore,
     pub pre_key_store: DbPreKeyStore,
@@ -75,7 +83,7 @@ impl IdentityKeyStore for DbIdentityKeyStore {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        .map_err(|error| storage_error("save_identity", error))?;
 
         let changed = if let Some(stored) = existing {
             stored != identity_bytes.as_ref()
@@ -97,7 +105,7 @@ impl IdentityKeyStore for DbIdentityKeyStore {
         )
         .execute(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        .map_err(|error| storage_error("save_identity", error))?;
 
         Ok(IdentityChange::from_changed(changed))
     }
@@ -115,7 +123,7 @@ impl IdentityKeyStore for DbIdentityKeyStore {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        .map_err(|error| storage_error("is_trusted_identity", error))?;
 
         if let Some(stored_key) = row {
             Ok(stored_key == identity_bytes.as_ref())
@@ -135,7 +143,7 @@ impl IdentityKeyStore for DbIdentityKeyStore {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        .map_err(|error| storage_error("get_identity", error))?;
 
         if let Some(bytes) = row {
             let key = IdentityKey::decode(&bytes)
@@ -164,11 +172,22 @@ impl PreKeyStore for DbPreKeyStore {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::InvalidPreKeyId)?;
+        .map_err(|error| storage_error("get_pre_key", error))?;
 
         if let Some(bytes) = row {
-            PreKeyRecord::deserialize(&bytes).map_err(|_| SignalProtocolError::InvalidPreKeyId)
+            PreKeyRecord::deserialize(&bytes).and_then(|record| {
+                record.key_pair()?;
+                Ok(record)
+            }).map_err(|error| {
+                tracing::warn!(key_id = id, kind = "ecc", %error, "local Signal prekey record is invalid");
+                SignalProtocolError::InvalidPreKeyId
+            })
         } else {
+            tracing::warn!(
+                key_id = id,
+                kind = "ecc",
+                "local Signal private prekey is missing"
+            );
             Err(SignalProtocolError::InvalidPreKeyId)
         }
     }
@@ -182,18 +201,25 @@ impl PreKeyStore for DbPreKeyStore {
             .serialize()
             .map_err(|_| SignalProtocolError::InvalidPreKeyId)?;
 
-        sqlx::query!(
+        let stored = sqlx::query!(
             r#"
             INSERT INTO signal_pre_keys(pre_key_id, record_bytes) VALUES (?, ?)
             ON CONFLICT(pre_key_id) DO UPDATE SET record_bytes = excluded.record_bytes
+            WHERE signal_pre_keys.record_bytes = excluded.record_bytes
             "#,
             id,
             bytes,
         )
         .execute(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::InvalidPreKeyId)?;
+        .map_err(|error| storage_error("save_pre_key", error))?;
 
+        if stored.rows_affected() == 0 {
+            return Err(storage_error(
+                "save_pre_key",
+                "refusing to replace an existing private prekey",
+            ));
+        }
         Ok(())
     }
 
@@ -203,7 +229,7 @@ impl PreKeyStore for DbPreKeyStore {
         sqlx::query!(r#"DELETE FROM signal_pre_keys WHERE pre_key_id = ?"#, id)
             .execute(&self.pool)
             .await
-            .map_err(|_| SignalProtocolError::InvalidPreKeyId)?;
+            .map_err(|error| storage_error("remove_pre_key", error))?;
 
         Ok(())
     }
@@ -227,12 +253,22 @@ impl SignedPreKeyStore for DbSignedPreKeyStore {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::InvalidSignedPreKeyId)?;
+        .map_err(|error| storage_error("get_signed_pre_key", error))?;
 
         if let Some(bytes) = row {
-            SignedPreKeyRecord::deserialize(&bytes)
-                .map_err(|_| SignalProtocolError::InvalidSignedPreKeyId)
+            SignedPreKeyRecord::deserialize(&bytes).and_then(|record| {
+                record.key_pair()?;
+                Ok(record)
+            }).map_err(|error| {
+                tracing::warn!(key_id = id, kind = "signed", %error, "local Signal prekey record is invalid");
+                SignalProtocolError::InvalidSignedPreKeyId
+            })
         } else {
+            tracing::warn!(
+                key_id = id,
+                kind = "signed",
+                "local Signal private prekey is missing"
+            );
             Err(SignalProtocolError::InvalidSignedPreKeyId)
         }
     }
@@ -246,20 +282,27 @@ impl SignedPreKeyStore for DbSignedPreKeyStore {
             .serialize()
             .map_err(|_| SignalProtocolError::InvalidSignedPreKeyId)?;
 
-        sqlx::query!(
+        let stored = sqlx::query!(
             r#"
             INSERT INTO signal_signed_pre_keys(signed_pre_key_id, record_bytes)
             VALUES (?, ?)
             ON CONFLICT(signed_pre_key_id)
             DO UPDATE SET record_bytes = excluded.record_bytes
+            WHERE signal_signed_pre_keys.record_bytes = excluded.record_bytes
             "#,
             id,
             bytes,
         )
         .execute(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::InvalidSignedPreKeyId)?;
+        .map_err(|error| storage_error("save_signed_pre_key", error))?;
 
+        if stored.rows_affected() == 0 {
+            return Err(storage_error(
+                "save_signed_pre_key",
+                "refusing to replace an existing private prekey",
+            ));
+        }
         Ok(())
     }
 }
@@ -282,12 +325,22 @@ impl KyberPreKeyStore for DbKyberPreKeyStore {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::InvalidKyberPreKeyId)?;
+        .map_err(|error| storage_error("get_kyber_pre_key", error))?;
 
         if let Some(bytes) = row {
-            KyberPreKeyRecord::deserialize(&bytes)
-                .map_err(|_| SignalProtocolError::InvalidKyberPreKeyId)
+            KyberPreKeyRecord::deserialize(&bytes).and_then(|record| {
+                record.key_pair()?;
+                Ok(record)
+            }).map_err(|error| {
+                tracing::warn!(key_id = id, kind = "kyber", %error, "local Signal prekey record is invalid");
+                SignalProtocolError::InvalidKyberPreKeyId
+            })
         } else {
+            tracing::warn!(
+                key_id = id,
+                kind = "kyber",
+                "local Signal private prekey is missing"
+            );
             Err(SignalProtocolError::InvalidKyberPreKeyId)
         }
     }
@@ -301,20 +354,27 @@ impl KyberPreKeyStore for DbKyberPreKeyStore {
             .serialize()
             .map_err(|_| SignalProtocolError::InvalidKyberPreKeyId)?;
 
-        sqlx::query!(
+        let stored = sqlx::query!(
             r#"
             INSERT INTO signal_kyber_pre_keys(kyber_pre_key_id, record_bytes)
             VALUES (?, ?)
             ON CONFLICT(kyber_pre_key_id)
             DO UPDATE SET record_bytes = excluded.record_bytes
+            WHERE signal_kyber_pre_keys.record_bytes = excluded.record_bytes
             "#,
             id,
             bytes,
         )
         .execute(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::InvalidKyberPreKeyId)?;
+        .map_err(|error| storage_error("save_kyber_pre_key", error))?;
 
+        if stored.rows_affected() == 0 {
+            return Err(storage_error(
+                "save_kyber_pre_key",
+                "refusing to replace an existing private prekey",
+            ));
+        }
         Ok(())
     }
 
@@ -347,7 +407,7 @@ impl SessionStore for DbSessionStore {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        .map_err(|error| storage_error("load_session", error))?;
 
         if let Some(bytes) = row {
             let record = SessionRecord::deserialize(&bytes)
@@ -383,7 +443,7 @@ impl SessionStore for DbSessionStore {
         )
         .execute(&self.pool)
         .await
-        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        .map_err(|error| storage_error("store_session", error))?;
 
         Ok(())
     }

@@ -15,6 +15,7 @@ class ConnectionLifecycle {
   final void Function(Object, StackTrace) onError;
   Future<void> _pending = Future.value();
   bool _inBackground = false;
+  Object? _lastNetworkIdentity;
 
   Future<void> setBackground(bool background) => _enqueue(() async {
     if (!background && _inBackground) {
@@ -26,7 +27,11 @@ class ConnectionLifecycle {
     _inBackground = background;
   });
 
-  Future<void> networkChanged() => _enqueue(_refreshNetwork);
+  Future<void> networkChanged({Object? identity}) => _enqueue(() async {
+    if (identity != null && identity == _lastNetworkIdentity) return;
+    await _refreshNetwork();
+    _lastNetworkIdentity = identity;
+  });
 
   Future<void> _refreshNetwork() async {
     bool available;

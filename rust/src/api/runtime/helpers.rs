@@ -83,6 +83,10 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
             tracing::warn!("failed to verify this account's PQC prekey bundle: {error}");
         }
 
+        if let Err(error) = Server::maintain_prekeys(&ctx).await {
+            tracing::warn!(%error, "Signal key maintenance failed");
+        }
+
         // Direct-media uploads consume Rust-owned slots, so keep their cache
         // warm whenever an authenticated connection becomes available.
         if let Err(error) = DirectMediaUploadService::new(&ctx).preload_slots().await {
@@ -138,14 +142,6 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
 
         if let Err(error) = ctx.user_discovery.get().await.on_connected(&ctx).await {
             tracing::warn!("user-discovery post-connection refresh failed: {error}");
-        }
-
-        let signal_engine = ctx.signal_engine.lock().await;
-
-        if let Some(engine) = signal_engine.as_ref() {
-            if let Err(error) = engine.on_connected(&ctx).await {
-                tracing::warn!("Signal key maintenance failed: {error}");
-            }
         }
     });
 }
