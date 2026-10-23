@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
@@ -32,6 +33,9 @@ class _HelpViewState extends State<HelpView> {
       body: StreamBuilder<void>(
         stream: userService.onUserUpdated,
         builder: (context, _) {
+          final isTester =
+              planFromString(userService.currentUser.subscriptionPlan) ==
+              SubscriptionPlan.Tester;
           return ListView(
             children: [
               ListTile(
@@ -49,10 +53,12 @@ class _HelpViewState extends State<HelpView> {
                   context.lang.allowErrorTrackingSubtitle,
                   style: const TextStyle(fontSize: 10),
                 ),
-                onTap: toggleAllowErrorTrackingViaSentry,
+                onTap: isTester ? null : toggleAllowErrorTrackingViaSentry,
                 trailing: Switch.adaptive(
                   value: userService.currentUser.allowErrorTrackingViaSentry,
-                  onChanged: (a) => toggleAllowErrorTrackingViaSentry(),
+                  onChanged: isTester
+                      ? null
+                      : (a) => toggleAllowErrorTrackingViaSentry(),
                 ),
               ),
               ListTile(

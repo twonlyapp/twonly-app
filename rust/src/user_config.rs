@@ -431,6 +431,9 @@ pub struct UserConfig {
 
 impl UserConfig {
     fn normalize(&mut self) {
+        if self.subscription_plan.trim().eq_ignore_ascii_case("tester") {
+            self.allow_error_tracking_via_sentry = true;
+        }
         self.user_discovery_threshold = self
             .user_discovery_threshold
             .max(MIN_USER_DISCOVERY_THRESHOLD);
@@ -692,6 +695,30 @@ mod tests {
             config.user_discovery_threshold,
             MIN_USER_DISCOVERY_THRESHOLD
         );
+    }
+
+    #[test]
+    fn enables_error_tracking_only_for_testers() {
+        for plan in ["Tester", " tester ", "Free", "Family", "Pro", "Plus", "Unknown"] {
+            for enabled in [false, true] {
+                let mut config: UserConfig = serde_json::from_value(serde_json::json!({
+                    "userId": 42,
+                    "username": "alice",
+                    "displayName": "Alice",
+                    "subscriptionPlan": plan,
+                    "allowErrorTrackingViaSentry": enabled,
+                }))
+                .unwrap();
+
+                config.normalize();
+
+                assert_eq!(
+                    config.allow_error_tracking_via_sentry,
+                    enabled || plan.trim().eq_ignore_ascii_case("tester"),
+                    "plan: {plan}, saved preference: {enabled}",
+                );
+            }
+        }
     }
 
     #[test]
