@@ -25,6 +25,9 @@ import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
+import 'package:twonly/src/visual/components/mention_decoration.dart';
+import 'package:twonly/src/visual/components/mention_editing_controller.dart';
+import 'package:twonly/src/visual/components/mention_suggestions.dart';
 import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
@@ -88,7 +91,7 @@ enum RecordingState { none, recording, finished }
 
 class _MessageInputState extends State<MessageInput>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late final TextEditingController _textFieldController;
+  late final MentionEditingController _textFieldController;
   late final RecorderController recorderController;
   final bool isApple = Platform.isIOS;
   bool _stickerShowing = false;
@@ -113,7 +116,7 @@ class _MessageInputState extends State<MessageInput>
   late final AnimationController _recordingBlink;
 
   void _sendMessage() {
-    final text = _textFieldController.text;
+    final text = _textFieldController.messageText;
     if (text == '') return;
     final quoteMessageId = widget.quotesMessage?.messageId;
 
@@ -136,11 +139,10 @@ class _MessageInputState extends State<MessageInput>
     super.initState();
 
     WidgetsBinding.instance.addObserver(this);
-    _textFieldController = TextEditingController();
+    _textFieldController = MentionEditingController(
+      text: widget.group.draftMessage ?? '',
+    );
     _textFieldController.addListener(_handleTextChange);
-    if (widget.group.draftMessage != null) {
-      _textFieldController.text = widget.group.draftMessage!;
-    }
     widget.textFieldFocus.addListener(_handleTextFocusChange);
     if (userService.currentUser.typingIndicators) {
       _nextTypingIndicator = Timer.periodic(typingIndicatorInterval, (_) {
@@ -184,7 +186,7 @@ class _MessageInputState extends State<MessageInput>
     widget.composing.value = false;
 
     // Persist draft message on close
-    final draftText = _textFieldController.text;
+    final draftText = _textFieldController.messageText;
     unawaited(
       rust_groups.updateGroup(
         id: widget.group.groupId,
@@ -489,6 +491,12 @@ class _MessageInputState extends State<MessageInput>
               flameOnRightSide: true,
             ),
           ),
+        if (_recordingState != RecordingState.recording)
+          MentionSuggestions(
+            group: widget.group,
+            controller: _textFieldController,
+            focusNode: widget.textFieldFocus,
+          ),
         Padding(
           padding: const EdgeInsets.only(left: 10, bottom: 10),
           child: Row(
@@ -527,26 +535,30 @@ class _MessageInputState extends State<MessageInput>
                       Expanded(
                         child: Stack(
                           children: [
-                            TextField(
+                            MentionInputBackground(
                               controller: _textFieldController,
-                              focusNode: widget.textFieldFocus,
-                              textCapitalization: TextCapitalization.sentences,
-                              keyboardType: TextInputType.multiline,
-                              showCursor:
-                                  _recordingState != RecordingState.recording,
-                              maxLines: 4,
-                              minLines: 1,
-                              onChanged: (value) {
-                                setState(() {});
-                              },
-                              onSubmitted: (_) {
-                                _sendMessage();
-                              },
-                              style: const TextStyle(fontSize: 17),
-                              decoration: InputDecoration(
-                                hintText: context.lang.chatListDetailInput,
-                                contentPadding: EdgeInsets.zero,
-                                border: InputBorder.none,
+                              child: TextField(
+                                controller: _textFieldController,
+                                focusNode: widget.textFieldFocus,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                keyboardType: TextInputType.multiline,
+                                showCursor:
+                                    _recordingState != RecordingState.recording,
+                                maxLines: 4,
+                                minLines: 1,
+                                onChanged: (value) {
+                                  setState(() {});
+                                },
+                                onSubmitted: (_) {
+                                  _sendMessage();
+                                },
+                                style: const TextStyle(fontSize: 17),
+                                decoration: InputDecoration(
+                                  hintText: context.lang.chatListDetailInput,
+                                  contentPadding: EdgeInsets.zero,
+                                  border: InputBorder.none,
+                                ),
                               ),
                             ),
                             if (_recordingState == RecordingState.recording)

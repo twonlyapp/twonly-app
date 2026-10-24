@@ -20,6 +20,7 @@ class MyInput extends StatefulWidget {
     this.dense = false,
     this.readOnly = false,
     this.fontWeight,
+    this.focusNode,
     super.key,
   });
 
@@ -37,6 +38,7 @@ class MyInput extends StatefulWidget {
   final bool dense;
   final bool readOnly;
   final FontWeight? fontWeight;
+  final FocusNode? focusNode;
 
   @override
   State<MyInput> createState() => _MyInputState();
@@ -56,6 +58,7 @@ class _MyInputState extends State<MyInput> {
       alwaysAnimate: true,
       child: TextField(
         controller: widget.controller,
+        focusNode: widget.focusNode,
         readOnly: widget.readOnly,
         onChanged: widget.onChanged,
         onSubmitted: widget.onSubmitted,

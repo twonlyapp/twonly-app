@@ -4,8 +4,10 @@ import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database_values.dart';
+import 'package:twonly/src/utils/mentions.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
+import 'package:twonly/src/visual/components/mention_text.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 
 class BubbleInfo {
@@ -57,7 +59,12 @@ BubbleInfo getBubbleInfo(
     }
   }
 
-  final textWidth = measureTextWidth(info.text);
+  final textWidth = measureTextWidth(
+    resolveMentions(
+      info.text,
+      (id) => mentionDisplayName(context, id, userIdToContact ?? const {}),
+    ),
+  );
   info.spacerWidth = minWidth - textWidth - 53;
   if (info.spacerWidth < 0) info.spacerWidth = 0;
 

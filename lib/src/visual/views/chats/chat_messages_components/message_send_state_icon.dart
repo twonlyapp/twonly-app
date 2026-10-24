@@ -15,8 +15,10 @@ import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database_values.dart';
+import 'package:twonly/src/utils/mentions.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
+import 'package:twonly/src/visual/components/mention_text.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/file_limit_reached.dialog.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_color.dart';
@@ -396,8 +398,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             color: context.color.onSurfaceVariant,
           ),
         ];
-        textWidget = Text(
-          '${context.lang.draftMessage}: ${substringBy(widget.group!.draftMessage!, 10)}',
+        textWidget = MentionNames(
+          text: widget.group!.draftMessage!,
+          builder: (context, name) => Text(
+            '${context.lang.draftMessage}: ${substringBy(resolveMentions(widget.group!.draftMessage!, name), 10)}',
+          ),
         );
       }
     }

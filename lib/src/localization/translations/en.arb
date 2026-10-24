@@ -470,6 +470,8 @@
   "groupActionYour": "your",
   "notificationFillerIn": "in",
   "notificationLiveLocation": "shared their live location{inGroup}.",
+  "notificationMention": "mentioned you in a message{inGroup}.",
+  "chatMentionUnknownUser": "Unknown user",
   "notificationText": "sent a message{inGroup}.",
   "notificationTextMessages": "sent {count} messages{inGroup}.",
   "notificationTwonly": "sent a twonly{inGroup}.",

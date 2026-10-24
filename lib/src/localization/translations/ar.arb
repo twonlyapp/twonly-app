@@ -374,6 +374,8 @@
   "groupActionYour": "حسابك",
   "notificationFillerIn": "في",
   "notificationLiveLocation": "شارك موقعه المباشر{inGroup}.",
+  "notificationMention": "أشار إليك في رسالة{inGroup}.",
+  "chatMentionUnknownUser": "مستخدم غير معروف",
   "notificationText": "رسالة جديدة{inGroup}.",
   "notificationTextMessages": "{count} رسائل جديدة{inGroup}.",
   "notificationTwonly": "رسالة twonly جديدة{inGroup}.",

@@ -1327,6 +1327,14 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String notificationMention(Object inGroup) {
+    return 'hat dich in einer Nachricht$inGroup erwähnt.';
+  }
+
+  @override
+  String get chatMentionUnknownUser => 'Unbekannter Nutzer';
+
+  @override
   String notificationText(Object inGroup) {
     return 'hat eine Nachricht$inGroup gesendet.';
   }

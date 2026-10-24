@@ -460,6 +460,8 @@
   "twonlySafeRecoverBtn": "Backup wiederherstellen",
   "notificationFillerIn": "in",
   "notificationLiveLocation": "hat den Live-Standort{inGroup} geteilt.",
+  "notificationMention": "hat dich in einer Nachricht{inGroup} erwähnt.",
+  "chatMentionUnknownUser": "Unbekannter Nutzer",
   "notificationText": "hat eine Nachricht{inGroup} gesendet.",
   "notificationTextMessages": "hat {count} Nachrichten{inGroup} gesendet.",
   "notificationTwonly": "hat ein twonly{inGroup} gesendet.",

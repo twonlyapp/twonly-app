@@ -60,7 +60,6 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     }
     if (!mounted) return;
     setState(() {});
-    await RustApi.forceIpaCheck();
   }
 
   @override

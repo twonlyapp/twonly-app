@@ -18,7 +18,9 @@ import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
+import 'package:twonly/src/utils/mentions.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/mention_text.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 
 class ResponseContainer extends StatelessWidget {
@@ -89,6 +91,7 @@ class ResponseContainer extends StatelessWidget {
                     messageId: msg.quotesMessageId,
                     message: quotedMessage,
                     mediaFile: quotedMediaFile,
+                    contactsById: contactsById,
                     contact: quotedMessage?.senderId == null
                         ? null
                         : contactsById?[quotedMessage!.senderId],
@@ -119,6 +122,7 @@ class ResponsePreview extends StatefulWidget {
     this.colorUsername = false,
     this.mediaFile,
     this.contact,
+    this.contactsById,
     this.useSharedData = false,
     super.key,
   });
@@ -131,6 +135,7 @@ class ResponsePreview extends StatefulWidget {
   final bool colorUsername;
   final MediaFile? mediaFile;
   final Contact? contact;
+  final Map<int, Contact>? contactsById;
   final bool useSharedData;
 
   @override
@@ -221,7 +226,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
         if (quotedStickerBytes != null) {
           subtitle = context.lang.sticker;
         } else if (_message!.content != null) {
-          subtitle = truncateString(_message!.content!);
+          subtitle = _message!.content!;
         }
       }
       if (_message!.type == MessageType.media.name && _mediaService != null) {
@@ -347,10 +352,16 @@ class _ResponsePreviewState extends State<ResponsePreview> {
                   ),
                 ),
                 if (subtitle != null)
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  MentionNames(
+                    text: subtitle,
+                    contactsById: widget.useSharedData
+                        ? widget.contactsById
+                        : null,
+                    builder: (context, name) => Text(
+                      truncateString(resolveMentions(subtitle!, name)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
             ),

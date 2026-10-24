@@ -41,6 +41,7 @@ import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/mentions.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
@@ -682,6 +683,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
   Iterable<int> _referencedContactIds() sync* {
     for (final message in _data.allMessages) {
+      yield* parseMentions(
+        message.content ?? '',
+      ).map((part) => part.userId).nonNulls;
       final bytes = message.additionalMessageData;
       if (bytes == null) continue;
       try {

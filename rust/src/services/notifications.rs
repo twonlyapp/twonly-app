@@ -381,7 +381,7 @@ pub(crate) async fn record_incoming_event(
             None => false,
         };
 
-        let (kind, reaction) = if is_live_location {
+        let (mut kind, reaction) = if is_live_location {
             ("live_location", None)
         } else {
             match (about_story, message.quote_message_id.is_some(), is_sticker) {
@@ -395,6 +395,24 @@ pub(crate) async fn record_incoming_event(
                 (false, false, false) => ("text", None),
             }
         };
+
+        // Mentions change the description, while retaining the usual blocked,
+        // visible-conversation and notification delivery rules. Replies that
+        // explicitly mention the receiver use the more specific description.
+        if matches!(kind, "text" | "response")
+            && message.text.contains("@[user:")
+            && crate::services::mentions::mentions_user(&message.text, ctx.user_id().await?)
+        {
+            let is_direct = sqlx::query_scalar::<_, i64>(
+                "SELECT is_direct_chat FROM groups WHERE group_id = ?",
+            )
+            .bind(conversation_id.as_deref())
+            .fetch_optional(&mut **transaction)
+            .await?;
+            if is_direct == Some(0) {
+                kind = "mention";
+            }
+        }
 
         Some(NotificationDraft {
             event_id: receipt_id.to_owned(),
@@ -664,7 +682,7 @@ async fn clear_stale_messages(database: &Arc<AppDatabase>) -> Result<()> {
                         messages.is_deleted_from_sender = 1
                         OR (
                             messages.opened_at IS NOT NULL
-                            AND notification_outbox.kind IN ('text', 'response', 'sticker', 'live_location', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
+                            AND notification_outbox.kind IN ('text', 'response', 'mention', 'sticker', 'live_location', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
                         )
                     )
               )
@@ -1180,7 +1198,7 @@ pub(crate) async fn clear_opened_messages(
             SET cleared_at = ?
             WHERE message_id = ?
               AND cleared_at IS NULL
-              AND kind IN ('text', 'response', 'sticker', 'live_location', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
+              AND kind IN ('text', 'response', 'mention', 'sticker', 'live_location', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
             "#,
         )
         .bind(cleared_at)
@@ -1273,6 +1291,7 @@ fn localized_body(locale: &str, row: &PendingRow) -> String {
 
     let key = match row.kind.as_str() {
         "text" => "notificationText",
+        "mention" => "notificationMention",
         "response" => "notificationResponse",
         "sticker" => "notificationSticker",
         "live_location" => "notificationLiveLocation",
@@ -1319,6 +1338,111 @@ pub(crate) fn notification_avatar_path(
 mod tests {
 
     use super::*;
+
+    #[tokio::test]
+    async fn group_mentions_notify_the_target_and_keep_message_contents_private() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+        ctx.inject_test_user_id(42).await?;
+        let db = ctx.app_db.read().await.clone();
+        let mut tx = db.pool.begin().await?;
+        sqlx::query("INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1)")
+            .execute(&mut *tx)
+            .await?;
+        sqlx::query("INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('group', 'Friends', 0), ('direct', 'Alice', 1)")
+            .execute(&mut *tx).await?;
+        let cases = [
+            ("group", "Hi @[user:42]", false, "mention"),
+            ("group", "Hi @[user:42] and @[user:42]", false, "mention"),
+            ("group", "Hi @[user:7]", false, "text"),
+            ("group", "@@[user:42]", false, "text"),
+            ("group", "@@@[user:42]", false, "text"),
+            ("group", "@[user:042]", false, "text"),
+            ("group", "Hi @Me", false, "text"),
+            ("direct", "Hi @[user:42]", false, "text"),
+            ("group", "Hi @[user:42]", true, "mention"),
+            ("group", "Hi @[user:7]", true, "response"),
+        ];
+        for (index, (group, text, reply, kind)) in cases.iter().enumerate() {
+            let id = format!("mention-{index}");
+            sqlx::query("INSERT INTO messages(message_id, group_id, sender_id, type, content) VALUES (?, ?, 7, 'text', ?)")
+                .bind(&id).bind(group).bind(text).execute(&mut *tx).await?;
+            let content = proto::EncryptedContent {
+                group_id: Some((*group).into()),
+                text_message: Some(encrypted_content::TextMessage {
+                    sender_message_id: id.clone(),
+                    text: (*text).into(),
+                    timestamp: current_time().timestamp_millis(),
+                    quote_message_id: reply.then(|| "earlier-message".into()),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            };
+            // Retries must produce only one event, including repeated mentions.
+            for _ in 0..2 {
+                record_incoming_event(&ctx, &mut tx, 7, &id, &content).await?;
+            }
+            let actual: (String, Option<String>) =
+                sqlx::query_as("SELECT kind, content FROM notification_outbox WHERE event_id = ?")
+                    .bind(&id)
+                    .fetch_one(&mut *tx)
+                    .await?;
+            assert_eq!(actual, ((*kind).into(), None));
+        }
+        // Blocked senders remain silent even when mentioning the receiver.
+        sqlx::query("UPDATE contacts SET blocked = 1 WHERE user_id = 7")
+            .execute(&mut *tx)
+            .await?;
+        record_incoming_event(
+            &ctx,
+            &mut tx,
+            7,
+            "blocked-mention",
+            &proto::EncryptedContent {
+                group_id: Some("group".into()),
+                text_message: Some(encrypted_content::TextMessage {
+                    sender_message_id: "blocked-mention".into(),
+                    text: "@[user:42]".into(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+        )
+        .await?;
+        sqlx::query("UPDATE contacts SET blocked = 0 WHERE user_id = 7")
+            .execute(&mut *tx)
+            .await?;
+        tx.commit().await?;
+
+        let batch = pending_batch(&ctx, "en").await?;
+        assert_eq!(batch.additions.len(), cases.len());
+        let mentions: Vec<_> = batch
+            .additions
+            .iter()
+            .filter(|entry| entry.kind == "mention")
+            .collect();
+        assert_eq!(mentions.len(), 3);
+        for mention in mentions {
+            assert_eq!(mention.body, "mentioned you in a message in Friends.");
+            assert!(mention.text_messages_body.is_none());
+            assert!(mention.content.is_none());
+        }
+        let german = pending_batch(&ctx, "de").await?;
+        assert!(german
+            .additions
+            .iter()
+            .filter(|entry| entry.kind == "mention")
+            .all(|entry| entry.body == "hat dich in einer Nachricht in Friends erwähnt."));
+        assert_eq!(
+            clear_conversation(&ctx, "group").await?.len(),
+            cases.len() - 1
+        );
+        assert_eq!(pending_batch(&ctx, "en").await?.additions.len(), 1);
+        Ok(())
+    }
 
     #[tokio::test]
 
@@ -1973,6 +2097,7 @@ mod tests {
         let activity_kinds = [
             "text",
             "response",
+            "mention",
             "sticker",
             "live_location",
             "webxdc",
@@ -2089,7 +2214,10 @@ mod tests {
                 .fetch_one(&database.pool)
                 .await?;
 
-                assert_eq!(other_uncleared, 32);
+                assert_eq!(
+                    other_uncleared,
+                    (media_kinds.len() * 4 + activity_kinds.len()) as i64
+                );
             }
 
             let mut tx = database.pool.begin().await?;

@@ -2344,6 +2344,18 @@ abstract class AppLocalizations {
   /// **'shared their live location{inGroup}.'**
   String notificationLiveLocation(Object inGroup);
 
+  /// No description provided for @notificationMention.
+  ///
+  /// In en, this message translates to:
+  /// **'mentioned you in a message{inGroup}.'**
+  String notificationMention(Object inGroup);
+
+  /// No description provided for @chatMentionUnknownUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown user'**
+  String get chatMentionUnknownUser;
+
   /// No description provided for @notificationText.
   ///
   /// In en, this message translates to:

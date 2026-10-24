@@ -195,6 +195,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
         );
       }
       return ChatTextEntry(
+        contactsById: widget.useSharedData ? widget.userIdToContact : null,
         message: widget.message,
         borderRadius: borderRadius,
         info: info,
@@ -293,6 +294,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
       children: [
         if (widget.message.isDeletedFromSender)
           ChatTextEntry(
+            contactsById: widget.useSharedData ? widget.userIdToContact : null,
             message: widget.message,
             borderRadius: borderRadius,
             info: info,

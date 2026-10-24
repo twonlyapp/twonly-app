@@ -33,6 +33,7 @@ import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/mention_editing_controller.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
@@ -112,7 +113,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   List<StoredMessage> allMediaFiles = [];
   StreamSubscription<List<StoredMessage>>? _subscription;
-  TextEditingController textMessageController = TextEditingController();
+  final textMessageController = MentionEditingController();
+  final _textMessageFocus = FocusNode();
 
   final HashSet<String> _alreadyOpenedMediaIds = HashSet();
 
@@ -158,7 +160,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     _disposeVideoController();
 
     // Persist draft message on close
-    final draftText = textMessageController.text;
+    final draftText = textMessageController.messageText;
     if (!_isStory) {
       unawaited(
         rust_groups.updateGroup(
@@ -173,6 +175,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       );
     }
     textMessageController.dispose();
+    _textMessageFocus.dispose();
 
     super.dispose();
   }
@@ -830,7 +833,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       unawaitedRustCall(
         RustApi.insertAndSendText(
           groupId: currentMessage!.groupId,
-          text: textMessageController.text,
+          text: textMessageController.messageText,
           quoteMessageId: currentMessage!.messageId,
         ),
         'insertAndSendText',
@@ -955,6 +958,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               if (showSendTextMessageInput)
                 MediaViewerMessageInput(
                   controller: textMessageController,
+                  group: _group,
+                  focusNode: _textMessageFocus,
                   safeAreaBottomPadding: MediaQuery.viewPaddingOf(
                     context,
                   ).bottom,

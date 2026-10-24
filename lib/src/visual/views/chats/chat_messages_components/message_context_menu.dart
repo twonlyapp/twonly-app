@@ -4,9 +4,13 @@ import 'package:clock/clock.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
 import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/core/database/app/patch.dart';
@@ -21,8 +25,13 @@ import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
+import 'package:twonly/src/utils/mentions.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
+import 'package:twonly/src/visual/components/mention_decoration.dart';
+import 'package:twonly/src/visual/components/mention_editing_controller.dart';
+import 'package:twonly/src/visual/components/mention_suggestions.dart';
+import 'package:twonly/src/visual/components/mention_text.dart';
 import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
@@ -183,7 +192,7 @@ class MessageContextMenu extends StatelessWidget {
           ContextMenuItem(
             title: context.lang.edit,
             onTap: () async {
-              await editTextMessage(navigator.context, message);
+              await editTextMessage(navigator.context, message, group);
             },
             icon: FontAwesomeIcons.pencil,
           ),
@@ -191,7 +200,32 @@ class MessageContextMenu extends StatelessWidget {
           ContextMenuItem(
             title: context.lang.copy,
             onTap: () async {
-              await Clipboard.setData(ClipboardData(text: message.content!));
+              final menuContext = navigator.context;
+              final text = message.content!;
+              final ids = parseMentions(
+                text,
+              ).map((part) => part.userId).nonNulls.toSet();
+              final contacts = ids.isEmpty
+                  ? <Contact>[]
+                  : await rust_contacts.listContacts(
+                      input: ContactQuery(
+                        filter: ContactFilter.ids,
+                        ids: Int64List.fromList(ids.toList()),
+                      ),
+                      transaction: currentDatabaseSession(),
+                    );
+              if (!menuContext.mounted) return;
+              final byId = {
+                for (final contact in contacts) contact.userId: contact,
+              };
+              await Clipboard.setData(
+                ClipboardData(
+                  text: resolveMentions(
+                    text,
+                    (id) => mentionDisplayName(menuContext, id, byId),
+                  ),
+                ),
+              );
               await HapticFeedback.heavyImpact();
             },
             icon: FontAwesomeIcons.solidCopy,
@@ -376,118 +410,120 @@ Future<String?> showDeleteMessageOptions(
 Future<void> editTextMessage(
   BuildContext context,
   StoredMessage message,
+  Group group,
 ) async {
-  var newText = message.content;
-  final controller = TextEditingController(text: message.content);
+  final controller = MentionEditingController(text: message.content ?? '');
+  final focusNode = FocusNode();
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: 40,
+          ),
+          decoration: BoxDecoration(
+            color: context.color.surfaceContainer,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
             ),
-            child: Container(
-              padding: const EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: 40,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MentionSuggestions(
+                group: group,
+                controller: controller,
+                focusNode: focusNode,
               ),
-              decoration: BoxDecoration(
-                color: context.color.surfaceContainer,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+              MentionInputBackground(
+                controller: controller,
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.sentences,
+                  keyboardType: TextInputType.multiline,
+                  maxLines: 4,
+                  minLines: 1,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: 24),
+              Row(
                 children: [
-                  TextField(
-                    controller: controller,
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.sentences,
-                    keyboardType: TextInputType.multiline,
-                    maxLines: 4,
-                    minLines: 1,
-                    onChanged: (value) => setState(() {
-                      newText = value;
-                    }),
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
+                  Expanded(
+                    child: MyButton(
+                      variant: MyButtonVariant.secondaryMiddle,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(
+                        context.lang.cancel,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: MyButton(
-                          variant: MyButtonVariant.secondaryMiddle,
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text(
-                            context.lang.cancel,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: MyButton(
-                          variant: MyButtonVariant.primaryMiddle,
-                          onPressed: () async {
-                            if (newText != null &&
-                                newText != message.content &&
-                                newText != '') {
-                              final timestamp = clock.now();
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: MyButton(
+                      variant: MyButtonVariant.primaryMiddle,
+                      onPressed: () async {
+                        final newText = controller.messageText;
+                        if (newText != message.content && newText.isNotEmpty) {
+                          final timestamp = clock.now();
 
-                              await rust_messages.editMessage(
-                                id: message.messageId,
-                                text: newText!,
-                                timestamp:
-                                    timestamp.millisecondsSinceEpoch ~/ 1000,
-                                transaction: currentDatabaseSession(),
-                              );
-                              await RustApi.sendEncryptedContentToGroup(
-                                groupId: message.groupId,
-                                content: pb.EncryptedContent(
-                                  messageUpdate:
-                                      pb.EncryptedContent_MessageUpdate(
-                                        type: pb
-                                            .EncryptedContent_MessageUpdate_Type
-                                            .EDIT_TEXT,
-                                        senderMessageId: message.messageId,
-                                        text: newText,
-                                        timestamp: Int64(
-                                          timestamp.millisecondsSinceEpoch,
-                                        ),
-                                      ),
-                                ).writeToBuffer(),
-                                onlySendIfNoReceiptsAreOpen: false,
-                              );
-                            }
-                            if (!context.mounted) return;
-                            Navigator.of(context).pop();
-                          },
-                          child: Text(
-                            context.lang.ok,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+                          await rust_messages.editMessage(
+                            id: message.messageId,
+                            text: newText,
+                            timestamp: timestamp.millisecondsSinceEpoch ~/ 1000,
+                            transaction: currentDatabaseSession(),
+                          );
+                          await RustApi.sendEncryptedContentToGroup(
+                            groupId: message.groupId,
+                            content: pb.EncryptedContent(
+                              messageUpdate: pb.EncryptedContent_MessageUpdate(
+                                type: pb
+                                    .EncryptedContent_MessageUpdate_Type
+                                    .EDIT_TEXT,
+                                senderMessageId: message.messageId,
+                                text: newText,
+                                timestamp: Int64(
+                                  timestamp.millisecondsSinceEpoch,
+                                ),
+                              ),
+                            ).writeToBuffer(),
+                            onlySendIfNoReceiptsAreOpen: false,
+                          );
+                        }
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(
+                        context.lang.ok,
+                        textAlign: TextAlign.center,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          );
-        },
+            ],
+          ),
+        ),
       );
     },
   );
+  controller.dispose();
+  focusNode.dispose();
 }

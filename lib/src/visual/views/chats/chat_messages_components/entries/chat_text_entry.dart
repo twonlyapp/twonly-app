@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
@@ -11,12 +12,14 @@ class ChatTextEntry extends StatelessWidget {
     required this.message,
     required this.borderRadius,
     required this.info,
+    this.contactsById,
     super.key,
   });
 
   final StoredMessage message;
   final BorderRadius borderRadius;
   final BubbleInfo info;
+  final Map<int, Contact>? contactsById;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +63,7 @@ class ChatTextEntry extends StatelessWidget {
                   child: BetterText(
                     text: info.text,
                     textColor: info.textColor,
+                    contactsById: contactsById,
                   ),
                 ),
                 if (showTime) FriendlyMessageTime(message: message),

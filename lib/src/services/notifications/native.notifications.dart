@@ -50,6 +50,7 @@ class NativeNotificationService {
   /// stories and contact requests stay on the chat overview.
   static bool opensConversation(String? kind) =>
       kind == 'text' ||
+      kind == 'mention' ||
       kind == 'response' ||
       kind == 'sticker' ||
       kind == 'live_location' ||

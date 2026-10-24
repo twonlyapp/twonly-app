@@ -16,6 +16,7 @@ pub mod media_exif;
 pub mod media_upload;
 pub mod mediafiles;
 pub mod messages;
+pub mod mentions;
 pub mod notifications;
 pub mod outbox_dispatch;
 pub mod stickers;
