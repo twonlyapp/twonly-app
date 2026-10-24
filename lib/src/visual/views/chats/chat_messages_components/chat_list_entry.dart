@@ -143,7 +143,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
           if (mounted) setState(() {});
         } else {
           Log.error(
-            'Media file not found for ${widget.message.messageId} => ${widget.message.mediaId}',
+            'Media file not found for chat message',
           );
         }
       });

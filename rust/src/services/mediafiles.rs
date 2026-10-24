@@ -323,7 +323,7 @@ impl MediaFileService {
         let media_id = &media.media_id;
 
         let token = media.download_token.as_deref().ok_or_else(|| {
-            TwonlyError::Generic(format!("media {media_id} has no download token"))
+            TwonlyError::Generic("media has no download token".into())
         })?;
 
         let url = format!(
@@ -339,7 +339,8 @@ impl MediaFileService {
             .timeout(Duration::from_secs(30))
             .send()
             .await
-            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+            // reqwest includes the URL in Display, including the secret token.
+            .map_err(|error| TwonlyError::Generic(error.without_url().to_string()))?;
 
         let status = response.status();
 
@@ -358,7 +359,7 @@ impl MediaFileService {
         let bytes = response
             .bytes()
             .await
-            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+            .map_err(|error| TwonlyError::Generic(error.without_url().to_string()))?;
 
         let partial_path = self.partial_download_path(media_id, &media.media_type);
 

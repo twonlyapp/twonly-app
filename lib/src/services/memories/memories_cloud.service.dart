@@ -294,8 +294,7 @@ class MemoriesCloudService {
           mediaId: mediaFile.mediaId,
         );
       } catch (error, stackTrace) {
-        final message =
-            'Could not get upload URLs for memory ${mediaFile.mediaId}';
+        const message = 'Could not get upload URLs for memory';
         if (_expectedUploadFailure(error)) {
           // The row remains queued and the periodic worker retries it.
           Log.warn(message, error, stackTrace);
@@ -357,7 +356,7 @@ class MemoriesCloudService {
         throw Exception('Server confirmation failed: ${confirmRes.error}');
       }
     } catch (error, stackTrace) {
-      final message = 'Error backing up memory ${mediaFile.mediaId}';
+      const message = 'Error backing up memory';
       if (_expectedUploadFailure(error)) {
         Log.warn(message, error, stackTrace);
       } else {
@@ -427,9 +426,17 @@ class MemoriesCloudService {
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode != 200 && response.statusCode != 204) {
+      // Request/host IDs and payload sizes differ on every attempt. Retain
+      // diagnostics locally and report only the stable status and S3 code.
+      Log.warn(
+        'S3 upload rejected (${encryptedBytes.length} encrypted bytes): '
+        '${response.body}',
+      );
+      final code = RegExp(
+        r'<Code>\s*([A-Za-z][A-Za-z0-9]{0,99})\s*</Code>',
+      ).firstMatch(response.body)?.group(1);
       throw Exception(
-        'S3 upload failed: ${response.statusCode} '
-        '(${encryptedBytes.length} encrypted bytes) - ${response.body}',
+        'S3 upload failed: ${response.statusCode} (${code ?? 'Unknown'})',
       );
     }
   }

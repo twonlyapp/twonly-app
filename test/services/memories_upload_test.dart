@@ -350,10 +350,13 @@ void main() {
         hasLength(1),
       );
       final record = records.singleWhere(
-        (record) => record.message == 'Error backing up memory $mediaId',
+        (record) => record.message == 'Error backing up memory',
       );
       expect(record.level, Level.SHOUT);
-      expect(record.error.toString(), contains('S3 upload failed: 500'));
+      expect(
+        record.error.toString(),
+        'Exception: S3 upload failed: 500 (Unknown)',
+      );
       expect(record.stackTrace, isNotNull);
       expect(service.isProcessing, isFalse);
 
@@ -373,6 +376,39 @@ void main() {
       );
     },
   );
+
+  for (final (body, code) in [
+    (
+      '<Error><Code>EntityTooLarge</Code><RequestId>unique-request</RequestId>'
+          '<HostId>unique-host</HostId></Error>',
+      'EntityTooLarge',
+    ),
+    ('<html>Request unique-request failed</html>', 'Unknown'),
+  ]) {
+    test(
+      'S3 $code reports a stable reason without the response body',
+      () async {
+        final client = MockClient((_) async => http.Response(body, 400));
+        addTearDown(client.close);
+        await http.runWithClient(service.checkUploads, () => client);
+
+        final record = records.singleWhere((r) => r.level == Level.SHOUT);
+        expect(record.message, 'Error backing up memory');
+        expect(
+          record.error.toString(),
+          'Exception: S3 upload failed: 400 ($code)',
+        );
+        expect(record.stackTrace, isNotNull);
+        expect(api.confirmations, 0);
+        expect(
+          records.any(
+            (r) => r.level == Level.WARNING && r.message.contains(body),
+          ),
+          isTrue,
+        );
+      },
+    );
+  }
 
   for (final uploadPath in ['/thumbnail', '/full']) {
     for (final error in [
@@ -413,7 +449,7 @@ void main() {
         await http.runWithClient(service.checkUploads, () => client);
 
         final record = records.singleWhere(
-          (record) => record.message == 'Error backing up memory $mediaId',
+          (record) => record.message == 'Error backing up memory',
         );
         expect(record.level, Level.WARNING);
         expect(record.error, same(error));
@@ -544,8 +580,7 @@ void main() {
         await service.checkUploads();
 
         final record = records.singleWhere(
-          (record) =>
-              record.message == 'Could not get upload URLs for memory $mediaId',
+          (record) => record.message == 'Could not get upload URLs for memory',
         );
         expect(record.error, same(api.error));
         expect(record.stackTrace, same(api.stackTrace));
