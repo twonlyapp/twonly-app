@@ -12,7 +12,7 @@ use crate::utils::{current_time, start_of_local_day};
 
 use crate::database::app::contacts::table::Contact;
 
-const MAX_FUTURE_TIMESTAMP_SKEW_SECONDS: i64 = 10 * 60;
+pub(crate) const MAX_FUTURE_TIMESTAMP_SKEW_SECONDS: i64 = 10 * 60;
 
 pub use super::table::Group;
 

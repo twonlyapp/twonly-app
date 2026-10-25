@@ -9,10 +9,10 @@ use crate::api::messages::incoming::messages::queue_encrypted_content;
 use crate::api::proto::client::encrypted_content;
 use crate::context::Context;
 use crate::database::app::contacts::table::Contact;
-use crate::database::app::groups::native::Group;
+use crate::database::app::groups::native::{Group, MAX_FUTURE_TIMESTAMP_SKEW_SECONDS};
 use crate::error::{Result, TwonlyError};
 use crate::services::groups::GroupService;
-use crate::utils::{is_today, milliseconds_to_seconds, new_uuid_v4};
+use crate::utils::{current_time, is_today, milliseconds_to_seconds, new_uuid_v4};
 use rand::SeedableRng;
 use sqlx::{Sqlite, Transaction};
 
@@ -280,7 +280,13 @@ pub(crate) async fn handle_group_update(
 pub(crate) async fn handle_flame_sync(
     t: &mut Transaction<'_, Sqlite>, group_id: &str, flame: encrypted_content::FlameSync,
 ) -> Result<()> {
-    let last_flame_counter_change = milliseconds_to_seconds(flame.last_flame_counter_change);
+    // The peer chooses this timestamp, and a future one would keep the streak
+    // alive past its real expiry once it is merged into the exchange times.
+    let last_flame_counter_change = milliseconds_to_seconds(flame.last_flame_counter_change).min(
+        current_time()
+            .timestamp()
+            .saturating_add(MAX_FUTURE_TIMESTAMP_SKEW_SECONDS),
+    );
 
     let Some(group) = sqlx::query!(
         r#"
@@ -603,9 +609,70 @@ mod flame_tests {
 
     use super::*;
     use crate::database::app::AppDatabase;
-    use crate::utils::{current_time, start_of_local_day};
+    use crate::utils::start_of_local_day;
 
     const DAY: i64 = 86_400;
+
+    #[tokio::test]
+
+    async fn forced_sync_cannot_date_a_restore_into_the_future() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let path = directory.path().join("app.sqlite");
+
+        let db = AppDatabase::new(path.to_str().unwrap(), None, false).await?;
+
+        db.run_migrations().await?;
+
+        let lapsed = start_of_local_day()? - 4 * DAY;
+
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, flame_counter,
+                                last_message_send, last_message_received, \
+             last_flame_counter_change)
+             VALUES ('chat', 'Chat', 0, ?, ?, ?)",
+        )
+        .bind(lapsed)
+        .bind(lapsed)
+        .bind(lapsed)
+        .execute(&db.pool)
+        .await?;
+
+        let before = current_time().timestamp();
+
+        let mut t = db.pool.begin().await?;
+
+        handle_flame_sync(
+            &mut t,
+            "chat",
+            encrypted_content::FlameSync {
+                flame_counter: 12,
+                last_flame_counter_change: (before + 30 * DAY) * 1000,
+                force_update: true,
+                best_friend: false,
+            },
+        )
+        .await?;
+
+        t.commit().await?;
+
+        let after = current_time().timestamp();
+
+        let dates: (i64, i64, i64) = sqlx::query_as(
+            "SELECT last_message_send, last_message_received, last_flame_counter_change
+             FROM groups WHERE group_id = 'chat'",
+        )
+        .fetch_one(&db.pool)
+        .await?;
+
+        for date in [dates.0, dates.1, dates.2] {
+            assert!(date >= before + MAX_FUTURE_TIMESTAMP_SKEW_SECONDS);
+
+            assert!(date <= after + MAX_FUTURE_TIMESTAMP_SKEW_SECONDS);
+        }
+
+        Ok(())
+    }
 
     #[tokio::test]
 
