@@ -18906,6 +18906,8 @@ impl SseDecode for crate::database::app::messages::table::StoredMessage {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_groupId = <String>::sse_decode(deserializer);
         let mut var_messageId = <String>::sse_decode(deserializer);
+        let mut var_activityMessageId = <Option<String>>::sse_decode(deserializer);
+        let mut var_originalSenderId = <Option<i64>>::sse_decode(deserializer);
         let mut var_senderId = <Option<i64>>::sse_decode(deserializer);
         let mut var_type = <String>::sse_decode(deserializer);
         let mut var_content = <Option<String>>::sse_decode(deserializer);
@@ -18927,6 +18929,8 @@ impl SseDecode for crate::database::app::messages::table::StoredMessage {
         return crate::database::app::messages::table::StoredMessage {
             group_id: var_groupId,
             message_id: var_messageId,
+            activity_message_id: var_activityMessageId,
+            original_sender_id: var_originalSenderId,
             sender_id: var_senderId,
             r#type: var_type,
             content: var_content,
@@ -22542,6 +22546,8 @@ impl flutter_rust_bridge::IntoDart for crate::database::app::messages::table::St
         [
             self.group_id.into_into_dart().into_dart(),
             self.message_id.into_into_dart().into_dart(),
+            self.activity_message_id.into_into_dart().into_dart(),
+            self.original_sender_id.into_into_dart().into_dart(),
             self.sender_id.into_into_dart().into_dart(),
             self.r#type.into_into_dart().into_dart(),
             self.content.into_into_dart().into_dart(),
@@ -26338,6 +26344,8 @@ impl SseEncode for crate::database::app::messages::table::StoredMessage {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.group_id, serializer);
         <String>::sse_encode(self.message_id, serializer);
+        <Option<String>>::sse_encode(self.activity_message_id, serializer);
+        <Option<i64>>::sse_encode(self.original_sender_id, serializer);
         <Option<i64>>::sse_encode(self.sender_id, serializer);
         <String>::sse_encode(self.r#type, serializer);
         <Option<String>>::sse_encode(self.content, serializer);

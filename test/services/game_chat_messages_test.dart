@@ -36,7 +36,7 @@ StoredMessage message(
 }
 
 void main() {
-  test('latest game text stays beside its card despite timestamp ties', () {
+  test('only the original game card remains despite cached move text', () {
     final ordered = arrangeGameMessages([
       message('old-info', 100, instance: 'card'),
       message('a-latest-info', 300, instance: 'card'),
@@ -44,29 +44,57 @@ void main() {
       message('card', 300, card: true),
     ]);
     expect(ordered.map((m) => m.messageId), [
-      'card',
-      'a-latest-info',
       'b-person',
+      'card',
     ]);
   });
 
   test('game instances remain independent and shared app text is retained', () {
     final ordered = arrangeGameMessages([
-      message('card', 100, card: true),
       message('old-info', 100, instance: 'card'),
       message('other', 200, card: true),
       message('other-info', 200, instance: 'other'),
       message('shared-text', 250, instance: 'card'),
+      message('card', 300, card: true),
       message('latest-info', 300, instance: 'card'),
     ]);
     expect(ordered.map((m) => m.messageId), [
       'other',
-      'other-info',
       'shared-text',
       'card',
-      'latest-info',
     ]);
-    expect(ordered[3].createdAt, ordered[4].createdAt);
+    expect(
+      ordered.last.createdAt,
+      databaseDate(
+        databaseSeconds(
+          DateTime.fromMillisecondsSinceEpoch(300000),
+        ),
+      ),
+    );
+  });
+
+  test('each move has its own identity even within the same second', () {
+    final first = message('card', 300, card: true);
+    final next = StoredMessage(
+      groupId: first.groupId,
+      messageId: first.messageId,
+      activityMessageId: 'next-turn-info',
+      type: first.type,
+      mediaStored: false,
+      mediaReopened: false,
+      isDeletedFromSender: false,
+      isWidgetMedia: false,
+      isStory: false,
+      createdAtSeconds: first.createdAtSeconds,
+    );
+    expect(messageActivityId(first), 'card');
+    expect(messageActivityId(next), 'next-turn-info');
+    expect(
+      next
+          .copyWith(content: const NullableText(value: 'copy'))
+          .activityMessageId,
+      'next-turn-info',
+    );
   });
 
   test(

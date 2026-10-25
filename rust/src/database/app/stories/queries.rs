@@ -11,6 +11,8 @@ pub async fn received(
         r#"
             SELECT m.group_id AS "group_id!",
                 m.message_id AS "message_id!",
+                NULL AS "activity_message_id?: String",
+                m.sender_id AS "original_sender_id?",
                 m.sender_id AS "sender_id?",
                 m.type AS "type!",
                 m.content AS "content?",

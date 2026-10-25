@@ -50,6 +50,13 @@ static AR_TRANSLATIONS: LazyLock<HashMap<String, String>> =
 /// sent -- but an `info` is written to be read, and becomes a chat row of its
 /// own on arrival. That row is what the receiver is woken and notified for.
 
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct GameNotificationContent {
+    webxdc_game: crate::services::webxdc::GameNotification,
+    instance_id: String,
+}
+
 fn webxdc_announcement(
     message: &encrypted_content::AdditionalDataMessage, user_id: i64,
 ) -> Option<String> {
@@ -66,19 +73,28 @@ fn webxdc_announcement(
     match update.notify.as_deref() {
         None => Some(announcement),
         Some(raw) => {
-            let recipients: std::collections::BTreeMap<String, String> =
-                serde_json::from_str(raw).ok()?;
+            let recipients: std::collections::BTreeMap<
+                String,
+                crate::services::webxdc::AppNotification,
+            > = serde_json::from_str(raw).ok()?;
 
             let address =
                 crate::services::webxdc::WebxdcService::address_for(&update.instance_id, user_id);
 
-            let text = recipients.get(&address)?;
-
-            let mut notification = update;
-
-            notification.info = Some(text.clone());
-
-            crate::services::webxdc::announcement(&notification)
+            match recipients.get(&address)? {
+                crate::services::webxdc::AppNotification::Text(text) => {
+                    let mut notification = update;
+                    notification.info = Some(text.clone());
+                    crate::services::webxdc::announcement(&notification)
+                }
+                crate::services::webxdc::AppNotification::Game { game } => {
+                    serde_json::to_string(&GameNotificationContent {
+                        webxdc_game: *game,
+                        instance_id: update.instance_id,
+                    })
+                    .ok()
+                }
+            }
         }
     }
 }
@@ -533,9 +549,8 @@ pub(crate) async fn record_incoming_event(
             conversation_id,
             sender_id: from_user_id,
             message_id: Some(message_id),
-            // An app speaks for itself: the alert reads "Alice is on turn"
-            // rather than "sent a message", so a game's traffic stays
-            // distinguishable from the people in the chat talking.
+            // Games carry an outcome for twonly to localize at presentation;
+            // other apps can still provide a plain announcement.
             kind: if announcement.is_some() {
                 "webxdc"
             } else {
@@ -793,6 +808,7 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
     let mut additions = Vec::with_capacity(rows.len());
 
     for mut row in rows {
+        localize_game_notification(&database.read_pool, locale, &mut row).await?;
         let flame_state = row
             .conversation_id
             .as_ref()
@@ -1324,11 +1340,56 @@ fn group_suffix(locale: &str, row: &PendingRow) -> String {
     }
 }
 
+async fn localize_game_notification(
+    pool: &sqlx::SqlitePool, locale: &str, row: &mut PendingRow,
+) -> Result<()> {
+    if row.kind != "webxdc" {
+        return Ok(());
+    }
+    let Some(content) = row
+        .content
+        .as_deref()
+        .and_then(|content| serde_json::from_str::<GameNotificationContent>(content).ok())
+    else {
+        return Ok(());
+    };
+    // Resolve the title from this chat's installed app, never from game text.
+    let app: Option<(String, Option<String>, Option<String>)> = sqlx::query_as(
+        "SELECT i.app_id, a.name, a.name_translations FROM webxdc_instances i LEFT JOIN \
+         webxdc_apps a ON a.app_id = i.app_id AND a.version = i.version WHERE i.instance_id = ? \
+         AND i.group_id = ?",
+    )
+    .bind(&content.instance_id)
+    .bind(&row.conversation_id)
+    .fetch_optional(pool)
+    .await?;
+    let name = app
+        .map(|(id, name, translations)| {
+            translations
+                .and_then(|names| {
+                    crate::services::webxdc::store::pick_localized(
+                        &names,
+                        &[locale.replace('_', "-")],
+                    )
+                })
+                .or(name)
+                .unwrap_or(id)
+        })
+        .unwrap_or_else(|| translation(locale, "notificationGameFallbackName").to_owned());
+    let key = match content.webxdc_game {
+        crate::services::webxdc::GameNotification::Turn => "notificationGameTurn",
+        crate::services::webxdc::GameNotification::Won => "notificationGameWon",
+        crate::services::webxdc::GameNotification::Lost => "notificationGameLost",
+    };
+    row.content = Some(translation(locale, key).replace("{gameName}", &name));
+    Ok(())
+}
+
 fn localized_body(locale: &str, row: &PendingRow) -> String {
     let in_group = group_suffix(locale, row);
 
-    // An app's announcement is already a whole sentence written for the
-    // reader, so it is shown as it is rather than described.
+    // Game outcomes were localized above. Other apps' plain announcements
+    // remain readable as supplied by those apps.
     if row.kind == "webxdc" {
         if let Some(announcement) = row.content.as_deref().filter(|text| !text.is_empty()) {
             return announcement.to_owned();
@@ -2724,6 +2785,122 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn game_outcomes_use_receiver_localization_catalog_names_and_contact_names() -> Result<()>
+    {
+        use crate::services::webxdc::WebxdcService;
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+        let database = ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        for statement in [
+            "INSERT INTO contacts(user_id, username, display_name, nick_name) VALUES \
+             (7,'ben','Ben','Benny')",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('g','Games',1)",
+            "INSERT INTO webxdc_apps(app_id, version, name, name_translations, bundle_sha256, \
+             bundle_bytes, cached_at) VALUES \
+             ('chess',1,'Chess','{\"en\":\"Chess\",\"de\":\"Schach\",\"ar\":\"الشطرنج\"}','hash',\
+             1,0)",
+        ] {
+            sqlx::query(statement).execute(&mut *tx).await?;
+        }
+        for outcome in ["turn", "won", "lost"] {
+            let instance_id = format!("card-{outcome}");
+            sqlx::query(
+                "INSERT INTO messages(message_id,group_id,type) VALUES (?,'g','webxdcApp')",
+            )
+            .bind(&instance_id)
+            .execute(&mut *tx)
+            .await?;
+            sqlx::query(
+                "INSERT INTO webxdc_instances(instance_id,group_id,app_id,version,origin_token) \
+                 VALUES (?,'g','chess',1,?)",
+            )
+            .bind(&instance_id)
+            .bind(&instance_id)
+            .execute(&mut *tx)
+            .await?;
+            let update = proto::WebxdcUpdate {
+                instance_id: instance_id.clone(),
+                payload: "{}".into(),
+                info: Some("Sender supplied words must not become the push text".into()),
+                notify: Some(serde_json::json!({WebxdcService::address_for(&instance_id,42): {"game":outcome}}).to_string()),
+                ..Default::default()
+            };
+            WebxdcService::handle_incoming_update(&mut tx, outcome, "g", 7, &update, 1).await?;
+            let data = proto::AdditionalMessageData {
+                webxdc_update: Some(update),
+                ..Default::default()
+            };
+            let content = proto::EncryptedContent {
+                group_id: Some("g".into()),
+                additional_data_message: Some(encrypted_content::AdditionalDataMessage {
+                    sender_message_id: outcome.into(),
+                    hidden: true,
+                    additional_message_data: Some(prost::Message::encode_to_vec(&data)),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            };
+            assert!(should_wake_receiver(&mut tx, 42, &content).await?);
+            assert!(!should_wake_receiver(&mut tx, 43, &content).await?);
+            record_incoming_event(&ctx, &mut tx, 7, outcome, &content).await?;
+        }
+        tx.commit().await?;
+        for (locale, expected) in [
+            (
+                "en",
+                [
+                    "has played Chess. It is your turn.",
+                    "has played Chess. You have won.",
+                    "has played Chess. You have lost.",
+                ],
+            ),
+            (
+                "de-DE",
+                [
+                    "hat Schach gespielt. Du bist am Zug.",
+                    "hat Schach gespielt. Du hast gewonnen.",
+                    "hat Schach gespielt. Du hast verloren.",
+                ],
+            ),
+            (
+                "ar",
+                [
+                    "لعب الشطرنج. حان دورك.",
+                    "لعب الشطرنج. لقد فزت.",
+                    "لعب الشطرنج. لقد خسرت.",
+                ],
+            ),
+        ] {
+            let batch = pending_batch(&ctx, locale).await?;
+            assert_eq!(batch.additions.len(), 3);
+            for (outcome, body) in ["turn", "won", "lost"].into_iter().zip(expected) {
+                let alert = batch
+                    .additions
+                    .iter()
+                    .find(|alert| alert.event_id == outcome)
+                    .unwrap();
+                assert_eq!(alert.title, "Benny");
+                assert_eq!(alert.body, body);
+            }
+        }
+        let address = WebxdcService::address_for("instance", 42);
+        for malformed in [
+            serde_json::json!({"game":"draw"}),
+            serde_json::json!({"game":"turn","text":"injected"}),
+        ] {
+            assert!(announcement_of(&targeted_update(
+                &serde_json::json!({&address:malformed}).to_string()
+            ))
+            .is_none());
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
 
     async fn visible_game_moves_keep_chat_info_without_alerting_and_other_games_still_alert(
     ) -> Result<()> {
@@ -2770,7 +2947,7 @@ mod tests {
                 payload: "{}".into(),
                 info: Some("Anna played a move. Ben is on turn".into()),
                 notify: Some(
-                    serde_json::json!({WebxdcService::address_for(instance_id, 42): "Your turn"})
+                    serde_json::json!({WebxdcService::address_for(instance_id, 42): {"game":"turn"}})
                         .to_string(),
                 ),
                 ..Default::default()
@@ -2832,10 +3009,12 @@ mod tests {
 
         assert_eq!(batch.additions.len(), 2);
 
-        assert!(batch
-            .additions
-            .iter()
-            .all(|alert| alert.body == "Your turn"));
+        assert!(batch.additions.iter().all(|alert| alert.body
+            == if alert.event_id == "other-game-move" {
+                "has played mills. It is your turn."
+            } else {
+                "has played connect4. It is your turn."
+            }));
 
         assert!(batch
             .additions

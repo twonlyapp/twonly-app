@@ -6,6 +6,7 @@ import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_send_state_icon.dart';
 
 Group _group() => Group(
@@ -45,22 +46,67 @@ StoredMessage _mediaMessage({bool received = true, bool opened = true}) =>
       createdAtSeconds: databaseSeconds(DateTime(2026)),
     );
 
-Widget _status(StoredMessage message, {bool showDraft = false}) => MaterialApp(
+Widget _status(
+  StoredMessage message, {
+  bool showDraft = false,
+  Set<String> acknowledgedIds = const {},
+}) => MaterialApp(
   theme: lightTheme,
   locale: const Locale('en'),
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: Scaffold(
-    body: MessageSendStateIcon(
-      [message],
-      const [],
-      group: _group(),
-      showDraft: showDraft,
+    body: ChatMessageActionScope(
+      ackedMessageIds: acknowledgedIds,
+      child: MessageSendStateIcon(
+        [message],
+        const [],
+        group: _group(),
+        showDraft: showDraft,
+      ),
     ),
   ),
 );
 
 void main() {
+  testWidgets('receiver acknowledgement clears a stale sending status', (
+    tester,
+  ) async {
+    // The message snapshot intentionally stays unchanged while the delivery
+    // action arrives, as with an older page retained by the chat view.
+    final message = _mediaMessage(received: false, opened: false);
+    await tester.pumpWidget(_status(message));
+    await tester.pump();
+    expect(find.text('Sending'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pumpWidget(
+      _status(message, acknowledgedIds: const {'message'}),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Received'), findsOneWidget);
+    expect(find.text('Sending'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets(
+    'another message acknowledgement does not finish a pending send',
+    (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _status(
+          _mediaMessage(received: false, opened: false),
+          acknowledgedIds: const {'another-message'},
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Sending'), findsOneWidget);
+      expect(find.text('Received'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
   final draftIcon = find.byIcon(FontAwesomeIcons.pen.data);
   for (final received in [true, false]) {
     testWidgets(

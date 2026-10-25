@@ -618,6 +618,20 @@ impl MessageService {
             return Ok(());
         }
 
+        let database = self.ctx.app_db.read().await.clone();
+        // A game card is stable in the UI, while each move has its own receipt
+        // identity. Snapshot that identity before sending, so a turn arriving
+        // during the request cannot accidentally be acknowledged as opened.
+        let message_ids = crate::database::app::messages::queries::opened_targets(
+            &mut *database.read_pool.acquire().await?,
+            &message_ids,
+            contact_id,
+        )
+        .await?;
+        if message_ids.is_empty() {
+            return Ok(());
+        }
+
         let timestamp = chrono::Utc::now().timestamp_millis();
 
         let content = proto::EncryptedContent {
@@ -637,8 +651,6 @@ impl MessageService {
             .encrypted_content(content.encode_to_vec())
             .call()
             .await?;
-
-        let database = self.ctx.app_db.read().await.clone();
 
         let mut transaction = database.pool.begin().await?;
 

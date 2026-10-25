@@ -7,6 +7,10 @@ use flutter_rust_bridge::frb;
 pub struct StoredMessage {
     pub group_id: String,
     pub message_id: String,
+    /// Current game move's receipt identity; the card's message ID stays fixed.
+    pub activity_message_id: Option<String>,
+    /// Protocol author, retained when a game's displayed player changes.
+    pub original_sender_id: Option<i64>,
     pub sender_id: Option<i64>,
     pub r#type: String,
     pub content: Option<String>,

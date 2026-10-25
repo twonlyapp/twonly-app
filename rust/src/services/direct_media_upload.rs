@@ -1111,18 +1111,75 @@ impl DirectMediaUploadService {
 
         let database = self.ctx.app_db.read().await.clone();
 
+        // Retire the durable retry only with the status it exists to publish.
+        // A cancelled/failed acknowledgement must leave the job and its files
+        // intact so the next reconciliation can finish updating the chat.
+        let mut transaction = database.pool.begin().await?;
+
         let claimed = sqlx::query(
             "DELETE FROM direct_media_upload_jobs WHERE attachment_id = ? AND state IN \
              ('prepared', 'scheduled', 'waiting_for_server')",
         )
         .bind(&job.attachment_id)
-        .execute(&database.pool)
+        .execute(&mut *transaction)
         .await?
         .rows_affected();
 
         if claimed == 0 {
             return Ok(());
         }
+
+        let slot_state = if matches!(outcome, Outcome::Uploaded) {
+            "consumed"
+        } else {
+            "abandoned"
+        };
+
+        sqlx::query("UPDATE direct_media_upload_slots SET state = ? WHERE attachment_id = ?")
+            .bind(slot_state)
+            .bind(&job.attachment_id)
+            .execute(&mut *transaction)
+            .await?;
+
+        match outcome {
+            Outcome::Uploaded => {
+                MediaFile::mark_uploaded(&mut transaction, &job.media_id).await?;
+
+                // A newer request may have arrived while the OS transferred
+                // this job. Only clear the request set this job carried.
+                sqlx::query(
+                    r#"UPDATE media_files SET reupload_requested_by = NULL, reupload_targets = NULL
+                       WHERE media_id = ? AND reupload_requested_by IS ? AND reupload_targets IS ?"#,
+                )
+                .bind(&job.media_id)
+                .bind(&job.reupload_requested_by)
+                .bind(&job.reupload_targets)
+                .execute(&mut *transaction)
+                .await?;
+            }
+            // A rejection is a policy decision (quota, size, plan). Retrying it
+            // with the same bytes would fail the same way.
+            Outcome::Rejected => {
+                sqlx::query(
+                    "UPDATE media_files SET upload_state = 'uploadLimitReached' WHERE media_id = ?",
+                )
+                .bind(&job.media_id)
+                .execute(&mut *transaction)
+                .await?;
+            }
+            Outcome::Retry => {
+                sqlx::query(
+                    r#"UPDATE media_files SET upload_state = 'preprocessing'
+                       WHERE media_id = ?
+                         AND (upload_state != 'uploaded' OR reupload_requested_by IS NOT NULL OR reupload_targets IS NOT NULL)"#,
+                )
+                .bind(&job.media_id)
+                .execute(&mut *transaction)
+                .await?;
+            }
+        }
+
+        transaction.commit().await?;
 
         for path in [
             &job.multipart_path,
@@ -1142,65 +1199,11 @@ impl DirectMediaUploadService {
 
         let _ = std::fs::remove_dir(&job_dir);
 
-        let slot_state = if matches!(outcome, Outcome::Uploaded) {
-            "consumed"
-        } else {
-            "abandoned"
-        };
-
-        sqlx::query("UPDATE direct_media_upload_slots SET state = ? WHERE attachment_id = ?")
-            .bind(slot_state)
-            .bind(&job.attachment_id)
-            .execute(&database.pool)
-            .await?;
-
-        // The cache has just lost one; refill in the background so the next
-        // send does not have to be online to reserve one. Only once this slot
-        // has left `reserved`, so the refill does not report it as still held.
+        // Refill only after the slot's committed transition out of reserved.
         self.spawn_slot_refill();
 
-        match outcome {
-            Outcome::Uploaded => {
-                let mut transaction = database.pool.begin().await?;
-
-                MediaFile::mark_uploaded(&mut transaction, &job.media_id).await?;
-
-                // A newer request may have arrived while the OS transferred
-                // this job. Only clear the request set this job carried.
-                sqlx::query(
-                    r#"UPDATE media_files SET reupload_requested_by = NULL, reupload_targets = NULL
-                       WHERE media_id = ? AND reupload_requested_by IS ? AND reupload_targets IS ?"#,
-                )
-                .bind(&job.media_id)
-                .bind(&job.reupload_requested_by)
-                .bind(&job.reupload_targets)
-                .execute(&mut *transaction)
-                .await?;
-
-                transaction.commit().await?;
-
-                self.remove_encrypted_copy(&job.media_id).await;
-            }
-            // A rejection is a policy decision (quota, size, plan). Retrying it
-            // with the same bytes would fail the same way.
-            Outcome::Rejected => {
-                sqlx::query(
-                    "UPDATE media_files SET upload_state = 'uploadLimitReached' WHERE media_id = ?",
-                )
-                .bind(&job.media_id)
-                .execute(&database.pool)
-                .await?;
-            }
-            Outcome::Retry => {
-                sqlx::query(
-                    r#"UPDATE media_files SET upload_state = 'preprocessing'
-                       WHERE media_id = ?
-                         AND (upload_state != 'uploaded' OR reupload_requested_by IS NOT NULL OR reupload_targets IS NOT NULL)"#,
-                )
-                .bind(&job.media_id)
-                .execute(&database.pool)
-                .await?;
-            }
+        if matches!(outcome, Outcome::Uploaded) {
+            self.remove_encrypted_copy(&job.media_id).await;
         }
 
         Ok(())
@@ -2570,6 +2573,46 @@ mod tests {
                 );
             }
         }
+
+        // Simulate completion reaching the device, then failing to publish the
+        // chat's acknowledgement. It must retain both the durable retry and
+        // the immutable request files, rather than strand a delivered send.
+        sqlx::raw_sql(
+            "CREATE TRIGGER reject_upload_ack BEFORE UPDATE OF ack_by_server ON messages
+             BEGIN SELECT RAISE(ABORT, 'injected acknowledgement failure'); END;",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        assert!(service.settle(&job, Outcome::Uploaded).await.is_err());
+        assert_eq!(service.pending_job_count().await?, 1);
+        let slot_state: String = sqlx::query_scalar(
+            "SELECT state FROM direct_media_upload_slots WHERE attachment_id = ?",
+        )
+        .bind(&job.attachment_id)
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(slot_state, "reserved");
+        let upload_state: String = sqlx::query_scalar(
+            "SELECT upload_state FROM media_files WHERE media_id = 'pending-media'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(upload_state, "backgroundUploadTaskStarted");
+        for path in [
+            &job.multipart_path,
+            &job.manifest_path,
+            &job.complete_body_path,
+        ] {
+            assert!(
+                Path::new(path).exists(),
+                "failed acknowledgement must keep request files"
+            );
+        }
+
+        sqlx::query("DROP TRIGGER reject_upload_ack")
+            .execute(&database.pool)
+            .await?;
 
         for _ in 0..2 {
             service

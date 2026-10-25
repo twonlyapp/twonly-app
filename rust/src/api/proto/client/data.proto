@@ -126,7 +126,8 @@ message WebxdcUpdate {
     optional string href        = 4;
     optional string summary     = 5;
     optional string document    = 6;
-    // JSON map of app-scoped member addresses to notification text.
+    // JSON map of app-scoped member addresses to notification text or
+    // {"game":"turn"|"won"|"lost"}, localized by the receiving twonly host.
     // Absent preserves legacy broadcast; an empty map notifies nobody.
     optional string notify      = 7;
 }

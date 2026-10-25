@@ -58,7 +58,7 @@ pub async fn actions(
 ) -> Result<()> {
     watch::snapshots(
         databases,
-        &["message_actions", "contacts"],
+        &["message_actions", "contacts", "messages", "webxdc_updates"],
         cancellation,
         move |database| {
             let id = id.clone();

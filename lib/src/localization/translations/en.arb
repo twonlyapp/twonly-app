@@ -1297,5 +1297,12 @@
         "type": "int"
       }
     }
-  }
+  },
+  "notificationGameTurn": "has played {gameName}. It is your turn.",
+  "@notificationGameTurn": {"placeholders": {"gameName": {"type": "String"}}},
+  "notificationGameWon": "has played {gameName}. You have won.",
+  "@notificationGameWon": {"placeholders": {"gameName": {"type": "String"}}},
+  "notificationGameLost": "has played {gameName}. You have lost.",
+  "@notificationGameLost": {"placeholders": {"gameName": {"type": "String"}}},
+  "notificationGameFallbackName": "a game"
 }

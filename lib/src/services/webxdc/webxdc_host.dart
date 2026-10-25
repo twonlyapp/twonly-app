@@ -36,6 +36,11 @@ class WebxdcHost {
   /// The instance currently on screen. A page may only ever act on this one:
   /// the id in a bridge message is checked against it rather than obeyed.
   static String? _openInstanceId;
+
+  /// The screen currently bound to the runtime. Closing a screen ends only its
+  /// own session: the same game reopened while the old screen is still
+  /// animating away has the same instance id, and must not be unbound by it.
+  static WebxdcSession? _session;
   static StreamSubscription<void>? _updateSubscription;
   static int _deliveredSerial = 0;
   static VoidCallback? _closeView;
@@ -68,13 +73,15 @@ class WebxdcHost {
   /// its state and nothing is reloaded. Android only: WebKit offers no
   /// equivalent, and the transition there does not transform the platform view
   /// the way the predictive back gesture does.
-  static Future<void> setPaused({required bool paused}) async {
+  static Future<void> setPaused(
+    WebxdcSession session, {
+    required bool paused,
+  }) async {
     if (defaultTargetPlatform != TargetPlatform.android) return;
-    final instanceId = _openInstanceId;
-    if (instanceId == null) return;
+    if (!identical(_session, session)) return;
     try {
       await _channel.invokeMethod<void>('setPaused', {
-        'instanceId': instanceId,
+        'instanceId': session.instanceId,
         'paused': paused,
       });
     } on PlatformException catch (error) {
@@ -126,7 +133,12 @@ class WebxdcHost {
   /// Until this is called nothing may act on the instance, and once `detach`
   /// runs nothing may again: a bridge message naming any other instance is
   /// refused rather than obeyed.
-  static void attach(String instanceId, {required VoidCallback close}) {
+  static WebxdcSession attach(
+    String instanceId, {
+    required VoidCallback close,
+  }) {
+    final session = WebxdcSession._(instanceId);
+    _session = session;
     _openInstanceId = instanceId;
     _closeView = close;
     _deliveredSerial = 0;
@@ -134,24 +146,28 @@ class WebxdcHost {
     _updateSubscription = WebxdcService.watchUpdates(instanceId).listen(
       (_) => unawaited(_pushPendingUpdates()),
     );
+    return session;
   }
 
-  static void detach(String instanceId) {
-    if (_openInstanceId != instanceId) return;
-    setVisible(instanceId, visible: false);
+  static void detach(WebxdcSession session) {
+    if (!identical(_session, session)) return;
+    setVisible(session, visible: false);
     unawaited(_updateSubscription?.cancel());
     _updateSubscription = null;
+    _session = null;
     _openInstanceId = null;
     _closeView = null;
     // Closing never waits for the server; downloaded code is used next time.
-    unawaited(WebxdcService.cacheUpdate(instanceId));
+    unawaited(WebxdcService.cacheUpdate(session.instanceId));
   }
 
   /// Native notification workers share this state, including the iOS extension.
-  static void setVisible(String instanceId, {required bool visible}) {
-    if (_openInstanceId != instanceId) return;
+  static void setVisible(WebxdcSession session, {required bool visible}) {
+    if (!identical(_session, session)) return;
     try {
-      rust_webxdc.setVisibleInstance(instanceId: visible ? instanceId : null);
+      rust_webxdc.setVisibleInstance(
+        instanceId: visible ? session.instanceId : null,
+      );
     } catch (error) {
       Log.warn('updating webxdc visibility failed: $error');
     }
@@ -485,6 +501,16 @@ class WebxdcHost {
       Log.warn('delivering webxdc updates failed: ${error.message}');
     }
   }
+}
+
+/// One screen's hold on the runtime, from `attach` until its own `detach`.
+///
+/// Compared by identity, never by instance id: two screens of the same game
+/// share an id, but only the newest one may act.
+final class WebxdcSession {
+  WebxdcSession._(this.instanceId);
+
+  final String instanceId;
 }
 
 /// One `sendToChat` call, after checking.

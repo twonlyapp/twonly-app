@@ -11,7 +11,9 @@ pub async fn get(connection: &mut SqliteConnection, id: &str) -> Result<Option<S
             SELECT
             group_id AS "group_id!",
                     message_id AS "message_id!",
-                    sender_id AS "sender_id?",
+                    activity_message_id AS "activity_message_id?: String",
+                    original_sender_id AS "original_sender_id?: i64",
+                    sender_id AS "sender_id?: i64",
                     type AS "type!",
                     content AS "content?",
                     media_id AS "media_id?",
@@ -23,13 +25,13 @@ pub async fn get(connection: &mut SqliteConnection, id: &str) -> Result<Option<S
                     is_deleted_from_sender AS "is_deleted_from_sender!: bool",
                     is_widget_media AS "is_widget_media!: bool",
                     is_story AS "is_story!: bool",
-                    opened_at AS "opened_at?",
-                    opened_by_all AS "opened_by_all?",
+                    opened_at AS "opened_at?: i64",
+                    opened_by_all AS "opened_by_all?: i64",
                     created_at AS "created_at!",
                     modified_at AS "modified_at?",
-                    ack_by_user AS "ack_by_user?",
-                    ack_by_server AS "ack_by_server?"
-                FROM messages WHERE message_id = ?
+                    ack_by_user AS "ack_by_user?: i64",
+                    ack_by_server AS "ack_by_server?: i64"
+                FROM chat_messages WHERE message_id = ?
         "#,
         id,
     )
@@ -47,7 +49,9 @@ pub async fn list(
             SELECT
             group_id AS "group_id!",
                     message_id AS "message_id!",
-                    sender_id AS "sender_id?",
+                    activity_message_id AS "activity_message_id?: String",
+                    original_sender_id AS "original_sender_id?: i64",
+                    sender_id AS "sender_id?: i64",
                     type AS "type!",
                     content AS "content?",
                     media_id AS "media_id?",
@@ -59,14 +63,14 @@ pub async fn list(
                     is_deleted_from_sender AS "is_deleted_from_sender!: bool",
                     is_widget_media AS "is_widget_media!: bool",
                     is_story AS "is_story!: bool",
-                    opened_at AS "opened_at?",
-                    opened_by_all AS "opened_by_all?",
+                    opened_at AS "opened_at?: i64",
+                    opened_by_all AS "opened_by_all?: i64",
                     created_at AS "created_at!",
                     modified_at AS "modified_at?",
-                    ack_by_user AS "ack_by_user?",
-                    ack_by_server AS "ack_by_server?"
+                    ack_by_user AS "ack_by_user?: i64",
+                    ack_by_server AS "ack_by_server?: i64"
                 FROM (
-                        SELECT m.group_id, m.message_id, m.sender_id, m.type, m.content, m.media_id,
+                        SELECT m.group_id, m.message_id, m.activity_message_id, m.original_sender_id, m.sender_id, m.type, m.content, m.media_id,
                             m.additional_message_data, m.media_stored, m.media_reopened, m.download_token,
                             m.quotes_message_id, m.is_deleted_from_sender, m.is_widget_media, m.is_story,
                             m.opened_at, m.opened_by_all, m.created_at, m.modified_at, m.ack_by_user,
@@ -74,7 +78,7 @@ pub async fn list(
                             PARTITION BY m.group_id
                             ORDER BY m.created_at DESC, m.message_id DESC
                         ) AS rank
-                        FROM messages m
+                        FROM chat_messages m
                         JOIN groups g
                         ON g.group_id = m.group_id
                         LEFT JOIN media_files f
@@ -88,6 +92,7 @@ pub async fn list(
                         )
                             AND (m.opened_at IS NULL
                                 OR m.media_stored = 1
+                                OR m.type = 'webxdcApp'
                                 OR m.opened_at > CAST(strftime('%s','now') AS INTEGER) -
                                     g.delete_messages_after_milliseconds / 1000
                         )
@@ -108,7 +113,9 @@ pub async fn list(
                 sqlx::query_as!(StoredMessage, r#"
                     SELECT m.group_id AS "group_id!",
                     m.message_id AS "message_id!",
-                    m.sender_id AS "sender_id?",
+                    m.activity_message_id AS "activity_message_id?: String",
+                    m.original_sender_id AS "original_sender_id?: i64",
+                    m.sender_id AS "sender_id?: i64",
                     m.type AS "type!",
                     m.content AS "content?",
                     m.media_id AS "media_id?",
@@ -120,18 +127,20 @@ pub async fn list(
                     m.is_deleted_from_sender AS "is_deleted_from_sender!: bool",
                     m.is_widget_media AS "is_widget_media!: bool",
                     m.is_story AS "is_story!: bool",
-                    m.opened_at AS "opened_at?",
-                    m.opened_by_all AS "opened_by_all?",
+                    m.opened_at AS "opened_at?: i64",
+                    m.opened_by_all AS "opened_by_all?: i64",
                     m.created_at AS "created_at!",
                     m.modified_at AS "modified_at?",
-                    m.ack_by_user AS "ack_by_user?",
-                    m.ack_by_server AS "ack_by_server?" FROM messages m
+                    m.ack_by_user AS "ack_by_user?: i64",
+                    m.ack_by_server AS "ack_by_server?: i64" FROM chat_messages m
                 "# + $joins + " WHERE m.group_id = ? " + $filter + $order, group, $($arg),*).fetch_all(&mut *connection).await?
             } else {
                 sqlx::query_as!(StoredMessage, r#"
                     SELECT m.group_id AS "group_id!",
                     m.message_id AS "message_id!",
-                    m.sender_id AS "sender_id?",
+                    m.activity_message_id AS "activity_message_id?: String",
+                    m.original_sender_id AS "original_sender_id?: i64",
+                    m.sender_id AS "sender_id?: i64",
                     m.type AS "type!",
                     m.content AS "content?",
                     m.media_id AS "media_id?",
@@ -143,12 +152,12 @@ pub async fn list(
                     m.is_deleted_from_sender AS "is_deleted_from_sender!: bool",
                     m.is_widget_media AS "is_widget_media!: bool",
                     m.is_story AS "is_story!: bool",
-                    m.opened_at AS "opened_at?",
-                    m.opened_by_all AS "opened_by_all?",
+                    m.opened_at AS "opened_at?: i64",
+                    m.opened_by_all AS "opened_by_all?: i64",
                     m.created_at AS "created_at!",
                     m.modified_at AS "modified_at?",
-                    m.ack_by_user AS "ack_by_user?",
-                    m.ack_by_server AS "ack_by_server?" FROM messages m
+                    m.ack_by_user AS "ack_by_user?: i64",
+                    m.ack_by_server AS "ack_by_server?: i64" FROM chat_messages m
                 "# + $joins + " WHERE 1 " + $filter + $order, $($arg),*).fetch_all(&mut *connection).await?
             }
         };
@@ -366,13 +375,13 @@ pub async fn actions(
     let actions: Vec<MessageAction> = sqlx::query_as!(
         MessageAction,
         r#"
-            SELECT message_id AS "message_id!",
-                contact_id AS "contact_id!",
-                type AS "type!",
-                action_at AS "action_at!"
-            FROM message_actions
-            WHERE message_id = ?
-            ORDER BY rowid
+            SELECT m.message_id AS "message_id!",
+                a.contact_id AS "contact_id!",
+                a.type AS "type!",
+                a.action_at AS "action_at!"
+            FROM chat_messages m JOIN message_actions a ON a.message_id = COALESCE(m.activity_message_id, m.message_id)
+            WHERE m.message_id = ?
+            ORDER BY a.rowid
         "#,
         message,
     )
@@ -403,16 +412,16 @@ pub async fn delivery_actions(
     Ok(sqlx::query_as!(
         MessageAction,
         r#"
-            SELECT a.message_id AS "message_id!",
+            SELECT m.message_id AS "message_id!",
                 a.contact_id AS "contact_id!",
                 a.type AS "type!",
                 a.action_at AS "action_at!"
             FROM message_actions a
-            JOIN messages m
-            ON m.message_id = a.message_id
+            JOIN chat_messages m
+            ON COALESCE(m.activity_message_id, m.message_id) = a.message_id
             JOIN groups g
             ON g.group_id = m.group_id
-            WHERE a.message_id IN (
+            WHERE m.message_id IN (
                 SELECT value
                 FROM json_each(?)
             )
@@ -425,6 +434,27 @@ pub async fn delivery_actions(
         "#,
         serde_json::to_string(messages)?,
     )
+    .fetch_all(connection)
+    .await?)
+}
+
+/// Freeze each visible message's receipt identity before an asynchronous send.
+pub(crate) async fn opened_targets(
+    connection: &mut SqliteConnection, messages: &[String], contact_id: i64,
+) -> Result<Vec<String>> {
+    let ids = serde_json::to_string(messages)?;
+    Ok(sqlx::query_scalar(
+        "SELECT DISTINCT COALESCE(m.activity_message_id, m.message_id)
+         FROM json_each(?) requested
+         LEFT JOIN webxdc_updates u ON substr(requested.value, -5) = '-info'
+             AND u.message_id = substr(requested.value, 1, length(requested.value) - 5)
+             AND u.info IS NOT NULL
+         JOIN chat_messages m ON m.message_id = COALESCE(u.instance_id, requested.value)
+         WHERE m.sender_id = ? AND (requested.value = m.message_id
+             OR requested.value = m.activity_message_id)",
+    )
+    .bind(&ids)
+    .bind(contact_id)
     .fetch_all(connection)
     .await?)
 }

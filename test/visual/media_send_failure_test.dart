@@ -47,6 +47,44 @@ void main() {
     [messageId, 7, MessageActionType.sendFailed.name],
   );
 
+  testWidgets('a receipt updates a media status without a new message snapshot', (
+    tester,
+  ) async {
+    final message = (await runNative(
+      tester,
+      () => rust_messages.getMessage(
+        id: 'direct',
+        transaction: currentDatabaseSession(),
+      ),
+    ))!.copyWith(mediaId: const NullableText(value: 'shared-media'));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: lightTheme,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: MessageSendStateIcon([message], const [])),
+      ),
+    );
+    await pumpNative(
+      tester,
+      until: () => find.text('Sending').evaluate().isNotEmpty,
+    );
+
+    await runNative(
+      tester,
+      () => testDatabase.customStatement(
+        "INSERT INTO message_actions(message_id, contact_id, type) VALUES ('direct', 7, 'ackByUserAt')",
+      ),
+    );
+    await pumpNative(
+      tester,
+      until: () => find.text('Received').evaluate().isNotEmpty,
+    );
+    expect(find.text('Sending'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('a direct failure replaces the sending spinner', (tester) async {
     final message = (await runNative(
       tester,

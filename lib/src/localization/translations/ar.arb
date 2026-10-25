@@ -917,5 +917,9 @@
   "mediaSendFailed": "تعذّر الإرسال",
   "mailboxSyncTitle": "جارٍ مزامنة twonly",
   "mailboxSyncBody": "يقوم twonly بمزامنة هذا الجهاز وتنزيل رسائلك. يُرجى إبقاء التطبيق مفتوحًا حتى تكتمل العملية.",
-  "mailboxSyncRemaining": "{count, plural, =1 {تبقّت رسالة واحدة} =2 {تبقّت رسالتان} few {تبقّت {count} رسائل} many {تبقّت {count} رسالة} other {تبقّت {count} رسالة}}"
+  "mailboxSyncRemaining": "{count, plural, =1 {تبقّت رسالة واحدة} =2 {تبقّت رسالتان} few {تبقّت {count} رسائل} many {تبقّت {count} رسالة} other {تبقّت {count} رسالة}}",
+  "notificationGameTurn": "لعب {gameName}. حان دورك.",
+  "notificationGameWon": "لعب {gameName}. لقد فزت.",
+  "notificationGameLost": "لعب {gameName}. لقد خسرت.",
+  "notificationGameFallbackName": "لعبة"
 }

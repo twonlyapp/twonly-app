@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -121,6 +123,64 @@ void main() {
       variant: TargetPlatformVariant.only(TargetPlatform.android),
     );
   }
+
+  testWidgets(
+    'reopening a game while its last screen is closing keeps the new one bound',
+    (tester) async {
+      WebxdcHost.initialize();
+      const codec = StandardMethodCodec();
+      Future<String> callBridge() async {
+        final reply = Completer<ByteData?>();
+        await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+          'eu.twonly/webxdc',
+          codec.encodeMethodCall(
+            const MethodCall('bridge', {
+              'instanceId': 'game',
+              'message': '{"id":1,"method":"noSuchMethod"}',
+            }),
+          ),
+          reply.complete,
+        );
+        return codec.decodeEnvelope((await reply.future)!) as String;
+      }
+
+      Route<void> gameRoute() => MaterialPageRoute(
+        builder: (_) => const WebxdcAppView(
+          launch: WebxdcLaunch(
+            instanceId: 'game',
+            appId: 'game',
+            origin: 'origin',
+            title: 'Game',
+          ),
+        ),
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      final navigator = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navigator,
+          home: const Scaffold(body: Text('Chat')),
+        ),
+      );
+      navigator.currentState!.push(gameRoute());
+      await tester.pumpAndSettle();
+
+      // Closed, and opened again before the closing animation is over: the
+      // old screen is disposed only after the new one has attached.
+      navigator.currentState!.pop();
+      await tester.pump();
+      navigator.currentState!.push(gameRoute());
+      await tester.pumpAndSettle();
+
+      expect(api.visibleInstances.last, 'game');
+      expect(await callBridge(), contains('unknown method'));
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      expect(api.visibleInstances.last, isNull);
+      expect(await callBridge(), contains('this app is not open'));
+    },
+  );
 
   for (final appId in ['backend-uploaded-game', 'expenses']) {
     testWidgets(

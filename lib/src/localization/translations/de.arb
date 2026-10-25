@@ -87,8 +87,8 @@
   "locationStickerSettingSubtitle": "Zeigt deine Stadt oder dein Land, oder Koordinaten, wenn kein Ortsname verfügbar ist. Dein Standort wird nur geteilt, wenn du den Standortfilter auswählst.",
   "locationStickerLoading": "Dein Standort wird ermittelt…",
   "liveLocationMenu": "Standort",
-  "memoriesMenu": "Erinnerungen",
-  "memoriesLoadFailed": "Die Erinnerung konnte nicht geladen werden.",
+  "memoriesMenu": "Memories",
+  "memoriesLoadFailed": "Das Bild aus Memories konnte nicht geladen werden.",
   "liveLocationTitle": "Live-Standort",
   "liveLocationExplanation": "Teile deinen aktuellen Standort in diesem Chat. Alle Mitglieder dieser Gruppe können ihn sehen. Nur dein letzter Standort wird gespeichert.",
   "liveLocationDuration": "Teilen für",
@@ -1266,5 +1266,9 @@
   "mediaSendFailed": "Senden fehlgeschlagen",
   "mailboxSyncTitle": "twonly wird synchronisiert",
   "mailboxSyncBody": "twonly synchronisiert dieses Gerät und lädt deine Nachrichten herunter. Bitte lass die App geöffnet, bis der Vorgang abgeschlossen ist.",
-  "mailboxSyncRemaining": "{count, plural, =1 {Noch 1 Nachricht} other {Noch {count} Nachrichten}}"
+  "mailboxSyncRemaining": "{count, plural, =1 {Noch 1 Nachricht} other {Noch {count} Nachrichten}}",
+  "notificationGameTurn": "hat {gameName} gespielt. Du bist am Zug.",
+  "notificationGameWon": "hat {gameName} gespielt. Du hast gewonnen.",
+  "notificationGameLost": "hat {gameName} gespielt. Du hast verloren.",
+  "notificationGameFallbackName": "ein Spiel"
 }

@@ -246,6 +246,12 @@ class MessageQuery {
 class StoredMessage {
   final String groupId;
   final String messageId;
+
+  /// Current game move's receipt identity; the card's message ID stays fixed.
+  final String? activityMessageId;
+
+  /// Protocol author, retained when a game's displayed player changes.
+  final PlatformInt64? originalSenderId;
   final PlatformInt64? senderId;
   final String type;
   final String? content;
@@ -268,6 +274,8 @@ class StoredMessage {
   const StoredMessage({
     required this.groupId,
     required this.messageId,
+    this.activityMessageId,
+    this.originalSenderId,
     this.senderId,
     required this.type,
     this.content,
@@ -292,6 +300,8 @@ class StoredMessage {
   int get hashCode =>
       groupId.hashCode ^
       messageId.hashCode ^
+      activityMessageId.hashCode ^
+      originalSenderId.hashCode ^
       senderId.hashCode ^
       type.hashCode ^
       content.hashCode ^
@@ -318,6 +328,8 @@ class StoredMessage {
           runtimeType == other.runtimeType &&
           groupId == other.groupId &&
           messageId == other.messageId &&
+          activityMessageId == other.activityMessageId &&
+          originalSenderId == other.originalSenderId &&
           senderId == other.senderId &&
           type == other.type &&
           content == other.content &&

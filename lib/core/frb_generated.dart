@@ -16845,29 +16845,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   StoredMessage dco_decode_stored_message(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 20)
-      throw Exception('unexpected arr length: expect 20 but see ${arr.length}');
+    if (arr.length != 22)
+      throw Exception('unexpected arr length: expect 22 but see ${arr.length}');
     return StoredMessage(
       groupId: dco_decode_String(arr[0]),
       messageId: dco_decode_String(arr[1]),
-      senderId: dco_decode_opt_box_autoadd_i_64(arr[2]),
-      type: dco_decode_String(arr[3]),
-      content: dco_decode_opt_String(arr[4]),
-      mediaId: dco_decode_opt_String(arr[5]),
-      additionalMessageData: dco_decode_opt_list_prim_u_8_strict(arr[6]),
-      mediaStored: dco_decode_bool(arr[7]),
-      mediaReopened: dco_decode_bool(arr[8]),
-      downloadToken: dco_decode_opt_list_prim_u_8_strict(arr[9]),
-      quotesMessageId: dco_decode_opt_String(arr[10]),
-      isDeletedFromSender: dco_decode_bool(arr[11]),
-      isWidgetMedia: dco_decode_bool(arr[12]),
-      isStory: dco_decode_bool(arr[13]),
-      openedAtSeconds: dco_decode_opt_box_autoadd_i_64(arr[14]),
-      openedByAllSeconds: dco_decode_opt_box_autoadd_i_64(arr[15]),
-      createdAtSeconds: dco_decode_i_64(arr[16]),
-      modifiedAtSeconds: dco_decode_opt_box_autoadd_i_64(arr[17]),
-      ackByUserSeconds: dco_decode_opt_box_autoadd_i_64(arr[18]),
-      ackByServerSeconds: dco_decode_opt_box_autoadd_i_64(arr[19]),
+      activityMessageId: dco_decode_opt_String(arr[2]),
+      originalSenderId: dco_decode_opt_box_autoadd_i_64(arr[3]),
+      senderId: dco_decode_opt_box_autoadd_i_64(arr[4]),
+      type: dco_decode_String(arr[5]),
+      content: dco_decode_opt_String(arr[6]),
+      mediaId: dco_decode_opt_String(arr[7]),
+      additionalMessageData: dco_decode_opt_list_prim_u_8_strict(arr[8]),
+      mediaStored: dco_decode_bool(arr[9]),
+      mediaReopened: dco_decode_bool(arr[10]),
+      downloadToken: dco_decode_opt_list_prim_u_8_strict(arr[11]),
+      quotesMessageId: dco_decode_opt_String(arr[12]),
+      isDeletedFromSender: dco_decode_bool(arr[13]),
+      isWidgetMedia: dco_decode_bool(arr[14]),
+      isStory: dco_decode_bool(arr[15]),
+      openedAtSeconds: dco_decode_opt_box_autoadd_i_64(arr[16]),
+      openedByAllSeconds: dco_decode_opt_box_autoadd_i_64(arr[17]),
+      createdAtSeconds: dco_decode_i_64(arr[18]),
+      modifiedAtSeconds: dco_decode_opt_box_autoadd_i_64(arr[19]),
+      ackByUserSeconds: dco_decode_opt_box_autoadd_i_64(arr[20]),
+      ackByServerSeconds: dco_decode_opt_box_autoadd_i_64(arr[21]),
     );
   }
 
@@ -21191,6 +21193,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_groupId = sse_decode_String(deserializer);
     var var_messageId = sse_decode_String(deserializer);
+    var var_activityMessageId = sse_decode_opt_String(deserializer);
+    var var_originalSenderId = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_senderId = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_type = sse_decode_String(deserializer);
     var var_content = sse_decode_opt_String(deserializer);
@@ -21214,6 +21218,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return StoredMessage(
       groupId: var_groupId,
       messageId: var_messageId,
+      activityMessageId: var_activityMessageId,
+      originalSenderId: var_originalSenderId,
       senderId: var_senderId,
       type: var_type,
       content: var_content,
@@ -25504,6 +25510,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.groupId, serializer);
     sse_encode_String(self.messageId, serializer);
+    sse_encode_opt_String(self.activityMessageId, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.originalSenderId, serializer);
     sse_encode_opt_box_autoadd_i_64(self.senderId, serializer);
     sse_encode_String(self.type, serializer);
     sse_encode_opt_String(self.content, serializer);

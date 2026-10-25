@@ -436,18 +436,22 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
   Future<void> _applyLoadedMessages({required bool reportOpened}) async {
     final revision = ++_loadedMessagesRevision;
-    // Older pages are kept in memory rather than watched. A game update can
-    // delete one of their info rows, including another move in the same second.
-    final olderGameInfoIds = _data.olderMessages
-        .where((message) => gameAnnouncementInstance(message) != null)
+    // Game cards on older pages can change player, position or disappear.
+    // Refresh them too, and discard cached automatic text from older snapshots.
+    final olderGameMessageIds = _data.olderMessages
+        .where(
+          (message) =>
+              message.type == MessageType.webxdcApp.name ||
+              gameAnnouncementInstance(message) != null,
+        )
         .map((message) => message.messageId)
         .toSet();
-    if (olderGameInfoIds.isNotEmpty) {
+    if (olderGameMessageIds.isNotEmpty) {
       final current = await watchRustDatabase(
         (control) => rust_messages.watchMessages(
           input: db_messages.MessageQuery(
             filter: db_messages.MessageFilter.ids,
-            ids: olderGameInfoIds.toList(),
+            ids: olderGameMessageIds.toList(),
             nowMs: clock.now().millisecondsSinceEpoch,
           ),
           control: control,
@@ -456,7 +460,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       if (!mounted || revision != _loadedMessagesRevision) return;
       _data.olderMessages = [
         ..._data.olderMessages.where(
-          (message) => !olderGameInfoIds.contains(message.messageId),
+          (message) => !olderGameMessageIds.contains(message.messageId),
         ),
         ...current,
       ];
@@ -721,7 +725,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         _animationState.hasReceivedFirstBatch &&
         lastMessage != null &&
         lastMessage.senderId == null &&
-        !_animationState.knownMessageIds.contains(lastMessage.messageId);
+        !_animationState.knownMessageIds.contains(
+          messageActivityId(lastMessage),
+        );
 
     for (final msg in newMessages) {
       // Only messages appended after the newest one already loaded are new to
@@ -731,10 +737,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           msg.senderId != null &&
           newestKnownAt != null &&
           msg.createdAt.isAfter(newestKnownAt) &&
-          !_animationState.knownMessageIds.contains(msg.messageId)) {
+          !_animationState.knownMessageIds.contains(messageActivityId(msg))) {
         _animationState.animateMessageIds.add(msg.messageId);
       }
-      _animationState.knownMessageIds.add(msg.messageId);
+      _animationState.knownMessageIds.add(messageActivityId(msg));
       final currentNewest = _animationState.newestKnownAt;
       if (currentNewest == null || msg.createdAt.isAfter(currentNewest)) {
         _animationState.newestKnownAt = msg.createdAt;
@@ -778,11 +784,13 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       if (msg.type != MessageType.media.name &&
           msg.senderId != null &&
           msg.openedAt == null &&
-          !_animationState.reportedOpenedMessageIds.contains(msg.messageId)) {
+          !_animationState.reportedOpenedMessageIds.contains(
+            messageActivityId(msg),
+          )) {
         if (openedMessages[msg.senderId!] == null) {
           openedMessages[msg.senderId!] = [];
         }
-        openedMessages[msg.senderId!]!.add(msg.messageId);
+        openedMessages[msg.senderId!]!.add(messageActivityId(msg));
       }
 
       if (msg.type == MessageType.media.name && msg.mediaStored) {

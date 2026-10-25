@@ -3311,4 +3311,22 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String notificationGameTurn(String gameName) {
+    return 'has played $gameName. It is your turn.';
+  }
+
+  @override
+  String notificationGameWon(String gameName) {
+    return 'has played $gameName. You have won.';
+  }
+
+  @override
+  String notificationGameLost(String gameName) {
+    return 'has played $gameName. You have lost.';
+  }
+
+  @override
+  String get notificationGameFallbackName => 'a game';
 }

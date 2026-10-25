@@ -5607,6 +5607,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 message left} other{{count} messages left}}'**
   String mailboxSyncRemaining(int count);
+
+  /// No description provided for @notificationGameTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'has played {gameName}. It is your turn.'**
+  String notificationGameTurn(String gameName);
+
+  /// No description provided for @notificationGameWon.
+  ///
+  /// In en, this message translates to:
+  /// **'has played {gameName}. You have won.'**
+  String notificationGameWon(String gameName);
+
+  /// No description provided for @notificationGameLost.
+  ///
+  /// In en, this message translates to:
+  /// **'has played {gameName}. You have lost.'**
+  String notificationGameLost(String gameName);
+
+  /// No description provided for @notificationGameFallbackName.
+  ///
+  /// In en, this message translates to:
+  /// **'a game'**
+  String get notificationGameFallbackName;
 }
 
 class _AppLocalizationsDelegate

@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT m.message_id AS \"message_id!\",\n                a.contact_id AS \"contact_id!\",\n                a.type AS \"type!\",\n                a.action_at AS \"action_at!\"\n            FROM message_actions a\n            JOIN chat_messages m\n            ON COALESCE(m.activity_message_id, m.message_id) = a.message_id\n            JOIN groups g\n            ON g.group_id = m.group_id\n            WHERE m.message_id IN (\n                SELECT value\n                FROM json_each(?)\n            )\n                AND (a.type = 'ackByUserAt'\n                    OR (a.type = 'sendFailed'\n                        AND g.is_direct_chat = 1\n                )\n            )\n            ORDER BY a.rowid\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "message_actions",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "type!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "message_actions",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "action_at!",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "message_actions",
+            "name": "action_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c9fef2c5a1340aed87530ec1ba9e6e1d568ad8c84fb1f605019a43992510fc6f"
+}

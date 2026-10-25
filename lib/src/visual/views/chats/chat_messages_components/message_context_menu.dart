@@ -305,7 +305,12 @@ Future<String?> showDeleteMessageOptions(
     context: context,
     backgroundColor: Colors.transparent,
     builder: (context) {
-      final isForAll = message.senderId == null && !message.isDeletedFromSender;
+      // A game changes sides with the last player, but its original author
+      // still decides who can delete the shared card for everyone.
+      final author = message.type == MessageType.webxdcApp.name
+          ? message.originalSenderId
+          : message.senderId;
+      final isForAll = author == null && !message.isDeletedFromSender;
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.only(

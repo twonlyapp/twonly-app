@@ -93,6 +93,22 @@ const MAX_SUMMARY_CHARS: usize = 64;
 
 const MAX_DOCUMENT_CHARS: usize = 128;
 
+/// Games select an outcome; the receiving twonly app owns its wording.
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum GameNotification {
+    Turn,
+    Won,
+    Lost,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged, deny_unknown_fields)]
+pub(crate) enum AppNotification {
+    Text(String),
+    Game { game: GameNotification },
+}
+
 pub struct WebxdcInstance {
     pub instance_id: String,
     pub group_id: String,
@@ -870,13 +886,14 @@ impl WebxdcService {
         Ok(())
     }
 
-    /// Keeps the latest automatic announcement beside its refreshed app card.
+    /// Records the latest activity behind the instance's single timeline card.
     ///
     /// An app announces things a person is meant to read -- "a new game
     /// started", "it is your turn". The update carrying it is state rather than
     /// a message and stays hidden, so the announcement is materialised here
-    /// instead. It replaces the previous automatic announcement for this
-    /// instance and moves the card to the same point in the conversation.
+    /// instead as internal receipt state. `chat_messages` projects its sender
+    /// and read/delivery state onto the original card and hides the info row.
+    /// It replaces the previous activity and moves the card in the timeline.
     ///
     /// Both devices build the row out of the update they already have, so
     /// nothing extra is sent, and the id derived from the update's own message
@@ -1011,11 +1028,16 @@ impl WebxdcService {
                SET summary = COALESCE(?, summary),
                    document = COALESCE(?, document),
                    last_update_at = ?
-               WHERE instance_id = ?"#,
+               WHERE instance_id = ? AND ? >= COALESCE((
+                   SELECT MAX(received_at) FROM webxdc_updates WHERE instance_id = ?
+               ), ?)"#,
             summary,
             document,
             received_at,
             instance_id,
+            received_at,
+            instance_id,
+            received_at,
         )
         .execute(&mut **transaction)
         .await?;
@@ -1087,9 +1109,11 @@ impl WebxdcService {
                 ));
             }
 
-            let entries: std::collections::BTreeMap<String, String> = serde_json::from_str(&raw)
-                .map_err(|_| {
-                    TwonlyError::Generic("notify must map member addresses to text".into())
+            let entries: std::collections::BTreeMap<String, AppNotification> =
+                serde_json::from_str(&raw).map_err(|_| {
+                    TwonlyError::Generic(
+                        "notify must map member addresses to text or a game outcome".into(),
+                    )
                 })?;
 
             let members = self.members(&instance_id).await?;
@@ -1098,7 +1122,7 @@ impl WebxdcService {
 
             let mut cleaned = std::collections::BTreeMap::new();
 
-            for (address, text) in entries {
+            for (address, notification) in entries {
                 if !members["members"]
                     .as_array()
                     .unwrap()
@@ -1110,8 +1134,15 @@ impl WebxdcService {
                     ));
                 }
 
-                if let Some(text) = sanitize(Some(&text), MAX_INFO_CHARS) {
-                    cleaned.insert(address, text);
+                match notification {
+                    AppNotification::Text(text) => {
+                        if let Some(text) = sanitize(Some(&text), MAX_INFO_CHARS) {
+                            cleaned.insert(address, AppNotification::Text(text));
+                        }
+                    }
+                    game @ AppNotification::Game { .. } => {
+                        cleaned.insert(address, game);
+                    }
                 }
             }
 
@@ -1521,13 +1552,8 @@ impl WebxdcService {
 
         let mut transaction = database.pool.begin().await?;
 
-        sqlx::query!(
-            "DELETE FROM webxdc_updates WHERE instance_id = ?",
-            instance_id
-        )
-        .execute(&mut *transaction)
-        .await?;
-
+        // The instance deletion first removes its internal activity messages;
+        // then foreign keys remove the log. This also covers deleting the card.
         sqlx::query!(
             "DELETE FROM webxdc_instances WHERE instance_id = ?",
             instance_id
@@ -1612,6 +1638,325 @@ mod tests {
     use sha2::{Digest, Sha256};
 
     #[tokio::test]
+    async fn single_game_card_tracks_the_latest_turn_without_changing_protocol_ownership(
+    ) -> Result<()> {
+        use crate::database::app::messages::native::Message;
+        use crate::database::app::messages::queries;
+        use crate::database::app::messages::table::{MessageFilter, MessageQuery};
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        for statement in [
+            "INSERT INTO contacts(user_id,username,signal_version) VALUES \
+             (7,'alice','v2'),(8,'bob','v2')",
+            "INSERT INTO groups(group_id,group_name,is_direct_chat) VALUES ('g','Games',1)",
+            "INSERT INTO group_members(group_id,contact_id) VALUES ('g',7),('g',8)",
+            "INSERT INTO messages(message_id,group_id,sender_id,type,created_at) VALUES \
+             ('card','g',7,'webxdcApp',100)",
+            "INSERT INTO messages(message_id,group_id,sender_id,type,content,created_at) VALUES \
+             ('ordinary','g',7,'text','Hello',250)",
+            "INSERT INTO webxdc_instances(instance_id,group_id,app_id,version,origin_token) \
+             VALUES ('card','g','chess',1,'origin')",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+        let page = MessageQuery {
+            filter: MessageFilter::Page,
+            group_id: Some("g".into()),
+            ids: vec![],
+            limit: 100,
+            before: None,
+            before_message_id: None,
+            now_ms: chrono::Utc::now().timestamp_millis(),
+        };
+        let update = |summary: &str| proto::WebxdcUpdate {
+            instance_id: "card".into(),
+            payload: "{}".into(),
+            info: Some("Played a move".into()),
+            summary: Some(summary.into()),
+            ..Default::default()
+        };
+        let mut tx = database.pool.begin().await?;
+        WebxdcService::handle_incoming_update(
+            &mut tx,
+            "first",
+            "g",
+            8,
+            &update("Alice's turn"),
+            200,
+        )
+        .await?;
+        let rows = queries::list(&mut tx, &page).await?;
+        assert_eq!(
+            rows.iter()
+                .map(|row| row.message_id.as_str())
+                .collect::<Vec<_>>(),
+            ["card", "ordinary"]
+        );
+        assert_eq!(rows[0].r#type, "webxdcApp");
+        assert_eq!(rows[0].sender_id, Some(8));
+        assert_eq!(rows[0].created_at, 200);
+        assert!(queries::get(&mut tx, "first-info").await?.is_none());
+        tx.commit().await?;
+
+        // Exercise the real local publishing path: the same original card
+        // moves after the ordinary chat message and changes to the right side.
+        let service = WebxdcService::new(&ctx);
+        service
+            .send_update(
+                "card".into(),
+                "{}".into(),
+                Some("My move".into()),
+                None,
+                Some("Bob's turn".into()),
+                None,
+                Some("{}".into()),
+            )
+            .await?;
+        let mut tx = database.pool.begin().await?;
+        let rows = queries::list(&mut tx, &page).await?;
+        assert_eq!(
+            rows.iter()
+                .map(|row| row.message_id.as_str())
+                .collect::<Vec<_>>(),
+            ["ordinary", "card"]
+        );
+        assert_eq!(rows[1].sender_id, None);
+        let mine = rows[1].created_at;
+        let raw_sender: Option<i64> =
+            sqlx::query_scalar("SELECT sender_id FROM messages WHERE message_id = 'card'")
+                .fetch_one(&mut *tx)
+                .await?;
+        assert_eq!(
+            raw_sender,
+            Some(7),
+            "the immutable creator still owns the original transport message"
+        );
+        Message::check_message_owner(&mut tx, "card", 7).await?;
+
+        let receipt: String =
+            sqlx::query_scalar("SELECT receipt_id FROM receipts WHERE contact_id = 7")
+                .fetch_one(&mut *tx)
+                .await?;
+        crate::api::messages::incoming::messages::handle_sender_delivery_receipt(
+            &mut tx, 7, &receipt,
+        )
+        .await?;
+        let actions = queries::delivery_actions(&mut tx, &["card".into()]).await?;
+        assert_eq!(actions.len(), 1);
+        assert_eq!(actions[0].message_id, "card");
+        assert_eq!(actions[0].r#type, "ackByUserAt");
+        assert!(queries::get(&mut tx, "card")
+            .await?
+            .unwrap()
+            .ack_by_server
+            .is_some());
+
+        WebxdcService::handle_incoming_update(
+            &mut tx,
+            "reply",
+            "g",
+            8,
+            &update("My turn"),
+            mine + 2,
+        )
+        .await?;
+        assert_eq!(
+            queries::get(&mut tx, "card").await?.unwrap().sender_id,
+            Some(8)
+        );
+        let read_targets = queries::opened_targets(&mut tx, &["card".into()], 8).await?;
+        assert_eq!(read_targets, ["reply-info"]);
+        assert!(queries::opened_targets(&mut tx, &["card".into()], 7)
+            .await?
+            .is_empty());
+        sqlx::query("UPDATE messages SET opened_at = ? WHERE message_id = ?")
+            .bind(mine + 3)
+            .bind(&read_targets[0])
+            .execute(&mut *tx)
+            .await?;
+        assert_eq!(
+            queries::get(&mut tx, "card").await?.unwrap().opened_at,
+            Some(mine + 3)
+        );
+        let latest = queries::list(
+            &mut tx,
+            &MessageQuery {
+                filter: MessageFilter::LatestByGroup,
+                ..page.clone()
+            },
+        )
+        .await?;
+        assert_eq!(
+            latest[0].message_id, "card",
+            "reading a game must not remove its latest-chat preview"
+        );
+
+        WebxdcService::handle_incoming_update(
+            &mut tx,
+            "newest",
+            "g",
+            7,
+            &update("Newest turn"),
+            mine + 4,
+        )
+        .await?;
+        // An old read receipt, an out-of-order move, and a duplicate cannot
+        // change the current turn, subtitle, position or unread state.
+        Message::record_opened(&mut tx, &read_targets[0], 8, mine + 5).await?;
+        WebxdcService::handle_incoming_update(
+            &mut tx,
+            "late",
+            "g",
+            8,
+            &update("Stale subtitle"),
+            mine - 1,
+        )
+        .await?;
+        WebxdcService::handle_incoming_update(
+            &mut tx,
+            "newest",
+            "g",
+            8,
+            &update("Duplicate subtitle"),
+            mine + 8,
+        )
+        .await?;
+        let before_same_second = queries::get(&mut tx, "card").await?.unwrap();
+        WebxdcService::handle_incoming_update(
+            &mut tx,
+            "same-second",
+            "g",
+            7,
+            &update("Newest turn"),
+            mine + 4,
+        )
+        .await?;
+        let current = queries::get(&mut tx, "card").await?.unwrap();
+        assert_eq!(current.created_at, before_same_second.created_at);
+        assert_ne!(
+            current.activity_message_id,
+            before_same_second.activity_message_id
+        );
+        assert_eq!(
+            current.activity_message_id.as_deref(),
+            Some("same-second-info")
+        );
+        assert!(
+            queries::opened_targets(
+                &mut tx,
+                &[before_same_second.activity_message_id.unwrap()],
+                7,
+            )
+            .await?
+            .is_empty(),
+            "an earlier move's read report cannot open a later turn"
+        );
+        assert_eq!(current.sender_id, Some(7));
+        assert_eq!(current.original_sender_id, Some(7));
+        assert_eq!(current.created_at, mine + 4);
+        assert_eq!(current.opened_at, None);
+        let summary: String =
+            sqlx::query_scalar("SELECT summary FROM webxdc_instances WHERE instance_id = 'card'")
+                .fetch_one(&mut *tx)
+                .await?;
+        assert_eq!(summary, "Newest turn");
+        let before = queries::list(
+            &mut tx,
+            &MessageQuery {
+                before: Some(mine + 4),
+                before_message_id: Some("card".into()),
+                ..page.clone()
+            },
+        )
+        .await?;
+        assert_eq!(
+            before
+                .iter()
+                .map(|row| row.message_id.as_str())
+                .collect::<Vec<_>>(),
+            ["ordinary"]
+        );
+        tx.commit().await?;
+        let mut tx = database.pool.begin().await?;
+        WebxdcService::handle_incoming_update(
+            &mut tx,
+            "rolled-back",
+            "g",
+            8,
+            &update("Rolled back"),
+            mine + 6,
+        )
+        .await?;
+        tx.rollback().await?;
+        let rows = queries::list(&mut *database.read_pool.acquire().await?, &page).await?;
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[1], current);
+
+        let mut tx = database.pool.begin().await?;
+        sqlx::query("DELETE FROM messages WHERE message_id = 'card'")
+            .execute(&mut *tx)
+            .await?;
+        let remaining = queries::list(&mut tx, &page).await?;
+        assert_eq!(
+            remaining
+                .iter()
+                .map(|row| row.message_id.as_str())
+                .collect::<Vec<_>>(),
+            ["ordinary"]
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM messages WHERE message_id LIKE '%-info'"
+            )
+            .fetch_one(&mut *tx)
+            .await?,
+            0,
+            "deleting a card must not reveal orphan move text"
+        );
+        tx.rollback().await?;
+        assert_eq!(
+            service.delete_instance("card").await?.as_deref(),
+            Some("origin")
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM messages WHERE message_id LIKE '%-info'"
+            )
+            .fetch_one(&database.pool)
+            .await?,
+            0
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn game_notification_outcomes_are_closed_and_legacy_text_is_preserved() {
+        for outcome in ["turn", "won", "lost"] {
+            let value = serde_json::json!({"game": outcome});
+            let notification: super::AppNotification =
+                serde_json::from_value(value.clone()).unwrap();
+            assert_eq!(serde_json::to_value(notification).unwrap(), value);
+        }
+        for value in [
+            serde_json::json!({"game":"draw"}),
+            serde_json::json!({"game":"turn","text":"injected"}),
+            serde_json::json!(null),
+        ] {
+            assert!(serde_json::from_value::<super::AppNotification>(value).is_err());
+        }
+        let text = serde_json::json!("Dinner added");
+        let notification: super::AppNotification = serde_json::from_value(text.clone()).unwrap();
+        assert_eq!(serde_json::to_value(notification).unwrap(), text);
+    }
+
+    #[tokio::test]
 
     async fn upgrading_compacts_existing_game_announcements_without_losing_moves() -> Result<()> {
         let directory = tempfile::tempdir()?;
@@ -1652,6 +1997,23 @@ mod tests {
                 .await?;
 
         assert_eq!(ids, ["card", "last-info", "shared"]);
+
+        // Upgrade an existing two-row conversation without dropping its game
+        // log or the hidden row that outstanding receipts still refer to.
+        sqlx::raw_sql("DROP VIEW chat_messages; DROP TRIGGER webxdc_activity_cleanup;")
+            .execute(&database.pool)
+            .await?;
+        sqlx::raw_sql(include_str!(
+            "../../database/app/migrations/0048_webxdc_single_timeline_card.sql"
+        ))
+        .execute(&database.pool)
+        .await?;
+        let visible: Vec<String> = sqlx::query_scalar(
+            "SELECT message_id FROM chat_messages ORDER BY created_at, message_id",
+        )
+        .fetch_all(&database.pool)
+        .await?;
+        assert_eq!(visible, ["shared", "card"]);
 
         let card_at: i64 =
             sqlx::query_scalar("SELECT created_at FROM messages WHERE message_id = 'card'")
@@ -1929,7 +2291,7 @@ mod tests {
         let service = WebxdcService::new(&ctx);
 
         let notify =
-            serde_json::json!({WebxdcService::address_for("card", 7): "Your turn"}).to_string();
+            serde_json::json!({WebxdcService::address_for("card", 7): {"game":"turn"}}).to_string();
 
         for (info, delete_announcement) in [
             (Some("Ben's turn"), false),

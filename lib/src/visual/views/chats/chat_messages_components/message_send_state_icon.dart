@@ -32,14 +32,17 @@ enum MessageSendState {
   sending,
 }
 
-MessageSendState messageSendStateFromMessage(StoredMessage msg) {
+MessageSendState messageSendStateFromMessage(
+  StoredMessage msg, {
+  bool receiverAcknowledged = false,
+}) {
   if (msg.senderId == null) {
     if (msg.openedByAll != null || msg.openedAt != null) {
       return MessageSendState.sendOpened;
     }
 
-    /// messages was send by me, look up if every messages was received by the server...
-    if (msg.ackByServer == null) {
+    // A receiver acknowledgement also proves the server accepted this send.
+    if (msg.ackByServer == null && !receiverAcknowledged) {
       return MessageSendState.sending;
     }
     return MessageSendState.send;
@@ -109,7 +112,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
   Widget build(BuildContext context) {
     final sharedActions = ChatMessageActionScope.maybeOf(context);
     if (sharedActions != null) {
-      return _buildStatus(context, sharedActions.failedMessageIds);
+      return _buildStatus(
+        context,
+        sharedActions.failedMessageIds,
+        sharedActions.ackedMessageIds,
+      );
     }
     final pendingIds = widget.messages
         .where(
@@ -123,7 +130,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         .map((m) => m.messageId)
         .toSet();
     if (pendingIds.isEmpty || widget.group?.isDirectChat == false) {
-      return _buildStatus(context, const {});
+      return _buildStatus(context, const {}, const {});
     }
     _deliveryActions ??= watchRustDatabase(
       (control) => rust_messages.watchDeliveryActions(
@@ -139,11 +146,19 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             .where((a) => a.type == MessageActionType.sendFailed)
             .map((a) => a.messageId)
             .toSet(),
+        (snapshot.data ?? [])
+            .where((a) => a.type == MessageActionType.ackByUserAt)
+            .map((a) => a.messageId)
+            .toSet(),
       ),
     );
   }
 
-  Widget _buildStatus(BuildContext context, Set<String> failedMessageIds) {
+  Widget _buildStatus(
+    BuildContext context,
+    Set<String> failedMessageIds,
+    Set<String> ackedMessageIds,
+  ) {
     var icons = <Widget>[];
     var text = '';
     Widget? textWidget;
@@ -153,18 +168,18 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
     var hasLoader = false;
     GestureTapCallback? onTap;
 
-    /// Only the chat view knows which of the sent messages the receivers have
-    /// acknowledged; elsewhere the set stays empty and 'sent' is the last state.
-    final ackedMessageIds =
-        ChatMessageActionScope.maybeOf(context)?.ackedMessageIds ??
-        const <String>{};
-
     for (final message in widget.messages) {
       if (icons.length == 2) break;
       if (kindsAlreadyShown.contains(message.type)) continue;
       kindsAlreadyShown.add(message.type);
 
-      final state = messageSendStateFromMessage(message);
+      // Actions and messages have separate snapshot streams. A receiver's
+      // acknowledgement is conclusive even before the message snapshot catches
+      // up, including older pages retained in memory by the chat view.
+      final state = messageSendStateFromMessage(
+        message,
+        receiverAcknowledged: ackedMessageIds.contains(message.messageId),
+      );
 
       final mediaFile = message.mediaId == null
           ? null

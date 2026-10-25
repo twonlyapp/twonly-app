@@ -272,11 +272,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get liveLocationMenu => 'Standort';
 
   @override
-  String get memoriesMenu => 'Erinnerungen';
+  String get memoriesMenu => 'Memories';
 
   @override
   String get memoriesLoadFailed =>
-      'Die Erinnerung konnte nicht geladen werden.';
+      'Das Bild aus Memories konnte nicht geladen werden.';
 
   @override
   String get liveLocationTitle => 'Live-Standort';
@@ -3343,4 +3343,22 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String notificationGameTurn(String gameName) {
+    return 'hat $gameName gespielt. Du bist am Zug.';
+  }
+
+  @override
+  String notificationGameWon(String gameName) {
+    return 'hat $gameName gespielt. Du hast gewonnen.';
+  }
+
+  @override
+  String notificationGameLost(String gameName) {
+    return 'hat $gameName gespielt. Du hast verloren.';
+  }
+
+  @override
+  String get notificationGameFallbackName => 'ein Spiel';
 }

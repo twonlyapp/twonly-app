@@ -28,6 +28,7 @@ import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_sticker.entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_webxdc.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input.dart';
 
 import '../../helpers/native_database.dart';
@@ -38,6 +39,15 @@ class _OutgoingApi extends NativeTestApi {
   final List<Completer<String>> completions = [];
   bool failMessageWatch = false;
   Completer<void>? messageWatchGate;
+  final openedMessages = <String>[];
+
+  @override
+  Future<void> crateBridgeApiRustApiNotifyMessagesOpened({
+    required int contactId,
+    required List<String> messageIds,
+  }) async {
+    openedMessages.addAll(messageIds);
+  }
 
   @override
   Stream<List<StoredMessage>> crateBridgeDatabaseMessagesWatchMessages({
@@ -127,6 +137,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     api
       ..requests.clear()
+      ..openedMessages.clear()
       ..completions.clear()
       ..failMessageWatch = false
       ..messageWatchGate = null;
@@ -182,6 +193,130 @@ void main() {
     );
     await flush(tester);
   }
+
+  testWidgets('one game card moves with the latest turn and updates its subtitle and side', (
+    tester,
+  ) async {
+    final wasInBackground = AppState.isAppInBackground;
+    AppState.isAppInBackground = false;
+    addTearDown(() => AppState.isAppInBackground = wasInBackground);
+    final start = DateTime.now().millisecondsSinceEpoch ~/ 1000 - 60;
+    await runNative(tester, () async {
+      await testDatabase.customStatement(
+        "INSERT INTO contacts(user_id,username) VALUES (7,'player')",
+      );
+      await testDatabase.customStatement(
+        "INSERT INTO group_members(group_id,contact_id) VALUES ('chat',7)",
+      );
+      await testDatabase.customStatement(
+        "INSERT INTO webxdc_apps(app_id,version,name,bundle_sha256,bundle_bytes,cached_at) VALUES ('timeline-game',1,'Connect Four','hash',1,0)",
+      );
+      await testDatabase.customStatement(
+        "INSERT INTO messages(message_id,group_id,sender_id,type,created_at) VALUES ('timeline-card','chat',7,'webxdcApp',?)",
+        [start],
+      );
+      await testDatabase.customStatement(
+        "INSERT INTO webxdc_instances(instance_id,group_id,app_id,version,origin_token) VALUES ('timeline-card','chat','timeline-game',1,'timeline-origin')",
+      );
+      await testDatabase.customStatement(
+        "INSERT INTO messages(message_id,group_id,type,content,created_at) VALUES ('between','chat','text','Between game turns',?)",
+        [start + 15],
+      );
+    });
+
+    Future<void> turn(
+      String id,
+      int? sender,
+      int offset,
+      String summary,
+    ) => withDatabaseTransaction(() async {
+      await testDatabase.customStatement(
+        "INSERT INTO webxdc_updates(instance_id,serial,message_id,sender_id,payload,info,received_at) SELECT 'timeline-card',COALESCE(MAX(serial),0)+1,?,?,'{}','Automatic move text',? FROM webxdc_updates WHERE instance_id = 'timeline-card'",
+        [id, sender, start + offset],
+      );
+      await testDatabase.customStatement(
+        "DELETE FROM messages WHERE message_id IN (SELECT message_id || '-info' FROM webxdc_updates WHERE instance_id = 'timeline-card')",
+      );
+      await testDatabase.customStatement(
+        "INSERT INTO messages(message_id,group_id,sender_id,type,content,created_at) VALUES (?,'chat',?,'text','Automatic move text',?)",
+        ['$id-info', sender, start + offset],
+      );
+      await testDatabase.customStatement(
+        "UPDATE messages SET created_at = ? WHERE message_id = 'timeline-card'",
+        [start + offset],
+      );
+      await testDatabase.customStatement(
+        "UPDATE webxdc_instances SET summary = ? WHERE instance_id = 'timeline-card'",
+        [summary],
+      );
+    });
+    await runNative(tester, () => turn('first', 7, 5, 'Your turn'));
+    await openChat(tester);
+    final card = find.byType(ChatWebxdcEntry);
+    await pumpNative(
+      tester,
+      until: () =>
+          find.text('Your turn').evaluate().isNotEmpty &&
+          find.text('Between game turns').evaluate().isNotEmpty,
+    );
+    expect(card, findsOneWidget);
+    expect(find.text('Automatic move text'), findsNothing);
+    expect(tester.getCenter(card).dx, lessThan(400));
+    expect(
+      tester.getTopLeft(card).dy,
+      lessThan(tester.getTopLeft(find.text('Between game turns')).dy),
+    );
+    await pumpNative(
+      tester,
+      until: () => api.openedMessages.contains('first-info'),
+    );
+
+    await runNative(tester, () => turn('mine', null, 30, "Player's turn"));
+    await pumpNative(
+      tester,
+      until: () =>
+          find.text("Player's turn").evaluate().isNotEmpty &&
+          tester.getCenter(card).dx > 400,
+    );
+    expect(card, findsOneWidget);
+    expect(find.text('Automatic move text'), findsNothing);
+    expect(
+      tester.getTopLeft(card).dy,
+      greaterThan(tester.getTopLeft(find.text('Between game turns')).dy),
+    );
+
+    await runNative(tester, () => turn('reply', 7, 30, 'Your next turn'));
+    await pumpNative(
+      tester,
+      until: () =>
+          find.text('Your next turn').evaluate().isNotEmpty &&
+          tester.getCenter(card).dx < 400,
+    );
+    await pumpNative(
+      tester,
+      until: () => api.openedMessages.contains('reply-info'),
+    );
+    // A second activity from the same player within the same second must still
+    // refresh the card and receive its own read acknowledgement.
+    await runNative(tester, () => turn('capture', 7, 30, 'Your next turn'));
+    await pumpNative(
+      tester,
+      until: () => api.openedMessages.contains('capture-info'),
+    );
+    expect(card, findsOneWidget);
+    expect(find.text('Automatic move text'), findsNothing);
+    expect(api.openedMessages.where((id) => id == 'reply-info'), hasLength(1));
+    final entry = tester.widget<ChatListEntry>(
+      find.byKey(const Key('timeline-card')),
+    );
+    expect(entry.message.messageId, 'timeline-card');
+    expect(entry.message.activityMessageId, 'capture-info');
+    expect(entry.message.senderId, 7);
+    expect(entry.message.originalSenderId, 7);
+    expect(entry.message.createdAtSeconds, start + 30);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await flush(tester);
+  });
 
   testWidgets(
     'conversation opens without a loader before its first message snapshot',

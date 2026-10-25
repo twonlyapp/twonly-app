@@ -167,6 +167,8 @@ extension MessagePresentation on StoredMessage {
   }) => StoredMessage(
     groupId: groupId,
     messageId: messageId,
+    activityMessageId: activityMessageId,
+    originalSenderId: originalSenderId,
     senderId: senderId,
     type: type,
     content: content == null ? this.content : content.value,

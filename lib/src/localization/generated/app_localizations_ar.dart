@@ -3397,4 +3397,22 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String notificationGameTurn(String gameName) {
+    return 'لعب $gameName. حان دورك.';
+  }
+
+  @override
+  String notificationGameWon(String gameName) {
+    return 'لعب $gameName. لقد فزت.';
+  }
+
+  @override
+  String notificationGameLost(String gameName) {
+    return 'لعب $gameName. لقد خسرت.';
+  }
+
+  @override
+  String get notificationGameFallbackName => 'لعبة';
 }
