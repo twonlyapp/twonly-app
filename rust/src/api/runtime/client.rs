@@ -93,12 +93,47 @@ mod tests {
             catch_up_tx: Mutex::new(None),
             forced_reconnect: SyncMutex::new(ReconnectWork::default()),
             forced_reconnect_attempts: AtomicU32::new(0),
+            background_deferred: AtomicBool::new(false),
         })
     }
 
     fn socket() -> Arc<WebSocketClient> {
         // Never run the transport: these tests must not access the network.
         Arc::new(WebSocketClient::builder("ws://127.0.0.1:1").build())
+    }
+
+    #[tokio::test]
+    async fn background_rejection_defers_only_its_current_client() {
+        let client = client();
+        client.in_background.store(true, Ordering::Release);
+        client.connection_generation.store(2, Ordering::Release);
+
+        client.defer_background_for_generation(1).await;
+        assert!(!client.background_deferred());
+
+        client.defer_background_for_generation(2).await;
+        assert!(client.background_deferred());
+        assert_eq!(*client.state.read().await, ApiConnectionState::Suspended);
+
+        client.schedule_reconnect(&socket(), "handshake refused background auth");
+        assert!(client.forced_reconnect.lock().unwrap().pending.is_empty());
+
+        // A later connect in the same run must not restart the dial loop.
+        client.connect().await.unwrap();
+        assert!(client.ws_client.lock().await.is_none());
+        assert!(!self::client().background_deferred());
+
+        client.close().await;
+        assert!(!client.background_deferred());
+        client.deliberately_closed.store(false, Ordering::Release);
+        client
+            .defer_background_for_generation(client.connection_generation.load(Ordering::Acquire))
+            .await;
+        assert!(client.background_deferred());
+
+        // Foreground adoption is allowed to authenticate normally again.
+        let _ = client.set_background(false).await;
+        assert!(!client.background_deferred());
     }
 
     #[tokio::test]
@@ -285,6 +320,9 @@ pub(crate) struct ApiClient {
     /// Counts forced redials since the last authenticated session; feeds the
     /// backoff in [`ApiClient::schedule_reconnect`].
     forced_reconnect_attempts: AtomicU32,
+    /// The server has a foreground session for this account. Only a later
+    /// native run or foreground adoption should try background auth again.
+    background_deferred: AtomicBool,
 }
 
 impl ApiClient {
@@ -309,6 +347,7 @@ impl ApiClient {
             catch_up_tx: Mutex::const_new(None),
             forced_reconnect: SyncMutex::new(ReconnectWork::default()),
             forced_reconnect_attempts: AtomicU32::new(0),
+            background_deferred: AtomicBool::new(false),
         })
     }
 
@@ -464,6 +503,7 @@ impl ApiClient {
     pub(crate) fn schedule_reconnect(self: &Arc<Self>, stale: &Arc<WebSocketClient>, reason: &str) {
         if self.deliberately_closed.load(Ordering::Acquire)
             || API_PERMANENTLY_REJECTED.load(Ordering::Acquire)
+            || self.background_deferred()
         {
             return;
         }
@@ -564,6 +604,7 @@ impl ApiClient {
         // redial is no longer wanted.
         if self.deliberately_closed.load(Ordering::Acquire)
             || !self.network_available.load(Ordering::Acquire)
+            || self.background_deferred()
         {
             return Ok(());
         }
@@ -615,6 +656,21 @@ impl ApiClient {
         self.set_state(state).await;
 
         true
+    }
+
+    pub(crate) fn background_deferred(&self) -> bool {
+        self.background_deferred.load(Ordering::Acquire)
+    }
+
+    pub(super) async fn defer_background_for_generation(&self, generation: u64) {
+        let _change = self.connection_change.lock().await;
+
+        if generation == self.connection_generation.load(Ordering::Acquire)
+            && self.in_background.load(Ordering::Acquire)
+        {
+            self.background_deferred.store(true, Ordering::Release);
+            self.set_state(ApiConnectionState::Suspended).await;
+        }
     }
 
     /// Returns whether `connection` still owns the live client slot.
@@ -683,6 +739,12 @@ impl ApiClient {
     }
 
     async fn connect_inner(self: &Arc<Self>) -> Result<()> {
+        if self.background_deferred() {
+            self.set_state(ApiConnectionState::Suspended).await;
+
+            return Ok(());
+        }
+
         if API_PERMANENTLY_REJECTED.load(Ordering::Acquire) {
             self.set_state(ApiConnectionState::PermanentlyRejected)
                 .await;
@@ -820,6 +882,8 @@ impl ApiClient {
                                 self_clone.is_authenticated.store(false, Ordering::Release);
                                 if API_PERMANENTLY_REJECTED.load(Ordering::Acquire) {
                                     self_clone.set_state(ApiConnectionState::PermanentlyRejected).await;
+                                } else if self_clone.background_deferred() {
+                                    self_clone.set_state(ApiConnectionState::Suspended).await;
                                 } else {
                                     self_clone.set_state(ApiConnectionState::Stopped).await;
                                 }
@@ -857,6 +921,8 @@ impl ApiClient {
 
         self.connection_generation.fetch_add(1, Ordering::AcqRel);
 
+        self.background_deferred.store(false, Ordering::Release);
+
         self.is_authenticated.store(false, Ordering::Release);
 
         // Dropping the sender ends the catch-up loop for this connection.
@@ -889,6 +955,8 @@ impl ApiClient {
         if in_background {
             self.set_state(ApiConnectionState::Suspended).await;
         } else {
+            self.background_deferred.store(false, Ordering::Release);
+
             if !was_background
                 && matches!(
                     *self.state.read().await,

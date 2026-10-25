@@ -36,9 +36,17 @@ pub async fn upsert_media_file(
 pub async fn update_media_files(
     id: Option<String>, patch: MediaFilePatch, transaction: &DatabaseSession,
 ) -> Result<()> {
+    // No Flutter caller needs a table-wide update. An omitted ID must never
+    // silently turn editor cleanup into a write to the complete media library.
+    let id = id.ok_or_else(|| {
+        crate::error::TwonlyError::Generic(
+            "A media ID is required; bulk media updates are not supported".into(),
+        )
+    })?;
+
     let mut tx = CommandTransaction::begin(transaction).await?;
 
-    let result = writes::update(tx.transaction(), id.as_deref(), patch).await;
+    let result = writes::update(tx.transaction(), Some(&id), patch).await;
 
     tx.finish(result).await
 }

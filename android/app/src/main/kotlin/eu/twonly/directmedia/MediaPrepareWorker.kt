@@ -55,7 +55,9 @@ class MediaPrepareWorker(
             } else if (runAttemptCount < MAX_RETRIES) {
                 Result.retry()
             } else {
-                NativeErrorReporting.failure(applicationContext, "media_preparation")
+                NativeErrorReporting.rustFailure(
+                    applicationContext, "media_preparation", response.optString("error"),
+                )
                 // Giving up here loses nothing: the media row still says the
                 // send is unfinished, so the next flush picks it up again.
                 Result.failure()

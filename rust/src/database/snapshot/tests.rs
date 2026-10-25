@@ -126,7 +126,7 @@ async fn encrypted_wal_snapshot_contains_uncheckpointed_commits_and_header_metad
                     crate::database::cipher::KeyForm::Raw.pragma_value(key),
                 )
                 .journal_mode(SqliteJournalMode::Wal)
-                .pragma("synchronous", "FULL")
+                .pragma("synchronous", "NORMAL")
                 .pragma("wal_autocheckpoint", "0"),
         )
         .await

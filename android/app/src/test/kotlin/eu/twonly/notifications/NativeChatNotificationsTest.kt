@@ -30,6 +30,19 @@ import java.io.File
 class NativeChatNotificationsTest {
     private val context: Context get() = RuntimeEnvironment.getApplication()
 
+    @Test
+    fun rustFailureReasonSurvivesParsingWithoutChangingLegacyResponses() {
+        val cancelled = NativeNotificationResponse.parse(
+            """{"ok":false,"batch":null,"error":"Notification run cancelled"}""",
+        )
+        assertFalse(cancelled.ok)
+        assertNull(cancelled.batch)
+        assertEquals("Notification run cancelled", cancelled.error)
+        for (json in listOf("""{"ok":true}""", """{"ok":false,"error":null}""")) {
+            assertNull(NativeNotificationResponse.parse(json).error)
+        }
+    }
+
     @Before
     fun setUp() {
         // Robolectric gives each test a different data directory, while

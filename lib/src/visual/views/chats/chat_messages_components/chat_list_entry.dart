@@ -21,7 +21,6 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database_values.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_reaction_row.dart';
@@ -96,7 +95,18 @@ class _ChatListEntryState extends State<ChatListEntry> {
   @override
   void didUpdateWidget(ChatListEntry oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.useSharedData) _applySharedData();
+    if (oldWidget.useSharedData != widget.useSharedData ||
+        oldWidget.message.messageId != widget.message.messageId ||
+        oldWidget.message.mediaId != widget.message.mediaId) {
+      mediaFileSub?.cancel();
+      reactionsSub?.cancel();
+      mediaService = null;
+      reactions = [];
+      _applySharedData();
+      initAsync();
+    } else if (widget.useSharedData) {
+      _applySharedData();
+    }
   }
 
   void _applySharedData() {
@@ -125,38 +135,48 @@ class _ChatListEntryState extends State<ChatListEntry> {
 
   Future<void> initAsync() async {
     if (widget.useSharedData) return;
-    if (widget.message.mediaId != null) {
+    final mediaId = widget.message.mediaId;
+    final messageId = widget.message.messageId;
+    if (mediaId != null) {
       final mediaFileStream = watchRustDatabase(
         (control) => rust_mediafiles
             .watchMediaFiles(
               input: db_mediafiles.MediaQuery(
                 filter: db_mediafiles.MediaFilter.ids,
-                ids: [widget.message.mediaId!].toList(),
+                ids: [mediaId],
               ),
               control: control,
             )
             .map(orderedMediaFiles),
       ).map((rows) => rows.isEmpty ? null : rows.single);
       mediaFileSub = mediaFileStream.listen((mediaFiles) {
-        if (mediaFiles != null) {
-          mediaService = MediaFileService(mediaFiles);
-          if (mounted) setState(() {});
-        } else {
-          Log.error(
-            'Media file not found for chat message',
-          );
+        if (!mounted ||
+            widget.useSharedData ||
+            widget.message.mediaId != mediaId) {
+          return;
         }
+        // Deletion emits an empty result before the parent message rebuilds.
+        // Drop the old service so the tile cannot keep opening deleted media.
+        setState(() {
+          mediaService = mediaFiles == null
+              ? null
+              : MediaFileService(mediaFiles);
+        });
       });
     }
     final stream = watchRustDatabase(
       (control) => rust_reactions.watchReactions(
-        messages: {widget.message.messageId}.toList(),
+        messages: [messageId],
         control: control,
       ),
     );
 
     reactionsSub = stream.listen((update) {
-      if (!mounted) return;
+      if (!mounted ||
+          widget.useSharedData ||
+          widget.message.messageId != messageId) {
+        return;
+      }
       setState(() {
         reactions = update;
       });

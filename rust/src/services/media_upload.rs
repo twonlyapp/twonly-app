@@ -167,32 +167,47 @@ impl MediaUploadService {
 
         let media_id = new_uuid_v7();
 
-        let database = self.ctx.app_db.read().await.clone();
+        // Share intents can arrive while the activity is suspended. Keep the
+        // identity/key material stable across retired foreground epochs and
+        // retry only this atomic database step, never a committed initializer.
+        self.ctx
+            .foreground_database_call(|| async {
+                let database = self.ctx.app_db.read().await.clone();
 
-        let mut transaction = database.pool.begin().await?;
+                let mut transaction = database.pool.begin().await?;
 
-        sqlx::query("UPDATE media_files SET is_draft_media = 0 WHERE is_draft_media = 1")
-            .execute(&mut *transaction)
-            .await?;
+                sqlx::query("UPDATE media_files SET is_draft_media = 0 WHERE is_draft_media = 1")
+                    .execute(&mut *transaction)
+                    .await?;
 
-        sqlx::query(
-            r#"INSERT INTO media_files
+                sqlx::query(
+                    r#"INSERT INTO media_files
                (media_id, type, upload_state, display_limit_in_milliseconds,
                 encryption_key, encryption_nonce, is_draft_media)
                VALUES (?, ?, 'initialized', ?, ?, ?, ?)"#,
-        )
-        .bind(&media_id)
-        .bind(&media_type)
-        .bind(display_limit)
-        .bind(&encryption_key)
-        .bind(&encryption_nonce)
-        .bind(i64::from(is_draft_media))
-        .execute(&mut *transaction)
-        .await?;
+                )
+                .bind(&media_id)
+                .bind(&media_type)
+                .bind(display_limit)
+                .bind(&encryption_key)
+                .bind(&encryption_nonce)
+                .bind(i64::from(is_draft_media))
+                .execute(&mut *transaction)
+                .await?;
 
-        transaction.commit().await?;
+                transaction.commit().await?;
 
-        crate::services::location_metadata::initialize_for_media(&self.ctx, &media_id).await?;
+                Ok(())
+            })
+            .await?;
+
+        // Location initialization is idempotent and has its own admission, so
+        // a pause here cannot replay the media row creation above.
+        self.ctx
+            .foreground_database_call(|| {
+                crate::services::location_metadata::initialize_for_media(&self.ctx, &media_id)
+            })
+            .await?;
 
         Ok(media_id)
     }
@@ -1578,13 +1593,64 @@ impl MediaUploadService {
         if media.reupload_requested_by.is_some() || media.reupload_targets.is_some() {
             tracing::warn!(media_id, "reupload requested but the source is gone");
 
+            let mut transaction = database.pool.begin().await?;
+
+            let mut targets: Vec<MediaReuploadTarget> = media
+                .reupload_targets
+                .as_deref()
+                .map(serde_json::from_str)
+                .transpose()?
+                .unwrap_or_default();
+
+            // Legacy requests only recorded contacts. Resolve their own media
+            // messages, without failing another recipient of the same file.
+            if targets.is_empty() {
+                for contact in parse_reupload_requested_by(media.reupload_requested_by.as_deref()) {
+                    let messages: Vec<String> = sqlx::query_scalar(
+                        "SELECT m.message_id FROM messages m JOIN group_members gm ON gm.group_id \
+                         = m.group_id WHERE m.media_id = ? AND m.sender_id IS NULL AND \
+                         gm.contact_id = ?",
+                    )
+                    .bind(media_id)
+                    .bind(contact)
+                    .fetch_all(&mut *transaction)
+                    .await?;
+
+                    targets.extend(messages.into_iter().map(|message_id| MediaReuploadTarget {
+                        contact_id: contact,
+                        message_id,
+                    }));
+                }
+            }
+
+            for target in targets {
+                sqlx::query(
+                    "INSERT INTO message_actions(message_id, contact_id, type) SELECT message_id, \
+                     ?, 'sendFailed' FROM messages WHERE message_id = ? AND media_id = ? ON \
+                     CONFLICT(message_id, contact_id, type) DO NOTHING",
+                )
+                .bind(target.contact_id)
+                .bind(&target.message_id)
+                .bind(media_id)
+                .execute(&mut *transaction)
+                .await?;
+
+                sqlx::query("DELETE FROM receipts WHERE message_id = ? AND contact_id = ?")
+                    .bind(&target.message_id)
+                    .bind(target.contact_id)
+                    .execute(&mut *transaction)
+                    .await?;
+            }
+
             sqlx::query(
                 r#"UPDATE media_files SET upload_state = 'uploaded', reupload_requested_by = NULL, reupload_targets = NULL
                    WHERE media_id = ?"#,
             )
             .bind(media_id)
-            .execute(&database.pool)
+            .execute(&mut *transaction)
             .await?;
+
+            transaction.commit().await?;
 
             return Ok(());
         }
@@ -2283,6 +2349,76 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    async fn missing_reupload_source_fails_only_the_requesting_message_and_stops_retries(
+    ) -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
+            .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice'), (8, 'bob')")
+            .execute(&database.pool)
+            .await?;
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('g', 'Group')")
+            .execute(&database.pool)
+            .await?;
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES ('g', 7), ('g', 8)")
+            .execute(&database.pool)
+            .await?;
+        sqlx::query(
+            "INSERT INTO media_files(media_id, type, upload_state) VALUES ('gone', 'image', \
+             'uploaded')",
+        )
+        .execute(&database.pool)
+        .await?;
+        sqlx::query(
+            "INSERT INTO messages(message_id, group_id, type, media_id) VALUES ('first', 'g', \
+             'media', 'gone'), ('second', 'g', 'media', 'gone')",
+        )
+        .execute(&database.pool)
+        .await?;
+        sqlx::query(
+            "INSERT INTO receipts(receipt_id, contact_id, message_id, message) VALUES ('failed', \
+             7, 'first', x'00'), ('other-member', 8, 'first', x'00'), ('other-message', 7, \
+             'second', x'00')",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        let service = MediaUploadService::new(&ctx);
+        service.reupload(7, "gone", "first").await?;
+
+        let failed: Vec<(String, i64)> = sqlx::query_as(
+            "SELECT message_id, contact_id FROM message_actions WHERE type = 'sendFailed'",
+        )
+        .fetch_all(&database.pool)
+        .await?;
+        assert_eq!(failed, vec![("first".into(), 7)]);
+        let remaining: Vec<String> =
+            sqlx::query_scalar("SELECT receipt_id FROM receipts ORDER BY receipt_id")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(remaining, vec!["other-member", "other-message"]);
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM messages")
+                .fetch_one(&database.pool)
+                .await?,
+            2
+        );
+
+        // Another peer error cannot enqueue an impossible compression again.
+        assert!(!service.record_reupload_request(7, "gone", "first").await?);
+        let state: (String, Option<String>, Option<String>) = sqlx::query_as(
+            "SELECT upload_state, reupload_requested_by, reupload_targets FROM media_files WHERE \
+             media_id = 'gone'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(state, ("uploaded".into(), None, None));
+        database.close().await;
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn stored_metadata_hashes_empty_and_multiple_buffer_files() -> anyhow::Result<()> {
         let temp = tempfile::tempdir()?;
         let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
@@ -2312,7 +2448,8 @@ mod tests {
                 .await?;
 
             let (size, hash): (i64, Vec<u8>) = sqlx::query_as(
-                "SELECT size_in_bytes, stored_file_hash FROM media_files WHERE media_id = 'hash-fixture'",
+                "SELECT size_in_bytes, stored_file_hash FROM media_files WHERE media_id = \
+                 'hash-fixture'",
             )
             .fetch_one(&database.pool)
             .await?;

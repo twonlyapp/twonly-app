@@ -60,9 +60,18 @@ impl Foreground {
     }
 
     pub(crate) fn ready(&self) -> bool {
-        self.epoch.lock().unwrap().as_ref().is_some_and(|epoch| {
-            !epoch.operation.cancelled() && matches!(*epoch.phase.borrow(), Phase::Ready)
-        })
+        self.ready_operation().is_some()
+    }
+
+    pub(crate) fn ready_operation(&self) -> Option<Operation> {
+        self.epoch
+            .lock()
+            .unwrap()
+            .as_ref()
+            .filter(|epoch| {
+                !epoch.operation.cancelled() && matches!(*epoch.phase.borrow(), Phase::Ready)
+            })
+            .map(|epoch| epoch.operation.clone())
     }
 
     fn epoch(&self) -> Option<Arc<Epoch>> {
@@ -202,8 +211,8 @@ async fn visible() -> Result<()> {
     }
 }
 
-/// A reset abandons this process's identity. Lifecycle callbacks must not reopen
-/// its pools or write its credentials again before the app restarts.
+/// A reset abandons this process's identity. Lifecycle callbacks must not
+/// reopen its pools or write its credentials again before the app restarts.
 pub(crate) async fn stop_for_reset() {
     RESETTING.store(true, Ordering::Release);
 

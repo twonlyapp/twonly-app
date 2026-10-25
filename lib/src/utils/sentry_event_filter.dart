@@ -1,3 +1,4 @@
+import 'package:logging/logging.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 final _uuid = RegExp(
@@ -6,6 +7,7 @@ final _uuid = RegExp(
 );
 final _downloadToken = RegExp(r'(/api/download/)[^\s)\]"\x27?]+');
 final _userId = RegExp(r'\b(from|user|peer|target) -?\d+\b');
+final _avatarContactId = RegExp(r'(Failed to render avatar for )-?\d+\b');
 final _ciphertextRecipient = RegExp(r'(ciphertext message for )-?\d+\b');
 final _signalAddress = RegExp(
   r'(session with |identity for address )-?\d+\.\d+',
@@ -14,6 +16,22 @@ final _signalCounter = RegExp(r'old counter \d+ / \d+');
 final _s3RequestId = RegExp(r'<(RequestId|HostId)>[^<]*</\1>');
 final _uploadSize = RegExp(r'\(\d+ encrypted bytes\)');
 final _socketPort = RegExp(r'\bport = \d+\b');
+final _networkErrno = RegExp(
+  r'errno = (?:7|50|51|54|57|60|61|64|65|101|102|103|104|110|111|113)\b',
+);
+
+bool _isTransientNetworkException(SentryException exception) {
+  final value = exception.value ?? '';
+  if (value.contains('CERTIFICATE_VERIFY_FAILED')) return false;
+  return switch (exception.type) {
+    'SocketException' || '_SocketException' || 'ClientException' => true,
+    'OSError' => _networkErrno.hasMatch(value),
+    'HandshakeException' => value.contains(
+      'Connection terminated during handshake',
+    ),
+    _ => false,
+  };
+}
 
 /// Keep failure reasons stable across users, messages, files and requests.
 /// Apply at beforeSend so uncaught bridge errors are covered too, while local
@@ -22,6 +40,7 @@ String normalizeReportedError(String message) => message
     .replaceAll(_uuid, '<id>')
     .replaceAllMapped(_downloadToken, (match) => '${match[1]}<token>')
     .replaceAllMapped(_userId, (match) => '${match[1]} <user>')
+    .replaceAllMapped(_avatarContactId, (match) => '${match[1]}<user>')
     .replaceAllMapped(_ciphertextRecipient, (match) => '${match[1]}<user>')
     .replaceAllMapped(_signalAddress, (match) => '${match[1]}<address>')
     .replaceAll(_signalCounter, 'old counter <counter> / <counter>')
@@ -33,7 +52,19 @@ String normalizeReportedError(String message) => message
     .replaceAll(_socketPort, 'port = <port>');
 
 SentryEvent? filterSentryEvent(SentryEvent event, Hint hint) {
-  for (final exception in event.exceptions ?? <SentryException>[]) {
+  final exceptions = event.exceptions ?? <SentryException>[];
+  // SDK/library transport failures can escape the application's catch sites.
+  // Keep them in local warning logs, without opening another GlitchTip issue.
+  // A wrapper or any non-network cause keeps the whole chain reportable.
+  if (exceptions.isNotEmpty && exceptions.every(_isTransientNetworkException)) {
+    Logger('error_reporting').warning(
+      exceptions
+          .map((exception) => normalizeReportedError(exception.value ?? ''))
+          .join('\n'),
+    );
+    return null;
+  }
+  for (final exception in exceptions) {
     if (exception.type != 'LateError' &&
         exception.type != 'LateInitializationError') {
       continue;

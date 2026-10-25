@@ -37,15 +37,21 @@ impl<'a> CommandTransaction<'a> {
 
             Ok(Self::Borrowed(guard))
         } else {
-            get_twonly_flutter()?.wait_for_foreground().await?;
+            let context = get_twonly_flutter()?;
 
-            let database = get_twonly_flutter()?.app_db.read().await.clone();
+            let transaction = context
+                .foreground_database_call(|| async {
+                    let database = context.app_db.read().await.clone();
 
-            Ok(Self::Owned(if read {
-                database.read_pool.begin().await?
-            } else {
-                database.pool.begin().await?
-            }))
+                    Ok(if read {
+                        database.read_pool.begin().await?
+                    } else {
+                        database.pool.begin().await?
+                    })
+                })
+                .await?;
+
+            Ok(Self::Owned(transaction))
         }
     }
 

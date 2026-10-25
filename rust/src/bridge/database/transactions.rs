@@ -16,12 +16,18 @@ pub struct DatabaseTransaction {
 
 impl DatabaseTransaction {
     pub async fn begin() -> Result<Self> {
-        get_twonly_flutter()?.wait_for_foreground().await?;
-
-        let database = get_twonly_flutter()?.app_db.read().await.clone();
+        let context = get_twonly_flutter()?;
 
         Ok(Self {
-            inner: Arc::new(TransactionScope::begin(&database.pool).await?),
+            inner: Arc::new(
+                context
+                    .foreground_database_call(|| async {
+                        let database = context.app_db.read().await.clone();
+
+                        TransactionScope::begin(&database.pool).await
+                    })
+                    .await?,
+            ),
         })
     }
 

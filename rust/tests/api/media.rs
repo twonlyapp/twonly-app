@@ -1,4 +1,4 @@
-use super::{init_tracing, Tester};
+use super::{Tester, init_tracing};
 use prost::Message as _;
 use rust_lib_twonly::api::messages::outgoing::send_c2c_message_to_contact;
 use rust_lib_twonly::api::proto::client::{self as proto, encrypted_content};
@@ -224,10 +224,11 @@ async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
         .wait_for_media_encryption_mac(&local_media_id)
         .await?;
 
-    // The slot was reserved but never handed to a native uploader, so no job may
-    // be left behind and the slot has to become reusable again. A recipient can
-    // ask more than once, so wait for preparation to quiesce first.
-    tester_a.wait_for_no_pending_upload_jobs().await?;
+    // A failed native schedule retains its durable requests and reserved slot
+    // so a later foreground pass can retry the same upload.
+    tester_a
+        .wait_for_prepared_upload_job(&local_media_id)
+        .await?;
 
     // 5. Tester A responds with MediaType::Reupload
     let reupload_content = proto::EncryptedContent {

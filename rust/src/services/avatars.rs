@@ -144,7 +144,7 @@ pub(crate) async fn own_custom_avatar(ctx: &Context) -> Result<CustomAvatarInfo>
         "SELECT webp, sha256, width, height, accepted_contacts_only, source_revision FROM \
          own_custom_avatar WHERE singleton = 1",
     )
-    .fetch_one(&database.pool)
+    .fetch_one(&database.read_pool)
     .await?;
 
     Ok(CustomAvatarInfo {
@@ -549,7 +549,7 @@ pub(crate) async fn ensure_contact_avatar_png(
          WHERE user_id = ?",
     )
     .bind(contact_id)
-    .fetch_optional(&database.pool)
+    .fetch_optional(&database.read_pool)
     .await?;
 
     let Some((svg, profile_counter, prefer_photo)) = row else {
@@ -566,7 +566,7 @@ pub(crate) async fn ensure_contact_avatar_png(
              webp IS NOT NULL",
         )
         .bind(contact_id)
-        .fetch_optional(&database.pool)
+        .fetch_optional(&database.read_pool)
         .await?
         {
             let counter: i64 = custom.get("applied_counter");
@@ -577,9 +577,7 @@ pub(crate) async fn ensure_contact_avatar_png(
                 .join("avatars")
                 .join(format!("contact_{contact_id}_custom_{counter}.webp"));
 
-            write_cached_bytes(&output, &webp)?;
-
-            return Ok(Some(output));
+            return cache_avatar_bytes(output, webp).await.map(Some);
         }
     }
 
@@ -745,12 +743,24 @@ pub(crate) async fn current_custom_avatar_path(ctx: &Context) -> Result<Option<P
         .join("avatars")
         .join(format!("user_custom_{}.webp", avatar.source_revision));
 
-    write_cached_bytes(&output, &webp)?;
+    cache_avatar_bytes(output, webp).await.map(Some)
+}
 
-    Ok(Some(output))
+async fn cache_avatar_bytes(output: PathBuf, bytes: Vec<u8>) -> Result<PathBuf> {
+    crate::database::lifecycle::spawn_blocking(move || {
+        write_cached_bytes(&output, &bytes)?;
+        Ok(output)
+    })
+    .await
+    .map_err(|error| TwonlyError::Generic(format!("avatar cache task failed: {error}")))?
 }
 
 fn write_cached_bytes(output: &Path, bytes: &[u8]) -> Result<()> {
+    // A cached photo must not wait behind another contact's SVG rasterizer.
+    if output.exists() {
+        return Ok(());
+    }
+
     let _guard = AVATAR_RENDER_LOCK
         .lock()
         .map_err(|_| TwonlyError::Generic("avatar render lock was poisoned".into()))?;
@@ -931,6 +941,26 @@ mod tests {
 
     #[test]
 
+    fn cached_photo_does_not_wait_for_an_unrelated_svg_render() {
+        let directory = tempfile::tempdir().unwrap();
+        let output = directory.path().join("cached.webp");
+        std::fs::write(&output, b"cached").unwrap();
+        let rendering = AVATAR_RENDER_LOCK.lock().unwrap();
+        let (sent, received) = std::sync::mpsc::channel();
+        let worker = std::thread::spawn(move || {
+            let result = write_cached_bytes(&output, b"cached");
+            let _ = sent.send(result);
+        });
+        let cached = received.recv_timeout(std::time::Duration::from_millis(500));
+        // Release before asserting so a failure never strands the worker.
+        drop(rendering);
+        worker.join().unwrap();
+        cached
+            .expect("a cached photo waited for the SVG render lock")
+            .unwrap();
+    }
+
+    #[test]
     fn invalid_svg_encoding_uses_default() {
         assert_eq!(decode_avatar_svg(vec![0xff]), DEFAULT_AVATAR_SVG);
     }

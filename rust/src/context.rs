@@ -954,6 +954,50 @@ impl Context {
         self.foreground.wait_ready().await
     }
 
+    /// UI reads and atomic local commands may arrive after native suspension
+    /// has closed the pools. Bind each attempt to its foreground epoch and
+    /// retry failures only when that epoch was retired. Never replay successful
+    /// work or use this for network sends or filesystem mutations.
+    pub(crate) async fn foreground_database_call<T, F, W>(&self, work: F) -> Result<T>
+    where
+        F: Fn() -> W,
+        W: std::future::Future<Output = Result<T>>,
+    {
+        // Native jobs and already scoped work must retain their own deadline;
+        // waiting for a future foreground here would deadlock their cleanup.
+        if let Some(operation) = crate::database::lifecycle::Operation::current() {
+            operation.check()?;
+
+            return work().await;
+        }
+
+        if !self.has_flutter() {
+            return work().await;
+        }
+
+        loop {
+            self.wait_for_foreground().await?;
+
+            // Readiness and the chosen owner must come from the same epoch;
+            // a new Starting epoch may replace the one we just waited for.
+            let Some(operation) = self.foreground.ready_operation() else {
+                continue;
+            };
+
+            if operation.cancelled() {
+                continue;
+            }
+
+            let result = operation.scope(work()).await;
+
+            if result.is_err() && operation.cancelled() {
+                continue;
+            }
+
+            return result;
+        }
+    }
+
     pub(crate) fn is_flutter_runtime(&self) -> bool {
         self.has_flutter()
             && !self.suspended.load(Ordering::Acquire)

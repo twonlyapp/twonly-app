@@ -1,6 +1,8 @@
-use super::{init_tracing, Tester};
+use super::{Tester, init_tracing};
 use anyhow::Context as _;
 use rust_lib_twonly::bridge::api::ApiConnectionState;
+use rust_lib_twonly::database::app::groups::native::Group;
+use rust_lib_twonly::services::contacts::ContactService;
 use rust_lib_twonly::services::direct_media_upload::DirectMediaUploadService;
 use rust_lib_twonly::services::media_upload::MediaUploadService;
 
@@ -253,6 +255,20 @@ async fn test_outgoing_images_are_encoded_to_webp_by_rust() -> anyhow::Result<()
 
     let tester = create_authenticated_tester().await?;
 
+    let recipient = create_authenticated_tester().await?;
+    ContactService::new(&tester.context)
+        .request_by_username(recipient.username.clone(), true)
+        .await?;
+    recipient
+        .wait_for_contact_state(tester.user_id, false, true)
+        .await?;
+    ContactService::new(&recipient.context)
+        .accept_request(tester.user_id, true)
+        .await?;
+    tester
+        .wait_for_contact_state(recipient.user_id, true, false)
+        .await?;
+
     let service = MediaUploadService::new(&tester.context);
 
     let media_id = service.initialize("image".into(), None, false).await?;
@@ -272,8 +288,17 @@ async fn test_outgoing_images_are_encoded_to_webp_by_rust() -> anyhow::Result<()
 
     image::DynamicImage::ImageRgba8(source).save_with_format(&original, image::ImageFormat::Png)?;
 
-    // Scheduling the transfer needs a mobile background uploader and a
-    // recipient, so preparation stops right after compression on this host.
+    // Give the send a real recipient. An unreferenced image is correctly
+    // removed by orphan cleanup after preparation reports no recipients.
+    service
+        .insert_into_messages(
+            media_id.clone(),
+            vec![Group::direct_chat_id(tester.user_id, recipient.user_id)],
+            None,
+            false,
+            None,
+        )
+        .await?;
     service.start_upload(&media_id).await?;
 
     let plaintext = media_root.join("tmp").join(format!("{media_id}.webp"));

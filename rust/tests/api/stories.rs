@@ -1,14 +1,19 @@
-use super::{init_tracing, Tester};
+use super::{Tester, init_tracing};
+use anyhow::Context as _;
+use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce, aead::AeadInOut};
 use prost::Message as _;
+use rand::RngCore as _;
 use rust_lib_twonly::api::messages::outgoing::send_c2c_message_to_contact;
-use rust_lib_twonly::api::proto::client::{encrypted_content, EncryptedContent};
+use rust_lib_twonly::api::proto::client::{EncryptedContent, encrypted_content};
+use rust_lib_twonly::api::proto::http_requests::{AttachmentDispatch, AttachmentManifest};
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::database::app::groups::native::Group;
 use rust_lib_twonly::services::contacts::ContactService;
+use rust_lib_twonly::services::direct_media_upload::DirectMediaUploadService;
 use rust_lib_twonly::services::media_upload::MediaUploadService;
 use rust_lib_twonly::services::messages::MessageService;
-use rust_lib_twonly::services::stories::{self, StoryAudience, STORY_LIFETIME_SECONDS};
-use tokio::time::{sleep, Duration};
+use rust_lib_twonly::services::stories::{self, STORY_LIFETIME_SECONDS, StoryAudience};
+use tokio::time::{Duration, sleep};
 
 async fn create_authenticated_tester() -> anyhow::Result<Tester> {
     let mut tester = Tester::new().await?;
@@ -67,16 +72,37 @@ async fn wait_for(tester: &Tester, what: &str, sql: &str, bind: &str) -> anyhow:
     Err(anyhow::anyhow!("{what} did not happen"))
 }
 
-/// Files a story row for `recipient` on `sender`, as `insert_into_messages`
-/// does, and sends the envelope `prepare_media` builds for it. Only the
-/// envelope travels: on this host a media upload stops before the native
-/// transfer, so the attachment itself never reaches the server.
+/// Supplies a real encrypted attachment and a deliberately timestamped story
+/// envelope. The host performs the same three requests as the mobile uploader;
+/// receivers can download it without triggering missing-media recovery.
 
 async fn post_story(
     sender: &Tester, recipient: &Tester, message_id: &str, media_id: &str, posted_at: i64,
     notify: bool,
 ) -> anyhow::Result<()> {
     let group_id = Group::direct_chat_id(sender.user_id, recipient.user_id);
+    let key = vec![2; 32];
+    let nonce = vec![4; 12];
+    let source = image::RgbImage::from_pixel(8, 6, image::Rgb([12, 34, 56]));
+    let plaintext = webp::Encoder::from_rgb(source.as_raw(), source.width(), source.height())
+        .encode_simple(false, 80.0)
+        .map_err(|error| anyhow::anyhow!("encode story fixture: {error:?}"))?;
+    let plaintext_path = std::path::PathBuf::from(&sender.context.config.data_dir)
+        .join("mediafiles/tmp")
+        .join(format!("{media_id}.webp"));
+    std::fs::create_dir_all(plaintext_path.parent().unwrap())?;
+    std::fs::write(&plaintext_path, &*plaintext)?;
+    let mut ciphertext = plaintext.to_vec();
+    let cipher = ChaCha20Poly1305::new_from_slice(&key).unwrap();
+    let tag = cipher
+        .encrypt_inout_detached(
+            &Nonce::try_from(nonce.as_slice()).unwrap(),
+            b"",
+            ciphertext.as_mut_slice().into(),
+        )
+        .map_err(|_| anyhow::anyhow!("encrypt story fixture"))?;
+    let mut download_token = vec![0; 32];
+    rand::rng().fill_bytes(&mut download_token);
 
     {
         let database = sender.context.app_db.read().await.clone();
@@ -88,6 +114,10 @@ async fn post_story(
         .bind(media_id)
         .execute(&database.pool)
         .await?;
+
+        sqlx::query("UPDATE media_files SET encryption_key = ?, encryption_nonce = ?, encryption_mac = ? WHERE media_id = ?")
+            .bind(&key).bind(&nonce).bind(tag.as_slice()).bind(media_id)
+            .execute(&database.pool).await?;
 
         sqlx::query(
             "INSERT INTO messages(group_id, message_id, type, media_id, is_story, created_at) \
@@ -107,10 +137,10 @@ async fn post_story(
                 sender_message_id: message_id.to_owned(),
                 r#type: encrypted_content::media::Type::Image as i32,
                 timestamp: posted_at * 1_000,
-                download_token: Some(vec![1; 32]),
-                encryption_key: Some(vec![2; 32]),
-                encryption_mac: Some(vec![3; 16]),
-                encryption_nonce: Some(vec![4; 12]),
+                download_token: Some(download_token.clone()),
+                encryption_key: Some(key),
+                encryption_mac: Some(tag.to_vec()),
+                encryption_nonce: Some(nonce),
                 ..Default::default()
             }),
             notify,
@@ -118,12 +148,86 @@ async fn post_story(
         ..Default::default()
     };
 
-    send_c2c_message_to_contact()
+    let encrypted_body = send_c2c_message_to_contact()
         .ctx(&sender.context)
         .contact_id(recipient.user_id)
         .encrypted_content(content.encode_to_vec())
         .message_id(message_id.to_owned())
+        .only_return_encrypted_data(true)
+        .blocking(true)
         .call()
+        .await?
+        .context("prepare encrypted story envelope")?;
+
+    DirectMediaUploadService::new(&sender.context)
+        .preload_slots()
+        .await?;
+    let database = sender.context.app_db.read().await.clone();
+    let (attachment, capability, upload_url, fields): (String, Vec<u8>, String, String) =
+        sqlx::query_as("SELECT attachment_id, capability, upload_url, upload_fields_json FROM direct_media_upload_slots WHERE state = 'cached' LIMIT 1")
+            .fetch_one(&database.pool).await?;
+    sqlx::query("UPDATE direct_media_upload_slots SET state = 'reserved' WHERE attachment_id = ?")
+        .bind(&attachment)
+        .execute(&database.pool)
+        .await?;
+    let fields: std::collections::HashMap<String, String> = serde_json::from_str(&fields)?;
+    let boundary = format!("twonly-test-{}", uuid::Uuid::new_v4());
+    let mut multipart = Vec::new();
+    for (name, value) in fields {
+        multipart.extend_from_slice(
+            format!(
+                "--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n{value}\r\n"
+            )
+            .as_bytes(),
+        );
+    }
+    multipart.extend_from_slice(format!("--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"story.bin\"\r\nContent-Type: application/octet-stream\r\n\r\n").as_bytes());
+    multipart.extend_from_slice(&ciphertext);
+    multipart.extend_from_slice(format!("\r\n--{boundary}--\r\n").as_bytes());
+    let _ = rustls::crypto::ring::default_provider().install_default();
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(30))
+        .build()?;
+    client
+        .post(upload_url)
+        .header(
+            "content-type",
+            format!("multipart/form-data; boundary={boundary}"),
+        )
+        .body(multipart)
+        .send()
+        .await?
+        .error_for_status()?;
+    let manifest = AttachmentManifest {
+        encrypted_object_size: ciphertext.len() as i64,
+        dispatches: vec![AttachmentDispatch {
+            recipient_user_id: recipient.user_id,
+            encrypted_body,
+            push_data: notify.then(|| vec![1]),
+            download_token,
+        }],
+    };
+    for (step, body) in [
+        ("manifest", manifest.encode_to_vec()),
+        ("complete", Vec::new()),
+    ] {
+        let url = format!(
+            "{}v2/attachments/{attachment}/{step}",
+            rust_lib_twonly::bridge::api::RustApi::api_base_url("https".into())
+        );
+        client
+            .post(url)
+            .header("x-twonly-upload-capability", hex::encode(&capability))
+            .header("content-type", "application/x-protobuf")
+            .header("content-length", body.len())
+            .body(body)
+            .send()
+            .await?
+            .error_for_status()?;
+    }
+    sqlx::query("UPDATE direct_media_upload_slots SET state = 'consumed' WHERE attachment_id = ?")
+        .bind(&attachment)
+        .execute(&database.pool)
         .await?;
 
     Ok(())
@@ -201,10 +305,12 @@ async fn test_story_lifecycle_between_clients() -> anyhow::Result<()> {
     };
 
     // A widget send cannot also be a story.
-    assert!(uploads
-        .insert_into_messages(media_id.clone(), Vec::new(), None, true, Some(all.clone()))
-        .await
-        .is_err());
+    assert!(
+        uploads
+            .insert_into_messages(media_id.clone(), Vec::new(), None, true, Some(all.clone()))
+            .await
+            .is_err()
+    );
 
     uploads
         .insert_into_messages(media_id.clone(), Vec::new(), None, false, Some(all))
@@ -230,6 +336,9 @@ async fn test_story_lifecycle_between_clients() -> anyhow::Result<()> {
         assert_eq!(groups, expected, "one hidden story row per contact");
     }
 
+    // Direct service calls in this harness do not enter the foreground bridge
+    // operation that normally starts preparation in the application.
+    uploads.start_upload(&media_id).await?;
     tester_a.wait_for_media_encryption_mac(&media_id).await?;
 
     wait_for(
@@ -241,7 +350,7 @@ async fn test_story_lifecycle_between_clients() -> anyhow::Result<()> {
     )
     .await?;
 
-    tester_a.wait_for_no_pending_upload_jobs().await?;
+    tester_a.wait_for_prepared_upload_job(&media_id).await?;
 
     // This host never hands the upload to a native transfer. Cancelling it
     // takes it down locally without sending deletion messages to anybody.

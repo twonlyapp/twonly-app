@@ -42,52 +42,52 @@ class AvatarIcon extends StatefulWidget {
   State<AvatarIcon> createState() => _AvatarIconState();
 }
 
-/// Avatars are only ever drawn from PNG. Rasterising the stored SVG on the UI
-/// thread is what made long chat lists stutter, so a missing PNG is rendered
-/// once by Rust instead of being drawn as vector graphics every frame.
-/// Keyed by contact plus profile counter, so a changed avatar naturally lands
-/// on a fresh key.
-final Map<String, String> _avatarPngPathCache = {};
-
-/// Avatar paths already known to exist on disk. Only positive results are
-/// cached: a PNG can still appear after a miss (it is written when the avatar
-/// finishes downloading, or by the render below), so a miss stays re-checkable.
-final Set<String> _existingAvatarPngPaths = {};
-
-/// Contacts whose PNG render is already in flight, so a list that shows the
-/// same contact in several rows asks Rust to render it only once.
+/// Last resolved paths let recreated list rows draw an avatar while Rust
+/// refreshes it. Only successful results are cached; misses remain retryable.
+final Map<String, String> _avatarPathCache = {};
 final Map<String, Future<String?>> _pendingAvatarRenders = {};
-
-/// Avatars Rust could not turn into a PNG, keyed by contact plus profile
-/// counter so a broken SVG is not re-rendered on every stream tick while a
-/// later avatar still gets its own attempt.
-final Set<String> _unrenderableAvatars = {};
-
 const _avatarCacheLimit = 200;
 
-void _putBounded<T>(Map<String, T> cache, String key, T value) {
-  if (cache.length >= _avatarCacheLimit) {
-    cache.remove(cache.keys.first);
+// A received photo can change without changing the public profile counter.
+// Share one native invalidation stream across all visible contact avatars.
+StreamSubscription<List<String>>? _avatarDatabaseChanges;
+final StreamController<void> _avatarChanges = StreamController<void>.broadcast(
+  onListen: () {
+    var first = true;
+    _avatarDatabaseChanges = watchRustDatabaseChanges().listen(
+      (tables) {
+        // Mounted rows already resolve once before this initial invalidation.
+        if (first) {
+          first = false;
+          if (tables.isEmpty) return;
+        }
+        if (tables.isEmpty || tables.contains('received_custom_avatars')) {
+          _avatarChanges.add(null);
+        }
+      },
+      onError: (Object error) {
+        Log.warn('Could not watch avatar changes: $error');
+      },
+    );
+  },
+  onCancel: () {
+    unawaited(_avatarDatabaseChanges?.cancel());
+    _avatarDatabaseChanges = null;
+  },
+);
+
+void _cacheAvatarPath(String key, String path) {
+  if (!_avatarPathCache.containsKey(key) &&
+      _avatarPathCache.length >= _avatarCacheLimit) {
+    _avatarPathCache.remove(_avatarPathCache.keys.first);
   }
-  cache[key] = value;
+  _avatarPathCache[key] = path;
 }
 
 String _avatarCacheKey(Contact contact) =>
     '${contact.userId}:${contact.senderProfileCounter}:${contact.preferPhotoAvatar}';
 
-String _avatarPngPathFor(Contact contact) {
-  final key = _avatarCacheKey(contact);
-  final cached = _avatarPngPathCache[key];
-  if (cached != null) return cached;
-  final path = RustApi.avatarPngPath(
-    contactId: contact.userId,
-    profileCounter: contact.senderProfileCounter,
-  );
-  _putBounded(_avatarPngPathCache, key, path);
-  return path;
-}
-
-class _AvatarIconState extends State<AvatarIcon> {
+class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
   double get _avatarSize => 2 * (widget.fontSize ?? 20);
 
   bool _isPhotoAvatar(String? path) => path?.endsWith('.webp') ?? false;
@@ -107,24 +107,53 @@ class _AvatarIconState extends State<AvatarIcon> {
   }
 
   List<Contact> _avatarContacts = [];
-  Set<int> _contactsWithPngAvatar = {};
-  final Map<int, String> _resolvedAvatarPaths = {};
+  final Map<String, String> _resolvedAvatarPaths = {};
+  final Set<String> _failedAvatarKeys = {};
+  Timer? _avatarRetry;
+  int _retryAttempt = 0;
+  int _sourceGeneration = 0;
   String? _myAvatarPath;
 
   StreamSubscription<List<Contact>>? groupStream;
   StreamSubscription<List<Contact>>? contactsStream;
   StreamSubscription<Contact?>? contactStream;
   StreamSubscription<void>? _userSub;
+  StreamSubscription<void>? _photoSub;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     initAsync();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_refreshAvatarFiles());
+      if (widget.myAvatar) unawaited(_updateMyAvatar());
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      _avatarRetry?.cancel();
+      _avatarRetry = null;
+    }
   }
 
   @override
   void didUpdateWidget(AvatarIcon oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if ((widget.contacts == null) != (oldWidget.contacts == null) ||
+        widget.group?.groupId != oldWidget.group?.groupId ||
+        widget.contactId != oldWidget.contactId ||
+        widget.myAvatar != oldWidget.myAvatar) {
+      _cancelSources();
+      _avatarContacts = [];
+      _resolvedAvatarPaths.clear();
+      _failedAvatarKeys.clear();
+      initAsync();
+      return;
+    }
     // Compare by value: callers commonly build a fresh list on every rebuild,
     // and an identity check would restart the avatar probe every frame.
     if (widget.contacts != null &&
@@ -135,66 +164,128 @@ class _AvatarIconState extends State<AvatarIcon> {
 
   void _setAvatarContacts(List<Contact> contacts) {
     _avatarContacts = contacts;
+    final keys = contacts.map(_avatarCacheKey).toSet();
+    _resolvedAvatarPaths.removeWhere((key, _) => !keys.contains(key));
+    _failedAvatarKeys.retainAll(keys);
     unawaited(_refreshAvatarFiles());
     if (mounted) setState(() {});
   }
 
   Future<void> _refreshAvatarFiles() async {
     for (final contact in _avatarContacts) {
-      if (!_unrenderableAvatars.contains(_avatarCacheKey(contact))) {
-        // Rust resolves a received custom avatar before the SVG fallback. Do
-        // not trust the old profile-counter cache here: a custom-avatar update
-        // deliberately leaves that public counter unchanged.
-        unawaited(_renderAvatarPng(contact));
-      }
+      unawaited(_renderAvatarPng(contact));
     }
   }
 
-  Future<void> _renderAvatarPng(Contact contact) async {
-    final contactId = contact.userId;
-    final cacheKey = _avatarCacheKey(contact);
-    // Every widget showing this contact awaits the same render, so each one
-    // still learns the path while Rust rasterises it only once.
-    var render = _pendingAvatarRenders[cacheKey];
-    if (render == null) {
-      // Block body on purpose: returning `remove`'s value would hand
-      // `whenComplete` the future it is completing and hang it.
-      render = RustApi.ensureAvatarPng(contactId: contactId).whenComplete(() {
-        _pendingAvatarRenders.remove(cacheKey);
-      });
-      _pendingAvatarRenders[cacheKey] = render;
+  bool _showsAvatar(String key) =>
+      mounted &&
+      _avatarContacts.any((contact) => _avatarCacheKey(contact) == key);
+
+  void _setAvatarPath(String key, String? path) {
+    if (!_showsAvatar(key) || _resolvedAvatarPaths[key] == path) return;
+    setState(() {
+      if (path == null) {
+        _resolvedAvatarPaths.remove(key);
+      } else {
+        _resolvedAvatarPaths[key] = path;
+      }
+    });
+  }
+
+  void _retryAvatar(String key, Object error) {
+    if (!_showsAvatar(key)) return;
+    final message = error.toString().toLowerCase();
+    if (!message.contains('closed pool') &&
+        !message.contains('pool timed out') &&
+        !message.contains('database operation cancelled') &&
+        !message.contains('interrupted') &&
+        !message.contains('database is locked')) {
+      return;
     }
+    _failedAvatarKeys.add(key);
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (_avatarRetry != null ||
+        (lifecycle != null && lifecycle != AppLifecycleState.resumed)) {
+      return;
+    }
+    final delay = Duration(seconds: 1 << _retryAttempt.clamp(0, 5));
+    _retryAttempt++;
+    _avatarRetry = Timer(delay, () {
+      _avatarRetry = null;
+      if (!mounted) return;
+      for (final contact in _avatarContacts) {
+        if (_failedAvatarKeys.contains(_avatarCacheKey(contact))) {
+          unawaited(_renderAvatarPng(contact));
+        }
+      }
+    });
+  }
+
+  Future<void> _renderAvatarPng(Contact contact) async {
+    final key = _avatarCacheKey(contact);
+    final cached = _avatarPathCache[key];
+    if (cached != null) {
+      if (File(cached).existsSync()) {
+        _setAvatarPath(key, cached);
+      } else {
+        _avatarPathCache.remove(key);
+        _setAvatarPath(key, null);
+      }
+    }
+    if (!_showsAvatar(key)) return;
 
     String? path;
     try {
+      // Every visible copy of a contact awaits the same native resolution.
+      final render = _pendingAvatarRenders.putIfAbsent(
+        key,
+        () =>
+            RustApi.ensureAvatarPng(contactId: contact.userId).whenComplete(() {
+              _pendingAvatarRenders.remove(key);
+            }),
+      );
       path = await render;
-    } catch (e) {
-      Log.error('Failed to render avatar for $contactId: $e');
-      _unrenderableAvatars.add(_avatarCacheKey(contact));
+    } catch (error) {
+      Log.error('Failed to render avatar for ${contact.userId}: $error');
+      _retryAvatar(key, error);
       return;
+    }
+
+    _failedAvatarKeys.remove(key);
+    if (_failedAvatarKeys.isEmpty) {
+      _avatarRetry?.cancel();
+      _avatarRetry = null;
+      _retryAttempt = 0;
     }
     if (path == null) {
-      _unrenderableAvatars.add(_avatarCacheKey(contact));
-      return;
+      _avatarPathCache.remove(key);
+    } else {
+      _cacheAvatarPath(key, path);
     }
-    _existingAvatarPngPaths.add(path);
-    if (!mounted) return;
-    if (!_avatarContacts.any((entry) => _avatarCacheKey(entry) == cacheKey)) {
-      return;
-    }
-    if (_resolvedAvatarPaths[contactId] == path) return;
-    setState(() {
-      _resolvedAvatarPaths[contactId] = path!;
-      _contactsWithPngAvatar = {..._contactsWithPngAvatar, contactId};
-    });
+    _setAvatarPath(key, path);
+  }
+
+  void _cancelSources() {
+    groupStream?.cancel();
+    groupStream = null;
+    contactStream?.cancel();
+    contactStream = null;
+    contactsStream?.cancel();
+    contactsStream = null;
+    _userSub?.cancel();
+    _userSub = null;
+    _photoSub?.cancel();
+    _photoSub = null;
+    _avatarRetry?.cancel();
+    _avatarRetry = null;
+    _retryAttempt = 0;
   }
 
   @override
   void dispose() {
-    groupStream?.cancel();
-    contactStream?.cancel();
-    contactsStream?.cancel();
-    _userSub?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _sourceGeneration++;
+    _cancelSources();
     super.dispose();
   }
 
@@ -205,17 +296,22 @@ class _AvatarIconState extends State<AvatarIcon> {
   }
 
   Widget getAvatarForContact(Contact contact) {
-    if (_contactsWithPngAvatar.contains(contact.userId)) {
-      return _avatarImage(
-        _resolvedAvatarPaths[contact.userId] ?? _avatarPngPathFor(contact),
-      );
-    }
-    // Deliberately no SVG fallback: the render kicked off by
-    // `_refreshAvatarFiles` swaps this placeholder for the PNG when it is done.
-    return errorBuilder(null, null, null);
+    final key = _avatarCacheKey(contact);
+    final path = _resolvedAvatarPaths[key] ?? _avatarPathCache[key];
+    return path == null ? errorBuilder(null, null, null) : _avatarImage(path);
   }
 
   Future<void> initAsync() async {
+    final generation = ++_sourceGeneration;
+    bool active() => mounted && generation == _sourceGeneration;
+    if (!widget.myAvatar &&
+        (widget.contacts != null ||
+            widget.group != null ||
+            widget.contactId != null)) {
+      _photoSub = _avatarChanges.stream.listen((_) {
+        if (active()) unawaited(_refreshAvatarFiles());
+      });
+    }
     if (widget.contacts != null) {
       _setAvatarContacts(widget.contacts!);
     } else if (widget.group != null) {
@@ -235,17 +331,8 @@ class _AvatarIconState extends State<AvatarIcon> {
               .listen((
                 contacts,
               ) {
-                _avatarContacts = [];
-                for (final contact in contacts) {
-                  _unrenderableAvatars.remove(_avatarCacheKey(contact));
-                }
-                if (contacts.length == 1) {
-                  _avatarContacts.add(contacts.first);
-                } else {
-                  _avatarContacts.addAll(contacts);
-                }
-                unawaited(_refreshAvatarFiles());
-                setState(() {});
+                if (!active()) return;
+                _setAvatarContacts(contacts);
               });
     } else if (widget.myAvatar) {
       _userSub = userService.onUserUpdated.listen((_) {
@@ -265,12 +352,8 @@ class _AvatarIconState extends State<AvatarIcon> {
           ).map((rows) => rows.isEmpty ? null : rows.single).listen((
             contact,
           ) {
-            if (contact != null) {
-              _unrenderableAvatars.remove(_avatarCacheKey(contact));
-              _avatarContacts = [contact];
-              unawaited(_refreshAvatarFiles());
-              setState(() {});
-            }
+            if (!active()) return;
+            _setAvatarContacts(contact == null ? [] : [contact]);
           });
     }
     if (mounted) setState(() {});
@@ -279,12 +362,16 @@ class _AvatarIconState extends State<AvatarIcon> {
   Future<void> _updateMyAvatar() async {
     // Rust resolves photo avatars as well as public SVG avatars, including
     // profiles that have only a photo avatar.
-    final path = await RustApi.currentUserAvatarPath();
+    try {
+      final path = await RustApi.currentUserAvatarPath();
 
-    if (mounted) {
-      setState(() {
-        _myAvatarPath = path;
-      });
+      if (mounted) {
+        setState(() {
+          _myAvatarPath = path;
+        });
+      }
+    } catch (error) {
+      Log.error('Failed to load own avatar: $error');
     }
   }
 

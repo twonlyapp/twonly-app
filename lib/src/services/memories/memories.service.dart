@@ -199,8 +199,10 @@ class MemoriesService {
           mediaIdToSender: mediaIdToSender,
         );
       }
-    } catch (e) {
-      Log.error('Error prewarming memories cache: $e');
+    } catch (error, stackTrace) {
+      // This is an optional startup optimization; the live library watch
+      // builds the state normally when the cache is unavailable.
+      Log.warn('Could not prewarm memories cache', error, stackTrace);
     }
   }
 

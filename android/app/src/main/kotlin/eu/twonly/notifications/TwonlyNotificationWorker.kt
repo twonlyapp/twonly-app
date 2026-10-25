@@ -47,7 +47,9 @@ class TwonlyNotificationWorker(
             val batch = response.batch
             if (!response.ok || batch == null) {
                 if (runAttemptCount >= MAX_RETRIES) {
-                    NativeErrorReporting.failure(applicationContext, "notification_processing")
+                    NativeErrorReporting.rustFailure(
+                        applicationContext, "notification_processing", response.error,
+                    )
                 }
                 // Rust could not reach the mailbox. Show the generic alert so a
                 // high-priority wake-up still produces a notification, and retry.
@@ -96,6 +98,11 @@ class TwonlyNotificationWorker(
                 NativeNotificationBridge.finalizeWakeup(run, FINALIZE_DEADLINE_MS),
             )
             if (finalized.widgetRefresh) TwonlyWidgetProvider.refreshAll(applicationContext)
+            if (!finalized.ok) {
+                NativeErrorReporting.rustFailure(
+                    applicationContext, "notification_finalize", finalized.error,
+                )
+            }
         } catch (error: Throwable) {
             NativeErrorReporting.failure(applicationContext, "notification_finalize", error)
             Log.w(TAG, "Deferred notification maintenance failed", error)

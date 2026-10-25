@@ -90,6 +90,11 @@ pub enum TwonlyError {
     #[error("media has no remaining recipients")]
     MediaHasNoRecipients,
 
+    /// The attachment remains pending and can be retried after the network or
+    /// object store recovers. Its URL must never contain the download token.
+    #[error("media download temporarily unavailable: {0}")]
+    MediaDownloadUnavailable(String),
+
     /// The group server refused a state update because it was written against
     /// a version it no longer holds. Somebody else changed the group first, so
     /// the update has to be applied again to the version that won.

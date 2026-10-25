@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -23,11 +24,22 @@ import '../../helpers/native_database.dart';
 class _AvatarApi extends NativeTestApi {
   late String photo;
   late String illustrated;
+  int failures = 0;
+  int renders = 0;
+  bool returnNull = false;
+  Completer<void>? renderGate;
 
   @override
   Future<String?> crateBridgeApiRustApiEnsureAvatarPng({
     required int contactId,
   }) async {
+    renders++;
+    if (failures > 0) {
+      failures--;
+      throw Exception('attempted to acquire a connection on a closed pool');
+    }
+    await renderGate?.future;
+    if (returnNull) return null;
     final contact = await rust_contacts.getContact(
       id: contactId,
       transaction: currentDatabaseSession(),
@@ -45,6 +57,11 @@ void main() {
   setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
   setUp(() async {
+    api
+      ..failures = 0
+      ..renders = 0
+      ..returnNull = false
+      ..renderGate = null;
     await locator.reset();
     await TestDatabase.create();
     await testDatabase.insert(
@@ -101,9 +118,216 @@ void main() {
     ),
   );
 
+  testWidgets('an avatar storage failure can recover after resume', (
+    tester,
+  ) async {
+    // Use a distinct counter so another test's positive cache is irrelevant.
+    final contact = await runNative(tester, () async {
+      await testDatabase.customStatement(
+        'UPDATE contacts SET sender_profile_counter = 91 WHERE user_id = 7',
+      );
+      return (await rust_contacts.getContact(
+        id: 7,
+        transaction: currentDatabaseSession(),
+      ))!;
+    });
+    api.failures = 1;
+    await tester.pumpWidget(MaterialApp(home: AvatarIcon(contacts: [contact])));
+    await tester.pump();
+    expect(api.renders, 1);
+    expect(find.byType(Image), findsNothing);
+
+    tester.binding.handleAppLifecycleStateChanged(
+      AppLifecycleState.inactive,
+    );
+    tester.binding.handleAppLifecycleStateChanged(
+      AppLifecycleState.resumed,
+    );
+    await pumpNative(
+      tester,
+      until: () => find.byType(Image).evaluate().isNotEmpty,
+    );
+    // A native table invalidation may also refresh the avatar after resume.
+    expect(api.renders, greaterThanOrEqualTo(2));
+    expect(
+      (tester.widget<Image>(find.byType(Image)).image as FileImage).file.path,
+      api.photo,
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  Future<Contact> contactWithCounter(WidgetTester tester, int counter) =>
+      runNative(tester, () async {
+        await testDatabase.customStatement(
+          'UPDATE contacts SET sender_profile_counter = ? WHERE user_id = 7',
+          [counter],
+        );
+        return (await rust_contacts.getContact(
+          id: 7,
+          transaction: currentDatabaseSession(),
+        ))!;
+      });
+
+  testWidgets('a visible avatar retries a temporary database failure', (
+    tester,
+  ) async {
+    final contact = await contactWithCounter(tester, 92);
+    api.failures = 1;
+    await tester.pumpWidget(MaterialApp(home: AvatarIcon(contacts: [contact])));
+    await tester.pump();
+    expect(find.byType(Image), findsNothing);
+    await tester.pump(const Duration(seconds: 1));
+    await pumpNative(
+      tester,
+      until: () => find.byType(Image).evaluate().isNotEmpty,
+    );
+    // Resume and storage invalidations may both request a refresh.
+    expect(api.renders, greaterThanOrEqualTo(2));
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'a missing avatar is resolved when its data arrives at the same counter',
+    (tester) async {
+      final contact = await contactWithCounter(tester, 93);
+      api.returnNull = true;
+      await tester.pumpWidget(
+        MaterialApp(home: AvatarIcon(contacts: [contact])),
+      );
+      await tester.pump();
+      expect(find.byType(Image), findsNothing);
+      final changed = await runNative(tester, () async {
+        await rust_contacts.updateContact(
+          id: 7,
+          patch: ContactPatch(
+            avatarSvgCompressed: NullableBytes(value: Uint8List.fromList([2])),
+          ),
+          transaction: currentDatabaseSession(),
+        );
+        return (await rust_contacts.getContact(
+          id: 7,
+          transaction: currentDatabaseSession(),
+        ))!;
+      });
+      api.returnNull = false;
+      await tester.pumpWidget(
+        MaterialApp(home: AvatarIcon(contacts: [changed])),
+      );
+      await pumpNative(
+        tester,
+        until: () => find.byType(Image).evaluate().isNotEmpty,
+      );
+      expect(api.renders, 2);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'scrolling back shows the cached avatar while its database refresh waits',
+    (tester) async {
+      final contact = await contactWithCounter(tester, 94);
+      final scroll = ScrollController();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ListView.builder(
+            controller: scroll,
+            itemCount: 40,
+            itemExtent: 100,
+            itemBuilder: (_, index) => index == 0
+                ? AvatarIcon(contacts: [contact])
+                : Text('Row $index'),
+          ),
+        ),
+      );
+      await pumpNative(
+        tester,
+        until: () => find.byType(Image).evaluate().isNotEmpty,
+      );
+      scroll.jumpTo(2000);
+      await tester.pump();
+      expect(find.byType(AvatarIcon), findsNothing);
+      final gate = Completer<void>();
+      api.renderGate = gate;
+      scroll.jumpTo(0);
+      await tester.pump();
+      expect(find.byType(Image), findsOneWidget);
+      expect(gate.isCompleted, isFalse);
+      expect(
+        (tester.widget<Image>(find.byType(Image)).image as FileImage).file.path,
+        api.photo,
+      );
+      gate.complete();
+      await pumpNative(tester);
+      await tester.pumpWidget(const SizedBox.shrink());
+      scroll.dispose();
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'a received photo refreshes shared-contact avatars without a profile change',
+    (tester) async {
+      final contact = await contactWithCounter(tester, 95);
+      api.returnNull = true;
+      await tester.pumpWidget(
+        MaterialApp(home: AvatarIcon(contacts: [contact])),
+      );
+      await tester.pump();
+      expect(find.byType(Image), findsNothing);
+      api.returnNull = false;
+      await runNative(
+        tester,
+        () => testDatabase.customStatement(
+          'UPDATE received_custom_avatars SET applied_counter = applied_counter + 1 WHERE contact_id = 7',
+        ),
+      );
+      await pumpNative(
+        tester,
+        until: () => find.byType(Image).evaluate().isNotEmpty,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('a reused avatar switches its contact subscription', (
+    tester,
+  ) async {
+    await runNative(
+      tester,
+      () => testDatabase.insert(
+        const ContactPatch(
+          userId: 8,
+          username: 'other',
+          preferPhotoAvatar: NullableInt(value: 0),
+        ),
+      ),
+    );
+    await tester.pumpWidget(const MaterialApp(home: AvatarIcon(contactId: 7)));
+    await pumpNative(
+      tester,
+      until: () => find.byType(Image).evaluate().isNotEmpty,
+    );
+    await tester.pumpWidget(const MaterialApp(home: AvatarIcon(contactId: 8)));
+    await pumpNative(
+      tester,
+      until: () => tester
+          .widgetList<Image>(find.byType(Image))
+          .any(
+            (image) => (image.image as FileImage).file.path == api.illustrated,
+          ),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'choice is persisted and an already displayed avatar switches both ways',
     (tester) async {
+      // Keep the app-wide path cache from reusing another fixture's temp files.
+      await contactWithCounter(tester, 96);
       await tester.pumpWidget(app());
       await pumpNative(
         tester,

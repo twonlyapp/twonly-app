@@ -35,6 +35,7 @@ internal data class NativeNotificationResponse(
     val widgetRefresh: Boolean,
     val batch: NativeNotificationBatch?,
     val fallback: NativeNotificationPresentation?,
+    val error: String? = null,
 ) {
     companion object {
         fun parse(json: String): NativeNotificationResponse {
@@ -82,6 +83,7 @@ internal data class NativeNotificationResponse(
                 root.optBoolean("widget_refresh"),
                 batch,
                 fallback,
+                root.nullableString("error"),
             )
         }
     }

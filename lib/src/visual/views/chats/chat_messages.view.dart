@@ -307,20 +307,18 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     if (mounted) await initStreams();
   }
 
-  Widget _chatLoadingStatus() => Center(
-    child: _chatLoadFailed
-        ? Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(context.lang.errorInternalError),
-              TextButton.icon(
-                onPressed: _retryChatLoading,
-                icon: const Icon(Icons.refresh),
-                label: Text(context.lang.manualVerificationRetry),
-              ),
-            ],
-          )
-        : const CircularProgressIndicator.adaptive(),
+  Widget _chatLoadError() => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(context.lang.errorInternalError),
+        TextButton.icon(
+          onPressed: _retryChatLoading,
+          icon: const Icon(Icons.refresh),
+          label: Text(context.lang.manualVerificationRetry),
+        ),
+      ],
+    ),
   );
 
   Future<void> initStreams() async {
@@ -968,7 +966,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       // Drawing nothing leaves the pushed route black until the group row
       // arrives, which is plainly visible whenever the database is busy. The
       // empty app bar keeps the back button reachable during that wait.
-      return Scaffold(appBar: AppBar(), body: _chatLoadingStatus());
+      return Scaffold(
+        appBar: AppBar(),
+        body: _chatLoadFailed ? _chatLoadError() : null,
+      );
     }
     final group = _group!;
     return GestureDetector(
@@ -1051,9 +1052,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                 child: ValueListenableBuilder<int>(
                   valueListenable: _messageDataVersion,
                   builder: (context, _, _) =>
-                      (_loadingMessages || _chatLoadFailed) &&
-                          _data.allMessages.isEmpty
-                      ? _chatLoadingStatus()
+                      _chatLoadFailed && _data.allMessages.isEmpty
+                      ? _chatLoadError()
                       : Align(
                           alignment: Alignment.topCenter,
                           child: ChatMessageActionScope(
@@ -1061,7 +1061,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                             failedMessageIds: _data.failedMessageIds,
                             child: ScrollablePositionedList.builder(
                               reverse: true,
-                              itemCount: _data.chatItems.length + 1 + 1,
+                              itemCount:
+                                  _data.chatItems.length +
+                                  1 +
+                                  (_loadingMessages ? 0 : 1),
                               itemScrollController: itemScrollController,
                               itemPositionsListener: itemPositionsListener,
                               itemBuilder: (context, i) {

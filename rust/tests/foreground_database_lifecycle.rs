@@ -4,8 +4,10 @@
 
 use rust_lib_twonly::bridge::api::RustApi;
 use rust_lib_twonly::bridge::database::contact_groups::{self, ContactGroupInput};
+use rust_lib_twonly::bridge::database::mediafiles::{self, MediaFilter, MediaQuery};
 use rust_lib_twonly::bridge::database::transactions::DatabaseTransaction;
 use rust_lib_twonly::bridge::database::DatabaseSession;
+use rust_lib_twonly::bridge::user_config::UserConfigApi;
 use rust_lib_twonly::bridge::{initialize_twonly_flutter, InitConfig};
 use std::ffi::{c_char, CStr, CString};
 use std::os::fd::AsRawFd;
@@ -118,6 +120,20 @@ fn retained_transactions_are_rolled_back_native_callbacks_run_and_resume_preserv
 
         assert!(!deferred.is_finished());
 
+        // These facade calls used to bypass admission and fail on the closed
+        // pool (or borrow a notification worker's replacement pool).
+        let avatar = tokio::spawn(RustApi::ensure_avatar_png(7));
+        let own_avatar = tokio::spawn(RustApi::current_user_avatar_path());
+        let notifications = tokio::spawn(RustApi::clear_conversation_notifications("chat".into()));
+        let requests = tokio::spawn(RustApi::clear_contact_request_notifications());
+        let badge = tokio::spawn(RustApi::notification_badge_count());
+
+        tokio::task::yield_now().await;
+
+        assert!(!avatar.is_finished());
+        assert!(!notifications.is_finished());
+        assert!(!badge.is_finished());
+
         let native_path = CString::new(database.to_str().unwrap()).unwrap();
 
         let request = CString::new(r#"{"action":"state"}"#).unwrap();
@@ -210,6 +226,16 @@ fn retained_transactions_are_rolled_back_native_callbacks_run_and_resume_preserv
         // A queued Dart pause cannot reverse the newer native resume event.
         RustApi::set_background(true).await.unwrap();
 
+        tokio::time::timeout(Duration::from_secs(5), async {
+            assert!(avatar.await.unwrap().unwrap().is_none());
+            own_avatar.await.unwrap().unwrap();
+            assert!(notifications.await.unwrap().unwrap().is_empty());
+            assert!(requests.await.unwrap().unwrap().is_empty());
+            assert_eq!(badge.await.unwrap().unwrap(), 0);
+        })
+        .await
+        .unwrap();
+
         assert_eq!(
             tokio::time::timeout(Duration::from_secs(5), deferred)
                 .await
@@ -264,6 +290,62 @@ fn retained_transactions_are_rolled_back_native_callbacks_run_and_resume_preserv
             .unwrap()
             .unwrap();
 
+        for file in ["app_db.sqlite", "rust_db.sqlite"] {
+            assert!(locks_free(&database.join(file)));
+        }
+
+        // A share intent may reach HomeView after native suspension. Its
+        // initializer must wait, then create exactly one usable media row.
+        unsafe { twonly_database_set_foreground(true) };
+        RustApi::set_background(false).await.unwrap();
+        let config = UserConfigApi::create(7, "test".into(), "Test".into(), None, 193)
+            .await
+            .unwrap();
+        UserConfigApi::save(config).await.unwrap();
+
+        unsafe { twonly_database_set_foreground(false) };
+        RustApi::set_background(true).await.unwrap();
+        let media = tokio::spawn(RustApi::initialize_media_upload(
+            "image".into(),
+            Some(12),
+            true,
+        ));
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        assert!(!media.is_finished());
+
+        unsafe { twonly_database_set_foreground(true) };
+        RustApi::set_background(false).await.unwrap();
+        let media_id = tokio::time::timeout(Duration::from_secs(5), media)
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap();
+        let row = mediafiles::get_media_file(media_id.clone(), &DatabaseSession::new())
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(row.upload_state.as_deref(), Some("initialized"));
+        assert_eq!(row.display_limit_in_milliseconds, Some(12_000));
+        assert_eq!(row.encryption_key.unwrap().len(), 32);
+        assert_eq!(row.encryption_nonce.unwrap().len(), 12);
+        assert!(row.is_draft_media);
+        let rows = mediafiles::list_media_files(
+            MediaQuery {
+                filter: MediaFilter::All,
+                ids: vec![],
+                group_id: None,
+                hash: None,
+                favorites_only: false,
+            },
+            &DatabaseSession::new(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].media_id, media_id);
+
+        unsafe { twonly_database_set_foreground(false) };
+        RustApi::set_background(true).await.unwrap();
         for file in ["app_db.sqlite", "rust_db.sqlite"] {
             assert!(locks_free(&database.join(file)));
         }

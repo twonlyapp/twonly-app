@@ -339,22 +339,18 @@ class MemoriesCloudService {
       }
 
       // 3. Confirm upload
-      final confirmRes = await rustApiResult(
-        RustApi.confirmMemoriesUpload(mediaId: mediaFile.mediaId),
+      // Preserve the actual transport/API failure for retry classification.
+      // rustApiResult reduces timeouts and disconnects to an Unknown code.
+      await RustApi.confirmMemoriesUpload(mediaId: mediaFile.mediaId);
+      await rust_mediafiles.updateMediaFiles(
+        id: mediaFile.mediaId,
+        patch: MediaFilePatch(cloudState: CloudState.uploaded.name),
+        transaction: currentDatabaseSession(),
       );
-      if (confirmRes.isSuccess) {
-        await rust_mediafiles.updateMediaFiles(
-          id: mediaFile.mediaId,
-          patch: MediaFilePatch(cloudState: CloudState.uploaded.name),
-          transaction: currentDatabaseSession(),
-        );
-        Log.info(
-          'Cloud backup complete and confirmed for ${mediaFile.mediaId}',
-        );
-        return true;
-      } else {
-        throw Exception('Server confirmation failed: ${confirmRes.error}');
-      }
+      Log.info(
+        'Cloud backup complete and confirmed for ${mediaFile.mediaId}',
+      );
+      return true;
     } catch (error, stackTrace) {
       const message = 'Error backing up memory';
       if (_expectedUploadFailure(error)) {

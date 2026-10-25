@@ -7,7 +7,7 @@ use rust_lib_twonly::services::notifications::{self, NotificationAddition, Notif
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tempfile::TempDir;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 
 /// Installs the tracing subscriber shared by every integration test.
 ///
@@ -982,24 +982,44 @@ impl Tester {
         ))
     }
 
-    /// Every direct-media preparation either scheduled a transfer or released
-    /// everything it took, so nothing may be left half-built.
-
-    pub async fn wait_for_no_pending_upload_jobs(&self) -> anyhow::Result<()> {
+    /// Desktop has no native scheduler. A fully prepared transfer must remain
+    /// durable, with its slot and every request file intact for a later retry.
+    pub async fn wait_for_prepared_upload_job(&self, media_id: &str) -> anyhow::Result<()> {
         for _ in 0..100 {
             let database = self.context.app_db.read().await.clone();
-
-            let jobs = sqlx::query_scalar!("SELECT COUNT(*) FROM direct_media_upload_jobs")
+            let job = sqlx::query_as::<_, (String, String, String, String, String)>(
+                "SELECT j.attachment_id, j.multipart_path, j.manifest_path, \
+                 j.complete_body_path, j.native_descriptor_json FROM direct_media_upload_jobs j \
+                 JOIN direct_media_upload_slots s ON s.attachment_id = j.attachment_id \
+                 WHERE j.media_id = ? AND j.state = 'prepared' AND s.state = 'reserved'",
+            )
+            .bind(media_id)
+            .fetch_optional(&database.pool)
+            .await?;
+            if let Some((attachment, multipart, manifest, complete, descriptor)) = job {
+                let descriptor: serde_json::Value = serde_json::from_str(&descriptor)?;
+                assert_eq!(descriptor["attachment_id"], attachment);
+                for (role, path) in [
+                    ("media", multipart),
+                    ("manifest", manifest),
+                    ("complete", complete),
+                ] {
+                    assert!(
+                        std::path::Path::new(&path).is_file(),
+                        "missing prepared {role} request"
+                    );
+                    assert_eq!(descriptor[role]["body_path"], path);
+                    if role != "complete" {
+                        assert!(std::fs::metadata(&path)?.len() > 0);
+                    }
+                }
+                let count: i64 = sqlx::query_scalar(
+                    "SELECT COUNT(*) FROM direct_media_upload_jobs WHERE media_id = ?",
+                )
+                .bind(media_id)
                 .fetch_one(&database.pool)
                 .await?;
-
-            let reserved = sqlx::query_scalar!(
-                "SELECT COUNT(*) FROM direct_media_upload_slots WHERE state = 'reserved'"
-            )
-            .fetch_one(&database.pool)
-            .await?;
-
-            if jobs == 0 && reserved == 0 {
+                assert_eq!(count, 1, "retries must reuse the same prepared upload");
                 return Ok(());
             }
 
@@ -1007,7 +1027,7 @@ impl Tester {
         }
 
         Err(anyhow::anyhow!(
-            "a failed upload preparation kept its job or slot"
+            "media {media_id} did not retain a complete prepared upload for native retry"
         ))
     }
 

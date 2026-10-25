@@ -36,6 +36,29 @@ ResolutionPreset cameraPreviewResolution(CameraLensDirection direction) =>
     ? ResolutionPreset.high
     : ResolutionPreset.veryHigh;
 
+/// Failed initialization can leave CameraX with no preview surface to release.
+/// Allow the caller's fallback initialization to run instead of replacing the
+/// original setup error with this expected cleanup failure.
+Future<void> disposeCameraController(CameraController controller) async {
+  final initialized = controller.value.isInitialized;
+  try {
+    await controller.dispose();
+  } on PlatformException catch (error, stackTrace) {
+    if (initialized ||
+        error.code != 'IllegalStateException' ||
+        !(error.message ?? '').contains(
+          'releaseFlutterSurfaceTexture() cannot be called if the flutterSurfaceProducer',
+        )) {
+      rethrow;
+    }
+    Log.warn(
+      'Camera setup ended before its preview surface existed',
+      error,
+      stackTrace,
+    );
+  }
+}
+
 class PreviewLink {
   const PreviewLink({
     required this.url,
@@ -135,7 +158,7 @@ class MainCameraController {
       } catch (e) {
         Log.warn('Could not stop image stream while closing camera: $e');
       } finally {
-        await cameraControllerTemp.dispose();
+        await disposeCameraController(cameraControllerTemp);
       }
     });
     initCameraStarted = false;
@@ -216,7 +239,7 @@ class MainCameraController {
       cameraController = null;
       setState?.call();
       if (controllerToDispose != null) {
-        await controllerToDispose.dispose();
+        await disposeCameraController(controllerToDispose);
         if (sessionId != _cameraSessionId) return;
       }
 
@@ -241,7 +264,7 @@ class MainCameraController {
           Log.warn(
             'Initial camera format initialization failed ($e), trying fallback format...',
           );
-          await controller.dispose();
+          await disposeCameraController(controller);
           controller = CameraController(
             AppEnvironment.cameras[cameraId],
             resolution,
@@ -251,7 +274,7 @@ class MainCameraController {
         }
 
         if (sessionId != _cameraSessionId) {
-          await controller.dispose();
+          await disposeCameraController(controller);
           return;
         }
 
@@ -266,13 +289,13 @@ class MainCameraController {
           await controller.startImageStream(_processCameraImage);
         }
         if (sessionId != _cameraSessionId) {
-          await controller.dispose();
+          await disposeCameraController(controller);
           return;
         }
 
         await controller.setZoomLevel(selectedCameraDetails.scaleFactor);
         if (sessionId != _cameraSessionId) {
-          await controller.dispose();
+          await disposeCameraController(controller);
           return;
         }
 
@@ -293,7 +316,7 @@ class MainCameraController {
                 : VideoStabilizationMode.level1,
           );
           if (sessionId != _cameraSessionId) {
-            await controller.dispose();
+            await disposeCameraController(controller);
             return;
           }
         }
@@ -307,12 +330,12 @@ class MainCameraController {
           Log.error('Error initializing camera: $e');
         }
         if (!assignedToGlobal) {
-          await controller.dispose();
+          await disposeCameraController(controller);
         } else {
           if (cameraController == controller) {
             cameraController = null;
           }
-          await controller.dispose();
+          await disposeCameraController(controller);
         }
         setState?.call();
         return;
@@ -397,7 +420,7 @@ class MainCameraController {
       if (cameraController == controller) {
         cameraController = null;
       }
-      await controller.dispose();
+      await disposeCameraController(controller);
       return;
     }
   }

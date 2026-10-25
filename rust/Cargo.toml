@@ -11,8 +11,8 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
 [features]
 default = ["sqlite-wal"]
-# Application DB: WAL/FULL, one writer and two query-only readers. Use
-# --no-default-features for the retained DELETE/FULL regression baseline.
+# Application DB: WAL/NORMAL, one writer and two query-only readers. Use
+# --no-default-features for the DELETE/NORMAL regression baseline.
 sqlite-wal = []
 # Points every API URL at the development server. Flutter profile builds
 # compile with `--release`, so `debug_assertions` cannot distinguish them from

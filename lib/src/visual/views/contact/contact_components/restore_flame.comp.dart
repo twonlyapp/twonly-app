@@ -32,6 +32,7 @@ class RestoreFlameComp extends StatefulWidget {
 class _RestoreFlameCompState extends State<RestoreFlameComp> {
   Group? _group;
   bool _canRestore = false;
+  bool _restoring = false;
   late String _groupId;
   late StreamSubscription<Group?> _groupSub;
 
@@ -70,22 +71,32 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
   }
 
   Future<void> _restoreFlames() async {
-    final currentPlan = planFromString(
-      userService.currentUser.subscriptionPlan,
-    );
-    if (!isUserAllowed(currentPlan, PremiumFeatures.RestoreFlames) &&
-        kReleaseMode) {
-      await context.push(Routes.settingsSubscription);
-      return;
-    }
-    Log.info(
-      'Restoring flames from ${_group!.flameCounter} to ${_group!.maxFlameCounter}',
-    );
+    if (_restoring || _group == null || !_canRestore) return;
+    _restoring = true;
+    try {
+      final currentPlan = planFromString(
+        userService.currentUser.subscriptionPlan,
+      );
+      if (!isUserAllowed(currentPlan, PremiumFeatures.RestoreFlames) &&
+          kReleaseMode) {
+        await context.push(Routes.settingsSubscription);
+        return;
+      }
+      Log.info(
+        'Restoring flames from ${_group!.flameCounter} to ${_group!.maxFlameCounter}',
+      );
 
-    // Rust owns the whole restore: the counter, the chat entry, and the forced
-    // flame sync that brings the peer back in line.
-    if (!await rust_groups.restoreFlames(groupId: _groupId)) {
-      Log.error('Could not restore the flame counter');
+      // Rust owns the whole restore: the counter, the chat entry, and the forced
+      // flame sync that brings the peer back in line.
+      final restored = await rust_groups.restoreFlames(groupId: _groupId);
+      if (!restored) {
+        // The offer may expire or be restored by another tap after it renders.
+        Log.warn('Flame restoration is no longer available');
+      }
+      final canRestore = await rust_groups.canRestoreFlames(groupId: _groupId);
+      if (mounted) setState(() => _canRestore = canRestore);
+    } finally {
+      _restoring = false;
     }
   }
 

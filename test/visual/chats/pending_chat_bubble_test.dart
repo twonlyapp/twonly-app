@@ -183,24 +183,31 @@ void main() {
     await flush(tester);
   }
 
-  testWidgets('conversation waits visibly for its first message snapshot', (
-    tester,
-  ) async {
-    final gate = Completer<void>();
-    api.messageWatchGate = gate;
-    await openChat(tester);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    gate.complete();
-    await pumpNative(
+  testWidgets(
+    'conversation opens without a loader before its first message snapshot',
+    (
       tester,
-      until: () => find.byType(CircularProgressIndicator).evaluate().isEmpty,
-    );
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pumpWidget(const SizedBox.shrink());
-    await flush(tester);
-    await tester.pump(const Duration(milliseconds: 1));
-  });
+    ) async {
+      final gate = Completer<void>();
+      api.messageWatchGate = gate;
+      await openChat(tester);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('Chat'), findsOneWidget);
+      expect(find.byType(MessageInput), findsOneWidget);
+      expect(find.byKey(const Key('overview_chat')), findsNothing);
+      gate.complete();
+      await pumpNative(
+        tester,
+        until: () =>
+            find.byKey(const Key('overview_chat')).evaluate().isNotEmpty,
+      );
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await flush(tester);
+      await tester.pump(const Duration(milliseconds: 1));
+    },
+  );
 
   testWidgets(
     'failed initial conversation query can retry and load stored messages',

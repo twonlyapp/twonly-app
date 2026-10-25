@@ -145,7 +145,7 @@ impl AppDatabase {
                     Duration::from_secs(30)
                 },
             )
-            .pragma("synchronous", "FULL")
+            .pragma("synchronous", "NORMAL")
             .log_statements(tracing::log::LevelFilter::Off)
             .log_slow_statements(tracing::log::LevelFilter::Warn, Duration::from_millis(500));
 

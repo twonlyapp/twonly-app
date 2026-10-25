@@ -1,4 +1,4 @@
-//! Run against the production baseline and the opt-in sqlite-wal configuration.
+//! Run against WAL/NORMAL and the DELETE/NORMAL regression baseline.
 
 use rust_lib_twonly::database::app::contact_groups::table::ContactGroupInput;
 use rust_lib_twonly::database::app::contact_groups::{queries, writes};
@@ -37,7 +37,7 @@ async fn open(directory: &std::path::Path) -> AppDatabase {
             .fetch_one(&database.pool)
             .await
             .unwrap(),
-        2
+        1
     );
 
     database

@@ -327,6 +327,36 @@ mod logcat {
 
 pub struct PlainFields;
 
+/// SQLx logs its connection PRAGMAs when setup is slow. Those statements
+/// contain the SQLCipher key even when normal statement logging is disabled.
+fn format_event_fields<'writer, N: FormatFields<'writer>>(
+    fields: &N, mut writer: Writer<'writer>, event: &Event<'_>,
+) -> fmt::Result {
+    let normalized = event.normalized_metadata();
+    let metadata = normalized.as_ref().unwrap_or_else(|| event.metadata());
+    if !metadata.target().starts_with("sqlx") {
+        return fields.format_fields(writer, event);
+    }
+
+    struct KeyStatement(bool);
+
+    impl tracing::field::Visit for KeyStatement {
+        fn record_debug(&mut self, _field: &tracing::field::Field, value: &dyn fmt::Debug) {
+            let value = format!("{value:?}").to_ascii_lowercase();
+            self.0 |= value.contains("pragma key") || value.contains("pragma rekey");
+        }
+    }
+
+    let mut sensitive = KeyStatement(false);
+    event.record(&mut sensitive);
+
+    if sensitive.0 {
+        write!(writer, "SQLCipher key statement [SQL redacted]")
+    } else {
+        fields.format_fields(writer, event)
+    }
+}
+
 impl<'writer> FormatFields<'writer> for PlainFields {
     fn format_fields<R: tracing_subscriber::field::RecordFields>(
         &self, writer: Writer<'writer>, fields: R,
@@ -453,7 +483,7 @@ where
             }
         }
 
-        ctx.field_format().format_fields(writer.by_ref(), event)?;
+        format_event_fields(ctx.field_format(), writer.by_ref(), event)?;
 
         writeln!(writer)
     }
@@ -522,7 +552,7 @@ where
             }
         }
 
-        ctx.field_format().format_fields(writer.by_ref(), event)?;
+        format_event_fields(ctx.field_format(), writer.by_ref(), event)?;
 
         writeln!(writer)
     }
@@ -792,6 +822,28 @@ mod tests {
 
     #[test]
 
+    fn sqlcipher_key_statements_are_redacted_in_both_sinks() {
+        let (app, console) = capture_logs(DEFAULT_LOG_FILTER, || {
+            for statement in [
+                "PRAGMA key = 'test-key-secret';",
+                "PRAGMA rekey = \"x'test-rekey-secret'\";",
+            ] {
+                tracing::warn!(target: "sqlx::query", summary = statement, db.statement = statement,
+                    "slow statement: execution time exceeded alert threshold");
+            }
+            tracing::warn!(target: "sqlx::query", summary = "SELECT COUNT(*) FROM messages", elapsed_ms = 501,
+                "slow statement: execution time exceeded alert threshold");
+        });
+        for log in [app, console] {
+            assert!(log.contains("SQLCipher key statement [SQL redacted]"));
+            assert!(!log.contains("test-key-secret"));
+            assert!(!log.contains("test-rekey-secret"));
+            assert!(log.contains("SELECT COUNT(*) FROM messages"));
+            assert!(log.contains("elapsed_ms=501"));
+        }
+    }
+
+    #[test]
     fn bridged_logs_include_the_original_filename_in_both_sinks() {
         let (app, console) = capture_logs(DEFAULT_LOG_FILTER, || {
             emit_bridged_log(

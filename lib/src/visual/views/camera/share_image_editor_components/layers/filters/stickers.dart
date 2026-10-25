@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/network_failure.dart';
 
 class Sticker {
   Sticker({required this.imageSrc, required this.source});
@@ -49,13 +49,15 @@ Future<List<Sticker>> getStickerIndex() async {
     } else {
       return res;
     }
-  } catch (e) {
-    if (e is http.ClientException ||
-        e is SocketException ||
-        e is TimeoutException) {
-      Log.warn('Could not load stickers index: $e');
+  } catch (error, stackTrace) {
+    if (isTransientNetworkFailure(error)) {
+      Log.warn('Could not load stickers index', error, stackTrace);
     } else {
-      Log.error('Could not load stickers index: $e');
+      Log.error(
+        'Could not load stickers index',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
     return res;
   }

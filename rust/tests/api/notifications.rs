@@ -7,7 +7,7 @@
 //! hand, so classification, deduplication, claiming and clearing are all
 //! exercised end to end.
 
-use crate::{init_tracing, Tester};
+use crate::{Tester, init_tracing};
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::database::app::groups::native::Group;
 use rust_lib_twonly::services::contacts::ContactService;
@@ -66,9 +66,16 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
 
         assert!(request.message_id.is_none());
 
-        // No avatar has been shared yet, so the native layer must fall back to
-        // a notification without an image instead of failing.
-        assert!(request.avatar_path.is_none());
+        // No avatar has been shared yet. Rust supplies the bundled logo so
+        // native notifications still have a usable image.
+        let fallback = request
+            .avatar_path
+            .as_ref()
+            .expect("notification logo fallback");
+        assert_eq!(
+            std::fs::read(fallback)?,
+            include_bytes!("../../../assets/images/logo.png")
+        );
 
         ContactService::new(&tester_b.context)
             .accept_request(tester_a.user_id, true)
@@ -127,11 +134,13 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         // is killed between scheduling and acknowledging.
         tester_b.acknowledge_notifications(&event_ids).await?;
 
-        assert!(tester_b
-            .notification_batch("en")
-            .await?
-            .additions
-            .is_empty());
+        assert!(
+            tester_b
+                .notification_batch("en")
+                .await?
+                .additions
+                .is_empty()
+        );
 
         tester_b.acknowledge_notifications(&[]).await?;
     }
@@ -344,6 +353,11 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         assert!(
             std::path::Path::new(&avatar_path).is_file(),
             "the rendered avatar must exist on disk at {avatar_path}"
+        );
+        assert_ne!(
+            std::fs::read(&avatar_path)?,
+            include_bytes!("../../../assets/images/logo.png"),
+            "the shared avatar must replace the logo fallback"
         );
 
         tester_b
@@ -615,10 +629,12 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         );
 
         // Clearing twice must not report the same notifications again.
-        assert!(tester_b
-            .clear_notification_conversation(&group_conversation_id)
-            .await?
-            .is_empty());
+        assert!(
+            tester_b
+                .clear_notification_conversation(&group_conversation_id)
+                .await?
+                .is_empty()
+        );
     }
 
     //
@@ -647,10 +663,12 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
             "acknowledging contact requests must reduce the badge"
         );
 
-        assert!(tester_b
-            .clear_contact_request_notifications()
-            .await?
-            .is_empty());
+        assert!(
+            tester_b
+                .clear_contact_request_notifications()
+                .await?
+                .is_empty()
+        );
     }
 
     //

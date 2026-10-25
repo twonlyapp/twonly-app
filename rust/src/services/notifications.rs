@@ -972,13 +972,29 @@ async fn drain_wakeup_mailbox(ctx: &Arc<Context>, deadline: std::time::Duration)
     // connect returns. One incoming message is not proof that the drain ended.
     let generation = ctx.mailbox_generation();
 
-    ApiRuntime::client(ctx).await?.catch_up_after_push().await?;
+    let client = ApiRuntime::client(ctx).await?;
+    let mut events = client.events.subscribe();
 
-    Ok(
-        tokio::time::timeout(deadline, ctx.wait_for_mailbox_after(generation))
-            .await
-            .is_ok(),
-    )
+    client.catch_up_after_push().await?;
+
+    Ok(tokio::time::timeout(deadline, async {
+        loop {
+            if client.background_deferred() {
+                return false;
+            }
+
+            tokio::select! {
+                _ = ctx.wait_for_mailbox_after(generation) => return true,
+                event = events.recv() => {
+                    if matches!(event, Err(tokio::sync::broadcast::error::RecvError::Closed)) {
+                        return false;
+                    }
+                }
+            }
+        }
+    })
+    .await
+    .unwrap_or(false))
 }
 
 /// Settles what the wake-up still owes the app once its notification is on

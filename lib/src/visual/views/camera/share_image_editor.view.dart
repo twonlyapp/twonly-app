@@ -176,6 +176,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     layerStack.clear();
     videoController?.dispose();
     rust_mediafiles.updateMediaFiles(
+      id: media.mediaId,
       patch: const MediaFilePatch(isDraftMedia: false),
       transaction: currentDatabaseSession(),
     );

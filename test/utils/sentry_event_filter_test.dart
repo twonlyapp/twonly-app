@@ -1,8 +1,66 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/src/utils/sentry_event_filter.dart';
 
 void main() {
+  test('uncaught connectivity errors become local warnings', () async {
+    final records = <LogRecord>[];
+    final previous = Logger.root.level;
+    Logger.root.level = Level.ALL;
+    final subscription = Logger.root.onRecord.listen(records.add);
+    try {
+      final network = SentryEvent(
+        exceptions: [
+          SentryException(type: 'ClientException', value: 'Connection aborted'),
+          SentryException(
+            type: 'OSError',
+            value: 'OS Error: Connection aborted, errno = 103',
+          ),
+        ],
+      );
+      expect(filterSentryEvent(network, Hint()), isNull);
+      await Future<void>.delayed(Duration.zero);
+      expect(records.single.level, Level.WARNING);
+      expect(records.single.message, contains('Connection aborted'));
+    } finally {
+      await subscription.cancel();
+      Logger.root.level = previous;
+    }
+  });
+
+  test(
+    'database, permission, certificate and mixed failures remain reportable',
+    () {
+      for (final exceptions in [
+        [
+          SentryException(
+            type: 'AnyhowException',
+            value: 'pool timed out while waiting for an open connection',
+          ),
+        ],
+        [
+          SentryException(
+            type: 'OSError',
+            value: 'Permission denied, errno = 13',
+          ),
+        ],
+        [
+          SentryException(
+            type: 'HandshakeException',
+            value: 'CERTIFICATE_VERIFY_FAILED: Hostname mismatch',
+          ),
+        ],
+        [
+          SentryException(type: 'SocketException', value: 'Offline'),
+          SentryException(type: 'StateError', value: 'Invalid state'),
+        ],
+      ]) {
+        final original = SentryEvent(exceptions: exceptions);
+        expect(filterSentryEvent(original, Hint()), same(original));
+      }
+    },
+  );
   SentryEvent event({
     String type = 'LateError',
     String field = '_channel@1661297868',
@@ -50,6 +108,12 @@ void main() {
     final firstToken = 'a' * 64;
     final secondToken = 'b' * 64;
     final variants = [
+      (
+        'Exception: Failed to render avatar for 6880667202433343488: '
+            'AnyhowException(attempted to acquire a connection on a closed pool)',
+        'Exception: Failed to render avatar for 1827181605: '
+            'AnyhowException(attempted to acquire a connection on a closed pool)',
+      ),
       (
         'AnyhowException(error sending request for url '
             '(https://api.twonly.eu/api/download/$firstToken))',
@@ -127,6 +191,19 @@ void main() {
     }
   });
 
+  test('avatar grouping preserves different failure reasons', () {
+    final closedPool = normalizeReportedError(
+      'Failed to render avatar for -123: '
+      'attempted to acquire a connection on a closed pool',
+    );
+    final invalidSvg = normalizeReportedError(
+      'Failed to render avatar for 456: invalid SVG',
+    );
+    expect(closedPool, contains('avatar for <user>:'));
+    expect(invalidSvg, contains('avatar for <user>:'));
+    expect(closedPool, isNot(invalidSvg));
+  });
+
   test(
     'normalizes every exception and log message without losing metadata',
     () {
@@ -162,7 +239,7 @@ void main() {
       expect(json, isNot(contains('123456789')));
       expect(json, contains('untrusted identity'));
       expect(filtered.message!.params!.last, 42);
-    expect((filtered.contexts['log'] as Map)['other'], 'retained');
+      expect((filtered.contexts['log'] as Map)['other'], 'retained');
       // The scope's original context must remain untouched.
       expect(logContext['message'], raw);
     },

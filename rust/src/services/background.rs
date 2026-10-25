@@ -313,7 +313,9 @@ async fn connect_and_authenticate(ctx: &Arc<Context>) -> bool {
     while tokio::time::Instant::now() < deadline {
         match ApiRuntime::connection_state(ctx).await {
             Ok(ApiConnectionState::Authenticated) => return true,
-            Ok(ApiConnectionState::PermanentlyRejected) => return false,
+            Ok(ApiConnectionState::PermanentlyRejected | ApiConnectionState::Suspended) => {
+                return false
+            }
             _ => tokio::time::sleep(AUTHENTICATION_POLL).await,
         }
     }

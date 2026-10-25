@@ -85,6 +85,17 @@ impl ApiAuthHandshaker {
         let ok = match ok_res {
             ServerResult::Ok(val) => val,
             ServerResult::ErrorCode(code) => {
+                if self.in_background
+                    && code
+                        == crate::api::proto::error::ErrorCode::ForegroundSessionConnected as i32
+                {
+                    if let Some(client) = self.api_client.upgrade() {
+                        client
+                            .defer_background_for_generation(self.generation)
+                            .await;
+                    }
+                }
+
                 // The handshake never reaches `handle_api_error`, so a rejection
                 // that no reconnect can fix has to be published here — otherwise
                 // the app just keeps failing to connect without telling the user
@@ -404,7 +415,17 @@ impl Handshaker for ApiAuthHandshaker {
                     return Ok(());
                 }
                 Err(error) => {
-                    tracing::error!("ApiAuthHandshaker: login token auth failed ({})", error);
+                    if self
+                        .api_client
+                        .upgrade()
+                        .is_some_and(|client| client.background_deferred())
+                    {
+                        tracing::info!(
+                            "background authentication deferred to the foreground session"
+                        );
+                    } else {
+                        tracing::error!("ApiAuthHandshaker: login token auth failed ({})", error);
+                    }
 
                     return Err(HandshakeError::Protocol(error.to_string()));
                 }

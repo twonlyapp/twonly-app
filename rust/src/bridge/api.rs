@@ -224,7 +224,9 @@ impl RustApi {
     pub async fn ensure_avatar_png(contact_id: i64) -> Result<Option<String>> {
         let ctx = Context::get_static()?;
 
-        let path = avatars::ensure_contact_avatar_png(ctx, contact_id).await?;
+        let path = ctx
+            .foreground_database_call(|| avatars::ensure_contact_avatar_png(ctx, contact_id))
+            .await?;
 
         Ok(path.map(|path| path.display().to_string()))
     }
@@ -232,7 +234,10 @@ impl RustApi {
     pub async fn current_user_avatar_path() -> Result<Option<String>> {
         let ctx = Context::get_static()?.clone();
 
-        if let Some(path) = avatars::current_custom_avatar_path(&ctx).await? {
+        if let Some(path) = ctx
+            .foreground_database_call(|| avatars::current_custom_avatar_path(&ctx))
+            .await?
+        {
             return Ok(Some(path.display().to_string()));
         }
 
@@ -576,6 +581,28 @@ impl RustApi {
     #[frb(sync)]
 
     pub fn api_base_url(protocol: String) -> String {
+        // Integration tests may target the local Docker API. This override is
+        // excluded from release builds and never changes store-build routing.
+        #[cfg(debug_assertions)]
+        if let Ok(origin) = std::env::var("TWONLY_TEST_API_ORIGIN") {
+            let mut url = reqwest::Url::parse(&origin).expect("invalid TWONLY_TEST_API_ORIGIN");
+            assert!(
+                matches!(url.host_str(), Some("127.0.0.1" | "localhost" | "[::1]")),
+                "test API origin must be loopback"
+            );
+            let scheme = if protocol == "wss" || protocol == "ws" {
+                if url.scheme() == "https" { "wss" } else { "ws" }
+            } else if url.scheme() == "https" {
+                "https"
+            } else {
+                "http"
+            };
+            url.set_scheme(scheme).expect("invalid test API scheme");
+            url.set_path("/api/");
+            url.set_query(None);
+            url.set_fragment(None);
+            return url.to_string();
+        }
         // Every non-production build talks to the development server. A Flutter
         // profile build compiles Rust with `--release`, so `debug_assertions`
         // is off and cannot tell it apart from a store build; cargokit enables
@@ -1226,22 +1253,32 @@ impl RustApi {
     /// into `UNUserNotificationCenter` whenever the outbox changes.
 
     pub async fn notification_badge_count() -> Result<i64> {
-        crate::services::notifications::badge_count(Context::get_static()?).await
+        let ctx = Context::get_static()?;
+
+        ctx.foreground_database_call(|| crate::services::notifications::badge_count(ctx))
+            .await
     }
 
     /// Acknowledges every pending notification of a conversation the user just
     /// opened and returns the native notification IDs to withdraw.
 
     pub async fn clear_conversation_notifications(conversation_id: String) -> Result<Vec<String>> {
-        crate::services::notifications::clear_conversation(Context::get_static()?, &conversation_id)
-            .await
+        let ctx = Context::get_static()?;
+
+        ctx.foreground_database_call(|| {
+            crate::services::notifications::clear_conversation(ctx, &conversation_id)
+        })
+        .await
     }
 
     /// Acknowledges the pending contact-request notifications and returns the
     /// native notification IDs to withdraw.
 
     pub async fn clear_contact_request_notifications() -> Result<Vec<String>> {
-        crate::services::notifications::clear_contact_requests(Context::get_static()?).await
+        let ctx = Context::get_static()?;
+
+        ctx.foreground_database_call(|| crate::services::notifications::clear_contact_requests(ctx))
+            .await
     }
 
     pub async fn send_contact_profile(contact_id: i64) -> Result<()> {

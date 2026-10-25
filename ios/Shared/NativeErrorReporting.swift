@@ -75,9 +75,23 @@ enum NativeErrorReporting {
     SentrySDK.addBreadcrumb(breadcrumb)
   }
 
+  static func warning(_ operation: String) {
+    NSLog("Twonly background operation deferred: %@", operation)
+    guard isAllowed else { return }
+    let breadcrumb = Breadcrumb(level: .warning, category: "native.background")
+    breadcrumb.message = operation
+    SentrySDK.addBreadcrumb(breadcrumb)
+  }
+
   /// Operation names only: Rust errors may contain message content, paths or
   /// credentials. Never attach the push payload or the worker's raw response.
   static func failure(_ operation: String) {
+    // iOS may end any background grant. The worker cancels safely and the next
+    // grant retries it; expiration is not an application failure.
+    if operation.hasSuffix("_expired") {
+      warning(operation)
+      return
+    }
     guard isAllowed else { return }
     SentrySDK.capture(message: "Native background operation failed: \(operation)") { scope in
       scope.setLevel(.error)

@@ -95,6 +95,15 @@ impl MediaFileService {
     }
 
     pub async fn download(&self, media_id: &str) -> Result<()> {
+        self.download_with(media_id, || self.download_claimed(media_id))
+            .await
+    }
+
+    async fn download_with<F, Fut>(&self, media_id: &str, transfer: F) -> Result<()>
+    where
+        F: FnOnce() -> Fut,
+        Fut: std::future::Future<Output = Result<()>>,
+    {
         let lock = download_lock(media_id);
 
         let _guard = lock.lock().await;
@@ -124,7 +133,7 @@ impl MediaFileService {
             return Ok(());
         }
 
-        let result = self.download_claimed(media_id).await;
+        let result = transfer().await;
 
         if result.is_err() {
             sqlx::query!(
@@ -136,7 +145,13 @@ impl MediaFileService {
             .await?;
         }
 
-        result
+        match result {
+            Err(TwonlyError::MediaDownloadUnavailable(error)) => {
+                tracing::warn!(media_id, %error, "media download deferred until a retry");
+                Ok(())
+            }
+            result => result,
+        }
     }
 
     /// Incoming media is inserted inside a transaction owned by the message
@@ -322,9 +337,10 @@ impl MediaFileService {
     async fn fetch_encrypted(&self, media: &DownloadMedia, encrypted_path: &Path) -> Result<bool> {
         let media_id = &media.media_id;
 
-        let token = media.download_token.as_deref().ok_or_else(|| {
-            TwonlyError::Generic("media has no download token".into())
-        })?;
+        let token = media
+            .download_token
+            .as_deref()
+            .ok_or_else(|| TwonlyError::Generic("media has no download token".into()))?;
 
         let url = format!(
             "{}download/{}",
@@ -340,7 +356,9 @@ impl MediaFileService {
             .send()
             .await
             // reqwest includes the URL in Display, including the secret token.
-            .map_err(|error| TwonlyError::Generic(error.without_url().to_string()))?;
+            .map_err(|error| {
+                TwonlyError::MediaDownloadUnavailable(error.without_url().to_string())
+            })?;
 
         let status = response.status();
 
@@ -351,15 +369,19 @@ impl MediaFileService {
         }
 
         if !status.is_success() {
-            return Err(TwonlyError::Generic(format!(
-                "media download returned HTTP {status}"
-            )));
+            let reason = format!("media download returned HTTP {status}");
+            return Err(
+                if status.is_server_error() || status == reqwest::StatusCode::TOO_MANY_REQUESTS {
+                    TwonlyError::MediaDownloadUnavailable(reason)
+                } else {
+                    TwonlyError::Generic(reason)
+                },
+            );
         }
 
-        let bytes = response
-            .bytes()
-            .await
-            .map_err(|error| TwonlyError::Generic(error.without_url().to_string()))?;
+        let bytes = response.bytes().await.map_err(|error| {
+            TwonlyError::MediaDownloadUnavailable(error.without_url().to_string())
+        })?;
 
         let partial_path = self.partial_download_path(media_id, &media.media_type);
 
@@ -693,4 +715,92 @@ pub(crate) async fn cleanup_pending_file_removals(ctx: &Arc<Context>) -> Result<
         service.remove_files(id, kind)
     })
     .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn a_transport_failure_keeps_the_download_pending_and_a_later_retry_completes(
+    ) -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query(
+            "INSERT INTO media_files(media_id, type, download_state) VALUES ('retry', 'image', \
+             'pending')",
+        )
+        .execute(&database.pool)
+        .await?;
+        let service = MediaFileService::new(&ctx);
+
+        service
+            .download_with("retry", || async {
+                Err(TwonlyError::MediaDownloadUnavailable(
+                    "connection reset by peer".into(),
+                ))
+            })
+            .await?;
+        let state: String =
+            sqlx::query_scalar("SELECT download_state FROM media_files WHERE media_id = 'retry'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(state, "pending");
+
+        service
+            .download_with("retry", || async {
+                sqlx::query(
+                    "UPDATE media_files SET download_state = 'ready' WHERE media_id = 'retry'",
+                )
+                .execute(&database.pool)
+                .await?;
+                Ok(())
+            })
+            .await?;
+        let state: String =
+            sqlx::query_scalar("SELECT download_state FROM media_files WHERE media_id = 'retry'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(state, "ready");
+        service
+            .download_with("retry", || async {
+                panic!("a ready download must not be transferred twice")
+            })
+            .await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn a_non_transport_failure_remains_an_error_and_does_not_strand_the_claim() -> Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query(
+            "INSERT INTO media_files(media_id, type, download_state) VALUES ('broken', 'image', \
+             'pending')",
+        )
+        .execute(&database.pool)
+        .await?;
+        let error = MediaFileService::new(&ctx)
+            .download_with("broken", || async {
+                Err(TwonlyError::Generic(
+                    "invalid media encryption nonce".into(),
+                ))
+            })
+            .await
+            .unwrap_err();
+        assert!(matches!(error, TwonlyError::Generic(_)));
+        let state: String =
+            sqlx::query_scalar("SELECT download_state FROM media_files WHERE media_id = 'broken'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(state, "pending");
+        Ok(())
+    }
 }

@@ -30,6 +30,7 @@ class _MemoriesApi extends NativeTestApi {
   ApiConnectionState connectionState = ApiConnectionState.authenticated;
   int? originalDate;
   Object? error;
+  Object? confirmationError;
   late StackTrace stackTrace;
   int requests = 0;
   int confirmations = 0;
@@ -86,6 +87,9 @@ class _MemoriesApi extends NativeTestApi {
     required String mediaId,
   }) async {
     confirmations++;
+    if (confirmationError != null) {
+      Error.throwWithStackTrace(confirmationError!, stackTrace);
+    }
   }
 
   @override
@@ -142,6 +146,7 @@ void main() {
       ..refreshThumbnail = null
       ..mediaKey = null
       ..error = null
+      ..confirmationError = null
       ..pendingRequest = null
       ..requestStarted = null
       ..stackTrace = StackTrace.fromString(
@@ -408,6 +413,44 @@ void main() {
         );
       },
     );
+  }
+
+  for (final (error, level) in [
+    (TimeoutException('confirmation reply lost'), Level.WARNING),
+    (AnyhowException('API request timed out'), Level.WARNING),
+    (AnyhowException('API error code 500'), Level.SHOUT),
+  ]) {
+    test('confirmation $error retains its cause and permits a retry', () async {
+      api.confirmationError = error;
+      final client = MockClient((_) async => http.Response('', 204));
+      addTearDown(client.close);
+      await http.runWithClient(service.checkUploads, () => client);
+
+      final record = records.singleWhere(
+        (r) => r.message == 'Error backing up memory',
+      );
+      expect(record.level, level);
+      expect(record.error, same(error));
+      expect(record.stackTrace, same(api.stackTrace));
+      expect(
+        (await rust_mediafiles.getMediaFile(
+          id: mediaId,
+          transaction: currentDatabaseSession(),
+        ))!.cloudState,
+        CloudState.none,
+      );
+
+      api.confirmationError = null;
+      await http.runWithClient(service.checkUploads, () => client);
+      expect(api.confirmations, 2);
+      expect(
+        (await rust_mediafiles.getMediaFile(
+          id: mediaId,
+          transaction: currentDatabaseSession(),
+        ))!.cloudState,
+        CloudState.uploaded,
+      );
+    });
   }
 
   for (final uploadPath in ['/thumbnail', '/full']) {

@@ -23,7 +23,7 @@ async fn open(path: &Path, vfs: &FaultVfs) -> AppDatabase {
             sqlx::sqlite::SqliteJournalMode::Delete
         })
         .foreign_keys(true)
-        .pragma("synchronous", "FULL")
+        .pragma("synchronous", "NORMAL")
         .pragma("mmap_size", "0");
 
     let (changes, _) = broadcast::channel(256);
@@ -87,7 +87,7 @@ async fn storage_write_sync_and_full_failures_preserve_acknowledged_data_and_tra
     for kind in [Fault::Write, Fault::Sync, Fault::Full] {
         let positions = if kind == Fault::Sync {
             if cfg!(feature = "sqlite-wal") {
-                1
+                2 // WAL sync and database sync during a NORMAL checkpoint.
             } else {
                 2
             }
@@ -146,12 +146,25 @@ async fn storage_write_sync_and_full_failures_preserve_acknowledged_data_and_tra
                 }
             };
 
+            // NORMAL WAL commits do not fsync individually. Exercise the two
+            // real synchronization points at checkpoint time instead, without
+            // weakening the data/integrity assertions or silently skipping it.
+            let checkpoint_sync = cfg!(feature = "sqlite-wal") && kind == Fault::Sync;
+            let result = if checkpoint_sync {
+                result.expect("NORMAL commit should precede the injected checkpoint sync fault");
+                sqlx::query("PRAGMA wal_checkpoint(TRUNCATE)")
+                    .execute(&mut *connection)
+                    .await
+                    .map(|_| ())
+            } else {
+                result
+            };
+
             let triggered = vfs.disarm();
 
             assert_eq!(triggered, Some(kind), "unexercised fault: {kind:?}/{nth}");
 
-            let error =
-                result.expect_err("a failed storage operation must never acknowledge success");
+            let error = result.expect_err("the injected storage failure must be returned");
 
             let error = error.as_database_error().expect("native SQLite error");
 
@@ -169,13 +182,26 @@ async fn storage_write_sync_and_full_failures_preserve_acknowledged_data_and_tra
 
             database.close().await;
 
-            // An error can race durable commit. Unacknowledged work may be
-            // wholly present or absent, while acknowledged baseline must stay.
+            // A failed commit may have completed before its error. A successful
+            // NORMAL commit followed by a checkpoint error must still survive
+            // ordinary reopen; this does not simulate OS/power loss.
             let reopened = open(&path, &vfs).await;
 
             let mut connection = reopened.pool.acquire().await.unwrap();
 
             let actual = contents(&mut connection).await;
+
+            if checkpoint_sync {
+                assert_eq!(
+                    actual,
+                    vec![
+                        ("io-baseline".into(), "acknowledged".into()),
+                        ("io-marker".into(), "same-transaction".into()),
+                        ("io-payload".into(), payload.clone()),
+                    ],
+                    "checkpoint failure lost acknowledged data at {nth}"
+                );
+            }
 
             assert!(
                 actual == vec![("io-baseline".into(), "acknowledged".into())]

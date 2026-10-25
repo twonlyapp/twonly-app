@@ -1,5 +1,63 @@
-#[cfg(feature = "sqlite-wal")]
 use super::*;
+
+#[tokio::test]
+
+async fn normal_sync_is_applied_to_writer_readers_and_reopened_connections() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("app.sqlite");
+    let key = "0101010101010101010101010101010101010101010101010101010101010101";
+    let mut database = AppDatabase::new(path.to_str().unwrap(), Some(key), false)
+        .await
+        .unwrap();
+    database.run_migrations().await.unwrap();
+
+    for round in 0..2 {
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("PRAGMA synchronous")
+                .fetch_one(&database.pool)
+                .await
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, String>("PRAGMA journal_mode")
+                .fetch_one(&database.pool)
+                .await
+                .unwrap(),
+            if cfg!(feature = "sqlite-wal") {
+                "wal"
+            } else {
+                "delete"
+            }
+        );
+
+        if cfg!(feature = "sqlite-wal") {
+            let mut first = database.read_pool.acquire().await.unwrap();
+            let mut second = database.read_pool.acquire().await.unwrap();
+            for connection in [&mut first, &mut second] {
+                assert_eq!(
+                    sqlx::query_scalar::<_, i64>("PRAGMA synchronous")
+                        .fetch_one(&mut **connection)
+                        .await
+                        .unwrap(),
+                    1
+                );
+                assert_eq!(
+                    sqlx::query_scalar::<_, i64>("PRAGMA query_only")
+                        .fetch_one(&mut **connection)
+                        .await
+                        .unwrap(),
+                    1
+                );
+            }
+        }
+
+        database.close().await;
+        if round == 0 {
+            database = database.reopen().await.unwrap();
+        }
+    }
+}
 
 #[tokio::test]
 
