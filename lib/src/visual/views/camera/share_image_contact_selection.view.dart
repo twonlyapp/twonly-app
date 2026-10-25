@@ -125,7 +125,7 @@ class _ShareImageView extends State<ShareImageView> {
       setState(() {
         _allGroups = allGroups;
       });
-      await updateGroups(_allGroups.where((x) => !x.archived).toList());
+      await _filterUsers(lastQuery);
     });
 
     unawaited(initAsync());
@@ -184,9 +184,14 @@ class _ShareImageView extends State<ShareImageView> {
         otherUsers.add(group);
       }
     }
-    otherUsers.sort(
-      (a, b) => b.lastMessageExchange.compareTo(a.lastMessageExchange),
-    );
+    // Selected chats lead the list, archived or not, so a preselected
+    // receiver is in view without scrolling for it.
+    otherUsers.sort((a, b) {
+      final aSelected = widget.selectedGroupIds.contains(a.groupId);
+      final bSelected = widget.selectedGroupIds.contains(b.groupId);
+      if (aSelected != bSelected) return aSelected ? -1 : 1;
+      return b.lastMessageExchange.compareTo(a.lastMessageExchange);
+    });
 
     setState(() {
       _bestFriends = bestFriends;
@@ -218,7 +223,17 @@ class _ShareImageView extends State<ShareImageView> {
     await updateGroups(usersFiltered);
   }
 
+  /// A selection made outside the list, e.g. through a contact group, moves
+  /// the chat to the top of it.
   void updateSelectedGroupIds(String groupId, bool checked) {
+    widget.updateSelectedGroupIds(groupId, checked);
+    setState(() {});
+    unawaited(_filterUsers(lastQuery));
+  }
+
+  /// A chat ticked in the list itself stays where it is, so the rows do not
+  /// move under the finger.
+  void _updateSelectedGroupIdsInList(String groupId, bool checked) {
     widget.updateSelectedGroupIds(groupId, checked);
     setState(() {});
   }
@@ -406,7 +421,7 @@ class _ShareImageView extends State<ShareImageView> {
                   UserList(
                     _otherUsers,
                     selectedGroupIds: widget.selectedGroupIds,
-                    updateSelectedGroupIds: updateSelectedGroupIds,
+                    updateSelectedGroupIds: _updateSelectedGroupIdsInList,
                   ),
               ],
             ],
