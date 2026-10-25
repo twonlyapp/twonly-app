@@ -53,6 +53,16 @@ class NativeChatNotificationsTest {
         shadowOf(context.getSystemService(ShortcutManager::class.java)).setMaxShortcutCountPerActivity(5)
     }
 
+    private fun avatarFile(name: String, color: Int) = File(context.cacheDir, name).apply {
+        outputStream().use {
+            Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888).apply { eraseColor(color) }
+                .compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+    }
+
+    /** Senders have an avatar unless a test says otherwise. */
+    private val senderAvatar: String get() = avatarFile("sender.png", Color.GREEN).path
+
     private fun event(
         id: String,
         kind: String = "text",
@@ -60,7 +70,7 @@ class NativeChatNotificationsTest {
         sender: Long = 7,
         group: Boolean = false,
         time: Long = 1,
-        avatar: String? = null,
+        avatar: String? = senderAvatar,
         groupAvatar: String? = null,
     ) = NativeNotificationAddition(
         eventId = id, notificationId = id, conversationId = chat,
@@ -239,28 +249,19 @@ class NativeChatNotificationsTest {
 
     @Test
     fun groupMembersKeepTheirOwnAlertsAndAvatars() {
-        val avatar = File(context.cacheDir, "alice.png").apply {
-            outputStream().use {
-                Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.RED) }
-                    .compress(Bitmap.CompressFormat.PNG, 100, it)
-            }
-        }
-        val groupAvatar = File(context.cacheDir, "group.png").apply {
-            outputStream().use {
-                Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.BLUE) }
-                    .compress(Bitmap.CompressFormat.PNG, 100, it)
-            }
-        }
+        val avatar = avatarFile("alice.png", Color.RED)
+        val groupAvatar = avatarFile("group.png", Color.BLUE)
         val notification = post(
             event("alice", chat = "group", group = true, avatar = avatar.path, groupAvatar = groupAvatar.path),
-            event("bob", chat = "group", sender = 8, group = true, time = 2, groupAvatar = groupAvatar.path),
+            event("bob", chat = "group", sender = 8, group = true, time = 2, avatar = null, groupAvatar = groupAvatar.path),
         )
         val style = style(notification)
         assertTrue(style.isGroupConversation)
         assertEquals("Friends", style.conversationTitle.toString())
         assertEquals(listOf("8"), style.messages.map { it.person?.key })
         assertEquals(listOf("Bob"), style.messages.map { it.person?.name.toString() })
-        assertTrue(style.messages.all { it.person?.icon != null })
+        // Bob has no avatar, so none is shown for him.
+        assertTrue(style.messages.all { it.person?.icon == null })
         assertNotNull(notification.getLargeIcon())
         val active = NotificationManagerCompat.from(context).activeNotifications
         assertEquals(2, active.size)
@@ -280,30 +281,23 @@ class NativeChatNotificationsTest {
     }
 
     @Test
-    fun duplicateDeliveryReplacesAnEntryAndMissingAvatarsHaveAFallback() {
+    fun duplicateDeliveryReplacesAnEntryAndMissingAvatarsShowNone() {
         post(event("message", avatar = "/missing/avatar.png"))
-        val notification = post(event("message", time = 2))
+        val notification = post(event("message", time = 2, avatar = null))
         assertEquals(1, style(notification).messages.size)
-        assertNotNull(style(notification).messages.single().person?.icon)
-        assertNotNull(notification.getLargeIcon())
-        assertNotNull(shortcutAvatar(notification))
+        assertNull(style(notification).messages.single().person?.icon)
+        assertNull(notification.getLargeIcon())
+        assertNull(ReflectionHelpers.callInstanceMethod<Icon?>(shortcut(notification), "getIcon"))
     }
 
     @Test
-    fun aRemovedAvatarUsesTheTwonlyLogo() {
-        val avatar = File(context.cacheDir, "known-avatar.png").apply {
-            outputStream().use {
-                Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.RED) }
-                    .compress(Bitmap.CompressFormat.PNG, 100, it)
-            }
-        }
+    fun aRemovedAvatarIsNotShown() {
+        val avatar = avatarFile("known-avatar.png", Color.RED)
         post(event("first", avatar = avatar.path))
-        val notification = post(event("second", time = 2))
-        val sender = requireNotNull(style(notification).messages.last().person)
-        val bitmap = requireNotNull(sender.icon?.loadDrawable(context)).toBitmap()
-        val logo = BitmapFactory.decodeResource(context.resources, eu.twonly.R.drawable.logo)
-        assertTrue(logo.sameAs(bitmap))
-        assertTrue(logo.sameAs(shortcutAvatar(notification)))
+        val notification = post(event("second", time = 2, avatar = null))
+        assertNull(style(notification).messages.last().person?.icon)
+        assertNull(notification.getLargeIcon())
+        assertNull(ReflectionHelpers.callInstanceMethod<Icon?>(shortcut(notification), "getIcon"))
         assertEquals(1, context.getSystemService(ShortcutManager::class.java).dynamicShortcuts.size)
     }
 

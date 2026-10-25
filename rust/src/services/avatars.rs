@@ -603,18 +603,10 @@ pub(crate) async fn ensure_contact_avatar_png(
     Ok(Some(output))
 }
 
-pub(crate) fn notification_logo_path(ctx: &Context) -> Result<PathBuf> {
-    let output = Path::new(&ctx.config.data_dir)
-        .join("notification_avatars")
-        .join("twonly-logo.png");
-
-    write_cached_bytes(&output, include_bytes!("../../../assets/images/logo.png"))?;
-
-    Ok(output)
-}
-
 /// Matches the group avatar in Flutter: up to three active members, ordered
 /// by their latest message, with overlapping avatars and rounded corners.
+/// Members without an avatar are left out, and a group in which no member has
+/// one gets no avatar at all.
 
 pub(crate) async fn ensure_group_avatar_png(
     ctx: &Context, group_id: &str,
@@ -624,48 +616,43 @@ pub(crate) async fn ensure_group_avatar_png(
     let members: Vec<i64> = sqlx::query_scalar(
         "SELECT c.user_id FROM contacts c JOIN group_members m ON m.contact_id = c.user_id WHERE \
          m.group_id = ? AND (m.member_state IS NULL OR m.member_state != 'leftGroup') ORDER BY \
-         m.last_message DESC, c.user_id ASC LIMIT 3",
+         m.last_message DESC, c.user_id ASC",
     )
     .bind(group_id)
     .fetch_all(&database.pool)
     .await?;
 
-    if members.is_empty() {
-        return Ok(None);
-    }
-
-    let logo = notification_logo_path(ctx)?;
-
-    let mut paths = Vec::with_capacity(members.len());
+    let mut paths = Vec::with_capacity(3);
 
     for member in members {
-        let avatar = match ensure_contact_avatar_png(ctx, member).await {
-            Ok(path) => path,
+        match ensure_contact_avatar_png(ctx, member).await {
+            Ok(Some(path)) => paths.push(path),
+            Ok(None) => {}
             Err(error) => {
                 tracing::warn!(%error, member, "failed to prepare group member avatar");
-
-                None
             }
-        };
+        }
 
-        paths.push(avatar.unwrap_or_else(|| logo.clone()));
+        if paths.len() == 3 {
+            break;
+        }
+    }
+
+    if paths.is_empty() {
+        return Ok(None);
     }
 
     let directory = Path::new(&ctx.config.data_dir).join("notification_avatars");
 
-    let output = crate::database::lifecycle::spawn_blocking(move || -> Result<PathBuf> {
-        let logo = image::open(logo)
-            .map_err(|error| TwonlyError::Generic(format!("invalid notification logo: {error}")))?
-            .to_rgba8();
-
+    let output = crate::database::lifecycle::spawn_blocking(move || -> Result<Option<PathBuf>> {
         let images: Vec<RgbaImage> = paths
             .iter()
-            .map(|path| {
-                image::open(path)
-                    .map(|image| image.to_rgba8())
-                    .unwrap_or_else(|_| logo.clone())
-            })
+            .filter_map(|path| image::open(path).ok().map(|image| image.to_rgba8()))
             .collect();
+
+        if images.is_empty() {
+            return Ok(None);
+        }
 
         let png = compose_group_avatar(&images);
 
@@ -683,12 +670,12 @@ pub(crate) async fn ensure_group_avatar_png(
 
         write_cached_bytes(&output, &bytes)?;
 
-        Ok(output)
+        Ok(Some(output))
     })
     .await
     .map_err(|error| TwonlyError::Generic(format!("group avatar render task failed: {error}")))??;
 
-    Ok(Some(output))
+    Ok(output)
 }
 
 fn compose_group_avatar(images: &[RgbaImage]) -> RgbaImage {
@@ -1122,9 +1109,21 @@ mod tests {
 
         assert_eq!(image.get_pixel(200, 128), &Rgba([255, 0, 0, 255]));
 
-        assert_ne!(image.get_pixel(30, 128), &Rgba([255, 0, 0, 255]));
+        // Bob has no avatar, so Alice fills the whole group avatar.
+        assert_eq!(image.get_pixel(30, 128), &Rgba([255, 0, 0, 255]));
 
         assert_eq!(image.get_pixel(0, 0)[3], 0);
+
+        assert_eq!(
+            ensure_group_avatar_png(&ctx, "g").await?,
+            Some(first.clone())
+        );
+
+        // A member without an avatar never appears, even after writing more
+        // recently.
+        sqlx::query("UPDATE group_members SET last_message = 3 WHERE contact_id = 8")
+            .execute(&db.pool)
+            .await?;
 
         assert_eq!(
             ensure_group_avatar_png(&ctx, "g").await?,
@@ -1153,14 +1152,13 @@ mod tests {
 
         assert_eq!(image.get_pixel(200, 128), &Rgba([0, 0, 255, 255]));
 
-        // A member who left no longer contributes an avatar.
+        // A member who left no longer contributes an avatar, and the remaining
+        // member has none.
         sqlx::query("UPDATE group_members SET member_state = 'leftGroup' WHERE contact_id = 7")
             .execute(&db.pool)
             .await?;
 
-        let remaining = ensure_group_avatar_png(&ctx, "g").await?.unwrap();
-
-        assert_ne!(remaining, second);
+        assert!(ensure_group_avatar_png(&ctx, "g").await?.is_none());
 
         Ok(())
     }

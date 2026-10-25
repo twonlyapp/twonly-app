@@ -842,12 +842,6 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
                 }
             };
 
-        let avatar_path = avatar_path.or_else(|| {
-            crate::services::avatars::notification_logo_path(ctx)
-                .ok()
-                .map(|path| path.display().to_string())
-        });
-
         let conversation_avatar_path = if is_group {
             match crate::services::avatars::ensure_group_avatar_png(
                 ctx,
@@ -2601,8 +2595,7 @@ mod tests {
 
     #[tokio::test]
 
-    async fn notification_batch_supplies_group_avatars_and_a_logo_for_missing_sender_avatars(
-    ) -> Result<()> {
+    async fn notification_batch_shows_no_avatar_when_none_exists() -> Result<()> {
         let directory = tempfile::tempdir()?;
 
         let ctx =
@@ -2613,10 +2606,18 @@ mod tests {
 
         for statement in [
             "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1)",
+            "INSERT INTO contacts(user_id, username, accepted, avatar_svg_compressed) VALUES \
+             (8, 'bob', 1, '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" \
+             height=\"10\"><rect width=\"10\" height=\"10\" fill=\"red\"/></svg>')",
             "INSERT INTO groups(group_id, group_name) VALUES ('g', 'Friends')",
-            "INSERT INTO group_members(group_id, contact_id) VALUES ('g', 7)",
+            "INSERT INTO groups(group_id, group_name) VALUES ('h', 'Family')",
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('g', 7), ('h', 8)",
             "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, \
-             sender_id, kind, created_at) VALUES ('event', 'message', 'g', 7, 'text', 1)",
+             sender_id, kind, created_at) VALUES ('group', 'group', 'g', 7, 'text', 1)",
+            "INSERT INTO notification_outbox(event_id, notification_id, sender_id, kind, \
+             created_at) VALUES ('direct', 'direct', 7, 'text', 2)",
+            "INSERT INTO notification_outbox(event_id, notification_id, conversation_id, \
+             sender_id, kind, created_at) VALUES ('avatar', 'avatar', 'h', 8, 'text', 3)",
         ] {
             sqlx::query(sqlx::AssertSqlSafe(statement))
                 .execute(&db.pool)
@@ -2625,23 +2626,38 @@ mod tests {
 
         let batch = pending_batch(&ctx, "en").await?;
 
-        let addition = &batch.additions[0];
+        let addition = |event: &str| {
+            batch
+                .additions
+                .iter()
+                .find(|addition| addition.event_id == event)
+                .unwrap()
+        };
 
-        assert!(addition.is_group);
+        // Alice has no avatar, and neither does the only member of her group.
+        let group = addition("group");
 
-        let logo = crate::services::avatars::notification_logo_path(&ctx)?;
+        assert!(group.is_group);
 
-        assert_eq!(addition.avatar_path.as_deref(), logo.to_str());
+        assert_eq!(group.avatar_path, None);
 
-        let group = addition.conversation_avatar_path.as_ref().unwrap();
+        assert_eq!(group.conversation_avatar_path, None);
 
-        assert!(std::path::Path::new(group).exists());
+        assert_eq!(addition("direct").avatar_path, None);
 
-        let json = serde_json::to_value(addition).unwrap();
+        let with_avatar = addition("avatar");
+
+        assert!(std::path::Path::new(with_avatar.avatar_path.as_ref().unwrap()).exists());
+
+        let group_avatar = with_avatar.conversation_avatar_path.as_ref().unwrap();
+
+        assert!(std::path::Path::new(group_avatar).exists());
+
+        let json = serde_json::to_value(with_avatar).unwrap();
 
         assert_eq!(
             json["conversation_avatar_path"].as_str(),
-            Some(group.as_str())
+            Some(group_avatar.as_str())
         );
 
         Ok(())
