@@ -366,6 +366,63 @@ void main() {
       expect(position.pixels, offsetBeforeWheel);
     });
 
+    testWidgets('Scrolling back past the top shrinks the picker again', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomCenter,
+              child: EmojiPicker(
+                config: Config(
+                  checkPlatformCompatibility: false,
+                  resizeConfig: ResizeConfig(
+                    expandOnScroll: true,
+                    maxHeight: 420,
+                  ),
+                  categoryViewConfig: CategoryViewConfig(
+                    recentTabBehavior: RecentTabBehavior.NONE,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final picker = find.byKey(const Key('emojiPickerResizableContainer'));
+      final grid = find.byKey(const Key('emojiScrollView'));
+      final position = tester
+          .state<ScrollableState>(
+            find.descendant(of: grid, matching: find.byType(Scrollable)),
+          )
+          .position;
+      final gesture = await tester.startGesture(tester.getCenter(grid));
+      await gesture.moveBy(const Offset(0, -20));
+      await gesture.moveBy(const Offset(0, -300));
+      await tester.pump();
+      expect(tester.getSize(picker).height, 420);
+      expect(position.pixels, greaterThan(position.minScrollExtent));
+
+      // Scrolling back first returns the emoji to the top, then the same
+      // gesture shrinks the picker, but not below its configured height.
+      await gesture.moveBy(const Offset(0, 50));
+      await tester.pump();
+      expect(tester.getSize(picker).height, 420);
+      await gesture.moveBy(const Offset(0, 150));
+      await tester.pump();
+      expect(position.pixels, position.minScrollExtent);
+      expect(tester.getSize(picker).height, lessThan(420));
+      expect(tester.getSize(picker).height, greaterThan(256));
+      await gesture.moveBy(const Offset(0, 400));
+      await tester.pump();
+      expect(tester.getSize(picker).height, 256);
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('A short fling expands without scrolling emoji early', (
       tester,
     ) async {

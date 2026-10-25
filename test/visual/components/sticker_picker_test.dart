@@ -206,6 +206,40 @@ void main() {
     },
   );
 
+  testWidgets('scrolling the stickers expands the picker like the emoji', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        EmojiPicker(
+          alternateView: StickerPicker(
+            onEmojiPressed: () {},
+            onStickerSelected: (_) {},
+          ),
+          config: const Config(
+            height: 300,
+            checkPlatformCompatibility: false,
+            resizeConfig: ResizeConfig(expandOnScroll: true, maxHeight: 420),
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+    final container = find.byKey(const Key('emojiPickerResizableContainer'));
+    final grid = find.byType(GridView);
+    final gesture = await tester.startGesture(tester.getCenter(grid));
+    await gesture.moveBy(const Offset(0, -20));
+    await gesture.moveBy(const Offset(0, -80));
+    await tester.pump();
+    expect(tester.getSize(container).height, greaterThan(300));
+    expect(tester.getSize(container).height, lessThan(420));
+    await gesture.moveBy(const Offset(0, -200));
+    await tester.pump();
+    expect(tester.getSize(container).height, 420);
+    await gesture.up();
+    await _settle(tester);
+  });
+
   testWidgets('new sticker opens Memories with a Gallery option', (
     tester,
   ) async {

@@ -841,7 +841,8 @@ class _MessageInputState extends State<MessageInput>
               ),
               resizeConfig: ResizeConfig(
                 expandOnScroll: true,
-                maxHeight: MediaQuery.sizeOf(context).height / 2,
+                // Leaves the app bar, the input and a few messages visible.
+                maxHeight: MediaQuery.sizeOf(context).height * 0.7,
               ),
               locale: Localizations.localeOf(context),
               emojiTextStyle: TextStyle(
