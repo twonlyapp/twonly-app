@@ -1,3 +1,4 @@
+import AVFoundation
 import AppIntents
 import CryptoKit
 import Flutter
@@ -61,6 +62,7 @@ import flutter_sharing_intent
     NativeLocationPermission.register(with: engineBridge.pluginRegistry)
     NativeErrorReportingChannel.register(with: engineBridge.pluginRegistry)
     NativeBackupScheduleChannel.register(with: engineBridge.pluginRegistry)
+    NativeAudioSessionChannel.register(with: engineBridge.pluginRegistry)
   }
 
   override func userNotificationCenter(
@@ -231,6 +233,37 @@ class NativeNotificationChannel {
         DispatchQueue.main.async {
           completion(nil)
         }
+      }
+    }
+  }
+}
+
+/// The audio_waveforms player keeps the default `.soloAmbient` category, which
+/// is muted by the silent switch. Dart switches to `.playback` right before a
+/// voice message starts, so merely showing one does not stop other apps' audio.
+enum NativeAudioSessionChannel {
+  static func register(with registry: FlutterPluginRegistry) {
+    guard let registrar = registry.registrar(forPlugin: "TwonlyAudioSession") else {
+      return
+    }
+    let channel = FlutterMethodChannel(
+      name: "eu.twonly/audio_session",
+      binaryMessenger: registrar.messenger()
+    )
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "activatePlayback" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      do {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playback, mode: .default)
+        try session.setActive(true)
+        result(nil)
+      } catch {
+        result(
+          FlutterError(
+            code: "audio_session", message: error.localizedDescription, details: nil))
       }
     }
   }
