@@ -1021,9 +1021,8 @@ pub(crate) async fn handle_sender_delivery_receipt(
         // server acceptance. A recipient's receipt proves delivery, so advance
         // the aggregate state too before removing the outbox entry.
         sqlx::query!(
-            "UPDATE messages SET ack_by_server = COALESCE(ack_by_server, \
-             CAST(strftime('%s', 'now') AS INTEGER)) \
-             WHERE message_id = ? AND sender_id IS NULL",
+            "UPDATE messages SET ack_by_server = COALESCE(ack_by_server, CAST(strftime('%s', \
+             'now') AS INTEGER)) WHERE message_id = ? AND sender_id IS NULL",
             message_id,
         )
         .execute(&mut **transaction)

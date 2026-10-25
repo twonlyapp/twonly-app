@@ -44,7 +44,8 @@ pub(crate) fn cancel_backup_runs() {
 }
 
 /// A push takes priority over optional exports and media maintenance. Their
-/// supervisors still finish rollback and pool cleanup before releasing admission.
+/// supervisors still finish rollback and pool cleanup before releasing
+/// admission.
 pub(crate) fn cancel_maintenance_runs() {
     cancel_backup_runs();
 

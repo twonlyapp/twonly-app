@@ -10,7 +10,7 @@ async fn a_restore_finishing_in_background_closes_new_handles_before_its_owner_d
 
     impl Drop for Visibility {
         fn drop(&mut self) {
-            foreground::visibility(self.0);
+            foreground::set_active_for_test(self.0);
         }
     }
 
@@ -44,7 +44,9 @@ async fn a_restore_finishing_in_background_closes_new_handles_before_its_owner_d
 
     let _visibility = Visibility(foreground::active());
 
-    foreground::visibility(false);
+    // Only the background branch matters here; the real transition would also
+    // cancel native admissions held by tests running in parallel.
+    foreground::set_active_for_test(false);
 
     context.flutter_claimed.store(true, Ordering::Release);
 

@@ -185,6 +185,15 @@ pub(crate) fn visibility(active: bool) {
     }
 }
 
+/// Lib tests share one process. `visibility(false)` cancels every native
+/// operation in it, including other tests' admissions running in parallel.
+#[cfg(test)]
+pub(crate) fn set_active_for_test(active: bool) {
+    ACTIVE.store(active, Ordering::Release);
+
+    CHANGED.notify_waiters();
+}
+
 async fn visible() -> Result<()> {
     loop {
         let changed = CHANGED.notified();
@@ -282,6 +291,15 @@ pub(crate) async fn activate(config: InitConfig) -> Result<()> {
 
         if let Ok(context) = Context::get_static() {
             context.foreground.attach(epoch.clone());
+        }
+
+        // Waiting for the previous epoch can take seconds, and a background
+        // transition meanwhile had nothing registered to cancel. This epoch
+        // would then stay open in the background, and every push wake-up and
+        // Flutter pause would wait for a close that never comes. The OPERATIONS
+        // lock orders this check against visibility(false)'s cancellation.
+        if !active() {
+            epoch.operation.cancel();
         }
 
         let owned = epoch.clone();

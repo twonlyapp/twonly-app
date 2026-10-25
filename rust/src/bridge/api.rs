@@ -89,6 +89,20 @@ pub struct ApiEvent {
     pub message: Option<String>,
 }
 
+/// Progress of a large mailbox catch-up. While none runs, `active` is false
+/// and both counts are zero.
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+
+pub struct MailboxSyncProgress {
+    pub active: bool,
+    /// Messages waiting when the catch-up started, raised if more arrive
+    /// while it runs.
+    pub total: i64,
+    /// Messages the server still holds for this device.
+    pub remaining: i64,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 
 pub enum ApiEventKind {
@@ -591,7 +605,11 @@ impl RustApi {
                 "test API origin must be loopback"
             );
             let scheme = if protocol == "wss" || protocol == "ws" {
-                if url.scheme() == "https" { "wss" } else { "ws" }
+                if url.scheme() == "https" {
+                    "wss"
+                } else {
+                    "ws"
+                }
             } else if url.scheme() == "https" {
                 "https"
             } else {
@@ -723,6 +741,21 @@ impl RustApi {
         let ctx = Context::get_static()?;
 
         ApiRuntime::allocate_sequence(ctx).await
+    }
+
+    /// Streams the progress of a large mailbox catch-up, starting with the
+    /// current state.
+
+    pub async fn mailbox_sync_progress(sink: StreamSink<MailboxSyncProgress>) -> Result<()> {
+        crate::api::messages::mailbox_sync::stream(sink).await
+    }
+
+    /// Developer option: shows the catch-up screen with made-up numbers.
+
+    pub async fn preview_mailbox_sync() -> Result<()> {
+        crate::database::lifecycle::spawn(crate::api::messages::mailbox_sync::preview());
+
+        Ok(())
     }
 
     pub async fn events(sink: StreamSink<ApiEvent>) -> Result<()> {

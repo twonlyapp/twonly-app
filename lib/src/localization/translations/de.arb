@@ -1261,5 +1261,8 @@
   "memoriesMapNoResults": "Keine Erinnerungen in diesem Bereich. Verschiebe oder zoome die Karte, um einen anderen Ort zu erkunden.",
   "memoriesMapLoadError": "Die Karte konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
   "memoriesMapVisibleCount": "{count, plural, =1 {1 Erinnerung in diesem Bereich} other {{count} Erinnerungen in diesem Bereich}}",
-  "mediaSendFailed": "Senden fehlgeschlagen"
+  "mediaSendFailed": "Senden fehlgeschlagen",
+  "mailboxSyncTitle": "twonly wird synchronisiert",
+  "mailboxSyncBody": "twonly synchronisiert dieses Gerät und lädt deine Nachrichten herunter. Bitte lass die App geöffnet, bis der Vorgang abgeschlossen ist.",
+  "mailboxSyncRemaining": "{count, plural, =1 {Noch 1 Nachricht} other {Noch {count} Nachrichten}}"
 }

@@ -27,6 +27,12 @@ const CATCH_UP_INTERVAL: Duration = Duration::from_secs(60);
 
 const CATCH_UP_JITTER: Duration = Duration::from_secs(15);
 
+/// The safety catch-up while a large mailbox is being caught up. A drain the
+/// server stopped would otherwise leave the progress screen frozen for a
+/// minute.
+
+const SYNC_CATCH_UP_INTERVAL: Duration = Duration::from_secs(10);
+
 /// First reconnect attempt after a drop. Kept well below a second so a server
 /// restart or a short network blip is over before the user notices missing
 /// messages.
@@ -509,10 +515,14 @@ impl ApiClient {
 
         crate::database::lifecycle::spawn(async move {
             loop {
-                let delay = CATCH_UP_INTERVAL
-                    + Duration::from_millis(
-                        rand::random::<u64>() % (CATCH_UP_JITTER.as_millis() as u64).max(1),
-                    );
+                let delay = if crate::api::messages::mailbox_sync::is_active() {
+                    SYNC_CATCH_UP_INTERVAL
+                } else {
+                    CATCH_UP_INTERVAL
+                        + Duration::from_millis(
+                            rand::random::<u64>() % (CATCH_UP_JITTER.as_millis() as u64).max(1),
+                        )
+                };
 
                 tokio::select! {
                     trigger = receiver.recv() => {

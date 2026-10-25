@@ -87,7 +87,8 @@ object NativeErrorReporting {
         val reason = when (error) {
             "Database operation cancelled; retry when active",
             "Native database admission cancelled",
-            "Notification run cancelled" -> "cancelled"
+            "Notification run cancelled",
+            "Notification run is closing" -> "cancelled"
             "attempted to acquire a connection on a closed pool" -> "database_pool_closed"
             "pool timed out while waiting for an open connection" -> "database_pool_timeout"
             "main_key could not be loaded from the key_chain",

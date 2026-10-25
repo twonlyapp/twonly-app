@@ -714,7 +714,8 @@ impl DirectMediaUploadService {
         let database = self.ctx.app_db.read().await.clone();
 
         Ok(sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM direct_media_upload_jobs WHERE state IN ('prepared', 'scheduled', 'waiting_for_server')",
+            "SELECT COUNT(*) FROM direct_media_upload_jobs WHERE state IN ('prepared', \
+             'scheduled', 'waiting_for_server')",
         )
         .fetch_one(&database.pool)
         .await?)
@@ -780,12 +781,14 @@ impl DirectMediaUploadService {
         // Old clients could return a live job's slot to the cache. The job,
         // its recipient scope and its immutable files still own that slot.
         sqlx::query(
-            "UPDATE direct_media_upload_slots SET state = 'reserved' WHERE state = 'cached' AND attachment_id IN (SELECT attachment_id FROM direct_media_upload_jobs)",
+            "UPDATE direct_media_upload_slots SET state = 'reserved' WHERE state = 'cached' AND \
+             attachment_id IN (SELECT attachment_id FROM direct_media_upload_jobs)",
         )
         .execute(&mut *transaction)
         .await?;
         sqlx::query(
-            "UPDATE direct_media_upload_slots SET state = 'cached' WHERE state = 'reserved' AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)",
+            "UPDATE direct_media_upload_slots SET state = 'cached' WHERE state = 'reserved' AND \
+             attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)",
         )
         .execute(&mut *transaction)
         .await?;
@@ -804,7 +807,8 @@ impl DirectMediaUploadService {
             let lock = media_lock(&media_id);
             let _guard = lock.lock().await;
             let descriptor = sqlx::query_scalar::<_, String>(
-                "SELECT native_descriptor_json FROM direct_media_upload_jobs WHERE attachment_id = ? AND state = 'prepared' AND expires_at > CAST(strftime('%s','now') AS INTEGER)",
+                "SELECT native_descriptor_json FROM direct_media_upload_jobs WHERE attachment_id \
+                 = ? AND state = 'prepared' AND expires_at > CAST(strftime('%s','now') AS INTEGER)",
             )
             .bind(&attachment_id)
             .fetch_optional(&database.pool)
@@ -927,11 +931,14 @@ impl DirectMediaUploadService {
 
     async fn purge_cached_slots(&self) {
         let database = self.ctx.app_db.read().await.clone();
-        let purged = sqlx::query("DELETE FROM direct_media_upload_slots WHERE state = 'cached' AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)")
-            .execute(&database.pool)
-            .await
-            .map(|result| result.rows_affected())
-            .unwrap_or_default();
+        let purged = sqlx::query(
+            "DELETE FROM direct_media_upload_slots WHERE state = 'cached' AND attachment_id NOT \
+             IN (SELECT attachment_id FROM direct_media_upload_jobs)",
+        )
+        .execute(&database.pool)
+        .await
+        .map(|result| result.rows_affected())
+        .unwrap_or_default();
 
         drop(database);
 
@@ -1105,7 +1112,8 @@ impl DirectMediaUploadService {
         let database = self.ctx.app_db.read().await.clone();
 
         let claimed = sqlx::query(
-            "DELETE FROM direct_media_upload_jobs WHERE attachment_id = ? AND state IN ('prepared', 'scheduled', 'waiting_for_server')",
+            "DELETE FROM direct_media_upload_jobs WHERE attachment_id = ? AND state IN \
+             ('prepared', 'scheduled', 'waiting_for_server')",
         )
         .bind(&job.attachment_id)
         .execute(&database.pool)
@@ -1393,7 +1401,8 @@ impl DirectMediaUploadService {
         transfer::schedule(descriptor)?;
         let database = self.ctx.app_db.read().await.clone();
         sqlx::query(
-            "UPDATE direct_media_upload_jobs SET state = 'scheduled', updated_at = CAST(strftime('%s','now') AS INTEGER) WHERE attachment_id = ? AND state = 'prepared'",
+            "UPDATE direct_media_upload_jobs SET state = 'scheduled', updated_at = \
+             CAST(strftime('%s','now') AS INTEGER) WHERE attachment_id = ? AND state = 'prepared'",
         )
         .bind(attachment_id)
         .execute(&database.pool)
@@ -3704,8 +3713,13 @@ mod tests {
             .execute(&database.pool)
             .await?;
         for media_id in ["original", "replacement"] {
-            sqlx::query("INSERT INTO media_files(media_id,type,upload_state) VALUES(?, 'image', 'preprocessing')")
-                .bind(media_id).execute(&database.pool).await?;
+            sqlx::query(
+                "INSERT INTO media_files(media_id,type,upload_state) VALUES(?, 'image', \
+                 'preprocessing')",
+            )
+            .bind(media_id)
+            .execute(&database.pool)
+            .await?;
         }
         for (attachment_id, expires_at) in [("first", 9999999998_i64), ("second", 9999999999)] {
             sqlx::query("INSERT INTO direct_media_upload_slots(attachment_id,expires_at,maximum_object_bytes,upload_url,upload_fields_json,capability,state) VALUES(?, ?, 1000000, 'https://objects.example', '{}', x'01', 'cached')")
@@ -3750,8 +3764,13 @@ mod tests {
         let (started, start_received) = tokio::sync::oneshot::channel();
         let mut competing = tokio::spawn(async move {
             started.send(()).unwrap();
-            sqlx::query("UPDATE direct_media_upload_slots SET state = 'cached' WHERE state = 'reserved' AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)")
-                .execute(&competing_pool).await.unwrap();
+            sqlx::query(
+                "UPDATE direct_media_upload_slots SET state = 'cached' WHERE state = 'reserved' \
+                 AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)",
+            )
+            .execute(&competing_pool)
+            .await
+            .unwrap();
             competing_pool.close().await;
         });
         start_received.await?;
@@ -3860,8 +3879,12 @@ mod tests {
         let (_directory, ctx) = slot_test_context().await?;
         let service = DirectMediaUploadService::new(&ctx);
         let database = ctx.app_db.read().await.clone();
-        sqlx::query("UPDATE media_files SET reupload_requested_by = '[7]', reupload_targets = 'saved-targets' WHERE media_id = 'original'")
-            .execute(&database.pool).await?;
+        sqlx::query(
+            "UPDATE media_files SET reupload_requested_by = '[7]', reupload_targets = \
+             'saved-targets' WHERE media_id = 'original'",
+        )
+        .execute(&database.pool)
+        .await?;
         let (attachment_id, descriptor) = service
             .persist_prepared_job("original", test_prepared_media(&ctx))
             .await?;
@@ -3927,8 +3950,12 @@ mod tests {
             .bind(&attachment_id)
             .execute(&database.pool)
             .await?;
-            sqlx::query("UPDATE media_files SET upload_state = 'backgroundUploadTaskStarted' WHERE media_id = 'original'")
-                .execute(&database.pool).await?;
+            sqlx::query(
+                "UPDATE media_files SET upload_state = 'backgroundUploadTaskStarted' WHERE \
+                 media_id = 'original'",
+            )
+            .execute(&database.pool)
+            .await?;
             let job = test_pending_job(&ctx, &attachment_id).await?;
             let bytes = std::fs::read(&job.multipart_path)?;
             // Also verify the real reservation path skips the poisoned slot
@@ -4013,8 +4040,13 @@ mod tests {
                 test_pending_job(&ctx, &attachment_id).await?.capability,
                 vec![1]
             );
-            let saved: String = sqlx::query_scalar("SELECT native_descriptor_json FROM direct_media_upload_jobs WHERE attachment_id = ?")
-                .bind(&attachment_id).fetch_one(&database.pool).await?;
+            let saved: String = sqlx::query_scalar(
+                "SELECT native_descriptor_json FROM direct_media_upload_jobs WHERE attachment_id \
+                 = ?",
+            )
+            .bind(&attachment_id)
+            .fetch_one(&database.pool)
+            .await?;
             assert_eq!(saved, descriptor);
         }
         Ok(())

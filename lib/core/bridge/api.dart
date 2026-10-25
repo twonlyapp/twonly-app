@@ -13,7 +13,7 @@ import 'stories.dart';
 
 // These functions are ignored because they are not marked as `pub`: `api_result`, `empty_api_response`, `from_rust_state`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ApiConfig`, `ServerResult`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 enum ApiConnectionState {
   stopped,
@@ -271,6 +271,37 @@ class FrbUserData {
           username == other.username &&
           publicIdentityKey == other.publicIdentityKey &&
           joinedAt == other.joinedAt;
+}
+
+/// Progress of a large mailbox catch-up. While none runs, `active` is false
+/// and both counts are zero.
+class MailboxSyncProgress {
+  final bool active;
+
+  /// Messages waiting when the catch-up started, raised if more arrive
+  /// while it runs.
+  final PlatformInt64 total;
+
+  /// Messages the server still holds for this device.
+  final PlatformInt64 remaining;
+
+  const MailboxSyncProgress({
+    required this.active,
+    required this.total,
+    required this.remaining,
+  });
+
+  @override
+  int get hashCode => active.hashCode ^ total.hashCode ^ remaining.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MailboxSyncProgress &&
+          runtimeType == other.runtimeType &&
+          active == other.active &&
+          total == other.total &&
+          remaining == other.remaining;
 }
 
 class RustApi {
@@ -575,6 +606,11 @@ class RustApi {
   static Future<FrbPlanBalance> loadPlanBalance() =>
       RustLib.instance.api.crateBridgeApiRustApiLoadPlanBalance();
 
+  /// Streams the progress of a large mailbox catch-up, starting with the
+  /// current state.
+  static Stream<MailboxSyncProgress> mailboxSyncProgress() =>
+      RustLib.instance.api.crateBridgeApiRustApiMailboxSyncProgress();
+
   /// Explains a send that stopped because the media was too large: the size
   /// it reached and the largest single object the plan accepts.
   static Future<MediaSizeReport> mediaSizeLimitReport({
@@ -618,6 +654,10 @@ class RustApi {
       .instance
       .api
       .crateBridgeApiRustApiPrerenderMedia(mediaId: mediaId);
+
+  /// Developer option: shows the catch-up screen with made-up numbers.
+  static Future<void> previewMailboxSync() =>
+      RustLib.instance.api.crateBridgeApiRustApiPreviewMailboxSync();
 
   /// Warms the shared location cache if Memories or city stickers are
   /// enabled.

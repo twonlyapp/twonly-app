@@ -2,11 +2,9 @@ package eu.twonly.notifications
 
 import android.content.Context
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import eu.twonly.R
 import eu.twonly.NativeErrorReporting
 import eu.twonly.widget.TwonlyWidgetProvider
 import java.util.Locale
@@ -52,11 +50,8 @@ class TwonlyNotificationWorker(
                         applicationContext, "notification_processing", response.error,
                     )
                 }
-                // Rust could not reach the mailbox. Show the generic alert so a
-                // high-priority wake-up still produces a notification, and retry.
-                if (!NotificationTapChannel.isApplicationActive()) {
-                    response.fallback?.let(::showFallback)
-                }
+                // Rust could not reach the mailbox. Retry rather than guessing
+                // with a generic alert: the wake-up may have carried nothing new.
                 return settle(run, retry = true)
             }
 
@@ -70,15 +65,6 @@ class TwonlyNotificationWorker(
             if (delivered.isNotEmpty()) {
                 NativeNotificationBridge.acknowledge(run, JSONArray(delivered).toString())
                 NotificationTapChannel.notificationArrived()
-                // Real notifications supersede a placeholder from an earlier attempt.
-                manager.cancel(FALLBACK_ID)
-            } else if (batch.additions.isEmpty() && batch.completed) {
-                manager.cancel(FALLBACK_ID)
-            } else if (!batch.completed && batch.additions.isEmpty() &&
-                !NotificationTapChannel.isApplicationActive()) {
-                // A rejected connection or an offline mailbox must still alert
-                // the user. A later successful drain replaces this placeholder.
-                response.fallback?.let(::showFallback)
             }
 
             // An empty batch is the normal outcome of a duplicate wake-up or of
@@ -139,25 +125,8 @@ class TwonlyNotificationWorker(
         }
     }
 
-    private fun showFallback(presentation: NativeNotificationPresentation) {
-        val notification = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(presentation.title)
-            .setContentText(presentation.body)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setOnlyAlertOnce(true)
-            .setAutoCancel(true)
-            .build()
-        try {
-            NotificationManagerCompat.from(applicationContext).notify(FALLBACK_ID, notification)
-        } catch (error: SecurityException) {
-            Log.w(TAG, "Notification permission is unavailable", error)
-        }
-    }
-
     private companion object {
         const val TAG = "TwonlyNotification"
-        const val FALLBACK_ID = 0x74776F
         const val MAX_RETRIES = 2
 
         // Split from the old single 25s budget: the drain only has to produce

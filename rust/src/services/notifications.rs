@@ -1522,8 +1522,12 @@ mod tests {
         sqlx::query("INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1)")
             .execute(&mut *tx)
             .await?;
-        sqlx::query("INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('group', 'Friends', 0), ('direct', 'Alice', 1)")
-            .execute(&mut *tx).await?;
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('group', 'Friends', \
+             0), ('direct', 'Alice', 1)",
+        )
+        .execute(&mut *tx)
+        .await?;
         let cases = [
             ("group", "Hi @[user:42]", false, "mention"),
             ("group", "Hi @[user:42] and @[user:42]", false, "mention"),
@@ -1538,8 +1542,15 @@ mod tests {
         ];
         for (index, (group, text, reply, kind)) in cases.iter().enumerate() {
             let id = format!("mention-{index}");
-            sqlx::query("INSERT INTO messages(message_id, group_id, sender_id, type, content) VALUES (?, ?, 7, 'text', ?)")
-                .bind(&id).bind(group).bind(text).execute(&mut *tx).await?;
+            sqlx::query(
+                "INSERT INTO messages(message_id, group_id, sender_id, type, content) VALUES (?, \
+                 ?, 7, 'text', ?)",
+            )
+            .bind(&id)
+            .bind(group)
+            .bind(text)
+            .execute(&mut *tx)
+            .await?;
             let content = proto::EncryptedContent {
                 group_id: Some((*group).into()),
                 text_message: Some(encrypted_content::TextMessage {
@@ -2988,10 +2999,10 @@ mod tests {
         let mut tx = database.pool.begin().await?;
 
         for statement in [
-            "INSERT INTO contacts(user_id, username) VALUES (7, 'saver'), (42, 'author'), \
-             (43, 'member')",
-            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES \
-             ('direct', 'Direct', 1), ('group', 'Group', 0)",
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'saver'), (42, 'author'), (43, \
+             'member')",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('direct', 'Direct', \
+             1), ('group', 'Group', 0)",
         ] {
             sqlx::query(statement).execute(&mut *tx).await?;
         }
@@ -3005,8 +3016,8 @@ mod tests {
                 let message_id = format!("{chat}-{target}");
                 if target != "unknown" {
                     sqlx::query(
-                        "INSERT INTO messages(message_id, group_id, sender_id, type) \
-                         VALUES (?, ?, ?, 'media')",
+                        "INSERT INTO messages(message_id, group_id, sender_id, type) VALUES (?, \
+                         ?, ?, 'media')",
                     )
                     .bind(&message_id)
                     .bind(chat)

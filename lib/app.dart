@@ -28,6 +28,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/visual/components/app_outdated.comp.dart';
+import 'package:twonly/src/visual/components/mailbox_sync.comp.dart';
 import 'package:twonly/src/visual/themes/dark.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/critical_error.view.dart';
@@ -158,6 +159,13 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           theme: getLightTheme(settings.primaryColor),
           darkTheme: getDarkTheme(settings.primaryColor),
           themeMode: settings.themeMode,
+          // Above the navigator, so a catch-up covers whichever screen is open.
+          builder: (context, child) => Stack(
+            children: [
+              ?child,
+              const MailboxSyncOverlay(),
+            ],
+          ),
         );
       },
     );

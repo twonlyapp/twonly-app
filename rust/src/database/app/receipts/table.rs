@@ -43,10 +43,11 @@ pub struct NewReceipt<'a> {
 }
 
 impl Receipt {
+    /// Returns whether the reaction is new; a resent one is already stored.
     pub async fn insert_reaction(
         transaction: &mut Transaction<'_, Sqlite>, message_id: &str, sender_id: i64, emoji: &str,
-    ) -> Result<()> {
-        sqlx::query!(
+    ) -> Result<bool> {
+        let inserted = sqlx::query!(
             r#"
             INSERT INTO reactions(message_id, emoji, sender_id)
             VALUES (?, ?, ?)
@@ -57,9 +58,10 @@ impl Receipt {
             sender_id,
         )
         .execute(&mut **transaction)
-        .await?;
+        .await?
+        .rows_affected();
 
-        Ok(())
+        Ok(inserted > 0)
     }
 
     pub async fn delete_reaction(

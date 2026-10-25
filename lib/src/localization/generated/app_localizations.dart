@@ -5577,6 +5577,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send failed'**
   String get mediaSendFailed;
+
+  /// No description provided for @mailboxSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronizing twonly'**
+  String get mailboxSyncTitle;
+
+  /// No description provided for @mailboxSyncBody.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly is synchronizing this device and downloading your messages. Please keep the app open until it is done.'**
+  String get mailboxSyncBody;
+
+  /// No description provided for @mailboxSyncRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 message left} other{{count} messages left}}'**
+  String mailboxSyncRemaining(int count);
 }
 
 class _AppLocalizationsDelegate

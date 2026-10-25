@@ -52,11 +52,14 @@ pub(crate) async fn handle_error_message(
                     .await?;
                 // Keep retrying the original message and repair the peer's
                 // handshake without turning our existing friend into a request.
-                sqlx::query("UPDATE receipts SET mark_for_retry_after_accepted = NULL WHERE receipt_id = ? AND contact_id = ?")
-                    .bind(&error.related_receipt_id)
-                    .bind(from_user_id)
-                    .execute(&mut **t)
-                    .await?;
+                sqlx::query(
+                    "UPDATE receipts SET mark_for_retry_after_accepted = NULL WHERE receipt_id = \
+                     ? AND contact_id = ?",
+                )
+                .bind(&error.related_receipt_id)
+                .bind(from_user_id)
+                .execute(&mut **t)
+                .await?;
                 super::messages::queue_encrypted_content(
                     t,
                     from_user_id,
@@ -128,10 +131,12 @@ mod tests {
                 .await?;
         let database = ctx.app_db.read().await.clone();
         for statement in [
-            "INSERT INTO contacts(user_id, username, accepted, requested_by_user, blocked, deleted_by_user) VALUES
+            "INSERT INTO contacts(user_id, username, accepted, requested_by_user, blocked, \
+             deleted_by_user) VALUES
              (7, 'friend', 1, 0, 0, 0), (8, 'pending', 0, 1, 0, 0),
              (9, 'blocked', 0, 0, 1, 1), (10, 'stale', 1, 0, 0, 0), (11, 'direct', 0, 0, 0, 0)",
-            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('direct', 'Direct', 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('direct', 'Direct', \
+             1)",
             "INSERT INTO group_members(group_id, contact_id) VALUES ('direct', 11)",
         ] {
             sqlx::query(statement).execute(&database.pool).await?;
@@ -156,8 +161,12 @@ mod tests {
             )
             .await?;
             let state: (bool, bool, bool, bool) = sqlx::query_as(
-                "SELECT accepted, requested, requested_by_user, deleted_by_user FROM contacts WHERE user_id = ?"
-            ).bind(id).fetch_one(&mut *t).await?;
+                "SELECT accepted, requested, requested_by_user, deleted_by_user FROM contacts \
+                 WHERE user_id = ?",
+            )
+            .bind(id)
+            .fetch_one(&mut *t)
+            .await?;
             assert_eq!(
                 state,
                 match id {
@@ -167,8 +176,13 @@ mod tests {
                     _ => unreachable!(),
                 }
             );
-            let parked: bool = sqlx::query_scalar("SELECT mark_for_retry_after_accepted IS NOT NULL FROM receipts WHERE receipt_id = ?")
-                .bind(&receipt).fetch_one(&mut *t).await?;
+            let parked: bool = sqlx::query_scalar(
+                "SELECT mark_for_retry_after_accepted IS NOT NULL FROM receipts WHERE receipt_id \
+                 = ?",
+            )
+            .bind(&receipt)
+            .fetch_one(&mut *t)
+            .await?;
             assert_eq!(parked, id == 8);
         }
         Ok(())

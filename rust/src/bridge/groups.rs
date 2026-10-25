@@ -15,9 +15,12 @@ use crate::services::groups::GroupService;
 pub async fn flame_state(group_id: String) -> Result<FlameState> {
     let ctx = crate::context::Context::get_static()?;
 
-    let database = ctx.app_db.read().await.clone();
+    ctx.foreground_database_call(|| async {
+        let database = ctx.app_db.read().await.clone();
 
-    Group::flame_state(&database.pool, &group_id).await
+        Group::flame_state(&database.read_pool, &group_id).await
+    })
+    .await
 }
 
 /// The same derivation for several chats at once. Sorting a contact list by
@@ -26,9 +29,12 @@ pub async fn flame_state(group_id: String) -> Result<FlameState> {
 pub async fn flame_states(group_ids: Vec<String>) -> Result<HashMap<String, FlameState>> {
     let ctx = crate::context::Context::get_static()?;
 
-    let database = ctx.app_db.read().await.clone();
+    ctx.foreground_database_call(|| async {
+        let database = ctx.app_db.read().await.clone();
 
-    Group::flame_states(&database.pool, Some(group_ids)).await
+        Group::flame_states(&database.read_pool, Some(group_ids.clone())).await
+    })
+    .await
 }
 
 /// Whether to offer the user a restore for this chat.
@@ -36,9 +42,12 @@ pub async fn flame_states(group_ids: Vec<String>) -> Result<HashMap<String, Flam
 pub async fn can_restore_flames(group_id: String) -> Result<bool> {
     let ctx = crate::context::Context::get_static()?;
 
-    let database = ctx.app_db.read().await.clone();
+    ctx.foreground_database_call(|| async {
+        let database = ctx.app_db.read().await.clone();
 
-    Group::can_restore_flames(&database.pool, &group_id).await
+        Group::can_restore_flames(&database.read_pool, &group_id).await
+    })
+    .await
 }
 
 /// Restores the lost streak, posts the chat entry, and syncs the peer.

@@ -370,6 +370,58 @@ mod tests {
     use prost::Message as _;
 
     #[tokio::test]
+    async fn media_sent_again_under_a_new_receipt_alerts_only_once() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":43,"username":"member","displayName":"Member","storeMediaFilesInGallery":false}"#,
+        )?;
+        ctx.inject_test_user_id(43).await?;
+        let database = ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        for statement in [
+            "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'sender', 1)",
+            "INSERT INTO groups(group_id, group_name) VALUES ('group', 'Group')",
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('group', 7)",
+        ] {
+            sqlx::query(statement).execute(&mut *tx).await?;
+        }
+
+        let twonly = EncryptedContent {
+            group_id: Some("group".into()),
+            media: Some(encrypted_content::Media {
+                sender_message_id: "twonly".into(),
+                r#type: encrypted_content::media::Type::Image as i32,
+                requires_authentication: true,
+                timestamp: 1_700_000_000_000,
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        // The peer resends after a session reset: same message, new receipt.
+        for receipt_id in ["first-receipt", "resent-receipt"] {
+            super::super::handle_encrypted(&ctx, &mut tx, 7, receipt_id, twonly.clone()).await?;
+        }
+        tx.commit().await?;
+
+        let alerts: Vec<String> =
+            sqlx::query_scalar("SELECT event_id FROM notification_outbox ORDER BY event_id")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(alerts, ["first-receipt"]);
+        let messages: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM messages")
+            .fetch_one(&database.pool)
+            .await?;
+        assert_eq!(messages, 1);
+
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn stored_group_media_is_kept_silently_by_other_members() -> anyhow::Result<()> {
         let directory = tempfile::tempdir()?;
         let ctx =
@@ -384,11 +436,11 @@ mod tests {
         for statement in [
             "INSERT INTO contacts(user_id, username) VALUES (7, 'saver'), (42, 'author')",
             "INSERT INTO groups(group_id, group_name) VALUES ('group', 'Group')",
-            "INSERT INTO media_files(media_id, type, download_state) \
-             VALUES ('available', 'image', 'ready'), ('missing', 'image', 'ready')",
-            "INSERT INTO messages(message_id, group_id, sender_id, type, media_id) \
-             VALUES ('available', 'group', 42, 'media', 'available'), \
-             ('missing', 'group', 42, 'media', 'missing')",
+            "INSERT INTO media_files(media_id, type, download_state) VALUES ('available', \
+             'image', 'ready'), ('missing', 'image', 'ready')",
+            "INSERT INTO messages(message_id, group_id, sender_id, type, media_id) VALUES \
+             ('available', 'group', 42, 'media', 'available'), ('missing', 'group', 42, 'media', \
+             'missing')",
         ] {
             sqlx::query(statement).execute(&mut *tx).await?;
         }

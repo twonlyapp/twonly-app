@@ -1,5 +1,6 @@
 use keyring_core::{Entry, Error};
-use rust_lib_twonly::bridge::{self, wrapper::key_manager::RustKeyManager, InitConfig};
+use rust_lib_twonly::bridge::wrapper::key_manager::RustKeyManager;
+use rust_lib_twonly::bridge::{self, InitConfig};
 
 #[tokio::test]
 async fn reset_closes_an_active_runtime_before_removing_credentials() {
@@ -26,7 +27,9 @@ async fn reset_closes_an_active_runtime_before_removing_credentials() {
 
     assert!(matches!(entry.get_password(), Err(Error::NoEntry)));
 
-    let error = bridge::initialize_twonly_flutter(config()).await.unwrap_err();
+    let error = bridge::initialize_twonly_flutter(config())
+        .await
+        .unwrap_err();
 
     assert!(error.to_string().contains("Restart required"));
     assert!(matches!(entry.get_password(), Err(Error::NoEntry)));

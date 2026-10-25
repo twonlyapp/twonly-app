@@ -94,6 +94,56 @@ async fn keys(database: &AppDatabase) -> Vec<String> {
 }
 
 #[tokio::test]
+async fn automatic_rollback_preserves_the_command_error_and_releases_the_connection() {
+    let (_directory, database) = open().await;
+
+    for borrowed in [false, true] {
+        let root = if borrowed {
+            Some(Arc::new(
+                TransactionScope::begin(&database.pool).await.unwrap(),
+            ))
+        } else {
+            None
+        };
+        let session = DatabaseSession {
+            transaction: root.clone(),
+        };
+        let mut command = if borrowed {
+            CommandTransaction::begin(&session).await.unwrap()
+        } else {
+            CommandTransaction::Owned(database.pool.begin().await.unwrap())
+        };
+        sqlx::query("INSERT INTO app_metadata(key, value) VALUES ('duplicate', 'test')")
+            .execute(&mut **command.transaction())
+            .await
+            .unwrap();
+
+        // SQLITE_INTERRUPT during a write can also roll back the transaction
+        // inside SQLite. Use a deterministic engine rollback to exercise the
+        // same cleanup path without depending on cancellation timing.
+        let error = sqlx::query(
+            "INSERT OR ROLLBACK INTO app_metadata(key, value) VALUES ('duplicate', 'test')",
+        )
+        .execute(&mut **command.transaction())
+        .await
+        .unwrap_err();
+        let original = error.to_string();
+        let result: Result<()> = command.finish(Err(error.into())).await;
+        assert_eq!(result.unwrap_err().to_string(), original);
+        if let Some(root) = root {
+            assert!(root.commit().await.is_err());
+        }
+        assert!(keys(&database).await.is_empty());
+
+        let next = TransactionScope::begin(&database.pool).await.unwrap();
+        insert(&next, "next owner").await.unwrap();
+        next.rollback().await.unwrap();
+        assert!(keys(&database).await.is_empty());
+    }
+    database.close().await;
+}
+
+#[tokio::test]
 
 async fn nested_rollback_preserves_outer_and_siblings_and_rejects_stale_scopes() {
     let (_directory, database) = open().await;

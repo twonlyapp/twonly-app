@@ -63,7 +63,8 @@ pub(crate) async fn handle_key_verification_proof(
     let now = chrono::Utc::now().timestamp();
 
     let tokens = sqlx::query_as::<_, (Vec<u8>, i64)>(
-        "SELECT token, created_at FROM verification_tokens WHERE created_at >= ? AND created_at <= ?",
+        "SELECT token, created_at FROM verification_tokens WHERE created_at >= ? AND created_at \
+         <= ?",
     )
     .bind(now - 60 * 60)
     .bind(now)
@@ -220,10 +221,13 @@ mod tests {
             (0, false, false, false, false),
         ] {
             let mut t = db.pool.begin().await?;
-            sqlx::query("INSERT INTO contacts(user_id, username, requested, blocked) VALUES (7, 'scanner', 1, ?)")
-                .bind(blocked)
-                .execute(&mut *t)
-                .await?;
+            sqlx::query(
+                "INSERT INTO contacts(user_id, username, requested, blocked) VALUES (7, \
+                 'scanner', 1, ?)",
+            )
+            .bind(blocked)
+            .execute(&mut *t)
+            .await?;
             sqlx::query("INSERT INTO verification_tokens(token, created_at) VALUES (?, ?)")
                 .bind(&token)
                 .bind(chrono::Utc::now().timestamp() - age)

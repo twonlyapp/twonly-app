@@ -280,6 +280,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_StreamSink_list_user_discovery_user_relation_Sse(dynamic raw);
 
   @protected
+  RustStreamSink<MailboxSyncProgress>
+  dco_decode_StreamSink_mailbox_sync_progress_Sse(dynamic raw);
+
+  @protected
   RustStreamSink<MediaCollection> dco_decode_StreamSink_media_collection_Sse(
     dynamic raw,
   );
@@ -827,6 +831,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LogLevel dco_decode_log_level(dynamic raw);
+
+  @protected
+  MailboxSyncProgress dco_decode_mailbox_sync_progress(dynamic raw);
 
   @protected
   MediaCollection dco_decode_media_collection(dynamic raw);
@@ -1419,6 +1426,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   sse_decode_StreamSink_list_user_discovery_user_relation_Sse(
     SseDeserializer deserializer,
   );
+
+  @protected
+  RustStreamSink<MailboxSyncProgress>
+  sse_decode_StreamSink_mailbox_sync_progress_Sse(SseDeserializer deserializer);
 
   @protected
   RustStreamSink<MediaCollection> sse_decode_StreamSink_media_collection_Sse(
@@ -2144,6 +2155,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LogLevel sse_decode_log_level(SseDeserializer deserializer);
 
   @protected
+  MailboxSyncProgress sse_decode_mailbox_sync_progress(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   MediaCollection sse_decode_media_collection(SseDeserializer deserializer);
 
   @protected
@@ -2857,6 +2873,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_StreamSink_list_user_discovery_user_relation_Sse(
     RustStreamSink<List<UserDiscoveryUserRelation>> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_mailbox_sync_progress_Sse(
+    RustStreamSink<MailboxSyncProgress> self,
     SseSerializer serializer,
   );
 
@@ -3750,6 +3772,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_log_level(LogLevel self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_mailbox_sync_progress(
+    MailboxSyncProgress self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_media_collection(

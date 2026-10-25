@@ -7,7 +7,7 @@
 //! hand, so classification, deduplication, claiming and clearing are all
 //! exercised end to end.
 
-use crate::{Tester, init_tracing};
+use crate::{init_tracing, Tester};
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::database::app::groups::native::Group;
 use rust_lib_twonly::services::contacts::ContactService;
@@ -134,13 +134,11 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         // is killed between scheduling and acknowledging.
         tester_b.acknowledge_notifications(&event_ids).await?;
 
-        assert!(
-            tester_b
-                .notification_batch("en")
-                .await?
-                .additions
-                .is_empty()
-        );
+        assert!(tester_b
+            .notification_batch("en")
+            .await?
+            .additions
+            .is_empty());
 
         tester_b.acknowledge_notifications(&[]).await?;
     }
@@ -629,12 +627,10 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         );
 
         // Clearing twice must not report the same notifications again.
-        assert!(
-            tester_b
-                .clear_notification_conversation(&group_conversation_id)
-                .await?
-                .is_empty()
-        );
+        assert!(tester_b
+            .clear_notification_conversation(&group_conversation_id)
+            .await?
+            .is_empty());
     }
 
     //
@@ -663,12 +659,10 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
             "acknowledging contact requests must reduce the badge"
         );
 
-        assert!(
-            tester_b
-                .clear_contact_request_notifications()
-                .await?
-                .is_empty()
-        );
+        assert!(tester_b
+            .clear_contact_request_notifications()
+            .await?
+            .is_empty());
     }
 
     //

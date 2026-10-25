@@ -699,7 +699,9 @@ mod tests {
 
     #[test]
     fn enables_error_tracking_only_for_testers() {
-        for plan in ["Tester", " tester ", "Free", "Family", "Pro", "Plus", "Unknown"] {
+        for plan in [
+            "Tester", " tester ", "Free", "Family", "Pro", "Plus", "Unknown",
+        ] {
             for enabled in [false, true] {
                 let mut config: UserConfig = serde_json::from_value(serde_json::json!({
                     "userId": 42,

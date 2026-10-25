@@ -3318,4 +3318,22 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get mediaSendFailed => 'Senden fehlgeschlagen';
+
+  @override
+  String get mailboxSyncTitle => 'twonly wird synchronisiert';
+
+  @override
+  String get mailboxSyncBody =>
+      'twonly synchronisiert dieses Gerät und lädt deine Nachrichten herunter. Bitte lass die App geöffnet, bis der Vorgang abgeschlossen ist.';
+
+  @override
+  String mailboxSyncRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Noch $count Nachrichten',
+      one: 'Noch 1 Nachricht',
+    );
+    return '$_temp0';
+  }
 }

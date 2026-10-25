@@ -17,12 +17,12 @@ mod typing_indicator;
 mod user_discovery;
 mod verification;
 
-use crate::api::messages::content_type_kind;
 use crate::api::messages::incoming::messages::{
     ensure_contact_exists, handle_plaintext_content, handle_sender_delivery_receipt,
     process_encrypted_or_queue_error, queue_decryption_error, queue_sender_delivery_receipt,
     release_deferred_receipts, retransmit_queued_receipts, spawn_receipt_delivery,
 };
+use crate::api::messages::{content_type_kind, mailbox_sync};
 use crate::api::proto::server_to_client::NewMessage;
 use crate::api::proto::{client as proto, client_to_server, server_to_client};
 use crate::context::Context;
@@ -138,6 +138,8 @@ pub(crate) async fn handle_server_message(
         Kind::MailboxDrained(_) => {
             ctx.mark_mailbox_drained();
 
+            mailbox_sync::finish();
+
             ok::Ok::None(true)
         }
         other => {
@@ -173,7 +175,13 @@ async fn acknowledge_pending_messages(
 ) -> client_to_server::Response {
     let mut delivery_ids = Vec::with_capacity(batch.messages.len());
 
-    for message in batch.messages {
+    let page_size = batch.messages.len();
+
+    let pending_count = batch.pending_count;
+
+    mailbox_sync::record_page(pending_count, 0);
+
+    for (index, message) in batch.messages.into_iter().enumerate() {
         let delivery_id = message.delivery_id;
 
         let from_user_id = message.from_user_id;
@@ -216,6 +224,18 @@ async fn acknowledge_pending_messages(
                     "mailbox message not persisted, will retry: {error}"
                 );
             }
+        }
+
+        mailbox_sync::record_page(pending_count, index + 1);
+    }
+
+    // A page acknowledged only in part ends the server's drain until the next
+    // trigger. During a catch-up, ask again straight away rather than wait for
+    // the next poll -- but only after a page that moved forward, so rows that
+    // keep failing cannot turn this into a loop.
+    if mailbox_sync::is_active() && !delivery_ids.is_empty() && delivery_ids.len() < page_size {
+        if let Ok(client) = crate::api::ApiRuntime::client(ctx).await {
+            client.request_catch_up().await;
         }
     }
 
@@ -833,21 +853,70 @@ pub(crate) async fn handle_encrypted(
 
     let notification_content = content.clone();
 
+    // A peer that sends a message again -- after a session reset it resends
+    // its queue under new receipt IDs -- finds the chat row already there, and
+    // the chat shows nothing new. Alerting for it would announce a message the
+    // user cannot find.
+    let already_held = already_held(t, from_user_id, &content).await?;
+
     match handle_encrypted_inner(ctx, t, from_user_id, receipt_id, content).await {
         Err(TwonlyError::ContactAcceptancePending) => return Ok(Delivery::Deferred),
         result => result?,
     }
 
-    crate::services::notifications::record_incoming_event(
-        ctx,
-        t,
-        from_user_id,
-        receipt_id,
-        &notification_content,
-    )
-    .await?;
+    if already_held {
+        tracing::info!("Not alerting for a message this device already holds");
+    } else {
+        crate::services::notifications::record_incoming_event(
+            ctx,
+            t,
+            from_user_id,
+            receipt_id,
+            &notification_content,
+        )
+        .await?;
+    }
 
     Ok(Delivery::Ack)
+}
+
+/// Whether the text, media or reaction in `content` is already stored here,
+/// so handling it again shows the user nothing new.
+
+async fn already_held(
+    t: &mut Transaction<'_, Sqlite>, from_user_id: i64, content: &proto::EncryptedContent,
+) -> Result<bool> {
+    if let Some(reaction) = content.reaction.as_ref().filter(|value| !value.remove) {
+        return Ok(sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                SELECT 1 FROM reactions WHERE message_id = ? AND sender_id = ? AND emoji = ?
+            ) AS "held!: bool""#,
+            reaction.target_message_id,
+            from_user_id,
+            reaction.emoji,
+        )
+        .fetch_one(&mut **t)
+        .await?);
+    }
+
+    let message_id = if let Some(message) = content.text_message.as_ref() {
+        &message.sender_message_id
+    } else if let Some(media) = content
+        .media
+        .as_ref()
+        .filter(|media| media.r#type != proto::encrypted_content::media::Type::Reupload as i32)
+    {
+        &media.sender_message_id
+    } else {
+        return Ok(false);
+    };
+
+    Ok(sqlx::query_scalar!(
+        r#"SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ?) AS "held!: bool""#,
+        message_id,
+    )
+    .fetch_one(&mut **t)
+    .await?)
 }
 
 async fn handle_encrypted_inner(
@@ -1083,8 +1152,12 @@ mod tests {
                 .await?;
         ctx.key_manager.lock().await.user_id = Some(42);
         let database = ctx.app_db.read().await.clone();
-        sqlx::query("INSERT INTO contacts(user_id, username, blocked, deleted_by_user) VALUES (7, 'blocked', 1, 1)")
-            .execute(&database.pool).await?;
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, blocked, deleted_by_user) VALUES (7, \
+             'blocked', 1, 1)",
+        )
+        .execute(&database.pool)
+        .await?;
         let mut t = database.pool.begin().await?;
         let delivery = handle_encrypted(
             &ctx,
@@ -1170,6 +1243,7 @@ mod tests {
                 &ctx,
                 server_to_client::PendingMessagesV2 {
                     messages: vec![message.clone()],
+                    pending_count: None,
                 },
             )
             .await;
@@ -1212,6 +1286,7 @@ mod tests {
                 &ctx,
                 server_to_client::PendingMessagesV2 {
                     messages: vec![message.clone()],
+                    pending_count: None,
                 },
             )
             .await;
@@ -1392,9 +1467,14 @@ mod tests {
             });
         }
 
-        let response =
-            acknowledge_pending_messages(&ctx, server_to_client::PendingMessagesV2 { messages })
-                .await;
+        let response = acknowledge_pending_messages(
+            &ctx,
+            server_to_client::PendingMessagesV2 {
+                messages,
+                pending_count: None,
+            },
+        )
+        .await;
 
         let Some(Response::Ok(response)) = response.response else {
             panic!("expected a mailbox acknowledgement");

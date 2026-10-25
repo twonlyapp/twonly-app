@@ -1,5 +1,6 @@
 use keyring_core::{Entry, Error};
-use rust_lib_twonly::bridge::{self, wrapper::key_manager::RustKeyManager, InitConfig};
+use rust_lib_twonly::bridge::wrapper::key_manager::RustKeyManager;
+use rust_lib_twonly::bridge::{self, InitConfig};
 
 #[tokio::test]
 async fn reset_clears_corrupt_credentials_after_failed_startup_and_requires_restart() {

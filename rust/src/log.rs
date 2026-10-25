@@ -786,15 +786,19 @@ mod tests {
 
         let subscriber = Registry::default()
             .with(EnvFilter::new(filter))
+            // Production disables ANSI on both sinks. Left on, field
+            // formatting wraps `=` in escape codes and no `key=value` matches.
             .with(
                 tracing_subscriber::fmt::layer()
                     .with_writer(move || app_writer.clone())
+                    .with_ansi(false)
                     .fmt_fields(PlainFields)
                     .event_format(AppLogEventFormatter),
             )
             .with(
                 tracing_subscriber::fmt::layer()
                     .with_writer(move || console_writer.clone())
+                    .with_ansi(false)
                     .event_format(ShortEventFormatter::plain()),
             );
 

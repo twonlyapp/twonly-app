@@ -43,17 +43,20 @@ pub(crate) async fn handle_reaction(
         )
         .await?;
     } else {
-        Receipt::insert_reaction(
+        let inserted = Receipt::insert_reaction(
             t,
             &reaction.target_message_id,
             from_user_id,
             &reaction.emoji,
         )
         .await?;
-    }
 
-    if !reaction.remove {
-        Group::increase_last_message_exchange_to_now(t, group_id).await?;
+        // A peer resending its queue repeats reactions this device already
+        // shows. Moving the chat up for one would put it first with nothing
+        // new in it.
+        if inserted {
+            Group::increase_last_message_exchange_to_now(t, group_id).await?;
+        }
     }
 
     MediaFile::handle_response_from_receiver(t, &reaction.target_message_id).await?;

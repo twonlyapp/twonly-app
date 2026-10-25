@@ -683,13 +683,15 @@ mod tests {
         for statement in [
             "PRAGMA user_version = 25",
             "INSERT INTO contacts(user_id, username, requested) VALUES (7, 'friend', 1)",
-            "INSERT INTO groups(group_id, group_name, is_direct_chat, flame_counter) VALUES ('direct', 'Friend', 1, 65)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat, flame_counter) VALUES \
+             ('direct', 'Friend', 1, 65)",
             "INSERT INTO group_members(group_id, contact_id) VALUES ('direct', 7)",
         ] {
             sqlx::query(statement).execute(&legacy.pool).await.unwrap();
         }
         legacy.pool.close().await;
-        // This is the same preparation Context performs before creating the API runtime.
+        // This is the same preparation Context performs before creating the API
+        // runtime.
         let target = AppDatabase::new(
             directory.path().join("app_db.sqlite").to_str().unwrap(),
             None,
@@ -705,8 +707,13 @@ mod tests {
             .unwrap();
         assert!(target.is_legacy_import_complete().await.unwrap());
         let friend: (bool, bool, i64) = sqlx::query_as(
-            "SELECT c.accepted, c.requested, g.flame_counter FROM contacts c JOIN group_members m ON m.contact_id = c.user_id JOIN groups g ON g.group_id = m.group_id WHERE c.user_id = 7"
-        ).fetch_one(&target.pool).await.unwrap();
+            "SELECT c.accepted, c.requested, g.flame_counter FROM contacts c JOIN group_members m \
+             ON m.contact_id = c.user_id JOIN groups g ON g.group_id = m.group_id WHERE c.user_id \
+             = 7",
+        )
+        .fetch_one(&target.pool)
+        .await
+        .unwrap();
         assert_eq!(friend, (true, false, 65));
         sqlx::query("UPDATE contacts SET nick_name = 'Kept after import' WHERE user_id = 7")
             .execute(&target.pool)

@@ -68,7 +68,12 @@ impl<'a> CommandTransaction<'a> {
                 if result.is_ok() {
                     transaction.commit().await?;
                 } else {
-                    transaction.rollback().await?;
+                    // SQLite may already have rolled back an interrupted
+                    // statement. Retain the command's original failure rather
+                    // than replacing it with "no transaction is active".
+                    if let Err(error) = transaction.rollback().await {
+                        tracing::warn!(%error, "failed command rollback did not complete");
+                    }
                 }
             }
             Self::Borrowed(mut guard) => {
@@ -104,7 +109,13 @@ impl<'a> CommandTransaction<'a> {
                         let _ = transaction.rollback().await;
                     }
 
-                    return Err(error.into());
+                    return match result {
+                        Err(original) => {
+                            tracing::warn!(%error, "failed command savepoint cleanup did not complete");
+                            Err(original)
+                        }
+                        Ok(_) => Err(error.into()),
+                    };
                 }
             }
         }

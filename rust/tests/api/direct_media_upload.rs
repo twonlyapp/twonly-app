@@ -1,4 +1,4 @@
-use super::{Tester, init_tracing};
+use super::{init_tracing, Tester};
 use anyhow::Context as _;
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::database::app::groups::native::Group;

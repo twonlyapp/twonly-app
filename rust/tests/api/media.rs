@@ -1,4 +1,4 @@
-use super::{Tester, init_tracing};
+use super::{init_tracing, Tester};
 use prost::Message as _;
 use rust_lib_twonly::api::messages::outgoing::send_c2c_message_to_contact;
 use rust_lib_twonly::api::proto::client::{self as proto, encrypted_content};

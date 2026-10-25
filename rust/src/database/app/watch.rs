@@ -85,7 +85,14 @@ where
                         _ = tokio::time::sleep(Duration::from_millis(250)) => continue,
                     }
                 }
-                other => other?,
+                Err(error) => {
+                    // Dart closes the stream with this error and never restarts
+                    // it, so the screen stays empty until it is rebuilt.
+                    tracing::error!(%error, ?dependencies, "database watch stopped");
+
+                    return Err(error);
+                }
+                Ok(value) => value,
             };
 
             if previous.as_ref() != Some(&value) {

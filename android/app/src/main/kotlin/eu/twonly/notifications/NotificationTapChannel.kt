@@ -89,8 +89,6 @@ object NotificationTapChannel {
         applicationActive = active
     }
 
-    internal fun isApplicationActive(): Boolean = applicationActive
-
     internal fun setVisibleConversation(conversationId: String?) {
         visibleConversationId = conversationId?.takeIf(String::isNotEmpty)
     }

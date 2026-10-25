@@ -1,10 +1,11 @@
-use super::{Tester, init_tracing};
+use super::{init_tracing, Tester};
 use anyhow::Context as _;
-use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce, aead::AeadInOut};
+use chacha20poly1305::aead::AeadInOut;
+use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
 use prost::Message as _;
 use rand::RngCore as _;
 use rust_lib_twonly::api::messages::outgoing::send_c2c_message_to_contact;
-use rust_lib_twonly::api::proto::client::{EncryptedContent, encrypted_content};
+use rust_lib_twonly::api::proto::client::{encrypted_content, EncryptedContent};
 use rust_lib_twonly::api::proto::http_requests::{AttachmentDispatch, AttachmentManifest};
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::database::app::groups::native::Group;
@@ -12,8 +13,8 @@ use rust_lib_twonly::services::contacts::ContactService;
 use rust_lib_twonly::services::direct_media_upload::DirectMediaUploadService;
 use rust_lib_twonly::services::media_upload::MediaUploadService;
 use rust_lib_twonly::services::messages::MessageService;
-use rust_lib_twonly::services::stories::{self, STORY_LIFETIME_SECONDS, StoryAudience};
-use tokio::time::{Duration, sleep};
+use rust_lib_twonly::services::stories::{self, StoryAudience, STORY_LIFETIME_SECONDS};
+use tokio::time::{sleep, Duration};
 
 async fn create_authenticated_tester() -> anyhow::Result<Tester> {
     let mut tester = Tester::new().await?;
@@ -115,9 +116,16 @@ async fn post_story(
         .execute(&database.pool)
         .await?;
 
-        sqlx::query("UPDATE media_files SET encryption_key = ?, encryption_nonce = ?, encryption_mac = ? WHERE media_id = ?")
-            .bind(&key).bind(&nonce).bind(tag.as_slice()).bind(media_id)
-            .execute(&database.pool).await?;
+        sqlx::query(
+            "UPDATE media_files SET encryption_key = ?, encryption_nonce = ?, encryption_mac = ? \
+             WHERE media_id = ?",
+        )
+        .bind(&key)
+        .bind(&nonce)
+        .bind(tag.as_slice())
+        .bind(media_id)
+        .execute(&database.pool)
+        .await?;
 
         sqlx::query(
             "INSERT INTO messages(group_id, message_id, type, media_id, is_story, created_at) \
@@ -164,8 +172,12 @@ async fn post_story(
         .await?;
     let database = sender.context.app_db.read().await.clone();
     let (attachment, capability, upload_url, fields): (String, Vec<u8>, String, String) =
-        sqlx::query_as("SELECT attachment_id, capability, upload_url, upload_fields_json FROM direct_media_upload_slots WHERE state = 'cached' LIMIT 1")
-            .fetch_one(&database.pool).await?;
+        sqlx::query_as(
+            "SELECT attachment_id, capability, upload_url, upload_fields_json FROM \
+             direct_media_upload_slots WHERE state = 'cached' LIMIT 1",
+        )
+        .fetch_one(&database.pool)
+        .await?;
     sqlx::query("UPDATE direct_media_upload_slots SET state = 'reserved' WHERE attachment_id = ?")
         .bind(&attachment)
         .execute(&database.pool)
@@ -176,12 +188,19 @@ async fn post_story(
     for (name, value) in fields {
         multipart.extend_from_slice(
             format!(
-                "--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n{value}\r\n"
+                "--{boundary}\r\nContent-Disposition: form-data; \
+                 name=\"{name}\"\r\n\r\n{value}\r\n"
             )
             .as_bytes(),
         );
     }
-    multipart.extend_from_slice(format!("--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"story.bin\"\r\nContent-Type: application/octet-stream\r\n\r\n").as_bytes());
+    multipart.extend_from_slice(
+        format!(
+            "--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; \
+             filename=\"story.bin\"\r\nContent-Type: application/octet-stream\r\n\r\n"
+        )
+        .as_bytes(),
+    );
     multipart.extend_from_slice(&ciphertext);
     multipart.extend_from_slice(format!("\r\n--{boundary}--\r\n").as_bytes());
     let _ = rustls::crypto::ring::default_provider().install_default();
@@ -305,12 +324,10 @@ async fn test_story_lifecycle_between_clients() -> anyhow::Result<()> {
     };
 
     // A widget send cannot also be a story.
-    assert!(
-        uploads
-            .insert_into_messages(media_id.clone(), Vec::new(), None, true, Some(all.clone()))
-            .await
-            .is_err()
-    );
+    assert!(uploads
+        .insert_into_messages(media_id.clone(), Vec::new(), None, true, Some(all.clone()))
+        .await
+        .is_err());
 
     uploads
         .insert_into_messages(media_id.clone(), Vec::new(), None, false, Some(all))

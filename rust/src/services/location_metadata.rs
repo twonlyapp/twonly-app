@@ -15,12 +15,13 @@ use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex as SyncMutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, MutexGuard};
 
 pub(crate) const LOCATION_WINDOW_SECONDS: i64 = 3 * 60;
 
-static LOCATION_REQUEST: LazyLock<Mutex<Option<(SystemTime, LocationFix)>>> =
-    LazyLock::new(|| Mutex::new(None));
+type LocationCache = Option<(SystemTime, LocationFix)>;
+
+static LOCATION_REQUEST: LazyLock<Mutex<LocationCache>> = LazyLock::new(|| Mutex::new(None));
 
 static LOCATION_IN_FLIGHT: LazyLock<SyncMutex<HashSet<String>>> = LazyLock::new(Default::default);
 
@@ -51,6 +52,28 @@ struct PendingLocation {
     location_deadline_at: i64,
 }
 
+/// The native request blocks its thread until a fix arrives or `timeout`
+/// elapses, and nothing can interrupt it. It must not count toward a database
+/// operation: suspending the foreground drains that operation, which kept the
+/// pools open for up to the whole three-minute window. The cache guard travels
+/// with the request, so an abandoned caller neither lets a second native
+/// session start nor loses a fix that arrives late.
+async fn request_fix(
+    mut cache: MutexGuard<'static, LocationCache>, timeout: Duration,
+) -> Result<Option<LocationFix>> {
+    tokio::task::spawn_blocking(move || {
+        let location = location::current(timeout)?;
+
+        if let Some(location) = location {
+            *cache = Some((SystemTime::now(), location));
+        }
+
+        Ok(location)
+    })
+    .await
+    .map_err(|error| crate::error::TwonlyError::Generic(error.to_string()))?
+}
+
 /// Starts acquiring a fix at foreground app startup or when the camera opens.
 /// Nothing is persisted until a media row exists; the result only warms the
 /// in-process cache consumed by `initialize_for_media`.
@@ -67,7 +90,7 @@ pub(crate) fn prewarm(ctx: &Arc<Context>) -> Result<()> {
     crate::database::lifecycle::spawn(async move {
         let _warmup = CameraWarmup;
 
-        let mut request = LOCATION_REQUEST.lock().await;
+        let request = LOCATION_REQUEST.lock().await;
 
         if request.as_ref().is_some_and(|(captured_at, _)| {
             captured_at.elapsed().unwrap_or(Duration::MAX)
@@ -78,13 +101,8 @@ pub(crate) fn prewarm(ctx: &Arc<Context>) -> Result<()> {
 
         let timeout = Duration::from_secs(LOCATION_WINDOW_SECONDS as u64);
 
-        match crate::database::lifecycle::spawn_blocking(move || location::current(timeout)).await {
-            Ok(Ok(Some(location))) => {
-                *request = Some((SystemTime::now(), location));
-            }
-            Ok(Ok(None)) => {}
-            Ok(Err(error)) => tracing::warn!(%error, "camera location warm-up failed"),
-            Err(error) => tracing::warn!(%error, "camera location worker failed"),
+        if let Err(error) = request_fix(request, timeout).await {
+            tracing::warn!(%error, "camera location warm-up failed");
         }
     });
 
@@ -99,8 +117,7 @@ pub(crate) async fn current_for_sticker(ctx: &Arc<Context>) -> Result<Option<Loc
         return Ok(None);
     }
 
-    let Ok(mut request) =
-        tokio::time::timeout(Duration::from_secs(15), LOCATION_REQUEST.lock()).await
+    let Ok(request) = tokio::time::timeout(Duration::from_secs(15), LOCATION_REQUEST.lock()).await
     else {
         return Ok(None);
     };
@@ -118,16 +135,7 @@ pub(crate) async fn current_for_sticker(ctx: &Arc<Context>) -> Result<Option<Loc
         }
     }
 
-    // Keep the mutex until the blocking native request has stopped. Cancelling
-    // its JoinHandle would leave that request racing a second native session.
-    let location =
-        crate::database::lifecycle::spawn_blocking(|| location::current(Duration::from_secs(12)))
-            .await
-            .map_err(|error| crate::error::TwonlyError::Generic(error.to_string()))??;
-
-    if let Some(location) = location {
-        *request = Some((SystemTime::now(), location));
-    }
+    let location = request_fix(request, Duration::from_secs(12)).await?;
 
     // Disabling stickers while a native lookup runs must discard its result.
     if !UserConfig::load_required_from(ctx)?.enable_location_sticker {
@@ -214,7 +222,7 @@ async fn capture(ctx: &Arc<Context>, media_id: &str, deadline: i64) -> Result<()
     // One native request serves captures made close together. Besides saving
     // battery, this avoids multiple CLLocationManager/LocationManager sessions
     // racing for identical coordinates.
-    let mut request = LOCATION_REQUEST.lock().await;
+    let request = LOCATION_REQUEST.lock().await;
 
     if let Some((captured_at, location)) = *request {
         let captured_before_deadline = captured_at
@@ -246,31 +254,16 @@ async fn capture(ctx: &Arc<Context>, media_id: &str, deadline: i64) -> Result<()
         return Ok(());
     }
 
-    let timeout = Duration::from_secs(remaining as u64);
-
-    let location = match crate::database::lifecycle::spawn_blocking(move || {
-        location::current(timeout)
-    })
-    .await
-    {
-        Ok(Ok(location)) => location,
-        Ok(Err(error)) => {
+    // A suspension aborts this task while the request continues. Its fix stays
+    // cached, and `resume` finishes the still-pending row with it.
+    let location = match request_fix(request, Duration::from_secs(remaining as u64)).await {
+        Ok(location) => location,
+        Err(error) => {
             tracing::warn!(%error, "Memory location request failed");
 
             None
         }
-        Err(error) => {
-            tracing::warn!(%error, "Memory location worker failed");
-
-            None
-        }
     };
-
-    if let Some(location) = location {
-        *request = Some((SystemTime::now(), location));
-    }
-
-    drop(request);
 
     finish(ctx, media_id, location).await
 }

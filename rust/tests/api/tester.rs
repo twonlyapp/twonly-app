@@ -7,7 +7,7 @@ use rust_lib_twonly::services::notifications::{self, NotificationAddition, Notif
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tempfile::TempDir;
-use tokio::time::{Duration, sleep};
+use tokio::time::{sleep, Duration};
 
 /// Installs the tracing subscriber shared by every integration test.
 ///
@@ -988,10 +988,10 @@ impl Tester {
         for _ in 0..100 {
             let database = self.context.app_db.read().await.clone();
             let job = sqlx::query_as::<_, (String, String, String, String, String)>(
-                "SELECT j.attachment_id, j.multipart_path, j.manifest_path, \
-                 j.complete_body_path, j.native_descriptor_json FROM direct_media_upload_jobs j \
-                 JOIN direct_media_upload_slots s ON s.attachment_id = j.attachment_id \
-                 WHERE j.media_id = ? AND j.state = 'prepared' AND s.state = 'reserved'",
+                "SELECT j.attachment_id, j.multipart_path, j.manifest_path, j.complete_body_path, \
+                 j.native_descriptor_json FROM direct_media_upload_jobs j JOIN \
+                 direct_media_upload_slots s ON s.attachment_id = j.attachment_id WHERE \
+                 j.media_id = ? AND j.state = 'prepared' AND s.state = 'reserved'",
             )
             .bind(media_id)
             .fetch_optional(&database.pool)

@@ -3370,4 +3370,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mediaSendFailed => 'تعذّر الإرسال';
+
+  @override
+  String get mailboxSyncTitle => 'جارٍ مزامنة twonly';
+
+  @override
+  String get mailboxSyncBody =>
+      'يقوم twonly بمزامنة هذا الجهاز وتنزيل رسائلك. يُرجى إبقاء التطبيق مفتوحًا حتى تكتمل العملية.';
+
+  @override
+  String mailboxSyncRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تبقّت $count رسالة',
+      many: 'تبقّت $count رسالة',
+      few: 'تبقّت $count رسائل',
+      two: 'تبقّت رسالتان',
+      one: 'تبقّت رسالة واحدة',
+    );
+    return '$_temp0';
+  }
 }

@@ -8,7 +8,7 @@ use rust_lib_twonly::bridge::database::mediafiles::{self, MediaFilter, MediaQuer
 use rust_lib_twonly::bridge::database::transactions::DatabaseTransaction;
 use rust_lib_twonly::bridge::database::DatabaseSession;
 use rust_lib_twonly::bridge::user_config::UserConfigApi;
-use rust_lib_twonly::bridge::{initialize_twonly_flutter, InitConfig};
+use rust_lib_twonly::bridge::{groups, initialize_twonly_flutter, InitConfig};
 use std::ffi::{c_char, CStr, CString};
 use std::os::fd::AsRawFd;
 use std::path::Path;
@@ -129,12 +129,18 @@ fn retained_transactions_are_rolled_back_native_callbacks_run_and_resume_preserv
         let notifications = tokio::spawn(RustApi::clear_conversation_notifications("chat".into()));
         let requests = tokio::spawn(RustApi::clear_contact_request_notifications());
         let badge = tokio::spawn(RustApi::notification_badge_count());
+        let flame = tokio::spawn(groups::flame_state("chat".into()));
+        let flames = tokio::spawn(groups::flame_states(vec!["chat".into()]));
+        let restore_offer = tokio::spawn(groups::can_restore_flames("chat".into()));
 
-        tokio::task::yield_now().await;
+        tokio::time::sleep(Duration::from_millis(20)).await;
 
         assert!(!avatar.is_finished());
         assert!(!notifications.is_finished());
         assert!(!badge.is_finished());
+        assert!(!flame.is_finished());
+        assert!(!flames.is_finished());
+        assert!(!restore_offer.is_finished());
 
         let native_path = CString::new(database.to_str().unwrap()).unwrap();
 
@@ -255,6 +261,9 @@ fn retained_transactions_are_rolled_back_native_callbacks_run_and_resume_preserv
             assert!(notifications.await.unwrap().unwrap().is_empty());
             assert!(requests.await.unwrap().unwrap().is_empty());
             assert_eq!(badge.await.unwrap().unwrap(), 0);
+            assert_eq!(flame.await.unwrap().unwrap().counter, 0);
+            assert!(flames.await.unwrap().unwrap().is_empty());
+            assert!(!restore_offer.await.unwrap().unwrap());
         })
         .await
         .unwrap();

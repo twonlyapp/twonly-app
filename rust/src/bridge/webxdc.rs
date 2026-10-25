@@ -100,7 +100,8 @@ pub async fn refresh_catalog() -> Result<()> {
 pub async fn catalog(group_id: String, languages: Vec<String>) -> Result<Vec<WebxdcStoreApp>> {
     let ctx = crate::context::Context::get_static()?;
 
-    catalog_for_context(&ctx, &group_id, &languages).await
+    ctx.foreground_database_call(|| catalog_for_context(ctx, &group_id, &languages))
+        .await
 }
 
 async fn catalog_for_context(
@@ -168,10 +169,12 @@ pub async fn one_time_instances(
 ) -> Result<Vec<WebxdcOneTimeInstance>> {
     let ctx = crate::context::Context::get_static()?;
 
-    let database = ctx.app_db.read().await.clone();
+    let rows = ctx
+        .foreground_database_call(|| async {
+            let database = ctx.app_db.read().await.clone();
 
-    let rows = sqlx::query!(
-        r#"SELECT instance.instance_id AS "instance_id!: String",
+            Ok(sqlx::query!(
+                r#"SELECT instance.instance_id AS "instance_id!: String",
                   app.name AS "name!: String",
                   app.name_translations AS "name_translations!: String",
                   app.icon AS "icon: Vec<u8>",
@@ -182,10 +185,12 @@ pub async fn one_time_instances(
              ON app.app_id = instance.app_id AND app.version = instance.version
            WHERE instance.group_id = ? AND app.one_time = 1
            ORDER BY instance.last_update_at DESC, instance.created_at DESC"#,
-        group_id,
-    )
-    .fetch_all(&database.pool)
-    .await?;
+                group_id,
+            )
+            .fetch_all(&database.pool)
+            .await?)
+        })
+        .await?;
 
     Ok(rows
         .into_iter()

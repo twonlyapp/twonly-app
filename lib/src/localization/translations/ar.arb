@@ -912,5 +912,8 @@
   "memoriesMapNoResults": "لا توجد ذكريات في هذه المنطقة. حرّك الخريطة أو غيّر مستوى التكبير لاستكشاف مكان آخر.",
   "memoriesMapLoadError": "تعذّر تحميل الخريطة. تحقّق من اتصالك وحاول مجددًا.",
   "memoriesMapVisibleCount": "{count, plural, =0 {لا توجد ذكريات في هذه المنطقة} =1 {ذكرى واحدة في هذه المنطقة} =2 {ذكريان في هذه المنطقة} few {{count} ذكريات في هذه المنطقة} many {{count} ذكرى في هذه المنطقة} other {{count} ذكرى في هذه المنطقة}}",
-  "mediaSendFailed": "تعذّر الإرسال"
+  "mediaSendFailed": "تعذّر الإرسال",
+  "mailboxSyncTitle": "جارٍ مزامنة twonly",
+  "mailboxSyncBody": "يقوم twonly بمزامنة هذا الجهاز وتنزيل رسائلك. يُرجى إبقاء التطبيق مفتوحًا حتى تكتمل العملية.",
+  "mailboxSyncRemaining": "{count, plural, =1 {تبقّت رسالة واحدة} =2 {تبقّت رسالتان} few {تبقّت {count} رسائل} many {تبقّت {count} رسالة} other {تبقّت {count} رسالة}}"
 }

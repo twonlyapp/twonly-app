@@ -94,6 +94,7 @@ class NativeErrorReportingTest {
             "Database operation cancelled; retry when active",
             "Native database admission cancelled",
             "Notification run cancelled",
+            "Notification run is closing",
         )) {
             NativeErrorReporting.rustFailure(context, "notification_processing", reason)
         }
@@ -110,6 +111,7 @@ class NativeErrorReportingTest {
             "main_key could not be loaded from the key_chain" to "secure_storage",
             "SELECT private-message FROM contacts WHERE user_id = 123" to "unknown",
             "private-message cancelled" to "unknown",
+            "Notification run is closed or unknown" to "unknown",
             null to "unknown",
         )) {
             NativeErrorReporting.rustFailure(context, "media_preparation", error)
@@ -119,7 +121,7 @@ class NativeErrorReportingTest {
             assertEquals("Native background operation failed: media_preparation ($reason)", event.message!!.formatted)
             assertFalse(event.message!!.formatted!!.contains("private-message"))
         }
-        assertEquals(7, events.size)
+        assertEquals(8, events.size)
     }
 
     @Test

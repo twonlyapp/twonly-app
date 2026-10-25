@@ -2,11 +2,6 @@ package eu.twonly.notifications
 
 import org.json.JSONObject
 
-internal data class NativeNotificationPresentation(
-    val title: String,
-    val body: String,
-)
-
 internal data class NativeNotificationAddition(
     val eventId: String,
     val notificationId: String,
@@ -34,7 +29,6 @@ internal data class NativeNotificationResponse(
     val ok: Boolean,
     val widgetRefresh: Boolean,
     val batch: NativeNotificationBatch?,
-    val fallback: NativeNotificationPresentation?,
     val error: String? = null,
 ) {
     companion object {
@@ -72,17 +66,10 @@ internal data class NativeNotificationResponse(
                     completed = it.optBoolean("completed"),
                 )
             }
-            val fallback = root.optJSONObject("fallback")?.let {
-                NativeNotificationPresentation(
-                    title = it.getString("title"),
-                    body = it.getString("body"),
-                )
-            }
             return NativeNotificationResponse(
                 root.optBoolean("ok"),
                 root.optBoolean("widget_refresh"),
                 batch,
-                fallback,
                 root.nullableString("error"),
             )
         }

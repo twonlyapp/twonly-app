@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:twonly/core/bridge/api.dart' as rust_api;
 import 'package:twonly/core/bridge/database/diagnostics.dart'
     as rust_diagnostics;
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
@@ -348,6 +349,11 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 title: const Text('Show User Discovery Database'),
                 onTap: () =>
                     context.navPush(const UserDiscoveryDeveloperView()),
+              ),
+              ListTile(
+                title: const Text('Preview Mailbox Sync'),
+                subtitle: const Text('Fake catch-up of 3000 messages'),
+                onTap: () => unawaited(rust_api.RustApi.previewMailboxSync()),
               ),
               ListTile(
                 title: const Text('Home Widget State'),

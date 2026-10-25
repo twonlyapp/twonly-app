@@ -66,6 +66,22 @@ async fn wait_closed(session: &Session) {
 }
 
 #[tokio::test]
+async fn finalization_after_cancellation_returns_the_closing_response_without_running_work() {
+    let (session, _) = fixture_session(Duration::from_secs(5));
+    session.execute(async { Ok(()) }, false).await.unwrap();
+    session.operation.cancel();
+    wait_closed(&session).await;
+
+    let result: Result<()> = session
+        .execute(async { panic!("cancelled maintenance must not run") }, true)
+        .await;
+    assert_eq!(
+        result.unwrap_err().to_string(),
+        "Notification run is closing"
+    );
+}
+
+#[tokio::test]
 
 async fn execution_and_cleanup_keep_their_source() {
     for source in [
@@ -189,7 +205,9 @@ async fn missing_finalization_closes_pools_at_the_original_deadline() {
 
     let path = directory.path().join("notification.sqlite");
 
-    let (session, pools) = fixture_session(Duration::from_millis(500));
+    // The budget also covers waiting for the process-wide native admission,
+    // which parallel lib tests hold for up to a second. wait_closed allows 3s.
+    let (session, pools) = fixture_session(Duration::from_secs(2));
 
     let database = open_database(&session, &pools, &path).await;
 
