@@ -83,6 +83,8 @@
   "locationStickerSettingSubtitle": "يعرض مدينتك أو بلدك، أو الإحداثيات إذا لم يتوفر اسم المكان. لا يُشارك موقعك إلا عند اختيار فلتر الموقع.",
   "locationStickerLoading": "جارٍ تحديد موقعك…",
   "liveLocationMenu": "الموقع",
+  "memoriesMenu": "الذكريات",
+  "memoriesLoadFailed": "تعذّر تحميل الذكرى.",
   "liveLocationTitle": "الموقع المباشر",
   "liveLocationExplanation": "شارك موقعك الحالي في هذه المحادثة. يمكن لجميع أعضاء هذه المجموعة رؤيته. يُحفظ أحدث موقع فقط.",
   "liveLocationDuration": "مدة المشاركة",

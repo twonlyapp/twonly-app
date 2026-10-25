@@ -12,7 +12,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
-import 'package:twonly/src/visual/views/memories/sticker_source_picker.view.dart';
+import 'package:twonly/src/visual/views/memories/memories_picker.view.dart';
 import 'package:vector_graphics/vector_graphics_compat.dart'
     show RenderingStrategy;
 
@@ -48,7 +48,9 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
     if (_processingCustomAvatar) return;
     final path = await Navigator.of(context).push<String>(
       MaterialPageRoute(
-        builder: (context) => const StickerSourcePickerView(forAvatar: true),
+        builder: (context) => MemoriesPickerView(
+          title: context.lang.customAvatarChooseSource,
+        ),
       ),
     );
     if (!mounted || path == null) return;

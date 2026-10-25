@@ -272,6 +272,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get liveLocationMenu => 'Standort';
 
   @override
+  String get memoriesMenu => 'Erinnerungen';
+
+  @override
+  String get memoriesLoadFailed =>
+      'Die Erinnerung konnte nicht geladen werden.';
+
+  @override
   String get liveLocationTitle => 'Live-Standort';
 
   @override

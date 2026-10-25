@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show Int64List;
@@ -10,11 +12,16 @@ import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_location.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/webxdc_store.bottom_sheet.dart';
+import 'package:twonly/src/visual/views/memories/memories_picker.view.dart';
 import 'package:twonly/src/visual/views/shared/select_contacts.view.dart';
 
 class ShareAdditionalView extends StatefulWidget {
@@ -96,6 +103,43 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
     );
   }
 
+  /// Picks an image from the memories (or the device gallery) and opens it in
+  /// the editor, addressed to this chat.
+  Future<void> openMemories() async {
+    // Dismissing removes this panel, so the navigator is taken beforehand.
+    final navigator = Navigator.of(context);
+    final title = context.lang.memoriesMenu;
+    widget.onDismiss();
+    final path = await navigator.push<String>(
+      MaterialPageRoute(
+        builder: (context) => MemoriesPickerView(title: title),
+      ),
+    );
+    if (path == null) return;
+
+    final mediaId = await RustApi.initializeMediaUpload(
+      mediaType: MediaType.image.name,
+      displayLimitInMilliseconds: userService.currentUser.defaultShowTime,
+      isDraftMedia: false,
+    );
+    final mediaService = await MediaFileService.fromMediaId(mediaId);
+    if (mediaService == null) {
+      Log.error('Could not create new media file for a memory share');
+      return;
+    }
+    File(path).copySync(mediaService.originalPath.path);
+
+    await navigator.push(
+      MaterialPageRoute<void>(
+        builder: (context) => ShareImageEditorView(
+          mediaFileService: mediaService,
+          sharedFromGallery: true,
+          sendToGroup: widget.group,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -120,6 +164,13 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
                   icon: const FaIcon(FontAwesomeIcons.circleUser),
                   label: context.lang.shareContactsMenu,
                   onTap: openShareContactView,
+                ),
+              ),
+              Expanded(
+                child: _entry(
+                  icon: const Icon(Icons.photo_library_outlined),
+                  label: context.lang.memoriesMenu,
+                  onTap: openMemories,
                 ),
               ),
               Expanded(

@@ -27,7 +27,7 @@ import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_sticker.entry.dart';
-import 'package:twonly/src/visual/views/memories/sticker_source_picker.view.dart';
+import 'package:twonly/src/visual/views/memories/memories_picker.view.dart';
 
 import '../../helpers/native_database.dart';
 import '../../mocks/user_config.dart';
@@ -259,7 +259,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.add_photo_alternate_outlined));
     await _settle(tester);
 
-    expect(find.byType(StickerSourcePickerView), findsOneWidget);
+    expect(find.byType(MemoriesPickerView), findsOneWidget);
     expect(find.text('Gallery'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());

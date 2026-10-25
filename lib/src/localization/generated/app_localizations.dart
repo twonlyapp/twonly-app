@@ -598,6 +598,18 @@ abstract class AppLocalizations {
   /// **'Location'**
   String get liveLocationMenu;
 
+  /// No description provided for @memoriesMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories'**
+  String get memoriesMenu;
+
+  /// No description provided for @memoriesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The memory could not be loaded.'**
+  String get memoriesLoadFailed;
+
   /// No description provided for @liveLocationTitle.
   ///
   /// In en, this message translates to:

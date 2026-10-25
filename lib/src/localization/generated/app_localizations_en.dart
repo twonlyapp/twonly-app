@@ -270,6 +270,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveLocationMenu => 'Location';
 
   @override
+  String get memoriesMenu => 'Memories';
+
+  @override
+  String get memoriesLoadFailed => 'The memory could not be loaded.';
+
+  @override
   String get liveLocationTitle => 'Live location';
 
   @override

@@ -15,7 +15,7 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
-import 'package:twonly/src/visual/views/memories/sticker_source_picker.view.dart';
+import 'package:twonly/src/visual/views/memories/memories_picker.view.dart';
 import 'package:twonly/src/visual/views/settings/profile/modify_avatar.view.dart';
 
 import '../../helpers/native_database.dart';
@@ -152,9 +152,12 @@ void main() {
       await openAvatar(tester);
       await tester.tap(find.widgetWithText(MyButton, 'Choose photo'));
       await pumpNative(tester);
-      final source = find.byType(StickerSourcePickerView);
+      final source = find.byType(MemoriesPickerView);
       expect(source, findsOneWidget);
-      expect(tester.widget<StickerSourcePickerView>(source).forAvatar, isTrue);
+      expect(
+        tester.widget<MemoriesPickerView>(source).title,
+        'Choose avatar photo',
+      );
       expect(find.text('Gallery'), findsOneWidget);
       await tester.pageBack();
       await pumpNative(tester);

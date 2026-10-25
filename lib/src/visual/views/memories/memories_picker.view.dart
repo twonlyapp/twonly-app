@@ -10,18 +10,19 @@ import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
 
 /// Selects a full-resolution image from twonly Memories, with an explicit
-/// escape hatch to the device gallery in the top app bar.
-class StickerSourcePickerView extends StatefulWidget {
-  const StickerSourcePickerView({this.forAvatar = false, super.key});
+/// escape hatch to the device gallery in the top app bar. Pops with the path
+/// of the selected image, or null when the user backs out.
+class MemoriesPickerView extends StatefulWidget {
+  const MemoriesPickerView({required this.title, super.key});
 
-  final bool forAvatar;
+  /// Names what the image is picked for, such as a sticker or an avatar.
+  final String title;
 
   @override
-  State<StickerSourcePickerView> createState() =>
-      _StickerSourcePickerViewState();
+  State<MemoriesPickerView> createState() => _MemoriesPickerViewState();
 }
 
-class _StickerSourcePickerViewState extends State<StickerSourcePickerView> {
+class _MemoriesPickerViewState extends State<MemoriesPickerView> {
   late final MemoriesService _memories = MemoriesService();
   String? _resolvingMediaId;
 
@@ -47,7 +48,7 @@ class _StickerSourcePickerViewState extends State<StickerSourcePickerView> {
       if (!mounted) return;
       if (path == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.lang.stickerCreateFailed)),
+          SnackBar(content: Text(context.lang.memoriesLoadFailed)),
         );
         return;
       }
@@ -55,7 +56,7 @@ class _StickerSourcePickerViewState extends State<StickerSourcePickerView> {
     } on Object {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.lang.stickerCreateFailed)),
+        SnackBar(content: Text(context.lang.memoriesLoadFailed)),
       );
     } finally {
       if (mounted) setState(() => _resolvingMediaId = null);
@@ -66,11 +67,7 @@ class _StickerSourcePickerViewState extends State<StickerSourcePickerView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.forAvatar
-              ? context.lang.customAvatarChooseSource
-              : context.lang.createSticker,
-        ),
+        title: Text(widget.title),
         actions: [
           TextButton.icon(
             onPressed: _resolvingMediaId == null ? _pickFromGallery : null,

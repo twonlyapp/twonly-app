@@ -83,6 +83,8 @@
   "locationStickerSettingSubtitle": "Shows your city or country, or coordinates if no place name is available. Your location is shared only when you select the location filter.",
   "locationStickerLoading": "Finding your location…",
   "liveLocationMenu": "Location",
+  "memoriesMenu": "Memories",
+  "memoriesLoadFailed": "The memory could not be loaded.",
   "liveLocationTitle": "Live location",
   "liveLocationExplanation": "Share your current location in this chat. Everyone in this group can see it. Only your latest location is kept.",
   "liveLocationDuration": "Share for",

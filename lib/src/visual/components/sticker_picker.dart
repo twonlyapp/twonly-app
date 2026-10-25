@@ -7,7 +7,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker/bottom_action_bar.dart';
 import 'package:twonly/src/visual/components/sticker_preview.dialog.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
-import 'package:twonly/src/visual/views/memories/sticker_source_picker.view.dart';
+import 'package:twonly/src/visual/views/memories/memories_picker.view.dart';
 
 class StickerPicker extends StatefulWidget {
   const StickerPicker({
@@ -35,7 +35,8 @@ class _StickerPickerState extends State<StickerPicker> {
     try {
       final imagePath = await Navigator.of(context).push<String>(
         MaterialPageRoute(
-          builder: (context) => const StickerSourcePickerView(),
+          builder: (context) =>
+              MemoriesPickerView(title: context.lang.createSticker),
         ),
       );
       if (!mounted || imagePath == null) return;

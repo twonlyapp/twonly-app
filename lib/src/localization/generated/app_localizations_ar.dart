@@ -278,6 +278,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get liveLocationMenu => 'الموقع';
 
   @override
+  String get memoriesMenu => 'الذكريات';
+
+  @override
+  String get memoriesLoadFailed => 'تعذّر تحميل الذكرى.';
+
+  @override
   String get liveLocationTitle => 'الموقع المباشر';
 
   @override
