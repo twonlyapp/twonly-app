@@ -861,12 +861,12 @@ class _MessageInputState extends State<MessageInput>
             config: Config(
               height: _emojiPickerHeight.clamp(
                 0,
-                MediaQuery.sizeOf(context).height / 2,
+                MediaQuery.sizeOf(context).height * 0.6,
               ),
               resizeConfig: ResizeConfig(
                 expandOnScroll: true,
                 // Leaves the app bar, the input and a few messages visible.
-                maxHeight: MediaQuery.sizeOf(context).height * 0.7,
+                maxHeight: MediaQuery.sizeOf(context).height * 0.6,
               ),
               locale: Localizations.localeOf(context),
               emojiTextStyle: TextStyle(

@@ -753,7 +753,9 @@ impl RustApi {
     /// Developer option: shows the catch-up screen with made-up numbers.
 
     pub async fn preview_mailbox_sync() -> Result<()> {
-        crate::database::lifecycle::spawn(crate::api::messages::mailbox_sync::preview());
+        // This UI preview owns no database work and must not be cancelled
+        // with a foreground session, leaving its progress channel claimed.
+        crate::api::messages::mailbox_sync::preview().await;
 
         Ok(())
     }

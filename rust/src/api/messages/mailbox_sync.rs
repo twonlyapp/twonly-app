@@ -200,10 +200,16 @@ pub(crate) async fn preview() {
     const TOTAL: u64 = 3000;
     const PAGE: u64 = 100;
     const STEP: u64 = 10;
+    const START_DELAY: Duration = Duration::from_millis(750);
 
     if MAILBOX_SYNC.borrow().active || PREVIEW.swap(true, Ordering::AcqRel) {
         return;
     }
+
+    // Let the overlay appear at its starting state before counting down.
+    publish_page(Some(TOTAL), 0);
+
+    tokio::time::sleep(START_DELAY).await;
 
     let mut pending = TOTAL;
 
@@ -239,7 +245,10 @@ pub(crate) async fn stream(sink: StreamSink<MailboxSyncProgress>) -> Result<()> 
         return Ok(());
     }
 
-    crate::database::lifecycle::spawn(async move {
+    // This observes process-wide progress and owns no database resources.
+    // Keep it alive across foreground database sessions: Flutter leaves the
+    // overlay mounted when the app goes into the background and back.
+    tokio::spawn(async move {
         loop {
             tokio::select! {
                 changed = receiver.changed() => {
@@ -270,6 +279,43 @@ pub(crate) async fn stream(sink: StreamSink<MailboxSyncProgress>) -> Result<()> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test(start_paused = true)]
+    async fn preview_pauses_then_counts_down_without_real_mailbox_interference() {
+        let mut receiver = MAILBOX_SYNC.subscribe();
+        let preview = tokio::spawn(preview());
+
+        receiver.changed().await.unwrap();
+
+        assert_eq!(
+            *receiver.borrow_and_update(),
+            MailboxSyncProgress {
+                active: true,
+                total: 3000,
+                remaining: 3000,
+            }
+        );
+
+        assert!(!is_active());
+
+        record_page(Some(9000), 0);
+        finish();
+
+        tokio::time::advance(Duration::from_millis(500)).await;
+        tokio::task::yield_now().await;
+
+        assert_eq!(receiver.borrow().remaining, 3000);
+        assert!(receiver.borrow().active);
+
+        receiver.changed().await.unwrap();
+
+        assert_eq!(receiver.borrow().remaining, 2990);
+
+        preview.await.unwrap();
+
+        assert_eq!(*receiver.borrow(), IDLE);
+        assert!(!PREVIEW.load(Ordering::Acquire));
+    }
 
     fn idle() -> MailboxSyncProgress {
         IDLE
