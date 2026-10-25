@@ -183,6 +183,12 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     itemPositionsListener.itemPositions.removeListener(_loadOlderWhenNeeded);
     _nextTypingIndicator?.cancel();
     _composing.dispose();
+    if (userService.currentUser.typingIndicators) {
+      unawaitedRustCall(
+        RustApi.sendChatClosed(groupId: widget.groupId),
+        'sendChatClosed',
+      );
+    }
     try {
       textFieldFocus?.dispose();
       // ignore: empty_catches

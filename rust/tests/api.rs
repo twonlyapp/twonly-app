@@ -223,6 +223,22 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
             .wait_for_typing_indicator(&group_id, tester_a.user_id, false)
             .await?;
 
+        MessageService::new(&tester_a.context)
+            .send_typing(group_id.clone(), true)
+            .await?;
+
+        tester_b
+            .wait_for_typing_indicator(&group_id, tester_a.user_id, true)
+            .await?;
+
+        MessageService::new(&tester_a.context)
+            .send_chat_closed(group_id.clone())
+            .await?;
+
+        tester_b
+            .wait_for_chat_closed(&group_id, tester_a.user_id)
+            .await?;
+
         // TesterB -> TesterA: Quoted reply
         let reply_id = MessageService::new(&tester_b.context)
             .insert_and_send_text(

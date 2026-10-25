@@ -212,6 +212,9 @@ message EncryptedContent {
   message TypingIndicator {
     bool  is_typing  = 1;
     int64 created_at = 2;
+    // The sender left the chat. Older clients read this as a plain chat-open
+    // ping, which expires on its own.
+    bool  chat_closed = 3;
   }
 
   message UserDiscoveryRequest  {

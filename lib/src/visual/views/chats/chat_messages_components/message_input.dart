@@ -241,7 +241,25 @@ class _MessageInputState extends State<MessageInput>
     }
   }
 
+  /// Withdraws the typing announcement as soon as the composer is put away,
+  /// so the other side does not keep showing it until it expires.
+  void _stopTyping() {
+    if (!widget.composing.value) return;
+    widget.composing.value = false;
+    // Without this the next periodic tick would announce typing again.
+    _lastTextChangeTime = null;
+    // While the chat is being closed its close message covers this.
+    if (!(ModalRoute.of(context)?.isActive ?? false)) return;
+    unawaitedRustCall(
+      RustApi.sendTyping(groupId: widget.group.groupId, isTyping: false),
+      'sendTyping',
+    );
+  }
+
   void _handleTextFocusChange() {
+    if (!widget.textFieldFocus.hasFocus) {
+      _stopTyping();
+    }
     if (widget.textFieldFocus.hasFocus &&
         widget.panel != ChatInputPanel.none &&
         !_switchingToSystemKeyboard) {
@@ -251,7 +269,13 @@ class _MessageInputState extends State<MessageInput>
 
   @override
   void didChangeMetrics() {
-    if (!mounted || !_switchingToSystemKeyboard) return;
+    if (!mounted) return;
+    // Dismissing the keyboard (for example with the Android back button) can
+    // leave the text field focused, so the focus listener alone misses it.
+    if (!_switchingToSystemKeyboard && _currentKeyboardHeight() == 0) {
+      _stopTyping();
+    }
+    if (!_switchingToSystemKeyboard) return;
     final keyboardHeight = _currentKeyboardHeight();
     if (keyboardHeight < _emojiPickerHeight * 0.8) return;
 

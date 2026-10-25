@@ -1258,6 +1258,14 @@ impl RustApi {
             .await
     }
 
+    pub async fn send_chat_closed(group_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+
+        crate::services::messages::MessageService::new(ctx)
+            .send_chat_closed(group_id)
+            .await
+    }
+
     pub async fn retransmit_all_messages() -> Result<()> {
         let ctx = Context::get_static()?;
 

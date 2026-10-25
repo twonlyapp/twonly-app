@@ -836,6 +836,35 @@ impl Tester {
         ))
     }
 
+    pub async fn wait_for_chat_closed(
+        &self, group_id: &str, contact_id: i64,
+    ) -> anyhow::Result<()> {
+        for _ in 0..100 {
+            let database = self.context.app_db.read().await.clone();
+
+            let state = sqlx::query!(
+                "SELECT last_chat_opened, last_type_indicator FROM group_members WHERE group_id \
+                 = ? AND contact_id = ?",
+                group_id,
+                contact_id,
+            )
+            .fetch_optional(&database.pool)
+            .await?;
+
+            if state.is_some_and(|row| {
+                row.last_chat_opened.is_none() && row.last_type_indicator.is_none()
+            }) {
+                return Ok(());
+            }
+
+            sleep(Duration::from_millis(100)).await;
+        }
+
+        Err(anyhow::anyhow!(
+            "chat of contact {contact_id} in {group_id} was not reported as closed"
+        ))
+    }
+
     pub async fn wait_for_message_opened(&self, message_id: &str) -> anyhow::Result<()> {
         for _ in 0..100 {
             let database = self.context.app_db.read().await.clone();

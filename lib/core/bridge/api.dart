@@ -799,6 +799,11 @@ class RustApi {
   static Future<void> sendBinary({required List<int> bytes}) =>
       RustLib.instance.api.crateBridgeApiRustApiSendBinary(bytes: bytes);
 
+  static Future<void> sendChatClosed({required String groupId}) => RustLib
+      .instance
+      .api
+      .crateBridgeApiRustApiSendChatClosed(groupId: groupId);
+
   static Future<void> sendContactProfile({required PlatformInt64 contactId}) =>
       RustLib.instance.api.crateBridgeApiRustApiSendContactProfile(
         contactId: contactId,

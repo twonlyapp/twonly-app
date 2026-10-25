@@ -518,6 +518,18 @@ impl MessageService {
     }
 
     pub async fn send_typing(&self, group_id: String, is_typing: bool) -> Result<()> {
+        self.send_typing_indicator(group_id, is_typing, false).await
+    }
+
+    /// Tells the group that the chat was left, so their indicator goes away
+    /// now instead of when the last announcement expires.
+    pub async fn send_chat_closed(&self, group_id: String) -> Result<()> {
+        self.send_typing_indicator(group_id, false, true).await
+    }
+
+    async fn send_typing_indicator(
+        &self, group_id: String, is_typing: bool, chat_closed: bool,
+    ) -> Result<()> {
         if !UserConfig::load_from(&self.ctx)?.is_some_and(|config| config.typing_indicators) {
             return Ok(());
         }
@@ -528,6 +540,7 @@ impl MessageService {
                 typing_indicator: Some(encrypted_content::TypingIndicator {
                     is_typing,
                     created_at: chrono::Utc::now().timestamp_millis(),
+                    chat_closed,
                 }),
                 ..Default::default()
             }
