@@ -32,6 +32,7 @@ import 'package:twonly/src/visual/views/camera/camera_preview_components/main_ca
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_list.view.dart';
 import 'package:twonly/src/visual/views/memories/memories.view.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/backup_reminder_sheet.comp.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({
@@ -384,10 +385,22 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _releaseNotesCheckScheduled = false;
       if (!mounted || _activePageIdx != 0 || !_isViewActive()) return;
-      unawaited(
-        ReleaseNotesPresenter.showIfNeeded(context, releaseNotes060(context)),
-      );
+      unawaited(_showStartupSheets());
     });
+  }
+
+  Future<void> _showStartupSheets() async {
+    final releaseNotesShown = await ReleaseNotesPresenter.showIfNeeded(
+      context,
+      releaseNotes060(context),
+    );
+    // One sheet per app start is enough.
+    if (releaseNotesShown) {
+      BackupReminderPresenter.skipThisSession();
+      return;
+    }
+    if (!mounted) return;
+    await BackupReminderPresenter.showIfNeeded(context);
   }
 
   @override

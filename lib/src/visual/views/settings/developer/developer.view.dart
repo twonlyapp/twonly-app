@@ -33,6 +33,7 @@ import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/backup_reminder_sheet.comp.dart';
 import 'package:twonly/src/visual/views/settings/developer/database_sizes_developer.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/home_widget_developer.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/user_discovery_developer.view.dart';
@@ -354,6 +355,24 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 title: const Text('Preview Mailbox Sync'),
                 subtitle: const Text('Fake catch-up of 3000 messages'),
                 onTap: () => unawaited(rust_api.RustApi.previewMailboxSync()),
+              ),
+              ListTile(
+                title: const Text('Show Backup Reminder'),
+                onTap: () => unawaited(
+                  showBackupReminderSheet(
+                    context,
+                    BackupReminder.missingBackup,
+                  ),
+                ),
+              ),
+              ListTile(
+                title: const Text('Show Trusted Friends Reminder'),
+                onTap: () => unawaited(
+                  showBackupReminderSheet(
+                    context,
+                    BackupReminder.passwordlessRecovery,
+                  ),
+                ),
               ),
               ListTile(
                 title: const Text('Home Widget State'),

@@ -2788,23 +2788,53 @@ abstract class AppLocalizations {
   /// **'Resume Setup'**
   String get finishSetupCardAction;
 
-  /// No description provided for @missingBackupCardTitle.
+  /// No description provided for @backupReminderTitle.
   ///
   /// In en, this message translates to:
-  /// **'Setup backup'**
-  String get missingBackupCardTitle;
+  /// **'Activate your backup'**
+  String get backupReminderTitle;
 
-  /// No description provided for @missingBackupCardDesc.
+  /// No description provided for @backupReminderDesc.
   ///
   /// In en, this message translates to:
-  /// **'We have improved the backup mechanism, which requires you to set it up again.'**
-  String get missingBackupCardDesc;
+  /// **'Without a backup, there is no way to recover your account if you lose your phone or delete the app. Set up at least one of the options below.'**
+  String get backupReminderDesc;
 
-  /// No description provided for @missingBackupCardAction.
+  /// No description provided for @passwordlessRecoveryReminderTitle.
   ///
   /// In en, this message translates to:
-  /// **'Set up now'**
-  String get missingBackupCardAction;
+  /// **'Forgot your password?'**
+  String get passwordlessRecoveryReminderTitle;
+
+  /// No description provided for @passwordlessRecoveryReminderDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you ever forget your password, this is how you get your account back: your trusted friends can help you recover it without the password.'**
+  String get passwordlessRecoveryReminderDesc;
+
+  /// No description provided for @passwordlessRecoveryReminderHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show again'**
+  String get passwordlessRecoveryReminderHide;
+
+  /// No description provided for @passwordlessRecoveryReminderHideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide this reminder?'**
+  String get passwordlessRecoveryReminderHideTitle;
+
+  /// No description provided for @passwordlessRecoveryReminderHideDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you lose your password, there is no other way to recover your account.'**
+  String get passwordlessRecoveryReminderHideDesc;
+
+  /// No description provided for @passwordlessRecoveryReminderEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get passwordlessRecoveryReminderEnable;
 
   /// No description provided for @onboardingFinishLater.
   ///
@@ -4575,24 +4605,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recover now'**
   String get recoverPasswordlessRecoverNowBtn;
-
-  /// No description provided for @missingRecoveryContactsCardTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Account Recovery'**
-  String get missingRecoveryContactsCardTitle;
-
-  /// No description provided for @missingRecoveryContactsCardDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Recovery Contacts to help you recover your account without requiring a password.'**
-  String get missingRecoveryContactsCardDesc;
-
-  /// No description provided for @missingRecoveryContactsCardAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Contacts'**
-  String get missingRecoveryContactsCardAction;
 
   /// No description provided for @memoriesBackupLimitReached.
   ///

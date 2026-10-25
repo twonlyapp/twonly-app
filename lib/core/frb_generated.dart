@@ -17017,8 +17017,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   UserConfig dco_decode_user_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 67)
-      throw Exception('unexpected arr length: expect 67 but see ${arr.length}');
+    if (arr.length != 68)
+      throw Exception('unexpected arr length: expect 68 but see ${arr.length}');
     return UserConfig(
       userId: dco_decode_i_64(arr[0]),
       username: dco_decode_String(arr[1]),
@@ -17079,19 +17079,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       hideChangeLog: dco_decode_bool(arr[52]),
       lastReleaseNotesVersion: dco_decode_opt_String(arr[53]),
       hideMemoriesBackupPromo: dco_decode_bool(arr[54]),
-      hideWidgetShareExplainer: dco_decode_bool(arr[55]),
-      updateFcmToken: dco_decode_bool(arr[56]),
-      canUseLoginTokenForAuth: dco_decode_bool(arr[57]),
-      twonlySafeBackup: dco_decode_opt_box_autoadd_twonly_safe_backup(arr[58]),
-      isBackupEnabled: dco_decode_bool(arr[59]),
+      hidePasswordlessRecoveryReminder: dco_decode_bool(arr[55]),
+      hideWidgetShareExplainer: dco_decode_bool(arr[56]),
+      updateFcmToken: dco_decode_bool(arr[57]),
+      canUseLoginTokenForAuth: dco_decode_bool(arr[58]),
+      twonlySafeBackup: dco_decode_opt_box_autoadd_twonly_safe_backup(arr[59]),
+      isBackupEnabled: dco_decode_bool(arr[60]),
       passwordLessRecovery:
-          dco_decode_opt_box_autoadd_passwordless_recovery_config(arr[60]),
-      fcmToken: dco_decode_opt_String(arr[61]),
-      lastFcmWakeupAt: dco_decode_opt_box_autoadd_i_64(arr[62]),
-      lastServerMessageAt: dco_decode_opt_box_autoadd_i_64(arr[63]),
-      currentSetupPage: dco_decode_opt_String(arr[64]),
-      skipSetupPages: dco_decode_bool(arr[65]),
-      hasZoomed: dco_decode_bool(arr[66]),
+          dco_decode_opt_box_autoadd_passwordless_recovery_config(arr[61]),
+      fcmToken: dco_decode_opt_String(arr[62]),
+      lastFcmWakeupAt: dco_decode_opt_box_autoadd_i_64(arr[63]),
+      lastServerMessageAt: dco_decode_opt_box_autoadd_i_64(arr[64]),
+      currentSetupPage: dco_decode_opt_String(arr[65]),
+      skipSetupPages: dco_decode_bool(arr[66]),
+      hasZoomed: dco_decode_bool(arr[67]),
     );
   }
 
@@ -21459,6 +21460,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_hideChangeLog = sse_decode_bool(deserializer);
     var var_lastReleaseNotesVersion = sse_decode_opt_String(deserializer);
     var var_hideMemoriesBackupPromo = sse_decode_bool(deserializer);
+    var var_hidePasswordlessRecoveryReminder = sse_decode_bool(deserializer);
     var var_hideWidgetShareExplainer = sse_decode_bool(deserializer);
     var var_updateFcmToken = sse_decode_bool(deserializer);
     var var_canUseLoginTokenForAuth = sse_decode_bool(deserializer);
@@ -21533,6 +21535,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       hideChangeLog: var_hideChangeLog,
       lastReleaseNotesVersion: var_lastReleaseNotesVersion,
       hideMemoriesBackupPromo: var_hideMemoriesBackupPromo,
+      hidePasswordlessRecoveryReminder: var_hidePasswordlessRecoveryReminder,
       hideWidgetShareExplainer: var_hideWidgetShareExplainer,
       updateFcmToken: var_updateFcmToken,
       canUseLoginTokenForAuth: var_canUseLoginTokenForAuth,
@@ -25721,6 +25724,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self.hideChangeLog, serializer);
     sse_encode_opt_String(self.lastReleaseNotesVersion, serializer);
     sse_encode_bool(self.hideMemoriesBackupPromo, serializer);
+    sse_encode_bool(self.hidePasswordlessRecoveryReminder, serializer);
     sse_encode_bool(self.hideWidgetShareExplainer, serializer);
     sse_encode_bool(self.updateFcmToken, serializer);
     sse_encode_bool(self.canUseLoginTokenForAuth, serializer);

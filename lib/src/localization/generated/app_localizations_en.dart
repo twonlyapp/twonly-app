@@ -1585,14 +1585,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finishSetupCardAction => 'Resume Setup';
 
   @override
-  String get missingBackupCardTitle => 'Setup backup';
+  String get backupReminderTitle => 'Activate your backup';
 
   @override
-  String get missingBackupCardDesc =>
-      'We have improved the backup mechanism, which requires you to set it up again.';
+  String get backupReminderDesc =>
+      'Without a backup, there is no way to recover your account if you lose your phone or delete the app. Set up at least one of the options below.';
 
   @override
-  String get missingBackupCardAction => 'Set up now';
+  String get passwordlessRecoveryReminderTitle => 'Forgot your password?';
+
+  @override
+  String get passwordlessRecoveryReminderDesc =>
+      'If you ever forget your password, this is how you get your account back: your trusted friends can help you recover it without the password.';
+
+  @override
+  String get passwordlessRecoveryReminderHide => 'Don\'t show again';
+
+  @override
+  String get passwordlessRecoveryReminderHideTitle => 'Hide this reminder?';
+
+  @override
+  String get passwordlessRecoveryReminderHideDesc =>
+      'If you lose your password, there is no other way to recover your account.';
+
+  @override
+  String get passwordlessRecoveryReminderEnable => 'Enable';
 
   @override
   String get onboardingFinishLater => 'Finish later';
@@ -2667,16 +2684,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recoverPasswordlessRecoverNowBtn => 'Recover now';
-
-  @override
-  String get missingRecoveryContactsCardTitle => 'Account Recovery';
-
-  @override
-  String get missingRecoveryContactsCardDesc =>
-      'Select Recovery Contacts to help you recover your account without requiring a password.';
-
-  @override
-  String get missingRecoveryContactsCardAction => 'Select Contacts';
 
   @override
   String get memoriesBackupLimitReached =>

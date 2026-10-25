@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.4
+
+- New: @mentions in chats and sharing memories from the + menu
+- Improve: Easier contact adding via QR codes and background backups
+- Improve: Emoji picker scrolling and chat selection when sharing
+- Fix: Notification issues, avatars, iOS audio and game crashes
+
 ## 0.6.3
 
 - Fix: In some cases, media files could no longer be sent

@@ -1638,14 +1638,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get finishSetupCardAction => 'متابعة الإعداد';
 
   @override
-  String get missingBackupCardTitle => 'إعداد النسخ الاحتياطي';
+  String get backupReminderTitle => 'فعّل النسخ الاحتياطي';
 
   @override
-  String get missingBackupCardDesc =>
-      'لقد حسّنّا آلية النسخ الاحتياطي، ولهذا يلزمك إعدادها من جديد.';
+  String get backupReminderDesc =>
+      'بدون نسخة احتياطية، لا توجد أي طريقة لاستعادة حسابك إذا فقدت هاتفك أو حذفت التطبيق. فعّل خيارًا واحدًا على الأقل من الخيارات أدناه.';
 
   @override
-  String get missingBackupCardAction => 'أعدّه الآن';
+  String get passwordlessRecoveryReminderTitle => 'هل نسيت كلمة المرور؟';
+
+  @override
+  String get passwordlessRecoveryReminderDesc =>
+      'إذا نسيت كلمة المرور يومًا ما، فهذه هي طريقة استعادة حسابك: يمكن لأصدقائك الموثوقين مساعدتك في استعادته دون كلمة المرور.';
+
+  @override
+  String get passwordlessRecoveryReminderHide => 'عدم الإظهار مرة أخرى';
+
+  @override
+  String get passwordlessRecoveryReminderHideTitle => 'إخفاء هذا التذكير؟';
+
+  @override
+  String get passwordlessRecoveryReminderHideDesc =>
+      'إذا فقدت كلمة المرور، فلن تكون هناك أي طريقة أخرى لاستعادة حسابك.';
+
+  @override
+  String get passwordlessRecoveryReminderEnable => 'تفعيل';
 
   @override
   String get onboardingFinishLater => 'الإكمال لاحقًا';
@@ -2727,16 +2744,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recoverPasswordlessRecoverNowBtn => 'استعد الآن';
-
-  @override
-  String get missingRecoveryContactsCardTitle => 'استعادة الحساب';
-
-  @override
-  String get missingRecoveryContactsCardDesc =>
-      'اختر جهات اتصال للاستعادة لتساعدك في استعادة حسابك دون الحاجة إلى كلمة مرور.';
-
-  @override
-  String get missingRecoveryContactsCardAction => 'اختر جهات الاتصال';
 
   @override
   String get memoriesBackupLimitReached =>

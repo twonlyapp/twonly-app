@@ -19191,6 +19191,7 @@ impl SseDecode for crate::user_config::UserConfig {
         let mut var_hideChangeLog = <bool>::sse_decode(deserializer);
         let mut var_lastReleaseNotesVersion = <Option<String>>::sse_decode(deserializer);
         let mut var_hideMemoriesBackupPromo = <bool>::sse_decode(deserializer);
+        let mut var_hidePasswordlessRecoveryReminder = <bool>::sse_decode(deserializer);
         let mut var_hideWidgetShareExplainer = <bool>::sse_decode(deserializer);
         let mut var_updateFcmToken = <bool>::sse_decode(deserializer);
         let mut var_canUseLoginTokenForAuth = <bool>::sse_decode(deserializer);
@@ -19262,6 +19263,7 @@ impl SseDecode for crate::user_config::UserConfig {
             hide_change_log: var_hideChangeLog,
             last_release_notes_version: var_lastReleaseNotesVersion,
             hide_memories_backup_promo: var_hideMemoriesBackupPromo,
+            hide_passwordless_recovery_reminder: var_hidePasswordlessRecoveryReminder,
             hide_widget_share_explainer: var_hideWidgetShareExplainer,
             update_fcm_token: var_updateFcmToken,
             can_use_login_token_for_auth: var_canUseLoginTokenForAuth,
@@ -22874,6 +22876,9 @@ impl flutter_rust_bridge::IntoDart for crate::user_config::UserConfig {
             self.hide_change_log.into_into_dart().into_dart(),
             self.last_release_notes_version.into_into_dart().into_dart(),
             self.hide_memories_backup_promo.into_into_dart().into_dart(),
+            self.hide_passwordless_recovery_reminder
+                .into_into_dart()
+                .into_dart(),
             self.hide_widget_share_explainer
                 .into_into_dart()
                 .into_dart(),
@@ -26601,6 +26606,7 @@ impl SseEncode for crate::user_config::UserConfig {
         <bool>::sse_encode(self.hide_change_log, serializer);
         <Option<String>>::sse_encode(self.last_release_notes_version, serializer);
         <bool>::sse_encode(self.hide_memories_backup_promo, serializer);
+        <bool>::sse_encode(self.hide_passwordless_recovery_reminder, serializer);
         <bool>::sse_encode(self.hide_widget_share_explainer, serializer);
         <bool>::sse_encode(self.update_fcm_token, serializer);
         <bool>::sse_encode(self.can_use_login_token_for_auth, serializer);

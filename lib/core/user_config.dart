@@ -184,6 +184,9 @@ class UserConfig {
   /// Last in-app release note the user dismissed.
   String? lastReleaseNotesVersion;
   bool hideMemoriesBackupPromo;
+
+  /// Set once the user declined the trusted-friends recovery reminder.
+  bool hidePasswordlessRecoveryReminder;
   bool hideWidgetShareExplainer;
   bool updateFcmToken;
   bool canUseLoginTokenForAuth;
@@ -261,6 +264,7 @@ class UserConfig {
     required this.hideChangeLog,
     this.lastReleaseNotesVersion,
     required this.hideMemoriesBackupPromo,
+    required this.hidePasswordlessRecoveryReminder,
     required this.hideWidgetShareExplainer,
     required this.updateFcmToken,
     required this.canUseLoginTokenForAuth,
@@ -332,6 +336,7 @@ class UserConfig {
       hideChangeLog.hashCode ^
       lastReleaseNotesVersion.hashCode ^
       hideMemoriesBackupPromo.hashCode ^
+      hidePasswordlessRecoveryReminder.hashCode ^
       hideWidgetShareExplainer.hashCode ^
       updateFcmToken.hashCode ^
       canUseLoginTokenForAuth.hashCode ^
@@ -412,6 +417,8 @@ class UserConfig {
           hideChangeLog == other.hideChangeLog &&
           lastReleaseNotesVersion == other.lastReleaseNotesVersion &&
           hideMemoriesBackupPromo == other.hideMemoriesBackupPromo &&
+          hidePasswordlessRecoveryReminder ==
+              other.hidePasswordlessRecoveryReminder &&
           hideWidgetShareExplainer == other.hideWidgetShareExplainer &&
           updateFcmToken == other.updateFcmToken &&
           canUseLoginTokenForAuth == other.canUseLoginTokenForAuth &&

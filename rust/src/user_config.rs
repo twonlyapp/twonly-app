@@ -388,6 +388,10 @@ pub struct UserConfig {
     #[serde(default)]
     #[frb(non_final)]
     pub hide_memories_backup_promo: bool,
+    /// Set once the user declined the trusted-friends recovery reminder.
+    #[serde(default)]
+    #[frb(non_final)]
+    pub hide_passwordless_recovery_reminder: bool,
     #[serde(default)]
     #[frb(non_final)]
     pub hide_widget_share_explainer: bool,

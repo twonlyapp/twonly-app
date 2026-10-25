@@ -45,15 +45,16 @@ class ReleaseNotesPresenter {
   static final Set<String> _showingVersions = {};
   static final Set<String> _shownThisSession = {};
 
-  static Future<void> showIfNeeded(
+  /// Returns whether the release notes are on screen or were just shown.
+  static Future<bool> showIfNeeded(
     BuildContext context,
     ReleaseNotesData releaseNotes,
   ) async {
     final version = releaseNotes.version;
-    if (_showingVersions.contains(version) ||
-        _shownThisSession.contains(version) ||
+    if (_showingVersions.contains(version)) return true;
+    if (_shownThisSession.contains(version) ||
         userService.currentUser.lastReleaseNotesVersion == version) {
-      return;
+      return false;
     }
 
     _showingVersions.add(version);
@@ -66,6 +67,7 @@ class ReleaseNotesPresenter {
     } finally {
       _showingVersions.remove(version);
     }
+    return true;
   }
 }
 

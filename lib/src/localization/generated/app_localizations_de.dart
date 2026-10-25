@@ -1594,14 +1594,31 @@ class AppLocalizationsDe extends AppLocalizations {
   String get finishSetupCardAction => 'Setup fortsetzen';
 
   @override
-  String get missingBackupCardTitle => 'Backup einrichten';
+  String get backupReminderTitle => 'Aktiviere dein Backup';
 
   @override
-  String get missingBackupCardDesc =>
-      'Wir haben den Backup-Mechanismus verbessert, weshalb du ihn erneut einrichten musst.';
+  String get backupReminderDesc =>
+      'Ohne Backup gibt es keine Möglichkeit, dein Konto wiederherzustellen, wenn du dein Handy verlierst oder die App löschst. Richte mindestens eine der folgenden Optionen ein.';
 
   @override
-  String get missingBackupCardAction => 'Jetzt einrichten';
+  String get passwordlessRecoveryReminderTitle => 'Passwort vergessen?';
+
+  @override
+  String get passwordlessRecoveryReminderDesc =>
+      'Falls du dein Passwort einmal vergisst, kommst du so wieder an dein Konto: Deine vertrauten Freunde können dir helfen, es ohne Passwort wiederherzustellen.';
+
+  @override
+  String get passwordlessRecoveryReminderHide => 'Nicht mehr anzeigen';
+
+  @override
+  String get passwordlessRecoveryReminderHideTitle => 'Erinnerung ausblenden?';
+
+  @override
+  String get passwordlessRecoveryReminderHideDesc =>
+      'Wenn du dein Passwort verlierst, gibt es keine andere Möglichkeit, dein Konto wiederherzustellen.';
+
+  @override
+  String get passwordlessRecoveryReminderEnable => 'Aktivieren';
 
   @override
   String get onboardingFinishLater => 'Später abschließen';
@@ -2690,16 +2707,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recoverPasswordlessRecoverNowBtn => 'Jetzt wiederherstellen';
-
-  @override
-  String get missingRecoveryContactsCardTitle => 'Kontowiederherstellung';
-
-  @override
-  String get missingRecoveryContactsCardDesc =>
-      'Wähle Kontakte für die Kontowiederherstellung aus, die dir helfen, dein Konto ohne Passwort wiederherzustellen.';
-
-  @override
-  String get missingRecoveryContactsCardAction => 'Kontakte auswählen';
 
   @override
   String get memoriesBackupLimitReached =>
