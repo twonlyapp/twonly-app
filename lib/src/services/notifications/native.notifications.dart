@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:twonly/core/bridge/api.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// Taps on notifications rendered natively (Android `MessagingStyle`) arrive
@@ -24,20 +23,11 @@ class NativeNotificationService {
   static const String _notificationIdsKey = 'notification_ids';
   static const String _badgeCountKey = 'badge_count';
 
-  /// The table Rust commits to whenever a notification event is recorded,
-  /// delivered or cleared.
-  static const String _outboxTable = 'notification_outbox';
-
   static final StreamController<NativeNotificationTap> _taps =
       StreamController<NativeNotificationTap>.broadcast();
   static final StreamController<void> _arrivals =
       StreamController<void>.broadcast();
   static String? _visibleConversation;
-
-  /// Lives for the whole process: the badge has to follow the outbox for as
-  /// long as the app runs.
-  // ignore: cancel_subscriptions
-  static StreamSubscription<List<String>>? _outboxChanges;
 
   /// Emits metadata for every native notification tapped while the app runs.
   static Stream<NativeNotificationTap> get taps => _taps.stream;
@@ -64,12 +54,11 @@ class NativeNotificationService {
       kind == 'added_to_group';
 
   static void init() {
-    _startBadgeSync();
+    unawaited(clearBadge());
     if (!Platform.isAndroid && !Platform.isIOS) return;
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'onNotificationArrived') {
         _arrivals.add(null);
-        unawaited(refreshBadgeCount());
         return;
       }
       if (call.method != 'onNotificationTapped') return;
@@ -99,43 +88,15 @@ class NativeNotificationService {
     }
   }
 
-  /// Keeps the iOS app icon badge in sync with the pending notification
-  /// events. Only the notification service extension ever sets a badge on a
-  /// delivered alert, so without this the number stays at whatever the last
-  /// push reported even after every message has been read.
-  static void _startBadgeSync() {
-    if (!Platform.isIOS || _outboxChanges != null) return;
-    try {
-      _outboxChanges = watchRustDatabaseChanges().listen(
-        (tables) {
-          // An empty batch means Rust could not say what changed, so the
-          // outbox has to be assumed stale as well.
-          if (tables.isNotEmpty && !tables.contains(_outboxTable)) return;
-          unawaited(refreshBadgeCount());
-        },
-        onError: (Object error) {
-          Log.error('Notification badge change stream failed: $error');
-        },
-      );
-    } catch (e) {
-      Log.error('Could not watch the notification outbox: $e');
-      return;
-    }
-    unawaited(refreshBadgeCount());
-  }
-
-  /// Reads the pending event count from Rust and writes it to the app icon.
-  static Future<void> refreshBadgeCount() async {
+  /// twonly shows no app icon badge on iOS. Clears one left behind by an
+  /// earlier version that still counted pending notifications.
+  static Future<void> clearBadge() async {
     if (!Platform.isIOS || AppState.isAppInBackground) return;
     try {
-      final count = await RustApi.notificationBadgeCount();
-      if (AppState.isAppInBackground) return;
-      await _channel.invokeMethod<void>('setBadgeCount', {
-        _badgeCountKey: count,
-      });
+      await _channel.invokeMethod<void>('setBadgeCount', {_badgeCountKey: 0});
     } catch (e) {
       if (!AppState.isAppInBackground) {
-        Log.error('Could not update the app icon badge: $e');
+        Log.error('Could not clear the app icon badge: $e');
       }
     }
   }

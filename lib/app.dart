@@ -60,7 +60,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     AppState.isAppInBackground =
         WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
     WidgetsBinding.instance.addObserver(this);
-    unawaited(NativeNotificationService.refreshBadgeCount());
+    unawaited(NativeNotificationService.clearBadge());
     // This stays subscribed on routes that do not contain a home view, such
     // as settings. The home view consumes the sender after navigation/unlock.
     _widgetLinkSub = AppLinks().uriLinkStream.listen((uri) {
@@ -88,13 +88,13 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   }
 
   Future<void> _resumeDatabaseServices() async {
-    // Native resume reopens both pools and rebinds Signal before any badge,
+    // Native resume reopens both pools and rebinds Signal before any
     // snapshot, widget or expiry query is allowed to run.
     await apiService.setBackground(false);
     if (AppState.isAppInBackground) return;
     unawaited(BackupService.resumePendingBackup());
     refreshDatabaseSubscriptions();
-    unawaited(NativeNotificationService.refreshBadgeCount());
+    unawaited(NativeNotificationService.clearBadge());
     if (userService.isUserCreated) {
       unawaited(HomeWidgetService.syncPermissions());
     }

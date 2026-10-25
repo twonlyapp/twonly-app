@@ -32,13 +32,7 @@ private struct NativeNotificationPresentation: Decodable {
 private struct NativeNotificationBatch: Decodable {
   let additions: [NativeNotificationAddition]
   let removals: [String]
-  let badgeCount: Int64
   let completed: Bool
-
-  enum CodingKeys: String, CodingKey {
-    case additions, removals, completed
-    case badgeCount = "badge_count"
-  }
 }
 
 private struct NativeNotificationAddition: Decodable {
@@ -176,7 +170,6 @@ final class NotificationService: UNNotificationServiceExtension {
     center.getDeliveredNotifications { [weak self] delivered in
       self?.render(
         groups: Self.groupedAdditions(batch.additions, delivered: delivered.map(\.request)),
-        badgeCount: batch.badgeCount,
         original: original,
         run: run
       )
@@ -213,7 +206,7 @@ final class NotificationService: UNNotificationServiceExtension {
   }
 
   private func render(
-    groups: [RenderedNotification], badgeCount: Int64, original: UNNotificationContent, run: UInt64
+    groups: [RenderedNotification], original: UNNotificationContent, run: UInt64
   ) {
     guard !isCompleting else { return }
     let center = UNUserNotificationCenter.current()
@@ -225,8 +218,7 @@ final class NotificationService: UNNotificationServiceExtension {
 
     for (index, rendered) in groups.enumerated() {
       group.enter()
-      communicationContent(for: rendered, badgeCount: badgeCount, original: original) {
-        content in
+      communicationContent(for: rendered, original: original) { content in
         guard !self.isCompleting else {
           group.leave()
           return
@@ -282,7 +274,6 @@ final class NotificationService: UNNotificationServiceExtension {
 
   private func communicationContent(
     for rendered: RenderedNotification,
-    badgeCount: Int64,
     original: UNNotificationContent,
     completion: @escaping (UNNotificationContent) -> Void
   ) {
@@ -292,7 +283,8 @@ final class NotificationService: UNNotificationServiceExtension {
     mutable.title = addition.senderName
     mutable.body = rendered.body
     mutable.threadIdentifier = addition.notificationGroup
-    mutable.badge = NSNumber(value: badgeCount)
+    // twonly shows no app icon badge; 0 also clears one left by an older build.
+    mutable.badge = 0
     mutable.sound = .default
     var userInfo = mutable.userInfo
     if let conversationId = addition.conversationId {
