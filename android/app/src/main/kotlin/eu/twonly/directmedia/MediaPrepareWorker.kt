@@ -11,6 +11,10 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import eu.twonly.R
 import eu.twonly.NativeErrorReporting
+import eu.twonly.notifications.NativeNotificationBridge
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.messaging.FirebaseMessaging
+import java.util.concurrent.TimeUnit
 import org.json.JSONObject
 
 /**
@@ -28,6 +32,8 @@ class MediaPrepareWorker(
     appContext: Context,
     params: WorkerParameters,
 ) : Worker(appContext, params) {
+    override fun getForegroundInfo(): ForegroundInfo = foregroundInfo()
+
     override fun doWork(): Result {
         NativeErrorReporting.breadcrumb(applicationContext, "media_preparation_started")
         val mediaId = inputData.getString(MEDIA_ID)
@@ -39,6 +45,12 @@ class MediaPrepareWorker(
             } else false
             if (isStopped) return Result.retry()
             val directory = applicationContext.filesDir.absolutePath
+            if (inputData.getBoolean(REFRESH_FCM_TOKEN, false)) {
+                val token = Tasks.await(FirebaseMessaging.getInstance().token, 15, TimeUnit.SECONDS)
+                if (isStopped) return Result.retry()
+                val stored = JSONObject(NativeNotificationBridge.storeFcmToken(directory, directory, token))
+                check(stored.optBoolean("ok")) { stored.optString("error", "Token storage failed") }
+            }
             val response = JSONObject(
                 NativeMediaPrepareBridge.run(directory, directory, mediaId, foregroundService),
             )
@@ -94,6 +106,7 @@ class MediaPrepareWorker(
     }
 
     companion object {
+        const val REFRESH_FCM_TOKEN = "refresh_fcm_token"
         const val MEDIA_ID = "media_id"
         private const val CHANNEL_ID = "twonly_direct_media_upload"
         private const val NOTIFICATION_ID = 0x7A01

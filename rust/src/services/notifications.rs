@@ -975,26 +975,31 @@ async fn drain_wakeup_mailbox(ctx: &Arc<Context>, deadline: std::time::Duration)
     let client = ApiRuntime::client(ctx).await?;
     let mut events = client.events.subscribe();
 
-    client.catch_up_after_push().await?;
-
-    Ok(tokio::time::timeout(deadline, async {
+    tokio::time::timeout(deadline, async {
+        client.catch_up_after_push().await?;
+        let mut handoff_retry = std::time::Duration::from_millis(250);
         loop {
             if client.background_deferred() {
-                return false;
+                // The old foreground socket may still be closing on the
+                // server. Retry inside this wake-up's budget rather than
+                // waiting for WorkManager's much longer retry backoff.
+                tokio::time::sleep(handoff_retry).await;
+                client.retry_deferred_push().await?;
+                handoff_retry = (handoff_retry * 2).min(std::time::Duration::from_secs(2));
             }
 
             tokio::select! {
-                _ = ctx.wait_for_mailbox_after(generation) => return true,
+                _ = ctx.wait_for_mailbox_after(generation) => return Ok::<bool, crate::error::TwonlyError>(true),
                 event = events.recv() => {
                     if matches!(event, Err(tokio::sync::broadcast::error::RecvError::Closed)) {
-                        return false;
+                        return Ok(false);
                     }
                 }
             }
         }
     })
     .await
-    .unwrap_or(false))
+    .unwrap_or(Ok(false))
 }
 
 /// Settles what the wake-up still owes the app once its notification is on
@@ -1086,6 +1091,37 @@ pub fn store_fcm_token(ctx: &Context, token: String) -> Result<()> {
         user.update_fcm_token = true;
     })?;
 
+    Ok(())
+}
+
+pub(crate) fn acknowledge_fcm_token(ctx: &Context, token: &str) -> Result<()> {
+    UserConfig::update(ctx, |user| {
+        // A native onNewToken callback can persist a replacement while an
+        // older upload is in flight. Its pending registration must survive.
+        if user.fcm_token.as_deref() == Some(token) {
+            user.update_fcm_token = false;
+        }
+    })?;
+    Ok(())
+}
+
+pub(crate) async fn synchronize_fcm_token(ctx: &Arc<Context>) -> Result<()> {
+    let Some(user) = UserConfig::load_from(ctx)? else {
+        return Ok(());
+    };
+    if !user.update_fcm_token {
+        return Ok(());
+    }
+    let Some(token) = user.fcm_token.filter(|token| !token.is_empty()) else {
+        return Ok(());
+    };
+    if let crate::bridge::api::ServerResult::ErrorCode(code) =
+        crate::api::Server::update_fcm_token(ctx, token.clone()).await?
+    {
+        return Err(crate::error::TwonlyError::Api(code));
+    }
+    acknowledge_fcm_token(ctx, &token)?;
+    tracing::info!("native FCM registration confirmed by server");
     Ok(())
 }
 
@@ -1354,6 +1390,124 @@ pub(crate) fn notification_avatar_path(
 mod tests {
 
     use super::*;
+
+    #[tokio::test]
+    async fn acknowledging_an_old_fcm_upload_preserves_the_replacement_registration() -> Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+        store_fcm_token(&ctx, "old".into())?;
+        store_fcm_token(&ctx, "new".into())?;
+        acknowledge_fcm_token(&ctx, "old")?;
+        let user = UserConfig::load_required_from(&ctx)?;
+        assert_eq!(user.fcm_token.as_deref(), Some("new"));
+        assert!(user.update_fcm_token);
+        acknowledge_fcm_token(&ctx, "new")?;
+        assert!(!UserConfig::load_required_from(&ctx)?.update_fcm_token);
+        crate::api::runtime::ApiRuntime::close(&ctx).await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn native_fcm_registration_reaches_the_server_without_flutter() -> Result<()> {
+        use crate::api::proto::{client_to_server, server_to_client};
+        use crate::api::runtime::ApiClient;
+        use crate::bridge::api::{ApiConfig, ApiConnectionState};
+        use futures_util::{SinkExt, StreamExt};
+        use prost::Message;
+        use std::sync::atomic::Ordering;
+        use std::time::Duration;
+        use stream_tungstenite::tokio_tungstenite::{accept_async, tungstenite};
+
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        ApiRuntime::close(&ctx).await?;
+        assert!(!ctx.is_flutter_runtime());
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+        store_fcm_token(&ctx, "replacement-token".into())?;
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+        let address = listener.local_addr()?;
+        let peer = tokio::spawn(async move {
+            let (socket, _) = listener.accept().await.unwrap();
+            let mut socket = accept_async(socket).await.unwrap();
+            let message = socket.next().await.unwrap().unwrap();
+            let request = client_to_server::ClientToServer::decode(message.into_data()).unwrap();
+            let Some(client_to_server::client_to_server::V::V0(request)) = request.v else {
+                panic!("missing envelope")
+            };
+            let Some(client_to_server::v0::Kind::Applicationdata(application)) = request.kind
+            else {
+                panic!("missing application request")
+            };
+            let Some(client_to_server::application_data::ApplicationData::UpdateGoogleFcmToken(
+                token,
+            )) = application.application_data
+            else {
+                panic!("missing token registration")
+            };
+            assert_eq!(token.google_fcm, "replacement-token");
+            let response = server_to_client::ServerToClient {
+                v: Some(server_to_client::server_to_client::V::V0(
+                    server_to_client::V0 {
+                        seq: request.seq,
+                        kind: Some(server_to_client::v0::Kind::Response(
+                            server_to_client::Response {
+                                response: Some(server_to_client::response::Response::Ok(
+                                    server_to_client::response::Ok {
+                                        ok: Some(server_to_client::response::ok::Ok::None(true)),
+                                    },
+                                )),
+                            },
+                        )),
+                    },
+                )),
+            };
+            socket
+                .send(tungstenite::Message::Binary(
+                    response.encode_to_vec().into(),
+                ))
+                .await
+                .unwrap();
+            let _ = socket.next().await;
+        });
+        let client = ApiClient::new(
+            &ctx,
+            ApiConfig {
+                websocket_url: format!("ws://{address}"),
+                legacy_user_app_version: 0,
+                in_background: true,
+                can_use_login_token_for_auth: true,
+            },
+        );
+        *ctx.api_client.get().unwrap().write().await = client.clone();
+        client.connect().await?;
+        tokio::time::timeout(Duration::from_secs(2), async {
+            while *client.state.read().await != ApiConnectionState::Connected {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        // This fixture tests registration over an established background
+        // session; authentication itself has separate integration coverage.
+        client.is_authenticated.store(true, Ordering::Release);
+        tokio::time::timeout(Duration::from_secs(2), synchronize_fcm_token(&ctx))
+            .await
+            .unwrap()?;
+        assert!(!UserConfig::load_required_from(&ctx)?.update_fcm_token);
+        client.close().await;
+        tokio::time::timeout(Duration::from_secs(2), peer)
+            .await
+            .unwrap()
+            .unwrap();
+        Ok(())
+    }
 
     #[tokio::test]
     async fn group_mentions_notify_the_target_and_keep_message_contents_private() -> Result<()> {

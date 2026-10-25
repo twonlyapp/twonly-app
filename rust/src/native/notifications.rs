@@ -178,7 +178,7 @@ pub unsafe extern "C" fn twonly_notification_process(
 #[unsafe(no_mangle)]
 
 pub extern "C" fn twonly_notification_run_create(budget_ms: u64) -> u64 {
-    crate::native::background::cancel_backup_runs();
+    crate::native::background::cancel_maintenance_runs();
     Session::start(Duration::from_millis(budget_ms.clamp(1, 120_000)))
         .map(|session| session.id)
         .unwrap_or(0)
@@ -616,6 +616,7 @@ mod android_jni {
 
                         let token = java_string(env, token)?;
 
+                        crate::native::background::cancel_maintenance_runs();
                         native_job(
                             config,
                             Duration::from_secs(10),

@@ -100,6 +100,42 @@ async fn execution_and_cleanup_keep_their_source() {
 }
 
 #[tokio::test]
+async fn notification_preempts_native_maintenance_but_preserves_other_pushes() {
+    let maintenance =
+        Operation::with_log_source(Duration::from_secs(30), crate::log::LogSource::Background);
+    let lease = Lease::external(maintenance.clone());
+    let permit = native_admission(&maintenance).await.unwrap();
+    crate::native::background::MAINTENANCE_RUNS
+        .lock()
+        .unwrap()
+        .insert(lease.id());
+    // A send being prepared shares the Background source but is not maintenance.
+    let send =
+        Operation::with_log_source(Duration::from_secs(30), crate::log::LogSource::Background);
+    let _send_lease = Lease::external(send.clone());
+
+    let run = crate::native::notifications::twonly_notification_run_create(5_000);
+    crate::native::background::MAINTENANCE_RUNS
+        .lock()
+        .unwrap()
+        .remove(&lease.id());
+    let session = Session::find(run).unwrap();
+    assert!(maintenance.cancelled());
+    assert!(
+        !send.cancelled(),
+        "a push must not cancel a send's preparation"
+    );
+    assert!(!session.operation.cancelled());
+
+    // Preemption does not steal a live job's handles. Admission remains held
+    // until its supervisor has actually finished cleanup.
+    assert!(matches!(*session.phase.borrow(), Phase::Queued));
+    drop(permit);
+    session.execute(async { Ok(()) }, false).await.unwrap();
+    session.finish().await.unwrap();
+}
+
+#[tokio::test]
 
 async fn cancellation_does_not_abandon_an_initialization_phase() {
     let (session, _) = fixture_session(Duration::from_secs(5));

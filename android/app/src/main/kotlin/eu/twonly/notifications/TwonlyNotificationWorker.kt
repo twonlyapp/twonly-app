@@ -42,6 +42,7 @@ class TwonlyNotificationWorker(
                     PROCESS_DEADLINE_MS,
                 ),
             )
+            if (isStopped) return Result.retry()
             if (response.widgetRefresh) TwonlyWidgetProvider.refreshAll(applicationContext)
             ensureNotificationChannel(applicationContext)
             val batch = response.batch
@@ -53,7 +54,9 @@ class TwonlyNotificationWorker(
                 }
                 // Rust could not reach the mailbox. Show the generic alert so a
                 // high-priority wake-up still produces a notification, and retry.
-                response.fallback?.let(::showFallback)
+                if (!NotificationTapChannel.isApplicationActive()) {
+                    response.fallback?.let(::showFallback)
+                }
                 return settle(run, retry = true)
             }
 
@@ -69,6 +72,13 @@ class TwonlyNotificationWorker(
                 NotificationTapChannel.notificationArrived()
                 // Real notifications supersede a placeholder from an earlier attempt.
                 manager.cancel(FALLBACK_ID)
+            } else if (batch.additions.isEmpty() && batch.completed) {
+                manager.cancel(FALLBACK_ID)
+            } else if (!batch.completed && batch.additions.isEmpty() &&
+                !NotificationTapChannel.isApplicationActive()) {
+                // A rejected connection or an offline mailbox must still alert
+                // the user. A later successful drain replaces this placeholder.
+                response.fallback?.let(::showFallback)
             }
 
             // An empty batch is the normal outcome of a duplicate wake-up or of
@@ -135,6 +145,7 @@ class TwonlyNotificationWorker(
             .setContentTitle(presentation.title)
             .setContentText(presentation.body)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setOnlyAlertOnce(true)
             .setAutoCancel(true)
             .build()
         try {

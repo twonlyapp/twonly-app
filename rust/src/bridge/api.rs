@@ -1064,9 +1064,10 @@ impl RustApi {
     pub async fn update_fcm_token(token: String) -> Result<()> {
         let ctx = Context::get_static()?;
 
-        Server::update_fcm_token(ctx, token)
+        Server::update_fcm_token(ctx, token.clone())
             .await
-            .and_then(api_result)
+            .and_then(api_result)?;
+        crate::services::notifications::acknowledge_fcm_token(ctx, &token)
     }
 
     pub async fn ipa_purchase(

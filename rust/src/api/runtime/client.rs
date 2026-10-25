@@ -56,6 +56,30 @@ pub(crate) static API_EVENTS: LazyLock<broadcast::Sender<ApiEvent>> =
 
 pub(crate) static API_PERMANENTLY_REJECTED: AtomicBool = AtomicBool::new(false);
 
+/// Transport cleanup must outlive cancellation of database consumers. Aborting
+/// `run()` detaches the transport's receiver task and leaves its socket open.
+fn spawn_transport(client: Arc<WebSocketClient>) -> tokio::task::JoinHandle<()> {
+    let operation = crate::database::lifecycle::Operation::inherited();
+    let source = crate::log::current_log_source();
+
+    tokio::spawn(source.scope(async move {
+        if let Some(operation) = operation {
+            let running = operation.scope(client.run());
+            tokio::pin!(running);
+
+            tokio::select! {
+                _ = operation.until_cancelled() => {
+                    client.shutdown();
+                    let _ = running.await;
+                }
+                _ = &mut running => {}
+            }
+        } else {
+            let _ = client.run().await;
+        }
+    }))
+}
+
 #[derive(Default)]
 
 struct ReconnectWork {
@@ -100,6 +124,63 @@ mod tests {
     fn socket() -> Arc<WebSocketClient> {
         // Never run the transport: these tests must not access the network.
         Arc::new(WebSocketClient::builder("ws://127.0.0.1:1").build())
+    }
+
+    #[tokio::test]
+    async fn cancelling_database_owner_closes_the_transport_and_peer_socket() {
+        use futures_util::StreamExt;
+        use stream_tungstenite::tokio_tungstenite::accept_async;
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let socket = Arc::new(
+            WebSocketClient::builder(format!("ws://{}", listener.local_addr().unwrap())).build(),
+        );
+        let (received, ready) = oneshot::channel();
+        let peer = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.unwrap();
+            let mut stream = accept_async(stream).await.unwrap();
+            assert!(stream.next().await.unwrap().unwrap().is_binary());
+            let _ = received.send(());
+            // A detached receiver used to keep this socket alive until its
+            // receive timeout, even after the database owner was fully drained.
+            let _ = stream.next().await;
+        });
+
+        let operation = crate::database::lifecycle::Operation::foreground();
+        let runner = operation
+            .scope(async { spawn_transport(socket.clone()) })
+            .await;
+
+        tokio::time::timeout(Duration::from_secs(3), async {
+            loop {
+                if socket
+                    .send(
+                        stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(
+                            vec![1].into(),
+                        ),
+                    )
+                    .await
+                    .is_ok()
+                {
+                    break;
+                }
+                tokio::task::yield_now().await;
+            }
+            ready.await.unwrap();
+        })
+        .await
+        .unwrap();
+
+        operation.cancel();
+        operation.drain().await;
+        tokio::time::timeout(Duration::from_secs(2), runner)
+            .await
+            .unwrap()
+            .unwrap();
+        tokio::time::timeout(Duration::from_secs(2), peer)
+            .await
+            .unwrap()
+            .unwrap();
     }
 
     #[tokio::test]
@@ -398,6 +479,19 @@ impl ApiClient {
         }
 
         self.request_catch_up().await;
+
+        Ok(())
+    }
+
+    pub(crate) async fn retry_deferred_push(self: &Arc<Self>) -> Result<()> {
+        let _change = self.connection_change.lock().await;
+
+        if self.background_deferred() && self.in_background.load(Ordering::Acquire) {
+            self.background_deferred.store(false, Ordering::Release);
+            self.discard_current_connection("retrying native push after session handoff")
+                .await;
+            self.connect_inner().await?;
+        }
 
         Ok(())
     }
@@ -739,6 +833,23 @@ impl ApiClient {
     }
 
     async fn connect_inner(self: &Arc<Self>) -> Result<()> {
+        // A push may restore the shared socket while Flutter is visible. Its
+        // short-lived notification operation must not own the app's receive
+        // and catch-up tasks, or finishing that push would stop delivery again.
+        if let Some(context) = self.context.upgrade() {
+            if context.is_flutter_runtime() {
+                // A cancelled epoch stays attached until the next resume, and
+                // tasks spawned under it are aborted before their first poll.
+                if let Some(operation) = context.foreground.ready_operation() {
+                    return operation.scope(self.connect_for_owner()).await;
+                }
+            }
+        }
+
+        self.connect_for_owner().await
+    }
+
+    async fn connect_for_owner(self: &Arc<Self>) -> Result<()> {
         if self.background_deferred() {
             self.set_state(ApiConnectionState::Suspended).await;
 
@@ -809,14 +920,9 @@ impl ApiClient {
 
         self.spawn_catch_up_loop(&ws_arc, catch_up_rx);
 
-        // Spawn client runner
-        crate::database::lifecycle::spawn({
-            let c = ws_arc.clone();
-
-            async move {
-                let _ = c.run().await;
-            }
-        });
+        // The transport must finish its own cleanup after its owner expires.
+        // Application message handlers below remain abortable descendants.
+        spawn_transport(ws_arc.clone());
 
         let self_clone = self.clone();
 
@@ -917,28 +1023,32 @@ impl ApiClient {
     pub async fn close(&self) {
         self.deliberately_closed.store(true, Ordering::Release);
 
-        let _connection_change = self.connection_change.lock().await;
+        let client = {
+            let _connection_change = self.connection_change.lock().await;
 
-        self.connection_generation.fetch_add(1, Ordering::AcqRel);
+            self.connection_generation.fetch_add(1, Ordering::AcqRel);
 
-        self.background_deferred.store(false, Ordering::Release);
+            self.background_deferred.store(false, Ordering::Release);
 
-        self.is_authenticated.store(false, Ordering::Release);
+            self.is_authenticated.store(false, Ordering::Release);
 
-        // Dropping the sender ends the catch-up loop for this connection.
-        *self.catch_up_tx.lock().await = None;
+            // Dropping the sender ends the catch-up loop for this connection.
+            *self.catch_up_tx.lock().await = None;
 
-        let client = self.ws_client.lock().await.take();
+            let client = self.ws_client.lock().await.take();
+
+            self.fail_pending().await;
+            self.set_state(ApiConnectionState::Stopped).await;
+            client
+        };
 
         if let Some(client) = client {
+            // A handshaker may be waiting for connection_change to publish its
+            // generation. Do not hold that lock while joining the transport.
             if let Err(error) = client.shutdown_graceful(Duration::from_secs(5)).await {
                 tracing::warn!("WebSocket shutdown did not finish cleanly: {error}");
             }
         }
-
-        self.fail_pending().await;
-
-        self.set_state(ApiConnectionState::Stopped).await;
     }
 
     pub(crate) async fn fail_pending(&self) {

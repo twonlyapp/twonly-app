@@ -25,6 +25,7 @@ import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/visual/components/app_outdated.comp.dart';
 import 'package:twonly/src/visual/themes/dark.dart';
@@ -176,8 +177,9 @@ class AppMainWidget extends StatefulWidget {
 class _AppMainWidgetState extends State<AppMainWidget> {
   bool _showOnboarding = true;
   bool _isLoaded = false;
+  bool _initializationFailed = false;
   bool _isTwonlyLocked = true;
-  bool _wasLogged = true;
+  int _initializationAttempt = 0;
   late int _initialPage;
 
   StreamSubscription<Uri>? _deepLinkSub;
@@ -228,26 +230,59 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   }
 
   Future<void> initAsync() async {
+    final attempt = ++_initializationAttempt;
+    setState(() {
+      _isLoaded = false;
+      _initializationFailed = false;
+    });
     Log.info('AppWidgetState: initAsync started');
+    try {
+      await _initializeRoute();
+      if (!mounted || attempt != _initializationAttempt) return;
+      setState(() => _isLoaded = true);
+      Log.info('AppWidgetState: initAsync finished');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && attempt == _initializationAttempt) {
+          Log.info('AppWidgetState: first loaded frame rendered');
+        }
+      });
+    } catch (error, stackTrace) {
+      Log.error(
+        'Could not initialize the app screen',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted || attempt != _initializationAttempt) return;
+      setState(() => _initializationFailed = true);
+    }
+  }
+
+  Future<void> _initializeRoute() async {
     final onboardingState = await KeyValueStore.getModel<OnboardingState>(
       KeyValueKeys.onboardingState,
-    );
+    ).timeout(const Duration(seconds: 10));
+    if (!mounted) return;
     _showOnboarding = !onboardingState.hasOnboardingFinished;
     if (userService.isUserCreated) {
       if (_initialPage != 0) {
-        final count = await rust_contacts.countContacts(
-          metric: db_contacts.ContactCount.all,
-          transaction: currentDatabaseSession(),
-        );
+        final count = await rust_contacts
+            .countContacts(
+              metric: db_contacts.ContactCount.all,
+              transaction: currentDatabaseSession(),
+            )
+            .timeout(const Duration(seconds: 10));
+        if (!mounted) return;
         if (count == 0) {
           _initialPage = 0;
         }
       }
-      try {
-        unawaited(FirebaseMessaging.instance.requestPermission());
-      } catch (e) {
-        Log.error(e);
-      }
+      unawaited(() async {
+        try {
+          await FirebaseMessaging.instance.requestPermission();
+        } catch (error) {
+          Log.error(error);
+        }
+      }());
       if (_isTwonlyLocked) {
         // do not change in case twonly was already unlocked at some point
         _isTwonlyLocked = userService.currentUser.screenLockEnabled;
@@ -255,7 +290,10 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     } else {
       // This means the user is in the onboarding screen, so start with the Proof of Work.
 
-      final proofResult = await rustApiResult(RustApi.getProofOfWork());
+      final proofResult = await rustApiResult(
+        RustApi.getProofOfWork(),
+      ).timeout(const Duration(seconds: 10));
+      if (!mounted) return;
       final proof = proofResult.value;
       final disabled = proofResult.error == ErrorCode.RegistrationDisabled;
       if (proof != null) {
@@ -271,26 +309,40 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       if (onboardingState.hasStartedPasswordlessRecovery ||
           onboardingState.emailRecoveryRequested) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
           routerProvider.push(Routes.recoverPasswordless);
         });
       }
     }
-
-    setState(() {
-      _isLoaded = true;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_wasLogged) {
-      Log.info('AppWidgetState: build started (_isLoaded: $_isLoaded)');
-      if (_isLoaded) {
-        _wasLogged = true;
-      }
+    if (_initializationFailed) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  context.lang.recoverErrorUnknown,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: initAsync,
+                  child: Text(context.lang.unlockTwonlyTryAgain),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
     if (!_isLoaded) {
-      return Center(child: Container());
+      return const Center(child: CircularProgressIndicator());
     }
 
     late Widget child;

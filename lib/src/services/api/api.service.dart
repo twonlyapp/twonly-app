@@ -32,6 +32,15 @@ class ApiService {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   late final StreamSubscription<ApiEvent> _apiEventSubscription;
   late final _connectionLifecycle = ConnectionLifecycle(
+    hasActiveConnection: () async =>
+        switch (await rust_api.RustApi.connectionState()) {
+          ApiConnectionState.authenticated ||
+          ApiConnectionState.authenticating ||
+          ApiConnectionState.connected ||
+          ApiConnectionState.connecting ||
+          ApiConnectionState.reconnecting => true,
+          _ => false,
+        },
     readNetworkAvailable: () async =>
         !(await Connectivity().checkConnectivity()).contains(
           ConnectivityResult.none,
@@ -81,7 +90,7 @@ class ApiService {
       return;
     }
 
-    await FcmNotificationService.initFCMAfterAuthenticated();
+    unawaited(FcmNotificationService.initFCMAfterAuthenticated());
 
     if (!AppState.isAppInBackground) {
       refreshDatabaseSubscriptions();

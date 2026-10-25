@@ -152,11 +152,15 @@ Future<StartupResult> _startup(SettingsChangeProvider settings) async {
     // initialization rather than queueing behind it. Both are awaited before
     // this returns, because the home view subscribes to them as it mounts.
     // Failing to set up notifications must not stop the rest of the app.
+    final firebaseInitialization = FcmNotificationService.initStartup();
     final notificationSetup =
         Future.wait<void>([
-          FcmNotificationService.initStartup(),
+          firebaseInitialization,
           setupPushNotification(),
-        ]).then((_) {}).catchError((Object error, StackTrace stackTrace) {
+        ]).timeout(const Duration(seconds: 5)).then((_) {}).catchError((
+          Object error,
+          StackTrace stackTrace,
+        ) {
           Log.error(
             'Notification setup failed',
             error: error,
@@ -204,7 +208,19 @@ Future<StartupResult> _startup(SettingsChangeProvider settings) async {
     settings.loadSettings();
 
     if (userExists) {
-      unawaited(FcmNotificationService.initAfterUserLoaded());
+      // If platform setup exceeds the splash budget, finish token setup when
+      // Firebase becomes ready rather than trying once before it exists.
+      unawaited(
+        firebaseInitialization
+            .then((_) => FcmNotificationService.initAfterUserLoaded())
+            .catchError((Object error, StackTrace stackTrace) {
+              Log.error(
+                'Could not initialize notification tokens',
+                error: error,
+                stackTrace: stackTrace,
+              );
+            }),
+      );
 
       // Data migrations have to finish before any screen reads the database.
       await runMigrations();

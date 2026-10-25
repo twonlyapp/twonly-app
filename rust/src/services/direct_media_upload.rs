@@ -159,6 +159,8 @@ pub fn watch_pending_uploads(ctx: &Arc<Context>) {
         return;
     };
 
+    let visible = ctx.foreground.ready_operation();
+
     let requested = UPLOAD_WATCH.request();
 
     if UPLOAD_WATCH.watching.swap(true, Ordering::SeqCst) {
@@ -173,7 +175,7 @@ pub fn watch_pending_uploads(ctx: &Arc<Context>) {
     // releases the claim.
     let guard = WatchingGuard(&UPLOAD_WATCH);
 
-    crate::database::lifecycle::spawn_on(&runtime, async move {
+    let watch = async move {
         let service = DirectMediaUploadService::new(&ctx);
 
         let mut seen = requested;
@@ -222,7 +224,17 @@ pub fn watch_pending_uploads(ctx: &Arc<Context>) {
         if UPLOAD_WATCH.requests.load(Ordering::SeqCst) != seen {
             watch_pending_uploads(&ctx);
         }
-    });
+    };
+
+    // Native preparation has a short-lived operation even when Flutter is
+    // visible. The watcher belongs to the visible session, otherwise finishing
+    // preparation cancels it along with the native worker's other children.
+    match visible {
+        Some(operation) => {
+            operation.scope_sync(|| crate::database::lifecycle::spawn_on(&runtime, watch))
+        }
+        None => crate::database::lifecycle::spawn_on(&runtime, watch),
+    };
 }
 
 #[derive(FromRow)]

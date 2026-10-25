@@ -83,9 +83,20 @@ object NotificationTapChannel {
     private var pendingNotificationKind: String? = null
     private var pendingLaunch = false
     @Volatile private var visibleConversationId: String? = null
+    @Volatile private var applicationActive = false
+
+    fun setApplicationActive(active: Boolean) {
+        applicationActive = active
+    }
+
+    internal fun isApplicationActive(): Boolean = applicationActive
+
+    internal fun setVisibleConversation(conversationId: String?) {
+        visibleConversationId = conversationId?.takeIf(String::isNotEmpty)
+    }
 
     internal fun suppresses(addition: NativeNotificationAddition): Boolean =
-        suppressesConversationNotification(visibleConversationId, addition)
+        applicationActive && suppressesConversationNotification(visibleConversationId, addition)
 
     internal fun notificationArrived() {
         Handler(Looper.getMainLooper()).post {
@@ -98,8 +109,7 @@ object NotificationTapChannel {
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "setVisibleConversation" -> {
-                    visibleConversationId = call.argument<String>(EXTRA_CONVERSATION_ID)
-                        ?.takeIf(String::isNotEmpty)
+                    setVisibleConversation(call.argument<String>(EXTRA_CONVERSATION_ID))
                     result.success(null)
                 }
                 "consumeInitialNotification" -> {

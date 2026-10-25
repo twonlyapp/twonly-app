@@ -32,6 +32,8 @@ unsafe extern "C" {
 
     fn twonly_notification_run_finish(run: u64);
 
+    fn twonly_notification_acknowledge_with_id(run: u64, event_ids: *const c_char) -> *mut c_char;
+
 }
 
 fn input(name: &str) -> ContactGroupInput {
@@ -205,6 +207,27 @@ fn retained_transactions_are_rolled_back_native_callbacks_run_and_resume_preserv
             assert_eq!(response["ok"], true, "{json}");
 
             run
+        })
+        .await
+        .unwrap();
+
+        // Dart may report the same pause after native onStop has already
+        // handed ownership to a push. It must not cancel the new worker.
+        RustApi::set_background(true).await.unwrap();
+        tokio::task::spawn_blocking(move || {
+            let ids = CString::new("[]").unwrap();
+            let pointer =
+                unsafe { twonly_notification_acknowledge_with_id(notification, ids.as_ptr()) };
+            let json = unsafe { CStr::from_ptr(pointer) }
+                .to_str()
+                .unwrap()
+                .to_owned();
+            unsafe { twonly_notification_string_free(pointer) };
+            let response: serde_json::Value = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                response["ok"], true,
+                "late Dart pause cancelled the push: {json}"
+            );
         })
         .await
         .unwrap();

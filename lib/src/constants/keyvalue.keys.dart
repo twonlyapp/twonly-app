@@ -2,6 +2,7 @@ class KeyValueKeys {
   static const String currentBackupState = 'current_backup_state';
   static const String forcedBackupPending = 'forced_backup_pending';
   static const String backupFallbackMonitoring = 'backup_fallback_monitoring';
+  static const String fcmRecoveryMonitoring = 'fcm_recovery_monitoring';
   static const String backupRecoveryState = 'backup_recovery_state';
   static const String onboardingState = 'onboarding_state';
   static const String shareImageWidgetExplainer =

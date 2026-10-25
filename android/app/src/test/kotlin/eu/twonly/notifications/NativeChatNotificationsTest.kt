@@ -88,6 +88,24 @@ class NativeChatNotificationsTest {
         }
     }
 
+    @Test
+    fun backgroundedActivityDoesNotSuppressNotificationsForItsLastOpenChat() {
+        NotificationTapChannel.setVisibleConversation("direct")
+        try {
+            NotificationTapChannel.setApplicationActive(true)
+            assertTrue(NotificationTapChannel.suppresses(event("message")))
+            // Native onStop must take effect even if Dart has not yet cleared
+            // its visible conversation through the platform channel.
+            NotificationTapChannel.setApplicationActive(false)
+            assertFalse(NotificationTapChannel.suppresses(event("message")))
+            NotificationTapChannel.setApplicationActive(true)
+            assertTrue(NotificationTapChannel.suppresses(event("message")))
+        } finally {
+            NotificationTapChannel.setVisibleConversation(null)
+            NotificationTapChannel.setApplicationActive(false)
+        }
+    }
+
     private fun shortcut(notification: Notification): android.content.pm.ShortcutInfo {
         assertNotNull(ShadowLog.getLogsForTag("TwonlyNotifications").toString(), notification.shortcutId)
         return context.getSystemService(ShortcutManager::class.java)

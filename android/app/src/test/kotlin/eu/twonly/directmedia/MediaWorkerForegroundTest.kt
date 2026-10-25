@@ -113,6 +113,9 @@ class MediaWorkerForegroundTest {
                 foregroundAttempts++
                 Futures.immediateVoidFuture()
             })
+            // WorkManager asks for this before starting expedited work on
+            // Android < 12. A missing override fails before doWork is called.
+            assertNotNull(worker.getForegroundInfoAsync().get(2, TimeUnit.SECONDS))
             assertEquals(ListenableWorker.Result.success(), worker.doWork())
             assertEquals(1, foregroundAttempts)
             assertNotNull(server.takeRequest(2, TimeUnit.SECONDS))

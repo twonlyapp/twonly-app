@@ -2,6 +2,43 @@ use super::*;
 use tokio::sync::oneshot;
 
 #[tokio::test]
+async fn foreground_upload_watcher_survives_native_preparation_but_stops_on_suspend() {
+    let preparation = Operation::new(Duration::from_secs(5));
+    let foreground = Operation::foreground();
+    let runtime = tokio::runtime::Handle::current();
+    let (hint, completion) = oneshot::channel();
+    let (observed, finished) = oneshot::channel();
+
+    let watcher = preparation.scope_sync(|| {
+        foreground.scope_sync(|| {
+            spawn_on(&runtime, async move {
+                completion.await.unwrap();
+                observed.send(()).unwrap();
+                std::future::pending::<()>().await;
+            })
+        })
+    });
+
+    preparation.cancel();
+    preparation.drain().await;
+    hint.send(()).unwrap();
+    tokio::time::timeout(Duration::from_secs(1), finished)
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(
+        !watcher.is_finished(),
+        "completion watching must outlive preparation"
+    );
+
+    foreground.cancel();
+    tokio::time::timeout(Duration::from_secs(1), foreground.drain())
+        .await
+        .unwrap();
+    assert!(watcher.await.unwrap_err().is_cancelled());
+}
+
+#[tokio::test]
 
 async fn cancelled_pool_borrow_does_not_retry_or_execute_a_small_write() {
     let directory = tempfile::tempdir().unwrap();

@@ -31,10 +31,12 @@ import android.content.pm.PackageManager
 class MainActivity : FlutterFragmentActivity() {
     override fun onStart() {
         super.onStart()
+        NotificationTapChannel.setApplicationActive(true)
         NativeNotificationBridge.setApplicationActive(true)
     }
 
     override fun onStop() {
+        NotificationTapChannel.setApplicationActive(false)
         NativeNotificationBridge.setApplicationActive(false)
         super.onStop()
     }

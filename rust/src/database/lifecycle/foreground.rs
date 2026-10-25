@@ -415,7 +415,9 @@ pub extern "C" fn twonly_database_set_foreground(active: bool) {
 pub(crate) fn flutter_visibility(active: bool) {
     // Native callbacks are authoritative once installed. A queued Flutter
     // pause/resume must not reverse a more recent native lifecycle event.
-    if !NATIVE_EVENTS.load(Ordering::Acquire) || self::active() == active {
+    // Replaying an identical pause would also cancel a notification worker
+    // that started after native onStop. Native visibility already did the work.
+    if !NATIVE_EVENTS.load(Ordering::Acquire) {
         visibility(active);
     }
 }

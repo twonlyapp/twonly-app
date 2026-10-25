@@ -3,8 +3,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 
 class NotificationView extends StatefulWidget {
   const NotificationView({super.key});
@@ -43,16 +45,20 @@ class _NotificationViewState extends State<NotificationView> {
     setState(() {
       _isLoadingReset = true;
     });
-    await FcmNotificationService.resetFCMTokens();
-    if (!mounted) return;
-    await showAlertDialog(
-      context,
-      context.lang.settingsNotifyResetTitleReset,
-      context.lang.settingsNotifyResetTitleResetDesc,
-    );
-    setState(() {
-      _isLoadingReset = false;
-    });
+    try {
+      await FcmNotificationService.resetFCMTokens();
+      if (!mounted) return;
+      await showAlertDialog(
+        context,
+        context.lang.settingsNotifyResetTitleReset,
+        context.lang.settingsNotifyResetTitleResetDesc,
+      );
+    } catch (error, stackTrace) {
+      Log.warn('Could not reset notification registration.', error, stackTrace);
+      if (mounted) showSnackbar(context, context.lang.recoverErrorUnknown);
+    } finally {
+      if (mounted) setState(() => _isLoadingReset = false);
+    }
   }
 
   @override

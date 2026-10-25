@@ -15,6 +15,9 @@ import com.google.firebase.messaging.RemoteMessage
 import eu.twonly.MainActivity
 import eu.twonly.NativeErrorReporting
 import eu.twonly.R
+import eu.twonly.directmedia.DirectMediaPrepare
+import java.util.UUID
+import org.json.JSONObject
 
 class TwonlyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
@@ -48,19 +51,27 @@ class TwonlyFirebaseMessagingService : FirebaseMessagingService() {
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
         WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-            UNIQUE_WORK,
-            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            // A previous push in retry backoff must not block a fresh wake-up.
+            // Rust serializes database ownership and deduplicates alert rows.
+            "$UNIQUE_WORK:${message.messageId ?: UUID.randomUUID()}",
+            ExistingWorkPolicy.KEEP,
             request,
         )
     }
 
     override fun onNewToken(token: String) {
+        var persisted = false
         try {
             val directory = applicationContext.filesDir.absolutePath
-            NativeNotificationBridge.storeFcmToken(directory, directory, token)
+            val response = JSONObject(NativeNotificationBridge.storeFcmToken(directory, directory, token))
+            check(response.optBoolean("ok")) { response.optString("error", "Token storage failed") }
+            persisted = true
         } catch (error: Throwable) {
             NativeErrorReporting.failure(applicationContext, "fcm_token_storage", error)
             Log.e(TAG, "Could not persist refreshed FCM token in Rust", error)
+        }
+        if (!DirectMediaPrepare.registerFcmToken(applicationContext, refreshFromSdk = !persisted)) {
+            Log.e(TAG, "Could not schedule FCM token registration")
         }
     }
 

@@ -31,9 +31,24 @@ static PENDING_RUNS: LazyLock<Mutex<HashMap<u64, Lease>>> =
 
 static BACKUP_RUNS: LazyLock<Mutex<HashSet<u64>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
 
+/// Flush runs: deferred media maintenance that a push may preempt. A run that
+/// prepares a send is never listed, so a wake-up cannot delay the user's send.
+pub(crate) static MAINTENANCE_RUNS: LazyLock<Mutex<HashSet<u64>>> =
+    LazyLock::new(|| Mutex::new(HashSet::new()));
+
 /// Optional exports yield their database admission to message delivery.
 pub(crate) fn cancel_backup_runs() {
     for id in BACKUP_RUNS.lock().unwrap().iter().copied() {
+        crate::database::lifecycle::twonly_database_operation_cancel(id);
+    }
+}
+
+/// A push takes priority over optional exports and media maintenance. Their
+/// supervisors still finish rollback and pool cleanup before releasing admission.
+pub(crate) fn cancel_maintenance_runs() {
+    cancel_backup_runs();
+
+    for id in MAINTENANCE_RUNS.lock().unwrap().iter().copied() {
         crate::database::lifecycle::twonly_database_operation_cancel(id);
     }
 }
@@ -210,7 +225,15 @@ pub unsafe extern "C" fn twonly_background_run_with_id(
         Some(media_id) => Job::PrepareMedia(media_id),
         None => Job::Flush,
     };
-    unsafe { run_job_with_id(id, database_dir, data_dir, job) }
+    let maintenance = matches!(job, Job::Flush);
+    if maintenance {
+        MAINTENANCE_RUNS.lock().unwrap().insert(id);
+    }
+    let response = unsafe { run_job_with_id(id, database_dir, data_dir, job) };
+    if maintenance {
+        MAINTENANCE_RUNS.lock().unwrap().remove(&id);
+    }
+    response
 }
 
 /// Backups have a processing grant, rather than the short message drain grant.
@@ -474,6 +497,36 @@ mod android_jni {
     use jni::objects::{JClass, JString};
     use jni::sys::{jboolean, jstring};
     use jni::{Env, EnvUnowned};
+
+    #[unsafe(no_mangle)]
+    pub extern "system" fn Java_eu_twonly_directmedia_NativeMediaTransferBridge_report(
+        mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, directory: JString<'_>,
+        attachment_id: JString<'_>, role: JString<'_>, queued_ms: jni::sys::jlong,
+        worker_ms: jni::sys::jlong, http_ms: jni::sys::jlong, status: jni::sys::jint,
+        attempt: jni::sys::jint,
+    ) {
+        unowned_env
+            .with_env(|env| {
+                let directory = directory.try_to_string(env)?;
+                let attachment_id = attachment_id.try_to_string(env)?;
+                let role = role.try_to_string(env)?;
+                if Context::get_static().is_err() {
+                    crate::log::init_tracing(
+                        std::path::Path::new(&directory),
+                        crate::log::LogSource::Background,
+                    );
+                }
+                crate::log::LogSource::Background.scope_sync(|| {
+                    tracing::info!(
+                        %attachment_id, %role, queued_ms, worker_ms, http_ms, status, attempt,
+                        "native direct-media transfer finished"
+                    );
+                });
+                twonly_direct_media_transfer_finished();
+                Ok::<_, jni::errors::Error>(())
+            })
+            .resolve::<jni::errors::LogErrorAndDefault>();
+    }
 
     #[unsafe(no_mangle)]
     pub extern "system" fn Java_eu_twonly_backup_NativeBackupBridge_create(

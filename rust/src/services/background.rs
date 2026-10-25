@@ -231,6 +231,12 @@ pub(crate) async fn run(ctx: Arc<Context>, job: Job) -> Result<RunOutcome> {
         if let Err(error) = DirectMediaUploadService::new(&ctx).preload_slots().await {
             tracing::warn!(%error, "could not preload direct-media upload slots");
         }
+
+        // After the job's own work, so a pending token never delays a send.
+        // A visible app registers through Dart's single registration owner.
+        if let Err(error) = crate::services::notifications::synchronize_fcm_token(&ctx).await {
+            tracing::warn!(%error, "native FCM registration remains pending");
+        }
     } else if owns_connection {
         // Nothing can be sent right now, so leave the envelopes with the OS,
         // which waits for connectivity by itself.
@@ -245,16 +251,20 @@ pub(crate) async fn run(ctx: Arc<Context>, job: Job) -> Result<RunOutcome> {
         !owns_connection
     };
 
-    let pending_messages = owns_connection
-        && ctx.is_notification_runtime()
-        && (!messages_finished
-            || messages::has_pending_receipts(&ctx)
-                .await
-                .unwrap_or_else(|error| {
-                    tracing::warn!(%error, "could not count pending receipts");
+    let pending_registration = owns_connection
+        && crate::user_config::UserConfig::load_from(&ctx)?
+            .is_some_and(|user| user.update_fcm_token && user.fcm_token.is_some());
+    let pending_messages = pending_registration
+        || (owns_connection
+            && ctx.is_notification_runtime()
+            && (!messages_finished
+                || messages::has_pending_receipts(&ctx)
+                    .await
+                    .unwrap_or_else(|error| {
+                        tracing::warn!(%error, "could not count pending receipts");
 
-                    true
-                }));
+                        true
+                    })));
 
     // The native entry point owns cancellation, producer shutdown and actual
     // database closure, including errors and expiration before this return.

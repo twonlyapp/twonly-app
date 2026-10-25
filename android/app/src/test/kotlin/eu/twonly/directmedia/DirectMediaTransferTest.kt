@@ -20,6 +20,20 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = Application::class)
 class DirectMediaTransferTest {
+    @Test
+    fun everySendHandoffIsExpeditedWithDurableNetworkAndQuotaFallback() {
+        val before = System.currentTimeMillis()
+        for (role in listOf("media", "manifest", "complete")) {
+            val work = DirectMediaTransfer.request("attachment", role, File("descriptor.json"), 1234)
+            assertTrue("$role must retain the send's priority", work.workSpec.expedited)
+            assertEquals(androidx.work.OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST,
+                work.workSpec.outOfQuotaPolicy)
+            assertEquals(androidx.work.NetworkType.CONNECTED, work.workSpec.constraints.requiredNetworkType)
+            assertEquals(role, work.workSpec.input.getString(DirectMediaUploadWorker.ROLE))
+            assertTrue(work.workSpec.input.getLong(DirectMediaUploadWorker.QUEUED_AT_MS, 0) >= before)
+        }
+    }
+
     private fun request(server: MockWebServer, file: File) = JSONObject()
         .put("url", server.url("/upload").toString())
         .put("method", "POST")

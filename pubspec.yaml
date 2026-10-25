@@ -53,7 +53,6 @@ dependencies:
   # Trustworthy publishers
   firebase_core: ^4.3.0 # firebase.google.com
   firebase_messaging: ^16.1.0  # firebase.google.com
-  firebase_app_installations: ^0.4.1 # firebase.google.com
   json_annotation: ^4.9.0 # google.dev
   protobuf: ^6.0.0 # google.dev
   scrollable_positioned_list: ^0.3.8 # google.dev
