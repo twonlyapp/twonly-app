@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COUNT(*) FROM messages m\n               JOIN media_files f ON f.media_id = m.media_id\n               JOIN groups g ON g.group_id = m.group_id\n               WHERE m.media_id = ?\n                 AND (\n                   m.opened_at IS NULL\n                   -- Opening a message races this sweep; give the viewer a\n                   -- moment before its source disappears underneath it.\n                   OR m.opened_at > ?\n                   OR (\n                     f.requires_authentication = 0\n                     AND f.display_limit_in_milliseconds IS NULL\n                     AND m.opened_at > ?\n                     -- A group member may still store it, and the sender may\n                     -- still reopen their own copy.\n                     AND (m.sender_id IS NULL OR g.is_direct_chat = 0)\n                   )\n                   -- A story replays until it expires, and a viewer saving it\n                   -- makes the sender store its own copy from these bytes.\n                   OR (m.is_story = 1 AND m.created_at > ?)\n                 )",
+  "describe": {
+    "columns": [
+      {
+        "name": "COUNT(*)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "13e64ca9d02c2be7483d689d27f16af543e937e31166ebe4bb91c15bb04c489a"
+}

@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM signal_kyber_pre_keys WHERE kyber_pre_key_id = ?) AS \"used!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "used!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7cf33763e736f5f02f6b1113141b804b49d75690551408d010d803b80afa1e18"
+}

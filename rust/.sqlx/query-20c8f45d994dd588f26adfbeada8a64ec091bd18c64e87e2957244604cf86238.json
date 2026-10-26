@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM live_location_pending WHERE expires_at_ms < ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "20c8f45d994dd588f26adfbeada8a64ec091bd18c64e87e2957244604cf86238"
+}

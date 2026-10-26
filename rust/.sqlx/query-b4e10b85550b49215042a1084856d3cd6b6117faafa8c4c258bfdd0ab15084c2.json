@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET upload_state = 'uploadLimitReached' WHERE media_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "b4e10b85550b49215042a1084856d3cd6b6117faafa8c4c258bfdd0ab15084c2"
+}

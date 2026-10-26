@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COUNT(*) FROM direct_media_upload_jobs WHERE state IN ('prepared', 'scheduled', 'waiting_for_server')",
+  "describe": {
+    "columns": [
+      {
+        "name": "COUNT(*)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b9615d49c1f8e1bbb05acf64aa96fbad981ad194bcc408436b424857e5e9da51"
+}

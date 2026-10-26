@@ -1,0 +1,110 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT message_id, sender_id, payload, info, href, summary, document, received_at\n               FROM webxdc_pending_updates\n               WHERE instance_id = ? AND group_id = ?\n               ORDER BY received_at, message_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_pending_updates",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "sender_id",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_pending_updates",
+            "name": "sender_id"
+          }
+        }
+      },
+      {
+        "name": "payload",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_pending_updates",
+            "name": "payload"
+          }
+        }
+      },
+      {
+        "name": "info",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_pending_updates",
+            "name": "info"
+          }
+        }
+      },
+      {
+        "name": "href",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_pending_updates",
+            "name": "href"
+          }
+        }
+      },
+      {
+        "name": "summary",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_pending_updates",
+            "name": "summary"
+          }
+        }
+      },
+      {
+        "name": "document",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_pending_updates",
+            "name": "document"
+          }
+        }
+      },
+      {
+        "name": "received_at",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_pending_updates",
+            "name": "received_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "75b1315e4024e35fe735fd3212475f809224abaddb575f7d7278d50e3c7518df"
+}

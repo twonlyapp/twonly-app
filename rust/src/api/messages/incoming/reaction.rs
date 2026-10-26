@@ -17,11 +17,12 @@ pub(crate) async fn handle_reaction(
     // A delayed reaction may outlive the message's deletion timer. There is
     // nothing to update once that row is gone, but the receipt must still be
     // acknowledged so the reliable mailbox does not retry it forever.
-    let exists: i64 =
-        sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ?)")
-            .bind(&reaction.target_message_id)
-            .fetch_one(&mut **t)
-            .await?;
+    let exists: i64 = sqlx::query_scalar!(
+        "SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ?)",
+        &reaction.target_message_id
+    )
+    .fetch_one(&mut **t)
+    .await?;
 
     if exists == 0 {
         tracing::info!(

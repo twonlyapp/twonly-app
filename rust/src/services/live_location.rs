@@ -112,7 +112,8 @@ pub(crate) async fn active(ctx: &Arc<Context>) -> Result<Option<LiveLocationSess
     let db = ctx.app_db.read().await.clone();
 
     let row: Option<(String, i64)> =
-        sqlx::query_as("SELECT session_id, expires_at_ms FROM live_location_sessions LIMIT 1")
+        sqlx::query!("SELECT session_id, expires_at_ms FROM live_location_sessions LIMIT 1")
+            .map(|row| (row.session_id, row.expires_at_ms))
             .fetch_optional(&db.pool)
             .await?;
 
@@ -120,10 +121,10 @@ pub(crate) async fn active(ctx: &Arc<Context>) -> Result<Option<LiveLocationSess
         return Ok(None);
     };
 
-    let group_ids = sqlx::query_scalar(
+    let group_ids = sqlx::query_scalar!(
         "SELECT group_id FROM live_location_targets WHERE session_id = ? ORDER BY group_id",
+        &session_id
     )
-    .bind(&session_id)
     .fetch_all(&db.pool)
     .await?;
 
@@ -146,12 +147,14 @@ pub(crate) async fn state(ctx: &Arc<Context>) -> Result<Option<LiveLocationSessi
 
         let db = ctx.app_db.read().await.clone();
 
-        let cards: Vec<(Vec<u8>, bool)> = sqlx::query_as(
-            "SELECT m.additional_message_data, m.is_deleted_from_sender FROM \
-             live_location_targets lt JOIN messages m ON m.message_id = lt.message_id WHERE \
-             lt.session_id = ?",
+        let cards: Vec<(Vec<u8>, bool)> = sqlx::query!(
+            r#"SELECT m.additional_message_data AS "additional_message_data!",
+                      m.is_deleted_from_sender AS "is_deleted_from_sender: bool"
+               FROM live_location_targets lt JOIN messages m ON m.message_id = lt.message_id
+               WHERE lt.session_id = ?"#,
+            &session.session_id
         )
-        .bind(&session.session_id)
+        .map(|row| (row.additional_message_data, row.is_deleted_from_sender))
         .fetch_all(&db.pool)
         .await?;
 
@@ -216,22 +219,22 @@ pub(crate) async fn start(
 
     let mut t = db.pool.begin().await?;
 
-    sqlx::query(
+    sqlx::query!(
         "INSERT INTO live_location_sessions(session_id, expires_at_ms) VALUES (?, ?) ON \
          CONFLICT(session_id) DO UPDATE SET expires_at_ms = excluded.expires_at_ms",
+        &session_id,
+        worker_deadline
     )
-    .bind(&session_id)
-    .bind(worker_deadline)
     .execute(&mut *t)
     .await?;
 
     let mut queued = Vec::new();
 
     for group_id in &group_ids {
-        let allowed: bool = sqlx::query_scalar(
-            "SELECT EXISTS(SELECT 1 FROM groups WHERE group_id = ? AND left_group = 0)",
+        let allowed: bool = sqlx::query_scalar!(
+            r#"SELECT EXISTS(SELECT 1 FROM groups WHERE group_id = ? AND left_group = 0) AS "allowed!: bool""#,
+            group_id
         )
-        .bind(group_id)
         .fetch_one(&mut *t)
         .await?;
 
@@ -239,12 +242,12 @@ pub(crate) async fn start(
             return Err(invalid());
         }
 
-        let recipients: Vec<i64> = sqlx::query_scalar(
+        let recipients: Vec<i64> = sqlx::query_scalar!(
             "SELECT gm.contact_id FROM group_members gm JOIN contacts c ON c.user_id = \
              gm.contact_id WHERE gm.group_id = ? AND (gm.member_state IS NULL OR gm.member_state \
              != 'leftGroup') AND c.blocked = 0 AND c.accepted = 1",
+            group_id
         )
-        .bind(group_id)
         .fetch_all(&mut *t)
         .await?;
 
@@ -264,28 +267,28 @@ pub(crate) async fn start(
 
         let bytes = encode(&location);
 
-        sqlx::query(
+        sqlx::query!(
             "INSERT INTO messages(message_id, group_id, type, content, additional_message_data, \
              created_at) VALUES (?, ?, 'text', ?, ?, ?)",
+            &message_id,
+            group_id,
+            &text,
+            &bytes,
+            timestamp / 1000
         )
-        .bind(&message_id)
-        .bind(group_id)
-        .bind(&text)
-        .bind(&bytes)
-        .bind(timestamp / 1000)
         .execute(&mut *t)
         .await?;
 
         Group::record_text_or_media(&mut t, group_id, timestamp / 1000).await?;
 
-        sqlx::query(
+        sqlx::query!(
             "INSERT INTO live_location_targets(session_id, group_id, message_id, recipient_ids) \
              VALUES (?, ?, ?, ?)",
+            &session_id,
+            group_id,
+            &message_id,
+            serde_json::to_string(&recipients)?
         )
-        .bind(&session_id)
-        .bind(group_id)
-        .bind(&message_id)
-        .bind(serde_json::to_string(&recipients)?)
         .execute(&mut *t)
         .await?;
 
@@ -326,11 +329,11 @@ async fn queue(
     content: proto::EncryptedContent, update: bool, terminal: bool,
 ) -> Result<Vec<String>> {
     if update {
-        sqlx::query(
+        sqlx::query!(
             "DELETE FROM receipts WHERE receipt_id IN (SELECT receipt_id FROM \
              live_location_outbox WHERE message_id = ?)",
+            message_id
         )
-        .bind(message_id)
         .execute(&mut **t)
         .await?;
     }
@@ -338,14 +341,14 @@ async fn queue(
     let mut queued = Vec::new();
 
     for &recipient in recipients {
-        let eligible: bool = sqlx::query_scalar(
-            "SELECT EXISTS(SELECT 1 FROM contacts c JOIN group_members gm ON gm.contact_id = \
-             c.user_id JOIN groups g ON g.group_id = gm.group_id WHERE c.user_id = ? AND \
-             c.blocked = 0 AND gm.group_id = ? AND g.left_group = 0 AND (gm.member_state IS NULL \
-             OR gm.member_state != 'leftGroup'))",
+        let eligible: bool = sqlx::query_scalar!(
+            r#"SELECT EXISTS(SELECT 1 FROM contacts c JOIN group_members gm ON gm.contact_id = 
+             c.user_id JOIN groups g ON g.group_id = gm.group_id WHERE c.user_id = ? AND 
+             c.blocked = 0 AND gm.group_id = ? AND g.left_group = 0 AND (gm.member_state IS NULL 
+             OR gm.member_state != 'leftGroup')) AS "eligible!: bool""#,
+            recipient,
+            content.group_id.as_deref()
         )
-        .bind(recipient)
-        .bind(content.group_id.as_deref())
         .fetch_one(&mut **t)
         .await?;
 
@@ -360,17 +363,21 @@ async fn queue(
         let receipt = queue_encrypted_content(t, recipient, envelope, !update).await?;
 
         if update && !terminal {
-            sqlx::query("INSERT INTO live_location_outbox(receipt_id, message_id) VALUES (?, ?)")
-                .bind(&receipt)
-                .bind(message_id)
-                .execute(&mut **t)
-                .await?;
+            sqlx::query!(
+                "INSERT INTO live_location_outbox(receipt_id, message_id) VALUES (?, ?)",
+                &receipt,
+                message_id
+            )
+            .execute(&mut **t)
+            .await?;
         } else if !update {
-            sqlx::query("UPDATE receipts SET message_id = ? WHERE receipt_id = ?")
-                .bind(message_id)
-                .bind(&receipt)
-                .execute(&mut **t)
-                .await?;
+            sqlx::query!(
+                "UPDATE receipts SET message_id = ? WHERE receipt_id = ?",
+                message_id,
+                &receipt
+            )
+            .execute(&mut **t)
+            .await?;
         }
 
         queued.push(receipt);
@@ -427,20 +434,29 @@ async fn update_targets(
 
     let mut t = db.pool.begin().await?;
 
-    sqlx::query(
+    sqlx::query!(
         "DELETE FROM live_location_targets WHERE session_id = ? AND message_id IN (SELECT \
          message_id FROM messages WHERE is_deleted_from_sender = 1)",
+        session_id
     )
-    .bind(session_id)
     .execute(&mut *t)
     .await?;
 
-    let rows: Vec<(String, String, String, Vec<u8>)> = sqlx::query_as(
-        "SELECT lt.group_id, lt.message_id, lt.recipient_ids, m.additional_message_data FROM \
-         live_location_targets lt JOIN messages m ON m.message_id = lt.message_id WHERE \
-         lt.session_id = ? AND m.is_deleted_from_sender = 0",
+    let rows: Vec<(String, String, String, Vec<u8>)> = sqlx::query!(
+        r#"SELECT lt.group_id, lt.message_id, lt.recipient_ids,
+                  m.additional_message_data AS "additional_message_data!"
+           FROM live_location_targets lt JOIN messages m ON m.message_id = lt.message_id
+           WHERE lt.session_id = ? AND m.is_deleted_from_sender = 0"#,
+        session_id
     )
-    .bind(session_id)
+    .map(|row| {
+        (
+            row.group_id,
+            row.message_id,
+            row.recipient_ids,
+            row.additional_message_data,
+        )
+    })
     .fetch_all(&mut *t)
     .await?;
 
@@ -454,11 +470,13 @@ async fn update_targets(
 
     for (group_id, message_id, recipients, bytes) in rows {
         let Some(mut location) = decode(&bytes) else {
-            sqlx::query("DELETE FROM live_location_targets WHERE session_id = ? AND group_id = ?")
-                .bind(session_id)
-                .bind(&group_id)
-                .execute(&mut *t)
-                .await?;
+            sqlx::query!(
+                "DELETE FROM live_location_targets WHERE session_id = ? AND group_id = ?",
+                session_id,
+                &group_id
+            )
+            .execute(&mut *t)
+            .await?;
 
             continue;
         };
@@ -475,11 +493,13 @@ async fn update_targets(
         if target_stopped {
             sent_stop = true;
 
-            sqlx::query("DELETE FROM live_location_targets WHERE session_id = ? AND group_id = ?")
-                .bind(session_id)
-                .bind(&group_id)
-                .execute(&mut *t)
-                .await?;
+            sqlx::query!(
+                "DELETE FROM live_location_targets WHERE session_id = ? AND group_id = ?",
+                session_id,
+                &group_id
+            )
+            .execute(&mut *t)
+            .await?;
         } else {
             remaining_deadline = remaining_deadline.max(location.expires_at_ms);
         }
@@ -502,11 +522,13 @@ async fn update_targets(
 
         let bytes = encode(&location);
 
-        sqlx::query("UPDATE messages SET additional_message_data = ? WHERE message_id = ?")
-            .bind(&bytes)
-            .bind(&message_id)
-            .execute(&mut *t)
-            .await?;
+        sqlx::query!(
+            "UPDATE messages SET additional_message_data = ? WHERE message_id = ?",
+            &bytes,
+            &message_id
+        )
+        .execute(&mut *t)
+        .await?;
 
         let content = proto::EncryptedContent {
             group_id: Some(group_id),
@@ -539,16 +561,20 @@ async fn update_targets(
     let finished = remaining_deadline == 0;
 
     if finished {
-        sqlx::query("DELETE FROM live_location_sessions WHERE session_id = ?")
-            .bind(session_id)
-            .execute(&mut *t)
-            .await?;
+        sqlx::query!(
+            "DELETE FROM live_location_sessions WHERE session_id = ?",
+            session_id
+        )
+        .execute(&mut *t)
+        .await?;
     } else {
-        sqlx::query("UPDATE live_location_sessions SET expires_at_ms = ? WHERE session_id = ?")
-            .bind(remaining_deadline)
-            .bind(session_id)
-            .execute(&mut *t)
-            .await?;
+        sqlx::query!(
+            "UPDATE live_location_sessions SET expires_at_ms = ? WHERE session_id = ?",
+            remaining_deadline,
+            session_id
+        )
+        .execute(&mut *t)
+        .await?;
     }
 
     t.commit().await?;
@@ -596,11 +622,20 @@ pub(crate) async fn incoming(
     }
 
     #[allow(clippy::type_complexity)]
-    let row: Option<(String, Option<i64>, Option<Vec<u8>>, bool)> = sqlx::query_as(
-        "SELECT group_id, sender_id, additional_message_data, is_deleted_from_sender FROM \
-         messages WHERE message_id = ?",
+    let row: Option<(String, Option<i64>, Option<Vec<u8>>, bool)> = sqlx::query!(
+        r#"SELECT group_id, sender_id, additional_message_data,
+                  is_deleted_from_sender AS "is_deleted_from_sender: bool"
+           FROM messages WHERE message_id = ?"#,
+        &location.message_id
     )
-    .bind(&location.message_id)
+    .map(|row| {
+        (
+            row.group_id,
+            row.sender_id,
+            row.additional_message_data,
+            row.is_deleted_from_sender,
+        )
+    })
     .fetch_optional(&mut **t)
     .await?;
 
@@ -621,23 +656,28 @@ pub(crate) async fn incoming(
             return Ok(());
         }
 
-        sqlx::query("UPDATE messages SET additional_message_data = ? WHERE message_id = ?")
-            .bind(encode(location))
-            .bind(&location.message_id)
-            .execute(&mut **t)
-            .await?;
+        sqlx::query!(
+            "UPDATE messages SET additional_message_data = ? WHERE message_id = ?",
+            encode(location),
+            &location.message_id
+        )
+        .execute(&mut **t)
+        .await?;
     } else {
         // Only the newest pending payload is retained, with a bounded lifetime.
-        sqlx::query("DELETE FROM live_location_pending WHERE expires_at_ms < ?")
-            .bind(now() - 86_400_000)
-            .execute(&mut **t)
-            .await?;
+        sqlx::query!(
+            "DELETE FROM live_location_pending WHERE expires_at_ms < ?",
+            now() - 86_400_000
+        )
+        .execute(&mut **t)
+        .await?;
 
-        let pending: Option<Vec<u8>> =
-            sqlx::query_scalar("SELECT data FROM live_location_pending WHERE message_id = ?")
-                .bind(&location.message_id)
-                .fetch_optional(&mut **t)
-                .await?;
+        let pending: Option<Vec<u8>> = sqlx::query_scalar!(
+            "SELECT data FROM live_location_pending WHERE message_id = ?",
+            &location.message_id
+        )
+        .fetch_optional(&mut **t)
+        .await?;
 
         if let Some(previous) = pending.as_deref().and_then(decode) {
             if previous.stopped
@@ -648,20 +688,20 @@ pub(crate) async fn incoming(
             }
         }
 
-        sqlx::query(
+        sqlx::query!(
             "INSERT INTO live_location_pending(message_id, group_id, sender_id, updated_at_ms, \
              expires_at_ms, data) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(message_id) DO UPDATE SET \
              updated_at_ms = excluded.updated_at_ms, data = excluded.data WHERE \
              live_location_pending.sender_id = excluded.sender_id AND \
              live_location_pending.group_id = excluded.group_id AND \
              live_location_pending.updated_at_ms < excluded.updated_at_ms",
+            &location.message_id,
+            group_id,
+            sender_id,
+            location.updated_at_ms,
+            location.expires_at_ms,
+            encode(location)
         )
-        .bind(&location.message_id)
-        .bind(group_id)
-        .bind(sender_id)
-        .bind(location.updated_at_ms)
-        .bind(location.expires_at_ms)
-        .bind(encode(location))
         .execute(&mut **t)
         .await?;
     }
@@ -672,13 +712,13 @@ pub(crate) async fn incoming(
 pub(crate) async fn apply_pending(
     t: &mut Transaction<'_, Sqlite>, group_id: &str, sender_id: i64, message_id: &str,
 ) -> Result<()> {
-    let bytes: Option<Vec<u8>> = sqlx::query_scalar(
+    let bytes: Option<Vec<u8>> = sqlx::query_scalar!(
         "SELECT data FROM live_location_pending WHERE message_id = ? AND group_id = ? AND \
          sender_id = ?",
+        message_id,
+        group_id,
+        sender_id
     )
-    .bind(message_id)
-    .bind(group_id)
-    .bind(sender_id)
     .fetch_optional(&mut **t)
     .await?;
 
@@ -686,10 +726,12 @@ pub(crate) async fn apply_pending(
         incoming(t, group_id, sender_id, &location).await?;
     }
 
-    sqlx::query("DELETE FROM live_location_pending WHERE message_id = ?")
-        .bind(message_id)
-        .execute(&mut **t)
-        .await?;
+    sqlx::query!(
+        "DELETE FROM live_location_pending WHERE message_id = ?",
+        message_id
+    )
+    .execute(&mut **t)
+    .await?;
 
     Ok(())
 }

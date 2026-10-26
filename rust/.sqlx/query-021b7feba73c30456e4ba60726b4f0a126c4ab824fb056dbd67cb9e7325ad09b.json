@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE receipts SET mark_for_retry = NULL, mark_for_retry_after_accepted = NULL\n               WHERE contact_id = ? AND message_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "021b7feba73c30456e4ba60726b4f0a126c4ab824fb056dbd67cb9e7325ad09b"
+}

@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM media_files WHERE media_id = ? AND upload_state = 'uploaded')",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM media_files WHERE media_id = ? AND upload_state = 'uploaded')",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7c8cd49503ea107512ef8ebf6ce703b78b27194a13a26f2f99805a97b454bcbd"
+}

@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT webp, sha256, width, height, accepted_contacts_only, source_revision FROM own_custom_avatar WHERE singleton = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "webp",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "webp"
+          }
+        }
+      },
+      {
+        "name": "sha256",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "sha256"
+          }
+        }
+      },
+      {
+        "name": "width",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "width"
+          }
+        }
+      },
+      {
+        "name": "height",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "height"
+          }
+        }
+      },
+      {
+        "name": "accepted_contacts_only",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "accepted_contacts_only"
+          }
+        }
+      },
+      {
+        "name": "source_revision",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "source_revision"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "48e34afb691ff54b03a1363e58d2158264206346976b99445475c35ed7720268"
+}

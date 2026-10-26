@@ -447,18 +447,18 @@ pub(crate) async fn opened_targets(
     connection: &mut SqliteConnection, messages: &[String], contact_id: i64,
 ) -> Result<Vec<String>> {
     let ids = serde_json::to_string(messages)?;
-    Ok(sqlx::query_scalar(
-        "SELECT DISTINCT COALESCE(m.activity_message_id, m.message_id)
+    Ok(sqlx::query_scalar!(
+        r#"SELECT DISTINCT COALESCE(m.activity_message_id, m.message_id) AS "receipt_target!: String"
          FROM json_each(?) requested
          LEFT JOIN webxdc_updates u ON substr(requested.value, -5) = '-info'
              AND u.message_id = substr(requested.value, 1, length(requested.value) - 5)
              AND u.info IS NOT NULL
          JOIN chat_messages m ON m.message_id = COALESCE(u.instance_id, requested.value)
          WHERE m.sender_id = ? AND (requested.value = m.message_id
-             OR requested.value = m.activity_message_id)",
+             OR requested.value = m.activity_message_id)"#,
+        &ids,
+        contact_id
     )
-    .bind(&ids)
-    .bind(contact_id)
     .fetch_all(connection)
     .await?)
 }

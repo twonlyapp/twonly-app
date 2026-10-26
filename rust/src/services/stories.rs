@@ -69,7 +69,7 @@ pub struct StoryAudience {
 pub(crate) async fn resolve_audience(
     t: &mut Transaction<'_, Sqlite>, audience: &StoryAudience, now: i64,
 ) -> Result<Vec<i64>> {
-    let reachable = sqlx::query_scalar::<_, i64>(
+    let reachable = sqlx::query_scalar!(
         r#"SELECT c.user_id FROM contacts c
            WHERE c.accepted = 1 AND c.blocked = 0
              AND c.deleted_by_user = 0 AND c.account_deleted = 0
@@ -79,9 +79,9 @@ pub(crate) async fn resolve_audience(
                  WHERE gm.contact_id = c.user_id AND g.is_direct_chat = 1
                    AND g.last_text_or_media_at > ?
              ))"#,
+        audience.all,
+        now - STORY_AUDIENCE_RECENT_EXCHANGE_SECONDS
     )
-    .bind(audience.all)
-    .bind(now - STORY_AUDIENCE_RECENT_EXCHANGE_SECONDS)
     .fetch_all(&mut **t)
     .await?
     .into_iter()
@@ -318,10 +318,10 @@ pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
         return Ok(());
     }
 
-    let uploaded = sqlx::query_scalar::<_, i64>(
+    let uploaded = sqlx::query_scalar!(
         "SELECT EXISTS(SELECT 1 FROM media_files WHERE media_id = ? AND upload_state = 'uploaded')",
+        media_id
     )
-    .bind(media_id)
     .fetch_one(&database.pool)
     .await?
         != 0;
@@ -371,14 +371,14 @@ pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
     // if the same media was also sent in a chat, prepare that remaining send
     // again with a fresh manifest that no longer includes story recipients.
     if !dispatched {
-        sqlx::query(
+        sqlx::query!(
             r#"UPDATE media_files SET upload_state = CASE
                  WHEN EXISTS(SELECT 1 FROM messages WHERE media_id = ?)
                  THEN 'preprocessing' ELSE 'storedOnly' END
                WHERE media_id = ?"#,
+            media_id,
+            media_id
         )
-        .bind(media_id)
-        .bind(media_id)
         .execute(&mut *transaction)
         .await?;
     }

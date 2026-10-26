@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE direct_media_upload_slots SET state = ? WHERE attachment_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "7bd684b92928ebddd0053aadd663d500b1d63cbd3564366a199e56954414f07a"
+}

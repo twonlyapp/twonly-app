@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT gm.contact_id, c.account_deleted\n                   FROM group_members gm\n                   JOIN contacts c ON c.user_id = gm.contact_id\n                   WHERE gm.group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "account_deleted",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "account_deleted"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "6e94821799d3ab8b3d821dadc8d606ee0d7398965d0a72a60297e85c97dd87cc"
+}

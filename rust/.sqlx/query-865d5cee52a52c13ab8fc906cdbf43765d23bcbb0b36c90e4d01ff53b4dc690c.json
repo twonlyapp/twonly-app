@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE messages SET created_at = MAX(created_at, ?)\n             WHERE message_id = ? AND group_id = ? AND type = 'webxdcApp'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "865d5cee52a52c13ab8fc906cdbf43765d23bcbb0b36c90e4d01ff53b4dc690c"
+}

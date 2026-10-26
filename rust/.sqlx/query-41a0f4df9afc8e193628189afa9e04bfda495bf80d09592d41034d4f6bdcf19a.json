@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE webxdc_instances SET created_at = ? WHERE instance_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "41a0f4df9afc8e193628189afa9e04bfda495bf80d09592d41034d4f6bdcf19a"
+}

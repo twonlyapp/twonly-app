@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files\n               SET location_status = 'resolved', location_latitude = ?,\n                   location_longitude = ?, location_accuracy = ?\n               WHERE media_id = ? AND location_status = 'pending'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "4cd87d1e1d2223e0c889b82ddd5160bb72586b45d6ab4ac701129ccf0be7cd6b"
+}

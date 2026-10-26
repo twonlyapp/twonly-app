@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET upload_state = 'preprocessing'\n                       WHERE media_id = ?\n                         AND (upload_state != 'uploaded' OR reupload_requested_by IS NOT NULL OR reupload_targets IS NOT NULL)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "904feecffd5dde8ee61be08c3f9ec6e4c444472093f97984775e509d766a2f8f"
+}

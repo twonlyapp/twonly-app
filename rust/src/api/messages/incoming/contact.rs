@@ -170,11 +170,11 @@ pub(crate) async fn prepare_contact_request(
 
     let database = ctx.app_db.read().await.clone();
 
-    let auto_accept = sqlx::query_scalar::<_, bool>(
-        "SELECT blocked = 0 AND (accepted != 0 OR requested_by_user != 0) FROM contacts WHERE \
-         user_id = ?",
+    let auto_accept = sqlx::query_scalar!(
+        r#"SELECT blocked = 0 AND (accepted != 0 OR requested_by_user != 0) AS "auto_accept!: bool"
+           FROM contacts WHERE user_id = ?"#,
+        from_user_id
     )
-    .bind(from_user_id)
     .fetch_optional(&database.pool)
     .await?
     .unwrap_or(false);
@@ -197,12 +197,12 @@ pub(crate) async fn prepare_contact_request(
             .ok_or_else(|| TwonlyError::Generic("user response has no username".into()))?,
     )?;
 
-    sqlx::query(
+    sqlx::query!(
         "UPDATE contacts SET username = ?, joined_at = COALESCE(?, joined_at) WHERE user_id = ?",
+        username,
+        user.joined_at,
+        from_user_id
     )
-    .bind(username)
-    .bind(user.joined_at)
-    .bind(from_user_id)
     .execute(&database.pool)
     .await?;
 

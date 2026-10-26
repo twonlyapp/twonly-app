@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET has_crop_analyzed = 1 WHERE media_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "1fa282c9f2ff3b6a33aefea8b7515770ac1f0755597739088c2aa250840240f4"
+}

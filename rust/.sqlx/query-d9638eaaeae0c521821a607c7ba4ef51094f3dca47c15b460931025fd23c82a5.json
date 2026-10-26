@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO home_widgets(widget_id, platform) VALUES (?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "d9638eaaeae0c521821a607c7ba4ef51094f3dca47c15b460931025fd23c82a5"
+}

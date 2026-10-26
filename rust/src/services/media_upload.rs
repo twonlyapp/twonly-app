@@ -193,22 +193,22 @@ impl MediaUploadService {
 
                 let mut transaction = database.pool.begin().await?;
 
-                sqlx::query("UPDATE media_files SET is_draft_media = 0 WHERE is_draft_media = 1")
+                sqlx::query!("UPDATE media_files SET is_draft_media = 0 WHERE is_draft_media = 1")
                     .execute(&mut *transaction)
                     .await?;
 
-                sqlx::query(
+                sqlx::query!(
                     r#"INSERT INTO media_files
                (media_id, type, upload_state, display_limit_in_milliseconds,
                 encryption_key, encryption_nonce, is_draft_media)
                VALUES (?, ?, 'initialized', ?, ?, ?, ?)"#,
+                    &media_id,
+                    &media_type,
+                    display_limit,
+                    &encryption_key,
+                    &encryption_nonce,
+                    i64::from(is_draft_media)
                 )
-                .bind(&media_id)
-                .bind(&media_type)
-                .bind(display_limit)
-                .bind(&encryption_key)
-                .bind(&encryption_nonce)
-                .bind(i64::from(is_draft_media))
                 .execute(&mut *transaction)
                 .await?;
 
@@ -244,10 +244,12 @@ impl MediaUploadService {
 
         let story_recipients = match &story {
             Some(audience) => {
-                let (media_type, requires_authentication) = sqlx::query_as::<_, (String, i64)>(
-                    "SELECT type, requires_authentication FROM media_files WHERE media_id = ?",
+                let (media_type, requires_authentication) = sqlx::query!(
+                    "SELECT type AS media_type, requires_authentication FROM media_files WHERE \
+                     media_id = ?",
+                    &media_id
                 )
-                .bind(&media_id)
+                .map(|row| (row.media_type, row.requires_authentication))
                 .fetch_optional(&mut *transaction)
                 .await?
                 .ok_or_else(|| TwonlyError::Generic(format!("media {media_id} does not exist")))?;
@@ -273,13 +275,13 @@ impl MediaUploadService {
         let mut dispatches = story_recipients.len();
 
         for group_id in &group_ids {
-            dispatches += sqlx::query_scalar::<_, i64>(
+            dispatches += sqlx::query_scalar!(
                 r#"SELECT COUNT(*) FROM group_members gm
                    JOIN contacts c ON c.user_id = gm.contact_id
                    WHERE gm.group_id = ? AND c.account_deleted = 0
                      AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')"#,
+                group_id
             )
-            .bind(group_id)
             .fetch_one(&mut *transaction)
             .await? as usize;
         }
@@ -296,10 +298,12 @@ impl MediaUploadService {
         }
 
         if widget_only {
-            let media = sqlx::query_as::<_, (String, Option<i64>)>(
-                "SELECT type, display_limit_in_milliseconds FROM media_files WHERE media_id = ?",
+            let media = sqlx::query!(
+                "SELECT type AS media_type, display_limit_in_milliseconds FROM media_files WHERE \
+                 media_id = ?",
+                &media_id
             )
-            .bind(&media_id)
+            .map(|row| (row.media_type, row.display_limit_in_milliseconds))
             .fetch_optional(&mut *transaction)
             .await?
             .ok_or_else(|| TwonlyError::Generic(format!("media {media_id} does not exist")))?;
@@ -310,33 +314,36 @@ impl MediaUploadService {
                 ));
             }
 
-            sqlx::query("UPDATE media_files SET is_widget_media = 1 WHERE media_id = ?")
-                .bind(&media_id)
-                .execute(&mut *transaction)
-                .await?;
+            sqlx::query!(
+                "UPDATE media_files SET is_widget_media = 1 WHERE media_id = ?",
+                &media_id
+            )
+            .execute(&mut *transaction)
+            .await?;
         }
 
-        sqlx::query("UPDATE media_files SET is_draft_media = 0 WHERE is_draft_media = 1")
+        sqlx::query!("UPDATE media_files SET is_draft_media = 0 WHERE is_draft_media = 1")
             .execute(&mut *transaction)
             .await?;
 
         for group_id in &group_ids {
-            let members = sqlx::query_as::<_, (i64, i64)>(
+            let members = sqlx::query!(
                 r#"SELECT gm.contact_id, c.account_deleted
                    FROM group_members gm
                    JOIN contacts c ON c.user_id = gm.contact_id
                    WHERE gm.group_id = ?"#,
+                group_id
             )
-            .bind(group_id)
+            .map(|row| (row.contact_id, row.account_deleted))
             .fetch_all(&mut *transaction)
             .await?;
 
             if widget_only
                 && (members.len() != 1
-                    || sqlx::query_scalar::<_, i64>(
+                    || sqlx::query_scalar!(
                         "SELECT widget_sharing_allowed FROM contacts WHERE user_id = ?",
+                        members.first().map(|member| member.0).unwrap_or_default()
                     )
-                    .bind(members.first().map(|member| member.0).unwrap_or_default())
                     .fetch_optional(&mut *transaction)
                     .await?
                     .unwrap_or(0)
@@ -357,18 +364,18 @@ impl MediaUploadService {
 
             let message_id = new_uuid_v7();
 
-            sqlx::query(
+            sqlx::query!(
                 r#"INSERT INTO messages
                    (group_id, message_id, type, media_id, additional_message_data,
                     is_widget_media, created_at)
                    VALUES (?, ?, 'media', ?, ?, ?, ?)"#,
+                group_id,
+                &message_id,
+                &media_id,
+                additional_message_data.as_deref(),
+                widget_only,
+                now
             )
-            .bind(group_id)
-            .bind(&message_id)
-            .bind(&media_id)
-            .bind(additional_message_data.as_deref())
-            .bind(widget_only)
-            .bind(now)
             .execute(&mut *transaction)
             .await?;
 
@@ -384,17 +391,17 @@ impl MediaUploadService {
         for contact_id in story_recipients {
             let group_id = stories::direct_chat(&self.ctx, &mut transaction, contact_id).await?;
 
-            sqlx::query(
+            sqlx::query!(
                 r#"INSERT INTO messages
                    (group_id, message_id, type, media_id, additional_message_data,
                     is_story, created_at)
                    VALUES (?, ?, 'media', ?, ?, 1, ?)"#,
+                &group_id,
+                new_uuid_v7(),
+                &media_id,
+                additional_message_data.as_deref(),
+                now
             )
-            .bind(&group_id)
-            .bind(new_uuid_v7())
-            .bind(&media_id)
-            .bind(additional_message_data.as_deref())
-            .bind(now)
             .execute(&mut *transaction)
             .await?;
         }
@@ -670,11 +677,11 @@ impl MediaUploadService {
 
                 let mut transaction = database.pool.begin().await?;
 
-                sqlx::query(
+                sqlx::query!(
                     "UPDATE media_files SET upload_state = 'storedOnly', reupload_requested_by = \
                      NULL, reupload_targets = NULL WHERE media_id = ?",
+                    media_id
                 )
-                .bind(media_id)
                 .execute(&mut *transaction)
                 .await?;
 
@@ -720,7 +727,8 @@ impl MediaUploadService {
 
         let database = self.ctx.app_db.read().await.clone();
 
-        let pending = sqlx::query_as::<_, MediaRow>(
+        let pending = sqlx::query_as!(
+            MediaRow,
             r#"SELECT media_id, type AS media_type, upload_state, requires_authentication,
                       is_draft_media, is_widget_media, display_limit_in_milliseconds, reupload_requested_by, reupload_targets,
                       remove_audio, trim_start_ms, trim_end_ms, created_at
@@ -790,7 +798,7 @@ impl MediaUploadService {
 
         let mut transaction = database.pool.begin().await?;
 
-        let allowed = sqlx::query_scalar::<_, i64>(
+        let allowed = sqlx::query_scalar!(
             r#"SELECT EXISTS(SELECT 1 FROM messages m
                JOIN group_members gm ON gm.group_id = m.group_id
                WHERE m.message_id = ? AND m.media_id = ? AND m.sender_id IS NULL
@@ -801,10 +809,10 @@ impl MediaUploadService {
                      WHERE a.message_id = m.message_id AND a.contact_id = gm.contact_id
                        AND a.type = 'sendFailed'
                  ))"#,
+            message_id,
+            media_id,
+            contact_id
         )
-        .bind(message_id)
-        .bind(media_id)
-        .bind(contact_id)
         .fetch_one(&mut *transaction)
         .await?;
 
@@ -812,12 +820,12 @@ impl MediaUploadService {
             return Ok(false);
         }
 
-        sqlx::query(
+        sqlx::query!(
             r#"UPDATE receipts SET mark_for_retry = NULL, mark_for_retry_after_accepted = NULL
                WHERE contact_id = ? AND message_id = ?"#,
+            contact_id,
+            message_id
         )
-        .bind(contact_id)
-        .bind(message_id)
         .execute(&mut *transaction)
         .await?;
 
@@ -845,13 +853,13 @@ impl MediaUploadService {
             }
         }
 
-        sqlx::query(
+        sqlx::query!(
             r#"UPDATE media_files SET upload_state = 'preprocessing', reupload_requested_by = ?, reupload_targets = ?
                WHERE media_id = ?"#,
+            serde_json::to_string(&requested_by)?,
+            serde_json::to_string(&targets)?,
+            media_id
         )
-        .bind(serde_json::to_string(&requested_by)?)
-        .bind(serde_json::to_string(&targets)?)
-        .bind(media_id)
         .execute(&mut *transaction)
         .await?;
 
@@ -868,15 +876,16 @@ impl MediaUploadService {
 
         let database = self.ctx.app_db.read().await.clone();
 
-        let receipts = sqlx::query_as::<_, RetransmissionReceipt>(
+        let receipts = sqlx::query_as!(
+            RetransmissionReceipt,
             r#"SELECT receipt_id, contact_id, message_id, message,
                       mark_for_retry_after_accepted, ack_by_server_at, retry_count, last_retry
                FROM receipts
                WHERE will_be_retried_by_media_upload = 1
                  AND (mark_for_retry < ? OR mark_for_retry_after_accepted < ?)"#,
+            now - RETRY_MARK_GRACE_SECONDS,
+            now - RETRY_MARK_GRACE_SECONDS
         )
-        .bind(now - RETRY_MARK_GRACE_SECONDS)
-        .bind(now - RETRY_MARK_GRACE_SECONDS)
         .fetch_all(&database.pool)
         .await?;
 
@@ -922,28 +931,32 @@ impl MediaUploadService {
                     return Ok(());
                 };
 
-                let exists = sqlx::query_scalar::<_, i64>(
+                let exists = sqlx::query_scalar!(
                     "SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ?)",
+                    &message_id
                 )
-                .bind(&message_id)
                 .fetch_one(&database.pool)
                 .await?
                     != 0;
 
                 if !exists {
-                    sqlx::query("DELETE FROM receipts WHERE receipt_id = ?")
-                        .bind(&receipt.receipt_id)
-                        .execute(&database.pool)
-                        .await?;
+                    sqlx::query!(
+                        "DELETE FROM receipts WHERE receipt_id = ?",
+                        &receipt.receipt_id
+                    )
+                    .execute(&database.pool)
+                    .await?;
 
                     return Ok(());
                 }
 
-                sqlx::query("UPDATE receipts SET message_id = ? WHERE receipt_id = ?")
-                    .bind(&message_id)
-                    .bind(&receipt.receipt_id)
-                    .execute(&database.pool)
-                    .await?;
+                sqlx::query!(
+                    "UPDATE receipts SET message_id = ? WHERE receipt_id = ?",
+                    &message_id,
+                    &receipt.receipt_id
+                )
+                .execute(&database.pool)
+                .await?;
 
                 message_id
             }
@@ -951,12 +964,12 @@ impl MediaUploadService {
 
         // The recipient ignores a story once it expired, so resending one only
         // costs traffic until the story purge takes the receipt away.
-        let expired_story = sqlx::query_scalar::<_, i64>(
+        let expired_story = sqlx::query_scalar!(
             "SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ? AND is_story = 1 AND \
              created_at <= ?)",
+            &message_id,
+            now - stories::STORY_LIFETIME_SECONDS
         )
-        .bind(&message_id)
-        .bind(now - stories::STORY_LIFETIME_SECONDS)
         .fetch_one(&database.pool)
         .await?
             != 0;
@@ -967,13 +980,12 @@ impl MediaUploadService {
 
         // Nothing can be delivered to a contact who has not accepted yet.
         if receipt.mark_for_retry_after_accepted.is_some() {
-            let accepted = sqlx::query_scalar::<_, Option<i64>>(
+            let accepted = sqlx::query_scalar!(
                 "SELECT accepted FROM contacts WHERE user_id = ?",
+                receipt.contact_id
             )
-            .bind(receipt.contact_id)
             .fetch_optional(&database.pool)
-            .await?
-            .flatten();
+            .await?;
 
             if accepted.unwrap_or(0) == 0 {
                 return Ok(());
@@ -1001,10 +1013,12 @@ impl MediaUploadService {
                         "dropping a media envelope whose download is gone"
                     );
 
-                    sqlx::query("DELETE FROM receipts WHERE receipt_id = ?")
-                        .bind(&receipt.receipt_id)
-                        .execute(&database.pool)
-                        .await?;
+                    sqlx::query!(
+                        "DELETE FROM receipts WHERE receipt_id = ?",
+                        &receipt.receipt_id
+                    )
+                    .execute(&database.pool)
+                    .await?;
 
                     return Ok(());
                 }
@@ -1017,25 +1031,29 @@ impl MediaUploadService {
                 .await;
         }
 
-        let media_id = sqlx::query_scalar::<_, Option<String>>(
+        let media_id = sqlx::query_scalar!(
             "SELECT media_id FROM messages WHERE message_id = ?",
+            &message_id
         )
-        .bind(&message_id)
         .fetch_optional(&database.pool)
         .await?
         .flatten();
 
         let Some(media_id) = media_id else {
             // Neither the message nor its media exist any more.
-            sqlx::query("DELETE FROM messages WHERE message_id = ?")
-                .bind(&message_id)
-                .execute(&database.pool)
-                .await?;
+            sqlx::query!(
+                "DELETE FROM messages WHERE message_id = ?",
+                &message_id
+            )
+            .execute(&database.pool)
+            .await?;
 
-            sqlx::query("DELETE FROM receipts WHERE receipt_id = ?")
-                .bind(&receipt.receipt_id)
-                .execute(&database.pool)
-                .await?;
+            sqlx::query!(
+                "DELETE FROM receipts WHERE receipt_id = ?",
+                &receipt.receipt_id
+            )
+            .execute(&database.pool)
+            .await?;
 
             return Ok(());
         };
@@ -1117,11 +1135,11 @@ impl MediaUploadService {
         // thumbnail that was not written must not be advertised to the UI.
         let has_thumbnail = i64::from(files.thumbnail_path(media_id).exists());
 
-        self.update_media(
+        self.update_media(sqlx::query!(
             "UPDATE media_files SET stored = 1, has_thumbnail = ? WHERE media_id = ?",
             has_thumbnail,
-            media_id,
-        )
+            media_id
+        ))
         .await?;
 
         // Publish the Memory before waiting for Photos/MediaStore. Gallery
@@ -1174,12 +1192,12 @@ impl MediaUploadService {
 
         let database = self.ctx.app_db.read().await.clone();
 
-        sqlx::query(
+        sqlx::query!(
             "UPDATE media_files SET size_in_bytes = ?, stored_file_hash = ? WHERE media_id = ?",
+            size,
+            hash,
+            media_id
         )
-        .bind(size)
-        .bind(hash)
-        .bind(media_id)
         .execute(&database.pool)
         .await?;
 
@@ -1192,11 +1210,11 @@ impl MediaUploadService {
     async fn record_plaintext_size(&self, media_id: &str, path: &Path) -> Result<()> {
         let size = std::fs::metadata(path)?.len() as i64;
 
-        self.update_media(
+        self.update_media(sqlx::query!(
             "UPDATE media_files SET size_in_bytes = ? WHERE media_id = ?",
             size,
-            media_id,
-        )
+            media_id
+        ))
         .await
     }
 
@@ -1236,11 +1254,11 @@ impl MediaUploadService {
                     drop(permit);
                 }
 
-                self.update_media(
+                self.update_media(sqlx::query!(
                     "UPDATE media_files SET has_thumbnail = ? WHERE media_id = ?",
                     i64::from(files.thumbnail_path(media_id).exists()),
-                    media_id,
-                )
+                    media_id
+                ))
                 .await
             }
             "stored" => {
@@ -1259,15 +1277,15 @@ impl MediaUploadService {
                 // is not coming back.
                 let database = self.ctx.app_db.read().await.clone();
 
-                let removable = sqlx::query_scalar::<_, i64>(
+                let removable = sqlx::query_scalar!(
                     r#"SELECT EXISTS(
                            SELECT 1 FROM media_files
                            WHERE media_id = ? AND stored = 1 AND cloud_state = 'none'
                              AND created_at < ?
                        )"#,
+                    media_id,
+                    chrono::Utc::now().timestamp() - 30 * 24 * 60 * 60
                 )
-                .bind(media_id)
-                .bind(chrono::Utc::now().timestamp() - 30 * 24 * 60 * 60)
                 .fetch_one(&database.pool)
                 .await?
                     != 0;
@@ -1279,11 +1297,10 @@ impl MediaUploadService {
                 Ok(())
             }
             "crop" => {
-                self.update_media(
-                    "UPDATE media_files SET has_crop_analyzed = ? WHERE media_id = ?",
-                    1_i64,
-                    media_id,
-                )
+                self.update_media(sqlx::query!(
+                    "UPDATE media_files SET has_crop_analyzed = 1 WHERE media_id = ?",
+                    media_id
+                ))
                 .await?;
 
                 let Some(media) = self.load(media_id).await? else {
@@ -1318,10 +1335,12 @@ impl MediaUploadService {
 
         let database = self.ctx.app_db.read().await.clone();
 
-        sqlx::query("DELETE FROM media_files WHERE media_id = ?")
-            .bind(media_id)
-            .execute(&database.pool)
-            .await?;
+        sqlx::query!(
+            "DELETE FROM media_files WHERE media_id = ?",
+            media_id
+        )
+        .execute(&database.pool)
+        .await?;
 
         Ok(())
     }
@@ -1336,15 +1355,19 @@ impl MediaUploadService {
 
         let database = self.ctx.app_db.read().await.clone();
 
-        sqlx::query("UPDATE messages SET is_deleted_from_sender = 1 WHERE media_id = ?")
-            .bind(media_id)
-            .execute(&database.pool)
-            .await?;
+        sqlx::query!(
+            "UPDATE messages SET is_deleted_from_sender = 1 WHERE media_id = ?",
+            media_id
+        )
+        .execute(&database.pool)
+        .await?;
 
-        sqlx::query("UPDATE media_files SET upload_state = 'uploaded' WHERE media_id = ?")
-            .bind(media_id)
-            .execute(&database.pool)
-            .await?;
+        sqlx::query!(
+            "UPDATE media_files SET upload_state = 'uploaded' WHERE media_id = ?",
+            media_id
+        )
+        .execute(&database.pool)
+        .await?;
 
         MediaFileService::new(&self.ctx).remove_files(media_id, &media.media_type)?;
 
@@ -1412,7 +1435,7 @@ impl MediaUploadService {
     pub async fn size_limit_report(&self, media_id: &str) -> Result<MediaSizeReport> {
         let database = self.ctx.app_db.read().await.clone();
 
-        let limit_bytes = sqlx::query_scalar::<_, i64>(
+        let limit_bytes = sqlx::query_scalar!(
             "SELECT maximum_object_bytes FROM direct_media_upload_slots ORDER BY created_at DESC \
              LIMIT 1",
         )
@@ -1462,10 +1485,10 @@ impl MediaUploadService {
 
         // Voice messages stay playable.
         if media.media_type == "audio" {
-            let has_message = sqlx::query_scalar::<_, i64>(
+            let has_message = sqlx::query_scalar!(
                 "SELECT EXISTS(SELECT 1 FROM messages WHERE media_id = ?)",
+                media_id
             )
-            .bind(media_id)
             .fetch_one(&database.pool)
             .await?
                 != 0;
@@ -1477,7 +1500,7 @@ impl MediaUploadService {
 
         let now = chrono::Utc::now().timestamp();
 
-        let keepers = sqlx::query_scalar::<_, i64>(
+        let keepers = sqlx::query_scalar!(
             r#"SELECT COUNT(*) FROM messages m
                JOIN media_files f ON f.media_id = m.media_id
                JOIN groups g ON g.group_id = m.group_id
@@ -1499,11 +1522,11 @@ impl MediaUploadService {
                    -- makes the sender store its own copy from these bytes.
                    OR (m.is_story = 1 AND m.created_at > ?)
                  )"#,
+            media_id,
+            now - 3 * 60,
+            now - 2 * 24 * 60 * 60,
+            now - stories::STORY_LIFETIME_SECONDS
         )
-        .bind(media_id)
-        .bind(now - 3 * 60)
-        .bind(now - 2 * 24 * 60 * 60)
-        .bind(now - stories::STORY_LIFETIME_SECONDS)
         .fetch_one(&database.pool)
         .await?;
 
@@ -1513,11 +1536,11 @@ impl MediaUploadService {
     pub async fn set_display_limit(
         &self, media_id: &str, display_limit_in_milliseconds: Option<i64>,
     ) -> Result<()> {
-        self.update_media(
+        self.update_media(sqlx::query!(
             "UPDATE media_files SET display_limit_in_milliseconds = ? WHERE media_id = ?",
             display_limit_in_milliseconds,
-            media_id,
-        )
+            media_id
+        ))
         .await
     }
 
@@ -1529,19 +1552,21 @@ impl MediaUploadService {
         // Authenticated media is always time limited; the UI has no control
         // that could set both independently.
         if requires_authentication {
-            sqlx::query(
+            sqlx::query!(
                 r#"UPDATE media_files
                    SET requires_authentication = 1, display_limit_in_milliseconds = 12000
                    WHERE media_id = ?"#,
+                media_id
             )
-            .bind(media_id)
             .execute(&database.pool)
             .await?;
         } else {
-            sqlx::query("UPDATE media_files SET requires_authentication = 0 WHERE media_id = ?")
-                .bind(media_id)
-                .execute(&database.pool)
-                .await?;
+            sqlx::query!(
+                "UPDATE media_files SET requires_authentication = 0 WHERE media_id = ?",
+                media_id
+            )
+            .execute(&database.pool)
+            .await?;
         }
 
         Ok(())
@@ -1558,12 +1583,14 @@ impl MediaUploadService {
     ) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 
-        sqlx::query("UPDATE media_files SET trim_start_ms = ?, trim_end_ms = ? WHERE media_id = ?")
-            .bind(trim_start_ms)
-            .bind(trim_end_ms)
-            .bind(media_id)
-            .execute(&database.pool)
-            .await?;
+        sqlx::query!(
+            "UPDATE media_files SET trim_start_ms = ?, trim_end_ms = ? WHERE media_id = ?",
+            trim_start_ms,
+            trim_end_ms,
+            media_id
+        )
+        .execute(&database.pool)
+        .await?;
 
         Ok(())
     }
@@ -1571,11 +1598,11 @@ impl MediaUploadService {
     pub async fn toggle_remove_audio(&self, media_id: &str) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 
-        sqlx::query(
+        sqlx::query!(
             "UPDATE media_files SET remove_audio = 1 - COALESCE(remove_audio, 0) WHERE media_id = \
              ?",
+            media_id
         )
-        .bind(media_id)
         .execute(&database.pool)
         .await?;
 
@@ -1589,27 +1616,22 @@ impl MediaUploadService {
         Ok(())
     }
 
-    async fn update_media<T>(&self, query: &'static str, value: T, media_id: &str) -> Result<()>
-    where
-        T: for<'q> sqlx::Encode<'q, sqlx::Sqlite> + sqlx::Type<sqlx::Sqlite> + Send + 'static,
-    {
+    async fn update_media(
+        &self, query: sqlx::query::Query<'_, sqlx::Sqlite, sqlx::sqlite::SqliteArguments>,
+    ) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 
-        sqlx::query(query)
-            .bind(value)
-            .bind(media_id)
-            .execute(&database.pool)
-            .await?;
+        query.execute(&database.pool).await?;
 
         Ok(())
     }
 
     async fn set_upload_state(&self, media_id: &str, state: &str) -> Result<()> {
-        self.update_media(
+        self.update_media(sqlx::query!(
             "UPDATE media_files SET upload_state = ? WHERE media_id = ?",
-            state.to_owned(),
-            media_id,
-        )
+            state,
+            media_id
+        ))
         .await
     }
 
@@ -1637,13 +1659,13 @@ impl MediaUploadService {
             // messages, without failing another recipient of the same file.
             if targets.is_empty() {
                 for contact in parse_reupload_requested_by(media.reupload_requested_by.as_deref()) {
-                    let messages: Vec<String> = sqlx::query_scalar(
+                    let messages: Vec<String> = sqlx::query_scalar!(
                         "SELECT m.message_id FROM messages m JOIN group_members gm ON gm.group_id \
                          = m.group_id WHERE m.media_id = ? AND m.sender_id IS NULL AND \
                          gm.contact_id = ?",
+                        media_id,
+                        contact
                     )
-                    .bind(media_id)
-                    .bind(contact)
                     .fetch_all(&mut *transaction)
                     .await?;
 
@@ -1655,29 +1677,31 @@ impl MediaUploadService {
             }
 
             for target in targets {
-                sqlx::query(
+                sqlx::query!(
                     "INSERT INTO message_actions(message_id, contact_id, type) SELECT message_id, \
                      ?, 'sendFailed' FROM messages WHERE message_id = ? AND media_id = ? ON \
                      CONFLICT(message_id, contact_id, type) DO NOTHING",
+                    target.contact_id,
+                    &target.message_id,
+                    media_id
                 )
-                .bind(target.contact_id)
-                .bind(&target.message_id)
-                .bind(media_id)
                 .execute(&mut *transaction)
                 .await?;
 
-                sqlx::query("DELETE FROM receipts WHERE message_id = ? AND contact_id = ?")
-                    .bind(&target.message_id)
-                    .bind(target.contact_id)
-                    .execute(&mut *transaction)
-                    .await?;
+                sqlx::query!(
+                    "DELETE FROM receipts WHERE message_id = ? AND contact_id = ?",
+                    &target.message_id,
+                    target.contact_id
+                )
+                .execute(&mut *transaction)
+                .await?;
             }
 
-            sqlx::query(
+            sqlx::query!(
                 r#"UPDATE media_files SET upload_state = 'uploaded', reupload_requested_by = NULL, reupload_targets = NULL
                    WHERE media_id = ?"#,
+                media_id
             )
-            .bind(media_id)
             .execute(&mut *transaction)
             .await?;
 
@@ -1694,10 +1718,12 @@ impl MediaUploadService {
                 "media source is gone but messages still reference it"
             );
 
-            sqlx::query("UPDATE media_files SET upload_state = 'uploaded' WHERE media_id = ?")
-                .bind(media_id)
-                .execute(&database.pool)
-                .await?;
+            sqlx::query!(
+                "UPDATE media_files SET upload_state = 'uploaded' WHERE media_id = ?",
+                media_id
+            )
+            .execute(&database.pool)
+            .await?;
 
             return Ok(());
         }
@@ -1712,10 +1738,12 @@ impl MediaUploadService {
 
         MediaFileService::new(&self.ctx).remove_files(media_id, &media.media_type)?;
 
-        sqlx::query("DELETE FROM media_files WHERE media_id = ?")
-            .bind(media_id)
-            .execute(&database.pool)
-            .await?;
+        sqlx::query!(
+            "DELETE FROM media_files WHERE media_id = ?",
+            media_id
+        )
+        .execute(&database.pool)
+        .await?;
 
         Ok(())
     }
@@ -1737,13 +1765,14 @@ impl MediaUploadService {
     async fn load(&self, media_id: &str) -> Result<Option<MediaRow>> {
         let database = self.ctx.app_db.read().await.clone();
 
-        Ok(sqlx::query_as::<_, MediaRow>(
+        Ok(sqlx::query_as!(
+            MediaRow,
             r#"SELECT media_id, type AS media_type, upload_state, requires_authentication,
                       is_draft_media, is_widget_media, display_limit_in_milliseconds, reupload_requested_by, reupload_targets,
                       remove_audio, trim_start_ms, trim_end_ms, created_at
                FROM media_files WHERE media_id = ?"#,
+            media_id
         )
-        .bind(media_id)
         .fetch_optional(&database.pool)
         .await?)
     }
@@ -1752,10 +1781,12 @@ impl MediaUploadService {
         let database = self.ctx.app_db.read().await.clone();
 
         Ok(
-            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM messages WHERE media_id = ?")
-                .bind(media_id)
-                .fetch_one(&database.pool)
-                .await?,
+            sqlx::query_scalar!(
+                "SELECT COUNT(*) FROM messages WHERE media_id = ?",
+                media_id
+            )
+            .fetch_one(&database.pool)
+            .await?,
         )
     }
 
@@ -1940,10 +1971,10 @@ impl MediaUploadService {
 
         let database = self.ctx.app_db.read().await.clone();
 
-        let is_story = sqlx::query_scalar::<_, i64>(
+        let is_story = sqlx::query_scalar!(
             "SELECT EXISTS(SELECT 1 FROM messages WHERE media_id = ? AND is_story = 1)",
+            media_id
         )
-        .bind(media_id)
         .fetch_one(&database.pool)
         .await?
             != 0;
@@ -1959,10 +1990,12 @@ impl MediaUploadService {
         }
 
         if render_thumbnail(media_id, source, thumbnail, true).await {
-            sqlx::query("UPDATE media_files SET has_thumbnail = 1 WHERE media_id = ?")
-                .bind(media_id)
-                .execute(&database.pool)
-                .await?;
+            sqlx::query!(
+                "UPDATE media_files SET has_thumbnail = 1 WHERE media_id = ?",
+                media_id
+            )
+            .execute(&database.pool)
+            .await?;
         }
 
         Ok(())
@@ -1973,12 +2006,13 @@ impl MediaUploadService {
     pub async fn save_to_gallery(&self, media_id: &str) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 
-        let location = sqlx::query_as::<_, GalleryLocationRow>(
+        let location = sqlx::query_as!(
+            GalleryLocationRow,
             r#"SELECT location_status, location_deadline_at, location_latitude,
                       location_longitude, location_accuracy, gallery_export_pending
                FROM media_files WHERE media_id = ?"#,
+            media_id
         )
-        .bind(media_id)
         .fetch_optional(&database.pool)
         .await?;
 
@@ -1989,10 +2023,12 @@ impl MediaUploadService {
         if location.location_status.as_deref() == Some("pending")
             && location.location_deadline_at.unwrap_or_default() > chrono::Utc::now().timestamp()
         {
-            sqlx::query("UPDATE media_files SET gallery_export_pending = 1 WHERE media_id = ?")
-                .bind(media_id)
-                .execute(&database.pool)
-                .await?;
+            sqlx::query!(
+                "UPDATE media_files SET gallery_export_pending = 1 WHERE media_id = ?",
+                media_id
+            )
+            .execute(&database.pool)
+            .await?;
 
             drop(database);
 
@@ -2008,10 +2044,12 @@ impl MediaUploadService {
         }
 
         if location.location_status.as_deref() == Some("pending") {
-            sqlx::query("UPDATE media_files SET location_status = 'timedOut' WHERE media_id = ?")
-                .bind(media_id)
-                .execute(&database.pool)
-                .await?;
+            sqlx::query!(
+                "UPDATE media_files SET location_status = 'timedOut' WHERE media_id = ?",
+                media_id
+            )
+            .execute(&database.pool)
+            .await?;
         }
 
         drop(database);
@@ -2022,12 +2060,13 @@ impl MediaUploadService {
     pub(crate) async fn finish_pending_gallery_export(&self, media_id: &str) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 
-        let location = sqlx::query_as::<_, GalleryLocationRow>(
+        let location = sqlx::query_as!(
+            GalleryLocationRow,
             r#"SELECT location_status, location_deadline_at, location_latitude,
                       location_longitude, location_accuracy, gallery_export_pending
                FROM media_files WHERE media_id = ?"#,
+            media_id
         )
-        .bind(media_id)
         .fetch_optional(&database.pool)
         .await?;
 
@@ -2043,10 +2082,12 @@ impl MediaUploadService {
 
         // This flag represents waiting for location, not a general gallery
         // retry queue. Clear it before handing the export to the platform.
-        sqlx::query("UPDATE media_files SET gallery_export_pending = 0 WHERE media_id = ?")
-            .bind(media_id)
-            .execute(&database.pool)
-            .await?;
+        sqlx::query!(
+            "UPDATE media_files SET gallery_export_pending = 0 WHERE media_id = ?",
+            media_id
+        )
+        .execute(&database.pool)
+        .await?;
 
         drop(database);
 

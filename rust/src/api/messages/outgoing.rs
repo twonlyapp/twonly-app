@@ -90,7 +90,7 @@ pub(crate) async fn decorate_content(
 
     content.sender_twonly_score = if share_twonly_score {
         Some(
-            sqlx::query_scalar::<_, i64>(
+            sqlx::query_scalar!(
                 "SELECT COALESCE(SUM(total_media_counter), 0) FROM groups",
             )
             .fetch_one(&mut **t)

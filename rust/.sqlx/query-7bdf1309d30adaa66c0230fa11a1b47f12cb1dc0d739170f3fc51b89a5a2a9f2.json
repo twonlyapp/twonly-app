@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT gm.contact_id\n                   FROM group_members gm\n                   JOIN contacts c ON c.user_id = gm.contact_id\n                   WHERE gm.group_id = ?\n                     AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')\n                     AND c.account_deleted = 0\n                     AND NOT EXISTS (\n                         SELECT 1 FROM message_actions a\n                         WHERE a.message_id = ? AND a.contact_id = gm.contact_id\n                           AND a.type = 'sendFailed'\n                     )",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7bdf1309d30adaa66c0230fa11a1b47f12cb1dc0d739170f3fc51b89a5a2a9f2"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET location_status = 'timedOut' WHERE location_status = 'pending'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "c9b944628c4c29415495f8c2e4e3376eb86ec56ee350e738910977f6dd6f4437"
+}

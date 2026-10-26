@@ -1,0 +1,33 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT user_id AS \"id!\",\n                  COALESCE(NULLIF(nick_name, ''), display_name, username) AS \"name!: String\"\n           FROM contacts WHERE accepted = 1 AND blocked = 0\n             AND deleted_by_user = 0 AND account_deleted = 0\n           ORDER BY COALESCE(NULLIF(nick_name, ''), display_name, username) COLLATE NOCASE,\n                    user_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "name": "name!: String",
+        "ordinal": 1,
+        "type_info": "Null",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "99bc27a281563dc83117d49c2537aac745801685a9d3b5c7b5bda2b4929065aa"
+}

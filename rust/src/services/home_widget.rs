@@ -102,8 +102,8 @@ fn config_path(ctx: &Context) -> PathBuf {
 pub async fn allowed_contact_ids(ctx: &Arc<Context>) -> Result<Vec<i64>> {
     let database = ctx.app_db.read().await.clone();
 
-    let ids = sqlx::query_scalar::<_, i64>(
-        r#"SELECT DISTINCT contact_id FROM (
+    let ids = sqlx::query_scalar!(
+        r#"SELECT DISTINCT contact_id AS "contact_id!" FROM (
              SELECT contact_id FROM home_widget_contacts
              UNION
              SELECT cgm.user_id AS contact_id
@@ -135,9 +135,10 @@ pub async fn sync_permissions(ctx: &Arc<Context>) -> Result<()> {
 
     let database = ctx.app_db.read().await.clone();
 
-    let current = sqlx::query_as::<_, (i64, i64)>(
+    let current = sqlx::query!(
         "SELECT user_id, widget_sharing_granted FROM contacts WHERE accepted = 1",
     )
+    .map(|row| (row.user_id, row.widget_sharing_granted))
     .fetch_all(&database.pool)
     .await?;
 
@@ -152,11 +153,13 @@ pub async fn sync_permissions(ctx: &Arc<Context>) -> Result<()> {
             continue;
         }
 
-        sqlx::query("UPDATE contacts SET widget_sharing_granted = ? WHERE user_id = ?")
-            .bind(next)
-            .bind(contact_id)
-            .execute(&mut *transaction)
-            .await?;
+        sqlx::query!(
+            "UPDATE contacts SET widget_sharing_granted = ? WHERE user_id = ?",
+            next,
+            contact_id
+        )
+        .execute(&mut *transaction)
+        .await?;
 
         changed.push((contact_id, next));
     }
@@ -186,11 +189,13 @@ pub async fn sync_permissions(ctx: &Arc<Context>) -> Result<()> {
 pub async fn register_widget(ctx: &Arc<Context>, widget_id: &str, platform: &str) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
-    sqlx::query("INSERT OR IGNORE INTO home_widgets(widget_id, platform) VALUES (?, ?)")
-        .bind(widget_id)
-        .bind(platform)
-        .execute(&database.pool)
-        .await?;
+    sqlx::query!(
+        "INSERT OR IGNORE INTO home_widgets(widget_id, platform) VALUES (?, ?)",
+        widget_id,
+        platform
+    )
+    .execute(&database.pool)
+    .await?;
 
     sync_permissions(ctx).await
 }
@@ -198,10 +203,12 @@ pub async fn register_widget(ctx: &Arc<Context>, widget_id: &str, platform: &str
 pub async fn unregister_widget(ctx: &Arc<Context>, widget_id: &str) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
-    sqlx::query("DELETE FROM home_widgets WHERE widget_id = ?")
-        .bind(widget_id)
-        .execute(&database.pool)
-        .await?;
+    sqlx::query!(
+        "DELETE FROM home_widgets WHERE widget_id = ?",
+        widget_id
+    )
+    .execute(&database.pool)
+    .await?;
 
     sync_permissions(ctx).await
 }
@@ -213,23 +220,27 @@ pub async fn set_widget_groups(
 
     let mut transaction = database.pool.begin().await?;
 
-    sqlx::query("INSERT OR IGNORE INTO home_widgets(widget_id, platform) VALUES (?, ?)")
-        .bind(widget_id)
-        .bind(platform)
-        .execute(&mut *transaction)
-        .await?;
+    sqlx::query!(
+        "INSERT OR IGNORE INTO home_widgets(widget_id, platform) VALUES (?, ?)",
+        widget_id,
+        platform
+    )
+    .execute(&mut *transaction)
+    .await?;
 
-    sqlx::query("DELETE FROM home_widget_groups WHERE widget_id = ?")
-        .bind(widget_id)
-        .execute(&mut *transaction)
-        .await?;
+    sqlx::query!(
+        "DELETE FROM home_widget_groups WHERE widget_id = ?",
+        widget_id
+    )
+    .execute(&mut *transaction)
+    .await?;
 
     for group_id in contact_group_ids {
-        sqlx::query(
+        sqlx::query!(
             "INSERT OR IGNORE INTO home_widget_groups(widget_id, contact_group_id) VALUES (?, ?)",
+            widget_id,
+            group_id
         )
-        .bind(widget_id)
-        .bind(group_id)
         .execute(&mut *transaction)
         .await?;
     }
@@ -279,7 +290,7 @@ async fn import_native_configuration(ctx: &Arc<Context>) -> Result<()> {
 
     let mut transaction = database.pool.begin().await?;
 
-    sqlx::query("DELETE FROM home_widgets WHERE 1")
+    sqlx::query!("DELETE FROM home_widgets WHERE 1")
         .execute(&mut *transaction)
         .await?;
 
@@ -290,30 +301,32 @@ async fn import_native_configuration(ctx: &Arc<Context>) -> Result<()> {
             continue;
         }
 
-        sqlx::query("INSERT INTO home_widgets(widget_id, platform) VALUES (?, ?)")
-            .bind(&widget.id)
-            .bind(&widget.platform)
-            .execute(&mut *transaction)
-            .await?;
+        sqlx::query!(
+            "INSERT INTO home_widgets(widget_id, platform) VALUES (?, ?)",
+            &widget.id,
+            &widget.platform
+        )
+        .execute(&mut *transaction)
+        .await?;
 
         for group_id in widget.group_ids {
-            sqlx::query(
+            sqlx::query!(
                 "INSERT OR IGNORE INTO home_widget_groups(widget_id, contact_group_id) VALUES (?, \
                  ?)",
+                &widget.id,
+                group_id
             )
-            .bind(&widget.id)
-            .bind(group_id)
             .execute(&mut *transaction)
             .await?;
         }
 
         for contact_id in widget.contact_ids {
-            sqlx::query(
+            sqlx::query!(
                 r#"INSERT OR IGNORE INTO home_widget_contacts(widget_id, contact_id)
                    SELECT ?, user_id FROM contacts WHERE user_id = ?"#,
+                &widget.id,
+                contact_id
             )
-            .bind(&widget.id)
-            .bind(contact_id)
             .execute(&mut *transaction)
             .await?;
         }
@@ -327,7 +340,7 @@ async fn import_native_configuration(ctx: &Arc<Context>) -> Result<()> {
 async fn contact_group_ids_for_sender(ctx: &Arc<Context>, sender_id: i64) -> Result<Vec<i64>> {
     let database = ctx.app_db.read().await.clone();
 
-    Ok(sqlx::query_scalar::<_, i64>(
+    Ok(sqlx::query_scalar!(
         r#"SELECT DISTINCT contact_group_id FROM (
              SELECT contact_group_id FROM contact_group_members WHERE user_id = ?
              UNION
@@ -336,9 +349,9 @@ async fn contact_group_ids_for_sender(ctx: &Arc<Context>, sender_id: i64) -> Res
              JOIN group_members gm ON gm.group_id = cgm.group_id
              WHERE gm.contact_id = ?
            ) ORDER BY contact_group_id"#,
+        sender_id,
+        sender_id
     )
-    .bind(sender_id)
-    .bind(sender_id)
     .fetch_all(&database.pool)
     .await?)
 }
@@ -364,7 +377,8 @@ pub async fn refresh_manifest(ctx: &Arc<Context>) -> Result<()> {
 
     let database = ctx.app_db.read().await.clone();
 
-    let groups = sqlx::query_as::<_, ManifestGroup>(
+    let groups = sqlx::query_as!(
+        ManifestGroup,
         "SELECT id, name, emoji FROM contact_groups ORDER BY name COLLATE NOCASE, id",
     )
     .fetch_all(&database.pool)
@@ -372,26 +386,30 @@ pub async fn refresh_manifest(ctx: &Arc<Context>) -> Result<()> {
 
     // Matches getContactDisplayName: a nonempty nickname takes priority over
     // the profile's display name, with the username as the final fallback.
-    let contacts = sqlx::query_as::<_, ManifestContact>(
-        r#"SELECT user_id AS id, COALESCE(NULLIF(nick_name, ''), display_name, username) AS name
+    let contacts = sqlx::query_as!(
+        ManifestContact,
+        r#"SELECT user_id AS "id!",
+                  COALESCE(NULLIF(nick_name, ''), display_name, username) AS "name!: String"
            FROM contacts WHERE accepted = 1 AND blocked = 0
              AND deleted_by_user = 0 AND account_deleted = 0
-           ORDER BY name COLLATE NOCASE, user_id"#,
+           ORDER BY COALESCE(NULLIF(nick_name, ''), display_name, username) COLLATE NOCASE,
+                    user_id"#,
     )
     .fetch_all(&database.pool)
     .await?;
 
     let directly_selected: BTreeSet<i64> =
-        sqlx::query_scalar::<_, i64>("SELECT DISTINCT contact_id FROM home_widget_contacts")
+        sqlx::query_scalar!("SELECT DISTINCT contact_id FROM home_widget_contacts")
             .fetch_all(&database.pool)
             .await?
             .into_iter()
             .collect();
 
-    let rows = sqlx::query_as::<_, WidgetMediaRow>(
-        r#"SELECT f.media_id, f.type AS media_type, m.sender_id,
-                  COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username) AS sender, m.created_at,
-                  f.download_state
+    let rows = sqlx::query_as!(
+        WidgetMediaRow,
+        r#"SELECT f.media_id, f.type AS media_type, m.sender_id AS "sender_id!",
+                  COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username) AS "sender!: String",
+                  m.created_at, f.download_state AS "download_state!"
            FROM messages m
            JOIN media_files f ON f.media_id = m.media_id
            JOIN contacts c ON c.user_id = m.sender_id
@@ -570,15 +588,19 @@ async fn remove_media(ctx: &Arc<Context>, media: &[(String, String)]) -> Result<
     let mut transaction = database.pool.begin().await?;
 
     for (media_id, _) in media {
-        sqlx::query("DELETE FROM messages WHERE media_id = ?")
-            .bind(media_id)
-            .execute(&mut *transaction)
-            .await?;
+        sqlx::query!(
+            "DELETE FROM messages WHERE media_id = ?",
+            media_id
+        )
+        .execute(&mut *transaction)
+        .await?;
 
-        sqlx::query("DELETE FROM media_files WHERE media_id = ?")
-            .bind(media_id)
-            .execute(&mut *transaction)
-            .await?;
+        sqlx::query!(
+            "DELETE FROM media_files WHERE media_id = ?",
+            media_id
+        )
+        .execute(&mut *transaction)
+        .await?;
     }
 
     transaction.commit().await?;
@@ -609,10 +631,10 @@ async fn remove_media(ctx: &Arc<Context>, media: &[(String, String)]) -> Result<
 pub async fn delete_media(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
-    let media_type = sqlx::query_scalar::<_, String>(
+    let media_type = sqlx::query_scalar!(
         "SELECT type FROM media_files WHERE media_id = ? AND is_widget_media = 1",
+        media_id
     )
-    .bind(media_id)
     .fetch_optional(&database.pool)
     .await?;
 

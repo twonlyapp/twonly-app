@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO direct_media_upload_slots\n                   (attachment_id, expires_at, maximum_object_bytes, upload_url,\n                    upload_fields_json, capability, state)\n                   VALUES (?, ?, ?, ?, ?, ?, 'cached')\n                   ON CONFLICT(attachment_id) DO UPDATE SET\n                       expires_at = excluded.expires_at,\n                       maximum_object_bytes = excluded.maximum_object_bytes,\n                       upload_url = excluded.upload_url,\n                       upload_fields_json = excluded.upload_fields_json,\n                       capability = excluded.capability\n                   WHERE direct_media_upload_slots.state = 'cached'\n                     AND direct_media_upload_slots.attachment_id NOT IN\n                         (SELECT attachment_id FROM direct_media_upload_jobs)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "a96d841e7f261c11b7ae4a7d158e384d3475f025ccfa512987a045b35af2e076"
+}

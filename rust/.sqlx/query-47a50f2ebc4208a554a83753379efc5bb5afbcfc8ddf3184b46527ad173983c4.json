@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT DISTINCT contact_id AS \"contact_id!\" FROM (\n             SELECT contact_id FROM home_widget_contacts\n             UNION\n             SELECT cgm.user_id AS contact_id\n             FROM home_widget_groups hwg\n             JOIN contact_group_members cgm\n               ON cgm.contact_group_id = hwg.contact_group_id\n             WHERE cgm.user_id IS NOT NULL\n             UNION\n             SELECT gm.contact_id\n             FROM home_widget_groups hwg\n             JOIN contact_group_members cgm\n               ON cgm.contact_group_id = hwg.contact_group_id\n             JOIN group_members gm ON gm.group_id = cgm.group_id\n             WHERE cgm.group_id IS NOT NULL\n               AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')\n           ) ORDER BY contact_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "47a50f2ebc4208a554a83753379efc5bb5afbcfc8ddf3184b46527ad173983c4"
+}

@@ -186,7 +186,8 @@ impl WebxdcService {
 
         let local_user_id = self.ctx.user_id().await?;
 
-        let instances = sqlx::query_as::<_, SyncInstanceRow>(
+        let instances = sqlx::query_as!(
+            SyncInstanceRow,
             r#"SELECT instance.instance_id, instance.app_id, instance.version,
                       instance.summary, instance.document, instance.created_at,
                       instance.last_update_at
@@ -195,17 +196,18 @@ impl WebxdcService {
                  ON app.app_id = instance.app_id AND app.version = instance.version
                WHERE instance.group_id = ? AND app.one_time = 1
                ORDER BY instance.created_at, instance.instance_id"#,
+            group_id
         )
-        .bind(group_id)
         .fetch_all(&database.pool)
         .await?;
 
         for instance in instances {
-            let updates = sqlx::query_as::<_, SyncUpdateRow>(
+            let updates = sqlx::query_as!(
+                SyncUpdateRow,
                 r#"SELECT message_id, sender_id, payload, info, href, received_at
                    FROM webxdc_updates WHERE instance_id = ? ORDER BY serial"#,
+                &instance.instance_id
             )
-            .bind(&instance.instance_id)
             .fetch_all(&database.pool)
             .await?;
 
@@ -302,12 +304,12 @@ impl WebxdcService {
             return Err(TwonlyError::Generic("invalid webxdc sync chunk".into()));
         }
 
-        let sender_is_member: bool = sqlx::query_scalar(
-            "SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = ? AND contact_id = ? AND \
-             (member_state IS NULL OR member_state != 'leftGroup'))",
+        let sender_is_member: bool = sqlx::query_scalar!(
+            r#"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = ? AND contact_id = ? AND 
+             (member_state IS NULL OR member_state != 'leftGroup')) AS "sender_is_member!: bool""#,
+            group_id,
+            sender_id
         )
-        .bind(group_id)
-        .bind(sender_id)
         .fetch_one(&mut **transaction)
         .await?;
 
@@ -317,37 +319,45 @@ impl WebxdcService {
             ));
         }
 
-        sqlx::query(
+        sqlx::query!(
             r#"INSERT INTO webxdc_sync_chunks
                    (transfer_id, group_id, sender_id, chunk_index, chunk_count,
                     payload_sha256, payload)
                VALUES (?, ?, ?, ?, ?, ?, ?)
                ON CONFLICT(transfer_id, sender_id, chunk_index) DO NOTHING"#,
+            &chunk.transfer_id,
+            group_id,
+            sender_id,
+            chunk.chunk_index as i64,
+            chunk.chunk_count as i64,
+            &chunk.payload_sha256,
+            &chunk.payload
         )
-        .bind(&chunk.transfer_id)
-        .bind(group_id)
-        .bind(sender_id)
-        .bind(chunk.chunk_index as i64)
-        .bind(chunk.chunk_count as i64)
-        .bind(&chunk.payload_sha256)
-        .bind(&chunk.payload)
         .execute(&mut **transaction)
         .await?;
 
-        sqlx::query(
+        sqlx::query!(
             "DELETE FROM webxdc_sync_chunks WHERE created_at < strftime('%s','now') - 86400",
         )
         .execute(&mut **transaction)
         .await?;
 
-        let rows: Vec<(i64, i64, Vec<u8>, Vec<u8>)> = sqlx::query_as(
+        let rows: Vec<(i64, i64, Vec<u8>, Vec<u8>)> = sqlx::query!(
             r#"SELECT chunk_index, chunk_count, payload_sha256, payload
                FROM webxdc_sync_chunks
                WHERE transfer_id = ? AND sender_id = ?
                ORDER BY chunk_index"#,
+            &chunk.transfer_id,
+            sender_id
         )
-        .bind(&chunk.transfer_id)
-        .bind(sender_id)
+        .map(|row| {
+            (
+                row.chunk_index,
+                row.chunk_count,
+                row.payload_sha256,
+                row.payload,
+            )
+        })
         .fetch_all(&mut **transaction)
         .await?;
 
@@ -375,11 +385,13 @@ impl WebxdcService {
 
         Self::install_sync_payload(transaction, group_id, sender_id, payload).await?;
 
-        sqlx::query("DELETE FROM webxdc_sync_chunks WHERE transfer_id = ? AND sender_id = ?")
-            .bind(&chunk.transfer_id)
-            .bind(sender_id)
-            .execute(&mut **transaction)
-            .await?;
+        sqlx::query!(
+            "DELETE FROM webxdc_sync_chunks WHERE transfer_id = ? AND sender_id = ?",
+            &chunk.transfer_id,
+            sender_id
+        )
+        .execute(&mut **transaction)
+        .await?;
 
         Ok(())
     }
@@ -406,10 +418,10 @@ impl WebxdcService {
                 return Err(TwonlyError::Generic("invalid webxdc sync payload".into()));
             }
 
-            let exists: bool = sqlx::query_scalar(
-                "SELECT EXISTS(SELECT 1 FROM webxdc_instances WHERE instance_id = ?)",
+            let exists: bool = sqlx::query_scalar!(
+                r#"SELECT EXISTS(SELECT 1 FROM webxdc_instances WHERE instance_id = ?) AS "exists!: bool""#,
+                &instance.instance_id
             )
-            .bind(&instance.instance_id)
             .fetch_one(&mut **transaction)
             .await?;
 
@@ -435,18 +447,18 @@ impl WebxdcService {
                 ..Default::default()
             };
 
-            sqlx::query(
+            sqlx::query!(
                 r#"INSERT INTO messages
                        (group_id, message_id, sender_id, type,
                         additional_message_data, created_at, ack_by_server)
                    VALUES (?, ?, ?, 'webxdcApp', ?, ?, strftime('%s','now'))
                    ON CONFLICT(message_id) DO NOTHING"#,
+                group_id,
+                &instance.instance_id,
+                sender_id,
+                prost::Message::encode_to_vec(&app_data),
+                instance.created_at
             )
-            .bind(group_id)
-            .bind(&instance.instance_id)
-            .bind(sender_id)
-            .bind(prost::Message::encode_to_vec(&app_data))
-            .bind(instance.created_at)
             .execute(&mut **transaction)
             .await?;
 
@@ -459,11 +471,13 @@ impl WebxdcService {
             )
             .await?;
 
-            sqlx::query("UPDATE webxdc_instances SET created_at = ? WHERE instance_id = ?")
-                .bind(instance.created_at)
-                .bind(&instance.instance_id)
-                .execute(&mut **transaction)
-                .await?;
+            sqlx::query!(
+                "UPDATE webxdc_instances SET created_at = ? WHERE instance_id = ?",
+                instance.created_at,
+                &instance.instance_id
+            )
+            .execute(&mut **transaction)
+            .await?;
 
             for update in instance.updates {
                 if update.message_id.is_empty() || update.payload.len() > SEND_UPDATE_MAX_SIZE {
@@ -569,15 +583,15 @@ impl WebxdcService {
     async fn ensure_chat_allowed(&self, group_id: &str, app_id: &str) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 
-        let allowed: bool = sqlx::query_scalar(
-            "SELECT EXISTS(SELECT 1 FROM groups WHERE group_id = ? AND
+        let allowed: bool = sqlx::query_scalar!(
+            r#"SELECT EXISTS(SELECT 1 FROM groups WHERE group_id = ? AND
                 (is_direct_chat = 1 OR COALESCE((
                     SELECT direct_chat_only FROM webxdc_apps WHERE app_id = ?
                     ORDER BY published DESC, version DESC LIMIT 1
-                ), 0) = 0))",
+                ), 0) = 0)) AS "allowed!: bool""#,
+            group_id,
+            app_id
         )
-        .bind(group_id)
-        .bind(app_id)
         .fetch_one(&database.pool)
         .await?;
 
@@ -595,11 +609,11 @@ impl WebxdcService {
     ) -> Result<Option<String>> {
         let database = self.ctx.app_db.read().await.clone();
 
-        let one_time: bool = sqlx::query_scalar(
+        let one_time: bool = sqlx::query_scalar!(
             "SELECT one_time FROM webxdc_apps WHERE app_id = ? AND version = ? AND published = 1",
+            app_id,
+            version
         )
-        .bind(app_id)
-        .bind(version)
         .fetch_one(&database.pool)
         .await?;
 
@@ -607,11 +621,11 @@ impl WebxdcService {
             return Ok(None);
         }
 
-        Ok(sqlx::query_scalar(
+        Ok(sqlx::query_scalar!(
             "SELECT instance_id FROM webxdc_instances WHERE group_id = ? AND app_id = ? LIMIT 1",
+            group_id,
+            app_id
         )
-        .bind(group_id)
-        .bind(app_id)
         .fetch_optional(&database.pool)
         .await?)
     }
@@ -683,19 +697,21 @@ impl WebxdcService {
             // A newly joined member can receive a live update before the app
             // snapshot. Keep it until the instance arrives; deletion removes
             // these rows with the group.
-            sqlx::query(
+            sqlx::query!(
                 "DELETE FROM webxdc_pending_updates WHERE received_at < strftime('%s','now') - \
                  604800",
             )
             .execute(&mut **transaction)
             .await?;
 
-            let pending: (i64, i64) = sqlx::query_as(
-                r#"SELECT COUNT(*), COALESCE(SUM(LENGTH(payload)), 0)
+            let pending: (i64, i64) = sqlx::query!(
+                r#"SELECT COUNT(*) AS "count!: i64",
+                          COALESCE(SUM(LENGTH(payload)), 0) AS "bytes!: i64"
                    FROM webxdc_pending_updates WHERE instance_id = ? AND group_id = ?"#,
+                &update.instance_id,
+                group_id
             )
-            .bind(&update.instance_id)
-            .bind(group_id)
+            .map(|row| (row.count, row.bytes))
             .fetch_one(&mut **transaction)
             .await?;
 
@@ -707,23 +723,23 @@ impl WebxdcService {
                 return Ok(());
             }
 
-            sqlx::query(
+            sqlx::query!(
                 r#"INSERT INTO webxdc_pending_updates
                        (message_id, instance_id, group_id, sender_id, payload,
                         info, href, summary, document, received_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                    ON CONFLICT(message_id) DO NOTHING"#,
+                message_id,
+                &update.instance_id,
+                group_id,
+                sender_id,
+                &update.payload,
+                &update.info,
+                &update.href,
+                &update.summary,
+                &update.document,
+                received_at
             )
-            .bind(message_id)
-            .bind(&update.instance_id)
-            .bind(group_id)
-            .bind(sender_id)
-            .bind(&update.payload)
-            .bind(&update.info)
-            .bind(&update.href)
-            .bind(&update.summary)
-            .bind(&update.document)
-            .bind(received_at)
             .execute(&mut **transaction)
             .await?;
 
@@ -798,14 +814,15 @@ impl WebxdcService {
         transaction: &mut Transaction<'_, Sqlite>, instance_id: &str, app_id: &str, version: i64,
         group_id: &str,
     ) -> Result<()> {
-        let rows = sqlx::query_as::<_, PendingUpdateRow>(
+        let rows = sqlx::query_as!(
+            PendingUpdateRow,
             r#"SELECT message_id, sender_id, payload, info, href, summary, document, received_at
                FROM webxdc_pending_updates
                WHERE instance_id = ? AND group_id = ?
                ORDER BY received_at, message_id"#,
+            instance_id,
+            group_id
         )
-        .bind(instance_id)
-        .bind(group_id)
         .fetch_all(&mut **transaction)
         .await?;
 
@@ -869,11 +886,13 @@ impl WebxdcService {
             }
         }
 
-        sqlx::query("DELETE FROM webxdc_pending_updates WHERE instance_id = ? AND group_id = ?")
-            .bind(instance_id)
-            .bind(group_id)
-            .execute(&mut **transaction)
-            .await?;
+        sqlx::query!(
+            "DELETE FROM webxdc_pending_updates WHERE instance_id = ? AND group_id = ?",
+            instance_id,
+            group_id
+        )
+        .execute(&mut **transaction)
+        .await?;
 
         Ok(())
     }
@@ -896,12 +915,12 @@ impl WebxdcService {
         group_id: &str, update_message_id: &str, sender_id: Option<i64>, info: &str,
         created_at: i64,
     ) -> Result<()> {
-        let latest: Option<String> = sqlx::query_scalar(
+        let latest: Option<String> = sqlx::query_scalar!(
             "SELECT message_id FROM webxdc_updates
              WHERE instance_id = ? AND info IS NOT NULL
              ORDER BY received_at DESC, serial DESC LIMIT 1",
+            instance_id
         )
-        .bind(instance_id)
         .fetch_optional(&mut **transaction)
         .await?;
 
@@ -911,25 +930,25 @@ impl WebxdcService {
 
         // Only generated info rows are replaced. User-sent app text and the
         // complete update log remain, as do undelivered game receipts.
-        sqlx::query(
+        sqlx::query!(
             "DELETE FROM messages WHERE group_id = ? AND message_id IN (
                 SELECT message_id || '-info' FROM webxdc_updates
                 WHERE instance_id = ? AND message_id != ?
             )",
+            group_id,
+            instance_id,
+            update_message_id
         )
-        .bind(group_id)
-        .bind(instance_id)
-        .bind(update_message_id)
         .execute(&mut **transaction)
         .await?;
 
-        sqlx::query(
+        sqlx::query!(
             "UPDATE messages SET created_at = MAX(created_at, ?)
              WHERE message_id = ? AND group_id = ? AND type = 'webxdcApp'",
+            created_at,
+            instance_id,
+            group_id
         )
-        .bind(created_at)
-        .bind(instance_id)
-        .bind(group_id)
         .execute(&mut **transaction)
         .await?;
 
@@ -1480,14 +1499,16 @@ impl WebxdcService {
         let database = self.ctx.app_db.read().await.clone();
 
         // Match getContactDisplayName: nickname, profile display name, username.
-        let rows: Vec<(i64, String, bool)> = sqlx::query_as(
-            "SELECT c.user_id, COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username), \
-             c.account_deleted
-             FROM group_members m JOIN contacts c ON c.user_id = m.contact_id
-             WHERE m.group_id = ? AND (m.member_state IS NULL OR m.member_state != 'leftGroup')
-             ORDER BY c.user_id",
+        let rows: Vec<(i64, String, bool)> = sqlx::query!(
+            r#"SELECT c.user_id AS "user_id!",
+                      COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username) AS "name!: String",
+                      c.account_deleted AS "account_deleted: bool"
+               FROM group_members m JOIN contacts c ON c.user_id = m.contact_id
+               WHERE m.group_id = ? AND (m.member_state IS NULL OR m.member_state != 'leftGroup')
+               ORDER BY c.user_id"#,
+            &instance.group_id
         )
-        .bind(&instance.group_id)
+        .map(|row| (row.user_id, row.name, row.account_deleted))
         .fetch_all(&database.pool)
         .await?;
 

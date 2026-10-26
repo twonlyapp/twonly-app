@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE direct_media_upload_slots SET state = 'reserved'\n               WHERE attachment_id = (\n                 SELECT attachment_id FROM direct_media_upload_slots\n                 WHERE state = 'cached'\n                   AND expires_at > CAST(strftime('%s','now') AS INTEGER)\n                   AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)\n                 ORDER BY expires_at ASC LIMIT 1\n               )\n               RETURNING attachment_id, expires_at, maximum_object_bytes, upload_url,\n                         upload_fields_json, capability",
+  "describe": {
+    "columns": [
+      {
+        "name": "attachment_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_slots",
+            "name": "attachment_id"
+          }
+        }
+      },
+      {
+        "name": "expires_at",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_slots",
+            "name": "expires_at"
+          }
+        }
+      },
+      {
+        "name": "maximum_object_bytes",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_slots",
+            "name": "maximum_object_bytes"
+          }
+        }
+      },
+      {
+        "name": "upload_url",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_slots",
+            "name": "upload_url"
+          }
+        }
+      },
+      {
+        "name": "upload_fields_json",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_slots",
+            "name": "upload_fields_json"
+          }
+        }
+      },
+      {
+        "name": "capability",
+        "ordinal": 5,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_slots",
+            "name": "capability"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fbf29de671a0abe293c001370191aa37fd49d46d6f526dce4c29f4ec6b4caff6"
+}

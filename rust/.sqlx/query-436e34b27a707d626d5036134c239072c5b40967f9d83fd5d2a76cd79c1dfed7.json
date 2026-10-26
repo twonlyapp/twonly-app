@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT attachment_id, media_id FROM direct_media_upload_jobs WHERE state = 'prepared'",
+  "describe": {
+    "columns": [
+      {
+        "name": "attachment_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "attachment_id"
+          }
+        }
+      },
+      {
+        "name": "media_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "media_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "436e34b27a707d626d5036134c239072c5b40967f9d83fd5d2a76cd79c1dfed7"
+}

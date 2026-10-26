@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM messages m\n               JOIN group_members gm ON gm.group_id = m.group_id\n               WHERE m.message_id = ? AND m.media_id = ? AND m.sender_id IS NULL\n                 AND gm.contact_id = ?\n                 AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')\n                 AND NOT EXISTS (\n                     SELECT 1 FROM message_actions a\n                     WHERE a.message_id = m.message_id AND a.contact_id = gm.contact_id\n                       AND a.type = 'sendFailed'\n                 ))",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM messages m\n               JOIN group_members gm ON gm.group_id = m.group_id\n               WHERE m.message_id = ? AND m.media_id = ? AND m.sender_id IS NULL\n                 AND gm.contact_id = ?\n                 AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')\n                 AND NOT EXISTS (\n                     SELECT 1 FROM message_actions a\n                     WHERE a.message_id = m.message_id AND a.contact_id = gm.contact_id\n                       AND a.type = 'sendFailed'\n                 ))",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2b8f4783ec0adb547c73dde4f49543c7d5f0ff4b328cb59e36601cdf1f7f1ab2"
+}

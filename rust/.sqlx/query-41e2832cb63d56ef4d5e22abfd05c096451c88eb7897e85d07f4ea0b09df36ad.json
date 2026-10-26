@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR IGNORE INTO home_widgets(widget_id, platform) VALUES (?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "41e2832cb63d56ef4d5e22abfd05c096451c88eb7897e85d07f4ea0b09df36ad"
+}

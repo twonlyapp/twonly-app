@@ -1,0 +1,81 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT f.media_id, f.type AS media_type, m.sender_id AS \"sender_id!\",\n                  COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username) AS \"sender!: String\",\n                  m.created_at, f.download_state AS \"download_state!\"\n           FROM messages m\n           JOIN media_files f ON f.media_id = m.media_id\n           JOIN contacts c ON c.user_id = m.sender_id\n           WHERE m.is_widget_media = 1 AND f.is_widget_media = 1\n           ORDER BY m.created_at DESC, m.rowid DESC",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "media_type",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "sender_id!",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "sender_id"
+          }
+        }
+      },
+      {
+        "name": "sender!: String",
+        "ordinal": 3,
+        "type_info": "Null",
+        "origin": "Expression"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "download_state!",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "download_state"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null,
+      false,
+      true
+    ]
+  },
+  "hash": "076ccf250b482176a42b46f61420bc998a053406013ce1b2a3b6da709234eba7"
+}

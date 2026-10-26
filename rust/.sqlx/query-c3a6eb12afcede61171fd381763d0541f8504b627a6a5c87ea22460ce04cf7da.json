@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO live_location_outbox(receipt_id, message_id) VALUES (?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "c3a6eb12afcede61171fd381763d0541f8504b627a6a5c87ea22460ce04cf7da"
+}

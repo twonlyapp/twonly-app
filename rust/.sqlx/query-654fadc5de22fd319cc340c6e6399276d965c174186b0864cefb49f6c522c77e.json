@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE notification_outbox\n        SET cleared_at = ?\n        WHERE cleared_at IS NULL\n          AND message_id IS NOT NULL\n          AND (\n              NOT EXISTS (\n                  SELECT 1 FROM messages\n                  WHERE messages.message_id = notification_outbox.message_id\n              )\n              OR EXISTS (\n                  SELECT 1 FROM messages\n                  WHERE messages.message_id = notification_outbox.message_id\n                    AND (\n                        messages.is_deleted_from_sender = 1\n                        OR (\n                            messages.opened_at IS NOT NULL\n                            AND notification_outbox.kind IN ('text', 'response', 'mention', 'sticker', 'live_location', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')\n                        )\n                    )\n              )\n          )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "654fadc5de22fd319cc340c6e6399276d965c174186b0864cefb49f6c522c77e"
+}

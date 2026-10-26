@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT type AS media_type, display_limit_in_milliseconds FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_type",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "display_limit_in_milliseconds",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "display_limit_in_milliseconds"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "1ff35ab73b626fb73a179a9ecbbfee47c30ed3fe70c1197a2e9fe4faf5922bac"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE notification_outbox SET cleared_at = ?\n         WHERE cleared_at IS NULL AND kind = 'webxdc'\n           AND notification_id IN (SELECT message_id FROM webxdc_updates WHERE instance_id = ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "6b150f00596e576e90e8055dc47915908801428f942cbcb779462e51a5467296"
+}

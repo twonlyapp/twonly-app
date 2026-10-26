@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM webxdc_sync_chunks WHERE transfer_id = ? AND sender_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "cefd75118f981a879049bf7b8a5dc6038f56d0154f05877c0e1f93ae5d745219"
+}

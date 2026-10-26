@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM outbox_dispatch_jobs\n               WHERE expires_at <= CAST(strftime('%s','now') AS INTEGER)\n                  OR receipt_id NOT IN (SELECT receipt_id FROM receipts)\n               RETURNING body_path",
+  "describe": {
+    "columns": [
+      {
+        "name": "body_path",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "outbox_dispatch_jobs",
+            "name": "body_path"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0afdec8364035e93cdb211efc94c8cbdedd4db3c8fde7071d1e8a88682106c8f"
+}

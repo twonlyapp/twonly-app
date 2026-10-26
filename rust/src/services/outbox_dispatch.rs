@@ -93,7 +93,7 @@ impl OutboxDispatchService {
 
         let database = self.ctx.app_db.read().await.clone();
 
-        let receipt_ids = sqlx::query_scalar::<_, String>(
+        let receipt_ids = sqlx::query_scalar!(
             r#"SELECT receipt_id FROM receipts
                WHERE will_be_retried_by_media_upload = 0
                  AND deferred_until_session IS NULL
@@ -106,8 +106,8 @@ impl OutboxDispatchService {
                  ))
                ORDER BY created_at
                LIMIT ?"#,
+            MAXIMUM_HANDOVERS as i64
         )
-        .bind(MAXIMUM_HANDOVERS as i64)
         .fetch_all(&database.pool)
         .await?;
 
@@ -197,17 +197,17 @@ impl OutboxDispatchService {
         // The row is written before the hand-off so a process death between the
         // two leaves a job the expiry sweep can clean up, rather than a file
         // nothing knows about.
-        sqlx::query(
+        sqlx::query!(
             r#"INSERT INTO outbox_dispatch_jobs
                (receipt_id, dispatch_id, contact_id, body_path, expires_at, created_at)
                VALUES (?, ?, ?, ?, ?, ?)"#,
+            receipt_id,
+            &dispatch_id,
+            prepared.contact_id,
+            body_path.to_string_lossy(),
+            expires_at,
+            chrono::Utc::now().timestamp()
         )
-        .bind(receipt_id)
-        .bind(&dispatch_id)
-        .bind(prepared.contact_id)
-        .bind(body_path.to_string_lossy().as_ref())
-        .bind(expires_at)
-        .bind(chrono::Utc::now().timestamp())
         .execute(&database.pool)
         .await?;
 
@@ -229,10 +229,11 @@ impl OutboxDispatchService {
     async fn forget(&self, receipt_id: &str) {
         let database = self.ctx.app_db.read().await.clone();
 
-        let removed = sqlx::query_as::<_, ExpiredJob>(
+        let removed = sqlx::query_as!(
+            ExpiredJob,
             "DELETE FROM outbox_dispatch_jobs WHERE receipt_id = ? RETURNING body_path",
+            receipt_id
         )
-        .bind(receipt_id)
         .fetch_optional(&database.pool)
         .await;
 
@@ -246,7 +247,8 @@ impl OutboxDispatchService {
     pub async fn purge_expired(&self) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 
-        let expired = sqlx::query_as::<_, ExpiredJob>(
+        let expired = sqlx::query_as!(
+            ExpiredJob,
             r#"DELETE FROM outbox_dispatch_jobs
                WHERE expires_at <= CAST(strftime('%s','now') AS INTEGER)
                   OR receipt_id NOT IN (SELECT receipt_id FROM receipts)

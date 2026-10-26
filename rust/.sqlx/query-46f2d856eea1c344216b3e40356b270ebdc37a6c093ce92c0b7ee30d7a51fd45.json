@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE receipts SET message_id = ? WHERE receipt_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "46f2d856eea1c344216b3e40356b270ebdc37a6c093ce92c0b7ee30d7a51fd45"
+}

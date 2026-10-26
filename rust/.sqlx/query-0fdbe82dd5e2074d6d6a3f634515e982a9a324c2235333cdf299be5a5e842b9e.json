@@ -1,0 +1,45 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT webp IS NOT NULL AS \"has_photo!: bool\", accepted_contacts_only, source_revision\n           FROM own_custom_avatar WHERE singleton = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "has_photo!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "accepted_contacts_only",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "accepted_contacts_only"
+          }
+        }
+      },
+      {
+        "name": "source_revision",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "source_revision"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0fdbe82dd5e2074d6d6a3f634515e982a9a324c2235333cdf299be5a5e842b9e"
+}

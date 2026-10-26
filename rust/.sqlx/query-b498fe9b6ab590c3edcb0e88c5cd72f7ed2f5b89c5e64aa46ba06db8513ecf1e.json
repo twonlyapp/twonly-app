@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO custom_avatar_publications(contact_id, publication_counter, visible_source_revision, shows_photo) VALUES (?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "b498fe9b6ab590c3edcb0e88c5cd72f7ed2f5b89c5e64aa46ba06db8513ecf1e"
+}

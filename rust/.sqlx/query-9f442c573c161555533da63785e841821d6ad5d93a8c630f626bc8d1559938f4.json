@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COUNT(*) FROM direct_media_upload_slots\n               WHERE state = 'cached'\n                 AND expires_at > CAST(strftime('%s','now') AS INTEGER)\n                 AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)",
+  "describe": {
+    "columns": [
+      {
+        "name": "COUNT(*)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9f442c573c161555533da63785e841821d6ad5d93a8c630f626bc8d1559938f4"
+}

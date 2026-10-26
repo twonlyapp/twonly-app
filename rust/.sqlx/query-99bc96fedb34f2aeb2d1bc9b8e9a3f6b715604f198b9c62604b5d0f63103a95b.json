@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR IGNORE INTO home_widget_groups(widget_id, contact_group_id) VALUES (?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "99bc96fedb34f2aeb2d1bc9b8e9a3f6b715604f198b9c62604b5d0f63103a95b"
+}

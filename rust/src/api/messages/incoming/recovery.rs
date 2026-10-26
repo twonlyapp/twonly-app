@@ -100,14 +100,15 @@ pub async fn perform_heartbeat(ctx: &Arc<Context>) -> Result<()> {
             // A helper that restored an old backup or lost its local share
             // cannot send a heartbeat. Retry stale confirmations as well as
             // never-confirmed shares so it can become a helper again.
-            let contacts = sqlx::query_as::<_, (i64, Vec<u8>)>(
-                r#"SELECT user_id, recovery_secret_share FROM contacts
+            let contacts = sqlx::query!(
+                r#"SELECT user_id, recovery_secret_share AS "recovery_secret_share!" FROM contacts
                    WHERE recovery_is_trusted_friend = 1
                      AND (recovery_last_heartbeat IS NULL
                           OR recovery_last_heartbeat <= ?)
                      AND recovery_secret_share IS NOT NULL"#,
+                (now - chrono::Duration::days(7)).timestamp()
             )
-            .bind((now - chrono::Duration::days(7)).timestamp())
+            .map(|row| (row.user_id, row.recovery_secret_share))
             .fetch_all(&database.pool)
             .await?;
 

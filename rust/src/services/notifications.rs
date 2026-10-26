@@ -414,10 +414,10 @@ pub(crate) async fn record_incoming_event(
             && message.text.contains("@[user:")
             && crate::services::mentions::mentions_user(&message.text, ctx.user_id().await?)
         {
-            let is_direct = sqlx::query_scalar::<_, i64>(
+            let is_direct = sqlx::query_scalar!(
                 "SELECT is_direct_chat FROM groups WHERE group_id = ?",
+                conversation_id.as_deref()
             )
-            .bind(conversation_id.as_deref())
             .fetch_optional(&mut **transaction)
             .await?;
             if is_direct == Some(0) {
@@ -674,7 +674,7 @@ pub(crate) async fn record_incoming_event(
 async fn clear_stale_messages(database: &Arc<AppDatabase>) -> Result<()> {
     let cleared_at = current_time().timestamp();
 
-    sqlx::query(
+    sqlx::query!(
         r#"
         UPDATE notification_outbox
         SET cleared_at = ?
@@ -698,8 +698,8 @@ async fn clear_stale_messages(database: &Arc<AppDatabase>) -> Result<()> {
               )
           )
         "#,
+        cleared_at
     )
-    .bind(cleared_at)
     .execute(&database.pool)
     .await?;
 
@@ -715,13 +715,13 @@ async fn clear_visible_webxdc(ctx: &Context, database: &Arc<AppDatabase>) -> Res
         return Ok(());
     };
 
-    sqlx::query(
+    sqlx::query!(
         "UPDATE notification_outbox SET cleared_at = ?
          WHERE cleared_at IS NULL AND kind = 'webxdc'
            AND notification_id IN (SELECT message_id FROM webxdc_updates WHERE instance_id = ?)",
+        current_time().timestamp(),
+        instance_id
     )
-    .bind(current_time().timestamp())
-    .bind(instance_id)
     .execute(&database.pool)
     .await?;
 
@@ -1259,7 +1259,7 @@ pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Re
 
     let cleared_at = current_time().timestamp();
 
-    let notification_ids = sqlx::query_scalar::<_, String>(
+    let notification_ids = sqlx::query_scalar!(
         r#"
         UPDATE notification_outbox SET cleared_at = ?
         WHERE conversation_id = ? AND cleared_at IS NULL
@@ -1273,9 +1273,9 @@ pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Re
           )
         RETURNING notification_id
         "#,
+        cleared_at,
+        conversation_id
     )
-    .bind(cleared_at)
-    .bind(conversation_id)
     .fetch_all(&mut *transaction)
     .await?;
 
@@ -1324,7 +1324,7 @@ pub(crate) async fn clear_opened_messages(
     transaction: &mut Transaction<'_, Sqlite>, message_ids: &[String], cleared_at: i64,
 ) -> Result<()> {
     for message_id in message_ids {
-        sqlx::query(
+        sqlx::query!(
             r#"
             UPDATE notification_outbox
             SET cleared_at = ?
@@ -1332,9 +1332,9 @@ pub(crate) async fn clear_opened_messages(
               AND cleared_at IS NULL
               AND kind IN ('text', 'response', 'mention', 'sticker', 'live_location', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')
             "#,
+            cleared_at,
+            message_id
         )
-        .bind(cleared_at)
-        .bind(message_id)
         .execute(&mut **transaction)
         .await?;
     }
@@ -1423,13 +1423,15 @@ async fn localize_game_notification(
         return Ok(());
     };
     // Resolve the title from this chat's installed app, never from game text.
-    let app: Option<(String, Option<String>, Option<String>)> = sqlx::query_as(
-        "SELECT i.app_id, a.name, a.name_translations FROM webxdc_instances i LEFT JOIN \
-         webxdc_apps a ON a.app_id = i.app_id AND a.version = i.version WHERE i.instance_id = ? \
-         AND i.group_id = ?",
+    let app: Option<(String, Option<String>, Option<String>)> = sqlx::query!(
+        r#"SELECT i.app_id, a.name AS "name?", a.name_translations AS "name_translations?"
+           FROM webxdc_instances i
+           LEFT JOIN webxdc_apps a ON a.app_id = i.app_id AND a.version = i.version
+           WHERE i.instance_id = ? AND i.group_id = ?"#,
+        &content.instance_id,
+        &row.conversation_id
     )
-    .bind(&content.instance_id)
-    .bind(&row.conversation_id)
+    .map(|app| (app.app_id, app.name, app.name_translations))
     .fetch_optional(pool)
     .await?;
     let name = app

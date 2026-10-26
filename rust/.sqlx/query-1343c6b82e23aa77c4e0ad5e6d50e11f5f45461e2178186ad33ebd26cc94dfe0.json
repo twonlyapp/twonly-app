@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM direct_media_upload_slots WHERE 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "1343c6b82e23aa77c4e0ad5e6d50e11f5f45461e2178186ad33ebd26cc94dfe0"
+}

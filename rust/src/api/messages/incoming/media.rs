@@ -64,10 +64,10 @@ pub(crate) async fn handle_media(
     let widget_only = media.widget_only == Some(true);
 
     if widget_only {
-        let granted = sqlx::query_scalar::<_, i64>(
+        let granted = sqlx::query_scalar!(
             "SELECT widget_sharing_granted FROM contacts WHERE user_id = ?",
+            from_user_id
         )
-        .bind(from_user_id)
         .fetch_optional(&mut **t)
         .await?
         .unwrap_or(0)

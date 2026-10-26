@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ? AND ack_by_server IS NULL AND ack_by_user IS NULL AND opened_at IS NULL)",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM messages WHERE message_id = ? AND ack_by_server IS NULL AND ack_by_user IS NULL AND opened_at IS NULL)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d688fd7df6f307104b46168693df41059875c40684086a1a960039e44105d61e"
+}

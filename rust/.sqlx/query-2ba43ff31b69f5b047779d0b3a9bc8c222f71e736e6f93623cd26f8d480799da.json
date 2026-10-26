@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT attachment_id FROM direct_media_upload_slots\n               WHERE state IN ('cached', 'reserved')\n                 AND expires_at > CAST(strftime('%s','now') AS INTEGER)",
+  "describe": {
+    "columns": [
+      {
+        "name": "attachment_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_slots",
+            "name": "attachment_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2ba43ff31b69f5b047779d0b3a9bc8c222f71e736e6f93623cd26f8d480799da"
+}

@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM groups WHERE group_id = ? AND left_group = 0) AS \"allowed!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "allowed!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3908c9d8c41a93dfa28e8222363e2759c87a04cd05ec562dfe6eb6e87206812c"
+}

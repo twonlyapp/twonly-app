@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT location_status, location_deadline_at, location_latitude,\n                      location_longitude, location_accuracy, gallery_export_pending\n               FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "location_status",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_status"
+          }
+        }
+      },
+      {
+        "name": "location_deadline_at",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_deadline_at"
+          }
+        }
+      },
+      {
+        "name": "location_latitude",
+        "ordinal": 2,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_latitude"
+          }
+        }
+      },
+      {
+        "name": "location_longitude",
+        "ordinal": 3,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_longitude"
+          }
+        }
+      },
+      {
+        "name": "location_accuracy",
+        "ordinal": 4,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_accuracy"
+          }
+        }
+      },
+      {
+        "name": "gallery_export_pending",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "gallery_export_pending"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "9c2313883ed1b77a233e8b053726b587a9b36902f0fdd5ccf67a8f305ed72e7f"
+}

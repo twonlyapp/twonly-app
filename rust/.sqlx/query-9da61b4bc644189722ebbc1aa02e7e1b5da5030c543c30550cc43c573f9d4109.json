@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE live_location_sessions SET expires_at_ms = ? WHERE session_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "9da61b4bc644189722ebbc1aa02e7e1b5da5030c543c30550cc43c573f9d4109"
+}

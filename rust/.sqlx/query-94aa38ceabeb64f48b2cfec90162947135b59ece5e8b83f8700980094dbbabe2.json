@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM webxdc_pending_updates WHERE received_at < strftime('%s','now') - 604800",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "94aa38ceabeb64f48b2cfec90162947135b59ece5e8b83f8700980094dbbabe2"
+}

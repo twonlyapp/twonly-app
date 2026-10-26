@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT is_widget_media FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "is_widget_media",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "is_widget_media"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ce1528df8323324a5f1b0f0eed8bd0ab18a280d59ac83b4f8b5d4e6915469d9a"
+}

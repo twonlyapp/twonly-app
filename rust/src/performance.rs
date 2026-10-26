@@ -167,8 +167,13 @@ pub(crate) fn initialize(context: &Context) {
 }
 
 fn configure(state: &mut State, enabled: bool) {
+    // Debug builds never create collectors or an exporter, even when opted in.
+    // Use Flutter's build mode: Cargokit compiles profile builds with --release.
     // Automated Flutter/native tests must never send production telemetry.
-    let enabled = enabled && !cfg!(test) && std::env::var_os("FLUTTER_TEST").is_none();
+    let enabled = enabled
+        && matches!(env!("TWONLY_BUILD_MODE"), "profile" | "release")
+        && !cfg!(test)
+        && std::env::var_os("FLUTTER_TEST").is_none();
     let allowed = enabled && state.permission;
     if !allowed {
         if let Some(session) = state.session.take() {

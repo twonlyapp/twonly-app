@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COALESCE(SUM(total_media_counter), 0) FROM groups",
+  "describe": {
+    "columns": [
+      {
+        "name": "COALESCE(SUM(total_media_counter), 0)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a4938d751131f229180f7b2471b446e9a62ff8ce83fc4867611b86f8bf717b5f"
+}

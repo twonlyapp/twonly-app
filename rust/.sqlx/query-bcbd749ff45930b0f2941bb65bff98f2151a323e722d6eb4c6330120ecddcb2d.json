@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT lt.group_id, lt.message_id, lt.recipient_ids,\n                  m.additional_message_data AS \"additional_message_data!\"\n           FROM live_location_targets lt JOIN messages m ON m.message_id = lt.message_id\n           WHERE lt.session_id = ? AND m.is_deleted_from_sender = 0",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "live_location_targets",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "message_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "live_location_targets",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "recipient_ids",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "live_location_targets",
+            "name": "recipient_ids"
+          }
+        }
+      },
+      {
+        "name": "additional_message_data!",
+        "ordinal": 3,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "additional_message_data"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "bcbd749ff45930b0f2941bb65bff98f2151a323e722d6eb4c6330120ecddcb2d"
+}

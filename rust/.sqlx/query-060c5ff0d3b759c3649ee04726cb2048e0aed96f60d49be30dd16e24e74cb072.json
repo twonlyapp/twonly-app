@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT m.message_id FROM messages m JOIN group_members gm ON gm.group_id = m.group_id WHERE m.media_id = ? AND m.sender_id IS NULL AND gm.contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "060c5ff0d3b759c3649ee04726cb2048e0aed96f60d49be30dd16e24e74cb072"
+}

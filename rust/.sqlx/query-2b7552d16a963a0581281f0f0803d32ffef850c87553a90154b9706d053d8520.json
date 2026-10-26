@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT gm.contact_id FROM group_members gm JOIN contacts c ON c.user_id = gm.contact_id WHERE gm.group_id = ? AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup') AND c.blocked = 0 AND c.accepted = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2b7552d16a963a0581281f0f0803d32ffef850c87553a90154b9706d053d8520"
+}

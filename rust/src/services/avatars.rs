@@ -5,7 +5,7 @@ use flate2::read::GzDecoder;
 use image::{imageops, DynamicImage, ImageDecoder, Rgba, RgbaImage};
 use prost::Message as _;
 use sha2::{Digest, Sha256};
-use sqlx::{Row, Sqlite, Transaction};
+use sqlx::{Sqlite, Transaction};
 use std::io::{Cursor, Read};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -140,7 +140,7 @@ fn fit_custom_avatar(decoded: DynamicImage) -> Result<stickers::StickerOutput> {
 pub(crate) async fn own_custom_avatar(ctx: &Context) -> Result<CustomAvatarInfo> {
     let database = ctx.app_db.read().await.clone();
 
-    let row = sqlx::query(
+    let row = sqlx::query!(
         "SELECT webp, sha256, width, height, accepted_contacts_only, source_revision FROM \
          own_custom_avatar WHERE singleton = 1",
     )
@@ -148,16 +148,12 @@ pub(crate) async fn own_custom_avatar(ctx: &Context) -> Result<CustomAvatarInfo>
     .await?;
 
     Ok(CustomAvatarInfo {
-        webp: row.try_get("webp")?,
-        sha256: row.try_get("sha256")?,
-        width: row
-            .try_get::<Option<i64>, _>("width")?
-            .map(|value| value as u32),
-        height: row
-            .try_get::<Option<i64>, _>("height")?
-            .map(|value| value as u32),
-        accepted_contacts_only: row.try_get::<i64, _>("accepted_contacts_only")? != 0,
-        source_revision: row.try_get("source_revision")?,
+        webp: row.webp,
+        sha256: row.sha256,
+        width: row.width.map(|value| value as u32),
+        height: row.height.map(|value| value as u32),
+        accepted_contacts_only: row.accepted_contacts_only != 0,
+        source_revision: row.source_revision,
     })
 }
 
@@ -166,15 +162,15 @@ pub(crate) async fn store_own_custom_avatar(
 ) -> Result<CustomAvatarInfo> {
     let database = ctx.app_db.read().await.clone();
 
-    sqlx::query(
+    sqlx::query!(
         "UPDATE own_custom_avatar SET webp = ?, sha256 = ?, width = ?, height = ?, \
          accepted_contacts_only = ?, source_revision = source_revision + 1 WHERE singleton = 1",
+        avatar.webp,
+        avatar.sha256,
+        i64::from(avatar.width),
+        i64::from(avatar.height),
+        accepted_contacts_only
     )
-    .bind(avatar.webp)
-    .bind(avatar.sha256)
-    .bind(i64::from(avatar.width))
-    .bind(i64::from(avatar.height))
-    .bind(accepted_contacts_only)
     .execute(&database.pool)
     .await?;
 
@@ -186,13 +182,13 @@ pub(crate) async fn set_custom_avatar_audience(
 ) -> Result<CustomAvatarInfo> {
     let database = ctx.app_db.read().await.clone();
 
-    sqlx::query(
+    sqlx::query!(
         "UPDATE own_custom_avatar SET accepted_contacts_only = ?, source_revision = \
          source_revision + CASE WHEN accepted_contacts_only != ? THEN 1 ELSE 0 END WHERE \
          singleton = 1",
+        accepted_contacts_only,
+        accepted_contacts_only
     )
-    .bind(accepted_contacts_only)
-    .bind(accepted_contacts_only)
     .execute(&database.pool)
     .await?;
 
@@ -202,7 +198,7 @@ pub(crate) async fn set_custom_avatar_audience(
 pub(crate) async fn remove_own_custom_avatar(ctx: &Context) -> Result<CustomAvatarInfo> {
     let database = ctx.app_db.read().await.clone();
 
-    sqlx::query(
+    sqlx::query!(
         "UPDATE own_custom_avatar SET webp = NULL, sha256 = NULL, width = NULL, height = NULL, \
          source_revision = source_revision + CASE WHEN webp IS NULL THEN 0 ELSE 1 END WHERE \
          singleton = 1",
@@ -218,48 +214,46 @@ pub(crate) async fn remove_own_custom_avatar(ctx: &Context) -> Result<CustomAvat
 pub(crate) async fn prepare_publication(
     t: &mut Transaction<'_, Sqlite>, contact_id: i64,
 ) -> Result<i64> {
-    let own = sqlx::query(
-        "SELECT webp IS NOT NULL AS has_photo, accepted_contacts_only, source_revision FROM \
-         own_custom_avatar WHERE singleton = 1",
+    let own = sqlx::query!(
+        r#"SELECT webp IS NOT NULL AS "has_photo!: bool", accepted_contacts_only, source_revision
+           FROM own_custom_avatar WHERE singleton = 1"#,
     )
     .fetch_one(&mut **t)
     .await?;
 
-    let contact =
-        sqlx::query("SELECT accepted, blocked, deleted_by_user FROM contacts WHERE user_id = ?")
-            .bind(contact_id)
-            .fetch_optional(&mut **t)
-            .await?;
+    let contact = sqlx::query!(
+        "SELECT accepted, blocked, deleted_by_user FROM contacts WHERE user_id = ?",
+        contact_id
+    )
+    .fetch_optional(&mut **t)
+    .await?;
 
-    let accepted = contact
+    let accepted = contact.as_ref().is_some_and(|row| row.accepted != 0);
+
+    let eligible = contact
         .as_ref()
-        .is_some_and(|row| row.get::<i64, _>("accepted") != 0);
+        .is_some_and(|row| row.blocked == 0 && row.deleted_by_user == 0);
 
-    let eligible = contact.as_ref().is_some_and(|row| {
-        row.get::<i64, _>("blocked") == 0 && row.get::<i64, _>("deleted_by_user") == 0
-    });
+    let accepted_only = own.accepted_contacts_only != 0;
 
-    let accepted_only = own.get::<i64, _>("accepted_contacts_only") != 0;
+    let shows_photo = own.has_photo && eligible && (!accepted_only || accepted);
 
-    let shows_photo =
-        own.get::<i64, _>("has_photo") != 0 && eligible && (!accepted_only || accepted);
+    let visible_revision = shows_photo.then_some(own.source_revision);
 
-    let visible_revision = shows_photo.then(|| own.get::<i64, _>("source_revision"));
-
-    let current = sqlx::query(
+    let current = sqlx::query!(
         "SELECT publication_counter, visible_source_revision, shows_photo FROM \
          custom_avatar_publications WHERE contact_id = ?",
+        contact_id
     )
-    .bind(contact_id)
     .fetch_optional(&mut **t)
     .await?;
 
     if let Some(row) = current {
-        let old_photo = row.get::<i64, _>("shows_photo") != 0;
+        let old_photo = row.shows_photo != 0;
 
-        let old_revision: Option<i64> = row.try_get("visible_source_revision")?;
+        let old_revision = row.visible_source_revision;
 
-        let counter: i64 = row.get("publication_counter");
+        let counter = row.publication_counter;
 
         if old_photo == shows_photo && old_revision == visible_revision {
             return Ok(counter);
@@ -267,14 +261,14 @@ pub(crate) async fn prepare_publication(
 
         let counter = counter + 1;
 
-        sqlx::query(
+        sqlx::query!(
             "UPDATE custom_avatar_publications SET publication_counter = ?, \
              visible_source_revision = ?, shows_photo = ? WHERE contact_id = ?",
+            counter,
+            visible_revision,
+            shows_photo,
+            contact_id
         )
-        .bind(counter)
-        .bind(visible_revision)
-        .bind(shows_photo)
-        .bind(contact_id)
         .execute(&mut **t)
         .await?;
 
@@ -283,14 +277,14 @@ pub(crate) async fn prepare_publication(
 
     let counter = i64::from(shows_photo);
 
-    sqlx::query(
+    sqlx::query!(
         "INSERT INTO custom_avatar_publications(contact_id, publication_counter, \
          visible_source_revision, shows_photo) VALUES (?, ?, ?, ?)",
+        contact_id,
+        counter,
+        visible_revision,
+        shows_photo
     )
-    .bind(contact_id)
-    .bind(counter)
-    .bind(visible_revision)
-    .bind(shows_photo)
     .execute(&mut **t)
     .await?;
 
@@ -302,13 +296,14 @@ pub(crate) async fn publication_payload(
 ) -> Result<encrypted_content::CustomAvatar> {
     let counter = prepare_publication(t, contact_id).await?;
 
-    let publication =
-        sqlx::query("SELECT shows_photo FROM custom_avatar_publications WHERE contact_id = ?")
-            .bind(contact_id)
-            .fetch_one(&mut **t)
-            .await?;
+    let publication = sqlx::query!(
+        "SELECT shows_photo FROM custom_avatar_publications WHERE contact_id = ?",
+        contact_id
+    )
+    .fetch_one(&mut **t)
+    .await?;
 
-    let shows_photo = publication.get::<i64, _>("shows_photo") != 0;
+    let shows_photo = publication.shows_photo != 0;
 
     if !shows_photo {
         return Ok(encrypted_content::CustomAvatar {
@@ -322,7 +317,7 @@ pub(crate) async fn publication_payload(
         });
     }
 
-    let own = sqlx::query(
+    let own = sqlx::query!(
         "SELECT webp, sha256, width, height FROM own_custom_avatar WHERE singleton = 1",
     )
     .fetch_one(&mut **t)
@@ -332,24 +327,20 @@ pub(crate) async fn publication_payload(
         version: CUSTOM_AVATAR_PROTOCOL_VERSION,
         publication_counter: counter,
         state: encrypted_content::custom_avatar::State::Photo as i32,
-        webp: own.try_get("webp")?,
-        sha256: own.try_get("sha256")?,
-        width: own
-            .try_get::<Option<i64>, _>("width")?
-            .map(|value| value as u32),
-        height: own
-            .try_get::<Option<i64>, _>("height")?
-            .map(|value| value as u32),
+        webp: own.webp,
+        sha256: own.sha256,
+        width: own.width.map(|value| value as u32),
+        height: own.height.map(|value| value as u32),
     })
 }
 
 pub(crate) async fn applied_counter(
     t: &mut Transaction<'_, Sqlite>, contact_id: i64,
 ) -> Result<i64> {
-    Ok(sqlx::query_scalar::<_, i64>(
+    Ok(sqlx::query_scalar!(
         "SELECT applied_counter FROM received_custom_avatars WHERE contact_id = ?",
+        contact_id
     )
-    .bind(contact_id)
     .fetch_optional(&mut **t)
     .await?
     .unwrap_or(0))
@@ -391,26 +382,26 @@ pub(crate) async fn apply_received(
         }
     };
 
-    sqlx::query(
+    sqlx::query!(
         "INSERT INTO received_custom_avatars(contact_id, applied_counter, webp, sha256, width, \
          height) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(contact_id) DO UPDATE SET applied_counter \
          = excluded.applied_counter, webp = excluded.webp, sha256 = excluded.sha256, width = \
          excluded.width, height = excluded.height",
+        contact_id,
+        avatar.publication_counter,
+        webp,
+        sha256,
+        width.map(i64::from),
+        height.map(i64::from)
     )
-    .bind(contact_id)
-    .bind(avatar.publication_counter)
-    .bind(webp)
-    .bind(sha256)
-    .bind(width.map(i64::from))
-    .bind(height.map(i64::from))
     .execute(&mut **t)
     .await?;
 
     // Notify existing contact streams without adding protocol fields to Drift.
-    sqlx::query(
+    sqlx::query!(
         "UPDATE contacts SET sender_profile_counter = sender_profile_counter WHERE user_id = ?",
+        contact_id
     )
-    .bind(contact_id)
     .execute(&mut **t)
     .await?;
 
@@ -542,19 +533,23 @@ pub(crate) async fn ensure_contact_avatar_png(
     crate::performance::measure("avatar.resolve", "media.avatar", async {
         let database = ctx.app_db.read().await.clone();
 
-        let row: Option<(Option<Vec<u8>>, i64, Option<i64>)> = sqlx::query_as(
-        "SELECT avatar_svg_compressed, sender_profile_counter, prefer_photo_avatar FROM contacts \
-         WHERE user_id = ?",
-    )
-    .bind(contact_id)
-    .fetch_optional(&database.read_pool)
-    .await?;
+        let row = sqlx::query!(
+            "SELECT avatar_svg_compressed, sender_profile_counter, prefer_photo_avatar FROM \
+             contacts WHERE user_id = ?",
+            contact_id
+        )
+        .fetch_optional(&database.read_pool)
+        .await?;
 
-        let Some((svg, profile_counter, prefer_photo)) = row else {
+        let Some(row) = row else {
             return Ok(None);
         };
 
-        let svg = svg.filter(|bytes| !bytes.is_empty());
+        let profile_counter = row.sender_profile_counter;
+
+        let prefer_photo = row.prefer_photo_avatar;
+
+        let svg = row.avatar_svg_compressed.filter(|bytes| !bytes.is_empty());
 
         // Preferences are local, just like nicknames. If the preferred kind is no
         // longer shared by this contact, continue to use whichever is available.
@@ -568,39 +563,35 @@ pub(crate) async fn ensure_contact_avatar_png(
             // Every visible avatar resolves itself again whenever its row changes.
             // The file name carries the counter, so an existing file already holds
             // this photo and the bytes need not be read out of the database.
-            if let Some(counter) = sqlx::query_scalar::<_, i64>(
-            "SELECT applied_counter FROM received_custom_avatars WHERE contact_id = ? AND webp IS \
-             NOT NULL",
-        )
-        .bind(contact_id)
-        .fetch_optional(&database.read_pool)
-        .await?
-        {
-            let output = custom_path(counter);
+            if let Some(counter) = sqlx::query_scalar!(
+                "SELECT applied_counter FROM received_custom_avatars WHERE contact_id = ? AND \
+                 webp IS NOT NULL",
+                contact_id
+            )
+            .fetch_optional(&database.read_pool)
+            .await?
+            {
+                let output = custom_path(counter);
 
-            if output.exists() {
-                return Ok(Some(output));
+                if output.exists() {
+                    return Ok(Some(output));
+                }
             }
-        }
 
             // Counter and bytes are read together: the photo may have been
             // replaced since the lookup above.
-            if let Some(custom) = sqlx::query(
-            "SELECT applied_counter, webp FROM received_custom_avatars WHERE contact_id = ? AND \
-             webp IS NOT NULL",
-        )
-        .bind(contact_id)
-        .fetch_optional(&database.read_pool)
-        .await?
-        {
-            let counter: i64 = custom.get("applied_counter");
-
-            let webp: Vec<u8> = custom.get("webp");
-
-            return cache_avatar_bytes(custom_path(counter), webp)
-                .await
-                .map(Some);
-        }
+            if let Some(custom) = sqlx::query!(
+                r#"SELECT applied_counter, webp AS "webp!" FROM received_custom_avatars
+                   WHERE contact_id = ? AND webp IS NOT NULL"#,
+                contact_id
+            )
+            .fetch_optional(&database.read_pool)
+            .await?
+            {
+                return cache_avatar_bytes(custom_path(custom.applied_counter), custom.webp)
+                    .await
+                    .map(Some);
+            }
         }
 
         let Some(svg) = svg else {
@@ -637,14 +628,14 @@ pub(crate) async fn ensure_group_avatar_png(
     crate::performance::measure("avatar.group.resolve", "media.avatar", async {
         let database = ctx.app_db.read().await.clone();
 
-        let members: Vec<i64> = sqlx::query_scalar(
-        "SELECT c.user_id FROM contacts c JOIN group_members m ON m.contact_id = c.user_id WHERE \
+        let members: Vec<i64> = sqlx::query_scalar!(
+            "SELECT c.user_id FROM contacts c JOIN group_members m ON m.contact_id = c.user_id WHERE \
          m.group_id = ? AND (m.member_state IS NULL OR m.member_state != 'leftGroup') ORDER BY \
          m.last_message DESC, c.user_id ASC",
-    )
-    .bind(group_id)
-    .fetch_all(&database.pool)
-    .await?;
+            group_id
+        )
+        .fetch_all(&database.pool)
+        .await?;
 
         let mut paths = Vec::with_capacity(3);
 

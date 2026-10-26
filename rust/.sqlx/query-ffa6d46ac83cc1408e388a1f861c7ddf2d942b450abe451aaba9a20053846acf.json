@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT message_id FROM messages WHERE message_id = ? AND sender_id IS NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ffa6d46ac83cc1408e388a1f861c7ddf2d942b450abe451aaba9a20053846acf"
+}

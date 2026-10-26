@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contacts SET username = ?, joined_at = COALESCE(?, joined_at) WHERE user_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "3cf996b5d9f2efa3977c8a3e552fb60af6d0071dfe6d65851d2a79a2cbe14622"
+}

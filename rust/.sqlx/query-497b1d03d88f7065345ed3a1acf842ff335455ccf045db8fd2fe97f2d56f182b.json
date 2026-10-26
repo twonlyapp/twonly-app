@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM live_location_targets WHERE session_id = ? AND group_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "497b1d03d88f7065345ed3a1acf842ff335455ccf045db8fd2fe97f2d56f182b"
+}

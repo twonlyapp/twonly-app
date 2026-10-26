@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT j.attachment_id, j.native_descriptor_json, j.state\n               FROM direct_media_upload_jobs j\n               JOIN media_files m ON m.media_id = j.media_id\n               WHERE j.media_id = ? AND j.state IN ('prepared', 'scheduled', 'waiting_for_server')\n                 AND j.expires_at > CAST(strftime('%s','now') AS INTEGER)\n                 AND j.reupload_requested_by IS m.reupload_requested_by\n                 AND j.reupload_targets IS m.reupload_targets\n               ORDER BY j.created_at DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "attachment_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "attachment_id"
+          }
+        }
+      },
+      {
+        "name": "native_descriptor_json",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "native_descriptor_json"
+          }
+        }
+      },
+      {
+        "name": "state",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "state"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2b4b4dc961f77a006961dce5ceec0638d7fe805c9763f928bd1f1cbd3147e269"
+}

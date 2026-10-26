@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO live_location_targets(session_id, group_id, message_id, recipient_ids) VALUES (?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "d7a6986a7bd2cb578edf747ee31b839520021574c41c619428517016e32bde12"
+}

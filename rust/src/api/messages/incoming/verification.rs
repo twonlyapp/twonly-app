@@ -62,12 +62,13 @@ pub(crate) async fn handle_key_verification_proof(
 
     let now = chrono::Utc::now().timestamp();
 
-    let tokens = sqlx::query_as::<_, (Vec<u8>, i64)>(
+    let tokens = sqlx::query!(
         "SELECT token, created_at FROM verification_tokens WHERE created_at >= ? AND created_at \
          <= ?",
+        now - 60 * 60,
+        now
     )
-    .bind(now - 60 * 60)
-    .bind(now)
+    .map(|row| (row.token, row.created_at))
     .fetch_all(&mut **transaction)
     .await?;
 

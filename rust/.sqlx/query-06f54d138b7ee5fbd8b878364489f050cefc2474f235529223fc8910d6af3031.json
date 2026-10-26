@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO outbox_dispatch_jobs\n               (receipt_id, dispatch_id, contact_id, body_path, expires_at, created_at)\n               VALUES (?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "06f54d138b7ee5fbd8b878364489f050cefc2474f235529223fc8910d6af3031"
+}

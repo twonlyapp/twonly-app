@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM webxdc_sync_chunks WHERE created_at < strftime('%s','now') - 86400",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "0250f027789159628d1a93808562bc6f5667da3ba8c8da6b264b1ca6a516b7c9"
+}

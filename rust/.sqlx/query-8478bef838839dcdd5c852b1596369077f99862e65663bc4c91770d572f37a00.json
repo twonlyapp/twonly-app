@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT i.app_id, a.name AS \"name?\", a.name_translations AS \"name_translations?\"\n           FROM webxdc_instances i\n           LEFT JOIN webxdc_apps a ON a.app_id = i.app_id AND a.version = i.version\n           WHERE i.instance_id = ? AND i.group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "app_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "app_id"
+          }
+        }
+      },
+      {
+        "name": "name?",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "name_translations?",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "name_translations"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "8478bef838839dcdd5c852b1596369077f99862e65663bc4c91770d572f37a00"
+}

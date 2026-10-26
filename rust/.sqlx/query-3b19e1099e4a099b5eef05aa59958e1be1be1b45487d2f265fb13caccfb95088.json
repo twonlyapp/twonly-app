@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM signal_signed_pre_keys WHERE signed_pre_key_id = ?) AS \"used!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "used!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3b19e1099e4a099b5eef05aa59958e1be1be1b45487d2f265fb13caccfb95088"
+}

@@ -307,38 +307,48 @@ struct NativeUploadDescriptor {
 async fn reset_upload_namespace(
     database: &AppDatabase, data_dir: &Path, namespace: &str,
 ) -> Result<(Option<String>, usize)> {
-    let stored = sqlx::query_scalar::<_, String>("SELECT value FROM app_metadata WHERE key = ?")
-        .bind(API_NAMESPACE_KEY)
-        .fetch_optional(&database.pool)
-        .await?;
+    let stored = sqlx::query_scalar!(
+        "SELECT value FROM app_metadata WHERE key = ?",
+        API_NAMESPACE_KEY
+    )
+    .fetch_optional(&database.pool)
+    .await?;
 
     if stored.as_deref() == Some(namespace) {
         return Ok((stored, 0));
     }
 
     if stored.is_none() {
-        sqlx::query(
+        sqlx::query!(
             r#"INSERT INTO app_metadata(key, value) VALUES(?, ?)
                ON CONFLICT(key) DO UPDATE SET value = excluded.value"#,
+            API_NAMESPACE_KEY,
+            namespace
         )
-        .bind(API_NAMESPACE_KEY)
-        .bind(namespace)
         .execute(&database.pool)
         .await?;
 
         return Ok((None, 0));
     }
 
-    let stale_files = sqlx::query_as::<_, (String, String, String, String)>(
+    let stale_files = sqlx::query!(
         r#"SELECT attachment_id, multipart_path, manifest_path, complete_body_path
            FROM direct_media_upload_jobs"#,
     )
+    .map(|row| {
+        (
+            row.attachment_id,
+            row.multipart_path,
+            row.manifest_path,
+            row.complete_body_path,
+        )
+    })
     .fetch_all(&database.pool)
     .await?;
 
     let mut transaction = database.pool.begin().await?;
 
-    sqlx::query(
+    sqlx::query!(
         r#"UPDATE media_files
            SET upload_state = 'preprocessing', pre_progressing_process = NULL
            WHERE (upload_state != 'uploaded' OR reupload_requested_by IS NOT NULL OR reupload_targets IS NOT NULL)
@@ -347,20 +357,20 @@ async fn reset_upload_namespace(
     .execute(&mut *transaction)
     .await?;
 
-    sqlx::query("DELETE FROM direct_media_upload_jobs WHERE 1")
+    sqlx::query!("DELETE FROM direct_media_upload_jobs WHERE 1")
         .execute(&mut *transaction)
         .await?;
 
-    sqlx::query("DELETE FROM direct_media_upload_slots WHERE 1")
+    sqlx::query!("DELETE FROM direct_media_upload_slots WHERE 1")
         .execute(&mut *transaction)
         .await?;
 
-    sqlx::query(
+    sqlx::query!(
         r#"INSERT INTO app_metadata(key, value) VALUES(?, ?)
            ON CONFLICT(key) DO UPDATE SET value = excluded.value"#,
+        API_NAMESPACE_KEY,
+        namespace
     )
-    .bind(API_NAMESPACE_KEY)
-    .bind(namespace)
     .execute(&mut *transaction)
     .await?;
 
@@ -491,7 +501,7 @@ impl DirectMediaUploadService {
     async fn locally_known_slot_ids(&self) -> Result<Vec<String>> {
         let database = self.ctx.app_db.read().await.clone();
 
-        Ok(sqlx::query_scalar::<_, String>(
+        Ok(sqlx::query_scalar!(
             r#"SELECT attachment_id FROM direct_media_upload_slots
                WHERE state IN ('cached', 'reserved')
                  AND expires_at > CAST(strftime('%s','now') AS INTEGER)"#,
@@ -564,12 +574,12 @@ impl DirectMediaUploadService {
         // The server decides how deep this cache may be. Remembering the number
         // keeps an offline launch from refilling against a stale guess.
         if slots.refill_threshold > 0 {
-            sqlx::query(
+            sqlx::query!(
                 r#"INSERT INTO app_metadata(key, value) VALUES(?, ?)
                    ON CONFLICT(key) DO UPDATE SET value = excluded.value"#,
+                REFILL_THRESHOLD_KEY,
+                slots.refill_threshold.to_string()
             )
-            .bind(REFILL_THRESHOLD_KEY)
-            .bind(slots.refill_threshold.to_string())
             .execute(&mut *transaction)
             .await?;
         }
@@ -579,7 +589,7 @@ impl DirectMediaUploadService {
                 TwonlyError::Generic("server returned an upload slot without a POST".into())
             })?;
 
-            sqlx::query(
+            sqlx::query!(
                 r#"INSERT INTO direct_media_upload_slots
                    (attachment_id, expires_at, maximum_object_bytes, upload_url,
                     upload_fields_json, capability, state)
@@ -593,13 +603,13 @@ impl DirectMediaUploadService {
                    WHERE direct_media_upload_slots.state = 'cached'
                      AND direct_media_upload_slots.attachment_id NOT IN
                          (SELECT attachment_id FROM direct_media_upload_jobs)"#,
+                &slot.attachment_id,
+                slot.expires_at_unix_seconds,
+                slot.maximum_object_bytes,
+                upload.url,
+                serde_json::to_string(&upload.fields)?,
+                slot.background_capability
             )
-            .bind(&slot.attachment_id)
-            .bind(slot.expires_at_unix_seconds)
-            .bind(slot.maximum_object_bytes)
-            .bind(upload.url)
-            .bind(serde_json::to_string(&upload.fields)?)
-            .bind(slot.background_capability)
             .execute(&mut *transaction)
             .await?;
         }
@@ -612,7 +622,7 @@ impl DirectMediaUploadService {
     async fn usable_slot_count(&self) -> Result<i64> {
         let database = self.ctx.app_db.read().await.clone();
 
-        Ok(sqlx::query_scalar(
+        Ok(sqlx::query_scalar!(
             r#"SELECT COUNT(*) FROM direct_media_upload_slots
                WHERE state = 'cached'
                  AND expires_at > CAST(strftime('%s','now') AS INTEGER)
@@ -627,15 +637,17 @@ impl DirectMediaUploadService {
     async fn refill_threshold(&self) -> i64 {
         let database = self.ctx.app_db.read().await.clone();
 
-        sqlx::query_scalar::<_, String>("SELECT value FROM app_metadata WHERE key = ?")
-            .bind(REFILL_THRESHOLD_KEY)
-            .fetch_optional(&database.pool)
-            .await
-            .ok()
-            .flatten()
-            .and_then(|value| value.parse::<i64>().ok())
-            .filter(|threshold| *threshold > 0)
-            .unwrap_or(DEFAULT_SLOT_REFILL_THRESHOLD)
+        sqlx::query_scalar!(
+            "SELECT value FROM app_metadata WHERE key = ?",
+            REFILL_THRESHOLD_KEY
+        )
+        .fetch_optional(&database.pool)
+        .await
+        .ok()
+        .flatten()
+        .and_then(|value| value.parse::<i64>().ok())
+        .filter(|threshold| *threshold > 0)
+        .unwrap_or(DEFAULT_SLOT_REFILL_THRESHOLD)
     }
 
     async fn ensure_slots(&self) -> Result<()> {
@@ -677,7 +689,8 @@ impl DirectMediaUploadService {
 
         let mut transaction = database.pool.begin().await?;
 
-        let slot = sqlx::query_as::<_, CachedSlot>(
+        let slot = sqlx::query_as!(
+            CachedSlot,
             r#"UPDATE direct_media_upload_slots SET state = 'reserved'
                WHERE attachment_id = (
                  SELECT attachment_id FROM direct_media_upload_slots
@@ -701,7 +714,7 @@ impl DirectMediaUploadService {
     pub async fn pending_job_count(&self) -> Result<i64> {
         let database = self.ctx.app_db.read().await.clone();
 
-        Ok(sqlx::query_scalar::<_, i64>(
+        Ok(sqlx::query_scalar!(
             "SELECT COUNT(*) FROM direct_media_upload_jobs WHERE state IN ('prepared', \
              'scheduled', 'waiting_for_server')",
         )
@@ -729,7 +742,8 @@ impl DirectMediaUploadService {
         self.repair_slot_reservations().await?;
         self.resume_prepared_jobs().await?;
 
-        let jobs = sqlx::query_as::<_, PendingJob>(
+        let jobs = sqlx::query_as!(
+            PendingJob,
             r#"SELECT j.attachment_id, j.media_id, j.multipart_path, j.manifest_path,
                       j.complete_body_path, s.capability, j.expires_at,
                       j.reupload_requested_by, j.reupload_targets
@@ -767,13 +781,13 @@ impl DirectMediaUploadService {
         let mut transaction = database.pool.begin().await?;
         // Old clients could return a live job's slot to the cache. The job,
         // its recipient scope and its immutable files still own that slot.
-        sqlx::query(
+        sqlx::query!(
             "UPDATE direct_media_upload_slots SET state = 'reserved' WHERE state = 'cached' AND \
              attachment_id IN (SELECT attachment_id FROM direct_media_upload_jobs)",
         )
         .execute(&mut *transaction)
         .await?;
-        sqlx::query(
+        sqlx::query!(
             "UPDATE direct_media_upload_slots SET state = 'cached' WHERE state = 'reserved' AND \
              attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)",
         )
@@ -785,19 +799,20 @@ impl DirectMediaUploadService {
 
     async fn resume_prepared_jobs(&self) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
-        let jobs = sqlx::query_as::<_, (String, String)>(
+        let jobs = sqlx::query!(
             "SELECT attachment_id, media_id FROM direct_media_upload_jobs WHERE state = 'prepared'",
         )
+        .map(|row| (row.attachment_id, row.media_id))
         .fetch_all(&database.pool)
         .await?;
         for (attachment_id, media_id) in jobs {
             let lock = media_lock(&media_id);
             let _guard = lock.lock().await;
-            let descriptor = sqlx::query_scalar::<_, String>(
+            let descriptor = sqlx::query_scalar!(
                 "SELECT native_descriptor_json FROM direct_media_upload_jobs WHERE attachment_id \
                  = ? AND state = 'prepared' AND expires_at > CAST(strftime('%s','now') AS INTEGER)",
+                &attachment_id
             )
-            .bind(&attachment_id)
             .fetch_optional(&database.pool)
             .await?;
             if let Some(descriptor) = descriptor {
@@ -887,15 +902,16 @@ impl DirectMediaUploadService {
 
         // Claim a recovery interval across foreground/background reconcilers.
         // Holding the media lock also keeps settle from removing request files.
-        let descriptor = sqlx::query_as::<_, (String, i64)>(
+        let descriptor = sqlx::query!(
             r#"UPDATE direct_media_upload_jobs SET updated_at = ?
                WHERE attachment_id = ? AND state IN ('scheduled', 'waiting_for_server')
                  AND updated_at <= ?
                RETURNING native_descriptor_json, created_at"#,
+            now,
+            &job.attachment_id,
+            now - NATIVE_RECOVERY_INTERVAL_SECONDS
         )
-        .bind(now)
-        .bind(&job.attachment_id)
-        .bind(now - NATIVE_RECOVERY_INTERVAL_SECONDS)
+        .map(|row| (row.native_descriptor_json, row.created_at))
         .fetch_optional(&database.pool)
         .await?;
 
@@ -916,7 +932,7 @@ impl DirectMediaUploadService {
     /// failed send to discover. Dropping them costs one refill instead.
     async fn purge_cached_slots(&self) {
         let database = self.ctx.app_db.read().await.clone();
-        let purged = sqlx::query(
+        let purged = sqlx::query!(
             "DELETE FROM direct_media_upload_slots WHERE state = 'cached' AND attachment_id NOT \
              IN (SELECT attachment_id FROM direct_media_upload_jobs)",
         )
@@ -981,15 +997,16 @@ impl DirectMediaUploadService {
     pub(crate) async fn cancel_pending_upload(&self, media_id: &str) -> Result<bool> {
         let database = self.ctx.app_db.read().await.clone();
 
-        let jobs = sqlx::query_as::<_, PendingJob>(
+        let jobs = sqlx::query_as!(
+            PendingJob,
             r#"SELECT j.attachment_id, j.media_id, j.multipart_path, j.manifest_path,
                       j.complete_body_path, s.capability, j.expires_at,
                       j.reupload_requested_by, j.reupload_targets
                FROM direct_media_upload_jobs j
                JOIN direct_media_upload_slots s ON s.attachment_id = j.attachment_id
                WHERE j.media_id = ?"#,
+            media_id
         )
-        .bind(media_id)
         .fetch_all(&database.pool)
         .await?;
 
@@ -1049,16 +1066,20 @@ impl DirectMediaUploadService {
 
         let mut transaction = database.pool.begin().await?;
 
-        sqlx::query("DELETE FROM direct_media_upload_jobs WHERE attachment_id = ?")
-            .bind(&job.attachment_id)
-            .execute(&mut *transaction)
-            .await?;
+        sqlx::query!(
+            "DELETE FROM direct_media_upload_jobs WHERE attachment_id = ?",
+            &job.attachment_id
+        )
+        .execute(&mut *transaction)
+        .await?;
 
-        sqlx::query("UPDATE direct_media_upload_slots SET state = ? WHERE attachment_id = ?")
-            .bind(if dispatched { "consumed" } else { "abandoned" })
-            .bind(&job.attachment_id)
-            .execute(&mut *transaction)
-            .await?;
+        sqlx::query!(
+            "UPDATE direct_media_upload_slots SET state = ? WHERE attachment_id = ?",
+            if dispatched { "consumed" } else { "abandoned" },
+            &job.attachment_id
+        )
+        .execute(&mut *transaction)
+        .await?;
 
         if dispatched {
             MediaFile::mark_uploaded(&mut transaction, &job.media_id).await?;
@@ -1099,11 +1120,11 @@ impl DirectMediaUploadService {
         // intact so the next reconciliation can finish updating the chat.
         let mut transaction = database.pool.begin().await?;
 
-        let claimed = sqlx::query(
+        let claimed = sqlx::query!(
             "DELETE FROM direct_media_upload_jobs WHERE attachment_id = ? AND state IN \
              ('prepared', 'scheduled', 'waiting_for_server')",
+            &job.attachment_id
         )
-        .bind(&job.attachment_id)
         .execute(&mut *transaction)
         .await?
         .rows_affected();
@@ -1118,11 +1139,13 @@ impl DirectMediaUploadService {
             "abandoned"
         };
 
-        sqlx::query("UPDATE direct_media_upload_slots SET state = ? WHERE attachment_id = ?")
-            .bind(slot_state)
-            .bind(&job.attachment_id)
-            .execute(&mut *transaction)
-            .await?;
+        sqlx::query!(
+            "UPDATE direct_media_upload_slots SET state = ? WHERE attachment_id = ?",
+            slot_state,
+            &job.attachment_id
+        )
+        .execute(&mut *transaction)
+        .await?;
 
         match outcome {
             Outcome::Uploaded => {
@@ -1130,33 +1153,33 @@ impl DirectMediaUploadService {
 
                 // A newer request may have arrived while the OS transferred
                 // this job. Only clear the request set this job carried.
-                sqlx::query(
+                sqlx::query!(
                     r#"UPDATE media_files SET reupload_requested_by = NULL, reupload_targets = NULL
                        WHERE media_id = ? AND reupload_requested_by IS ? AND reupload_targets IS ?"#,
+                    &job.media_id,
+                    &job.reupload_requested_by,
+                    &job.reupload_targets
                 )
-                .bind(&job.media_id)
-                .bind(&job.reupload_requested_by)
-                .bind(&job.reupload_targets)
                 .execute(&mut *transaction)
                 .await?;
             }
             // A rejection is a policy decision (quota, size, plan). Retrying it
             // with the same bytes would fail the same way.
             Outcome::Rejected => {
-                sqlx::query(
+                sqlx::query!(
                     "UPDATE media_files SET upload_state = 'uploadLimitReached' WHERE media_id = ?",
+                    &job.media_id
                 )
-                .bind(&job.media_id)
                 .execute(&mut *transaction)
                 .await?;
             }
             Outcome::Retry => {
-                sqlx::query(
+                sqlx::query!(
                     r#"UPDATE media_files SET upload_state = 'preprocessing'
                        WHERE media_id = ?
                          AND (upload_state != 'uploaded' OR reupload_requested_by IS NOT NULL OR reupload_targets IS NOT NULL)"#,
+                    &job.media_id
                 )
-                .bind(&job.media_id)
                 .execute(&mut *transaction)
                 .await?;
             }
@@ -1195,11 +1218,12 @@ impl DirectMediaUploadService {
     async fn remove_encrypted_copy(&self, media_id: &str) {
         let database = self.ctx.app_db.read().await.clone();
 
-        let media_type =
-            sqlx::query_scalar::<_, String>("SELECT type FROM media_files WHERE media_id = ?")
-                .bind(media_id)
-                .fetch_optional(&database.pool)
-                .await;
+        let media_type = sqlx::query_scalar!(
+            "SELECT type FROM media_files WHERE media_id = ?",
+            media_id
+        )
+        .fetch_optional(&database.pool)
+        .await;
 
         if let Ok(Some(media_type)) = media_type {
             let path = PathBuf::from(&self.ctx.config.data_dir)
@@ -1217,7 +1241,7 @@ impl DirectMediaUploadService {
         // A process can die after native scheduling but before the media row
         // is updated. Reuse the same requests; never discard an active job.
         let database = self.ctx.app_db.read().await.clone();
-        let existing = sqlx::query_as::<_, (String, String, String)>(
+        let existing = sqlx::query!(
             r#"SELECT j.attachment_id, j.native_descriptor_json, j.state
                FROM direct_media_upload_jobs j
                JOIN media_files m ON m.media_id = j.media_id
@@ -1226,8 +1250,9 @@ impl DirectMediaUploadService {
                  AND j.reupload_requested_by IS m.reupload_requested_by
                  AND j.reupload_targets IS m.reupload_targets
                ORDER BY j.created_at DESC LIMIT 1"#,
+            media_id
         )
-        .bind(media_id)
+        .map(|row| (row.attachment_id, row.native_descriptor_json, row.state))
         .fetch_optional(&database.pool)
         .await?;
         if let Some((attachment_id, descriptor, state)) = existing {
@@ -1354,7 +1379,7 @@ impl DirectMediaUploadService {
         };
 
         let descriptor_json = serde_json::to_string(&descriptor)?;
-        let inserted = sqlx::query(
+        let inserted = sqlx::query!(
             r#"INSERT INTO direct_media_upload_jobs
                (attachment_id, media_id, multipart_path, manifest_path,
                 complete_body_path, native_descriptor_json, state, expires_at,
@@ -1362,14 +1387,14 @@ impl DirectMediaUploadService {
                SELECT ?, media_id, ?, ?, ?, ?, 'prepared', ?,
                       reupload_requested_by, reupload_targets
                FROM media_files WHERE media_id = ?"#,
+            &slot.attachment_id,
+            multipart_path.to_string_lossy(),
+            manifest_path.to_string_lossy(),
+            complete_body_path.to_string_lossy(),
+            &descriptor_json,
+            slot.expires_at,
+            media_id
         )
-        .bind(&slot.attachment_id)
-        .bind(multipart_path.to_string_lossy().as_ref())
-        .bind(manifest_path.to_string_lossy().as_ref())
-        .bind(complete_body_path.to_string_lossy().as_ref())
-        .bind(&descriptor_json)
-        .bind(slot.expires_at)
-        .bind(media_id)
         .execute(&mut **transaction)
         .await?;
         if inserted.rows_affected() != 1 {
@@ -1386,11 +1411,11 @@ impl DirectMediaUploadService {
         watch_pending_uploads(&self.ctx);
         transfer::schedule(descriptor)?;
         let database = self.ctx.app_db.read().await.clone();
-        sqlx::query(
+        sqlx::query!(
             "UPDATE direct_media_upload_jobs SET state = 'scheduled', updated_at = \
              CAST(strftime('%s','now') AS INTEGER) WHERE attachment_id = ? AND state = 'prepared'",
+            attachment_id
         )
-        .bind(attachment_id)
         .execute(&database.pool)
         .await?;
         Ok(())
@@ -1399,13 +1424,14 @@ impl DirectMediaUploadService {
     async fn prepare_media(&self, media_id: &str) -> Result<(PathBuf, i64, AttachmentManifest)> {
         let database = self.ctx.app_db.read().await.clone();
 
-        let media = sqlx::query_as::<_, MediaRow>(
+        let media = sqlx::query_as!(
+            MediaRow,
             r#"SELECT type AS media_type, requires_authentication,
                       display_limit_in_milliseconds, encryption_key, encryption_nonce,
                       reupload_requested_by, reupload_targets
                FROM media_files WHERE media_id = ?"#,
+            media_id
         )
-        .bind(media_id)
         .fetch_optional(&database.pool)
         .await?
         .ok_or_else(|| TwonlyError::Generic(format!("media {media_id} does not exist")))?;
@@ -1468,20 +1494,23 @@ impl DirectMediaUploadService {
 
         std::fs::write(&encrypted_path, &encrypted)?;
 
-        sqlx::query("UPDATE media_files SET encryption_mac = ? WHERE media_id = ?")
-            .bind(tag.as_slice())
-            .bind(media_id)
-            .execute(&database.pool)
-            .await?;
+        sqlx::query!(
+            "UPDATE media_files SET encryption_mac = ? WHERE media_id = ?",
+            tag.as_slice(),
+            media_id
+        )
+        .execute(&database.pool)
+        .await?;
 
         let now = chrono::Utc::now().timestamp();
 
-        let messages = sqlx::query_as::<_, MessageRow>(
+        let messages = sqlx::query_as!(
+            MessageRow,
             r#"SELECT group_id, message_id, created_at, quotes_message_id,
                       additional_message_data, is_widget_media, is_story
                FROM messages WHERE media_id = ?"#,
+            media_id
         )
-        .bind(media_id)
         .fetch_all(&database.pool)
         .await?
         .into_iter()
@@ -1506,7 +1535,8 @@ impl DirectMediaUploadService {
         let mut dispatches = Vec::new();
 
         for message in messages {
-            let recipients = sqlx::query_as::<_, RecipientRow>(
+            let recipients = sqlx::query_as!(
+                RecipientRow,
                 r#"SELECT gm.contact_id
                    FROM group_members gm
                    JOIN contacts c ON c.user_id = gm.contact_id
@@ -1518,9 +1548,9 @@ impl DirectMediaUploadService {
                          WHERE a.message_id = ? AND a.contact_id = gm.contact_id
                            AND a.type = 'sendFailed'
                      )"#,
+                &message.group_id,
+                &message.message_id
             )
-            .bind(&message.group_id)
-            .bind(&message.message_id)
             .fetch_all(&database.pool)
             .await?;
 
@@ -1659,18 +1689,20 @@ impl DirectMediaUploadService {
 
                 let mut transaction = database.pool.begin().await?;
 
-                sqlx::query("DELETE FROM receipts WHERE message_id = ? AND contact_id = ?")
-                    .bind(&message.message_id)
-                    .bind(contact_id)
-                    .execute(&mut *transaction)
-                    .await?;
+                sqlx::query!(
+                    "DELETE FROM receipts WHERE message_id = ? AND contact_id = ?",
+                    &message.message_id,
+                    contact_id
+                )
+                .execute(&mut *transaction)
+                .await?;
 
                 // Keep previously delivered rows when this is a reupload.
-                let unsent = sqlx::query_scalar::<_, i64>(
+                let unsent = sqlx::query_scalar!(
                     "SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ? AND ack_by_server \
                      IS NULL AND ack_by_user IS NULL AND opened_at IS NULL)",
+                    &message.message_id
                 )
-                .bind(&message.message_id)
                 .fetch_one(&mut *transaction)
                 .await?
                     != 0;
@@ -1699,21 +1731,23 @@ impl DirectMediaUploadService {
 
                 let mut transaction = database.pool.begin().await?;
 
-                sqlx::query(
+                sqlx::query!(
                     r#"INSERT INTO message_actions(message_id, contact_id, type)
                        VALUES (?, ?, 'sendFailed')
                        ON CONFLICT(message_id, contact_id, type) DO NOTHING"#,
+                    &message.message_id,
+                    contact_id
                 )
-                .bind(&message.message_id)
-                .bind(contact_id)
                 .execute(&mut *transaction)
                 .await?;
 
-                sqlx::query("DELETE FROM receipts WHERE message_id = ? AND contact_id = ?")
-                    .bind(&message.message_id)
-                    .bind(contact_id)
-                    .execute(&mut *transaction)
-                    .await?;
+                sqlx::query!(
+                    "DELETE FROM receipts WHERE message_id = ? AND contact_id = ?",
+                    &message.message_id,
+                    contact_id
+                )
+                .execute(&mut *transaction)
+                .await?;
 
                 transaction.commit().await?;
 
@@ -1750,7 +1784,7 @@ impl DirectMediaUploadService {
 async fn story_wakes_recipient(
     database: &AppDatabase, message: &MessageRow, media_id: &str, contact_id: i64, now: i64,
 ) -> Result<bool> {
-    let quiet = sqlx::query_scalar::<_, i64>(
+    let quiet = sqlx::query_scalar!(
         r#"SELECT EXISTS(
                SELECT 1 FROM messages older
                WHERE older.is_story = 1 AND older.sender_id IS NULL
@@ -1770,18 +1804,18 @@ async fn story_wakes_recipient(
                SELECT 1 FROM groups chat
                WHERE chat.group_id = ? AND chat.last_text_or_media_at > ?
            )"#,
+        &message.group_id,
+        now - STORY_LIFETIME_SECONDS,
+        message.created_at,
+        message.created_at,
+        &message.message_id,
+        media_id,
+        contact_id,
+        &message.message_id,
+        contact_id,
+        &message.group_id,
+        now - STORY_ANNOUNCE_RECENT_EXCHANGE_SECONDS
     )
-    .bind(&message.group_id)
-    .bind(now - STORY_LIFETIME_SECONDS)
-    .bind(message.created_at)
-    .bind(message.created_at)
-    .bind(&message.message_id)
-    .bind(media_id)
-    .bind(contact_id)
-    .bind(&message.message_id)
-    .bind(contact_id)
-    .bind(&message.group_id)
-    .bind(now - STORY_ANNOUNCE_RECENT_EXCHANGE_SECONDS)
     .fetch_one(&database.pool)
     .await?;
 

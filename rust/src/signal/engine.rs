@@ -53,21 +53,36 @@ pub struct FrbPqcPreKey {
 async fn unused_prekey_id(
     pool: &sqlx::SqlitePool, kind: &str, rng: &mut rand::rngs::StdRng,
 ) -> Result<u32> {
-    let query = match kind {
-        "ecc" => "SELECT EXISTS(SELECT 1 FROM signal_pre_keys WHERE pre_key_id = ?)",
-        "signed" => {
-            "SELECT EXISTS(SELECT 1 FROM signal_signed_pre_keys WHERE signed_pre_key_id = ?)"
-        }
-        "kyber" => "SELECT EXISTS(SELECT 1 FROM signal_kyber_pre_keys WHERE kyber_pre_key_id = ?)",
-        _ => unreachable!("unknown local prekey store"),
-    };
     loop {
         let id = rng.random_range(1..=i32::MAX as u32);
-        if !sqlx::query_scalar::<_, bool>(query)
-            .bind(id)
-            .fetch_one(pool)
-            .await?
-        {
+        let used = match kind {
+            "ecc" => {
+                sqlx::query_scalar!(
+                    r#"SELECT EXISTS(SELECT 1 FROM signal_pre_keys WHERE pre_key_id = ?) AS "used!: bool""#,
+                    id
+                )
+                .fetch_one(pool)
+                .await?
+            }
+            "signed" => {
+                sqlx::query_scalar!(
+                    r#"SELECT EXISTS(SELECT 1 FROM signal_signed_pre_keys WHERE signed_pre_key_id = ?) AS "used!: bool""#,
+                    id
+                )
+                .fetch_one(pool)
+                .await?
+            }
+            "kyber" => {
+                sqlx::query_scalar!(
+                    r#"SELECT EXISTS(SELECT 1 FROM signal_kyber_pre_keys WHERE kyber_pre_key_id = ?) AS "used!: bool""#,
+                    id
+                )
+                .fetch_one(pool)
+                .await?
+            }
+            _ => unreachable!("unknown local prekey store"),
+        };
+        if !used {
             return Ok(id);
         }
     }
@@ -120,10 +135,10 @@ impl RustSignalEngine {
         let Some(bundle) = user.pqc_bundle.as_ref() else {
             return Ok(false);
         };
-        let signed = sqlx::query_scalar::<_, Vec<u8>>(
+        let signed = sqlx::query_scalar!(
             "SELECT record_bytes FROM signal_signed_pre_keys WHERE signed_pre_key_id = ?",
+            bundle.ecc_signed_prekey_id
         )
-        .bind(bundle.ecc_signed_prekey_id)
         .fetch_optional(&store.pool)
         .await?;
         let Some(signed) = signed
@@ -137,10 +152,10 @@ impl RustSignalEngine {
         {
             return Ok(false);
         }
-        let kyber = sqlx::query_scalar::<_, Vec<u8>>(
+        let kyber = sqlx::query_scalar!(
             "SELECT record_bytes FROM signal_kyber_pre_keys WHERE kyber_pre_key_id = ?",
+            bundle.kyber_signed_prekey_id
         )
-        .bind(bundle.kyber_signed_prekey_id)
         .fetch_optional(&store.pool)
         .await?;
         let Some(kyber) =
@@ -155,10 +170,10 @@ impl RustSignalEngine {
             return Ok(false);
         }
         if let Some(prekey) = &bundle.prekey {
-            let ecc = sqlx::query_scalar::<_, Vec<u8>>(
+            let ecc = sqlx::query_scalar!(
                 "SELECT record_bytes FROM signal_pre_keys WHERE pre_key_id = ?",
+                prekey.ecc_pre_key_id
             )
-            .bind(prekey.ecc_pre_key_id)
             .fetch_optional(&store.pool)
             .await?;
             let Some(ecc) =
@@ -171,10 +186,10 @@ impl RustSignalEngine {
             {
                 return Ok(false);
             }
-            let kyber = sqlx::query_scalar::<_, Vec<u8>>(
+            let kyber = sqlx::query_scalar!(
                 "SELECT record_bytes FROM signal_kyber_pre_keys WHERE kyber_pre_key_id = ?",
+                prekey.kyber_pre_key_id
             )
-            .bind(prekey.kyber_pre_key_id)
             .fetch_optional(&store.pool)
             .await?;
             let Some(kyber) = kyber

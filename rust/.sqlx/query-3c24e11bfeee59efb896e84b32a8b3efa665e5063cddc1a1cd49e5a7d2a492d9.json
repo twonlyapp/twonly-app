@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO live_location_pending(message_id, group_id, sender_id, updated_at_ms, expires_at_ms, data) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(message_id) DO UPDATE SET updated_at_ms = excluded.updated_at_ms, data = excluded.data WHERE live_location_pending.sender_id = excluded.sender_id AND live_location_pending.group_id = excluded.group_id AND live_location_pending.updated_at_ms < excluded.updated_at_ms",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "3c24e11bfeee59efb896e84b32a8b3efa665e5063cddc1a1cd49e5a7d2a492d9"
+}

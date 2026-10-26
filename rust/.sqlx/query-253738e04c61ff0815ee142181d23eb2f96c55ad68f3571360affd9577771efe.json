@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT attachment_id, multipart_path, manifest_path, complete_body_path\n           FROM direct_media_upload_jobs",
+  "describe": {
+    "columns": [
+      {
+        "name": "attachment_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "attachment_id"
+          }
+        }
+      },
+      {
+        "name": "multipart_path",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "multipart_path"
+          }
+        }
+      },
+      {
+        "name": "manifest_path",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "manifest_path"
+          }
+        }
+      },
+      {
+        "name": "complete_body_path",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "complete_body_path"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "253738e04c61ff0815ee142181d23eb2f96c55ad68f3571360affd9577771efe"
+}

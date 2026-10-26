@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO webxdc_sync_chunks\n                   (transfer_id, group_id, sender_id, chunk_index, chunk_count,\n                    payload_sha256, payload)\n               VALUES (?, ?, ?, ?, ?, ?, ?)\n               ON CONFLICT(transfer_id, sender_id, chunk_index) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "07a50aea06134204f63cca0df6dcc44995add0572ed6c80a61ea2077bececdd4"
+}

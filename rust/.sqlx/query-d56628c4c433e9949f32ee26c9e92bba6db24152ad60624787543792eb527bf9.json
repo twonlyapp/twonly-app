@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT location_status, location_deadline_at FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "location_status",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_status"
+          }
+        }
+      },
+      {
+        "name": "location_deadline_at",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_deadline_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "d56628c4c433e9949f32ee26c9e92bba6db24152ad60624787543792eb527bf9"
+}

@@ -171,7 +171,7 @@ async fn import(
     // before checking again so the second cannot overwrite newly received data.
     let mut tx = connection.begin_with("BEGIN IMMEDIATE").await?;
     let complete: Option<String> =
-        sqlx::query_scalar("SELECT value FROM app_metadata WHERE key = 'legacy_import_complete'")
+        sqlx::query_scalar!("SELECT value FROM app_metadata WHERE key = 'legacy_import_complete'")
             .fetch_optional(&mut *tx)
             .await?;
     if complete.as_deref() == Some("1") {

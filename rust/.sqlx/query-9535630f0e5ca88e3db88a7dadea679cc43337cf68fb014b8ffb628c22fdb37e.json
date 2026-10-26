@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT message_id, sender_id, payload, info, href, received_at\n                   FROM webxdc_updates WHERE instance_id = ? ORDER BY serial",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "sender_id",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "sender_id"
+          }
+        }
+      },
+      {
+        "name": "payload",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "payload"
+          }
+        }
+      },
+      {
+        "name": "info",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "info"
+          }
+        }
+      },
+      {
+        "name": "href",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "href"
+          }
+        }
+      },
+      {
+        "name": "received_at",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "received_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "9535630f0e5ca88e3db88a7dadea679cc43337cf68fb014b8ffb628c22fdb37e"
+}

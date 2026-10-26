@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE own_custom_avatar SET webp = ?, sha256 = ?, width = ?, height = ?, accepted_contacts_only = ?, source_revision = source_revision + 1 WHERE singleton = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "df784a4e7e6f4ad06308532ef028f47e3d4d29466489998a4c0346e6bb532a94"
+}

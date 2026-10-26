@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET display_limit_in_milliseconds = ? WHERE media_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "eaaf48c4bfe5115375809252dc4ac9d2606c3b13a72da02e232f8cf6d6758b1c"
+}

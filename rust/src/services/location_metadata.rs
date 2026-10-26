@@ -156,10 +156,11 @@ pub(crate) async fn initialize_for_media(ctx: &Arc<Context>, media_id: &str) -> 
 
     // Saving an editor capture creates a second row for its Memory. Carry its
     // original fix/window through, rather than restarting capture at save time.
-    let existing: Option<(Option<String>, Option<i64>)> = sqlx::query_as(
+    let existing: Option<(Option<String>, Option<i64>)> = sqlx::query!(
         "SELECT location_status, location_deadline_at FROM media_files WHERE media_id = ?",
+        media_id
     )
-    .bind(media_id)
+    .map(|row| (row.location_status, row.location_deadline_at))
     .fetch_optional(&database.pool)
     .await?;
 
@@ -175,15 +176,15 @@ pub(crate) async fn initialize_for_media(ctx: &Arc<Context>, media_id: &str) -> 
         return Ok(());
     }
 
-    sqlx::query(
+    sqlx::query!(
         r#"UPDATE media_files
            SET location_status = 'pending', location_deadline_at = ?,
                location_latitude = NULL, location_longitude = NULL,
                location_accuracy = NULL
            WHERE media_id = ?"#,
+        deadline,
+        media_id
     )
-    .bind(deadline)
-    .bind(media_id)
     .execute(&database.pool)
     .await?;
 
@@ -270,24 +271,24 @@ async fn finish(ctx: &Arc<Context>, media_id: &str, location: Option<LocationFix
     let database = ctx.app_db.read().await.clone();
 
     if let Some(location) = location {
-        sqlx::query(
+        sqlx::query!(
             r#"UPDATE media_files
                SET location_status = 'resolved', location_latitude = ?,
                    location_longitude = ?, location_accuracy = ?
                WHERE media_id = ? AND location_status = 'pending'"#,
+            location.latitude,
+            location.longitude,
+            location.accuracy,
+            media_id
         )
-        .bind(location.latitude)
-        .bind(location.longitude)
-        .bind(location.accuracy)
-        .bind(media_id)
         .execute(&database.pool)
         .await?;
     } else {
-        sqlx::query(
+        sqlx::query!(
             "UPDATE media_files SET location_status = 'timedOut' WHERE media_id = ? AND \
              location_status = 'pending'",
+            media_id
         )
-        .bind(media_id)
         .execute(&database.pool)
         .await?;
     }
@@ -304,8 +305,9 @@ async fn finish(ctx: &Arc<Context>, media_id: &str, location: Option<LocationFix
 pub(crate) async fn resume(ctx: &Arc<Context>) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
-    let pending = sqlx::query_as::<_, PendingLocation>(
-        r#"SELECT media_id, location_deadline_at
+    let pending = sqlx::query_as!(
+        PendingLocation,
+        r#"SELECT media_id, location_deadline_at AS "location_deadline_at!"
            FROM media_files WHERE location_status = 'pending'"#,
     )
     .fetch_all(&database.pool)
@@ -331,13 +333,13 @@ pub(crate) async fn resume(ctx: &Arc<Context>) -> Result<()> {
 pub(crate) async fn disable_pending(ctx: &Arc<Context>) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
-    let media_ids = sqlx::query_scalar::<_, String>(
+    let media_ids = sqlx::query_scalar!(
         "SELECT media_id FROM media_files WHERE location_status = 'pending'",
     )
     .fetch_all(&database.pool)
     .await?;
 
-    sqlx::query(
+    sqlx::query!(
         "UPDATE media_files SET location_status = 'timedOut' WHERE location_status = 'pending'",
     )
     .execute(&database.pool)

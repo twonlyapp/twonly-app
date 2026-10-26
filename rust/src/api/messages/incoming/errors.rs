@@ -24,18 +24,19 @@ pub(crate) async fn handle_error_message(
         Type::ErrorProcessingMessageCreatedAccountRequestInstead => {
             // A peer's missing contact state is not a local unfriend action.
             // Ignore stale errors after the related outbox entry was delivered.
-            let Some(established) = sqlx::query_scalar::<_, bool>(
+            let Some(established) = sqlx::query_scalar!(
                 r#"SELECT c.accepted != 0 OR EXISTS (
                        SELECT 1 FROM group_members m JOIN groups g ON g.group_id = m.group_id
                        WHERE m.contact_id = c.user_id AND g.is_direct_chat = 1
-                   ) FROM contacts c
+                   ) AS "established!: bool"
+                   FROM contacts c
                    WHERE c.user_id = ? AND c.blocked = 0 AND c.deleted_by_user = 0
                      AND c.account_deleted = 0 AND EXISTS (
                          SELECT 1 FROM receipts r WHERE r.receipt_id = ? AND r.contact_id = c.user_id
                      )"#,
+                from_user_id,
+                &error.related_receipt_id
             )
-            .bind(from_user_id)
-            .bind(&error.related_receipt_id)
             .fetch_optional(&mut **t)
             .await? else {
                 return Ok(());
@@ -52,12 +53,12 @@ pub(crate) async fn handle_error_message(
                     .await?;
                 // Keep retrying the original message and repair the peer's
                 // handshake without turning our existing friend into a request.
-                sqlx::query(
+                sqlx::query!(
                     "UPDATE receipts SET mark_for_retry_after_accepted = NULL WHERE receipt_id = \
                      ? AND contact_id = ?",
+                    &error.related_receipt_id,
+                    from_user_id
                 )
-                .bind(&error.related_receipt_id)
-                .bind(from_user_id)
                 .execute(&mut **t)
                 .await?;
                 super::messages::queue_encrypted_content(

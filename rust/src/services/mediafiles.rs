@@ -348,10 +348,10 @@ impl MediaFileService {
             tracing::warn!(media_id, %error, "could not create the story thumbnail");
         }
 
-        let is_widget = sqlx::query_scalar::<_, i64>(
+        let is_widget = sqlx::query_scalar!(
             "SELECT is_widget_media FROM media_files WHERE media_id = ?",
+            media_id
         )
-        .bind(media_id)
         .fetch_optional(&database.pool)
         .await?
         .unwrap_or(0)

@@ -554,10 +554,10 @@ async fn tracked_message_id<'e>(
 
     // The announcement can be absent (a silent update or an expired chat row).
     // Only track rows that still exist, and never recreate purged announcements.
-    Ok(sqlx::query_scalar::<_, String>(
+    Ok(sqlx::query_scalar!(
         "SELECT message_id FROM messages WHERE message_id = ? AND sender_id IS NULL",
+        announcement_id
     )
-    .bind(announcement_id)
     .fetch_optional(executor)
     .await?)
 }
@@ -752,11 +752,13 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         // `message_actions` keeps the per-recipient acknowledgement used by
         // group chats. The message row also carries the aggregate value used
         // by message bubbles and chat previews to leave the "sending" state.
-        sqlx::query("UPDATE messages SET ack_by_server = ? WHERE message_id = ?")
-            .bind(chrono::Utc::now().timestamp())
-            .bind(&message_id)
-            .execute(&mut *t)
-            .await?;
+        sqlx::query!(
+            "UPDATE messages SET ack_by_server = ? WHERE message_id = ?",
+            chrono::Utc::now().timestamp(),
+            &message_id
+        )
+        .execute(&mut *t)
+        .await?;
     }
 
     if receipt.contact_will_sends_receipt == 0 {
@@ -916,7 +918,7 @@ async fn due_receipt_ids(pool: &sqlx::SqlitePool, now: i64) -> Result<Vec<String
 pub(crate) async fn has_pending_receipts(ctx: &Arc<Context>) -> Result<bool> {
     let database = ctx.app_db.read().await.clone();
 
-    Ok(sqlx::query_scalar::<_, i64>(
+    Ok(sqlx::query_scalar!(
         r#"SELECT EXISTS(SELECT 1 FROM receipts
            WHERE will_be_retried_by_media_upload = 0
              AND deferred_until_session IS NULL

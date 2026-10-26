@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM direct_media_upload_jobs WHERE attachment_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "887e83ef9889faa499ff58778f63660bdb38d2fd3fc3e746d48cea47f0c76fbe"
+}

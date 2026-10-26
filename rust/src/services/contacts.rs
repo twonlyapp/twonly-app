@@ -56,11 +56,13 @@ impl ContactService {
             .await?;
 
         if let Some(joined_at) = user.joined_at {
-            sqlx::query("UPDATE contacts SET joined_at = ? WHERE user_id = ?")
-                .bind(joined_at)
-                .bind(user.user_id)
-                .execute(&mut *transaction)
-                .await?;
+            sqlx::query!(
+                "UPDATE contacts SET joined_at = ? WHERE user_id = ?",
+                joined_at,
+                user.user_id
+            )
+            .execute(&mut *transaction)
+            .await?;
         }
 
         transaction.commit().await?;
@@ -127,12 +129,12 @@ impl ContactService {
 
         // The server answered with a bundle, so a previous `UserIdNotFound`
         // (or a manual mark) must not keep the contact blocked.
-        sqlx::query(
+        sqlx::query!(
             "UPDATE contacts SET signal_version = 'v2', account_deleted = 0, joined_at = \
              COALESCE(?, joined_at) WHERE user_id = ?",
+            user.joined_at,
+            user_id
         )
-        .bind(user.joined_at)
-        .bind(user_id)
         .execute(&database.pool)
         .await?;
 

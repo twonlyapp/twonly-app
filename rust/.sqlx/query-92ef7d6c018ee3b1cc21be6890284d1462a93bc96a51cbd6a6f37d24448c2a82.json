@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET upload_state = CASE\n                 WHEN EXISTS(SELECT 1 FROM messages WHERE media_id = ?)\n                 THEN 'preprocessing' ELSE 'storedOnly' END\n               WHERE media_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "92ef7d6c018ee3b1cc21be6890284d1462a93bc96a51cbd6a6f37d24448c2a82"
+}
