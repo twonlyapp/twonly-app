@@ -550,7 +550,7 @@ impl MediaUploadService {
         .await
     }
 
-    async fn start_upload_locked(&self, media_id: &str) -> Result<()> {
+    pub(crate) async fn start_upload_locked(&self, media_id: &str) -> Result<()> {
         // The iOS notification extension has no Runner upload callback. Keep
         // the durable request pending; the foreground startup sweep resumes
         // it once Runner can schedule the native transfer.

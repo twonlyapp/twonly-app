@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:twonly/core/bridge/api.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/services/api/rust_api_result.dart';
 import 'package:twonly/src/utils/log.dart';
 
 typedef HomeWidgetTap = ({int? senderId});
@@ -83,12 +84,19 @@ class HomeWidgetService {
   }
 
   static Future<void> syncPermissions() async {
-    // Must run first: Rust derives who may share from the placement file, so a
-    // widget removed from the home screen has to disappear from it before that
-    // import reads it.
-    await reconcile();
-    await RustApi.syncWidgetPermissions();
-    await refresh();
+    try {
+      // Must run first: Rust derives who may share from the placement file, so a
+      // widget removed from the home screen has to disappear from it before that
+      // import reads it.
+      await reconcile();
+      await RustApi.syncWidgetPermissions();
+      await refresh();
+    } catch (error) {
+      if (!isBackgroundCancellation(error)) rethrow;
+      // Native reconciliation can outlive the foreground database session.
+      // App._resumeDatabaseServices repeats this sync after reopening the pools.
+      Log.info('Widget permission sync deferred until the app resumes');
+    }
   }
 
   /// Rewrites the placement file from the widgets WidgetKit says are placed.

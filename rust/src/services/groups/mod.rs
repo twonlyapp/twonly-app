@@ -569,6 +569,12 @@ impl GroupService {
 
         t.commit().await?;
 
+        // An OS upload may already hold an immutable manifest from before
+        // this membership change. Abandon it before rebuilding its recipients.
+        crate::services::direct_media_upload::DirectMediaUploadService::new(&self.ctx)
+            .reconcile_group_recipients(Some(&group_id))
+            .await?;
+
         if let Some(compaction) = compaction {
             // Every admin that reads the same leave-append folds it away, and
             // the group server takes whichever gets there first. A rejection

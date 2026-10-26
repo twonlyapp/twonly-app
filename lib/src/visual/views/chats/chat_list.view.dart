@@ -155,7 +155,6 @@ class _ChatListViewState extends State<ChatListView>
       _appVisible = false;
       _syncWatchActivity();
     }
-    if (mounted) setState(() {});
   }
 
   void _syncWatchActivity() {
@@ -675,7 +674,9 @@ class _ChatListViewState extends State<ChatListView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (!widget.active || !_appVisible) return const SizedBox.shrink();
+    // Stays mounted while the app is hidden: frames resume at `inactive`,
+    // before `resumed`, so an empty build here would flash on return.
+    if (!widget.active) return const SizedBox.shrink();
     final plan = context.select<PurchasesProvider, SubscriptionPlan>(
       (p) => p.plan,
     );

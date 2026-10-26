@@ -10,7 +10,9 @@ use crate::database::app::mediafiles::native::MediaFile;
 use crate::database::app::AppDatabase;
 use crate::error::{Result, TwonlyError};
 use crate::native::transfer;
-use crate::services::media_upload::{media_lock, parse_reupload_requested_by, MediaReuploadTarget};
+use crate::services::media_upload::{
+    media_lock, parse_reupload_requested_by, MediaReuploadTarget, MediaUploadService,
+};
 use crate::services::stories::{STORY_ANNOUNCE_RECENT_EXCHANGE_SECONDS, STORY_LIFETIME_SECONDS};
 use chacha20poly1305::aead::{AeadInOut, KeyInit};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
@@ -737,6 +739,10 @@ impl DirectMediaUploadService {
     pub async fn reconcile(&self) -> Result<()> {
         self.ensure_api_namespace().await?;
 
+        // Retry cancellations interrupted after a group-state commit, before
+        // rescheduling any immutable requests that still name former members.
+        self.reconcile_group_recipients(None).await?;
+
         let database = self.ctx.app_db.read().await.clone();
 
         self.repair_slot_reservations().await?;
@@ -991,6 +997,87 @@ impl DirectMediaUploadService {
         Ok(status)
     }
 
+    /// Removes former group members from queued media. A native transfer owns
+    /// immutable requests, so an affected attachment has to be abandoned on
+    /// the server and prepared again, including any other chats sharing it.
+    pub(crate) async fn reconcile_group_recipients(&self, group_id: Option<&str>) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let media_ids = sqlx::query_scalar!(
+            r#"SELECT DISTINCT m.media_id AS "media_id!: String"
+               FROM receipts r
+               JOIN messages m ON m.message_id = r.message_id
+               JOIN groups g ON g.group_id = m.group_id
+               JOIN group_members gm ON gm.group_id = m.group_id AND gm.contact_id = r.contact_id
+               WHERE m.sender_id IS NULL AND m.media_id IS NOT NULL
+                 AND g.is_direct_chat = 0 AND gm.member_state = 'leftGroup'
+                 AND (? IS NULL OR m.group_id = ?)"#,
+            group_id,
+            group_id
+        )
+        .fetch_all(&database.pool)
+        .await?;
+
+        for media_id in media_ids {
+            let lock = media_lock(&media_id);
+            let _guard = lock.lock().await;
+            let pending = sqlx::query_scalar!(
+                "SELECT EXISTS(SELECT 1 FROM direct_media_upload_jobs WHERE media_id = ?)",
+                media_id
+            )
+            .fetch_one(&database.pool)
+            .await?
+                != 0;
+
+            // Keep the receipts until abandonment is confirmed. They are the
+            // durable retry marker if the network or process goes away here.
+            let dispatched = if pending {
+                self.cancel_pending_upload(&media_id).await?
+            } else {
+                false
+            };
+
+            let restart = self
+                .finish_group_recipient_change(&media_id, pending, dispatched)
+                .await?;
+
+            if restart {
+                MediaUploadService::new(&self.ctx)
+                    .start_upload_locked(&media_id)
+                    .await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn finish_group_recipient_change(
+        &self, media_id: &str, pending: bool, dispatched: bool,
+    ) -> Result<bool> {
+        let database = self.ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+        discard_removed_group_receipts(&mut transaction, media_id).await?;
+
+        // A crash after cancellation may have removed the job without
+        // resetting the media. Recover that case in this same commit.
+        let restart = if !dispatched {
+            sqlx::query!(
+                "UPDATE media_files SET upload_state = 'preprocessing' WHERE media_id = ? AND (? \
+                 OR upload_state = 'backgroundUploadTaskStarted')",
+                media_id,
+                pending
+            )
+            .execute(&mut *transaction)
+            .await?
+            .rows_affected()
+                != 0
+        } else {
+            false
+        };
+
+        transaction.commit().await?;
+        Ok(restart)
+    }
+
     /// Caller holds the media lock. Abandoning on the server prevents even a
     /// native transfer already in flight from dispatching its old manifest.
     /// Returns true if dispatch won the race and recipients need a deletion.
@@ -1218,12 +1305,10 @@ impl DirectMediaUploadService {
     async fn remove_encrypted_copy(&self, media_id: &str) {
         let database = self.ctx.app_db.read().await.clone();
 
-        let media_type = sqlx::query_scalar!(
-            "SELECT type FROM media_files WHERE media_id = ?",
-            media_id
-        )
-        .fetch_optional(&database.pool)
-        .await;
+        let media_type =
+            sqlx::query_scalar!("SELECT type FROM media_files WHERE media_id = ?", media_id)
+                .fetch_optional(&database.pool)
+                .await;
 
         if let Ok(Some(media_type)) = media_type {
             let path = PathBuf::from(&self.ctx.config.data_dir)
@@ -1306,7 +1391,34 @@ impl DirectMediaUploadService {
         &self, media_id: &str, slot: &CachedSlot, prepared: (PathBuf, i64, AttachmentManifest),
         transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<String> {
-        let (encrypted_path, encrypted_size, manifest) = prepared;
+        let (encrypted_path, encrypted_size, mut manifest) = prepared;
+        // Membership can change while compression and Signal encryption run.
+        // Check under the writer lock that also persists the manifest: a later
+        // group-state commit will find its receipts and cancel the job above.
+        discard_removed_group_receipts(transaction, media_id).await?;
+        if !manifest.dispatches.is_empty() {
+            let receipt_ids: std::collections::BTreeSet<String> = sqlx::query_scalar!(
+                "SELECT r.receipt_id FROM receipts r JOIN messages m ON m.message_id = \
+                 r.message_id WHERE m.media_id = ?",
+                media_id
+            )
+            .fetch_all(&mut **transaction)
+            .await?
+            .into_iter()
+            .collect();
+            let mut dispatches = Vec::with_capacity(manifest.dispatches.len());
+            for dispatch in manifest.dispatches {
+                let envelope =
+                    crate::api::proto::client::Message::decode(dispatch.encrypted_body.as_slice())?;
+                if receipt_ids.contains(&envelope.receipt_id) {
+                    dispatches.push(dispatch);
+                }
+            }
+            manifest.dispatches = dispatches;
+            if manifest.dispatches.is_empty() {
+                return Err(TwonlyError::MediaHasNoRecipients);
+            }
+        }
         // The server rejects an oversized object anyway, but only once the whole
         // upload has been spent: the manifest is refused outright, and an object
         // that slips past it is deleted at finalize with `single_object_limit`.
@@ -1765,6 +1877,27 @@ impl DirectMediaUploadService {
             }),
         }
     }
+}
+
+/// Receipt IDs identify individual dispatches, including when one file is sent
+/// to several chats containing the same contact. Never revoke their other chat.
+async fn discard_removed_group_receipts(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>, media_id: &str,
+) -> Result<()> {
+    sqlx::query!(
+        r#"DELETE FROM receipts WHERE receipt_id IN (
+               SELECT r.receipt_id FROM receipts r
+               JOIN messages m ON m.message_id = r.message_id
+               JOIN groups g ON g.group_id = m.group_id
+               JOIN group_members gm ON gm.group_id = m.group_id AND gm.contact_id = r.contact_id
+               WHERE m.media_id = ? AND m.sender_id IS NULL
+                 AND g.is_direct_chat = 0 AND gm.member_state = 'leftGroup'
+           )"#,
+        media_id
+    )
+    .execute(&mut **transaction)
+    .await?;
+    Ok(())
 }
 
 /// Whether a story row's recipient is woken for it. Stories wake only for the
@@ -3783,6 +3916,207 @@ mod tests {
                 .bind(attachment_id).bind(expires_at).execute(&database.pool).await?;
         }
         Ok((directory, ctx))
+    }
+
+    async fn membership_test_context() -> anyhow::Result<(tempfile::TempDir, Arc<Context>)> {
+        let (directory, ctx) = slot_test_context().await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'remaining'), (8, 'removed');
+             INSERT INTO groups(group_id, group_name, is_direct_chat)
+                 VALUES ('g', 'Group', 0), ('d', 'Direct', 1);
+             INSERT INTO group_members(group_id, contact_id)
+                 VALUES ('g', 7), ('g', 8), ('d', 8);
+             INSERT INTO messages(message_id, group_id, type, media_id)
+                 VALUES ('group', 'g', 'media', 'original'),
+                        ('direct', 'd', 'media', 'original'),
+                        ('other-media', 'g', 'media', 'replacement');
+             INSERT INTO receipts(receipt_id, contact_id, message_id, message)
+                 VALUES ('remaining', 7, 'group', x'00'),
+                        ('removed', 8, 'group', x'00'),
+                        ('direct', 8, 'direct', x'00'),
+                        ('other-media', 8, 'other-media', x'00');",
+        )
+        .execute(&database.pool)
+        .await?;
+        Ok((directory, ctx))
+    }
+
+    fn membership_prepared_media(ctx: &Context) -> (PathBuf, i64, AttachmentManifest) {
+        let (path, size, mut manifest) = test_prepared_media(ctx);
+        manifest.dispatches = [("remaining", 7), ("removed", 8), ("direct", 8)]
+            .into_iter()
+            .map(|(receipt_id, recipient_user_id)| AttachmentDispatch {
+                recipient_user_id,
+                encrypted_body: crate::api::proto::client::Message {
+                    receipt_id: receipt_id.into(),
+                    ..Default::default()
+                }
+                .encode_to_vec(),
+                ..Default::default()
+            })
+            .collect();
+        (path, size, manifest)
+    }
+
+    #[tokio::test]
+    async fn member_removed_during_preparation_is_excluded_before_native_handoff(
+    ) -> anyhow::Result<()> {
+        let (_directory, ctx) = membership_test_context().await?;
+        let database = ctx.app_db.read().await.clone();
+        let prepared = membership_prepared_media(&ctx);
+        sqlx::query(
+            "UPDATE group_members SET member_state = 'leftGroup' WHERE group_id = 'g' AND \
+             contact_id = 8",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        let service = DirectMediaUploadService::new(&ctx);
+        let (id, _) = service.persist_prepared_job("original", prepared).await?;
+        let job = test_pending_job(&ctx, &id).await?;
+        let manifest = AttachmentManifest::decode(std::fs::read(job.manifest_path)?.as_slice())?;
+        let receipt_ids = manifest
+            .dispatches
+            .iter()
+            .map(|dispatch| {
+                crate::api::proto::client::Message::decode(dispatch.encrypted_body.as_slice())
+                    .unwrap()
+                    .receipt_id
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(receipt_ids, vec!["remaining", "direct"]);
+        // The same person's direct copy and a different media file are untouched.
+        let queued: Vec<String> =
+            sqlx::query_scalar("SELECT receipt_id FROM receipts ORDER BY receipt_id")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(queued, vec!["direct", "other-media", "remaining"]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn membership_cancellation_preserves_other_recipients_and_recovers_after_interruption(
+    ) -> anyhow::Result<()> {
+        for state in [
+            AttachmentState::Abandoned,
+            AttachmentState::Ready,
+            AttachmentState::Uploading,
+        ] {
+            let (_directory, ctx) = membership_test_context().await?;
+            let database = ctx.app_db.read().await.clone();
+            let service = DirectMediaUploadService::new(&ctx);
+            let (id, _) = service
+                .persist_prepared_job("original", membership_prepared_media(&ctx))
+                .await?;
+            let job = test_pending_job(&ctx, &id).await?;
+            sqlx::raw_sql(
+                "UPDATE media_files SET upload_state = 'backgroundUploadTaskStarted' WHERE \
+                 media_id = 'original';
+                 UPDATE group_members SET member_state = 'leftGroup' WHERE group_id = 'g' AND \
+                 contact_id = 8;",
+            )
+            .execute(&database.pool)
+            .await?;
+
+            // Until the server confirms abandonment, the immutable job and
+            // its receipts must remain available for cancellation to retry.
+            let result = service
+                .finish_cancellation(
+                    &job,
+                    AttachmentStatus {
+                        state: state as i32,
+                        ..Default::default()
+                    },
+                )
+                .await;
+            if state == AttachmentState::Uploading {
+                assert!(result.is_err());
+                assert_eq!(service.pending_job_count().await?, 1);
+                assert!(Path::new(&job.manifest_path).exists());
+                assert_eq!(
+                    sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM receipts")
+                        .fetch_one(&database.pool)
+                        .await?,
+                    4
+                );
+                continue;
+            }
+
+            let dispatched = result?;
+            // Simulate a process interruption after the job was deleted. The
+            // media state and the retained receipts must still recover it.
+            let restart = service
+                .finish_group_recipient_change("original", false, dispatched)
+                .await?;
+            assert_eq!(restart, state == AttachmentState::Abandoned);
+            assert_eq!(service.pending_job_count().await?, 0);
+            let upload_state: String = sqlx::query_scalar(
+                "SELECT upload_state FROM media_files WHERE media_id = 'original'",
+            )
+            .fetch_one(&database.pool)
+            .await?;
+            assert_eq!(
+                upload_state,
+                if dispatched {
+                    "uploaded"
+                } else {
+                    "preprocessing"
+                }
+            );
+            let queued: Vec<String> =
+                sqlx::query_scalar("SELECT receipt_id FROM receipts ORDER BY receipt_id")
+                    .fetch_all(&database.pool)
+                    .await?;
+            assert_eq!(queued, vec!["direct", "other-media", "remaining"]);
+            let ack: Option<i64> =
+                sqlx::query_scalar("SELECT ack_by_server FROM messages WHERE message_id = 'group'")
+                    .fetch_one(&database.pool)
+                    .await?;
+            assert_eq!(ack.is_some(), dispatched);
+
+            if restart {
+                // Rebuilding cannot resurrect a dispatch whose queue row was
+                // removed, even if handed the old prepared recipient list.
+                let (id, _) = service
+                    .persist_prepared_job("original", membership_prepared_media(&ctx))
+                    .await?;
+                let job = test_pending_job(&ctx, &id).await?;
+                let manifest =
+                    AttachmentManifest::decode(std::fs::read(job.manifest_path)?.as_slice())?;
+                assert_eq!(manifest.dispatches.len(), 2);
+            }
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn removal_of_every_prepared_recipient_leaves_no_native_job() -> anyhow::Result<()> {
+        let (_directory, ctx) = membership_test_context().await?;
+        let database = ctx.app_db.read().await.clone();
+        let (path, size, mut manifest) = membership_prepared_media(&ctx);
+        manifest.dispatches.retain(|dispatch| {
+            crate::api::proto::client::Message::decode(dispatch.encrypted_body.as_slice())
+                .unwrap()
+                .receipt_id
+                == "removed"
+        });
+        sqlx::query(
+            "UPDATE group_members SET member_state = 'leftGroup' WHERE group_id = 'g' AND \
+             contact_id = 8",
+        )
+        .execute(&database.pool)
+        .await?;
+        let service = DirectMediaUploadService::new(&ctx);
+        assert!(matches!(
+            service
+                .persist_prepared_job("original", (path, size, manifest))
+                .await,
+            Err(TwonlyError::MediaHasNoRecipients)
+        ));
+        assert_eq!(service.pending_job_count().await?, 0);
+        assert_eq!(service.usable_slot_count().await?, 2);
+        Ok(())
     }
 
     fn test_prepared_media(ctx: &Context) -> (PathBuf, i64, AttachmentManifest) {

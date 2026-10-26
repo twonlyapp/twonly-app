@@ -108,13 +108,13 @@ class _MessageInfoViewState extends State<MessageInfoView> {
       });
     });
 
+    // Match outgoing media recipients: former members are no longer waiting.
     final streamGroup =
         watchRustDatabase(
           (control) => rust_groups
               .watchGroupContacts(
                 input: db_groups.GroupMembersQuery(
                   groupId: widget.message.groupId,
-                  activeOnly: false,
                 ),
                 control: control,
               )
