@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(\n                SELECT 1 FROM receipts\n                WHERE contact_id = ? AND receipt_id != ? AND decryption_failures > 0\n            ) AS \"failed!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "failed!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ed1384c959f827ef323a702678fae1a70012c5267bbd477ff904d0771a6de3ce"
+}

@@ -88,17 +88,16 @@ pub(crate) async fn decorate_content(
         TwonlyScoreVisibility::Everyone => true,
     };
 
-    content.sender_twonly_score = if share_twonly_score {
-        Some(
-            sqlx::query_scalar!(
-                "SELECT COALESCE(SUM(total_media_counter), 0) FROM groups",
-            )
+    // A hidden score is sent as zero rather than left out: receivers ignore a
+    // missing one, since protocol replies queued without this decoration carry
+    // none, and show neither zero nor nothing.
+    content.sender_twonly_score = Some(if share_twonly_score {
+        sqlx::query_scalar!("SELECT COALESCE(SUM(total_media_counter), 0) FROM groups")
             .fetch_one(&mut **t)
-            .await?,
-        )
+            .await?
     } else {
-        None
-    };
+        0
+    });
 
     if config.ask_for_friend_promotions {
         let accepted = sqlx::query_scalar!("SELECT COUNT(*) FROM contacts WHERE accepted = 1")
@@ -371,7 +370,7 @@ mod tests {
 
         transaction.rollback().await?;
 
-        assert_eq!(hidden_content.sender_twonly_score, None);
+        assert_eq!(hidden_content.sender_twonly_score, Some(0));
 
         sqlx::query("UPDATE contacts SET accepted = 1 WHERE user_id = 7")
             .execute(&database.pool)
@@ -402,7 +401,7 @@ mod tests {
 
         transaction.rollback().await?;
 
-        assert_eq!(nobody_content.sender_twonly_score, None);
+        assert_eq!(nobody_content.sender_twonly_score, Some(0));
 
         Ok(())
     }

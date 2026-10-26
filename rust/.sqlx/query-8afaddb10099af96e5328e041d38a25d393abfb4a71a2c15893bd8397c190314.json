@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT decryption_failures FROM receipts WHERE receipt_id = ? AND contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "decryption_failures",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "decryption_failures"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8afaddb10099af96e5328e041d38a25d393abfb4a71a2c15893bd8397c190314"
+}

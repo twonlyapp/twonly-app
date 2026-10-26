@@ -1021,27 +1021,93 @@ pub(crate) async fn handle_sender_delivery_receipt(
     Ok(())
 }
 
+/// Failed attempts after which a message is no longer sent through a session
+/// the peer cannot open. It waits until a session appears: a message from the
+/// peer that decrypts, or a prekey bundle fetch.
+const MAX_DECRYPTION_FAILURES: i64 = 5;
+
+/// The Signal session rebuild a peer's decryption error calls for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+
+pub enum SessionRepair {
+    None,
+    /// The peer retired its half of the session. A rebuild from its current
+    /// bundle is what it asked for, so a successful one ends the episode.
+    PeerReset,
+    /// Our messages keep failing through the session we have. A rebuild may
+    /// fix that, but getting a bundle proves nothing until the peer reads the
+    /// result, so it keeps counting against the reset budget: each rebuild
+    /// spends one of the peer's one-time prekeys.
+    RepeatedFailures,
+}
+
 /// Requeues the receipt a peer could not process, under a new ID.
 ///
-/// Returns whether the peer also retired their Signal session, in which case
-/// the caller has to rebuild one before the requeued receipt can go out. The
-/// receipt is parked here so the flush that follows the caller's commit cannot
-/// send it through the session the peer just threw away.
+/// Says which session rebuild the caller has to run before the requeued
+/// receipt can go out. For any rebuild, the receipt is parked here so the
+/// flush that follows the caller's commit cannot send it through the session
+/// being replaced.
+///
+/// Only a first failure is resent at once. Older peers answer every failure
+/// with a plain retry request, and a peer that cannot open our session fails
+/// each resend the same way: an immediate resend for each of those turned the
+/// two devices into a loop limited only by the network.
 pub async fn handle_plaintext_content(
     _ctx: &Context, transaction: &mut Transaction<'_, Sqlite>, from_user_id: i64, receipt_id: &str,
     plaintext: proto::PlaintextContent,
-) -> Result<bool> {
+) -> Result<SessionRepair> {
     if plaintext.decryption_error_message.is_none() && plaintext.retry_control_error.is_none() {
-        return Ok(false);
+        return Ok(SessionRepair::None);
     }
 
     // An unknown type comes from a client newer than this one. Treating it as
     // a plain retry request is what every release before session resets did,
     // so it stays the fallback rather than an error.
-    let rebuild_session = plaintext.decryption_error_message.is_some_and(|error| {
+    let peer_reset = plaintext.decryption_error_message.is_some_and(|error| {
         proto::plaintext_content::decryption_error_message::Type::try_from(error.r#type)
             == Ok(proto::plaintext_content::decryption_error_message::Type::SessionResetRequired)
     });
+
+    let Some(failures) = sqlx::query_scalar!(
+        "SELECT decryption_failures FROM receipts WHERE receipt_id = ? AND contact_id = ?",
+        receipt_id,
+        from_user_id,
+    )
+    .fetch_optional(&mut **transaction)
+    .await?
+    else {
+        return Ok(if peer_reset {
+            SessionRepair::PeerReset
+        } else {
+            SessionRepair::None
+        });
+    };
+
+    // The session is shared by every message to this peer, so another message
+    // that failed already points at it just as much as this one failing twice.
+    let session_suspect = failures > 0
+        || sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                SELECT 1 FROM receipts
+                WHERE contact_id = ? AND receipt_id != ? AND decryption_failures > 0
+            ) AS "failed!: bool""#,
+            from_user_id,
+            receipt_id,
+        )
+        .fetch_one(&mut **transaction)
+        .await?;
+
+    let exhausted = failures + 1 >= MAX_DECRYPTION_FAILURES;
+
+    let repair = if peer_reset {
+        SessionRepair::PeerReset
+    } else if session_suspect && !exhausted {
+        SessionRepair::RepeatedFailures
+    } else {
+        SessionRepair::None
+    };
+
+    let park = repair != SessionRepair::None || exhausted;
 
     let new_receipt_id = uuid::Uuid::new_v4().to_string();
 
@@ -1051,7 +1117,17 @@ pub async fn handle_plaintext_content(
         SET receipt_id = ?,
             mark_for_retry = CAST(strftime('%s', 'now') AS INTEGER),
             retry_count = retry_count + 1,
-            ack_by_server_at = NULL,
+            decryption_failures = decryption_failures + 1,
+            -- A suspect session is retried only after the resend suppression
+            -- window, which runs from `last_retry` once the server took it.
+            ack_by_server_at = CASE
+                WHEN ? THEN COALESCE(ack_by_server_at, CAST(strftime('%s', 'now') AS INTEGER))
+                ELSE NULL
+            END,
+            last_retry = CASE
+                WHEN ? THEN CAST(strftime('%s', 'now') AS INTEGER)
+                ELSE last_retry
+            END,
             -- A rebuild needs a server round-trip, so it cannot run inside this
             -- transaction. `release_deferred_receipts` frees the receipt once
             -- the new session stands.
@@ -1062,14 +1138,24 @@ pub async fn handle_plaintext_content(
         WHERE receipt_id = ? AND contact_id = ?
         "#,
         new_receipt_id,
-        rebuild_session,
+        session_suspect,
+        session_suspect,
+        park,
         receipt_id,
         from_user_id,
     )
     .execute(&mut **transaction)
     .await?;
 
-    Ok(rebuild_session)
+    tracing::info!(
+        new_receipt_id,
+        failures = failures + 1,
+        ?repair,
+        parked = park,
+        "requeued a message the peer could not decrypt"
+    );
+
+    Ok(repair)
 }
 
 #[cfg(test)]
@@ -1518,6 +1604,145 @@ mod tests {
 
     #[tokio::test]
 
+    async fn repeated_decryption_failures_back_off_rebuild_and_finally_wait() -> anyhow::Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        // The payload stays put while the receipt ID changes on every requeue.
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'alice');
+             INSERT INTO receipts(receipt_id, contact_id, message, ack_by_server_at)
+             VALUES ('first', 7, x'01', 1), ('second', 7, x'02', 1);",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        let retry_request = proto::PlaintextContent {
+            decryption_error_message: None,
+            retry_control_error: Some(proto::plaintext_content::RetryErrorMessage {}),
+        };
+
+        let reset_request = proto::PlaintextContent {
+            decryption_error_message: Some(proto::plaintext_content::DecryptionErrorMessage {
+                r#type:
+                    proto::plaintext_content::decryption_error_message::Type::SessionResetRequired
+                        as i32,
+            }),
+            retry_control_error: None,
+        };
+
+        let receipt = |payload: u8| {
+            let pool = database.pool.clone();
+
+            async move {
+                sqlx::query_as::<_, (String, bool)>(
+                    "SELECT receipt_id, deferred_until_session IS NOT NULL FROM receipts WHERE \
+                     message = ?",
+                )
+                .bind(vec![payload])
+                .fetch_one(&pool)
+                .await
+            }
+        };
+
+        // The peer reports that it could not open the message carrying `payload`.
+        let fail = |payload: u8, error: proto::PlaintextContent| {
+            let database = database.clone();
+
+            let ctx = ctx.clone();
+
+            async move {
+                let (receipt_id, _) = receipt(payload).await?;
+
+                let mut t = database.pool.begin().await?;
+
+                let repair = handle_plaintext_content(&ctx, &mut t, 7, &receipt_id, error).await?;
+
+                t.commit().await?;
+
+                let (new_id, parked) = receipt(payload).await?;
+
+                assert_ne!(new_id, receipt_id);
+
+                Ok::<_, anyhow::Error>((repair, new_id, parked))
+            }
+        };
+
+        let now = chrono::Utc::now().timestamp();
+
+        // One failure may be the peer's alone: resend at once, same session.
+        let (repair, id, parked) = fail(1, retry_request).await?;
+
+        assert_eq!((repair, parked), (SessionRepair::None, false));
+
+        assert_eq!(due_receipt_ids(&database.pool, now).await?, vec![id]);
+
+        // A second failure blames the session: rebuild it and wait for that.
+        let (repair, id, parked) = fail(1, retry_request).await?;
+
+        assert_eq!((repair, parked), (SessionRepair::RepeatedFailures, true));
+
+        assert!(due_receipt_ids(&database.pool, now).await?.is_empty());
+
+        // Released, it waits out the resend window instead of going at once.
+        release_deferred_receipts(&database, 7).await?;
+
+        assert!(due_receipt_ids(&database.pool, now).await?.is_empty());
+
+        assert_eq!(
+            due_receipt_ids(&database.pool, now + RESEND_SUPPRESSION_SECONDS + 1).await?,
+            vec![id]
+        );
+
+        // Another message to the same peer is suspect from its first failure.
+        let (repair, _, parked) = fail(2, retry_request).await?;
+
+        assert_eq!((repair, parked), (SessionRepair::RepeatedFailures, true));
+
+        for _ in 3..MAX_DECRYPTION_FAILURES {
+            release_deferred_receipts(&database, 7).await?;
+
+            let (repair, _, parked) = fail(1, retry_request).await?;
+
+            assert_eq!((repair, parked), (SessionRepair::RepeatedFailures, true));
+        }
+
+        // Out of attempts: no further rebuild of our own, it waits for a session.
+        release_deferred_receipts(&database, 7).await?;
+
+        let (repair, _, parked) = fail(1, retry_request).await?;
+
+        assert_eq!((repair, parked), (SessionRepair::None, true));
+
+        // A reset the peer asks for is still honoured.
+        release_deferred_receipts(&database, 7).await?;
+
+        let (repair, _, parked) = fail(1, reset_request).await?;
+
+        assert_eq!((repair, parked), (SessionRepair::PeerReset, true));
+
+        // So is one for a receipt no longer held under that ID.
+        let mut t = database.pool.begin().await?;
+
+        let repair = handle_plaintext_content(&ctx, &mut t, 7, "unknown", reset_request).await?;
+
+        t.rollback().await?;
+
+        assert_eq!(repair, SessionRepair::PeerReset);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+
     async fn live_location_receipts_can_be_requeued_without_losing_their_outbox_link() -> Result<()>
     {
         let directory = tempfile::tempdir()?;
@@ -1568,7 +1793,14 @@ mod tests {
             )
             .await?;
 
-            assert_eq!(rebuild, reset);
+            assert_eq!(
+                rebuild,
+                if reset {
+                    SessionRepair::PeerReset
+                } else {
+                    SessionRepair::None
+                }
+            );
 
             t.commit().await?;
 

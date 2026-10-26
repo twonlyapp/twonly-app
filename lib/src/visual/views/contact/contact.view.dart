@@ -211,6 +211,10 @@ class _ContactViewState extends State<ContactView> {
   Widget build(BuildContext context) {
     if (_contact == null) return Container();
     final contact = _contact!;
+    // A contact that stopped sharing sends zero.
+    final twonlyScore = (contact.twonlyScore ?? 0) > 0
+        ? contact.twonlyScore
+        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -265,7 +269,7 @@ class _ContactViewState extends State<ContactView> {
           ),
           if (getContactDisplayName(contact) != contact.username)
             Center(child: Text('(${contact.username})')),
-          if (contact.twonlyScore != null ||
+          if (twonlyScore != null ||
               (contact.joinedAt != null && !contact.accountDeleted))
             Padding(
               padding: const EdgeInsets.only(top: 10),
@@ -275,7 +279,7 @@ class _ContactViewState extends State<ContactView> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    if (contact.twonlyScore != null)
+                    if (twonlyScore != null)
                       IntrinsicWidth(
                         child: MyChip(
                           label: Row(
@@ -283,7 +287,7 @@ class _ContactViewState extends State<ContactView> {
                             children: [
                               const FaIcon(FontAwesomeIcons.trophy, size: 14),
                               const SizedBox(width: 7),
-                              Text('${contact.twonlyScore}'),
+                              Text('$twonlyScore'),
                             ],
                           ),
                           onTap: () => showDialog<void>(

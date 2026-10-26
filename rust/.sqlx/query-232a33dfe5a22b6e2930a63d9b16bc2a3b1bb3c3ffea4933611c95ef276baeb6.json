@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE receipts\n        SET receipt_id = ?,\n            mark_for_retry = CAST(strftime('%s', 'now') AS INTEGER),\n            retry_count = retry_count + 1,\n            decryption_failures = decryption_failures + 1,\n            -- A suspect session is retried only after the resend suppression\n            -- window, which runs from `last_retry` once the server took it.\n            ack_by_server_at = CASE\n                WHEN ? THEN COALESCE(ack_by_server_at, CAST(strftime('%s', 'now') AS INTEGER))\n                ELSE NULL\n            END,\n            last_retry = CASE\n                WHEN ? THEN CAST(strftime('%s', 'now') AS INTEGER)\n                ELSE last_retry\n            END,\n            -- A rebuild needs a server round-trip, so it cannot run inside this\n            -- transaction. `release_deferred_receipts` frees the receipt once\n            -- the new session stands.\n            deferred_until_session = CASE\n                WHEN ? THEN CAST(strftime('%s', 'now') AS INTEGER)\n                ELSE deferred_until_session\n            END\n        WHERE receipt_id = ? AND contact_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "232a33dfe5a22b6e2930a63d9b16bc2a3b1bb3c3ffea4933611c95ef276baeb6"
+}

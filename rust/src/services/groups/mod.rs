@@ -101,7 +101,9 @@ struct PendingCompaction {
 static PUBLIC_KEY_REQUESTS: LazyLock<Mutex<HashMap<(String, i64), Instant>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
-/// When each group was last refreshed because a member it excludes wrote to it.
+/// When each group was last refreshed because a member disagreed with our view
+/// of its membership: one it excludes wrote to it, or one it includes reported
+/// not being in it.
 ///
 /// Process-local for the same reason as [`PUBLIC_KEY_REQUESTS`]: it exists to
 /// keep a busy group from refetching its state on every inbound message while
@@ -158,13 +160,14 @@ fn claim_public_key_request(group_id: &str, contact_id: i64, force: bool) -> boo
     true
 }
 
-/// Claims a membership repair by rotating the receipt it refers to. A delayed
-/// error for an already retried or acknowledged receipt must not create a new
-/// invitation. Check the group too: receipt ownership alone is not sufficient.
+/// Claims a membership repair by rotating the receipt it refers to, and
+/// returns its new ID. A delayed error for an already retried or acknowledged
+/// receipt must not create a new invitation. Check the group too: receipt
+/// ownership alone is not sufficient.
 async fn retry_membership_receipt(
     t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, from_user_id: i64, group_id: &str,
     related_receipt_id: &str,
-) -> Result<bool> {
+) -> Result<Option<String>> {
     let message = sqlx::query_scalar!(
         "SELECT message FROM receipts WHERE receipt_id = ? AND contact_id = ?",
         related_receipt_id,
@@ -174,13 +177,13 @@ async fn retry_membership_receipt(
     .await?;
 
     let Some(message) = message else {
-        return Ok(false);
+        return Ok(None);
     };
 
     let envelope = proto::Message::decode(message.as_slice())?;
 
     let Some(content) = envelope.encrypted_content else {
-        return Ok(false);
+        return Ok(None);
     };
 
     if EncryptedContent::decode(content.as_slice())?
@@ -188,7 +191,7 @@ async fn retry_membership_receipt(
         .as_deref()
         != Some(group_id)
     {
-        return Ok(false);
+        return Ok(None);
     }
 
     let new_receipt_id = new_uuid_v4();
@@ -208,7 +211,31 @@ async fn retry_membership_receipt(
     .execute(&mut **t)
     .await?;
 
-    Ok(true)
+    Ok(Some(new_receipt_id))
+}
+
+/// Whether an invitation to `group_id` is still queued for the contact, that
+/// is, not yet acknowledged by them.
+async fn group_create_pending<'e, E>(executor: E, contact_id: i64, group_id: &str) -> Result<bool>
+where
+    E: sqlx::Executor<'e, Database = sqlx::Sqlite>,
+{
+    let messages = sqlx::query_scalar!(
+        "SELECT message FROM receipts WHERE contact_id = ?",
+        contact_id,
+    )
+    .fetch_all(executor)
+    .await?;
+
+    Ok(messages.iter().any(|message| {
+        proto::Message::decode(message.as_slice())
+            .ok()
+            .and_then(|envelope| envelope.encrypted_content)
+            .and_then(|content| EncryptedContent::decode(content.as_slice()).ok())
+            .is_some_and(|content| {
+                content.group_create.is_some() && content.group_id.as_deref() == Some(group_id)
+            })
+    }))
 }
 
 impl GroupService {
@@ -350,7 +377,11 @@ impl GroupService {
     pub(crate) async fn handle_membership_error(
         &self, from_user_id: i64, group_id: String, related_receipt_id: String,
     ) -> Result<()> {
-        let _ = self.fetch_group_state(group_id.clone()).await;
+        // Every message the peer could not place reports it separately, often a
+        // dozen at once, and one refresh serves all of them.
+        if claim_stale_membership_refresh(&group_id) {
+            let _ = self.fetch_group_state(group_id.clone()).await;
+        }
 
         let database = self.ctx.app_db.read().await.clone();
 
@@ -358,7 +389,9 @@ impl GroupService {
 
         let t = &mut transaction;
 
-        if !retry_membership_receipt(t, from_user_id, &group_id, &related_receipt_id).await? {
+        let Some(retried_receipt_id) =
+            retry_membership_receipt(t, from_user_id, &group_id, &related_receipt_id).await?
+        else {
             tracing::info!(
                 group_id,
                 from_user_id,
@@ -367,14 +400,17 @@ impl GroupService {
             );
 
             return Ok(());
-        }
+        };
 
         let group = GroupRecord::load_in_transaction(t, &group_id).await?;
 
+        // A member row without a state predates the states and is a member, as
+        // it is for sending.
         let is_still_member = sqlx::query_scalar!(
             r#"SELECT EXISTS(
                 SELECT 1 FROM group_members
-                WHERE group_id = ? AND contact_id = ? AND member_state != 'leftGroup'
+                WHERE group_id = ? AND contact_id = ?
+                  AND (member_state IS NULL OR member_state != 'leftGroup')
             )"#,
             group_id,
             from_user_id,
@@ -384,20 +420,39 @@ impl GroupService {
             != 0;
 
         if is_still_member {
-            queue_encrypted_content(
-                t,
-                from_user_id,
-                EncryptedContent {
-                    group_id: Some(group_id.clone()),
-                    group_create: Some(encrypted_content::GroupCreate {
-                        state_key: group.state_key()?.to_vec(),
-                        group_public_key: group.identity()?.identity_key().serialize().to_vec(),
-                        group_name: Some(group.group_name.clone()),
-                    }),
-                    ..Default::default()
-                },
-                true,
+            // One invitation answers every report; the queue still holds it
+            // until the peer acknowledges it.
+            if !group_create_pending(&mut **t, from_user_id, &group_id).await? {
+                queue_encrypted_content(
+                    t,
+                    from_user_id,
+                    EncryptedContent {
+                        group_id: Some(group_id.clone()),
+                        group_create: Some(encrypted_content::GroupCreate {
+                            state_key: group.state_key()?.to_vec(),
+                            group_public_key: group.identity()?.identity_key().serialize().to_vec(),
+                            group_name: Some(group.group_name.clone()),
+                        }),
+                        ..Default::default()
+                    },
+                    true,
+                )
+                .await?;
+            }
+
+            // The queue goes out oldest first, so the retried message would
+            // reach the peer ahead of the invitation and fail once more. Held
+            // for the resend window, it follows the invitation instead.
+            let now = current_time().timestamp();
+
+            sqlx::query!(
+                "UPDATE receipts SET ack_by_server_at = COALESCE(ack_by_server_at, ?), \
+                 last_retry = ? WHERE receipt_id = ?",
+                now,
+                now,
+                retried_receipt_id,
             )
+            .execute(&mut **t)
             .await?;
         }
 
@@ -1498,20 +1553,30 @@ mod membership_repair_tests {
 
         let mut t = db.pool.begin().await?;
 
-        assert!(!retry_membership_receipt(&mut t, 8, "chat", &receipt_id).await?);
+        assert!(retry_membership_receipt(&mut t, 8, "chat", &receipt_id)
+            .await?
+            .is_none());
 
-        assert!(!retry_membership_receipt(&mut t, 7, "other", &receipt_id).await?);
+        assert!(retry_membership_receipt(&mut t, 7, "other", &receipt_id)
+            .await?
+            .is_none());
 
-        assert!(!retry_membership_receipt(&mut t, 7, "chat", "missing").await?);
+        assert!(retry_membership_receipt(&mut t, 7, "chat", "missing")
+            .await?
+            .is_none());
 
-        assert!(retry_membership_receipt(&mut t, 7, "chat", &receipt_id).await?);
+        assert!(retry_membership_receipt(&mut t, 7, "chat", &receipt_id)
+            .await?
+            .is_some());
 
         // A failed repair transaction leaves the original receipt repairable.
         t.rollback().await?;
 
         let mut t = db.pool.begin().await?;
 
-        assert!(retry_membership_receipt(&mut t, 7, "chat", &receipt_id).await?);
+        assert!(retry_membership_receipt(&mut t, 7, "chat", &receipt_id)
+            .await?
+            .is_some());
 
         t.commit().await?;
 
@@ -1520,7 +1585,9 @@ mod membership_repair_tests {
         // Distinct incoming error IDs can still refer to the same old receipt.
         // Those must not generate another invitation or rotate it again.
         for _ in 0..69 {
-            assert!(!retry_membership_receipt(&mut t, 7, "chat", &receipt_id).await?);
+            assert!(retry_membership_receipt(&mut t, 7, "chat", &receipt_id)
+                .await?
+                .is_none());
         }
 
         t.commit().await?;
@@ -1540,6 +1607,117 @@ mod membership_repair_tests {
         assert!(receipts[0].2.is_none());
 
         assert!(receipts[0].3.is_some());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+
+    async fn a_burst_of_membership_errors_sends_one_invitation_ahead_of_the_retries(
+    ) -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+
+        crate::api::ApiRuntime::close(&ctx).await?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        let identity =
+            libsignal_protocol::IdentityKeyPair::generate(&mut rand::rngs::StdRng::from_os_rng());
+
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice')")
+            .execute(&database.pool)
+            .await?;
+
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, state_encryption_key, \
+             my_group_private_key) VALUES ('burst', 'Burst', ?, ?)",
+        )
+        .bind(vec![1_u8; 32])
+        .bind(identity.serialize().to_vec())
+        .execute(&database.pool)
+        .await?;
+
+        // A member row without a state, as legacy imports left them.
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES ('burst', 7)")
+            .execute(&database.pool)
+            .await?;
+
+        // The group was refreshed moments ago, so no server is needed.
+        claim_stale_membership_refresh("burst");
+
+        let mut receipt_ids = Vec::new();
+
+        let mut t = database.pool.begin().await?;
+
+        for text in ["one", "two", "three"] {
+            receipt_ids.push(
+                queue_encrypted_content(
+                    &mut t,
+                    7,
+                    EncryptedContent {
+                        group_id: Some("burst".into()),
+                        text_message: Some(encrypted_content::TextMessage {
+                            sender_message_id: text.into(),
+                            text: text.into(),
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    },
+                    true,
+                )
+                .await?,
+            );
+        }
+
+        sqlx::query("UPDATE receipts SET ack_by_server_at = 1")
+            .execute(&mut *t)
+            .await?;
+
+        t.commit().await?;
+
+        let started = current_time().timestamp();
+
+        // Each message the peer could not place is reported on its own.
+        for receipt_id in receipt_ids {
+            GroupService::new(&ctx)
+                .handle_membership_error(7, "burst".into(), receipt_id)
+                .await?;
+        }
+
+        let rows: Vec<(Vec<u8>, Option<i64>, Option<i64>)> =
+            sqlx::query_as("SELECT message, ack_by_server_at, last_retry FROM receipts")
+                .fetch_all(&database.pool)
+                .await?;
+
+        let mut invitations = 0;
+
+        for (message, acknowledged, last_retry) in rows {
+            let content = proto::Message::decode(message.as_slice())?
+                .encrypted_content
+                .map(|content| EncryptedContent::decode(content.as_slice()))
+                .transpose()?
+                .unwrap_or_default();
+
+            if content.group_create.is_some() {
+                invitations += 1;
+
+                // Goes out at once.
+                assert_eq!(acknowledged, None);
+            } else {
+                // Waits for the resend window, behind the invitation.
+                assert!(acknowledged.is_some());
+
+                assert!(last_retry.is_some_and(|at| at >= started));
+            }
+        }
+
+        assert_eq!(invitations, 1);
 
         Ok(())
     }

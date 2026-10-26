@@ -20,7 +20,7 @@ mod verification;
 use crate::api::messages::incoming::messages::{
     ensure_contact_exists, handle_plaintext_content, handle_sender_delivery_receipt,
     process_encrypted_or_queue_error, queue_decryption_error, queue_sender_delivery_receipt,
-    release_deferred_receipts, retransmit_queued_receipts, spawn_receipt_delivery,
+    release_deferred_receipts, retransmit_queued_receipts, spawn_receipt_delivery, SessionRepair,
 };
 use crate::api::messages::{content_type_kind, mailbox_sync};
 use crate::api::proto::server_to_client::NewMessage;
@@ -535,6 +535,17 @@ pub async fn handle_decoded_server_message(
             let should_resend = message_type != Type::SenderDeliveryReceipt
                 && Receipt::claim_received_retry(&mut t, &message.receipt_id).await?;
 
+            // A claim does not prove the receipt this one acknowledges is gone.
+            // Our own receipt IDs share the claim table: a peer's decryption
+            // error arrives under the ID of the receipt it failed on. Once such
+            // an ID is claimed, every later acknowledgement of that receipt
+            // lands here, and skipping it kept the receipt in the queue, resent
+            // on each message from the peer and acknowledged again each time.
+            // Clearing it is idempotent; a receipt already gone matches nothing.
+            if message_type == Type::SenderDeliveryReceipt {
+                handle_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
+            }
+
             if should_resend {
                 tracing::info!("Queueing sender delivery receipt for retry");
 
@@ -558,7 +569,7 @@ pub async fn handle_decoded_server_message(
         let mut defer_until_accepted = false;
         let mut handled = false;
 
-        let mut rebuild_session = false;
+        let mut session_repair = SessionRepair::None;
 
         match message_type {
             Type::SenderDeliveryReceipt => {
@@ -741,7 +752,7 @@ pub async fn handle_decoded_server_message(
                     TwonlyError::Generic("plaintext client message has no content".into())
                 })?;
 
-                rebuild_session = handle_plaintext_content(
+                session_repair = handle_plaintext_content(
                     ctx,
                     &mut t,
                     from_user_id,
@@ -778,15 +789,19 @@ pub async fn handle_decoded_server_message(
         let ctx = ctx.clone();
 
         crate::database::lifecycle::spawn(async move {
-            // The peer reset their session, so the parked receipt has to wait for a
-            // session built from a fresh prekey bundle. `establish_signal_session`
-            // releases it, and the flush below then sends it as a prekey message
-            // the peer can open without any prior state.
-            if rebuild_session {
-                if let Err(error) = rebuild_session_after_peer_reset(&ctx, from_user_id).await {
+            // The peer reset their session, or keeps failing to open ours, so the
+            // parked receipt has to wait for a session built from a fresh prekey
+            // bundle. `establish_signal_session` releases it, and the flush below
+            // then sends it as a prekey message the peer can open without any
+            // prior state.
+            if session_repair != SessionRepair::None {
+                if let Err(error) =
+                    rebuild_session_and_release(&ctx, from_user_id, session_repair).await
+                {
                     tracing::warn!(
                         from_user_id,
-                        "could not rebuild the signal session the peer reset: {error}"
+                        ?session_repair,
+                        "could not rebuild the signal session: {error}"
                     );
                 }
             }
@@ -807,14 +822,16 @@ pub async fn handle_decoded_server_message(
     .await
 }
 
-/// Answers a peer's session reset by opening a new session with them.
+/// Opens a new session with a peer that reset theirs or cannot open ours.
 ///
-/// Our own record is retired first: the peer discarded the half that matches
-/// it, so keeping it as the current state would only encrypt more messages
-/// they cannot read. `establish_signal_session` then installs a session built
-/// from their current prekey bundle and releases everything parked for it.
-async fn rebuild_session_after_peer_reset(ctx: &Arc<Context>, from_user_id: i64) -> Result<()> {
-    let outcome = rebuild_session(ctx, from_user_id).await;
+/// Our own record is retired first: keeping it as the current state would
+/// only encrypt more messages the peer cannot read. `establish_signal_session`
+/// then installs a session built from their current prekey bundle and
+/// releases everything parked for it.
+async fn rebuild_session_and_release(
+    ctx: &Arc<Context>, from_user_id: i64, repair: SessionRepair,
+) -> Result<()> {
+    let outcome = rebuild_session(ctx, from_user_id, repair).await;
 
     // `handle_plaintext_content` parked the receipt for this rebuild, and
     // nothing else is coming to free it. A refused claim means a rebuild is
@@ -829,7 +846,9 @@ async fn rebuild_session_after_peer_reset(ctx: &Arc<Context>, from_user_id: i64)
     outcome
 }
 
-async fn rebuild_session(ctx: &Arc<Context>, from_user_id: i64) -> Result<()> {
+async fn rebuild_session(
+    ctx: &Arc<Context>, from_user_id: i64, repair: SessionRepair,
+) -> Result<()> {
     let name = from_user_id.to_string();
 
     let rust_database = ctx.rust_db.read().await.clone();
@@ -852,14 +871,16 @@ async fn rebuild_session(ctx: &Arc<Context>, from_user_id: i64) -> Result<()> {
         .establish_signal_session(from_user_id, None)
         .await?;
 
-    // The repair worked, so the next unrelated failure starts from a full
-    // budget rather than what this one spent.
-    SessionResetLimiter::clear(&rust_database.pool, &name, 1).await?;
+    // The peer asked for exactly this, so the repair worked and the next
+    // unrelated failure starts from a full budget rather than what this one
+    // spent. A rebuild we started ourselves is only proven once the peer reads
+    // it; clearing here would let every further failure spend another of the
+    // peer's one-time prekeys.
+    if repair == SessionRepair::PeerReset {
+        SessionResetLimiter::clear(&rust_database.pool, &name, 1).await?;
+    }
 
-    tracing::info!(
-        from_user_id,
-        "rebuilt the signal session after a peer reset"
-    );
+    tracing::info!(from_user_id, ?repair, "rebuilt the signal session");
 
     Ok(())
 }
@@ -996,7 +1017,11 @@ async fn handle_encrypted_inner(
         return contact::handle_contact_request(ctx, t, from_user_id, request).await;
     }
 
-    Contact::update_twonly_score(t, from_user_id, content.sender_twonly_score).await?;
+    // A sender that stopped sharing sends zero. A missing score says nothing:
+    // protocol replies queued straight from a handler are not decorated.
+    if let Some(score) = content.sender_twonly_score {
+        Contact::update_twonly_score(t, from_user_id, Some(score)).await?;
+    }
 
     if let Some(update) = content.contact_update {
         return contact::handle_contact_update(
@@ -1524,6 +1549,66 @@ mod tests {
 
     #[tokio::test]
 
+    async fn an_acknowledgement_under_a_claimed_id_still_clears_its_receipt() -> anyhow::Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+
+        crate::api::ApiRuntime::close(&ctx).await?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'alice'), (8, 'bob');
+             INSERT INTO receipts(receipt_id, contact_id, message, ack_by_server_at)
+             VALUES ('stuck', 7, x'00', 1);",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        // The peer's decryption error for this receipt claimed its ID.
+        let mut t = database.pool.begin().await?;
+
+        Receipt::claim_received(&mut t, "stuck").await?;
+
+        t.commit().await?;
+
+        let acknowledgement = proto::Message {
+            receipt_id: "stuck".into(),
+            r#type: Type::SenderDeliveryReceipt as i32,
+            ..Default::default()
+        };
+
+        let pending = || async {
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM receipts WHERE receipt_id = 'stuck'")
+                .fetch_one(&database.pool)
+                .await
+        };
+
+        // Someone else's acknowledgement cannot clear it.
+        handle_decoded_server_message(&ctx, 8, acknowledgement.clone()).await?;
+
+        assert_eq!(pending().await?, 1);
+
+        handle_decoded_server_message(&ctx, 7, acknowledgement.clone()).await?;
+
+        assert_eq!(pending().await?, 0);
+
+        // A further copy finds nothing left to clear.
+        handle_decoded_server_message(&ctx, 7, acknowledgement).await?;
+
+        assert_eq!(pending().await?, 0);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+
     async fn contact_request_lookup_does_not_hold_the_app_connection() -> anyhow::Result<()> {
         let directory = tempfile::tempdir()?;
 
@@ -1710,7 +1795,7 @@ mod tests {
 
     #[tokio::test]
 
-    async fn incoming_twonly_score_is_stored_and_missing_score_clears_it() -> Result<()> {
+    async fn incoming_twonly_score_is_stored_and_a_missing_one_keeps_it() -> Result<()> {
         let directory = tempfile::tempdir()?;
 
         let ctx = Context::init_for_testing(
@@ -1748,14 +1833,22 @@ mod tests {
 
         assert_eq!(score, Some(23));
 
+        // A protocol reply queued straight from a handler is not decorated.
         let mut transaction = database.pool.begin().await?;
 
         handle_encrypted_inner(
             &ctx,
             &mut transaction,
             7,
-            "score-missing",
-            proto::EncryptedContent::default(),
+            "undecorated-reply",
+            proto::EncryptedContent {
+                message_update: Some(proto::encrypted_content::MessageUpdate {
+                    r#type: proto::encrypted_content::message_update::Type::Opened as i32,
+                    multiple_target_message_ids: vec!["widget-image".into()],
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
         )
         .await?;
 
@@ -1766,7 +1859,30 @@ mod tests {
                 .fetch_one(&database.pool)
                 .await?;
 
-        assert_eq!(score, None);
+        assert_eq!(score, Some(23), "an undecorated reply keeps the score");
+
+        let mut transaction = database.pool.begin().await?;
+
+        handle_encrypted_inner(
+            &ctx,
+            &mut transaction,
+            7,
+            "score-hidden",
+            proto::EncryptedContent {
+                sender_twonly_score: Some(0),
+                ..Default::default()
+            },
+        )
+        .await?;
+
+        transaction.commit().await?;
+
+        let score: Option<i64> =
+            sqlx::query_scalar("SELECT twonly_score FROM contacts WHERE user_id = 7")
+                .fetch_one(&database.pool)
+                .await?;
+
+        assert_eq!(score, Some(0), "a sender that stopped sharing sends zero");
 
         Ok(())
     }

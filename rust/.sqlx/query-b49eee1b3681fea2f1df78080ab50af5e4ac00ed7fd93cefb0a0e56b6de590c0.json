@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE receipts SET ack_by_server_at = COALESCE(ack_by_server_at, ?), last_retry = ? WHERE receipt_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "b49eee1b3681fea2f1df78080ab50af5e4ac00ed7fd93cefb0a0e56b6de590c0"
+}
