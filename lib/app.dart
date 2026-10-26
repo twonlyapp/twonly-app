@@ -350,7 +350,12 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       );
     }
     if (!_isLoaded) {
-      return const Center(child: CircularProgressIndicator());
+      // Continues the splash from `main.dart`, so the launch screen hands
+      // straight over to the first real screen.
+      return const ColoredBox(
+        color: defaultPrimaryColor,
+        child: SizedBox.expand(),
+      );
     }
 
     late Widget child;
