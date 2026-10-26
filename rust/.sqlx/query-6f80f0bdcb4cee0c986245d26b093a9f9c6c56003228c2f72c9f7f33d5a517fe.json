@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT handled_at IS NOT NULL AS \"handled!: bool\"\n            FROM received_receipts\n            WHERE receipt_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "handled!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6f80f0bdcb4cee0c986245d26b093a9f9c6c56003228c2f72c9f7f33d5a517fe"
+}

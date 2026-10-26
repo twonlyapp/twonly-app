@@ -143,6 +143,28 @@ pub(crate) async fn queue_encrypted_content(
 ) -> Result<String> {
     Contact::ensure_exists(t, target_user_id).await?;
 
+    // Nothing can reach an account the server denied, so nothing is queued for
+    // it. The ID returned names no receipt; whatever the caller does with it
+    // next finds nothing to update or send.
+    let account_deleted = sqlx::query_scalar!(
+        "SELECT account_deleted FROM contacts WHERE user_id = ?",
+        target_user_id
+    )
+    .fetch_optional(&mut **t)
+    .await?
+    .unwrap_or(0)
+        != 0;
+
+    if account_deleted {
+        tracing::info!(
+            contact_id = target_user_id,
+            kind = crate::api::messages::content_type_kind(&content),
+            "not queueing a message for a deleted account"
+        );
+
+        return Ok(new_uuid_v4());
+    }
+
     let wake_receiver =
         crate::services::notifications::should_wake_receiver(t, target_user_id, &content).await?;
 
@@ -555,10 +577,9 @@ pub(crate) async fn prepare_queued_receipt_details(
     };
 
     if row.account_deleted != 0 {
-        return Err(TwonlyError::Generic(format!(
-            "contact {} deleted their account",
-            row.contact_id
-        )));
+        crate::services::contacts::mark_account_deleted(&app_db, row.contact_id).await?;
+
+        return Ok(None);
     }
 
     prepare_queued_receipt_from_row(ctx, receipt_id, row)
@@ -661,51 +682,14 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         return Ok(());
     }
 
-    // `account_deleted` is a latch: one `UserIdNotFound` on any contact-scoped
-    // request sets it, and this check runs before anything that could clear it,
-    // so a peer who has since re-registered would stay unreachable forever --
-    // every message dropped here, unsent, unacknowledged and unlogged. Ask the
-    // server once more before believing it, and drop only what the server
-    // positively denies.
-    let row = if row.account_deleted != 0 {
-        match ContactService::new(ctx)
-            .establish_signal_session(row.contact_id, None)
-            .await
-        {
-            Err(TwonlyError::PeerAccountDeleted(contact_id)) => {
-                tracing::warn!(
-                    receipt_id,
-                    contact_id,
-                    "dropping a message for an account the server does not know"
-                );
+    // The mark is only ever set by the server denying that this account
+    // exists, which is final. Nothing is sent for it any more, and nothing is
+    // asked: whatever is still queued for it goes.
+    if row.account_deleted != 0 {
+        crate::services::contacts::mark_account_deleted(&app_db, row.contact_id).await?;
 
-                Receipt::delete(&app_db.pool, receipt_id).await?;
-
-                return Ok(());
-            }
-            // The account exists; it has just published no bundle. An existing
-            // session may still encrypt for it, and if not, preparing the
-            // payload parks the receipt for the right reason.
-            Ok(()) | Err(TwonlyError::PeerHasNoPrekeyBundle(_)) => {
-                tracing::info!(
-                    contact_id = row.contact_id,
-                    "contact is registered after all; clearing the deleted-account mark"
-                );
-            }
-            // Anything else -- a network failure above all -- must not be read
-            // as a deleted account. Leave the receipt queued for a later sweep.
-            Err(error) => return Err(error),
-        }
-
-        // `establish_signal_session` cleared the mark and may have changed
-        // `signal_version`, so the payload is prepared from the current row.
-        match load_queued_receipt_row(&app_db.pool, receipt_id).await? {
-            Some(row) => row,
-            None => return Ok(()),
-        }
-    } else {
-        row
-    };
+        return Ok(());
+    }
 
     let receipt = match prepare_queued_receipt_from_row(ctx, receipt_id, row).await {
         Ok(receipt) => receipt,

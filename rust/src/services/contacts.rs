@@ -374,3 +374,149 @@ impl ContactService {
         Ok(())
     }
 }
+
+/// Records that the server denied this account exists, and lets go of
+/// everything still queued for it.
+///
+/// Only a `UserIdNotFound` answer about this very user may lead here. User IDs
+/// are random and a deleted account is never brought back, so the denial is
+/// final: nothing queued for the account can be delivered, and asking about it
+/// again costs a round trip on every connection. A message the account sends
+/// after all clears the mark again, see `handle_decoded_server_message`.
+
+pub(crate) async fn mark_account_deleted(
+    database: &crate::database::app::AppDatabase, user_id: i64,
+) -> Result<()> {
+    let mut transaction = database.pool.begin().await?;
+
+    let contact = sqlx::query!(
+        "UPDATE contacts SET account_deleted = 1 WHERE user_id = ? AND account_deleted = 0",
+        user_id
+    )
+    .execute(&mut *transaction)
+    .await?
+    .rows_affected();
+
+    let announced = sqlx::query!(
+        "UPDATE user_discovery_announced_users SET account_deleted = 1 WHERE announced_user_id = \
+         ? AND account_deleted = 0",
+        user_id
+    )
+    .execute(&mut *transaction)
+    .await?
+    .rows_affected();
+
+    let receipts = sqlx::query!("DELETE FROM receipts WHERE contact_id = ?", user_id)
+        .execute(&mut *transaction)
+        .await?
+        .rows_affected();
+
+    transaction.commit().await?;
+
+    if contact + announced + receipts > 0 {
+        tracing::info!(
+            user_id,
+            dropped_receipts = receipts,
+            "account no longer exists; dropped everything queued for it"
+        );
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
+
+mod tests {
+    use super::*;
+    use crate::api::messages::incoming::messages::{queue_encrypted_content, send_queued_receipt};
+
+    #[tokio::test]
+
+    async fn a_deleted_account_is_marked_once_and_nothing_is_queued_or_sent_for_it() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'gone'), (8, 'still-here');
+             INSERT INTO user_discovery_announced_users(announced_user_id, announced_public_key, \
+             public_id) VALUES (7, x'01', 70), (9, x'02', 90);
+             INSERT INTO receipts(receipt_id, contact_id, message)
+             VALUES ('to-gone-1', 7, x'00'), ('to-gone-2', 7, x'00'), ('to-friend', 8, x'00');",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        mark_account_deleted(&database, 7).await?;
+
+        let flags: (i64, i64, i64) = sqlx::query_as(
+            "SELECT (SELECT account_deleted FROM contacts WHERE user_id = 7),
+                    (SELECT account_deleted FROM user_discovery_announced_users \
+             WHERE announced_user_id = 7),
+                    (SELECT account_deleted FROM user_discovery_announced_users \
+             WHERE announced_user_id = 9)",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+
+        assert_eq!(flags, (1, 1, 0));
+
+        let receipts: Vec<String> =
+            sqlx::query_scalar("SELECT receipt_id FROM receipts ORDER BY receipt_id")
+                .fetch_all(&database.pool)
+                .await?;
+
+        assert_eq!(receipts, vec!["to-friend"]);
+
+        let mut transaction = database.pool.begin().await?;
+
+        queue_encrypted_content(
+            &mut transaction,
+            7,
+            proto::EncryptedContent {
+                text_message: Some(encrypted_content::TextMessage {
+                    sender_message_id: "late".into(),
+                    text: "hello?".into(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            true,
+        )
+        .await?;
+
+        transaction.commit().await?;
+
+        let queued: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM receipts WHERE contact_id = 7")
+            .fetch_one(&database.pool)
+            .await?;
+
+        assert_eq!(queued, 0, "nothing is queued for a deleted account");
+
+        // A receipt that got in before the mark is dropped by the send path
+        // itself, without asking the server about the account again.
+        sqlx::query(
+            "INSERT INTO receipts(receipt_id, contact_id, message) VALUES ('raced', 7, x'00')",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        crate::api::ApiRuntime::close(&ctx).await?;
+
+        send_queued_receipt(&ctx, "raced").await?;
+
+        let left: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM receipts WHERE contact_id = 7")
+            .fetch_one(&database.pool)
+            .await?;
+
+        assert_eq!(left, 0);
+
+        Ok(())
+    }
+}

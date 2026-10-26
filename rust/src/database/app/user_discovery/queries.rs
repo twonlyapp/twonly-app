@@ -64,6 +64,7 @@ pub async fn missing_data(
                 was_asked_friends AS "was_asked_friends!: bool"
             FROM user_discovery_announced_users a
             WHERE a.username IS NULL
+                AND a.account_deleted = 0
                 AND NOT EXISTS(
                 SELECT 1
                 FROM contacts

@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COUNT(*) AS \"count: i64\"\n           FROM notification_outbox n\n           WHERE n.cleared_at IS NULL\n             AND NOT EXISTS (\n                 SELECT 1 FROM messages m\n                 JOIN media_files f ON f.media_id = m.media_id\n                 WHERE m.message_id = n.message_id\n                   AND n.kind IN ('image', 'video', 'audio', 'twonly', 'story')\n                   AND f.download_state = 'reuploadRequested'\n             )",
+  "describe": {
+    "columns": [
+      {
+        "name": "count: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7b7f2bd0fd4323dea3b3777fc16af7b97e46d09875255866e0cbf6140d322599"
+}

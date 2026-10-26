@@ -348,20 +348,13 @@ impl ApiClient {
 
                 let database = context.app_db.read().await.clone();
 
-                // Only the mark, never the queue. `account_deleted` is a latch
-                // any contact-scoped request can set, and this one may have
-                // been about something else entirely -- or the peer may since
-                // have re-registered. `send_queued_receipt` asks the server
-                // again before it believes the latch, and drops only what the
-                // server positively denies, so emptying the outbox here threw
-                // away the very messages that path exists to save: unsent,
-                // unacknowledged and unlogged.
-                sqlx::query!(
-                    "UPDATE contacts SET account_deleted = 1 WHERE user_id = ?",
-                    contact_id
-                )
-                .execute(&database.pool)
-                .await?;
+                // Only the requests that look this user up are sent for a
+                // contact, `GetUserById` and `TextMessage`, so this answer is
+                // about the user and nothing else: the server has no account
+                // with that ID, and IDs are never handed out again. Requests
+                // that can fail with the same code for another reason, such as
+                // the additional-user ones, are sent without a contact.
+                crate::services::contacts::mark_account_deleted(&database, contact_id).await?;
             }
         }
 

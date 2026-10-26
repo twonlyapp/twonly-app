@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT announced_user_id, announced_public_key\n               FROM user_discovery_announced_users WHERE username IS NULL",
+  "query": "SELECT announced_user_id, announced_public_key\n               FROM user_discovery_announced_users\n               WHERE username IS NULL AND account_deleted = 0",
   "describe": {
     "columns": [
       {
@@ -34,5 +34,5 @@
       false
     ]
   },
-  "hash": "4b8683059700bf2e6ad30130891cc5ac8759171c57fae2271a493e85c2ee4a2e"
+  "hash": "65e81b8502b121cf42835cb976c06a4cfa196a16a8bab4ff54c78cf51e54e318"
 }

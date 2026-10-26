@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT\n            announced_user_id AS \"announced_user_id!\",\n                announced_public_key AS \"announced_public_key!\",\n                public_id AS \"public_id!\",\n                username AS \"username?\",\n                was_shown_to_the_user AS \"was_shown_to_the_user!: bool\",\n                is_hidden AS \"is_hidden!: bool\",\n                was_asked_friends AS \"was_asked_friends!: bool\"\n            FROM user_discovery_announced_users a\n            WHERE a.username IS NULL\n                AND NOT EXISTS(\n                SELECT 1\n                FROM contacts\n                WHERE user_id = a.announced_user_id\n            )\n            ORDER BY a.announced_user_id\n        ",
+  "query": "\n            SELECT\n            announced_user_id AS \"announced_user_id!\",\n                announced_public_key AS \"announced_public_key!\",\n                public_id AS \"public_id!\",\n                username AS \"username?\",\n                was_shown_to_the_user AS \"was_shown_to_the_user!: bool\",\n                is_hidden AS \"is_hidden!: bool\",\n                was_asked_friends AS \"was_asked_friends!: bool\"\n            FROM user_discovery_announced_users a\n            WHERE a.username IS NULL\n                AND a.account_deleted = 0\n                AND NOT EXISTS(\n                SELECT 1\n                FROM contacts\n                WHERE user_id = a.announced_user_id\n            )\n            ORDER BY a.announced_user_id\n        ",
   "describe": {
     "columns": [
       {
@@ -94,5 +94,5 @@
       false
     ]
   },
-  "hash": "f4797b83e44b3b654bd97852ff433ef8c1f974db025463ed0ee548cee067318d"
+  "hash": "aeaf7e70c40d0ee8135836c91c8ffde60efddad3e34a6ed1a7944bc8849895cf"
 }

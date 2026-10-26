@@ -521,7 +521,17 @@ pub async fn handle_decoded_server_message(
     // consumed comes back as a duplicate and is acknowledged below.
     let retry_decryption = !claimed && resumed_plaintext.is_none() && is_encrypted_message;
 
-    if retry_decryption {
+    // The outcome of decrypting again stops telling the two apart once the
+    // peer opens a new session: it re-encrypts its queue under the same receipt
+    // IDs, and every copy opens. Only the mark says a copy was handled, and
+    // handling it again repeats everything it did -- a reupload request answered
+    // with another full reupload.
+    let already_handled =
+        retry_decryption && Receipt::was_handled(&mut t, &message.receipt_id).await?;
+
+    if already_handled {
+        tracing::info!("Decrypting a redelivered message that was already handled");
+    } else if retry_decryption {
         tracing::info!("Decrypting a redelivered message that was claimed but not handled");
     }
 
@@ -553,6 +563,7 @@ pub async fn handle_decoded_server_message(
 
     let mut withhold_delivery_receipt = false;
     let mut defer_until_accepted = false;
+    let mut handled = false;
 
     let mut rebuild_session = false;
 
@@ -604,6 +615,15 @@ pub async fn handle_decoded_server_message(
             };
 
             match decrypted {
+                // Decrypting kept the session in step; the content itself was
+                // handled the first time. Falling through queues the sender
+                // delivery receipt the peer keeps resending for.
+                Ok(_) if already_handled => {
+                    tracing::info!(
+                        receipt_id = message.receipt_id,
+                        "acknowledging a redelivered message without handling it again"
+                    );
+                }
                 Ok(plaintext) => {
                     // Decryption consumed a ratchet step in the signal database,
                     // which this transaction cannot roll back. Commit the
@@ -638,6 +658,25 @@ pub async fn handle_decoded_server_message(
                     .execute(&mut *t)
                     .await?;
 
+                    // The account just wrote to us, so it exists after all: a
+                    // deleted mark on it was wrong, and would keep every reply
+                    // from being queued.
+                    sqlx::query!(
+                        "UPDATE contacts SET account_deleted = 0 WHERE user_id = ? AND \
+                         account_deleted = 1",
+                        from_user_id,
+                    )
+                    .execute(&mut *t)
+                    .await?;
+
+                    sqlx::query!(
+                        "UPDATE user_discovery_announced_users SET account_deleted = 0 WHERE \
+                         announced_user_id = ? AND account_deleted = 1",
+                        from_user_id,
+                    )
+                    .execute(&mut *t)
+                    .await?;
+
                     // Decrypting means a session now exists, so anything parked
                     // for want of one can go out again.
                     sqlx::query!(
@@ -658,6 +697,7 @@ pub async fn handle_decoded_server_message(
                     .await?;
                     withhold_delivery_receipt = delivery != Delivery::Ack;
                     defer_until_accepted = delivery == Delivery::Deferred;
+                    handled = delivery == Delivery::Ack;
                 }
                 // The ratchet has already consumed this message, so it was
                 // handled and the peer is only missing the answer. Falling
@@ -723,6 +763,10 @@ pub async fn handle_decoded_server_message(
     // retry that is no longer needed can go.
     if !defer_until_accepted {
         Receipt::clear_pending_plaintext(&mut t, &message.receipt_id).await?;
+    }
+
+    if handled {
+        Receipt::mark_handled(&mut t, &message.receipt_id).await?;
     }
 
     t.commit().await?;
@@ -1314,6 +1358,171 @@ mod tests {
         .fetch_one(&mut *t)
         .await?;
         assert!(acked);
+        Ok(())
+    }
+
+    async fn signal_engine(
+        pool: sqlx::SqlitePool, name: &str,
+    ) -> Result<crate::signal::engine::RustSignalEngine> {
+        use rand::SeedableRng as _;
+
+        let identity =
+            libsignal_protocol::IdentityKeyPair::generate(&mut rand::rngs::StdRng::from_os_rng());
+
+        crate::signal::engine::RustSignalEngine::new_with_pool(
+            pool,
+            identity.serialize().to_vec(),
+            rand::random::<u32>() & 0x3fff,
+            name.into(),
+        )
+    }
+
+    /// The peer from the log: on every wake-up it opens a new session and
+    /// resends its queue under the same receipt IDs. Each copy decrypts, so
+    /// only the handled mark keeps it from being handled once per resend.
+    #[tokio::test]
+
+    async fn a_handled_message_resent_under_a_new_session_is_acknowledged_not_handled_again(
+    ) -> Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+
+        ctx.key_manager.lock().await.user_id = Some(42);
+
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+
+        let rust_database = ctx.rust_db.read().await.clone();
+
+        *ctx.signal_engine.lock().await =
+            Some(signal_engine(rust_database.pool.clone(), "42").await?);
+
+        let peer_path = directory.path().join("peer.db");
+
+        std::fs::File::create(&peer_path)?;
+
+        let peer_database =
+            crate::database::signal::Database::new(&peer_path.display().to_string(), None, false)
+                .await?;
+
+        peer_database.run_migrations().await?;
+
+        let peer = signal_engine(peer_database.pool.clone(), "7").await?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        sqlx::query("INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'friend', 1)")
+            .execute(&database.pool)
+            .await?;
+
+        let mut t = database.pool.begin().await?;
+
+        let contact = Contact::get_contact_by_id(&mut t, 7).await?.unwrap();
+
+        Group::create_direct_chat(&ctx, &mut t, contact).await?;
+
+        t.commit().await?;
+
+        // Keep receipt delivery offline while exercising the real inbound path.
+        let client = crate::api::ApiRuntime::client(&ctx).await?;
+
+        let _transport = client.ws_client.lock().await;
+
+        let content = proto::EncryptedContent {
+            group_id: Some(Group::direct_chat_id(42, 7)),
+            text_message: Some(proto::encrypted_content::TextMessage {
+                sender_message_id: "resent-text".into(),
+                text: "hello".into(),
+                timestamp: chrono::Utc::now().timestamp_millis(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        // Opens a session from a fresh bundle, the way the peer does after a
+        // reset, and encrypts the same content under the same receipt ID.
+        let deliver = || async {
+            let bundle = ctx
+                .signal_engine
+                .lock()
+                .await
+                .as_ref()
+                .unwrap()
+                .generate_bundle()
+                .await?;
+
+            peer.reset_session("42", 1, false).await?;
+
+            peer.process_prekey_bundle("42".into(), 1, bundle).await?;
+
+            let ciphertext = peer
+                .encrypt_message("42".into(), 1, content.encode_to_vec())
+                .await?;
+
+            handle_decoded_server_message(
+                &ctx,
+                7,
+                proto::Message {
+                    receipt_id: "resent-receipt".into(),
+                    r#type: Type::CiphertextV2 as i32,
+                    encrypted_content: Some(ciphertext),
+                    plaintext_content: None,
+                },
+            )
+            .await
+        };
+
+        let stored = || async {
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM messages WHERE message_id = 'resent-text'",
+            )
+            .fetch_one(&database.pool)
+            .await
+        };
+
+        deliver().await?;
+
+        assert_eq!(stored().await?, 1);
+
+        // The chat row is gone, as it is once its timer runs out. A copy that
+        // was handled again would put it back.
+        sqlx::query("DELETE FROM messages WHERE message_id = 'resent-text'")
+            .execute(&database.pool)
+            .await?;
+
+        deliver().await?;
+
+        assert_eq!(
+            stored().await?,
+            0,
+            "a handled message must not be handled again"
+        );
+
+        let acknowledged: bool = sqlx::query_scalar(
+            "SELECT EXISTS(SELECT 1 FROM receipts WHERE receipt_id = 'resent-receipt')",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+
+        assert!(acknowledged, "the resend is answered so the peer can stop");
+
+        // A claim without the mark -- left by a failed decryption, or older
+        // than the mark -- is still decrypted and handled.
+        sqlx::query("UPDATE received_receipts SET handled_at = NULL")
+            .execute(&database.pool)
+            .await?;
+
+        deliver().await?;
+
+        assert_eq!(stored().await?, 1);
+
         Ok(())
     }
 

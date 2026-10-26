@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE user_discovery_announced_users SET account_deleted = 0 WHERE announced_user_id = ? AND account_deleted = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "7dc4875b29b256d7a7da15908246edeb6b8e7c1732d958dc88848c0d9e32093e"
+}

@@ -789,3 +789,104 @@ async fn patches_only_fire_sender_deletion_triggers_when_the_flag_is_present() {
 
     database.pool.close().await;
 }
+
+/// Own media nobody received before the server dropped its upload is a send
+/// that failed for good. Anything somebody received, or that a newer upload
+/// may still deliver, stays.
+#[tokio::test]
+
+async fn own_media_nobody_received_before_its_upload_expired_is_deleted() {
+    let directory = tempfile::tempdir().unwrap();
+
+    let database = open(directory.path().join("app.sqlite").to_str().unwrap()).await;
+
+    let cutoff = 1_000_000;
+
+    let (old, recent) = (cutoff - 10, cutoff + 10);
+
+    let mut tx = database.pool.begin().await.unwrap();
+
+    sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
+        "INSERT INTO contacts(user_id, username) VALUES (7, 'alice'), (8, 'bob');
+         INSERT INTO groups(group_id, group_name) VALUES ('g', 'G');
+         INSERT INTO media_files(media_id, type) VALUES
+             ('lost', 'image'), ('received', 'image'), ('opened', 'image'),
+             ('reuploaded', 'image'), ('recent', 'image'), ('incoming', 'image'),
+             ('story', 'image');
+         INSERT INTO messages(message_id, group_id, sender_id, type, media_id, is_story,
+                              opened_at, created_at) VALUES
+             ('lost', 'g', NULL, 'media', 'lost', 0, NULL, {old}),
+             ('received', 'g', NULL, 'media', 'received', 0, NULL, {old}),
+             ('opened', 'g', NULL, 'media', 'opened', 0, {old}, {old}),
+             ('reuploaded', 'g', NULL, 'media', 'reuploaded', 0, NULL, {old}),
+             ('recent', 'g', NULL, 'media', 'recent', 0, NULL, {recent}),
+             ('incoming', 'g', 7, 'media', 'incoming', 0, NULL, {old}),
+             ('story', 'g', NULL, 'media', 'story', 1, NULL, {old});
+         INSERT INTO message_actions(message_id, contact_id, type) VALUES
+             ('received', 7, 'ackByUserAt');
+         INSERT INTO receipts(receipt_id, contact_id, message_id, message,
+                              will_be_retried_by_media_upload, created_at) VALUES
+             ('lost-7', 7, 'lost', x'00', 1, {old}),
+             ('received-8', 8, 'received', x'00', 1, {old}),
+             ('reuploaded-7', 7, 'reuploaded', x'00', 1, {recent}),
+             ('recent-7', 7, 'recent', x'00', 1, {recent}),
+             ('text-7', 7, NULL, x'00', 0, {old});"
+    )))
+    .execute(&mut *tx)
+    .await
+    .unwrap();
+
+    assert_eq!(
+        writes::purge_undelivered_media(&mut tx, cutoff)
+            .await
+            .unwrap(),
+        1
+    );
+
+    tx.commit().await.unwrap();
+
+    let messages: Vec<String> =
+        sqlx::query_scalar("SELECT message_id FROM messages ORDER BY message_id")
+            .fetch_all(&database.pool)
+            .await
+            .unwrap();
+
+    assert_eq!(
+        messages,
+        vec![
+            "incoming",
+            "opened",
+            "received",
+            "recent",
+            "reuploaded",
+            "story"
+        ]
+    );
+
+    // Bob never got the media Alice received; his envelope can deliver
+    // nothing any more either. Envelopes that are not media are not this
+    // purge's business.
+    let receipts: Vec<String> =
+        sqlx::query_scalar("SELECT receipt_id FROM receipts ORDER BY receipt_id")
+            .fetch_all(&database.pool)
+            .await
+            .unwrap();
+
+    assert_eq!(receipts, vec!["recent-7", "reuploaded-7", "text-7"]);
+
+    let removals: Vec<String> =
+        sqlx::query_scalar("SELECT media_id FROM pending_media_file_removals")
+            .fetch_all(&database.pool)
+            .await
+            .unwrap();
+
+    assert_eq!(removals, vec!["lost"]);
+
+    let lost_media: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM media_files WHERE media_id = 'lost'")
+            .fetch_one(&database.pool)
+            .await
+            .unwrap();
+
+    assert_eq!(lost_media, 0);
+}

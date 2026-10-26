@@ -86,7 +86,8 @@ impl Server {
         let database = ctx.app_db.read().await.clone();
 
         let contacts = sqlx::query_scalar!(
-            "SELECT user_id FROM contacts WHERE username IN ('[deleted]', '[Unknown]')"
+            "SELECT user_id FROM contacts WHERE username IN ('[deleted]', '[Unknown]') AND \
+             account_deleted = 0"
         )
         .fetch_all(&database.pool)
         .await?;
@@ -150,13 +151,14 @@ impl Server {
     pub async fn remove_additional_user(
         ctx: &Arc<Context>, user_id: i64,
     ) -> Result<ServerResult<()>> {
+        // Not sent for the contact: the server checks the plan here too, and
+        // its `UserIdNotFound` must not mark the user deleted.
         server_ok!(
-            Self::application_for_contact(
+            Self::application(
                 ctx,
                 client_to_server::application_data::ApplicationData::RemoveAdditionalUser(
                     client_to_server::application_data::RemoveAdditionalUser { user_id },
                 ),
-                user_id,
             )
             .await?
         )

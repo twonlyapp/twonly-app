@@ -36,6 +36,38 @@ fn download_lock(media_id: &str) -> Arc<Mutex<()>> {
     locks.entry(media_id.to_owned()).or_default().clone()
 }
 
+fn download_url(token: &[u8]) -> String {
+    format!(
+        "{}download/{}",
+        RustApi::api_base_url("https".into()),
+        hex::encode(token)
+    )
+}
+
+/// What the server says about a download token without transferring its
+/// object.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+
+pub(crate) enum DownloadAvailability {
+    Available,
+    /// The server does not know the token, or its object is gone, so the
+    /// download can only end in a reupload request.
+    Gone,
+    /// No answer either way: a network failure, a storage outage, or a server
+    /// that predates the check and refuses the method.
+    Unknown,
+}
+
+impl DownloadAvailability {
+    fn from_status(status: reqwest::StatusCode) -> Self {
+        match status.as_u16() {
+            200..=299 => Self::Available,
+            403 | 410 => Self::Gone,
+            _ => Self::Unknown,
+        }
+    }
+}
+
 struct DownloadMedia {
     media_id: String,
     media_type: String,
@@ -151,6 +183,26 @@ impl MediaFileService {
                 Ok(())
             }
             result => result,
+        }
+    }
+
+    /// Asks the server, with an `OPTIONS` request, whether a download token
+    /// still leads to an object. Cheap enough for the notification path, which
+    /// must not download whole files before it shows anything.
+
+    pub(crate) async fn download_availability(token: &[u8]) -> DownloadAvailability {
+        let Ok(client) = crate::api::http::client_builder().build() else {
+            return DownloadAvailability::Unknown;
+        };
+
+        match client
+            .request(reqwest::Method::OPTIONS, download_url(token))
+            .timeout(Duration::from_secs(3))
+            .send()
+            .await
+        {
+            Ok(response) => DownloadAvailability::from_status(response.status()),
+            Err(_) => DownloadAvailability::Unknown,
         }
     }
 
@@ -342,16 +394,10 @@ impl MediaFileService {
             .as_deref()
             .ok_or_else(|| TwonlyError::Generic("media has no download token".into()))?;
 
-        let url = format!(
-            "{}download/{}",
-            RustApi::api_base_url("https".into()),
-            hex::encode(token)
-        );
-
         let response = crate::api::http::client_builder()
             .build()
             .map_err(|error| TwonlyError::Generic(error.to_string()))?
-            .get(url)
+            .get(download_url(token))
             .timeout(Duration::from_secs(30))
             .send()
             .await
@@ -363,6 +409,14 @@ impl MediaFileService {
         let status = response.status();
 
         if status == reqwest::StatusCode::NOT_FOUND || status == reqwest::StatusCode::FORBIDDEN {
+            // 403 is a token the server does not know, 404 an object that is
+            // gone. Which one it was is the first question about a reupload.
+            tracing::warn!(
+                media_id,
+                status = status.as_u16(),
+                "media download was refused; requesting a reupload"
+            );
+
             self.request_reupload(media_id).await?;
 
             return Ok(false);

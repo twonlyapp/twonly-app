@@ -90,9 +90,12 @@ impl UserDiscovery {
     pub async fn on_connected(&self, ctx: &Arc<Context>) -> Result<()> {
         let database = ctx.app_db.read().await.clone();
 
+        // A deleted account never gets a username, so without its mark it
+        // would be asked about on every connection, forever.
         let announcements = sqlx::query!(
             r#"SELECT announced_user_id, announced_public_key
-               FROM user_discovery_announced_users WHERE username IS NULL"#
+               FROM user_discovery_announced_users
+               WHERE username IS NULL AND account_deleted = 0"#
         )
         .fetch_all(&database.pool)
         .await?;
@@ -100,6 +103,12 @@ impl UserDiscovery {
         for announcement in announcements {
             let user = match Server::get_user_by_id(ctx, announcement.announced_user_id).await? {
                 ServerResult::Ok(user) => user,
+                // The API error handler has already marked the account.
+                ServerResult::ErrorCode(code)
+                    if code == crate::api::proto::error::ErrorCode::UserIdNotFound as i32 =>
+                {
+                    continue;
+                }
                 ServerResult::ErrorCode(code) => {
                     tracing::warn!(
                         user_id = announcement.announced_user_id,

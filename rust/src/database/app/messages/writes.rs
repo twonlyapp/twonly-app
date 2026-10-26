@@ -424,6 +424,93 @@ pub async fn purge(tx: &mut Transaction<'_, Sqlite>, now_ms: i64) -> Result<()> 
     Ok(())
 }
 
+/// Deletes this device's own media that nobody received while its upload could
+/// still be fetched.
+///
+/// The server drops an upload `cutoff` ago, so a media envelope queued before
+/// then points at a file that no longer exists, or at an upload that never
+/// happened: it can deliver nothing, however often it is resent. Once no
+/// recipient has received the media and no newer envelope for it is pending,
+/// the message is a send that failed for good, and it goes with its file.
+/// Returns how many messages were deleted.
+
+pub async fn purge_undelivered_media(tx: &mut Transaction<'_, Sqlite>, cutoff: i64) -> Result<u64> {
+    sqlx::query!(
+        r#"
+            DELETE FROM receipts
+            WHERE will_be_retried_by_media_upload = 1 AND created_at < ?
+        "#,
+        cutoff,
+    )
+    .execute(&mut **tx)
+    .await?;
+
+    let undelivered = sqlx::query!(
+        r#"
+            SELECT m.message_id AS "message_id!", m.media_id
+            FROM messages m
+            WHERE m.sender_id IS NULL
+                AND m.type = 'media'
+                AND m.is_story = 0
+                AND m.created_at < ?
+                AND m.ack_by_user IS NULL
+                AND m.opened_at IS NULL
+                AND m.opened_by_all IS NULL
+                AND m.media_stored = 0
+                AND NOT EXISTS (
+                    SELECT 1 FROM message_actions a
+                    WHERE a.message_id = m.message_id
+                        AND a.type IN ('ackByUserAt', 'openedAt')
+                )
+                AND NOT EXISTS (SELECT 1 FROM receipts r WHERE r.message_id = m.message_id)
+        "#,
+        cutoff,
+    )
+    .fetch_all(&mut **tx)
+    .await?;
+
+    for message in &undelivered {
+        // Receipts, actions and histories go with the row.
+        delete(tx, &message.message_id).await?;
+
+        let Some(media) = message.media_id.as_deref() else {
+            continue;
+        };
+
+        let referenced: bool = sqlx::query_scalar!(
+            r#"
+                SELECT EXISTS(SELECT 1 FROM messages WHERE media_id = ?) AS "value!: bool"
+            "#,
+            media,
+        )
+        .fetch_one(&mut **tx)
+        .await?;
+
+        if referenced {
+            continue;
+        }
+
+        sqlx::query!(
+            r#"
+                INSERT INTO pending_media_file_removals(media_id, media_type)
+                SELECT media_id, type
+                FROM media_files
+                WHERE media_id = ?
+                ON CONFLICT(media_id) DO UPDATE SET media_type = excluded.media_type
+            "#,
+            media,
+        )
+        .execute(&mut **tx)
+        .await?;
+
+        sqlx::query!("DELETE FROM media_files WHERE media_id = ?", media)
+            .execute(&mut **tx)
+            .await?;
+    }
+
+    Ok(undelivered.len() as u64)
+}
+
 pub async fn delete_from_sender(
     tx: &mut Transaction<'_, Sqlite>, sender: Option<i64>, id: &str,
 ) -> Result<()> {

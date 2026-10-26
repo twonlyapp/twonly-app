@@ -9,8 +9,10 @@ use crate::context::Context;
 use crate::database::app::groups::native::{FlameState, Group};
 use crate::database::app::AppDatabase;
 use crate::error::Result;
+use crate::services::mediafiles::{DownloadAvailability, MediaFileService};
 use crate::user_config::UserConfig;
 use crate::utils::{current_time, milliseconds_to_seconds};
+use futures_util::StreamExt as _;
 use serde::{Deserialize, Serialize};
 use sqlx::{Sqlite, Transaction};
 use std::collections::HashMap;
@@ -745,13 +747,27 @@ pub async fn badge_count(ctx: &Arc<Context>) -> Result<i64> {
 
     clear_visible_webxdc(ctx, &database).await?;
 
-    let count = sqlx::query_scalar!(
-        r#"SELECT COUNT(*) AS "count: i64" FROM notification_outbox WHERE cleared_at IS NULL"#
+    open_event_count(&database).await
+}
+
+/// Media waiting for its reupload is hidden in the chat, so its alert is held
+/// back and does not count either until the reupload has arrived.
+
+async fn open_event_count(database: &Arc<AppDatabase>) -> Result<i64> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "count: i64"
+           FROM notification_outbox n
+           WHERE n.cleared_at IS NULL
+             AND NOT EXISTS (
+                 SELECT 1 FROM messages m
+                 JOIN media_files f ON f.media_id = m.media_id
+                 WHERE m.message_id = n.message_id
+                   AND n.kind IN ('image', 'video', 'audio', 'twonly', 'story')
+                   AND f.download_state = 'reuploadRequested'
+             )"#
     )
     .fetch_one(&database.pool)
-    .await?;
-
-    Ok(count)
+    .await?)
 }
 
 pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<NotificationBatch> {
@@ -777,6 +793,8 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
         LEFT JOIN messages target_message ON target_message.message_id = n.message_id
         LEFT JOIN media_files target_media ON target_media.media_id = target_message.media_id
         WHERE n.delivered_at IS NULL AND n.cleared_at IS NULL
+          AND (n.kind NOT IN ('image', 'video', 'audio', 'twonly', 'story')
+               OR target_media.download_state IS NOT 'reuploadRequested')
         ORDER BY n.created_at, n.event_id
         LIMIT ?
         "#,
@@ -785,11 +803,7 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
     .fetch_all(&database.pool)
     .await?;
 
-    let badge_count = sqlx::query_scalar!(
-        r#"SELECT COUNT(*) AS "count: i64" FROM notification_outbox WHERE cleared_at IS NULL"#
-    )
-    .fetch_one(&database.pool)
-    .await?;
+    let badge_count = open_event_count(&database).await?;
 
     let flame_states = if rows.is_empty() {
         HashMap::new()
@@ -963,6 +977,19 @@ pub(crate) async fn process_initialized(
     // durable notification rows before the native caller renders the result.
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
+    // Bounded on its own rather than out of the drain's deadline, which the
+    // drain may have spent in full: the extension still has to render.
+    match tokio::time::timeout(
+        UNDOWNLOADABLE_MEDIA_CHECK_BUDGET,
+        hold_back_undownloadable_media(ctx),
+    )
+    .await
+    {
+        Ok(Err(error)) => tracing::warn!(%error, "could not check announced media"),
+        Err(_) => tracing::info!("announced media check window elapsed"),
+        Ok(Ok(())) => {}
+    }
+
     let mut batch = pending_batch(&ctx, locale).await?;
 
     batch.completed = completed;
@@ -975,6 +1002,67 @@ pub(crate) async fn process_initialized(
     );
 
     Ok(batch)
+}
+
+const UNDOWNLOADABLE_MEDIA_CHECK_BUDGET: std::time::Duration = std::time::Duration::from_secs(4);
+
+/// Incoming media is announced as soon as its message is stored, while the
+/// download runs on its own. A download the server refuses ends in a reupload
+/// request, and the chat hides a message waiting for one, so an alert for it
+/// promises an image the user cannot find.
+///
+/// Before the batch is built, the server is asked about every announced media
+/// file that has not finished downloading. A refused one is downloaded right
+/// away: it fails fast, requests the reupload, and [`pending_batch`] holds its
+/// alert back until the reupload has arrived. Fail-open: media the server does
+/// not answer for is announced as before.
+
+async fn hold_back_undownloadable_media(ctx: &Arc<Context>) -> Result<()> {
+    let database = ctx.app_db.read().await.clone();
+
+    let unsettled = sqlx::query!(
+        r#"SELECT DISTINCT f.media_id AS "media_id!", f.download_token AS "download_token!"
+           FROM notification_outbox n
+           JOIN messages m ON m.message_id = n.message_id
+           JOIN media_files f ON f.media_id = m.media_id
+           WHERE n.delivered_at IS NULL AND n.cleared_at IS NULL
+             AND n.kind IN ('image', 'video', 'audio', 'twonly', 'story')
+             AND f.download_state IN ('pending', 'downloading')
+             AND f.download_token IS NOT NULL"#
+    )
+    .fetch_all(&database.pool)
+    .await?;
+
+    drop(database);
+
+    let media_files = MediaFileService::new(ctx);
+
+    futures_util::stream::iter(unsettled)
+        .for_each_concurrent(4, |row| {
+            let media_files = &media_files;
+
+            async move {
+                if MediaFileService::download_availability(&row.download_token).await
+                    != DownloadAvailability::Gone
+                {
+                    return;
+                }
+
+                // The download takes the per-file lock, so a transfer the
+                // message handler already started is not raced, and the
+                // refusal requests the reupload exactly once.
+                if let Err(error) = media_files.download(&row.media_id).await {
+                    tracing::warn!(
+                        media_id = row.media_id,
+                        %error,
+                        "could not settle refused media"
+                    );
+                }
+            }
+        })
+        .await;
+
+    Ok(())
 }
 
 async fn drain_wakeup_mailbox(ctx: &Arc<Context>, deadline: std::time::Duration) -> Result<bool> {
@@ -1914,6 +2002,66 @@ mod tests {
 
             assert_eq!(batch.additions[2].sender_name, "Ali");
         }
+
+        Ok(())
+    }
+
+    /// The chat hides media waiting for its reupload. Its alert waits with it,
+    /// and is shown once the reupload has arrived and downloaded.
+    #[tokio::test]
+
+    async fn media_waiting_for_its_reupload_is_announced_only_once_it_arrives() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+
+        let db = ctx.app_db.read().await.clone();
+
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'alice');
+             INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('chat', 'Alice', 1);
+             INSERT INTO media_files(media_id, type, download_state)
+             VALUES ('refused', 'image', 'reuploadRequested'), ('fine', 'image', 'ready');
+             INSERT INTO messages(message_id, group_id, sender_id, type, media_id)
+             VALUES ('refused', 'chat', 7, 'media', 'refused'),
+                    ('fine', 'chat', 7, 'media', 'fine'),
+                    ('text', 'chat', 7, 'text', NULL);
+             INSERT INTO notification_outbox(event_id, notification_id, conversation_id, \
+             sender_id, message_id, kind, created_at)
+             VALUES ('refused', 'refused', 'chat', 7, 'refused', 'image', 1),
+                    ('fine', 'fine', 'chat', 7, 'fine', 'image', 2),
+                    ('text', 'text', 'chat', 7, 'text', 'text', 3);",
+        )
+        .execute(&db.pool)
+        .await?;
+
+        let announced = |batch: &NotificationBatch| {
+            batch
+                .additions
+                .iter()
+                .map(|addition| addition.event_id.clone())
+                .collect::<Vec<_>>()
+        };
+
+        let batch = pending_batch(&ctx, "en").await?;
+
+        assert_eq!(announced(&batch), vec!["fine", "text"]);
+
+        assert_eq!(batch.badge_count, 2);
+
+        assert_eq!(badge_count(&ctx).await?, 2);
+
+        sqlx::query("UPDATE media_files SET download_state = 'ready' WHERE media_id = 'refused'")
+            .execute(&db.pool)
+            .await?;
+
+        let batch = pending_batch(&ctx, "en").await?;
+
+        assert_eq!(announced(&batch), vec!["refused", "fine", "text"]);
+
+        assert_eq!(badge_count(&ctx).await?, 3);
 
         Ok(())
     }

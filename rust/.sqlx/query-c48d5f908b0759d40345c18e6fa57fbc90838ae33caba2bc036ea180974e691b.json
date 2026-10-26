@@ -1,26 +1,26 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT user_id FROM contacts WHERE username IN ('[deleted]', '[Unknown]')",
+  "query": "SELECT account_deleted FROM contacts WHERE user_id = ?",
   "describe": {
     "columns": [
       {
-        "name": "user_id",
+        "name": "account_deleted",
         "ordinal": 0,
         "type_info": "Integer",
         "origin": {
           "Table": {
             "table": "contacts",
-            "name": "user_id"
+            "name": "account_deleted"
           }
         }
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 1
     },
     "nullable": [
       false
     ]
   },
-  "hash": "be136b085a392787e934ac0026f3621d0f6208e4d786e6ac9d1dc16b5dbdd238"
+  "hash": "c48d5f908b0759d40345c18e6fa57fbc90838ae33caba2bc036ea180974e691b"
 }

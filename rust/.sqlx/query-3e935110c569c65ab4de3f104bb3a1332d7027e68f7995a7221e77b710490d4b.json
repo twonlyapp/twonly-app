@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT m.message_id AS \"message_id!\", m.media_id\n            FROM messages m\n            WHERE m.sender_id IS NULL\n                AND m.type = 'media'\n                AND m.is_story = 0\n                AND m.created_at < ?\n                AND m.ack_by_user IS NULL\n                AND m.opened_at IS NULL\n                AND m.opened_by_all IS NULL\n                AND m.media_stored = 0\n                AND NOT EXISTS (\n                    SELECT 1 FROM message_actions a\n                    WHERE a.message_id = m.message_id\n                        AND a.type IN ('ackByUserAt', 'openedAt')\n                )\n                AND NOT EXISTS (SELECT 1 FROM receipts r WHERE r.message_id = m.message_id)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "media_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "media_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "3e935110c569c65ab4de3f104bb3a1332d7027e68f7995a7221e77b710490d4b"
+}

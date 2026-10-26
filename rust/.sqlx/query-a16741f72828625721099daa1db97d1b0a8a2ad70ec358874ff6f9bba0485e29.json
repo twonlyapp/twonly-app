@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT n.event_id, n.notification_id, n.conversation_id, n.sender_id,\n               COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username) AS \"sender_name!: String\",\n               g.group_name AS conversation_name,\n               COALESCE(g.is_direct_chat, 0) AS \"is_direct_chat!: i64\",\n               n.message_id, n.kind, n.content, n.created_at,\n               target_message.type AS target_message_type,\n               target_media.type AS target_media_type\n        FROM notification_outbox n\n        JOIN contacts c ON c.user_id = n.sender_id\n        LEFT JOIN groups g ON g.group_id = n.conversation_id\n        LEFT JOIN messages target_message ON target_message.message_id = n.message_id\n        LEFT JOIN media_files target_media ON target_media.media_id = target_message.media_id\n        WHERE n.delivered_at IS NULL AND n.cleared_at IS NULL\n        ORDER BY n.created_at, n.event_id\n        LIMIT ?\n        ",
+  "query": "\n        SELECT n.event_id, n.notification_id, n.conversation_id, n.sender_id,\n               COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username) AS \"sender_name!: String\",\n               g.group_name AS conversation_name,\n               COALESCE(g.is_direct_chat, 0) AS \"is_direct_chat!: i64\",\n               n.message_id, n.kind, n.content, n.created_at,\n               target_message.type AS target_message_type,\n               target_media.type AS target_media_type\n        FROM notification_outbox n\n        JOIN contacts c ON c.user_id = n.sender_id\n        LEFT JOIN groups g ON g.group_id = n.conversation_id\n        LEFT JOIN messages target_message ON target_message.message_id = n.message_id\n        LEFT JOIN media_files target_media ON target_media.media_id = target_message.media_id\n        WHERE n.delivered_at IS NULL AND n.cleared_at IS NULL\n          AND (n.kind NOT IN ('image', 'video', 'audio', 'twonly', 'story')\n               OR target_media.download_state IS NOT 'reuploadRequested')\n        ORDER BY n.created_at, n.event_id\n        LIMIT ?\n        ",
   "describe": {
     "columns": [
       {
@@ -156,5 +156,5 @@
       false
     ]
   },
-  "hash": "6b0d6a1df75da706448489fd05157a51a9c093260171ec5b89934e3aee116f8e"
+  "hash": "a16741f72828625721099daa1db97d1b0a8a2ad70ec358874ff6f9bba0485e29"
 }

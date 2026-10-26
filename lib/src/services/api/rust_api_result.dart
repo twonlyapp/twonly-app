@@ -40,7 +40,22 @@ Future<Result<T, ErrorCode>> rustApiResult<T>(Future<T> request) async {
 void unawaitedRustCall(Future<void> request, String description) {
   unawaited(
     request.catchError((Object error) {
+      if (isBackgroundCancellation(error)) {
+        Log.info('$description stopped: the app left the foreground');
+        return;
+      }
       Log.warn('$description failed', error);
     }),
   );
+}
+
+/// Whether [error] only says the app left the foreground while the call ran.
+///
+/// Rust cancels database work and closes the foreground pools when the app
+/// goes to the background, so a call still in flight at that moment fails
+/// with one of these. The next resume repeats it; nothing is lost.
+bool isBackgroundCancellation(Object error) {
+  final text = error.toString();
+  return text.contains('retry when active') ||
+      text.contains('attempted to acquire a connection on a closed pool');
 }

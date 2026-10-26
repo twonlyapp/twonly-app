@@ -165,6 +165,45 @@ impl Receipt {
         Ok(())
     }
 
+    /// Records, in the commit that handles it, that a claimed message was
+    /// handled. Only a mark written here is proof: an unmarked claim may be one
+    /// whose decryption failed, or one older than the mark.
+
+    pub async fn mark_handled(
+        transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str,
+    ) -> Result<()> {
+        sqlx::query!(
+            r#"
+            UPDATE received_receipts
+            SET handled_at = CAST(strftime('%s', 'now') AS INTEGER)
+            WHERE receipt_id = ? AND handled_at IS NULL
+            "#,
+            receipt_id,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn was_handled(
+        transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str,
+    ) -> Result<bool> {
+        let handled = sqlx::query_scalar!(
+            r#"
+            SELECT handled_at IS NOT NULL AS "handled!: bool"
+            FROM received_receipts
+            WHERE receipt_id = ?
+            "#,
+            receipt_id,
+        )
+        .fetch_optional(&mut **transaction)
+        .await?
+        .unwrap_or(false);
+
+        Ok(handled)
+    }
+
     pub async fn claim_received_retry(
         transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str,
     ) -> Result<bool> {

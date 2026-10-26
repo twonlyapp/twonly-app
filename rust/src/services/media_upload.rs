@@ -17,7 +17,7 @@ use crate::database::app::mediafiles::native::MediaFile;
 use crate::error::{Result, TwonlyError};
 use crate::native::{gallery, prepare, video};
 use crate::services::direct_media_upload::{DirectMediaUploadService, MAX_ATTACHMENT_DISPATCHES};
-use crate::services::mediafiles::MediaFileService;
+use crate::services::mediafiles::{DownloadAvailability, MediaFileService};
 use crate::services::messages::MessageService;
 use crate::services::stories::{self, StoryAudience};
 use crate::services::{media_codec, media_exif};
@@ -46,6 +46,12 @@ const RETRANSMISSION_BACKOFF_SECONDS: i64 = 6 * 60 * 60;
 /// marked receipt is worth retrying.
 
 const RETRY_MARK_GRACE_SECONDS: i64 = 20;
+
+/// How long the server keeps an upload before deleting it (`UPLOAD_LIFETIME` in
+/// twonly-server, the same as its mailbox retention). Media nobody received by
+/// then can no longer be delivered.
+
+pub(crate) const SERVER_UPLOAD_LIFETIME_SECONDS: i64 = 60 * 24 * 60 * 60;
 
 static MEDIA_LOCKS: LazyLock<SyncMutex<HashMap<String, Arc<Mutex<()>>>>> =
     LazyLock::new(|| SyncMutex::new(HashMap::new()));
@@ -113,6 +119,26 @@ pub struct MediaSizeReport {
     pub media_bytes: Option<i64>,
     /// The largest single object the user's plan accepts.
     pub limit_bytes: Option<i64>,
+}
+
+/// The download token a stored media envelope carries. A queued receipt keeps
+/// its content in plaintext until it is sent; older receipts stored the content
+/// itself rather than the message around it.
+
+fn stored_download_token(message: &[u8]) -> Option<Vec<u8>> {
+    fn token(content: EncryptedContent) -> Option<Vec<u8>> {
+        content
+            .media
+            .or_else(|| content.story.and_then(|story| story.media))?
+            .download_token
+    }
+
+    crate::api::proto::client::Message::decode(message)
+        .ok()
+        .and_then(|message| message.encrypted_content)
+        .and_then(|content| EncryptedContent::decode(content.as_slice()).ok())
+        .and_then(token)
+        .or_else(|| EncryptedContent::decode(message).ok().and_then(token))
 }
 
 #[derive(FromRow)]
@@ -966,8 +992,35 @@ impl MediaUploadService {
         }
 
         if receipt.ack_by_server_at.is_some() {
-            // The object should still be on the server, so resending the
-            // envelope with its download token is enough.
+            // The server took this envelope once, so its download token was
+            // valid then; resending it is enough while it still is. It is gone
+            // once the receiver opened the media and sent `DownloadDone`, or
+            // once the server dropped the upload after its lifetime. Resent
+            // then, it only reaches a receiver that no longer holds the
+            // message, as new media it cannot download: an alert for a chat row
+            // that stays hidden. A receiver that still needs the media asks for
+            // a reupload itself, so there is nothing left for this receipt to
+            // deliver.
+            if let Some(token) = stored_download_token(&receipt.message) {
+                if MediaFileService::download_availability(&token).await
+                    == DownloadAvailability::Gone
+                {
+                    tracing::info!(
+                        receipt.receipt_id,
+                        receipt.contact_id,
+                        message_id,
+                        "dropping a media envelope whose download is gone"
+                    );
+
+                    sqlx::query("DELETE FROM receipts WHERE receipt_id = ?")
+                        .bind(&receipt.receipt_id)
+                        .execute(&database.pool)
+                        .await?;
+
+                    return Ok(());
+                }
+            }
+
             drop(database);
 
             return MessageService::new(&self.ctx)
@@ -2347,6 +2400,64 @@ pub(crate) fn parse_reupload_requested_by(value: Option<&str>) -> Vec<i64> {
 mod tests {
 
     use super::*;
+
+    #[test]
+
+    fn the_download_token_is_read_from_every_stored_envelope_format() {
+        use crate::api::proto::client::{encrypted_content, Message};
+
+        let media = |token: &[u8]| encrypted_content::Media {
+            download_token: Some(token.to_vec()),
+            ..Default::default()
+        };
+
+        let queued = |content: EncryptedContent| {
+            Message {
+                encrypted_content: Some(content.encode_to_vec()),
+                ..Default::default()
+            }
+            .encode_to_vec()
+        };
+
+        let chat = EncryptedContent {
+            media: Some(media(b"chat")),
+            ..Default::default()
+        };
+
+        let story = EncryptedContent {
+            story: Some(encrypted_content::Story {
+                media: Some(media(b"story")),
+                notify: false,
+            }),
+            ..Default::default()
+        };
+
+        assert_eq!(
+            stored_download_token(&queued(chat.clone())),
+            Some(b"chat".to_vec())
+        );
+
+        assert_eq!(
+            stored_download_token(&queued(story)),
+            Some(b"story".to_vec())
+        );
+
+        assert_eq!(
+            stored_download_token(&chat.encode_to_vec()),
+            Some(b"chat".to_vec())
+        );
+
+        assert_eq!(
+            stored_download_token(&queued(EncryptedContent {
+                text_message: Some(encrypted_content::TextMessage {
+                    text: "no media".into(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            })),
+            None
+        );
+    }
 
     #[tokio::test]
     async fn missing_reupload_source_fails_only_the_requesting_message_and_stops_retries(

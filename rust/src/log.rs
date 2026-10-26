@@ -323,6 +323,87 @@ mod logcat {
     }
 }
 
+/// Drops the warnings dependencies raise about situations twonly expects and
+/// already handles, so the log keeps its attention for the ones it does not.
+///
+/// - flutter_rust_bridge reports every post to a Dart isolate that is gone.
+///   Android starts a new isolate in a process that still holds the old one's
+///   streams; each stream ends on its first failed post, so a burst of these
+///   follows every such start and names nothing to act on.
+/// - stream-tungstenite logs any handshake the handshaker ended as an error,
+///   including the two that end on purpose: a newer connection overtaking the
+///   one being authenticated, and the server refusing a background session
+///   while the app holds the foreground one.
+
+#[derive(Clone, Copy, Debug, Default)]
+
+pub(crate) struct ExpectedNoise;
+
+impl<S: Subscriber> tracing_subscriber::Layer<S> for ExpectedNoise {
+    fn event_enabled(
+        &self, event: &Event<'_>, _context: tracing_subscriber::layer::Context<'_, S>,
+    ) -> bool {
+        !is_expected_noise(event)
+    }
+}
+
+fn is_expected_noise(event: &Event<'_>) -> bool {
+    let normalized = event.normalized_metadata();
+    let metadata = normalized.as_ref().unwrap_or_else(|| event.metadata());
+    let target = metadata.target();
+
+    let bridge = target.starts_with("flutter_rust_bridge");
+
+    if !bridge && !target.starts_with("stream_tungstenite") {
+        return false;
+    }
+
+    #[derive(Default)]
+
+    struct Fields {
+        message: String,
+        error: String,
+    }
+
+    impl tracing::field::Visit for Fields {
+        fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn fmt::Debug) {
+            match field.name() {
+                "message" => self.message = format!("{value:?}"),
+                "error" => self.error = format!("{value:?}"),
+                _ => {}
+            }
+        }
+    }
+
+    let mut fields = Fields::default();
+    event.record(&mut fields);
+
+    if bridge {
+        return fields.message.starts_with("Fail to post message to Dart")
+            || fields
+                .message
+                .starts_with("Drop DartOpaque after closing the port");
+    }
+
+    fields.message == "Handshake failed" && is_expected_handshake_failure(&fields.error)
+}
+
+fn is_expected_handshake_failure(error: &str) -> bool {
+    if error.contains(crate::api::runtime::auth::CONNECTION_REPLACED) {
+        return true;
+    }
+
+    let refused = format!(
+        "Server returned error code: {}",
+        crate::api::proto::error::ErrorCode::ForegroundSessionConnected as i32
+    );
+
+    // The code must end there: 1036 is not a prefix of another code's match.
+    error
+        .match_indices(&refused)
+        .any(|(index, _)| !error[index + refused.len()..].starts_with(|c: char| c.is_ascii_digit()))
+}
+
 #[derive(Clone, Copy, Debug, Default)]
 
 pub struct PlainFields;
@@ -601,6 +682,7 @@ pub(crate) fn init_tracing(data_dir: &Path, source: LogSource) {
                 EnvFilter::try_from_default_env()
                     .unwrap_or_else(|_| EnvFilter::new(default_filter)),
             )
+            .with(ExpectedNoise)
             .with(console_layer)
             .with(file_layer)
             .try_init();
@@ -786,6 +868,7 @@ mod tests {
 
         let subscriber = Registry::default()
             .with(EnvFilter::new(filter))
+            .with(super::ExpectedNoise)
             // Production disables ANSI on both sinks. Left on, field
             // formatting wraps `=` in escape codes and no `key=value` matches.
             .with(
@@ -904,6 +987,71 @@ mod tests {
 
                 assert!(output.contains("application message"), "{output}");
             }
+        }
+    }
+
+    #[test]
+
+    fn expected_dependency_noise_is_dropped_and_real_failures_are_kept() {
+        let (app, console) = capture_logs(DEFAULT_LOG_FILTER, || {
+            emit_bridged_log(
+                "flutter_rust_bridge::misc::logs",
+                tracing::log::Level::Warn,
+                "Fail to post message to Dart. (If happen during Flutter hot restart, this may \
+                 not be a problem.)",
+            );
+
+            emit_bridged_log(
+                "flutter_rust_bridge::misc::logs",
+                tracing::log::Level::Warn,
+                "Drop DartOpaque after closing the port, thus the object will be leaked forever.",
+            );
+
+            emit_bridged_log(
+                "flutter_rust_bridge::misc::logs",
+                tracing::log::Level::Warn,
+                "another bridge warning",
+            );
+
+            for (error, keep) in [
+                ("Protocol(\"connection was replaced\")", false),
+                (
+                    "Protocol(\"Protocol error: Server returned error code: 1036\")",
+                    false,
+                ),
+                (
+                    "Protocol(\"Protocol error: Server returned error code: 10360\")",
+                    true,
+                ),
+                (
+                    "Protocol(\"Protocol error: Server returned error code: 1004\")",
+                    true,
+                ),
+            ] {
+                tracing::error!(
+                    target: "stream_tungstenite::client",
+                    error = %error,
+                    keep,
+                    "Handshake failed"
+                );
+            }
+
+            tracing::error!(error = "connection was replaced", "Handshake failed");
+        });
+
+        for output in [app, console] {
+            assert!(!output.contains("Fail to post message to Dart"), "{output}");
+
+            assert!(!output.contains("Drop DartOpaque"), "{output}");
+
+            assert!(output.contains("another bridge warning"), "{output}");
+
+            assert!(!output.contains("keep=false"), "{output}");
+
+            assert_eq!(output.matches("keep=true").count(), 2, "{output}");
+
+            // Only the connection library's report is noise; twonly's own is not.
+            assert_eq!(output.matches("Handshake failed").count(), 3, "{output}");
         }
     }
 

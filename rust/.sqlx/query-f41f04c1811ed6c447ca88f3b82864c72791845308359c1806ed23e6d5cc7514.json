@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT DISTINCT f.media_id AS \"media_id!\", f.download_token AS \"download_token!\"\n           FROM notification_outbox n\n           JOIN messages m ON m.message_id = n.message_id\n           JOIN media_files f ON f.media_id = m.media_id\n           WHERE n.delivered_at IS NULL AND n.cleared_at IS NULL\n             AND n.kind IN ('image', 'video', 'audio', 'twonly', 'story')\n             AND f.download_state IN ('pending', 'downloading')\n             AND f.download_token IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "download_token!",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "download_token"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "f41f04c1811ed6c447ca88f3b82864c72791845308359c1806ed23e6d5cc7514"
+}

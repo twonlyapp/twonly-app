@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE received_receipts\n            SET handled_at = CAST(strftime('%s', 'now') AS INTEGER)\n            WHERE receipt_id = ? AND handled_at IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "4d529866dee7f467b0a82971ab38c19ea40d264e90de963208c74fa9d755555e"
+}

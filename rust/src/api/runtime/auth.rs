@@ -30,6 +30,12 @@ use tokio::sync::broadcast;
 
 pub(crate) const APP_VERSION: &str = env!("TWONLY_APP_VERSION");
 
+/// Ends a handshake that a newer connection attempt has overtaken. The
+/// connection library logs every failed handshake as an error, so `crate::log`
+/// recognises this one by its text and leaves it out.
+
+pub(crate) const CONNECTION_REPLACED: &str = "connection was replaced";
+
 pub(crate) struct ApiAuthHandshaker {
     pub context: Arc<Context>,
     pub api_client: Weak<ApiClient>,
@@ -398,7 +404,9 @@ impl Handshaker for ApiAuthHandshaker {
                 .set_state_for_generation(self.generation, ApiConnectionState::Authenticating)
                 .await
             {
-                return Err(HandshakeError::Protocol("connection was replaced".into()));
+                tracing::debug!("handshake superseded by a newer connection");
+
+                return Err(HandshakeError::Protocol(CONNECTION_REPLACED.into()));
             }
         }
 

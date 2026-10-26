@@ -90,6 +90,12 @@ async fn purge_expired_data(ctx: &Arc<Context>) -> Result<()> {
 
     crate::database::app::messages::writes::purge(&mut transaction, now.timestamp_millis()).await?;
 
+    let undelivered = crate::database::app::messages::writes::purge_undelivered_media(
+        &mut transaction,
+        now.timestamp() - crate::services::media_upload::SERVER_UPLOAD_LIFETIME_SECONDS,
+    )
+    .await?;
+
     crate::database::app::receipts::writes::purge(
         &mut transaction,
         (now - chrono::Duration::days(45)).timestamp(),
@@ -97,6 +103,17 @@ async fn purge_expired_data(ctx: &Arc<Context>) -> Result<()> {
     .await?;
 
     transaction.commit().await?;
+
+    if undelivered > 0 {
+        tracing::info!(
+            count = undelivered,
+            "deleted own media nobody received before its upload expired"
+        );
+
+        if let Err(error) = crate::services::mediafiles::cleanup_pending_file_removals(ctx).await {
+            tracing::warn!(%error, "pending media file cleanup will be retried");
+        }
+    }
 
     MediaUploadService::new(ctx).purge_temp_folder().await
 }
