@@ -7,7 +7,7 @@ import 'package:twonly/src/utils/misc.dart';
 
 /// Blocks the app while a large mailbox is caught up.
 ///
-/// Rust starts a catch-up once the server reports more than 2000 waiting
+/// Rust starts a catch-up once the server reports more than 500 waiting
 /// messages and ends it when the mailbox is drained. Until then new messages
 /// queue behind the old ones, so the app shows how far it has got instead of
 /// looking as if nothing arrives. The overlay cannot be dismissed; Rust ends it

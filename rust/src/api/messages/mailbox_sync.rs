@@ -27,7 +27,7 @@ use tokio::sync::watch;
 /// A mailbox holding more messages than this is caught up behind the progress
 /// screen.
 
-pub(crate) const SYNC_THRESHOLD: i64 = 2000;
+pub(crate) const SYNC_THRESHOLD: i64 = 500;
 
 /// How long a catch-up may go without handling a single message before it is
 /// given up. Pages keep coming while the connection holds, so this only ends a
