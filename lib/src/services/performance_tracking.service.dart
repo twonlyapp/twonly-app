@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/core/bridge/database.dart';
 import 'package:twonly/core/bridge/performance.dart' as rust_performance;
@@ -24,7 +25,9 @@ class PerformanceTracking {
   static int _generation = 0;
 
   static bool get enabled {
-    if (!_enabled || !AppState.allowErrorTrackingViaSentry) return false;
+    if (kDebugMode || !_enabled || !AppState.allowErrorTrackingViaSentry) {
+      return false;
+    }
     try {
       return userService.currentUser.allowErrorTrackingViaSentry &&
           rust_performance.isEnabled();

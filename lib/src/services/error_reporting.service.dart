@@ -38,7 +38,11 @@ class ErrorReportingService {
               ? 'profile'
               : 'release'
           ..autoInitializeNativeSdk = false
-          ..tracesSampleRate = kReleaseMode ? 0.01 : 1.0
+          ..tracesSampleRate = kDebugMode
+              ? 0.0
+              : kReleaseMode
+              ? 0.01
+              : 1.0
           ..enableAutoPerformanceTracing = false
           ..beforeSendTransaction = PerformanceTracking.beforeSend
           ..sendDefaultPii = false
