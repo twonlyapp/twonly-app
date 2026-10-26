@@ -121,7 +121,7 @@ async fn replacement_merges_usage_preserves_dates_and_rolls_back() {
     tx.rollback().await.unwrap();
 
     assert_eq!(
-        queries::list(&mut *database.pool.acquire().await.unwrap())
+        queries::list(&mut database.pool.acquire().await.unwrap())
             .await
             .unwrap()
             .len(),

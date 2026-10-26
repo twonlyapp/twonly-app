@@ -36,18 +36,15 @@ use tokio::time::Instant;
 /// database until the app is opened again. The server caps how many a client
 /// may hold and advertises where it refills; this is only the value used before
 /// the first answer has arrived.
-
 const DEFAULT_SLOT_REFILL_THRESHOLD: i64 = 5;
 
 /// Where the server's advertised refill threshold is remembered between runs.
-
 const REFILL_THRESHOLD_KEY: &str = "direct_media_refill_threshold";
 
 /// Upload slots and attachment capabilities belong to exactly one API
 /// deployment. Debug and profile builds share the `.testing` application data,
 /// so this marker prevents a build switch from reusing the other server's
 /// durable jobs.
-
 const API_NAMESPACE_KEY: &str = "direct_media_api_namespace";
 
 const WATCH_FIRST_DELAY: Duration = Duration::from_secs(1);
@@ -55,7 +52,6 @@ const WATCH_FIRST_DELAY: Duration = Duration::from_secs(1);
 const WATCH_FAST_PERIOD: Duration = Duration::from_secs(15);
 
 /// The server accepts at most this many recipients for one uploaded attachment.
-
 pub(crate) const MAX_ATTACHMENT_DISPATCHES: usize = 300;
 
 const WATCH_MAX_DELAY: Duration = Duration::from_secs(120);
@@ -77,12 +73,10 @@ static API_NAMESPACE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_ne
 /// exactly the slots the first had just been handed. The client then holds a
 /// cache of slots that are already dead, and every send that reserves one of
 /// them fails.
-
 static PRELOAD_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 /// Coalesces requests into one watcher. The notification interrupts its sleep;
 /// the generation also catches requests racing with the watcher's last pass.
-
 struct UploadWatch {
     watching: AtomicBool,
     requests: AtomicU64,
@@ -139,7 +133,6 @@ impl WatchCadence {
 /// Clears the process-wide watcher claim even when the runtime carrying the
 /// task is shut down. Background platform entry points own short-lived Tokio
 /// runtimes, so ordinary code after an `.await` is not guaranteed to run.
-
 struct WatchingGuard<'a>(&'a UploadWatch);
 
 impl Drop for WatchingGuard<'_> {
@@ -151,7 +144,6 @@ impl Drop for WatchingGuard<'_> {
 /// Poll while the app is alive, and wake immediately for newly scheduled work
 /// or native completion callbacks. Polling remains the fallback when callbacks
 /// are lost or an accepted request still needs server-side finalization.
-
 pub fn watch_pending_uploads(ctx: &Arc<Context>) {
     let Some(runtime) = ctx.foreground_runtime() else {
         // A killed-app worker has no long-lived runtime. Its native scheduler
@@ -430,7 +422,6 @@ impl DirectMediaUploadService {
     /// API), or vice versa, leaves the media in `backgroundUploadTaskStarted`
     /// until the old slot expires. Returning the media to `preprocessing` lets
     /// the ordinary startup sweep reserve a fresh slot and really retry it.
-
     async fn ensure_api_namespace(&self) -> Result<()> {
         let _guard = API_NAMESPACE_LOCK.lock().await;
 
@@ -471,7 +462,6 @@ impl DirectMediaUploadService {
     /// Tops the slot cache up without blocking the caller. Failures are
     /// expected — this runs exactly when the network may be gone — and the next
     /// reconnect preloads again.
-
     fn spawn_slot_refill(&self) {
         let ctx = self.ctx.clone();
 
@@ -498,7 +488,6 @@ impl DirectMediaUploadService {
     /// the send has to start over. Reserved slots are exactly the ones a
     /// refill can race, because a refill runs on every reconnect and after
     /// every settled transfer, both of which happen while a send is in flight.
-
     async fn locally_known_slot_ids(&self) -> Result<Vec<String>> {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -635,7 +624,6 @@ impl DirectMediaUploadService {
 
     /// The refill point the server last advertised. Asking for slots the server
     /// will not issue costs a request per send, so its number wins over ours.
-
     async fn refill_threshold(&self) -> i64 {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -733,7 +721,6 @@ impl DirectMediaUploadService {
     /// A 2xx would not settle it anyway: the upload is accepted with a 202
     /// while the manifest is still being reconciled, so only the attachment's
     /// own state says whether the recipients were dispatched.
-
     pub async fn reconcile(&self) -> Result<()> {
         self.ensure_api_namespace().await?;
 
@@ -885,7 +872,6 @@ impl DirectMediaUploadService {
     /// Reuse the same immutable requests and attachment. The native scheduler
     /// keeps live work, repairs missing/failed work, and retries completion for
     /// an object already uploaded. No replacement recipient envelopes are made.
-
     async fn recover_native_transfer(&self, job: &PendingJob) -> Result<()> {
         if !cfg!(any(target_os = "android", test)) {
             return Ok(());
@@ -928,7 +914,6 @@ impl DirectMediaUploadService {
     /// still holding them, so the cache it holds is a generation the server has
     /// swept: the other slots in it are just as dead, and each would cost a
     /// failed send to discover. Dropping them costs one refill instead.
-
     async fn purge_cached_slots(&self) {
         let database = self.ctx.app_db.read().await.clone();
         let purged = sqlx::query(
@@ -993,7 +978,6 @@ impl DirectMediaUploadService {
     /// Caller holds the media lock. Abandoning on the server prevents even a
     /// native transfer already in flight from dispatching its old manifest.
     /// Returns true if dispatch won the race and recipients need a deletion.
-
     pub(crate) async fn cancel_pending_upload(&self, media_id: &str) -> Result<bool> {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -1103,7 +1087,6 @@ impl DirectMediaUploadService {
 
     /// Releases the request files and the slot, then applies the outcome to the
     /// media file. Safe to run twice: the job row is the claim.
-
     async fn settle(&self, job: &PendingJob, outcome: Outcome) -> Result<()> {
         let lock = media_lock(&job.media_id);
 
@@ -1667,7 +1650,6 @@ impl DirectMediaUploadService {
     /// that failure per recipient so a later preparation of the shared media
     /// cannot retry it or prevent the other recipients from receiving it.
     /// Transient errors still retry; stories retain their retirement policy.
-
     async fn recipient_envelope(
         &self, message: &MessageRow, contact_id: i64, envelope: Result<Option<Vec<u8>>>,
     ) -> Result<Option<Vec<u8>>> {
@@ -1765,7 +1747,6 @@ impl DirectMediaUploadService {
 ///
 /// The answer also travels inside the story, so the receiver announces
 /// exactly the items it was woken for.
-
 async fn story_wakes_recipient(
     database: &AppDatabase, message: &MessageRow, media_id: &str, contact_id: i64, now: i64,
 ) -> Result<bool> {
@@ -1856,7 +1837,6 @@ fn write_multipart_body(
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

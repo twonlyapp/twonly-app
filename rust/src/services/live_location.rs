@@ -17,7 +17,6 @@ static SHARING: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 pub const DURATIONS: &[i64] = &[600, 1200, 3600, 7200, 28800];
 
 /// A restored chat archive must never restart sharing on another device.
-
 pub(crate) async fn discard_sessions(pool: &sqlx::SqlitePool) -> Result<()> {
     let mut connection = pool.acquire().await?;
 
@@ -588,7 +587,6 @@ pub(crate) async fn stop(ctx: &Arc<Context>, session_id: &str) -> Result<()> {
 
 /// Authenticated sender, chat, session and deadline must all match the card.
 /// Out-of-order updates cannot revive a stopped share or rewind its point.
-
 pub(crate) async fn incoming(
     t: &mut Transaction<'_, Sqlite>, group_id: &str, sender_id: i64,
     location: &proto::LiveLocationData,
@@ -597,6 +595,7 @@ pub(crate) async fn incoming(
         return Ok(());
     }
 
+    #[allow(clippy::type_complexity)]
     let row: Option<(String, Option<i64>, Option<Vec<u8>>, bool)> = sqlx::query_as(
         "SELECT group_id, sender_id, additional_message_data, is_deleted_from_sender FROM \
          messages WHERE message_id = ?",
@@ -696,7 +695,6 @@ pub(crate) async fn apply_pending(
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

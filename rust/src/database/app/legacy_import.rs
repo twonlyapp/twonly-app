@@ -434,7 +434,6 @@ async fn copy_sequences(connection: &mut sqlx::Transaction<'_, sqlx::Sqlite>) ->
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

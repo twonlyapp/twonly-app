@@ -25,7 +25,7 @@ pub async fn first_verification_types(
 ) -> Result<Vec<FirstVerificationType>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::first_types(&mut **tx.transaction()).await;
+    let result = queries::first_types(tx.transaction()).await;
 
     tx.finish(result).await
 }
@@ -33,7 +33,7 @@ pub async fn first_verification_types(
 pub async fn is_contact_verified(contact: i64, transaction: &DatabaseSession) -> Result<bool> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::is_verified(&mut **tx.transaction(), contact).await;
+    let result = queries::is_verified(tx.transaction(), contact).await;
 
     tx.finish(result).await
 }
@@ -43,11 +43,12 @@ pub async fn get_contact_verifications(
 ) -> Result<Vec<KeyVerification>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::list(&mut **tx.transaction(), contact).await;
+    let result = queries::list(tx.transaction(), contact).await;
 
     tx.finish(result).await
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn change_key_verification(
     contact: i64, kind: Option<String>, verified_by: Option<i64>, verification_id: Option<i64>,
     update_discovery: bool, verified_at: Option<i64>, callback_id: u32,

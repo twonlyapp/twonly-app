@@ -159,7 +159,7 @@ async fn retry_cutoff_is_strict_and_purge_uses_deleted_contact_membership() {
     tx.rollback().await.unwrap();
 
     assert_eq!(
-        queries::list(&mut *database.pool.acquire().await.unwrap())
+        queries::list(&mut database.pool.acquire().await.unwrap())
             .await
             .unwrap()
             .len(),

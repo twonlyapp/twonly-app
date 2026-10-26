@@ -20,7 +20,6 @@ use std::time::Instant;
 
 /// Quality the sender's media is encoded with, and the lower quality retried
 /// when the first attempt is too large to be worth sending.
-
 const SEND_QUALITY: f32 = 90.0;
 
 const SEND_QUALITY_LARGE: f32 = 60.0;
@@ -35,23 +34,19 @@ const THUMBNAIL_MAX_EDGE: u32 = 2048;
 
 /// The Memories server signs thumbnails for 300 KB plus 100 KB of overhead.
 /// Keep the plaintext within that budget, leaving room for encryption and POST.
-
 pub(crate) const THUMBNAIL_MAX_BYTES: usize = 300_000;
 
 /// Alpha at or below this counts as transparent when trimming borders. Matches
 /// the threshold the Dart implementation used, so existing media crops the
 /// same.
-
 const TRANSPARENT_ALPHA: u8 = 10;
 
 /// Never crop down to a sliver; a result this small means the analysis was
 /// wrong.
-
 const MIN_CROPPED_EDGE: u32 = 10;
 
 /// Encodes with libwebp. RGB input is encoded without an alpha channel so
 /// opaque photos do not pay for one.
-
 pub(crate) fn encode_webp(image: &DynamicImage, quality: f32) -> Result<Vec<u8>> {
     let total_started = Instant::now();
 
@@ -126,7 +121,6 @@ pub(crate) fn encode_webp(image: &DynamicImage, quality: f32) -> Result<Vec<u8>>
 
 /// Decodes any still image. The platform is only consulted for the formats this
 /// crate has no decoder for, which in practice means HEIC/HEIF from an iPhone.
-
 pub(crate) fn decode(path: &Path) -> Result<DynamicImage> {
     let total_started = Instant::now();
 
@@ -211,7 +205,6 @@ pub(crate) fn decode(path: &Path) -> Result<DynamicImage> {
 /// plugin call, this currently keeps the source dimensions. A first pass at
 /// high quality is re-encoded lower only when the result is big enough that the
 /// quality loss is worth the transfer.
-
 pub(crate) fn compress_for_send(source: &Path, destination: &Path) -> Result<()> {
     let total_started = Instant::now();
 
@@ -281,7 +274,6 @@ pub(crate) fn compress_for_send(source: &Path, destination: &Path) -> Result<()>
 /// smaller as lossless WebP; already compressed media, high-bit-depth images,
 /// and files carrying metadata are kept byte for byte. In particular, an ICC
 /// profile or EXIF orientation must not disappear during optimisation.
-
 pub(crate) fn store_image_losslessly(source: &Path, destination: &Path) -> Result<()> {
     let mut header = [0_u8; 8];
 
@@ -384,7 +376,6 @@ fn encode_lossless_webp(image: &DynamicImage) -> Result<Vec<u8>> {
 /// an already small image up. Long images and large encoded previews are
 /// reduced further to fit the Memories upload budget. A GIF decodes to its
 /// first frame.
-
 pub(crate) fn create_image_thumbnail(source: &Path, destination: &Path) -> Result<()> {
     let total_started = Instant::now();
 
@@ -481,7 +472,6 @@ fn downscale(image: &DynamicImage, min_edge: u32) -> DynamicImage {
 /// The editor writes an overlay for every video, including one the user drew
 /// nothing on. Compositing a fully transparent layer produces the same frames
 /// at the cost of a whole transcode, so the send path asks this first.
-
 pub(crate) fn has_visible_content(path: &Path) -> Result<bool> {
     let image = decode(path)?;
 
@@ -494,7 +484,6 @@ pub(crate) fn has_visible_content(path: &Path) -> Result<bool> {
 
 /// Trims fully transparent borders left by the editor. Returns whether the
 /// image was rewritten.
-
 pub(crate) fn crop_transparent_borders(path: &Path) -> Result<bool> {
     let image = decode(path)?;
 
@@ -537,7 +526,6 @@ pub(crate) fn crop_transparent_borders(path: &Path) -> Result<bool> {
 }
 
 /// Inclusive bounding box of every pixel that is not effectively transparent.
-
 fn opaque_bounds(image: &image::RgbaImage) -> Option<(u32, u32, u32, u32)> {
     let (mut min_x, mut min_y) = (u32::MAX, u32::MAX);
 
@@ -564,7 +552,6 @@ fn opaque_bounds(image: &image::RgbaImage) -> Option<(u32, u32, u32, u32)> {
 
 /// The destination is often the file being read elsewhere, so it is replaced in
 /// one step rather than being briefly truncated.
-
 fn write_atomically(destination: &Path, bytes: &[u8]) -> Result<()> {
     if let Some(parent) = destination.parent() {
         std::fs::create_dir_all(parent)?;
@@ -590,7 +577,6 @@ fn file_size(path: &Path) -> u64 {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

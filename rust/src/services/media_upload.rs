@@ -34,23 +34,19 @@ use tokio::sync::{Mutex, Semaphore};
 
 /// A media file with no source bytes and no referencing message is only deleted
 /// once it is old enough that no in-flight editor can still be holding it.
-
 const ORPHAN_GRACE_SECONDS: i64 = 60 * 60;
 
 /// Matches the Dart retransmission window: a media file that already failed
 /// twice is not retried more than once every six hours.
-
 const RETRANSMISSION_BACKOFF_SECONDS: i64 = 6 * 60 * 60;
 
 /// The server needs a moment to hand queued messages to the recipient before a
 /// marked receipt is worth retrying.
-
 const RETRY_MARK_GRACE_SECONDS: i64 = 20;
 
 /// How long the server keeps an upload before deleting it (`UPLOAD_LIFETIME` in
 /// twonly-server, the same as its mailbox retention). Media nobody received by
 /// then can no longer be delivered.
-
 pub(crate) const SERVER_UPLOAD_LIFETIME_SECONDS: i64 = 60 * 24 * 60 * 60;
 
 static MEDIA_LOCKS: LazyLock<SyncMutex<HashMap<String, Arc<Mutex<()>>>>> =
@@ -61,13 +57,11 @@ static MEDIA_LOCKS: LazyLock<SyncMutex<HashMap<String, Arc<Mutex<()>>>>> =
 /// otherwise decode that many photos in parallel. Re-checking the file after
 /// the wait also keeps two tiles from writing the same thumbnail. The send path
 /// does not take this permit — a capture must not queue behind a backfill.
-
 static THUMBNAIL_BACKFILL: Semaphore = Semaphore::const_new(1);
 
 /// One media file is only ever prepared by one task. Preparation reserves a
 /// slot, encrypts, and writes request files, so a second concurrent run would
 /// burn a slot and leave orphaned jobs behind.
-
 pub(crate) fn media_lock(media_id: &str) -> Arc<Mutex<()>> {
     let mut locks = MEDIA_LOCKS
         .lock()
@@ -113,7 +107,6 @@ struct GalleryLocationRow {
 }
 
 /// Why a media send stopped at `fileLimitReached`, for the chat entry to show.
-
 pub struct MediaSizeReport {
     /// The encoded media as it sits on disk, while it is still there.
     pub media_bytes: Option<i64>,
@@ -124,7 +117,6 @@ pub struct MediaSizeReport {
 /// The download token a stored media envelope carries. A queued receipt keeps
 /// its content in plaintext until it is sent; older receipts stored the content
 /// itself rather than the message around it.
-
 fn stored_download_token(message: &[u8]) -> Option<Vec<u8>> {
     fn token(content: EncryptedContent) -> Option<Vec<u8>> {
         content
@@ -166,7 +158,6 @@ impl MediaUploadService {
     /// Creates the media row and its content-encryption material. The row is
     /// the only durable handle the UI needs; every later step is addressed by
     /// its media id.
-
     pub async fn initialize(
         &self, media_type: String, display_limit_in_milliseconds: Option<i64>, is_draft_media: bool,
     ) -> Result<String> {
@@ -241,7 +232,6 @@ impl MediaUploadService {
     /// Turns an edited media file into one outgoing message per selected group,
     /// plus one hidden story row per contact `story` reaches, and hands the
     /// send to the background uploader. Everything shares one upload.
-
     pub async fn insert_into_messages(
         &self, media_id: String, group_ids: Vec<String>, additional_message_data: Option<Vec<u8>>,
         widget_only: bool, story: Option<StoryAudience>,
@@ -426,7 +416,6 @@ impl MediaUploadService {
     /// Runs `start_upload` under whatever protection the platform offers. On
     /// Android the work itself moves into a `WorkManager` job and nothing is
     /// started here.
-
     fn spawn_preparation(&self, media_id: String) {
         match prepare::begin(&media_id) {
             prepare::Preparation::Scheduled => {
@@ -473,7 +462,6 @@ impl MediaUploadService {
     /// The result is only used when the editor's final state agrees with it,
     /// so a user who does draw on the clip pays for a wasted render rather than
     /// getting a second encoding pass over an already encoded file.
-
     pub async fn prerender(&self, media_id: &str) -> Result<()> {
         crate::performance::measure("media.prerender", "media.render", async {
             let lock = media_lock(media_id);
@@ -544,7 +532,6 @@ impl MediaUploadService {
 
     /// Advances one media file as far towards "scheduled" as it can get right
     /// now. Safe to call repeatedly and from maintenance passes.
-
     pub async fn start_upload(&self, media_id: &str) -> Result<()> {
         crate::performance::measure("media.upload", "http.client", async {
             let lock = media_lock(media_id);
@@ -714,7 +701,6 @@ impl MediaUploadService {
 
     /// Recovers every upload that a terminated process left mid-flight, and
     /// settles the transfers the server has meanwhile accepted or rejected.
-
     pub async fn finish_started_uploads(&self) -> Result<()> {
         let _guard = self.ctx.media_preprocessing.lock().await;
 
@@ -768,7 +754,6 @@ impl MediaUploadService {
 
     /// A recipient could not decrypt the media, so it has to be encrypted and
     /// uploaded again — but only for the contacts that asked for it.
-
     pub async fn reupload(&self, contact_id: i64, media_id: &str, message_id: &str) -> Result<()> {
         let lock = media_lock(media_id);
 
@@ -794,7 +779,6 @@ impl MediaUploadService {
     }
 
     /// The caller holds `media_lock` while recording and preparing the request.
-
     pub(crate) async fn record_reupload_request(
         &self, contact_id: i64, media_id: &str, message_id: &str,
     ) -> Result<bool> {
@@ -877,7 +861,6 @@ impl MediaUploadService {
     }
 
     /// Periodic maintenance over receipts whose media send never completed.
-
     pub async fn reupload_pending(&self) -> Result<()> {
         let _guard = self.ctx.media_retransmission.lock().await;
 
@@ -1065,7 +1048,6 @@ impl MediaUploadService {
 
     /// Keeps the local copy of a media file and derives everything the gallery
     /// and chat list need from it.
-
     pub async fn store(&self, media_id: &str) -> Result<()> {
         let Some(media) = self.load(media_id).await? else {
             return Ok(());
@@ -1158,7 +1140,6 @@ impl MediaUploadService {
     /// Size and content hash are read back from the file that was actually
     /// written, never from the value the caller believed it wrote. Videos can
     /// be tens of megabytes, so the hash streams instead of buffering.
-
     async fn refresh_stored_metadata(&self, media_id: &str, stored_path: &Path) -> Result<()> {
         let stored_path = stored_path.to_owned();
 
@@ -1208,7 +1189,6 @@ impl MediaUploadService {
     /// The size the user is shown for a media file is the plaintext one, not
     /// what the encrypted upload weighs, and it is kept even after the file
     /// itself is gone.
-
     async fn record_plaintext_size(&self, media_id: &str, path: &Path) -> Result<()> {
         let size = std::fs::metadata(path)?.len() as i64;
 
@@ -1223,7 +1203,6 @@ impl MediaUploadService {
     /// Called by Flutter after a plugin step rewrote a media file on disk, so
     /// the derived state Rust owns is recomputed from what was actually
     /// written.
-
     pub async fn media_step_finished(&self, media_id: &str, kind: &str) -> Result<()> {
         let files = MediaFileService::new(&self.ctx);
 
@@ -1325,7 +1304,6 @@ impl MediaUploadService {
 
     /// Drops every file of a media item while keeping its row, so a message
     /// that still references it keeps rendering as an expired media message.
-
     pub async fn remove_files(&self, media_id: &str) -> Result<()> {
         let Some(media) = self.load(media_id).await? else {
             return Ok(());
@@ -1335,7 +1313,6 @@ impl MediaUploadService {
     }
 
     /// Drops the files and the row. Only for media nothing references any more.
-
     async fn delete(&self, media_id: &str) -> Result<()> {
         self.remove_files(media_id).await?;
 
@@ -1352,7 +1329,6 @@ impl MediaUploadService {
     /// The media can never be sent — its source could not be produced at all.
     /// The recipients' messages become "deleted by the sender" and the upload
     /// loop stops instead of retrying something that cannot succeed.
-
     pub async fn abandon(&self, media_id: &str) -> Result<()> {
         let Some(media) = self.load(media_id).await? else {
             return Ok(());
@@ -1383,7 +1359,6 @@ impl MediaUploadService {
     /// Deletes temporary media whose message is finished with it. Everything
     /// that decides "finished" is a policy question, so it lives here rather
     /// than in the view layer that happens to trigger the sweep.
-
     pub async fn purge_temp_folder(&self) -> Result<()> {
         let temp_directory = std::path::PathBuf::from(&self.ctx.config.data_dir)
             .join("mediafiles")
@@ -1434,7 +1409,6 @@ impl MediaUploadService {
     /// tracked separately, because the slot is where the server states it. The
     /// size is whatever is still on disk, so it goes missing once the temporary
     /// files are purged — the limit alone is what the user can act on.
-
     pub async fn size_limit_report(&self, media_id: &str) -> Result<MediaSizeReport> {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -1579,7 +1553,6 @@ impl MediaUploadService {
     /// keeps that end. The recording itself is never rewritten - the transcode
     /// every send performs applies the cut - so this stays reversible for as
     /// long as the editor is open.
-
     pub async fn set_trim(
         &self, media_id: &str, trim_start_ms: Option<i64>, trim_end_ms: Option<i64>,
     ) -> Result<()> {
@@ -1643,7 +1616,6 @@ impl MediaUploadService {
     /// The media cannot be sent as it stands: either its plaintext is gone or
     /// nothing references it any more. What that means depends entirely on who
     /// is still waiting for it.
-
     async fn retire_media(&self, media: &MediaRow) -> Result<()> {
         let media_id = &media.media_id;
 
@@ -1750,7 +1722,6 @@ impl MediaUploadService {
 
     /// Marks an upload as delivered when a receiver's response proves the media
     /// arrived, even though the transfer callback never reached this device.
-
     pub async fn mark_uploaded(&self, media_id: &str) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -1791,7 +1762,6 @@ impl MediaUploadService {
     /// Produces the plaintext that actually gets encrypted and sent. Stills are
     /// encoded here with libwebp; only video still needs the Flutter editor,
     /// and GIF and audio are sent in their original container.
-
     async fn compress(&self, media: &MediaRow) -> Result<()> {
         let files = MediaFileService::new(&self.ctx);
 
@@ -1856,7 +1826,6 @@ impl MediaUploadService {
     /// Composites the editor's overlay and transcodes, in one hardware pass on
     /// the platform's own encoder. Flutter is not involved, so this also works
     /// from a background task.
-
     async fn render_video(&self, media: &MediaRow, original: &Path, temp: &Path) -> Result<()> {
         let files = MediaFileService::new(&self.ctx);
 
@@ -1937,7 +1906,6 @@ impl MediaUploadService {
     }
 
     /// Renders the preview shown in chat lists and the gallery.
-
     async fn create_thumbnail(&self, media: &MediaRow) -> Result<()> {
         let files = MediaFileService::new(&self.ctx);
 
@@ -1961,7 +1929,6 @@ impl MediaUploadService {
     /// Renders the frame a reply to a video story is shown with. Stored media
     /// gets its thumbnail from the stored file, but a story is replied to long
     /// before anybody stores it, so this one comes from the plaintext.
-
     pub(crate) async fn create_story_thumbnail(&self, media_id: &str) -> Result<()> {
         let Some(media) = self.load(media_id).await? else {
             return Ok(());
@@ -2003,7 +1970,6 @@ impl MediaUploadService {
 
     /// Exports a stored media file, or durably queues it while its optional
     /// location is still being resolved.
-
     pub async fn save_to_gallery(&self, media_id: &str) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -2089,7 +2055,6 @@ impl MediaUploadService {
 
     /// Stamps capture time and the locally stored location into a temporary
     /// export. The Memory itself remains untouched.
-
     async fn export_to_gallery_now(
         &self, media_id: &str, location: GalleryLocationRow,
     ) -> Result<()> {
@@ -2146,7 +2111,6 @@ impl MediaUploadService {
     }
 
     /// Trims fully transparent borders the editor left around a stored image.
-
     pub async fn crop_transparent_borders(&self, media_id: &str) -> Result<()> {
         let Some(media) = self.load(media_id).await? else {
             return Ok(());
@@ -2220,7 +2184,10 @@ fn prepare_gallery_export(
         Some(image::ImageFormat::Bmp) => "bmp",
         Some(image::ImageFormat::Avif) => "avif",
         _ if header.len() >= 16 && &header[4..8] == b"ftyp" => {
-            let brands = std::iter::once(&header[8..12]).chain(header[16..].chunks_exact(4));
+            let brands = header[8..]
+                .first_chunk::<4>()
+                .into_iter()
+                .chain(header[16..].as_chunks::<4>().0);
 
             if brands
                 .clone()
@@ -2296,7 +2263,6 @@ fn prepare_gallery_export(
 /// one description both sides compare. **Any new input the render starts to
 /// honour — a trim, a speed change, a filter — has to be added here in the same
 /// change, or a pre-rendered clip will be sent ignoring it.**
-
 fn render_fingerprint(media: &MediaRow) -> String {
     // A plain string rather than a struct: it is only ever compared, never
     // read back, and a stable textual form makes a stale marker obvious in a
@@ -2316,7 +2282,6 @@ fn render_fingerprint(media: &MediaRow) -> String {
 /// A bound is dropped when it cannot describe a cut: a negative offset, or an
 /// end at or before the start. The renderers are handed the raw numbers, so a
 /// nonsensical pair here would produce an empty clip rather than a whole one.
-
 fn trim_bounds(media: &MediaRow) -> (Option<i64>, Option<i64>) {
     let start = media.trim_start_ms.filter(|value| *value > 0);
 
@@ -2329,7 +2294,6 @@ fn trim_bounds(media: &MediaRow) -> (Option<i64>, Option<i64>) {
 
 /// Image codecs are CPU-bound: a full-resolution photo takes long enough to
 /// encode that it must not run on an async worker.
-
 async fn blocking<F, T>(task: F) -> Result<T>
 where
     F: FnOnce() -> Result<T> + Send + 'static,
@@ -2342,7 +2306,6 @@ where
 
 /// Writes a webp thumbnail of `source` to `thumbnail`. A failure only costs
 /// the preview, so it is logged and reported rather than returned.
-
 async fn render_thumbnail(
     media_id: &str, source: std::path::PathBuf, thumbnail: std::path::PathBuf, is_video: bool,
 ) -> bool {
@@ -2388,7 +2351,6 @@ fn file_size_or_zero(path: &Path) -> u64 {
 
 /// Drift persists this column as a JSON array of contact ids. Tolerate the
 /// single-scalar form that an earlier Rust write produced.
-
 pub(crate) fn parse_reupload_requested_by(value: Option<&str>) -> Vec<i64> {
     let Some(value) = value else {
         return Vec::new();
@@ -2402,7 +2364,6 @@ pub(crate) fn parse_reupload_requested_by(value: Option<&str>) -> Vec<i64> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

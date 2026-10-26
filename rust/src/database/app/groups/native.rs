@@ -31,7 +31,6 @@ impl Group {
     /// stored: it is a pure function of `total_media_counter`, and persisting
     /// it in the user configuration would leave Flutter's in-memory copy
     /// stale, because nothing tells Dart when Rust rewrites that file.
-
     pub async fn best_friend_group_id(pool: &sqlx::Pool<Sqlite>) -> Result<Option<String>> {
         Ok(sqlx::query_scalar!(
             "SELECT group_id FROM groups ORDER BY total_media_counter DESC LIMIT 1"
@@ -46,7 +45,6 @@ impl Group {
     ///
     /// Passing `None` derives the state of every group; the best friend is
     /// resolved once either way.
-
     pub async fn flame_states(
         pool: &sqlx::Pool<Sqlite>, group_ids: Option<Vec<String>>,
     ) -> Result<HashMap<String, FlameState>> {
@@ -92,7 +90,6 @@ impl Group {
 
     /// Whether the "restore flames" offer makes sense: a streak worth restoring
     /// was lost recently enough that the user still remembers having it.
-
     pub async fn can_restore_flames(pool: &sqlx::Pool<Sqlite>, group_id: &str) -> Result<bool> {
         let Some(group) = sqlx::query!(
             "SELECT max_flame_counter, max_flame_counter_from FROM groups WHERE group_id = ?",
@@ -117,7 +114,6 @@ impl Group {
     /// Puts the lost streak back and marks today as exchanged in both
     /// directions, so the restored counter survives the next derivation.
     /// Returns the restored value, or `None` when there was nothing to restore.
-
     pub async fn restore_flames(
         tr: &mut Transaction<'_, Sqlite>, group_id: &str,
     ) -> Result<Option<i64>> {
@@ -191,7 +187,6 @@ impl Group {
     /// state in the same transaction. This used to round-trip through Dart,
     /// which made the counters non-atomic and unavailable to headless Rust
     /// runtimes.
-
     pub async fn record_media_exchange(
         tr: &mut Transaction<'_, Sqlite>, group_id: &str, received: bool, timestamp: i64,
     ) -> Result<()> {
@@ -417,7 +412,6 @@ impl Group {
     /// left can still be seen to have written; the outgoing fan-out does not.
     /// This is the seam between the two, for callers that need to know the
     /// directions disagree.
-
     pub async fn has_member_left(
         tr: &mut Transaction<'_, Sqlite>, group_id: &str, contact_id: i64,
     ) -> Result<bool> {
@@ -461,7 +455,6 @@ impl Group {
     /// Notes a text or media message in this chat, sent or received. This is
     /// what "these two still talk" is measured by; see
     /// `stories::exchanged_recently`.
-
     pub async fn record_text_or_media(
         tr: &mut Transaction<'_, Sqlite>, group_id: &str, timestamp: i64,
     ) -> Result<()> {
@@ -959,7 +952,6 @@ fn current_unix_timestamp() -> Result<i64> {
 /// A streak is worth offering back while it was big enough to miss and recent
 /// enough to still be remembered. Pure so the boundaries stay testable without
 /// a controllable clock.
-
 fn can_restore(
     max_flame_counter: i64, max_flame_counter_from: Option<i64>, counter: i64, now: i64,
 ) -> bool {
@@ -971,7 +963,6 @@ fn can_restore(
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;
@@ -983,7 +974,6 @@ mod tests {
     /// Local midnight of the given date, which is what the derivation compares
     /// against. Mirrors the `DateTime(2026, 2, 2)` literals the Dart tests
     /// used.
-
     fn local_midnight(year: i32, month: u32, day: u32) -> i64 {
         Local
             .with_ymd_and_hms(year, month, day, 0, 0, 0)

@@ -87,7 +87,6 @@ impl Context {
     }
 
     #[allow(dead_code)]
-
     pub(crate) async fn init_standalone(config: InitConfig) -> Result<()> {
         Self::init_common(config, RuntimeMode::Standalone).await
     }
@@ -206,7 +205,6 @@ impl Context {
 
     #[doc(hidden)]
     #[cfg(any(test, debug_assertions))]
-
     pub async fn inject_test_signal_identity(
         &self, identity_key_pair_structure: Vec<u8>, registration_id: i64,
     ) -> Result<()> {
@@ -222,7 +220,6 @@ impl Context {
 
     #[doc(hidden)]
     #[cfg(any(test, debug_assertions))]
-
     pub async fn inject_test_user_id(&self, user_id: i64) -> Result<()> {
         let mut key_manager = self.key_manager.lock().await;
 
@@ -616,7 +613,6 @@ impl Context {
 
     /// Called under database_lifecycle after staging validates. The restore
     /// worker has its own lease, so retiring UI producers cannot cancel it.
-
     pub(crate) async fn quiesce_for_restore(self: &Arc<Self>) -> Result<()> {
         self.suspended.store(true, Ordering::Release);
 

@@ -215,7 +215,6 @@ pub(crate) async fn remove_own_custom_avatar(ctx: &Context) -> Result<CustomAvat
 
 /// Materializes the avatar state visible to one recipient and returns its
 /// counter. Private photo changes never advance excluded recipients' counters.
-
 pub(crate) async fn prepare_publication(
     t: &mut Transaction<'_, Sqlite>, contact_id: i64,
 ) -> Result<i64> {
@@ -421,7 +420,6 @@ pub(crate) async fn apply_received(
 /// Rebuilds an avatar response immediately before encryption. A photo queued
 /// while a contact was authorized can therefore become an SVG-only withdrawal
 /// if acceptance or audience changed before transmission.
-
 pub(crate) async fn refresh_queued_response(
     ctx: &Context, contact_id: i64, bytes: Vec<u8>,
 ) -> Result<Vec<u8>> {
@@ -538,7 +536,6 @@ pub(crate) fn current_user_avatar_path(ctx: &Context) -> Result<Option<PathBuf>>
 /// Resolves a contact's avatar PNG, rendering it from the stored SVG when it is
 /// not on disk yet. Avatars are only ever displayed as PNG, so a missing file
 /// has to be produced here rather than fall back to rasterising SVG in the UI.
-
 pub(crate) async fn ensure_contact_avatar_png(
     ctx: &Context, contact_id: i64,
 ) -> Result<Option<PathBuf>> {
@@ -634,7 +631,6 @@ pub(crate) async fn ensure_contact_avatar_png(
 /// by their latest message, with overlapping avatars and rounded corners.
 /// Members without an avatar are left out, and a group in which no member has
 /// one gets no avatar at all.
-
 pub(crate) async fn ensure_group_avatar_png(
     ctx: &Context, group_id: &str,
 ) -> Result<Option<PathBuf>> {
@@ -903,7 +899,6 @@ fn render_with_max_dimension(svg: &[u8], max_dimension: f32) -> Result<Vec<u8>> 
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

@@ -125,7 +125,6 @@ pub struct TwonlySafeBackup {
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-
 pub enum LastBackupUploadState {
     #[default]
     None,
@@ -160,7 +159,6 @@ pub struct PasswordlessRecoveryConfig {
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-
 pub enum SetupProfile {
     #[default]
     Standard,
@@ -169,7 +167,6 @@ pub enum SetupProfile {
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-
 pub enum ThemeMode {
     #[default]
     System,
@@ -179,7 +176,6 @@ pub enum ThemeMode {
 
 #[derive(Clone, Copy, Debug, Default, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-
 pub enum TwonlyScoreVisibility {
     Nobody,
     OnlyContacts,
@@ -488,7 +484,6 @@ impl UserConfig {
 
     /// Validates and atomically persists the complete user configuration.
     /// Rust is the only writer of `user.json`.
-
     pub(crate) fn save_json(context: &Context, json: &str) -> Result<String> {
         let _store = crate::database::maintenance::settings_access(std::path::Path::new(
             &context.config.database_dir,
@@ -504,7 +499,6 @@ impl UserConfig {
     /// Atomically updates the latest persisted configuration with a typed Rust
     /// mutation. Unlike `update_json`, this does not need a caller snapshot:
     /// loading, mutation, and saving all happen while holding the write lock.
-
     pub(crate) fn update(context: &Context, mutate: impl FnOnce(&mut Self)) -> Result<Self> {
         let _store = crate::database::maintenance::settings_access(std::path::Path::new(
             &context.config.database_dir,
@@ -529,7 +523,6 @@ impl UserConfig {
     /// Applies only fields changed relative to the caller's original snapshot.
     /// Concurrent updates from Flutter isolates or Rust therefore do not
     /// overwrite unrelated fields with stale values.
-
     pub(crate) fn update_json(
         context: &Context, base_json: &str, updated_json: &str,
     ) -> Result<String> {
@@ -601,7 +594,6 @@ impl UserConfig {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::{

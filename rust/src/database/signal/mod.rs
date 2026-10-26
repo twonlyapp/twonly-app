@@ -152,7 +152,6 @@ impl Database {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

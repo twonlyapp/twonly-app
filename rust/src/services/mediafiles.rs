@@ -27,7 +27,6 @@ static DOWNLOAD_LOCKS: LazyLock<StdMutex<HashMap<String, Arc<Mutex<()>>>>> =
 /// One media file is only ever downloaded by one task. Two of them share the
 /// ciphertext and plaintext paths, so a second concurrent run reads what the
 /// first is still writing and fails the authentication tag on whole bytes.
-
 fn download_lock(media_id: &str) -> Arc<Mutex<()>> {
     let mut locks = DOWNLOAD_LOCKS
         .lock()
@@ -84,7 +83,6 @@ struct ReuploadTarget {
 
 /// Filesystem and download operations for media files. Upload preparation and
 /// platform-specific media processing intentionally remain in Flutter.
-
 pub struct MediaFileService {
     ctx: Arc<Context>,
 }
@@ -99,7 +97,6 @@ impl MediaFileService {
     /// download lock rather than as one table-wide sweep: a sweep also
     /// un-claims the transfers that are still running, and the second
     /// downloader it lets in then races the first over the same files.
-
     pub async fn download_pending(&self) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -189,7 +186,6 @@ impl MediaFileService {
     /// Asks the server, with an `OPTIONS` request, whether a download token
     /// still leads to an object. Cheap enough for the notification path, which
     /// must not download whole files before it shows anything.
-
     pub(crate) async fn download_availability(token: &[u8]) -> DownloadAvailability {
         let Ok(client) = crate::api::http::client_builder().build() else {
             return DownloadAvailability::Unknown;
@@ -208,7 +204,6 @@ impl MediaFileService {
 
     /// Incoming media is inserted inside a transaction owned by the message
     /// handler. Wait until that transaction becomes visible before claiming it.
-
     pub async fn download_when_available(&self, media_id: &str) -> Result<()> {
         crate::performance::measure("media.download", "http.client", async {
             for _ in 0..40 {
@@ -388,7 +383,6 @@ impl MediaFileService {
     ///
     /// Returns `false` when the object is gone from the server and a reupload
     /// has been requested instead.
-
     async fn fetch_encrypted(&self, media: &DownloadMedia, encrypted_path: &Path) -> Result<bool> {
         let media_id = &media.media_id;
 
@@ -642,7 +636,6 @@ impl MediaFileService {
     /// Media lives under one directory per lifecycle stage. Both Rust and the
     /// Flutter view layer derive these names from the media id, so they must
     /// stay in sync with `MediaFileService` on the Dart side.
-
     fn media_path(
         &self, directory: &str, media_id: &str, suffix: &str, extension: &str,
     ) -> PathBuf {
@@ -675,7 +668,6 @@ impl MediaFileService {
     /// The transcode produced before the user picked recipients. It is only a
     /// candidate: `prerender_matches` decides whether the editor's final
     /// settings are still the ones it was produced with.
-
     pub(crate) fn prerendered_path(&self, media_id: &str) -> PathBuf {
         self.media_path("tmp", media_id, ".prerendered", "mp4")
     }
@@ -687,7 +679,6 @@ impl MediaFileService {
     /// Records the render inputs the pre-rendered clip was produced with.
     /// Written only after the render finished, so a marker on disk also proves
     /// the clip is whole.
-
     pub(crate) fn write_prerender_marker(&self, media_id: &str, fingerprint: &str) -> Result<()> {
         let marker = self.prerender_marker_path(media_id);
 
@@ -700,7 +691,6 @@ impl MediaFileService {
 
     /// Whether the pre-rendered clip can be sent as it stands, which is true
     /// only while the editor still asks for exactly what it was produced with.
-
     pub(crate) fn prerender_matches(&self, media_id: &str, fingerprint: &str) -> bool {
         if !self.prerendered_path(media_id).exists() {
             return false;
@@ -733,7 +723,6 @@ impl MediaFileService {
 
     /// Where an in-flight download accumulates before it is renamed onto
     /// [`Self::encrypted_path`].
-
     fn partial_download_path(&self, media_id: &str, media_type: &str) -> PathBuf {
         PathBuf::from(&self.ctx.config.data_dir)
             .join("mediafiles/tmp")
@@ -762,7 +751,6 @@ impl MediaFileService {
 }
 
 /// Retry committed removals without deleting files for rolled-back commands.
-
 pub(crate) async fn cleanup_pending_file_removals(ctx: &Arc<Context>) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 

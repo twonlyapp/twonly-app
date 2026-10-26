@@ -17,7 +17,6 @@ use tokio::time::{sleep, Duration};
 /// switches the formatter from ansi to plain for CI logs.
 ///
 /// Calling it more than once is a no-op, so every test can call it.
-
 pub(crate) fn init_tracing() {
     let Ok(filter) = tracing_subscriber::EnvFilter::try_from_default_env() else {
         return;
@@ -54,7 +53,6 @@ pub(crate) struct Tester {
 }
 
 #[allow(dead_code)]
-
 impl Tester {
     pub async fn set_contact_verified(&self, user_id: i64, verified: bool) -> anyhow::Result<()> {
         let database = self.context.app_db.read().await.clone();
@@ -375,7 +373,6 @@ impl Tester {
     /// The key travels on its own message -- announced when the member learns
     /// of the group, or answered on request -- so it arrives after the group
     /// itself and cannot be assumed present the moment the group is.
-
     pub async fn wait_for_group_public_key(
         &self, group_id: &str, contact_id: i64,
     ) -> anyhow::Result<()> {
@@ -557,7 +554,6 @@ impl Tester {
 
     /// Flips the receiver-side story notification setting, as the settings
     /// switch does.
-
     pub fn set_story_notifications(&self, enabled: bool) -> anyhow::Result<()> {
         let path = self
             ._temp_dir
@@ -663,7 +659,6 @@ impl Tester {
 
     /// Reads the receiver's notification outbox through the very API the iOS
     /// Notification Service Extension and the Android worker call.
-
     pub async fn notification_batch(&self, locale: &str) -> anyhow::Result<NotificationBatch> {
         Ok(notifications::pending_batch(&self.context, locale).await?)
     }
@@ -671,7 +666,6 @@ impl Tester {
     /// Waits until an undelivered notification of `kind` from `sender_id` is
     /// pending, and returns it. Incoming messages are committed asynchronously,
     /// so every notification assertion has to poll.
-
     pub async fn wait_for_notification(
         &self, kind: &str, sender_id: i64,
     ) -> anyhow::Result<NotificationAddition> {
@@ -696,7 +690,6 @@ impl Tester {
 
     /// Marks pending notifications as delivered, mirroring what the native
     /// layer does once it has actually scheduled them.
-
     pub async fn acknowledge_notifications(&self, event_ids: &[String]) -> anyhow::Result<()> {
         Ok(notifications::acknowledge_batch(&self.context, event_ids).await?)
     }
@@ -712,14 +705,12 @@ impl Tester {
     }
 
     /// The value the running app pushes into the iOS app icon badge.
-
     pub async fn notification_badge_count(&self) -> anyhow::Result<i64> {
         Ok(notifications::badge_count(&self.context).await?)
     }
 
     /// Number of rows the outbox holds for one receipt, used to prove that a
     /// redelivered envelope cannot notify twice.
-
     pub async fn notification_rows_for_event(&self, event_id: &str) -> anyhow::Result<i64> {
         let database = self.context.app_db.read().await.clone();
 
@@ -734,7 +725,6 @@ impl Tester {
     /// Whether any receipt still open for `message_id` would ask the server to
     /// push the recipient again. A receipt outlives its delivery, so this is
     /// what proves a retransmission cannot re-alert somebody.
-
     pub async fn receipts_still_waking(&self, message_id: &str) -> anyhow::Result<i64> {
         let database = self.context.app_db.read().await.clone();
 
@@ -819,12 +809,8 @@ impl Tester {
             .fetch_optional(&database.pool)
             .await?;
 
-            if let Some(row) = state {
-                if is_typing && row.last_type_indicator.is_some() {
-                    return Ok(());
-                } else if !is_typing && row.last_type_indicator.is_none() {
-                    return Ok(());
-                }
+            if state.is_some_and(|row| row.last_type_indicator.is_some() == is_typing) {
+                return Ok(());
             }
 
             sleep(Duration::from_millis(100)).await;
@@ -1062,7 +1048,6 @@ impl Tester {
 
     /// Proves that upload preparation ran: the authentication tag only exists
     /// once Rust has encrypted the plaintext for this send.
-
     pub async fn wait_for_media_encryption_mac(&self, media_id: &str) -> anyhow::Result<()> {
         for _ in 0..100 {
             let database = self.context.app_db.read().await.clone();
@@ -1089,7 +1074,6 @@ impl Tester {
 
     /// The download state cycles quickly once Rust starts a real transfer, so
     /// assert on the capability the message actually delivered.
-
     pub async fn wait_for_media_download_token(
         &self, media_id: &str, expected: &[u8],
     ) -> anyhow::Result<()> {
@@ -1310,7 +1294,6 @@ impl Tester {
     /// same development server at once, and a connect that queues behind them
     /// is slow rather than broken. Reaching the state ends the loop, so the
     /// budget costs nothing when the server is idle.
-
     pub(crate) async fn wait_until(&self, required: ApiConnectionState) -> anyhow::Result<()> {
         let mut state = ApiRuntime::connection_state(&self.context).await?;
 

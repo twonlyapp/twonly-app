@@ -4,7 +4,6 @@
  */
 
 #[macro_export]
-
 macro_rules! callback_generator {
     (
         $struct_name:ident {

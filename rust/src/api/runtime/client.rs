@@ -20,23 +20,19 @@ pub(super) type PendingRequests = Arc<Mutex<HashMap<u64, oneshot::Sender<Vec<u8>
 /// Base delay of the safety catch-up while the socket stays connected. Every
 /// other trigger (authentication, reconnection, foregrounding, a push) fires a
 /// catch-up immediately, so this only has to cover a silently stalled drain.
-
 const CATCH_UP_INTERVAL: Duration = Duration::from_secs(60);
 
 /// Spread across clients so reconnect storms do not line their pulls up.
-
 const CATCH_UP_JITTER: Duration = Duration::from_secs(15);
 
 /// The safety catch-up while a large mailbox is being caught up. A drain the
 /// server stopped would otherwise leave the progress screen frozen for a
 /// minute.
-
 const SYNC_CATCH_UP_INTERVAL: Duration = Duration::from_secs(10);
 
 /// First reconnect attempt after a drop. Kept well below a second so a server
 /// restart or a short network blip is over before the user notices missing
 /// messages.
-
 const RECONNECT_INITIAL_DELAY: Duration = Duration::from_millis(250);
 
 const RECONNECT_MAX_DELAY: Duration = Duration::from_secs(20);
@@ -46,7 +42,6 @@ const RECONNECT_MAX_DELAY: Duration = Duration::from_secs(20);
 /// channel behind so every later send reports a closed channel. These bound
 /// the redial we drive ourselves, backing off so a handshake that keeps
 /// failing (a rejected token, say) does not turn into a dial loop.
-
 const FORCED_RECONNECT_INITIAL_DELAY: Duration = Duration::from_secs(1);
 
 const FORCED_RECONNECT_MAX_DELAY: Duration = Duration::from_secs(60);
@@ -91,290 +86,6 @@ fn spawn_transport(client: Arc<WebSocketClient>) -> tokio::task::JoinHandle<()> 
 struct ReconnectWork {
     running: bool,
     pending: VecDeque<(Arc<WebSocketClient>, String)>,
-}
-
-#[cfg(test)]
-
-mod tests {
-
-    use super::*;
-
-    fn client() -> Arc<ApiClient> {
-        Arc::new(ApiClient {
-            context: Weak::new(),
-            config: ApiConfig {
-                websocket_url: "ws://127.0.0.1:1".into(),
-                legacy_user_app_version: 0,
-                in_background: false,
-                can_use_login_token_for_auth: true,
-            },
-            state: RwLock::new(ApiConnectionState::Stopped),
-            ws_client: Mutex::new(None),
-            connection_change: Mutex::new(()),
-            connection_generation: AtomicU64::new(0),
-            pending: Arc::new(Mutex::new(HashMap::new())),
-            next_sequence: Mutex::new(1),
-            events: broadcast::channel(32).0,
-            deliberately_closed: AtomicBool::new(false),
-            in_background: AtomicBool::new(false),
-            requested_background: AtomicBool::new(false),
-            network_available: AtomicBool::new(true),
-            is_authenticated: Arc::new(AtomicBool::new(false)),
-            catch_up_tx: Mutex::new(None),
-            forced_reconnect: SyncMutex::new(ReconnectWork::default()),
-            forced_reconnect_attempts: AtomicU32::new(0),
-            background_deferred: AtomicBool::new(false),
-        })
-    }
-
-    fn socket() -> Arc<WebSocketClient> {
-        // Never run the transport: these tests must not access the network.
-        Arc::new(WebSocketClient::builder("ws://127.0.0.1:1").build())
-    }
-
-    #[tokio::test]
-    async fn cancelling_database_owner_closes_the_transport_and_peer_socket() {
-        use futures_util::StreamExt;
-        use stream_tungstenite::tokio_tungstenite::accept_async;
-
-        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-        let socket = Arc::new(
-            WebSocketClient::builder(format!("ws://{}", listener.local_addr().unwrap())).build(),
-        );
-        let (received, ready) = oneshot::channel();
-        let peer = tokio::spawn(async move {
-            let (stream, _) = listener.accept().await.unwrap();
-            let mut stream = accept_async(stream).await.unwrap();
-            assert!(stream.next().await.unwrap().unwrap().is_binary());
-            let _ = received.send(());
-            // A detached receiver used to keep this socket alive until its
-            // receive timeout, even after the database owner was fully drained.
-            let _ = stream.next().await;
-        });
-
-        let operation = crate::database::lifecycle::Operation::foreground();
-        let runner = operation
-            .scope(async { spawn_transport(socket.clone()) })
-            .await;
-
-        tokio::time::timeout(Duration::from_secs(3), async {
-            loop {
-                if socket
-                    .send(
-                        stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(
-                            vec![1].into(),
-                        ),
-                    )
-                    .await
-                    .is_ok()
-                {
-                    break;
-                }
-                tokio::task::yield_now().await;
-            }
-            ready.await.unwrap();
-        })
-        .await
-        .unwrap();
-
-        operation.cancel();
-        operation.drain().await;
-        tokio::time::timeout(Duration::from_secs(2), runner)
-            .await
-            .unwrap()
-            .unwrap();
-        tokio::time::timeout(Duration::from_secs(2), peer)
-            .await
-            .unwrap()
-            .unwrap();
-    }
-
-    #[tokio::test]
-    async fn background_rejection_defers_only_its_current_client() {
-        let client = client();
-        client.in_background.store(true, Ordering::Release);
-        client.connection_generation.store(2, Ordering::Release);
-
-        client.defer_background_for_generation(1).await;
-        assert!(!client.background_deferred());
-
-        client.defer_background_for_generation(2).await;
-        assert!(client.background_deferred());
-        assert_eq!(*client.state.read().await, ApiConnectionState::Suspended);
-
-        client.schedule_reconnect(&socket(), "handshake refused background auth");
-        assert!(client.forced_reconnect.lock().unwrap().pending.is_empty());
-
-        // A later connect in the same run must not restart the dial loop.
-        client.connect().await.unwrap();
-        assert!(client.ws_client.lock().await.is_none());
-        assert!(!self::client().background_deferred());
-
-        client.close().await;
-        assert!(!client.background_deferred());
-        client.deliberately_closed.store(false, Ordering::Release);
-        client
-            .defer_background_for_generation(client.connection_generation.load(Ordering::Acquire))
-            .await;
-        assert!(client.background_deferred());
-
-        // Foreground adoption is allowed to authenticate normally again.
-        let _ = client.set_background(false).await;
-        assert!(!client.background_deferred());
-    }
-
-    #[tokio::test]
-
-    async fn obsolete_handshake_cannot_publish_authenticated_state() {
-        let client = client();
-
-        client.connection_generation.store(1, Ordering::Release);
-
-        assert!(
-            client
-                .set_state_for_generation(1, ApiConnectionState::Authenticated)
-                .await
-        );
-
-        {
-            let _change = client.connection_change.lock().await;
-
-            client.discard_current_connection("replacement").await;
-        }
-
-        assert!(
-            !client
-                .set_state_for_generation(1, ApiConnectionState::Authenticated)
-                .await
-        );
-
-        assert!(!client.is_authenticated.load(Ordering::Acquire));
-
-        assert_eq!(*client.state.read().await, ApiConnectionState::Stopped);
-
-        assert!(
-            client
-                .set_state_for_generation(2, ApiConnectionState::Authenticating)
-                .await
-        );
-
-        assert_eq!(
-            *client.state.read().await,
-            ApiConnectionState::Authenticating
-        );
-    }
-
-    #[tokio::test]
-
-    async fn focus_only_resume_keeps_the_authenticated_socket() {
-        let client = client();
-
-        let socket = socket();
-
-        *client.ws_client.lock().await = Some(socket.clone());
-
-        client.is_authenticated.store(true, Ordering::Release);
-
-        client.set_state(ApiConnectionState::Authenticated).await;
-
-        client.set_background(false).await.unwrap();
-
-        assert!(client.is_current_connection(&socket).await);
-
-        assert_eq!(
-            *client.state.read().await,
-            ApiConnectionState::Authenticated
-        );
-    }
-
-    #[tokio::test]
-
-    async fn native_push_keeps_a_healthy_socket_and_requests_catch_up() {
-        let client = client();
-
-        let socket = socket();
-
-        *client.ws_client.lock().await = Some(socket.clone());
-
-        client.is_authenticated.store(true, Ordering::Release);
-
-        client.set_state(ApiConnectionState::Authenticated).await;
-
-        let (sender, mut receiver) = mpsc::channel(1);
-
-        *client.catch_up_tx.lock().await = Some(sender);
-
-        client.catch_up_after_push().await.unwrap();
-
-        assert!(client.is_current_connection(&socket).await);
-
-        assert!(receiver.try_recv().is_ok());
-
-        assert!(client.is_authenticated.load(Ordering::Acquire));
-    }
-
-    #[tokio::test]
-
-    async fn native_push_does_not_replace_an_in_flight_connection() {
-        let client = client();
-
-        let socket = socket();
-
-        *client.ws_client.lock().await = Some(socket.clone());
-
-        client.set_state(ApiConnectionState::Connecting).await;
-
-        client.catch_up_after_push().await.unwrap();
-
-        assert!(client.is_current_connection(&socket).await);
-
-        assert_eq!(*client.state.read().await, ApiConnectionState::Connecting);
-    }
-
-    #[tokio::test]
-
-    async fn replacement_failure_is_processed_during_an_existing_retry() {
-        let client = client();
-
-        // Keep the test offline, including once the forced retry timer expires.
-        client.network_available.store(false, Ordering::Release);
-
-        let first = socket();
-
-        *client.ws_client.lock().await = Some(first.clone());
-
-        client.schedule_reconnect(&first, "first failure");
-
-        tokio::time::timeout(Duration::from_secs(1), async {
-            while client.ws_client.lock().await.is_some() {
-                tokio::task::yield_now().await;
-            }
-        })
-        .await
-        .unwrap();
-
-        // The first worker is asleep. A foreground/network transition has
-        // installed another transport that now also fails permanently.
-        let replacement = socket();
-
-        *client.ws_client.lock().await = Some(replacement.clone());
-
-        client.schedule_reconnect(&replacement, "replacement failure");
-
-        client.schedule_reconnect(&replacement, "duplicate failure");
-
-        assert_eq!(client.forced_reconnect.lock().unwrap().pending.len(), 1);
-
-        tokio::time::timeout(Duration::from_secs(2), async {
-            while client.ws_client.lock().await.is_some() {
-                tokio::task::yield_now().await;
-            }
-        })
-        .await
-        .unwrap();
-
-        assert_eq!(client.forced_reconnect_attempts.load(Ordering::Acquire), 2);
-    }
 }
 
 pub(crate) struct ApiClient {
@@ -443,7 +154,6 @@ impl ApiClient {
     /// Coalescing happens in the channel: while a pull is in flight further
     /// triggers set the single pending slot, so the loop issues exactly one
     /// more request afterwards no matter how many arrived.
-
     pub(crate) async fn request_catch_up(&self) {
         if let Some(sender) = self.catch_up_tx.lock().await.as_ref() {
             let _ = sender.try_send(());
@@ -453,7 +163,6 @@ impl ApiClient {
     /// A native push can run while Flutter is suspended with a cached offline
     /// flag and no socket. Restore the shared client before requesting a drain;
     /// runtime ownership alone says nothing about transport availability.
-
     pub(crate) async fn catch_up_after_push(self: &Arc<Self>) -> Result<()> {
         let _change = self.connection_change.lock().await;
 
@@ -505,7 +214,6 @@ impl ApiClient {
     /// Runs the catch-up loop for one connection. It exits as soon as that
     /// connection is replaced or closed, so a disconnected client never
     /// reconnects just to poll — reconnection triggers its own catch-up.
-
     fn spawn_catch_up_loop(
         self: &Arc<Self>, ws_client: &Arc<WebSocketClient>, mut receiver: mpsc::Receiver<()>,
     ) {
@@ -603,7 +311,6 @@ impl ApiClient {
     /// a no-op. The redial runs detached so the caller can return its own
     /// error right away — whatever failed to send is retried by the
     /// post-authentication receipt sweep once the new socket is up.
-
     pub(crate) fn schedule_reconnect(self: &Arc<Self>, stale: &Arc<WebSocketClient>, reason: &str) {
         if self.deliberately_closed.load(Ordering::Acquire)
             || API_PERMANENTLY_REJECTED.load(Ordering::Acquire)
@@ -719,7 +426,6 @@ impl ApiClient {
     /// Restarts the forced-reconnect backoff. A session that got all the way to
     /// an authenticated handshake proves the credentials and the server are
     /// fine, so the next dead socket starts over at the short delay.
-
     pub(crate) fn note_authenticated(&self) {
         self.forced_reconnect_attempts.store(0, Ordering::Release);
     }
@@ -782,7 +488,6 @@ impl ApiClient {
     /// A replaced socket can emit its final disconnect/shutdown events after
     /// the new socket has started. Those events must not overwrite the new
     /// connection's state or schedule another reconnect.
-
     pub(super) async fn is_current_connection(&self, connection: &Arc<WebSocketClient>) -> bool {
         self.ws_client
             .lock()
@@ -794,7 +499,6 @@ impl ApiClient {
     /// Drops the current transport without waiting for its graceful-shutdown
     /// timeout. Used for external reachability changes, where waiting would
     /// defeat the purpose of an immediate reconnect.
-
     async fn discard_current_connection(&self, reason: &str) {
         self.connection_generation.fetch_add(1, Ordering::AcqRel);
 
@@ -819,7 +523,6 @@ impl ApiClient {
     /// Starts a fresh connection immediately, bypassing any retry sleep owned
     /// by the previous transport. The replacement client still uses the normal
     /// exponential backoff if this first attempt fails.
-
     async fn reconnect_now(self: &Arc<Self>, reason: &str) -> Result<()> {
         let _connection_change = self.connection_change.lock().await;
 
@@ -1122,5 +825,286 @@ impl ApiClient {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    fn client() -> Arc<ApiClient> {
+        Arc::new(ApiClient {
+            context: Weak::new(),
+            config: ApiConfig {
+                websocket_url: "ws://127.0.0.1:1".into(),
+                legacy_user_app_version: 0,
+                in_background: false,
+                can_use_login_token_for_auth: true,
+            },
+            state: RwLock::new(ApiConnectionState::Stopped),
+            ws_client: Mutex::new(None),
+            connection_change: Mutex::new(()),
+            connection_generation: AtomicU64::new(0),
+            pending: Arc::new(Mutex::new(HashMap::new())),
+            next_sequence: Mutex::new(1),
+            events: broadcast::channel(32).0,
+            deliberately_closed: AtomicBool::new(false),
+            in_background: AtomicBool::new(false),
+            requested_background: AtomicBool::new(false),
+            network_available: AtomicBool::new(true),
+            is_authenticated: Arc::new(AtomicBool::new(false)),
+            catch_up_tx: Mutex::new(None),
+            forced_reconnect: SyncMutex::new(ReconnectWork::default()),
+            forced_reconnect_attempts: AtomicU32::new(0),
+            background_deferred: AtomicBool::new(false),
+        })
+    }
+
+    fn socket() -> Arc<WebSocketClient> {
+        // Never run the transport: these tests must not access the network.
+        Arc::new(WebSocketClient::builder("ws://127.0.0.1:1").build())
+    }
+
+    #[tokio::test]
+    async fn cancelling_database_owner_closes_the_transport_and_peer_socket() {
+        use futures_util::StreamExt;
+        use stream_tungstenite::tokio_tungstenite::accept_async;
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let socket = Arc::new(
+            WebSocketClient::builder(format!("ws://{}", listener.local_addr().unwrap())).build(),
+        );
+        let (received, ready) = oneshot::channel();
+        let peer = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.unwrap();
+            let mut stream = accept_async(stream).await.unwrap();
+            assert!(stream.next().await.unwrap().unwrap().is_binary());
+            let _ = received.send(());
+            // A detached receiver used to keep this socket alive until its
+            // receive timeout, even after the database owner was fully drained.
+            let _ = stream.next().await;
+        });
+
+        let operation = crate::database::lifecycle::Operation::foreground();
+        let runner = operation.scope_sync(|| spawn_transport(socket.clone()));
+
+        tokio::time::timeout(Duration::from_secs(3), async {
+            loop {
+                if socket
+                    .send(
+                        stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(
+                            vec![1].into(),
+                        ),
+                    )
+                    .await
+                    .is_ok()
+                {
+                    break;
+                }
+                tokio::task::yield_now().await;
+            }
+            ready.await.unwrap();
+        })
+        .await
+        .unwrap();
+
+        operation.cancel();
+        operation.drain().await;
+        tokio::time::timeout(Duration::from_secs(2), runner)
+            .await
+            .unwrap()
+            .unwrap();
+        tokio::time::timeout(Duration::from_secs(2), peer)
+            .await
+            .unwrap()
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn background_rejection_defers_only_its_current_client() {
+        let client = client();
+        client.in_background.store(true, Ordering::Release);
+        client.connection_generation.store(2, Ordering::Release);
+
+        client.defer_background_for_generation(1).await;
+        assert!(!client.background_deferred());
+
+        client.defer_background_for_generation(2).await;
+        assert!(client.background_deferred());
+        assert_eq!(*client.state.read().await, ApiConnectionState::Suspended);
+
+        client.schedule_reconnect(&socket(), "handshake refused background auth");
+        assert!(client.forced_reconnect.lock().unwrap().pending.is_empty());
+
+        // A later connect in the same run must not restart the dial loop.
+        client.connect().await.unwrap();
+        assert!(client.ws_client.lock().await.is_none());
+        assert!(!self::client().background_deferred());
+
+        client.close().await;
+        assert!(!client.background_deferred());
+        client.deliberately_closed.store(false, Ordering::Release);
+        client
+            .defer_background_for_generation(client.connection_generation.load(Ordering::Acquire))
+            .await;
+        assert!(client.background_deferred());
+
+        // Foreground adoption is allowed to authenticate normally again.
+        let _ = client.set_background(false).await;
+        assert!(!client.background_deferred());
+    }
+
+    #[tokio::test]
+
+    async fn obsolete_handshake_cannot_publish_authenticated_state() {
+        let client = client();
+
+        client.connection_generation.store(1, Ordering::Release);
+
+        assert!(
+            client
+                .set_state_for_generation(1, ApiConnectionState::Authenticated)
+                .await
+        );
+
+        {
+            let _change = client.connection_change.lock().await;
+
+            client.discard_current_connection("replacement").await;
+        }
+
+        assert!(
+            !client
+                .set_state_for_generation(1, ApiConnectionState::Authenticated)
+                .await
+        );
+
+        assert!(!client.is_authenticated.load(Ordering::Acquire));
+
+        assert_eq!(*client.state.read().await, ApiConnectionState::Stopped);
+
+        assert!(
+            client
+                .set_state_for_generation(2, ApiConnectionState::Authenticating)
+                .await
+        );
+
+        assert_eq!(
+            *client.state.read().await,
+            ApiConnectionState::Authenticating
+        );
+    }
+
+    #[tokio::test]
+
+    async fn focus_only_resume_keeps_the_authenticated_socket() {
+        let client = client();
+
+        let socket = socket();
+
+        *client.ws_client.lock().await = Some(socket.clone());
+
+        client.is_authenticated.store(true, Ordering::Release);
+
+        client.set_state(ApiConnectionState::Authenticated).await;
+
+        client.set_background(false).await.unwrap();
+
+        assert!(client.is_current_connection(&socket).await);
+
+        assert_eq!(
+            *client.state.read().await,
+            ApiConnectionState::Authenticated
+        );
+    }
+
+    #[tokio::test]
+
+    async fn native_push_keeps_a_healthy_socket_and_requests_catch_up() {
+        let client = client();
+
+        let socket = socket();
+
+        *client.ws_client.lock().await = Some(socket.clone());
+
+        client.is_authenticated.store(true, Ordering::Release);
+
+        client.set_state(ApiConnectionState::Authenticated).await;
+
+        let (sender, mut receiver) = mpsc::channel(1);
+
+        *client.catch_up_tx.lock().await = Some(sender);
+
+        client.catch_up_after_push().await.unwrap();
+
+        assert!(client.is_current_connection(&socket).await);
+
+        assert!(receiver.try_recv().is_ok());
+
+        assert!(client.is_authenticated.load(Ordering::Acquire));
+    }
+
+    #[tokio::test]
+
+    async fn native_push_does_not_replace_an_in_flight_connection() {
+        let client = client();
+
+        let socket = socket();
+
+        *client.ws_client.lock().await = Some(socket.clone());
+
+        client.set_state(ApiConnectionState::Connecting).await;
+
+        client.catch_up_after_push().await.unwrap();
+
+        assert!(client.is_current_connection(&socket).await);
+
+        assert_eq!(*client.state.read().await, ApiConnectionState::Connecting);
+    }
+
+    #[tokio::test]
+
+    async fn replacement_failure_is_processed_during_an_existing_retry() {
+        let client = client();
+
+        // Keep the test offline, including once the forced retry timer expires.
+        client.network_available.store(false, Ordering::Release);
+
+        let first = socket();
+
+        *client.ws_client.lock().await = Some(first.clone());
+
+        client.schedule_reconnect(&first, "first failure");
+
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while client.ws_client.lock().await.is_some() {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+
+        // The first worker is asleep. A foreground/network transition has
+        // installed another transport that now also fails permanently.
+        let replacement = socket();
+
+        *client.ws_client.lock().await = Some(replacement.clone());
+
+        client.schedule_reconnect(&replacement, "replacement failure");
+
+        client.schedule_reconnect(&replacement, "duplicate failure");
+
+        assert_eq!(client.forced_reconnect.lock().unwrap().pending.len(), 1);
+
+        tokio::time::timeout(Duration::from_secs(2), async {
+            while client.ws_client.lock().await.is_some() {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+
+        assert_eq!(client.forced_reconnect_attempts.load(Ordering::Acquire), 2);
     }
 }

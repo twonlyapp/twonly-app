@@ -20,17 +20,14 @@ use sqlx::SqlitePool;
 /// Shortest gap between two resets of the same session. A reset needs a server
 /// round-trip and a message each way, so anything faster only stacks duplicate
 /// repairs for a repair already in flight.
-
 const RESET_COOLDOWN: i64 = 60;
 
 /// Window the reset budget is counted over.
-
 const RESET_WINDOW: i64 = 60 * 60;
 
 /// Resets allowed per peer per [`RESET_WINDOW`]. A repair that works needs one;
 /// a handful covers messages that crossed it in flight. Beyond that the session
 /// is not the problem and resetting again will not make it one.
-
 const MAX_RESETS_PER_WINDOW: i64 = 5;
 
 pub(crate) struct SessionResetLimiter;
@@ -41,7 +38,6 @@ impl SessionResetLimiter {
     /// Returns `false` when the peer is inside the cooldown or has spent its
     /// budget for the window, in which case the caller must leave the session
     /// alone and let the message fail.
-
     pub(crate) async fn claim(pool: &SqlitePool, name: &str, device_id: u32) -> Result<bool> {
         let now = crate::utils::current_time().timestamp();
 
@@ -106,7 +102,6 @@ impl SessionResetLimiter {
 
     /// Forgets the reset history for a peer, so a session that works again
     /// starts from a full budget.
-
     pub(crate) async fn clear(pool: &SqlitePool, name: &str, device_id: u32) -> Result<()> {
         sqlx::query!(
             r#"DELETE FROM signal_session_resets WHERE name = ? AND device_id = ?"#,
@@ -121,7 +116,6 @@ impl SessionResetLimiter {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;
@@ -139,7 +133,6 @@ mod tests {
 
     /// Moves a peer's bookkeeping back in time, standing in for a cooldown or a
     /// window that has since elapsed.
-
     async fn age_by(pool: &SqlitePool, name: &str, seconds: i64) {
         sqlx::query!(
             r#"

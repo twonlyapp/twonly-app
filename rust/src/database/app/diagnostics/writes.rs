@@ -170,7 +170,6 @@ pub async fn seed_messages(
 
 /// A consistent inspection copy preserving the source encryption and SQLite
 /// metadata. The bound path also supports quotes; existing files are refused.
-
 pub async fn export_debug(database: &AppDatabase, path: &Path) -> Result<()> {
     if path.try_exists()? {
         return Err(TwonlyError::Generic(

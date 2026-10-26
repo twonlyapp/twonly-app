@@ -116,7 +116,6 @@ impl RustKeyManager {
     }
 
     /// Serialize the key_manager. Needed for the passwordless_recovery feature.
-
     pub async fn serialize() -> Result<Vec<u8>> {
         let ctx = get_twonly_flutter()?;
 

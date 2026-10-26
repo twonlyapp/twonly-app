@@ -329,7 +329,7 @@ async fn run(operations: usize, readers: bool, seed: u64) {
 
                         // Hold older WAL snapshots periodically while commits
                         // and checkpoint attempts continue on other handles.
-                        if checks % 32 == 0 {
+                        if checks.is_multiple_of(32) {
                             tokio::time::sleep(Duration::from_millis(10)).await;
                         }
 

@@ -27,19 +27,16 @@ use std::time::Duration;
 /// How long to wait for the socket to authenticate before giving up on the
 /// parts of the flush that need it. A background job has a hard budget of its
 /// own, so this stays well inside it.
-
 const AUTHENTICATION_TIMEOUT: Duration = Duration::from_secs(20);
 
 const AUTHENTICATION_POLL: Duration = Duration::from_millis(250);
 
 /// Mailbox delivery and the final receipt flush share one bounded window.
 /// On expiry their durable rows remain owned by the native scheduler.
-
 const MESSAGE_DRAIN_TIMEOUT: Duration = Duration::from_secs(20);
 
 /// Foreground work belongs to the Rust operation, so suspension cancels and
 /// drains it and the next foreground epoch retries it without a Dart timer.
-
 pub(crate) fn schedule_foreground_maintenance(ctx: &Arc<Context>) {
     let ctx = ctx.clone();
 
@@ -64,7 +61,6 @@ pub(crate) fn schedule_foreground_maintenance(ctx: &Arc<Context>) {
 
 /// The first Flutter launch still imports the historical store after Rust
 /// initialization. Maintenance must see the imported rows before it runs.
-
 pub(crate) async fn wait_for_legacy_import(ctx: &Context) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
@@ -119,7 +115,6 @@ async fn purge_expired_data(ctx: &Arc<Context>) -> Result<()> {
 }
 
 /// What a maintenance run should do.
-
 pub enum Job {
     /// Automatic backups get their own OS grant, separate from message work.
     Backup,
@@ -133,7 +128,6 @@ pub enum Job {
 
 /// State the native scheduler needs in order to decide whether this job is
 /// finished or must be retried later by the OS.
-
 pub struct RunOutcome {
     pub pending_uploads: bool,
     pub pending_messages: bool,
@@ -143,7 +137,6 @@ pub struct RunOutcome {
 ///
 /// Safe to call concurrently with a running app: every step it performs is the
 /// same idempotent one the app runs itself, guarded by the same locks.
-
 pub(crate) async fn run(ctx: Arc<Context>, job: Job) -> Result<RunOutcome> {
     if matches!(job, Job::Backup) {
         // An automatic job must never export databases during a visible app
@@ -294,7 +287,6 @@ pub(crate) async fn run(ctx: Arc<Context>, job: Job) -> Result<RunOutcome> {
 /// MailboxDrained is sent by the server after it has received the page ACKs.
 /// Only then can the last outbox pass know every inbound delivery receipt is
 /// durable. Waiting for the active flush prevents shutdown under its requests.
-
 async fn finish_message_work(ctx: &Arc<Context>, generation: u64, budget: Duration) -> bool {
     match tokio::time::timeout(budget, async {
         ctx.wait_for_mailbox_after(generation).await;
@@ -320,7 +312,6 @@ async fn finish_message_work(ctx: &Arc<Context>, generation: u64, budget: Durati
 /// Opens the socket and waits for the handshake, bounded. A background job that
 /// cannot reach the server still has offline work worth doing, so a failure
 /// here is reported rather than raised.
-
 async fn connect_and_authenticate(ctx: &Arc<Context>) -> bool {
     if matches!(
         ApiRuntime::connection_state(ctx).await,
@@ -351,7 +342,6 @@ async fn connect_and_authenticate(ctx: &Arc<Context>) -> bool {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

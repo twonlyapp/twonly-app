@@ -16,13 +16,7 @@ pub async fn list_contact_groups(
 ) -> Result<Vec<ContactGroup>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::list(
-        &mut **tx.transaction(),
-        filter,
-        user_id,
-        group_id.as_deref(),
-    )
-    .await;
+    let result = queries::list(tx.transaction(), filter, user_id, group_id.as_deref()).await;
 
     tx.finish(result).await
 }
@@ -32,7 +26,7 @@ pub async fn get_contact_group(
 ) -> Result<Option<ContactGroup>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::get(&mut **tx.transaction(), id).await;
+    let result = queries::get(tx.transaction(), id).await;
 
     tx.finish(result).await
 }
@@ -42,7 +36,7 @@ pub async fn get_contact_group_members(
 ) -> Result<Vec<ContactGroupMember>> {
     let mut tx = CommandTransaction::begin(transaction).await?;
 
-    let result = queries::members(&mut **tx.transaction(), id).await;
+    let result = queries::members(tx.transaction(), id).await;
 
     tx.finish(result).await
 }

@@ -153,9 +153,7 @@ pub async fn upsert(tx: &mut Transaction<'_, Sqlite>, patch: GroupPatch) -> Resu
         patch.last_message_exchange.is_some(),
     ).execute(&mut **tx).await?;
 
-    Ok(super::queries::get(&mut **tx, &id)
-        .await?
-        .expect("row exists"))
+    Ok(super::queries::get(tx, &id).await?.expect("row exists"))
 }
 
 pub async fn update(

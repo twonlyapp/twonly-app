@@ -22,7 +22,6 @@ pub struct SecureStorage {
 impl SecureStorage {
     /// Creates a new `SecureStorage` instance with the specified service name.
     /// The service name is used as a namespace in the system keyring.
-
     pub fn new(service_name: &str) -> Self {
         Self {
             service_name: service_name.to_string(),
@@ -55,7 +54,6 @@ impl SecureStorage {
     /// This function registers the appropriate credential store (Protected
     /// Store for iOS, Keystore for Android) with `keyring-core`. It is safe
     /// to call multiple times.
-
     pub fn init() -> Result<(), String> {
         if keyring_core::get_default_store().is_some() {
             return Ok(());
@@ -105,7 +103,6 @@ impl SecureStorage {
     /// # Arguments
     /// * `key` - The identifier (account name) for the secret.
     /// * `value` - The secret string to store.
-
     pub fn write(&self, key: &str, value: &str) -> Result<(), String> {
         let entry = self.get_entry(key)?;
 
@@ -121,7 +118,6 @@ impl SecureStorage {
     ///
     /// Returns `Ok(Some(String))` if the key exists, `Ok(None)` if it doesn't,
     /// or an `Err` if a system error occurs.
-
     pub fn read(&self, key: &str) -> Result<Option<String>, String> {
         let entry = self.get_entry(key)?;
 
@@ -136,7 +132,6 @@ impl SecureStorage {
     /// keyring.
     ///
     /// If the key does not exist, this function returns `Ok(())` (idempotent).
-
     pub fn delete(&self, key: &str) -> Result<(), String> {
         let entry = self.get_entry(key)?;
 
@@ -149,7 +144,6 @@ impl SecureStorage {
 
     /// Helper to create a keyring entry with the appropriate platform
     /// modifiers.
-
     fn get_entry(&self, key: &str) -> Result<Entry, String> {
         #[cfg(target_os = "ios")]
         {
@@ -172,7 +166,6 @@ impl SecureStorage {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

@@ -87,7 +87,6 @@ impl DatabaseSession {
 }
 
 /// Refresh process-local watches after an external background commit/resume.
-
 pub async fn refresh_database_watches() -> crate::error::Result<()> {
     let database = crate::bridge::get_twonly_flutter()?
         .app_db

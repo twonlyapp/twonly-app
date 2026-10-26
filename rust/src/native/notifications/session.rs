@@ -188,7 +188,6 @@ impl Session {
     /// Connection setup/migrations must finish their native work before the
     /// phase is unlocked. Ordinary work may be dropped on cancellation: native
     /// connection tickets then keep cleanup owned until SQLite really stops.
-
     pub(super) async fn execute<T>(
         &self, work: impl Future<Output = Result<T>>, interrupt: bool,
     ) -> Result<T> {

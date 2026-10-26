@@ -100,7 +100,7 @@ async fn recovery_selection_deduplicates_evidence_and_share_updates_roll_back_to
     tx.rollback().await.unwrap();
 
     assert!(
-        queries::trusted_ids(&mut *database.pool.acquire().await.unwrap())
+        queries::trusted_ids(&mut database.pool.acquire().await.unwrap())
             .await
             .unwrap()
             .is_empty()

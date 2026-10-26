@@ -11,7 +11,6 @@ use crate::services::groups::GroupService;
 
 /// The flame counter for one chat, derived against today rather than read from
 /// the stored column. See `Group::flame_states`.
-
 pub async fn flame_state(group_id: String) -> Result<FlameState> {
     let ctx = crate::context::Context::get_static()?;
 
@@ -25,7 +24,6 @@ pub async fn flame_state(group_id: String) -> Result<FlameState> {
 
 /// The same derivation for several chats at once. Sorting a contact list by
 /// streak needs every value up front, because a comparator cannot await.
-
 pub async fn flame_states(group_ids: Vec<String>) -> Result<HashMap<String, FlameState>> {
     let ctx = crate::context::Context::get_static()?;
 
@@ -38,7 +36,6 @@ pub async fn flame_states(group_ids: Vec<String>) -> Result<HashMap<String, Flam
 }
 
 /// Whether to offer the user a restore for this chat.
-
 pub async fn can_restore_flames(group_id: String) -> Result<bool> {
     let ctx = crate::context::Context::get_static()?;
 
@@ -51,7 +48,6 @@ pub async fn can_restore_flames(group_id: String) -> Result<bool> {
 }
 
 /// Restores the lost streak, posts the chat entry, and syncs the peer.
-
 pub async fn restore_flames(group_id: String) -> Result<bool> {
     let ctx = crate::context::Context::get_static()?;
 

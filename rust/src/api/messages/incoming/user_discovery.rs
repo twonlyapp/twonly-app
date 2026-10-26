@@ -121,10 +121,9 @@ pub(crate) async fn handle_user_discovery_update(
         ));
     }
 
-    Ok(ctx
-        .user_discovery
+    ctx.user_discovery
         .get()
         .await
         .handle_new_messages(from_user_id, None, update.messages, t)
-        .await?)
+        .await
 }

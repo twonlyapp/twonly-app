@@ -282,7 +282,6 @@ impl RustSignalEngine {
     }
 
     #[cfg(test)]
-
     fn generate_identity_key_pair() -> Result<Vec<u8>> {
         let mut csprng = rand::rngs::StdRng::from_os_rng();
 
@@ -581,7 +580,6 @@ impl RustSignalEngine {
     /// still in flight from the peer undecryptable.
     ///
     /// Returns whether a session existed.
-
     pub async fn reset_session(&self, name: &str, device_id: u32, hard: bool) -> Result<bool> {
         let mut store_guard = self.store.lock().await;
 
@@ -760,7 +758,6 @@ impl RustSignalEngine {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;
@@ -845,11 +842,11 @@ mod tests {
         assert_eq!(prekeys.len(), 30);
 
         for prekey in prekeys {
-            assert!(prekey.ecc_pre_key.len() > 0);
+            assert!(!prekey.ecc_pre_key.is_empty());
 
-            assert!(prekey.kyber_pre_key.len() > 0);
+            assert!(!prekey.kyber_pre_key.is_empty());
 
-            assert!(prekey.kyber_pre_key_signature.len() > 0);
+            assert!(!prekey.kyber_pre_key_signature.is_empty());
         }
     }
 
@@ -1062,7 +1059,6 @@ mod tests {
     }
 
     /// Encrypts on one engine and decrypts on the other.
-
     async fn ping(from: &RustSignalEngine, to: &RustSignalEngine, text: &str) -> Result<Vec<u8>> {
         let ciphertext = from
             .encrypt_message(to.local_name.clone(), 1, text.as_bytes().to_vec())
@@ -1074,7 +1070,6 @@ mod tests {
 
     /// Overwrites a peer's session record, the way restoring a backup puts an
     /// older signal database back in place.
-
     async fn restore_session(engine: &RustSignalEngine, name: &str, record: &[u8]) {
         let store = engine.store.lock().await;
 

@@ -118,7 +118,6 @@ fn native_callbacks_release_cross_process_locks_and_reopen_both_encrypted_databa
 
 #[test]
 #[ignore = "test-only subprocess entry, invoked by the parent lifecycle test"]
-
 fn sqlite_file_lock_probe() {
     let path = std::env::var_os("TWONLY_SQLITE_LOCK_PROBE").unwrap();
 

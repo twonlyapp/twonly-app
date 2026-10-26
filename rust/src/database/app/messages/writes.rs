@@ -138,9 +138,7 @@ pub async fn upsert(
         upsert!("");
     }
 
-    Ok(super::queries::get(&mut **tx, &id)
-        .await?
-        .expect("row exists"))
+    Ok(super::queries::get(tx, &id).await?.expect("row exists"))
 }
 
 pub async fn update(tx: &mut Transaction<'_, Sqlite>, id: &str, patch: MessagePatch) -> Result<()> {
@@ -433,7 +431,6 @@ pub async fn purge(tx: &mut Transaction<'_, Sqlite>, now_ms: i64) -> Result<()> 
 /// recipient has received the media and no newer envelope for it is pending,
 /// the message is a send that failed for good, and it goes with its file.
 /// Returns how many messages were deleted.
-
 pub async fn purge_undelivered_media(tx: &mut Transaction<'_, Sqlite>, cutoff: i64) -> Result<u64> {
     sqlx::query!(
         r#"

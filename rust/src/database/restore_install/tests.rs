@@ -108,7 +108,7 @@ fn every_single_installation_error_resolves_to_one_complete_generation() {
         .position(|point| point == "commit published")
         .unwrap();
 
-    for failure in 0..trace.len() {
+    for (failure, point) in trace.iter().enumerate() {
         let (_directory, config, staging) = fixture();
 
         let mut step = 0;
@@ -128,8 +128,7 @@ fn every_single_installation_error_resolves_to_one_complete_generation() {
         assert_eq!(
             result.is_ok(),
             failure >= committed,
-            "step {failure}: {}",
-            trace[failure]
+            "step {failure}: {point}"
         );
 
         assert_generation(&config, failure >= committed);
@@ -146,7 +145,7 @@ fn process_exit_at_every_installation_boundary_is_recovered_before_access() {
         .position(|point| point == "commit published")
         .unwrap();
 
-    for failure in 0..trace.len() {
+    for (failure, point) in trace.iter().enumerate() {
         let (_directory, config, staging) = fixture();
 
         let status = Command::new(std::env::current_exe().unwrap())
@@ -163,12 +162,7 @@ fn process_exit_at_every_installation_boundary_is_recovered_before_access() {
             .unwrap()
             .status;
 
-        assert_eq!(
-            status.code(),
-            Some(88),
-            "step {failure}: {}",
-            trace[failure]
-        );
+        assert_eq!(status.code(), Some(88), "step {failure}: {point}");
 
         let roots = Roots::new(&config).unwrap();
 
@@ -201,7 +195,6 @@ fn process_exit_at_every_installation_boundary_is_recovered_before_access() {
 
 #[test]
 #[ignore = "crash helper invoked by the restore recovery matrix"]
-
 fn restore_child() {
     let config = InitConfig {
         database_dir: std::env::var("TWONLY_RESTORE_DB").unwrap(),

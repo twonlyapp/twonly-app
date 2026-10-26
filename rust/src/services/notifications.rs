@@ -24,11 +24,9 @@ use std::sync::{Arc, LazyLock};
 // events that were already downloaded into the local notification outbox.
 // Keep Android's existing batch size unchanged.
 #[cfg(target_os = "ios")]
-
 const MAX_BATCH_SIZE: i64 = 40;
 
 #[cfg(not(target_os = "ios"))]
-
 const MAX_BATCH_SIZE: i64 = 100;
 
 const EN_ARB: &str = include_str!("../../../lib/src/localization/translations/en.arb");
@@ -106,7 +104,6 @@ fn webxdc_announcement(
 /// The two layers say different things and both matter here: the outer `None`
 /// means this device has no such message, while an inner `None` means this
 /// device wrote it, which is how an own message is stored.
-
 async fn message_sender(
     transaction: &mut Transaction<'_, Sqlite>, message_id: &str,
 ) -> Result<Option<Option<i64>>> {
@@ -120,7 +117,6 @@ async fn message_sender(
 
 /// Whether `message_id` is one of this device's own story rows, which is what
 /// a reply, reaction or save aimed at the user's story points at.
-
 async fn is_own_story(transaction: &mut Transaction<'_, Sqlite>, message_id: &str) -> Result<bool> {
     Ok(sqlx::query_scalar!(
         r#"SELECT EXISTS(
@@ -135,7 +131,6 @@ async fn is_own_story(transaction: &mut Transaction<'_, Sqlite>, message_id: &st
 
 /// Whether `text` is nothing but emoji. A reaction to a story travels as a
 /// text quoting it, so this is what tells a reaction from a reply.
-
 fn is_emoji_only(text: &str) -> bool {
     fn pictographic(c: char) -> bool {
         matches!(
@@ -187,7 +182,6 @@ fn is_emoji_only(text: &str) -> bool {
 /// device without leaving it anything to show reaches the user as a bare "You
 /// got a new message" -- which is why every arm here has to match something
 /// [`record_incoming_event`] will actually record.
-
 pub(crate) async fn should_wake_receiver(
     transaction: &mut Transaction<'_, Sqlite>, target_user_id: i64,
     content: &proto::EncryptedContent,
@@ -342,7 +336,6 @@ impl NotificationDraft {
 /// Records the user-visible consequence of an encrypted message in the same
 /// transaction that commits that message. Transport retries are deduplicated
 /// by the receipt-derived event ID.
-
 pub(crate) async fn record_incoming_event(
     ctx: &Context, transaction: &mut Transaction<'_, Sqlite>, from_user_id: i64, receipt_id: &str,
     content: &proto::EncryptedContent,
@@ -652,19 +645,20 @@ pub(crate) async fn record_incoming_event(
             content: None,
             created_at: now,
         })
-    } else if let Some(create) = content.group_create.as_ref() {
-        Some(NotificationDraft {
-            event_id: receipt_id.to_owned(),
-            notification_id: receipt_id.to_owned(),
-            conversation_id,
-            sender_id: from_user_id,
-            message_id: None,
-            kind: "added_to_group",
-            content: create.group_name.clone(),
-            created_at: now,
-        })
     } else {
-        None
+        content
+            .group_create
+            .as_ref()
+            .map(|create| NotificationDraft {
+                event_id: receipt_id.to_owned(),
+                notification_id: receipt_id.to_owned(),
+                conversation_id,
+                sender_id: from_user_id,
+                message_id: None,
+                kind: "added_to_group",
+                content: create.group_name.clone(),
+                created_at: now,
+            })
     };
 
     if let Some(draft) = draft {
@@ -677,7 +671,6 @@ pub(crate) async fn record_incoming_event(
 /// Reconcile old outbox rows and events recorded after their message was
 /// opened or deleted. Deleted messages can no longer be acknowledged in the
 /// UI, so their alerts must not keep inflating the badge.
-
 async fn clear_stale_messages(database: &Arc<AppDatabase>) -> Result<()> {
     let cleared_at = current_time().timestamp();
 
@@ -715,7 +708,6 @@ async fn clear_stale_messages(database: &Arc<AppDatabase>) -> Result<()> {
 
 /// A turn update may have been queued before the recipient opened the game.
 /// Clear only alerts belonging to the visible instance; chat rows stay intact.
-
 async fn clear_visible_webxdc(ctx: &Context, database: &Arc<AppDatabase>) -> Result<()> {
     let Some(instance_id) = crate::services::webxdc::visibility::visible_instance(
         std::path::Path::new(&ctx.config.data_dir),
@@ -739,7 +731,6 @@ async fn clear_visible_webxdc(ctx: &Context, database: &Arc<AppDatabase>) -> Res
 /// The number of events the user has not dealt with yet. iOS has no way to
 /// derive an app icon badge from the delivered alerts, so the running app has
 /// to push this value into `UNUserNotificationCenter` itself.
-
 pub async fn badge_count(ctx: &Arc<Context>) -> Result<i64> {
     let database = ctx.app_db.read().await.clone();
 
@@ -752,7 +743,6 @@ pub async fn badge_count(ctx: &Arc<Context>) -> Result<i64> {
 
 /// Media waiting for its reupload is hidden in the chat, so its alert is held
 /// back and does not count either until the reupload has arrived.
-
 async fn open_event_count(database: &Arc<AppDatabase>) -> Result<i64> {
     Ok(sqlx::query_scalar!(
         r#"SELECT COUNT(*) AS "count: i64"
@@ -922,7 +912,6 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
 /// Match FlameCounterWidget, using the same derived state as the app so expired
 /// counters disappear even before the next media exchange updates the stored
 /// row.
-
 fn notification_display_name(name: &str, state: FlameState) -> String {
     if state.counter < 1 {
         return name.to_owned();
@@ -955,7 +944,6 @@ fn notification_display_name(name: &str, state: FlameState) -> String {
 /// app — media downloads, widget upkeep, closing the socket — is deferred to
 /// [`finalize_wakeup`] so that none of it sits between the incoming message and
 /// the notification the user is waiting for.
-
 pub(crate) async fn process_initialized(
     ctx: &Arc<Context>, locale: &str, deadline_ms: u64,
 ) -> Result<NotificationBatch> {
@@ -963,7 +951,7 @@ pub(crate) async fn process_initialized(
 
     // The FCM health check used to be fed by the Dart background isolate, which
     // no longer runs. Record the wake-up here so both platforms report it.
-    if let Err(error) = UserConfig::update(&ctx, |user| {
+    if let Err(error) = UserConfig::update(ctx, |user| {
         user.last_fcm_wakeup_at = Some(current_time().timestamp());
     }) {
         tracing::warn!("could not record the FCM wake-up timestamp: {error}");
@@ -990,7 +978,7 @@ pub(crate) async fn process_initialized(
         Ok(Ok(())) => {}
     }
 
-    let mut batch = pending_batch(&ctx, locale).await?;
+    let mut batch = pending_batch(ctx, locale).await?;
 
     batch.completed = completed;
 
@@ -1016,7 +1004,6 @@ const UNDOWNLOADABLE_MEDIA_CHECK_BUDGET: std::time::Duration = std::time::Durati
 /// away: it fails fast, requests the reupload, and [`pending_batch`] holds its
 /// alert back until the reupload has arrived. Fail-open: media the server does
 /// not answer for is announced as before.
-
 async fn hold_back_undownloadable_media(ctx: &Arc<Context>) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
@@ -1105,7 +1092,6 @@ async fn drain_wakeup_mailbox(ctx: &Arc<Context>, deadline: std::time::Duration)
 /// step here is off the alert's critical path and the whole run is bounded by
 /// `deadline_ms` — an OS that reclaims the worker mid-way costs nothing that
 /// the next wake-up or app launch does not redo.
-
 pub async fn finalize_wakeup(deadline_ms: u64) -> Result<()> {
     let ctx = Context::get_static()?.clone();
 
@@ -1181,7 +1167,6 @@ pub async fn finalize_wakeup(deadline_ms: u64) -> Result<()> {
 
 /// Persists a token refresh from the native Android FCM callback. The normal
 /// authenticated Rust lifecycle uploads it and clears `update_fcm_token`.
-
 pub fn store_fcm_token(ctx: &Context, token: String) -> Result<()> {
     UserConfig::update(ctx, |user| {
         user.fcm_token = Some(token);
@@ -1252,7 +1237,6 @@ pub async fn acknowledge_batch(ctx: &Arc<Context>, event_ids: &[String]) -> Resu
 
 /// Opening a chat acknowledges its activity, but media notifications remain
 /// until the corresponding media is actually opened.
-
 pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Result<Vec<String>> {
     let database = ctx.app_db.read().await.clone();
 
@@ -1302,7 +1286,6 @@ pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Re
 
 /// Clears the contact-request notifications. They carry no conversation, so
 /// opening the request list is the only moment the user acknowledges them.
-
 pub async fn clear_contact_requests(ctx: &Arc<Context>) -> Result<Vec<String>> {
     let database = ctx.app_db.read().await.clone();
 
@@ -1337,7 +1320,6 @@ pub async fn clear_contact_requests(ctx: &Arc<Context>) -> Result<Vec<String>> {
 /// Clears only notifications representing the messages that were actually
 /// opened. Events that merely refer to the same message, such as reactions or
 /// media-status updates, remain independent notifications.
-
 pub(crate) async fn clear_opened_messages(
     transaction: &mut Transaction<'_, Sqlite>, message_ids: &[String], cleared_at: i64,
 ) -> Result<()> {
@@ -1388,7 +1370,6 @@ fn parse_arb(source: &str, locale: &str) -> HashMap<String, String> {
 
 /// The language picked in the app's settings, or the device's locale when the
 /// user left it on the system default or the configuration is not readable.
-
 pub fn app_locale(device_locale: &str) -> String {
     Context::get_static()
         .ok()
@@ -1529,7 +1510,6 @@ pub(crate) fn notification_avatar_path(
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

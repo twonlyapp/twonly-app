@@ -14,12 +14,10 @@ use std::time::Instant;
 /// exactly 64 hex characters. `database::cipher` only uses the raw key form for
 /// keys of that shape, so a fixture of the wrong length would silently test the
 /// passphrase path instead.
-
 const KEY: &str = "5b1f8c2d3e4a596877a8b9c0d1e2f30415263748596a7b8c9d0e1f2a3b4c5d6e";
 
 /// Writes a database keyed the way every released version keyed it: the hex
 /// string handed to `PRAGMA key` as a passphrase.
-
 async fn create_legacy_database(path: &Path) {
     let mut connection = SqliteConnectOptions::from_str(&format!("sqlite://{}", path.display()))
         .unwrap()
@@ -49,7 +47,6 @@ async fn create_legacy_database(path: &Path) {
 }
 
 /// True when the file opens with the raw key form and no key derivation.
-
 async fn opens_with_raw_key(path: &Path) -> bool {
     let Ok(mut connection) =
         SqliteConnectOptions::from_str(&format!("sqlite://{}", path.display()))

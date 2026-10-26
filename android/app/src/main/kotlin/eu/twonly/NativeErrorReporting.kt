@@ -37,6 +37,7 @@ object NativeErrorReporting {
         if (Sentry.isEnabled()) return
         SentryAndroid.init(app) { options ->
             options.dsn = DSN
+            options.environment = BuildConfig.BUILD_TYPE
             @Suppress("DEPRECATION")
             val info = app.packageManager.getPackageInfo(app.packageName, 0)
             options.release = "${app.packageName}@${info.versionName}+${androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(info)}"

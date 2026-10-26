@@ -20,7 +20,6 @@ use std::sync::{LazyLock, Mutex};
 /// whole request can move onto the blocking pool.
 // Only the mobile implementations read these; the desktop stub cannot render.
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
-
 pub(crate) struct RenderRequest {
     pub media_id: String,
     pub input: PathBuf,
@@ -39,7 +38,6 @@ pub(crate) struct RenderRequest {
 /// negative value standing for "not cut on this end". Keeping the C and JNI
 /// signatures to plain integers avoids an optional across either boundary.
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
-
 impl RenderRequest {
     fn trim_start_or_negative(&self) -> i64 {
         self.trim_start_ms.unwrap_or(-1)
@@ -56,7 +54,6 @@ impl RenderRequest {
 /// retain the first WorkManager runtime forever, even after that runtime was
 /// destroyed.
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
-
 static PROGRESS_RUNTIMES: LazyLock<Mutex<HashMap<String, ProgressOwner>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
@@ -69,13 +66,11 @@ struct ProgressOwner {
 }
 
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
-
 struct ProgressRuntimeGuard {
     id: String,
 }
 
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
-
 impl Drop for ProgressRuntimeGuard {
     fn drop(&mut self) {
         if let Ok(mut runtimes) = PROGRESS_RUNTIMES.lock() {
@@ -85,7 +80,6 @@ impl Drop for ProgressRuntimeGuard {
 }
 
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
-
 fn remember_runtime(media_id: &str) -> Option<ProgressRuntimeGuard> {
     let handle = tokio::runtime::Handle::try_current().ok()?;
 
@@ -118,7 +112,6 @@ fn is_cancelled(id: &str) -> bool {
 
 /// Pollable from codec threads without Flutter or the originating runtime.
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_video_is_cancelled(id: *const std::ffi::c_char) -> bool {
     std::panic::catch_unwind(|| {
         if id.is_null() {
@@ -135,7 +128,6 @@ pub unsafe extern "C" fn twonly_video_is_cancelled(id: *const std::ffi::c_char) 
 /// Reports transcoding progress back into the media row so the send state in
 /// chat can show it. Called by the platform while a render is running.
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
-
 fn report_progress(media_id: &str, percent: i64) {
     let Ok(ctx) = crate::context::Context::get_static() else {
         return;
@@ -188,7 +180,6 @@ fn report_progress(media_id: &str, percent: i64) {
 }
 
 #[cfg(target_os = "ios")]
-
 pub(crate) fn render(request: &RenderRequest) -> Result<()> {
     let progress_runtime = remember_runtime(&request.media_id)
         .ok_or_else(|| TwonlyError::Generic("Video rendering requires an owned runtime".into()))?;
@@ -282,7 +273,6 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
 }
 
 #[cfg(target_os = "android")]
-
 pub(crate) fn render(request: &RenderRequest) -> Result<()> {
     let progress_runtime = remember_runtime(&request.media_id)
         .ok_or_else(|| TwonlyError::Generic("Video rendering requires an owned runtime".into()))?;
@@ -332,9 +322,9 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
         // A pending Java exception would abort the process once this thread returns
         // to the VM, so it is cleared and reported as a plain error instead.
         if env.exception_check() {
-            let _ = env.exception_describe();
+            env.exception_describe();
 
-            let _ = env.exception_clear();
+            env.exception_clear();
         }
 
         if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
@@ -350,7 +340,6 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
 /// Progress reported by the Android renderer while `render` is blocked.
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
-
 pub extern "system" fn Java_eu_twonly_media_NativeVideoCodec_isCancelled(
     mut unowned_env: jni::EnvUnowned, _class: jni::objects::JClass, job_id: jni::objects::JString,
 ) -> jni::sys::jboolean {
@@ -370,38 +359,124 @@ pub extern "system" fn Java_eu_twonly_media_NativeVideoCodec_isCancelled(
 
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
-
 pub extern "system" fn Java_eu_twonly_media_NativeVideoCodec_reportProgress(
     mut unowned_env: jni::EnvUnowned, _class: jni::objects::JClass,
     media_id: jni::objects::JString, percent: jni::sys::jint,
 ) {
     unowned_env
         .with_env(|env| {
-            Ok::<_, jni::errors::Error>({
-                // This runs on Android's main looper. Unwinding back into the VM would
-                // abort the process, so a panic can only cost this one progress update.
-                let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    let Ok(media_id) = media_id.try_to_string(env) else {
-                        return;
-                    };
+            // This runs on Android's main looper. Unwinding back into the VM would
+            // abort the process, so a panic can only cost this one progress update.
+            let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let Ok(media_id) = media_id.try_to_string(env) else {
+                    return;
+                };
 
-                    report_progress(&media_id, i64::from(percent));
-                }));
-            })
+                report_progress(&media_id, i64::from(percent));
+            }));
+            Ok::<_, jni::errors::Error>(())
         })
         .resolve::<jni::errors::LogErrorAndDefault>()
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-
 pub(crate) fn render(_request: &RenderRequest) -> Result<()> {
     Err(TwonlyError::Generic(
         "platform video rendering is only available on Android and iOS".into(),
     ))
 }
 
-#[cfg(test)]
+/// Extracts a frame as PNG so Rust can encode the thumbnail itself. The frame
+/// grab needs the platform's video decoder; everything after it does not.
+#[cfg(target_os = "ios")]
+pub(crate) fn extract_frame(input: &Path, output: &Path) -> Result<()> {
+    use std::ffi::CString;
+    use std::os::raw::c_char;
 
+    type ExtractFrame = unsafe extern "C" fn(*const c_char, *const c_char) -> bool;
+
+    let to_c = |path: &Path| {
+        CString::new(path.as_os_str().as_encoded_bytes())
+            .map_err(|_| TwonlyError::Generic("video path contains a NUL byte".into()))
+    };
+
+    let input = to_c(input)?;
+
+    let output = to_c(output)?;
+
+    let symbol = c"twonly_extract_video_frame";
+
+    let callback = unsafe { libc::dlsym(libc::RTLD_DEFAULT, symbol.as_ptr()) };
+
+    if callback.is_null() {
+        return Err(TwonlyError::Generic(
+            "iOS frame extraction is unavailable".into(),
+        ));
+    }
+
+    // SAFETY: the Swift @_cdecl declaration has this exact stable C ABI signature.
+    let callback: ExtractFrame = unsafe { std::mem::transmute(callback) };
+
+    // SAFETY: Swift copies both strings before this call returns.
+    if unsafe { callback(input.as_ptr(), output.as_ptr()) } {
+        Ok(())
+    } else {
+        Err(TwonlyError::Generic(
+            "iOS could not extract a video frame".into(),
+        ))
+    }
+}
+
+#[cfg(target_os = "android")]
+pub(crate) fn extract_frame(input: &Path, output: &Path) -> Result<()> {
+    use crate::native::transfer::android::{video_codec_class, with_env};
+    use jni::objects::{JObject, JValue};
+
+    let class = video_codec_class()?;
+
+    with_env(|env| {
+        let mut string = |value: &str| {
+            jni::objects::JString::from_str(env, value)
+                .map_err(|error| TwonlyError::Generic(error.to_string()))
+        };
+
+        let input = JObject::from(string(&input.to_string_lossy())?);
+
+        let output = JObject::from(string(&output.to_string_lossy())?);
+
+        let call = env
+            .call_static_method(
+                class,
+                jni::jni_str!("extractFrame"),
+                jni::jni_sig!("(Ljava/lang/String;Ljava/lang/String;)Z"),
+                &[JValue::Object(&input), JValue::Object(&output)],
+            )
+            .and_then(|value| value.z());
+
+        if env.exception_check() {
+            env.exception_describe();
+
+            env.exception_clear();
+        }
+
+        if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
+            Ok(())
+        } else {
+            Err(TwonlyError::Generic(
+                "Android could not extract a video frame".into(),
+            ))
+        }
+    })
+}
+
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub(crate) fn extract_frame(_input: &Path, _output: &Path) -> Result<()> {
+    Err(TwonlyError::Generic(
+        "platform frame extraction is only available on Android and iOS".into(),
+    ))
+}
+
+#[cfg(test)]
 mod cancellation_tests {
 
     use super::*;
@@ -442,97 +517,4 @@ mod cancellation_tests {
 
         drop(new);
     }
-}
-
-/// Extracts a frame as PNG so Rust can encode the thumbnail itself. The frame
-/// grab needs the platform's video decoder; everything after it does not.
-#[cfg(target_os = "ios")]
-
-pub(crate) fn extract_frame(input: &Path, output: &Path) -> Result<()> {
-    use std::ffi::CString;
-    use std::os::raw::c_char;
-
-    type ExtractFrame = unsafe extern "C" fn(*const c_char, *const c_char) -> bool;
-
-    let to_c = |path: &Path| {
-        CString::new(path.as_os_str().as_encoded_bytes())
-            .map_err(|_| TwonlyError::Generic("video path contains a NUL byte".into()))
-    };
-
-    let input = to_c(input)?;
-
-    let output = to_c(output)?;
-
-    let symbol = c"twonly_extract_video_frame";
-
-    let callback = unsafe { libc::dlsym(libc::RTLD_DEFAULT, symbol.as_ptr()) };
-
-    if callback.is_null() {
-        return Err(TwonlyError::Generic(
-            "iOS frame extraction is unavailable".into(),
-        ));
-    }
-
-    // SAFETY: the Swift @_cdecl declaration has this exact stable C ABI signature.
-    let callback: ExtractFrame = unsafe { std::mem::transmute(callback) };
-
-    // SAFETY: Swift copies both strings before this call returns.
-    if unsafe { callback(input.as_ptr(), output.as_ptr()) } {
-        Ok(())
-    } else {
-        Err(TwonlyError::Generic(
-            "iOS could not extract a video frame".into(),
-        ))
-    }
-}
-
-#[cfg(target_os = "android")]
-
-pub(crate) fn extract_frame(input: &Path, output: &Path) -> Result<()> {
-    use crate::native::transfer::android::{video_codec_class, with_env};
-    use jni::objects::{JObject, JValue};
-
-    let class = video_codec_class()?;
-
-    with_env(|env| {
-        let mut string = |value: &str| {
-            jni::objects::JString::from_str(env, value)
-                .map_err(|error| TwonlyError::Generic(error.to_string()))
-        };
-
-        let input = JObject::from(string(&input.to_string_lossy())?);
-
-        let output = JObject::from(string(&output.to_string_lossy())?);
-
-        let call = env
-            .call_static_method(
-                class,
-                jni::jni_str!("extractFrame"),
-                jni::jni_sig!("(Ljava/lang/String;Ljava/lang/String;)Z"),
-                &[JValue::Object(&input), JValue::Object(&output)],
-            )
-            .and_then(|value| value.z());
-
-        if env.exception_check() {
-            let _ = env.exception_describe();
-
-            let _ = env.exception_clear();
-        }
-
-        if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
-            Ok(())
-        } else {
-            Err(TwonlyError::Generic(
-                "Android could not extract a video frame".into(),
-            ))
-        }
-    })
-}
-
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
-
-pub(crate) fn extract_frame(_input: &Path, _output: &Path) -> Result<()> {
-    Err(TwonlyError::Generic(
-        "platform frame extraction is only available on Android and iOS".into(),
-    ))
 }

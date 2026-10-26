@@ -107,7 +107,6 @@ impl Receipt {
     /// plaintext has to be committed together with the claim. A redelivery that
     /// finds it here resumes handling instead of decrypting again, which would
     /// fail with an old-counter error.
-
     pub async fn store_pending_plaintext(
         transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str, plaintext: &[u8],
     ) -> Result<()> {
@@ -127,7 +126,6 @@ impl Receipt {
     }
 
     /// Returns the parked plaintext of a receipt whose handling did not commit.
-
     pub async fn pending_plaintext(
         transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str,
     ) -> Result<Option<Vec<u8>>> {
@@ -147,7 +145,6 @@ impl Receipt {
     }
 
     /// Drops a parked plaintext once its message no longer needs it.
-
     pub async fn clear_pending_plaintext(
         transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str,
     ) -> Result<()> {
@@ -168,7 +165,6 @@ impl Receipt {
     /// Records, in the commit that handles it, that a claimed message was
     /// handled. Only a mark written here is proof: an unmarked claim may be one
     /// whose decryption failed, or one older than the mark.
-
     pub async fn mark_handled(
         transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str,
     ) -> Result<()> {
@@ -297,7 +293,6 @@ impl<'a> NewReceipt<'a> {
     /// Queues a response only while no response for this inbound receipt is in
     /// flight. A redelivery can race the sender task, but it must not replace
     /// the response that task is about to send.
-
     pub async fn insert_if_absent(&self, transaction: &mut Transaction<'_, Sqlite>) -> Result<()> {
         sqlx::query!(
             r#"
@@ -319,7 +314,6 @@ impl<'a> NewReceipt<'a> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

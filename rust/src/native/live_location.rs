@@ -69,7 +69,6 @@ fn run(directory: String, request: String, source: crate::log::LogSource) -> Str
 /// Both input strings remain valid until return. Free the result with the
 /// existing `twonly_notification_string_free` ABI.
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_live_location_run(
     directory: *const c_char, request: *const c_char,
 ) -> *mut c_char {
@@ -95,7 +94,6 @@ pub unsafe extern "C" fn twonly_live_location_run(
 
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
-
 pub extern "system" fn Java_eu_twonly_location_NativeLiveLocationBridge_run(
     mut unowned_env: jni::EnvUnowned<'_>, _class: jni::objects::JClass<'_>,
     directory: jni::objects::JString<'_>, request: jni::objects::JString<'_>,

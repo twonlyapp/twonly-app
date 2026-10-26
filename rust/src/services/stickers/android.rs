@@ -106,7 +106,7 @@ pub(super) fn remove_background(source: &Path) -> Result<RgbaImage> {
         max = max.max(value);
     }
 
-    if !min.is_finite() || !max.is_finite() || max - min < f32::EPSILON {
+    if !min.is_finite() || !max.is_finite() || (max - min).abs() < f32::EPSILON {
         return Err(sticker_error("sticker model produced an empty mask"));
     }
 
@@ -135,7 +135,6 @@ pub(super) fn remove_background(source: &Path) -> Result<RgbaImage> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

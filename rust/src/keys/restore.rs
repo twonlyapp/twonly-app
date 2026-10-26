@@ -51,7 +51,6 @@ fn write(storage: &SecureStorage, identity: &Identity) -> Result<()> {
 }
 
 /// Staging does not replace either the durable or the in-memory active key.
-
 pub(crate) fn stage(storage: &SecureStorage, key_manager: KeyManager) -> Result<()> {
     let _access = storage.identity_access()?;
 
@@ -74,7 +73,6 @@ pub(crate) fn pending(storage: &SecureStorage) -> Result<Option<Identity>> {
 
 /// Called only while holding both exclusive database maintenance gates. It
 /// deliberately bypasses ordinary key-write admission through the marker.
-
 pub(crate) fn validate(storage: &SecureStorage, id: &str) -> Result<()> {
     let identity = read(storage)?.ok_or_else(invalid)?;
 
@@ -129,7 +127,6 @@ pub(crate) fn discard(storage: &SecureStorage) -> Result<()> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

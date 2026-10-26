@@ -192,7 +192,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         );
 
         tester_b
-            .acknowledge_notifications(&[text.event_id.clone()])
+            .acknowledge_notifications(std::slice::from_ref(&text.event_id))
             .await?;
 
         message_id
@@ -286,7 +286,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         assert_eq!(unsupported.body, "sent a message.");
 
         tester_b
-            .acknowledge_notifications(&[pending.event_id.clone()])
+            .acknowledge_notifications(std::slice::from_ref(&pending.event_id))
             .await?;
     }
 
@@ -359,7 +359,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         );
 
         tester_b
-            .acknowledge_notifications(&[with_avatar.event_id.clone()])
+            .acknowledge_notifications(std::slice::from_ref(&with_avatar.event_id))
             .await?;
     }
 
@@ -386,7 +386,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         assert_eq!(reply.body, "has responded.");
 
         tester_b
-            .acknowledge_notifications(&[reply.event_id.clone()])
+            .acknowledge_notifications(std::slice::from_ref(&reply.event_id))
             .await?;
 
         // B owns a message that A can react to.
@@ -430,7 +430,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         assert_eq!(reaction.message_id.as_deref(), Some(owned_by_b.as_str()));
 
         tester_b
-            .acknowledge_notifications(&[reaction.event_id.clone()])
+            .acknowledge_notifications(std::slice::from_ref(&reaction.event_id))
             .await?;
 
         // Removing a reaction is not user visible and must stay silent.
@@ -471,7 +471,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
         );
 
         tester_b
-            .acknowledge_notifications(&[next.event_id.clone()])
+            .acknowledge_notifications(std::slice::from_ref(&next.event_id))
             .await?;
 
         // A reaction only concerns whoever wrote the message it lands on. A
@@ -493,7 +493,7 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
             .await?;
 
         tester_b
-            .acknowledge_notifications(&[own.event_id.clone()])
+            .acknowledge_notifications(std::slice::from_ref(&own.event_id))
             .await?;
 
         MessageService::new(&tester_a.context)

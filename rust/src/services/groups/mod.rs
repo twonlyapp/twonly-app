@@ -41,7 +41,6 @@ const DEFAULT_DELETE_MS: i64 = 86_400_000;
 /// again. A peer that cannot answer -- an old client, a member who never comes
 /// online -- would otherwise be re-asked on every reconnect and every group
 /// update.
-
 const PUBLIC_KEY_REQUEST_INTERVAL: Duration = Duration::from_secs(24 * 60 * 60);
 
 pub struct GroupService {
@@ -59,7 +58,6 @@ pub struct GroupService {
 ///
 /// Acquire this *before* a database connection and never while holding one:
 /// the reverse order deadlocks against the one-connection pool.
-
 static GROUP_STATE_LOCKS: LazyLock<Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
@@ -73,7 +71,6 @@ fn group_state_lock(group_id: &str) -> Arc<tokio::sync::Mutex<()>> {
 }
 
 /// How many versions a group-state update chases before it gives up.
-
 const STATE_UPDATE_ATTEMPTS: usize = 3;
 
 /// The admin rights a state update grants or revokes alongside the new state.
@@ -90,7 +87,6 @@ struct AdminKeys {
 /// copy of the state; whoever pushes first wins, and the losers' rejections
 /// are of no consequence. It is carried out of the inbound transaction because
 /// pushing it is a network round trip and the app database has one connection.
-
 struct PendingCompaction {
     group: GroupRecord,
     version_id: u64,
@@ -102,7 +98,6 @@ struct PendingCompaction {
 /// Process-local on purpose: the point is to keep one session from re-asking a
 /// silent peer on every reconnect, not to remember the attempt across restarts.
 /// `force` bypasses it, so the user can always retry by opening the group.
-
 static PUBLIC_KEY_REQUESTS: LazyLock<Mutex<HashMap<(String, i64), Instant>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
@@ -112,16 +107,13 @@ static PUBLIC_KEY_REQUESTS: LazyLock<Mutex<HashMap<(String, i64), Instant>>> =
 /// keep a busy group from refetching its state on every inbound message while
 /// the server still reports the member as gone, not to remember across
 /// restarts.
-
 static STALE_MEMBERSHIP_REFRESHES: LazyLock<Mutex<HashMap<String, Instant>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// Shortest gap between two refreshes prompted by the same group.
-
 const STALE_MEMBERSHIP_REFRESH_INTERVAL: Duration = Duration::from_secs(300);
 
 /// Records a refresh and reports whether it should be fetched at all.
-
 fn claim_stale_membership_refresh(group_id: &str) -> bool {
     let mut refreshes = match STALE_MEMBERSHIP_REFRESHES.lock() {
         Ok(refreshes) => refreshes,
@@ -143,7 +135,6 @@ fn claim_stale_membership_refresh(group_id: &str) -> bool {
 }
 
 /// Records a request and reports whether it should be sent at all.
-
 fn claim_public_key_request(group_id: &str, contact_id: i64, force: bool) -> bool {
     let mut requests = match PUBLIC_KEY_REQUESTS.lock() {
         Ok(requests) => requests,
@@ -170,7 +161,6 @@ fn claim_public_key_request(group_id: &str, contact_id: i64, force: bool) -> boo
 /// Claims a membership repair by rotating the receipt it refers to. A delayed
 /// error for an already retried or acknowledged receipt must not create a new
 /// invitation. Check the group too: receipt ownership alone is not sufficient.
-
 async fn retry_membership_receipt(
     t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, from_user_id: i64, group_id: &str,
     related_receipt_id: &str,
@@ -233,7 +223,6 @@ impl GroupService {
     /// Tells each peer where their shared streak stands. Normally at most once
     /// per day per chat; `force_for_group` overrides that guard and asks the
     /// peer to take our value, which is how a restore reaches the other side.
-
     pub(crate) async fn sync_flame_counters(&self, force_for_group: Option<&str>) -> Result<()> {
         let db = self.ctx.app_db.read().await.clone();
 
@@ -306,7 +295,6 @@ impl GroupService {
 
     /// Puts a lost streak back, tells the chat it happened, and pushes the
     /// restored value to the peer so both sides agree again.
-
     pub(crate) async fn restore_flames(&self, group_id: String) -> Result<bool> {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -359,7 +347,6 @@ impl GroupService {
     /// Owns its transaction instead of borrowing the inbound one: the refresh
     /// below reaches the group server, which must not happen while the single
     /// app-database connection is held.
-
     pub(crate) async fn handle_membership_error(
         &self, from_user_id: i64, group_id: String, related_receipt_id: String,
     ) -> Result<()> {
@@ -510,7 +497,6 @@ impl GroupService {
     /// holding it across network I/O starves every other database user until
     /// the acquire timeout and surfaces as `pool timed out while waiting for an
     /// open connection`.
-
     pub async fn fetch_group_state(&self, group_id: String) -> Result<bool> {
         let lock = group_state_lock(&group_id);
 
@@ -565,7 +551,6 @@ impl GroupService {
     /// only: the admin-side compaction of leave-appends is handed back to the
     /// caller instead of sent from here, because it is a network round trip
     /// and this runs while the caller holds the app database's one connection.
-
     async fn apply_fetched_group_state(
         &self, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: &str,
         server: Option<crate::api::proto::http_requests::GroupState>,
@@ -699,7 +684,6 @@ impl GroupService {
     ///
     /// `change` returning `None` means there is nothing left to write, which
     /// this reports back as `false`.
-
     async fn update_state_with_retry(
         &self, group: &GroupRecord,
         mut change: impl FnMut(&mut EncryptedGroupState) -> Result<Option<AdminKeys>>,
@@ -798,7 +782,6 @@ impl GroupService {
     /// Resolves the group public key a member signs its group-state appends
     /// with. Our own key lives in the group record; everyone else's arrives
     /// through `group_join` and may still be missing.
-
     async fn member_public_key(
         &self, db: &Arc<crate::database::app::AppDatabase>, group: &GroupRecord, group_id: &str,
         contact_id: i64,
@@ -915,7 +898,6 @@ impl GroupService {
     /// signing rights, so a plain member can be removed without it. That
     /// matters: a key that never arrived would otherwise make the member
     /// unremovable.
-
     pub async fn remove_member(&self, group_id: String, contact_id: i64) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
 
@@ -1109,7 +1091,6 @@ impl GroupService {
     /// Announcing first would reach that one member and leave every other
     /// member unable to promote or remove us. The announcement still runs when
     /// the refresh fails, so an offline group server costs reach, not delivery.
-
     pub fn spawn_state_refresh_and_announce(ctx: &Arc<Context>, group_id: String) {
         let ctx = ctx.clone();
 
@@ -1130,7 +1111,6 @@ impl GroupService {
     }
 
     /// Sends our group public key to every current member of `group_id`.
-
     async fn announce_group_public_key(&self, group_id: &str) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -1164,7 +1144,6 @@ impl GroupService {
     /// state is refetched rather than the message being taken as permission to
     /// rejoin them; if the server agrees they are gone, nothing changes and the
     /// interval keeps a busy group from asking again.
-
     pub fn spawn_stale_membership_refresh(ctx: &Arc<Context>, group_id: String, contact_id: i64) {
         if !claim_stale_membership_refresh(&group_id) {
             return;
@@ -1242,7 +1221,6 @@ impl GroupService {
     /// The ids are read on their own connection and each group is then
     /// refreshed by [`Self::fetch_group_state`], so no connection is held
     /// across the per-group round-trips.
-
     pub async fn fetch_group_states_for_unjoined_groups(&self) -> Result<()> {
         let db = self.ctx.app_db.read().await.clone();
 
@@ -1267,7 +1245,6 @@ impl GroupService {
     /// appends. Pass a `group_id` to limit the sweep to one group, and `force`
     /// to ignore [`PUBLIC_KEY_REQUEST_INTERVAL`] -- the group view does, so the
     /// user always has a way to retry by hand.
-
     pub async fn fetch_missing_group_public_keys(
         &self, group_id: Option<String>, force: bool,
     ) -> Result<()> {
@@ -1307,7 +1284,6 @@ impl GroupService {
     /// [`Self::fetch_missing_group_public_keys`] sends immediately, which needs
     /// its own database access and so cannot run while a transaction holds the
     /// single app-database connection.
-
     async fn queue_missing_group_public_key_requests(
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: &str,
     ) -> Result<()> {
@@ -1478,7 +1454,6 @@ impl GroupService {
 }
 
 #[cfg(test)]
-
 mod membership_repair_tests {
 
     use super::*;

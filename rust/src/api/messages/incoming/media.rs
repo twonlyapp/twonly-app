@@ -30,7 +30,6 @@ fn spawn_media_download(ctx: &Arc<Context>, media_id: String) {
 }
 
 /// A group member kept the media, so every member keeps an available copy too.
-
 fn spawn_media_store(ctx: &Arc<Context>, media_id: String) {
     let ctx = ctx.clone();
 
@@ -43,7 +42,6 @@ fn spawn_media_store(ctx: &Arc<Context>, media_id: String) {
 
 /// The receiver could not decrypt the media, so it has to be re-encrypted and
 /// uploaded again for that contact.
-
 fn spawn_media_reupload(ctx: &Arc<Context>, media_id: String, contact_id: i64, message_id: String) {
     let ctx = ctx.clone();
 
@@ -363,7 +361,6 @@ pub(crate) async fn handle_media_update(
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

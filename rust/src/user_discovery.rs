@@ -25,7 +25,6 @@ use crate::user_discovery::user_discovery_message::user_discovery_promotion::ann
 
 /// Type of the user id, this must be consistent with the user id defined in
 /// the types.proto
-
 pub type UserID = i64;
 
 fn is_supported_threshold(threshold: u32) -> bool {
@@ -86,7 +85,6 @@ impl UserDiscovery {
     /// Refreshes server-owned data for announcements after the API connection
     /// has authenticated. Cryptographic discovery state remains owned here;
     /// the API runtime only invokes this lifecycle hook.
-
     pub async fn on_connected(&self, ctx: &Arc<Context>) -> Result<()> {
         let database = ctx.app_db.read().await.clone();
 
@@ -305,7 +303,6 @@ impl UserDiscovery {
     ///   successfully
     /// * `Err(TwonlyError)` - If the user discovery was not initialized or
     ///   updated successfully
-
     pub async fn initialize_or_update(
         &self, threshold: u8, user_id: UserID, public_key: Vec<u8>, share_promotion: bool,
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
@@ -399,7 +396,6 @@ impl UserDiscovery {
     ///
     /// * `Ok(Vec<u8>)` - The current version of the user discovery
     /// * `Err(TwonlyError)` - If there where errors in the store.
-
     pub async fn get_current_version(&self) -> Result<Vec<u8>> {
         let config = self.get_config_snapshot().await?;
 
@@ -425,7 +421,6 @@ impl UserDiscovery {
     /// * `Ok(Vec<Vec<u8>>)` - The new user discovery messages
     /// * `Err(TwonlyError)` - If there where errors in the store or if the
     ///   received version is invalid.
-
     pub async fn get_new_messages(
         &self, contact_id: UserID, received_version: &[u8],
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
@@ -482,7 +477,7 @@ impl UserDiscovery {
                         verification_shares: config.verification_shares.clone(),
                         share_promotion: config.share_promotion,
                     }),
-                    version: version.clone(),
+                    version,
                     ..Default::default()
                 }
                 .encode_to_vec(),
@@ -524,7 +519,6 @@ impl UserDiscovery {
     /// Returns the latest version for this discovery.
     /// Before calling this function the application must sure that contact_id
     /// is qualified to be announced.
-
     pub async fn handle_new_messages(
         &self, contact_id: UserID, public_key_verified_timestamp: Option<i64>,
         messages: Vec<Vec<u8>>, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
@@ -724,7 +718,6 @@ impl UserDiscovery {
 
     /// Reads the config from the store without holding any lock.
     /// Use this for read-only access to the config.
-
     async fn get_config_snapshot(&self) -> Result<UserDiscoveryConfig> {
         Ok(serde_json::from_str(&self.read_config()?)?)
     }
@@ -750,7 +743,6 @@ impl UserDiscovery {
     /// Atomically reads the config, applies the mutation, and writes it back.
     /// The config_lock is only held during the read-modify-write cycle,
     /// NOT across any async Dart callbacks from the caller.
-
     async fn read_modify_write_config<F>(&self, mutate: F) -> Result<()>
     where
         F: FnOnce(&mut UserDiscoveryConfig),
@@ -1253,7 +1245,6 @@ impl Default for UserDiscoveryConfig {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::{is_supported_threshold, MIN_USER_DISCOVERY_THRESHOLD};

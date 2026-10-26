@@ -86,11 +86,9 @@ async fn storage_write_sync_and_full_failures_preserve_acknowledged_data_and_tra
 {
     for kind in [Fault::Write, Fault::Sync, Fault::Full] {
         let positions = if kind == Fault::Sync {
-            if cfg!(feature = "sqlite-wal") {
-                2 // WAL sync and database sync during a NORMAL checkpoint.
-            } else {
-                2
-            }
+            // Both journal modes sync twice; with WAL these are the WAL sync and
+            // the database sync during a NORMAL checkpoint.
+            2
         } else {
             12
         };

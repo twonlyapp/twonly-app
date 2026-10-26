@@ -47,7 +47,6 @@ pub async fn clean_log_file() -> Result<()> {
 }
 
 /// Truncates `app.log` through its owner instead of unlinking an open file.
-
 pub async fn clear_log_file() -> Result<bool> {
     tokio::task::spawn_blocking(crate::log::clear_log_file)
         .await

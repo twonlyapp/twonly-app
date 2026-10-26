@@ -129,7 +129,7 @@ async fn every_identity_installation_boundary_recovers_the_keys_that_open_both_d
 
     assert!(trace.iter().any(|at| at == "identity acknowledged"));
 
-    for failure in 0..trace.len() {
+    for (failure, at) in trace.iter().enumerate() {
         let (_directory, config, staging) = fixture();
 
         let roots = Roots::new(&config).unwrap();
@@ -171,7 +171,7 @@ async fn every_identity_installation_boundary_recovers_the_keys_that_open_both_d
                     step += 1;
 
                     if current == failure {
-                        panic!("injected interruption at {}", trace[failure]);
+                        panic!("injected interruption at {at}");
                     }
 
                     Ok(())
@@ -180,7 +180,7 @@ async fn every_identity_installation_boundary_recovers_the_keys_that_open_both_d
             .unwrap();
         }));
 
-        assert!(stopped.is_err(), "{}", trace[failure]);
+        assert!(stopped.is_err(), "{at}");
 
         if roots.journal().exists() {
             // Ordinary identity mutations must not bypass an incomplete restore.
@@ -193,7 +193,7 @@ async fn every_identity_installation_boundary_recovers_the_keys_that_open_both_d
 
         let expected = if failure >= committed { &new } else { &old };
 
-        assert_eq!(active, *expected, "{}", trace[failure]);
+        assert_eq!(active, *expected, "{at}");
 
         for target in DATABASES {
             let mut connection = cipher_connection(&roots.target(*target), &active, *target).await;
@@ -204,8 +204,7 @@ async fn every_identity_installation_boundary_recovers_the_keys_that_open_both_d
                     .await
                     .unwrap(),
                 Some(if failure >= committed { 77 } else { 42 }),
-                "{}",
-                trace[failure]
+                "{at}"
             );
 
             connection.close().await.unwrap();

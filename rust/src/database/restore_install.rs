@@ -72,7 +72,6 @@ enum Phase {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-
 struct Entry {
     target: Target,
     original: bool,
@@ -81,7 +80,6 @@ struct Entry {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-
 struct Journal {
     version: u32,
     id: String,
@@ -94,7 +92,6 @@ struct Journal {
 
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-
 struct Envelope {
     journal: Journal,
     sha256: String,
@@ -457,7 +454,6 @@ fn apply_identity(
 }
 
 /// Before any keys, SQLite handles or restored settings are read on startup.
-
 pub(crate) async fn recover_before_open(config: &InitConfig) -> Result<()> {
     recover_with_storage(config, SecureStorage::new("eu.twonly")).await
 }
@@ -506,7 +502,6 @@ pub(crate) fn install(
 }
 
 #[cfg(test)]
-
 fn install_with(
     config: &InitConfig, staging: &Path, operation: Option<&Operation>,
     hook: &mut impl FnMut(&str) -> Result<()>,

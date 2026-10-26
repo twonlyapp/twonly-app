@@ -17,7 +17,6 @@ use std::sync::Arc;
 
 /// When the story was posted, capped at `now`: a timestamp from the future
 /// would otherwise keep the story around for longer than its 24 hours.
-
 pub(crate) fn posted_at(story: &encrypted_content::Story, now: i64) -> i64 {
     story
         .media
@@ -35,7 +34,6 @@ pub(crate) fn is_expired(story: &encrypted_content::Story) -> bool {
 /// Files a story item under the 1:1 chat with its sender, where it stays
 /// hidden until it is saved. Expired items never get here; see
 /// `handle_encrypted`.
-
 pub(crate) async fn handle_story(
     ctx: &Arc<Context>, t: &mut Transaction<'_, Sqlite>, from_user_id: i64,
     story: encrypted_content::Story,
@@ -103,7 +101,6 @@ pub(crate) async fn handle_story(
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use crate::api::messages::incoming::{handle_encrypted, Delivery};
@@ -148,7 +145,6 @@ mod tests {
 
     /// The 1:1 chat with contact 7, last used for a text or media message at
     /// `last_text_or_media_at`.
-
     async fn chat_with_anna(ctx: &Context, last_text_or_media_at: Option<i64>) -> Result<String> {
         let chat = Group::direct_chat_id(42, 7);
 

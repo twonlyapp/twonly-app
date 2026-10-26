@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show kReleaseMode;
+import 'package:flutter/foundation.dart' show kDebugMode, kProfileMode, kReleaseMode;
 import 'package:flutter/services.dart';
 import 'package:mutex/mutex.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -32,6 +32,11 @@ class ErrorReportingService {
         (options) => options
           ..dsn =
               'https://6b24a012c85144c9b522440a1d17d01c@glitchtip.twonly.eu/4'
+          ..environment = kDebugMode
+              ? 'debug'
+              : kProfileMode
+              ? 'profile'
+              : 'release'
           ..autoInitializeNativeSdk = false
           ..tracesSampleRate = kReleaseMode ? 0.01 : 1.0
           ..enableAutoPerformanceTracing = false

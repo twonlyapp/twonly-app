@@ -14,7 +14,7 @@ pub async fn list_media_files(
 ) -> Result<Vec<MediaFile>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::list(&mut **tx.transaction(), &input).await;
+    let result = queries::list(tx.transaction(), &input).await;
 
     tx.finish(result).await
 }
@@ -64,7 +64,7 @@ pub async fn media_message_ids_by_hash(
 ) -> Result<Vec<String>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::message_ids_by_hash(&mut **tx.transaction(), &hash, sender).await;
+    let result = queries::message_ids_by_hash(tx.transaction(), &hash, sender).await;
 
     tx.finish(result).await
 }
@@ -74,7 +74,7 @@ pub async fn media_storage_stats(
 ) -> Result<Vec<MediaStorageStat>> {
     let mut tx = CommandTransaction::begin(transaction).await?;
 
-    let result = storage::stats(&mut **tx.transaction(), directory.into()).await;
+    let result = storage::stats(tx.transaction(), directory.into()).await;
 
     tx.finish(result).await
 }
@@ -84,7 +84,7 @@ pub async fn cloud_only_media_count(
 ) -> Result<i64> {
     let mut tx = CommandTransaction::begin(transaction).await?;
 
-    let result = storage::cloud_only_count(&mut **tx.transaction(), directory.into()).await;
+    let result = storage::cloud_only_count(tx.transaction(), directory.into()).await;
 
     tx.finish(result).await
 }
@@ -117,7 +117,7 @@ pub async fn watch_chat_media_files(
 pub async fn missing_media_month_dates(transaction: &DatabaseSession) -> Result<Vec<i64>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::missing_month_dates(&mut **tx.transaction()).await;
+    let result = queries::missing_month_dates(tx.transaction()).await;
 
     tx.finish(result).await
 }
@@ -144,7 +144,7 @@ pub async fn finish_memories_backup_disable(
     if transaction.transaction.is_none() {
         if let Ok(ctx) = crate::context::Context::get_static() {
             if let Err(error) =
-                crate::services::mediafiles::cleanup_pending_file_removals(&ctx).await
+                crate::services::mediafiles::cleanup_pending_file_removals(ctx).await
             {
                 tracing::warn!(%error, "media cleanup will be retried");
             }
@@ -159,7 +159,7 @@ pub async fn get_media_file(
 ) -> Result<Option<MediaFile>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::get(&mut **tx.transaction(), &id).await;
+    let result = queries::get(tx.transaction(), &id).await;
 
     tx.finish(result).await
 }

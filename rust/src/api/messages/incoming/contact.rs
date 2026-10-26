@@ -157,7 +157,6 @@ pub(crate) async fn check_for_profile_update(
 /// Refreshes request metadata before inbound handling opens its transaction.
 /// A server lookup may take the full request timeout, and its error handling
 /// can itself write to the app database. Neither can hold its only connection.
-
 pub(crate) async fn prepare_contact_request(
     ctx: &Arc<Context>, from_user_id: i64, content: &EncryptedContent,
 ) -> Result<()> {
@@ -449,7 +448,6 @@ pub(crate) async fn handle_contact_update(
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

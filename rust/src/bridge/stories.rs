@@ -23,7 +23,6 @@ pub struct _StoryAudience {
 /// The 1:1 chats a story sent to `audience` would go to right now, one per
 /// contact. Together with the chats picked for a direct send, this is who a
 /// send reaches.
-
 pub async fn story_audience_chats(audience: StoryAudience) -> Result<Vec<String>> {
     let ctx = Context::get_static()?;
 
@@ -38,7 +37,6 @@ pub fn max_media_recipients() -> u32 {
 }
 
 /// Takes one of the user's own story items down for every recipient.
-
 pub async fn delete_story_item(media_id: String) -> Result<()> {
     let ctx = Context::get_static()?;
 
@@ -46,7 +44,6 @@ pub async fn delete_story_item(media_id: String) -> Result<()> {
 }
 
 /// Lets go of every story item older than 24 hours.
-
 pub async fn purge_expired_stories() -> Result<()> {
     let ctx = Context::get_static()?;
 

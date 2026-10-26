@@ -65,7 +65,6 @@ fn copy_cancellable(
 }
 
 /// A timeout aborts restore; it never permits replacing a live database.
-
 const POOL_CLOSE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 
 async fn close_pool_required(
@@ -127,7 +126,6 @@ pub struct BackupFileSize {
 
 impl BackupArchive {
     /// Read current storage usage without creating or uploading a backup.
-
     pub(crate) async fn storage_info(ctx: &Context) -> Result<BackupStorageInfo> {
         let files = {
             let keys = ctx.key_manager.lock().await;
@@ -215,7 +213,6 @@ impl BackupArchive {
     }
 
     #[allow(clippy::type_complexity)]
-
     fn get_backup_files(
         ctx: &Context, keys: &KeyManager,
     ) -> Result<Vec<(&'static str, PathBuf, bool, Option<String>)>> {
@@ -243,7 +240,6 @@ impl BackupArchive {
     }
 
     #[cfg(test)]
-
     pub(crate) async fn create_backup(ctx: &Arc<Context>) -> Result<PathBuf> {
         Self::create_backup_with_token(ctx)
             .await
@@ -894,7 +890,6 @@ impl BackupArchive {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use crate::secure_storage::SecureStorage;

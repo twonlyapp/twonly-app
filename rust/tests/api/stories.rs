@@ -60,7 +60,6 @@ async fn scalar(tester: &Tester, sql: &str, bind: &str) -> anyhow::Result<i64> {
 }
 
 /// Polls until `sql` (with one bound value) returns something other than 0.
-
 async fn wait_for(tester: &Tester, what: &str, sql: &str, bind: &str) -> anyhow::Result<()> {
     for _ in 0..100 {
         if scalar(tester, sql, bind).await? != 0 {
@@ -76,7 +75,6 @@ async fn wait_for(tester: &Tester, what: &str, sql: &str, bind: &str) -> anyhow:
 /// Supplies a real encrypted attachment and a deliberately timestamped story
 /// envelope. The host performs the same three requests as the mobile uploader;
 /// receivers can download it without triggering missing-media recovery.
-
 async fn post_story(
     sender: &Tester, recipient: &Tester, message_id: &str, media_id: &str, posted_at: i64,
     notify: bool,

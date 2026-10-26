@@ -12,7 +12,6 @@ use std::path::Path;
 
 /// Apple Vision owns segmentation on iOS; no ONNX runtime or model is linked.
 #[cfg(target_os = "ios")]
-
 pub(crate) fn extract_foreground(input: &Path) -> Result<::image::RgbaImage> {
     use std::ffi::CString;
     use std::os::raw::c_char;
@@ -66,7 +65,6 @@ pub(crate) fn extract_foreground(input: &Path) -> Result<::image::RgbaImage> {
 }
 
 #[cfg(target_os = "ios")]
-
 pub(crate) fn decode_to_png(input: &Path, output: &Path) -> Result<()> {
     use std::ffi::CString;
     use std::os::raw::c_char;
@@ -105,7 +103,6 @@ pub(crate) fn decode_to_png(input: &Path, output: &Path) -> Result<()> {
 }
 
 #[cfg(target_os = "android")]
-
 pub(crate) fn decode_to_png(input: &Path, output: &Path) -> Result<()> {
     use crate::native::transfer::android::{media_codec_class, with_env};
     use jni::objects::{JObject, JValue};
@@ -135,9 +132,9 @@ pub(crate) fn decode_to_png(input: &Path, output: &Path) -> Result<()> {
         // A pending Java exception would abort the process once this thread returns
         // to the VM, so it is cleared and reported as a plain error instead.
         if env.exception_check() {
-            let _ = env.exception_describe();
+            env.exception_describe();
 
-            let _ = env.exception_clear();
+            env.exception_clear();
         }
 
         if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
@@ -151,7 +148,6 @@ pub(crate) fn decode_to_png(input: &Path, output: &Path) -> Result<()> {
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-
 pub(crate) fn decode_to_png(_input: &Path, _output: &Path) -> Result<()> {
     Err(TwonlyError::Generic(
         "platform image decoding is only available on Android and iOS".into(),

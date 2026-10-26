@@ -10,7 +10,7 @@ use crate::frb_generated::StreamSink;
 pub async fn verified_contact_ids(transaction: &DatabaseSession) -> Result<Vec<i64>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::verified_ids(&mut **tx.transaction()).await;
+    let result = queries::verified_ids(tx.transaction()).await;
 
     tx.finish(result).await
 }
@@ -18,7 +18,7 @@ pub async fn verified_contact_ids(transaction: &DatabaseSession) -> Result<Vec<i
 pub async fn recovery_friend_ids(transaction: &DatabaseSession) -> Result<Vec<i64>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::trusted_ids(&mut **tx.transaction()).await;
+    let result = queries::trusted_ids(tx.transaction()).await;
 
     tx.finish(result).await
 }
@@ -28,7 +28,7 @@ pub async fn recovery_contacts(
 ) -> Result<Vec<Contact>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::contacts(&mut **tx.transaction(), selection, limit).await;
+    let result = queries::contacts(tx.transaction(), selection, limit).await;
 
     tx.finish(result).await
 }

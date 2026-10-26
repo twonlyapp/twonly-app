@@ -14,7 +14,6 @@ const FILE_NAME: &str = "webxdc-visible-instance";
 // Unix, including the host running our tests, so the lease has the same
 // cross-process and close-on-drop behavior on both mobile platforms.
 #[cfg(unix)]
-
 fn try_lock(file: &File) -> std::io::Result<()> {
     use std::os::fd::AsRawFd;
 
@@ -105,7 +104,6 @@ pub(crate) fn visible_instance(directory: &Path) -> Option<String> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

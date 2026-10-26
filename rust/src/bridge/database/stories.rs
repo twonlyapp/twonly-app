@@ -13,7 +13,7 @@ pub async fn get_received_stories(
 ) -> Result<ReceivedStories> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::received(&mut **tx.transaction(), cutoff, None, Some(contact)).await;
+    let result = queries::received(tx.transaction(), cutoff, None, Some(contact)).await;
 
     tx.finish(result).await
 }

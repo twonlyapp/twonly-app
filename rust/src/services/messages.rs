@@ -85,7 +85,6 @@ impl MessageService {
     /// message asks user discovery for a version, which needs it initialized,
     /// and initializing it writes through the pool. Callers with a message id
     /// go through [`Self::send_to_group`], which sends outside a transaction.
-
     pub async fn send_to_group_in_transaction(
         &self, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: String,
         encrypted_content: Vec<u8>, message_id: Option<String>,
@@ -260,7 +259,6 @@ impl MessageService {
     /// `additional_message_data` records where the text came from when the
     /// sender did not type it -- today, the webxdc app that produced it. It is
     /// stored beside the message so the chat can say so on both devices.
-
     pub async fn insert_and_send_text(
         &self, group_id: String, text: String, quote_message_id: Option<String>,
         additional_message_data: Option<Vec<u8>>, message_id: Option<String>,
@@ -347,7 +345,6 @@ impl MessageService {
     /// sent: no row is written, so it cannot show up in a chat or be swept up
     /// by the deletion timer, and the receiving side neither notifies nor wakes
     /// for it.
-
     pub async fn insert_and_send_additional_data(
         &self, group_id: String, message_type: String, additional_data: Vec<u8>, hidden: bool,
     ) -> Result<String> {
@@ -687,7 +684,6 @@ impl MessageService {
 }
 
 #[cfg(test)]
-
 mod pending_text_tests {
 
     use super::*;

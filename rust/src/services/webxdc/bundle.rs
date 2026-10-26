@@ -18,7 +18,6 @@ use std::io::Read;
 use std::path::Path;
 
 /// Refuses to expand a single entry beyond this, whatever the zip claims.
-
 const MAX_ENTRY_BYTES: u64 = 32 * 1024 * 1024;
 
 /// Denies the app every way out of its own origin.
@@ -26,7 +25,6 @@ const MAX_ENTRY_BYTES: u64 = 32 * 1024 * 1024;
 /// The scheme handler already answers requests for anything else with a 403
 /// without touching the network, so this is defence in depth: CSP has a history
 /// of gaps (WebRTC, prefetch, plugins) and is not load bearing on its own.
-
 const CONTENT_SECURITY_POLICY: &str =
     "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' \
      'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' \
@@ -36,7 +34,6 @@ const CONTENT_SECURITY_POLICY: &str =
 /// Every powerful feature a webview can hand a page, switched off. The native
 /// permission callbacks deny these too; a header costs nothing and covers the
 /// features whose prompts a platform might answer on its own.
-
 const PERMISSIONS_POLICY: &str = "accelerometer=(), ambient-light-sensor=(), autoplay=(), \
                                   camera=(), display-capture=(), encrypted-media=(), \
                                   geolocation=(), gyroscope=(), magnetometer=(), microphone=(), \
@@ -84,7 +81,6 @@ impl HttpResponse {
 /// The API implementation served in place of anything the bundle ships under
 /// that name. Serving it from here rather than injecting it into the document
 /// means it is subject to the same CSP as the rest of the app.
-
 const WEBXDC_JS: &str = include_str!("webxdc.js");
 
 /// Turns a URL path into the zip entry name it may read, or `None` if it may
@@ -92,7 +88,6 @@ const WEBXDC_JS: &str = include_str!("webxdc.js");
 ///
 /// Rejects rather than sanitises: a request that needed cleaning up is a
 /// request no honest app makes, and rewriting it would only hide that.
-
 fn entry_name(request_path: &str) -> Option<String> {
     let path = request_path
         .split(['?', '#'])
@@ -149,7 +144,6 @@ fn percent_decode(input: &str) -> Option<String> {
 
 /// Only types a webxdc app has a reason to ship. Anything else is served as an
 /// opaque download with `nosniff`, so an unexpected file cannot become script.
-
 fn mime_for(name: &str) -> &'static str {
     let extension = name.rsplit('.').next().unwrap_or_default().to_lowercase();
 
@@ -185,7 +179,6 @@ fn mime_for(name: &str) -> &'static str {
 /// caller has already established that the origin belongs to this instance.
 /// `init` is the JSON object substituted into `webxdc.js`; it is produced by
 /// the caller and never passes through the page.
-
 pub fn serve(bundle_path: &Path, request_path: &str, init: &str) -> HttpResponse {
     let Some(name) = entry_name(request_path) else {
         return HttpResponse::forbidden();
@@ -256,7 +249,6 @@ fn read_entry(bundle_path: &Path, name: &str) -> Result<Option<Vec<u8>>> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::entry_name;

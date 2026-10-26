@@ -84,7 +84,6 @@ pub struct WebxdcResponse {
 }
 
 /// Refreshes the store listing. Metadata only; no bundle is fetched.
-
 pub async fn refresh_catalog() -> Result<()> {
     let ctx = crate::context::Context::get_static()?;
 
@@ -96,7 +95,6 @@ pub async fn refresh_catalog() -> Result<()> {
 /// `languages` is what the UI prefers, most preferred first. Names and
 /// descriptions are cached in every language the catalog carries and picked
 /// here, so which language a user reads is never sent anywhere.
-
 pub async fn catalog(group_id: String, languages: Vec<String>) -> Result<Vec<WebxdcStoreApp>> {
     let ctx = crate::context::Context::get_static()?;
 
@@ -163,7 +161,6 @@ async fn catalog_for_context(
 }
 
 /// One-time apps already placed into a chat, for the profile shortcut.
-
 pub async fn one_time_instances(
     group_id: String, languages: Vec<String>,
 ) -> Result<Vec<WebxdcOneTimeInstance>> {
@@ -209,7 +206,6 @@ pub async fn one_time_instances(
 }
 
 /// Places an app into a chat and returns the id of the message that carries it.
-
 pub async fn create_instance(group_id: String, app_id: String, version: i64) -> Result<String> {
     let ctx = crate::context::Context::get_static()?;
 
@@ -239,7 +235,6 @@ pub async fn instance(instance_id: String) -> Result<Option<WebxdcInstanceInfo>>
 /// Downloads and verifies the pinned bundle only when it is missing. Called
 /// when the user starts an app, never on message arrival: a message must not be
 /// able to make a device fetch anything.
-
 pub async fn prepare_bundle(instance_id: String) -> Result<String> {
     let ctx = crate::context::Context::get_static()?;
 
@@ -250,7 +245,6 @@ pub async fn prepare_bundle(instance_id: String) -> Result<String> {
 
 /// Background update check after a webxdc app closes. Downloads only; the
 /// running version changes on a later prepare_bundle call, never mid-session.
-
 pub async fn cache_update(instance_id: String) -> Result<()> {
     let ctx = crate::context::Context::get_static()?;
 
@@ -261,7 +255,6 @@ pub async fn cache_update(instance_id: String) -> Result<()> {
 ///
 /// The platform shim has already established that the request came from this
 /// instance's own origin; everything after that is decided here.
-
 pub async fn serve(instance_id: String, request_path: String) -> Result<WebxdcResponse> {
     let ctx = crate::context::Context::get_static()?;
 
@@ -317,7 +310,6 @@ pub async fn send_update(
 
 /// The address the running app sees for a participant. Stable inside one
 /// instance and unrelated to the same user's address in any other.
-
 pub fn address_for(instance_id: String, user_id: i64) -> String {
     WebxdcService::address_for(&instance_id, user_id)
 }
@@ -326,7 +318,6 @@ pub fn address_for(instance_id: String, user_id: i64) -> String {
 /// storage the platform layer still has to clear. The log is only half the
 /// state: an app is free to keep everything in `localStorage`, which no
 /// database delete reaches.
-
 pub async fn delete_instance(instance_id: String) -> Result<Option<String>> {
     let ctx = crate::context::Context::get_static()?;
 
@@ -334,7 +325,6 @@ pub async fn delete_instance(instance_id: String) -> Result<Option<String>> {
 }
 
 /// Current members of the instance's chat; no account identifiers leave Rust.
-
 pub async fn members(instance_id: String) -> Result<String> {
     let ctx = crate::context::Context::get_static()?;
 
@@ -342,7 +332,6 @@ pub async fn members(instance_id: String) -> Result<String> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

@@ -51,7 +51,7 @@ impl DatabaseTransaction {
         if self.inner.is_root() {
             if let Ok(ctx) = crate::context::Context::get_static() {
                 if let Err(error) =
-                    crate::services::mediafiles::cleanup_pending_file_removals(&ctx).await
+                    crate::services::mediafiles::cleanup_pending_file_removals(ctx).await
                 {
                     tracing::warn!(%error, "pending media file cleanup will be retried");
                 }

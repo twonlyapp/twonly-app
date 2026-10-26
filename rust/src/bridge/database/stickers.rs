@@ -14,7 +14,7 @@ pub async fn get_sticker(
 ) -> Result<Option<LocalSticker>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::get(&mut **tx.transaction(), &hash).await;
+    let result = queries::get(tx.transaction(), &hash).await;
 
     tx.finish(result).await
 }

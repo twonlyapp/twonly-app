@@ -21,12 +21,10 @@ use std::sync::Arc;
 /// No published app may be larger than this, whatever the catalog claims. The
 /// catalog is fetched over TLS from our own server, but it is still the input
 /// that decides how much a client downloads and stores.
-
 const MAX_BUNDLE_BYTES: i64 = 32 * 1024 * 1024;
 
 /// What the server accepts in a manifest, checked again here. A description is
 /// one line under an app's name in the store, whatever the catalog carries.
-
 const MAX_NAME_CHARS: usize = 128;
 
 const MAX_DESCRIPTION_CHARS: usize = 200;
@@ -36,7 +34,6 @@ const MAX_LANGUAGES: usize = 16;
 /// Ids are opaque and are never used to build a path or a URL beyond the
 /// catalog lookup, but a strict charset keeps the failure obvious if that ever
 /// changes.
-
 fn is_valid_app_id(app_id: &str) -> bool {
     !app_id.is_empty()
         && app_id.len() <= 64
@@ -53,7 +50,6 @@ fn is_valid_app_id(app_id: &str) -> bool {
 /// then one sharing its primary language (`de-at` for a reader of `de`), then
 /// English, then whatever the app has at all: a name or a description in the
 /// wrong language still says more about an app than a blank line does.
-
 pub fn pick_localized(translations: &str, languages: &[String]) -> Option<String> {
     let by_language: std::collections::BTreeMap<String, String> =
         serde_json::from_str(translations).ok()?;
@@ -108,7 +104,6 @@ impl WebxdcStore {
     /// An app the server no longer offers is not dropped if an instance on this
     /// device points at it: unpublishing takes an app out of the store, it does
     /// not take it away from the chats it was already placed in.
-
     pub async fn refresh_catalog(&self) -> Result<()> {
         let response = Self::client()?
             .get(Self::url("catalog"))
@@ -253,7 +248,6 @@ impl WebxdcStore {
 
     /// Bundles are content addressed, so two instances of the same app share
     /// one file and a changed bundle can never land on an existing path.
-
     pub fn bundle_path(&self, sha256: &str) -> PathBuf {
         self.bundles_dir().join(format!("{sha256}.xdc"))
     }
@@ -263,7 +257,6 @@ impl WebxdcStore {
     /// Callers pin the result on the instance, and keep running it until the
     /// next time the app is started: a refresh in between must not change the
     /// code behind a game that is being played.
-
     pub async fn resolve_bundle_sha256(&self, app_id: &str, version: i64) -> Result<String> {
         if !is_valid_app_id(app_id) {
             return Err(TwonlyError::Generic("invalid webxdc app id".into()));
@@ -285,7 +278,6 @@ impl WebxdcStore {
 
     /// The hash a version maps to, published or merely still cached for an
     /// instance that runs it.
-
     async fn known_bundle(&self, app_id: &str, version: i64) -> Result<Option<String>> {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -306,7 +298,6 @@ impl WebxdcStore {
     /// Read from the cache, so it says what the last refresh saw. Callers that
     /// care about being current refresh first and treat a failure as "no update
     /// today" rather than as a reason not to start the app.
-
     pub async fn newest_published(&self, app_id: &str) -> Result<Option<(i64, String)>> {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -326,7 +317,6 @@ impl WebxdcStore {
 
     /// Downloads the bundle unless it is already on disk, and returns the path
     /// only once its hash matches what was asked for.
-
     pub async fn ensure_bundle(&self, sha256: &str) -> Result<PathBuf> {
         let path = self.bundle_path(sha256);
 
@@ -390,7 +380,6 @@ impl WebxdcStore {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::{pick_localized, Context, WebxdcCatalog, WebxdcCatalogEntry, WebxdcStore};

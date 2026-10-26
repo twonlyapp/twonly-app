@@ -246,7 +246,6 @@ pub(crate) async fn stop_for_reset() {
 
 /// Startup and resume use the same serialized owner. The owned task finishes
 /// connection setup even if UIKit cancels midway through initialization.
-
 pub(crate) async fn activate(config: InitConfig) -> Result<()> {
     let _transition = TRANSITION.lock().await;
 
@@ -404,7 +403,6 @@ pub(crate) async fn activate(config: InitConfig) -> Result<()> {
 /// UIKit/Android lifecycle callbacks return immediately. Cleanup runs on the
 /// saved Flutter runtime, even while the Flutter isolate itself is suspended.
 #[unsafe(no_mangle)]
-
 pub extern "C" fn twonly_database_set_foreground(active: bool) {
     NATIVE_EVENTS.store(true, Ordering::Release);
 

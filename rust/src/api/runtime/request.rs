@@ -31,7 +31,6 @@ fn call_handle_server_message(
 
 /// Maps the error codes that make further connection attempts pointless onto
 /// the event the UI shows for them. Everything else is a per-request error.
-
 pub(crate) fn permanent_rejection_kind(code: i32) -> Option<ApiEventKind> {
     use crate::api::proto::error::ErrorCode;
 
@@ -50,7 +49,6 @@ pub(crate) fn permanent_rejection_kind(code: i32) -> Option<ApiEventKind> {
 /// every further send fails the same way until the client is replaced. The
 /// other variants describe a single message or a connection that is still
 /// coming up, and are left to the caller to retry.
-
 fn is_dead_transport(error: &SendError) -> bool {
     matches!(error, SendError::ChannelClosed)
 }
@@ -313,7 +311,6 @@ impl ApiClient {
     /// Rejections the server will keep returning for as long as this
     /// installation stays as it is: the socket is closed for good and the UI is
     /// told why, instead of the client reconnecting into the same error.
-
     pub(crate) async fn reject_permanently(&self, kind: ApiEventKind) {
         self.set_state(ApiConnectionState::PermanentlyRejected)
             .await;

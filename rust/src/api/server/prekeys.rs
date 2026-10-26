@@ -101,7 +101,6 @@ impl Server {
     }
 
     #[doc(hidden)]
-
     pub async fn generate_and_upload_pqc_pre_keys(ctx: &Arc<Context>) -> Result<Vec<u8>> {
         let engine = ctx.signal_engine.lock().await;
 
@@ -170,7 +169,6 @@ impl Server {
     }
 
     #[allow(clippy::too_many_arguments)]
-
     pub async fn upload_pqc_pre_keys(
         ctx: &Arc<Context>, public_identity_key: Vec<u8>, registration_id: i64,
         ecc_signed_prekey_id: i64, ecc_signed_prekey: Vec<u8>,

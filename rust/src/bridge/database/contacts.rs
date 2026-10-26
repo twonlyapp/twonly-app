@@ -11,7 +11,7 @@ use crate::frb_generated::StreamSink;
 pub async fn get_contact(id: i64, transaction: &DatabaseSession) -> Result<Option<Contact>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::get(&mut **tx.transaction(), id).await;
+    let result = queries::get(tx.transaction(), id).await;
 
     tx.finish(result).await
 }
@@ -21,7 +21,7 @@ pub async fn list_contacts(
 ) -> Result<Vec<Contact>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::list(&mut **tx.transaction(), &input).await;
+    let result = queries::list(tx.transaction(), &input).await;
 
     tx.finish(result).await
 }
@@ -29,7 +29,7 @@ pub async fn list_contacts(
 pub async fn count_contacts(metric: ContactCount, transaction: &DatabaseSession) -> Result<i64> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::count(&mut **tx.transaction(), metric).await;
+    let result = queries::count(tx.transaction(), metric).await;
 
     tx.finish(result).await
 }

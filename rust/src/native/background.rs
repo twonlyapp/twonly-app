@@ -23,7 +23,6 @@ use std::time::Duration;
 
 /// One maintenance run at a time per process. Two concurrent runs would only
 /// contend on the same per-media locks and the same socket.
-
 static MAINTENANCE_WORKER: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
 static PENDING_RUNS: LazyLock<Mutex<HashMap<u64, Lease>>> =
@@ -75,7 +74,6 @@ fn run_on_worker_stack<T: Send + 'static>(
 /// state. It must not mark a 202 response as sent or initialize a runtime when
 /// Flutter is absent; durable maintenance handles that case later.
 #[unsafe(no_mangle)]
-
 pub extern "C" fn twonly_direct_media_transfer_finished() -> bool {
     catch_unwind(AssertUnwindSafe(|| {
         let Ok(ctx) = Context::get_static() else {
@@ -164,7 +162,6 @@ fn response_json(outcome: Option<RunOutcome>, error: Option<String>) -> *mut c_c
 /// file is prepared. The returned pointer must be released with
 /// `twonly_background_string_free`.
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_background_run(
     database_dir: *const c_char, data_dir: *const c_char, media_id: *const c_char,
 ) -> *mut c_char {
@@ -175,7 +172,6 @@ pub unsafe extern "C" fn twonly_background_run(
 
 /// Register before enqueueing the OS worker so an early expiration is retained.
 #[unsafe(no_mangle)]
-
 pub extern "C" fn twonly_background_run_create() -> u64 {
     create_run(crate::log::LogSource::Background)
 }
@@ -205,7 +201,6 @@ fn create_run_with_budget(source: crate::log::LogSource, budget: u64) -> u64 {
 /// Release a registered run that never reached its worker (for example when
 /// the App Group directory is unavailable). It cannot dispose an active run.
 #[unsafe(no_mangle)]
-
 pub extern "C" fn twonly_background_run_dispose(id: u64) {
     let pending = PENDING_RUNS
         .lock()
@@ -217,7 +212,6 @@ pub extern "C" fn twonly_background_run_dispose(id: u64) {
 }
 
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_background_run_with_id(
     id: u64, database_dir: *const c_char, data_dir: *const c_char, media_id: *const c_char,
 ) -> *mut c_char {
@@ -332,7 +326,6 @@ unsafe fn run_job_with_id(
 
 /// Releases a string returned by a Twonly background entry point.
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_background_string_free(pointer: *mut c_char) {
     if !pointer.is_null() {
         // SAFETY: The pointer was allocated by `CString::into_raw` above and
@@ -342,7 +335,6 @@ pub unsafe extern "C" fn twonly_background_string_free(pointer: *mut c_char) {
 }
 
 #[cfg(test)]
-
 mod lifecycle_tests {
 
     use super::*;
@@ -491,7 +483,6 @@ mod lifecycle_tests {
 }
 
 #[cfg(target_os = "android")]
-
 mod android_jni {
 
     use super::*;
@@ -572,7 +563,6 @@ mod android_jni {
     }
 
     #[unsafe(no_mangle)]
-
     pub extern "system" fn Java_eu_twonly_directmedia_NativeMediaPrepareBridge_run(
         mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, database_dir: JString<'_>,
         data_dir: JString<'_>, media_id: JString<'_>, foreground_service: jboolean,

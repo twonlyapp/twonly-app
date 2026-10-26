@@ -101,7 +101,7 @@ pub async fn replace(
         remove(tx, original_hash).await?;
     }
 
-    Ok(queries::get(&mut **tx, &hash)
+    Ok(queries::get(tx, &hash)
         .await?
         .expect("sticker exists within transaction"))
 }

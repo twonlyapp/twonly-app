@@ -19,7 +19,6 @@ pub(crate) struct LocationFix {
 }
 
 #[cfg(target_os = "ios")]
-
 pub(crate) fn current(timeout: Duration) -> Result<Option<LocationFix>> {
     type CurrentLocation = unsafe extern "C" fn(i64, *mut f64, *mut f64, *mut f64) -> bool;
 
@@ -58,7 +57,6 @@ pub(crate) fn current(timeout: Duration) -> Result<Option<LocationFix>> {
 }
 
 #[cfg(target_os = "android")]
-
 pub(crate) fn current(timeout: Duration) -> Result<Option<LocationFix>> {
     use crate::native::transfer::android::{location_class, with_env};
     use jni::objects::JString;
@@ -78,9 +76,9 @@ pub(crate) fn current(timeout: Duration) -> Result<Option<LocationFix>> {
             .and_then(|value| value.l());
 
         if env.exception_check() {
-            let _ = env.exception_describe();
+            env.exception_describe();
 
-            let _ = env.exception_clear();
+            env.exception_clear();
         }
 
         let value = value.map_err(|error| TwonlyError::Generic(error.to_string()))?;
@@ -113,7 +111,6 @@ pub(crate) fn current(timeout: Duration) -> Result<Option<LocationFix>> {
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-
 pub(crate) fn current(_timeout: Duration) -> Result<Option<LocationFix>> {
     Ok(None)
 }

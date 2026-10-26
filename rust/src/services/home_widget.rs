@@ -25,20 +25,17 @@ use std::sync::Arc;
 /// A widget image lives until the next one takes its place. Only images that
 /// could not be published yet — a download still running, a file that could not
 /// be read — are kept on a clock, because nothing else would ever remove them.
-
 const ABANDONED_MEDIA_SECONDS: i64 = 24 * 60 * 60;
 
 /// Mirrors `staleWidgetSeconds` in the iOS widget: an entry that has not
 /// refreshed within this belongs to a widget that is no longer placed, and its
 /// contact groups must stop granting anyone permission to share.
-
 const STALE_WIDGET_SECONDS: i64 = 48 * 60 * 60;
 
 /// WidgetKit gives an extension roughly 30 MB, and a decoded full-resolution
 /// camera image alone exceeds that, which the system answers by killing the
 /// extension mid-render: the home screen then shows an empty widget. The
 /// largest supported family never needs more than this on either platform.
-
 const WIDGET_IMAGE_MAX_EDGE: u32 = 1200;
 
 #[derive(Serialize)]
@@ -102,7 +99,6 @@ fn config_path(ctx: &Context) -> PathBuf {
 
 /// People selected directly or through a contact group in a placed widget.
 /// Group-valued members are expanded through their ordinary members.
-
 pub async fn allowed_contact_ids(ctx: &Arc<Context>) -> Result<Vec<i64>> {
     let database = ctx.app_db.read().await.clone();
 
@@ -132,7 +128,6 @@ pub async fn allowed_contact_ids(ctx: &Arc<Context>) -> Result<Vec<i64>> {
 }
 
 /// Reconciles the derived grant set and explicitly announces every change.
-
 pub async fn sync_permissions(ctx: &Arc<Context>) -> Result<()> {
     import_native_configuration(ctx).await?;
 
@@ -247,7 +242,6 @@ pub async fn set_widget_groups(
 /// Imports native placement/config changes. Both widget implementations write
 /// `{ widgets: [{id, platform, group_ids, contact_ids}] }` atomically to this
 /// file.
-
 async fn import_native_configuration(ctx: &Arc<Context>) -> Result<()> {
     #[derive(serde::Deserialize)]
 
@@ -357,7 +351,6 @@ async fn contact_group_ids_for_sender(ctx: &Arc<Context>, sender_id: i64) -> Res
 /// hidden, not aged out, deleted along with its files. Walking the rows newest
 /// first and letting each claim only the groups still unclaimed is what makes
 /// that true for every group at once, including a sender who is in several.
-
 pub async fn refresh_manifest(ctx: &Arc<Context>) -> Result<()> {
     // Startup pruning and native pushes can run before permission sync. Import
     // first so a directly selected person's image is never pruned as unused.
@@ -500,7 +493,6 @@ pub async fn refresh_manifest(ctx: &Arc<Context>) -> Result<()> {
 /// None means this row cannot be shown right now. One unreadable file must not
 /// abort the whole manifest: bailing out here would freeze every other widget
 /// image at its last version.
-
 fn publish_image(ctx: &Arc<Context>, images_dir: &Path, row: &WidgetMediaRow) -> Option<String> {
     let source = MediaFileService::new(ctx).temp_path(&row.media_id, &row.media_type);
 
@@ -544,7 +536,6 @@ fn publish_image(ctx: &Arc<Context>, images_dir: &Path, row: &WidgetMediaRow) ->
 /// Every path out of [`remove_media`] already deletes the one it owns; this
 /// only catches what a crash between the two steps left behind, so that the
 /// directory cannot grow by a file nobody will ever look at again.
-
 fn remove_orphaned_images(images_dir: &Path, published: &[ManifestImage]) {
     let live: BTreeSet<&str> = published.iter().map(|image| image.path.as_str()).collect();
 
@@ -569,7 +560,6 @@ fn remove_orphaned_images(images_dir: &Path, published: &[ManifestImage]) {
 /// Widget media exists for the home screen and nowhere else — it is hidden from
 /// chats and never enters memories — so an image no group holds any more has no
 /// second place to live on in.
-
 async fn remove_media(ctx: &Arc<Context>, media: &[(String, String)]) -> Result<()> {
     if media.is_empty() {
         return Ok(());
@@ -616,7 +606,6 @@ async fn remove_media(ctx: &Arc<Context>, media: &[(String, String)]) -> Result<
 /// screen, so taking it back has to remove the bytes rather than filter them
 /// out of one view. Its groups then hold nothing until the next image arrives —
 /// the one it replaced is long gone.
-
 pub async fn delete_media(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
@@ -645,13 +634,11 @@ pub async fn delete_media(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
 /// by its successor, during the refresh that publishes it. This stays as the
 /// maintenance entry point so a wake-up or a launch settles the media that
 /// arrived while nothing was running.
-
 pub async fn purge_widget_media(ctx: &Arc<Context>) -> Result<()> {
     refresh_manifest(ctx).await
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

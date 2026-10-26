@@ -18,7 +18,6 @@ use std::sync::Arc;
 /// Initializing it builds the share set, which writes through the app database
 /// on a connection of its own. The pool has exactly one, so this has to happen
 /// before the caller opens the transaction [`decorate_content`] then runs on.
-
 pub(crate) async fn prepare_user_discovery(
     ctx: &Context, is_persisted_message: bool,
 ) -> Result<()> {
@@ -47,7 +46,6 @@ pub(crate) async fn prepare_user_discovery(
 ///
 /// A caller that passes `is_persisted_message` must have called
 /// [`prepare_user_discovery`] before opening `t`.
-
 pub(crate) async fn decorate_content(
     ctx: &Context, t: &mut Transaction<'_, Sqlite>, contact_id: i64,
     content: &mut proto::EncryptedContent, is_persisted_message: bool,
@@ -260,7 +258,6 @@ pub async fn send_c2c_message_to_contact(
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

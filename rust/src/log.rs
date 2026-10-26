@@ -50,7 +50,6 @@ const TEST_LOG_FILTER: &str = "info,refinery_core=warn,refinery=warn,tract=warn,
 /// The execution that owns a record, independent of other work in the process.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
-
 pub(crate) enum LogSource {
     Foreground = b'f',
     Notification = b'n',
@@ -194,7 +193,6 @@ impl<'a> MakeWriter<'a> for AppLogWriter {
 /// Android sends a native library's stdout to `/dev/null`; only `liblog`
 /// reaches logcat, so the console layer has to go through it there.
 #[cfg(target_os = "android")]
-
 mod logcat {
 
     use std::ffi::CString;
@@ -203,7 +201,6 @@ mod logcat {
     use tracing_subscriber::fmt::MakeWriter;
 
     #[link(name = "log")]
-
     extern "C" {
 
         fn __android_log_write(prio: c_int, tag: *const c_char, text: *const c_char) -> c_int;
@@ -213,7 +210,6 @@ mod logcat {
     const TAG: &[u8] = b"twonly\0";
 
     /// logcat truncates a record at ~4 KiB, so split before it does.
-
     const MAX_PAYLOAD: usize = 3800;
 
     const PRIO_VERBOSE: c_int = 2;
@@ -458,7 +454,6 @@ impl ShortEventFormatter {
     }
 
     /// The same format without escape codes, for a sink that is not a terminal.
-
     pub const fn plain() -> Self {
         Self { ansi: false }
     }
@@ -784,7 +779,6 @@ pub(crate) fn clean_log_file() -> Result<()> {
 
 /// Keeps approximately `target_bytes` from the end while avoiding a partial
 /// first log entry. The result can be slightly smaller by up to one log line.
-
 fn retain_latest_log_bytes(contents: &str, target_bytes: usize) -> String {
     if contents.len() <= target_bytes {
         return contents.to_owned();
@@ -829,7 +823,6 @@ pub(crate) fn clear_log_file() -> Result<bool> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::{

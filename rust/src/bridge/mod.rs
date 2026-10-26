@@ -70,7 +70,6 @@ pub async fn initialize_twonly_flutter(config: InitConfig) -> Result<()> {
 
 /// Initializes the complete Rust runtime without Flutter or callback setup.
 /// Background executables should call this before using `RustApi`.
-
 pub async fn initialize_twonly_standalone(config: InitConfig) -> Result<()> {
     Context::init_standalone(config).await
 }

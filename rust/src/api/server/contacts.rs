@@ -41,7 +41,6 @@ impl Server {
 
     /// Loads the immutable account creation date for contacts that do not
     /// already have it. Server-deleted contacts are deliberately excluded.
-
     pub async fn refresh_contact_joined_dates(ctx: &Arc<Context>) -> Result<()> {
         let database = ctx.app_db.read().await.clone();
 

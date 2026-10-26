@@ -19,7 +19,6 @@ use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 
 /// EXIF stores timestamps as local wall-clock text with no zone.
-
 const DATE_FORMAT: &str = "%Y:%m:%d %H:%M:%S";
 
 const TAG_DATE_TIME: u16 = 0x0132;
@@ -53,11 +52,9 @@ const TYPE_LONG: u16 = 4;
 const TYPE_RATIONAL: u16 = 5;
 
 /// The `VP8X` flag bit that says an `EXIF` chunk is present.
-
 const FLAG_EXIF: u8 = 0b0000_1000;
 
 /// The `VP8X` flag bit that says the image has transparency.
-
 const FLAG_ALPHA: u8 = 0b0001_0000;
 
 #[derive(Default)]
@@ -77,7 +74,6 @@ impl ExifMetadata {
 
 /// Removes the complete EXIF block from the WebP upload copy without decoding
 /// or recompressing its pixels.
-
 pub(crate) fn remove_exif_from_file(path: &std::path::Path) -> Result<()> {
     let bytes = std::fs::read(path)?;
 
@@ -133,7 +129,6 @@ fn without_exif(webp: &[u8]) -> Result<Vec<u8>> {
 /// Returns the WebP bytes with an `EXIF` chunk attached, converting a simple
 /// file to the extended layout when needed.
 #[cfg(test)]
-
 fn with_exif(webp: &[u8], metadata: &ExifMetadata) -> Result<Vec<u8>> {
     if metadata.is_empty() {
         return Ok(webp.to_vec());
@@ -197,7 +192,6 @@ fn with_exif(webp: &[u8], metadata: &ExifMetadata) -> Result<Vec<u8>> {
 
 /// Stamps a gallery export by streaming the existing compressed chunks. A
 /// full-resolution Memory is neither decoded nor held in two byte buffers.
-
 pub(crate) fn write_with_exif(
     source: &Path, destination: &Path, metadata: &ExifMetadata,
 ) -> Result<()> {
@@ -378,7 +372,6 @@ fn parse_chunks(webp: &[u8]) -> Result<Vec<Chunk<'_>>> {
 
 /// Lossy WebP keeps transparency in a separate `ALPH` chunk, while lossless
 /// declares it with a flag inside its own header.
-
 fn has_alpha_channel(chunk: &Chunk<'_>) -> bool {
     if chunk.id == *b"ALPH" {
         return true;
@@ -395,7 +388,6 @@ fn has_alpha_channel(chunk: &Chunk<'_>) -> bool {
 }
 
 /// Canvas size, read from whichever bitstream chunk this file uses.
-
 fn dimensions(chunks: &[Chunk<'_>]) -> Result<(u32, u32)> {
     for chunk in chunks {
         match &chunk.id {
@@ -446,7 +438,6 @@ fn write_chunk(output: &mut Vec<u8>, id: &[u8; 4], payload: &[u8]) {
 }
 
 /// Builds a little-endian TIFF header with Exif and GPS sub-IFDs.
-
 fn tiff_block(metadata: &ExifMetadata) -> Vec<u8> {
     let mut ifd0: Vec<(u16, u16, Vec<u8>)> = Vec::new();
 
@@ -608,7 +599,6 @@ fn rational(value: f64) -> Vec<u8> {
 
 /// One 12-byte IFD entry. Values longer than four bytes live in the value block
 /// and the entry stores their offset instead.
-
 fn entry(
     tag: u16, kind: u16, data: &[u8], values: &mut Vec<u8>, value_offset: &mut usize,
 ) -> [u8; 12] {
@@ -663,7 +653,6 @@ fn entry_inline(tag: u16, kind: u16, count: u32, value: [u8; 4]) -> [u8; 12] {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

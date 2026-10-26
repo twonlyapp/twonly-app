@@ -15,7 +15,7 @@ pub async fn missing_discovery_data(
 ) -> Result<Vec<UserDiscoveryAnnouncedUser>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::missing_data(&mut **tx.transaction()).await;
+    let result = queries::missing_data(tx.transaction()).await;
 
     tx.finish(result).await
 }
@@ -25,7 +25,7 @@ pub async fn get_discovery_announcement(
 ) -> Result<Option<UserDiscoveryAnnouncedUser>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::get(&mut **tx.transaction(), id).await;
+    let result = queries::get(tx.transaction(), id).await;
 
     tx.finish(result).await
 }

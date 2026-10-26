@@ -77,7 +77,6 @@ async fn request_fix(
 /// Starts acquiring a fix at foreground app startup or when the camera opens.
 /// Nothing is persisted until a media row exists; the result only warms the
 /// in-process cache consumed by `initialize_for_media`.
-
 pub(crate) fn prewarm(ctx: &Arc<Context>) -> Result<()> {
     let config = UserConfig::load_required_from(ctx)?;
 
@@ -111,7 +110,6 @@ pub(crate) fn prewarm(ctx: &Arc<Context>) -> Result<()> {
 
 /// Reuses the same native request/cache as Memories without creating or
 /// modifying a media row. The editor never waits for the full Memory window.
-
 pub(crate) async fn current_for_sticker(ctx: &Arc<Context>) -> Result<Option<LocationFix>> {
     if !UserConfig::load_required_from(ctx)?.enable_location_sticker {
         return Ok(None);
@@ -303,7 +301,6 @@ async fn finish(ctx: &Arc<Context>, media_id: &str, location: Option<LocationFix
 
 /// Resumes pending foreground requests and releases exports whose three-minute
 /// deadline elapsed while the app was not running.
-
 pub(crate) async fn resume(ctx: &Arc<Context>) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
@@ -331,7 +328,6 @@ pub(crate) async fn resume(ctx: &Arc<Context>) -> Result<()> {
 
 /// Turning the option off must not leave already requested gallery exports in
 /// limbo. Existing coordinates remain attached to their Memories.
-
 pub(crate) async fn disable_pending(ctx: &Arc<Context>) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
@@ -359,7 +355,6 @@ pub(crate) async fn disable_pending(ctx: &Arc<Context>) -> Result<()> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

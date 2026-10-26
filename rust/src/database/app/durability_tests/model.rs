@@ -169,7 +169,7 @@ impl Model {
     ) {
         let id = format!("soak-{slot:02}");
 
-        if !self.0.contains_key(&slot) {
+        if let std::collections::btree_map::Entry::Vacant(e) = self.0.entry(slot) {
             let input = ContactGroupInput {
                 name: format!("slot-{slot}-{ordinal}"),
                 emoji: Some("⭐".into()),
@@ -235,36 +235,33 @@ impl Model {
             .await
             .unwrap();
 
-            self.0.insert(
-                slot,
-                Record {
-                    group: Group {
-                        id: group_id,
-                        name: input.name,
-                        emoji: input.emoji,
-                        color: input.text_color,
-                        background: input.background_color,
-                        shortcut: true,
-                        label: true,
-                        stories: false,
-                        usage: 0,
-                        created,
-                    },
-                    message: Message {
-                        id: id.clone(),
-                        content,
-                        payload,
-                        ack: None,
-                    },
-                    receipt: Receipt {
-                        id: id.clone(),
-                        message_id: Some(id),
-                        payload: vec![0, 255, slot as u8],
-                        retry: 0,
-                    },
-                    users: BTreeSet::new(),
+            e.insert(Record {
+                group: Group {
+                    id: group_id,
+                    name: input.name,
+                    emoji: input.emoji,
+                    color: input.text_color,
+                    background: input.background_color,
+                    shortcut: true,
+                    label: true,
+                    stories: false,
+                    usage: 0,
+                    created,
                 },
-            );
+                message: Message {
+                    id: id.clone(),
+                    content,
+                    payload,
+                    ack: None,
+                },
+                receipt: Receipt {
+                    id: id.clone(),
+                    message_id: Some(id),
+                    payload: vec![0, 255, slot as u8],
+                    retry: 0,
+                },
+                users: BTreeSet::new(),
+            });
 
             return;
         }

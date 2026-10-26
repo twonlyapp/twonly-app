@@ -19,7 +19,6 @@ pub(crate) use client::{ApiClient, API_EVENTS};
 use helpers::*;
 
 #[doc(hidden)]
-
 pub struct ApiRuntime {}
 
 impl ApiRuntime {

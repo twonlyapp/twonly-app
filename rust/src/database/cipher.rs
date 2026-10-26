@@ -40,11 +40,9 @@ mod rekey;
 /// the switch would start failing. Leaving the rewrite to the app means it
 /// happens once, while the user is looking at it, and a background process
 /// simply keeps opening the database on the key it already has.
-
 static MIGRATION_ENABLED: AtomicBool = AtomicBool::new(true);
 
 /// Set from `Context::init_common` once the runtime mode is known.
-
 pub(crate) fn set_migration_enabled(enabled: bool) {
     MIGRATION_ENABLED.store(enabled, Ordering::Release);
 }
@@ -61,7 +59,6 @@ pub(crate) enum KeyForm {
 
 impl KeyForm {
     /// The right-hand side of `PRAGMA key = …` for this form.
-
     pub(crate) fn pragma_value(self, key: &str) -> String {
         match self {
             // The double quotes are part of SQLCipher's documented raw key
@@ -75,21 +72,18 @@ impl KeyForm {
 /// Only a 64 character hex string is exactly the 32 bytes SQLCipher wants for a
 /// raw key. Anything else (test fixtures, a user-chosen password) stays on the
 /// passphrase path, where SQLCipher derives a key of the right size itself.
-
 fn can_use_raw_key(key: &str) -> bool {
     key.len() == 64 && key.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 /// A path SQLCipher will open as a real file on disk. In-memory databases are
 /// created fresh every time and never need migrating.
-
 fn is_file_backed(db_path: &str) -> bool {
     !db_path.contains(":memory:")
 }
 
 /// True when the file already holds an encrypted database. A missing or empty
 /// file is about to be created, and gets the raw key from the start.
-
 fn has_existing_database(db_path: &str) -> bool {
     Path::new(db_path)
         .metadata()
@@ -97,7 +91,6 @@ fn has_existing_database(db_path: &str) -> bool {
 }
 
 /// Opens a bare connection to an existing database with `key` in `form`.
-
 async fn connect(
     db_path: &str, key: &str, form: KeyForm, read_only: bool,
 ) -> Result<SqliteConnection> {
@@ -139,7 +132,6 @@ async fn connect(
 
 /// Whether `key` in `form` actually decrypts the database. Reading the schema
 /// is the cheapest statement that has to touch the (encrypted) first page.
-
 async fn decrypts_with(db_path: &str, key: &str, form: KeyForm) -> bool {
     let Ok(mut connection) = connect(db_path, key, form, true).await else {
         return false;
@@ -161,7 +153,6 @@ async fn decrypts_with(db_path: &str, key: &str, form: KeyForm) -> bool {
 /// Never fails because of a key it cannot place: if neither form decrypts the
 /// file, the caller's own connection reports the real error with its own
 /// context instead.
-
 pub(crate) async fn prepare(db_path: &str, key: &str, read_only: bool) -> Result<KeyForm> {
     let operation = crate::database::lifecycle::Operation::current();
 
@@ -252,13 +243,11 @@ pub(crate) async fn prepare(db_path: &str, key: &str, read_only: bool) -> Result
 }
 
 /// Builds the `PRAGMA key` value for a database, migrating it first if needed.
-
 pub(crate) async fn key_pragma(db_path: &str, key: &str, read_only: bool) -> Result<String> {
     Ok(prepare(db_path, key, read_only).await?.pragma_value(key))
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

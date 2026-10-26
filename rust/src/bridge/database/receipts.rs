@@ -46,7 +46,7 @@ pub async fn purge_received_receipts(cutoff: i64, transaction: &DatabaseSession)
 pub async fn get_receipt(id: String, transaction: &DatabaseSession) -> Result<Option<Receipt>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::get(&mut **tx.transaction(), &id).await;
+    let result = queries::get(tx.transaction(), &id).await;
 
     tx.finish(result).await
 }
@@ -56,7 +56,7 @@ pub async fn get_media_retransmission_receipts(
 ) -> Result<Vec<Receipt>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::media_retransmissions(&mut **tx.transaction(), cutoff).await;
+    let result = queries::media_retransmissions(tx.transaction(), cutoff).await;
 
     tx.finish(result).await
 }

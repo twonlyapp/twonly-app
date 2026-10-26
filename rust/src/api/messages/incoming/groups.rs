@@ -61,7 +61,6 @@ pub(crate) async fn handle_group_create(
 }
 
 /// Returns whether this invitation needs an initial key announcement and sync.
-
 async fn store_group_invitation(
     t: &mut Transaction<'_, Sqlite>, from_user_id: i64, group_id: &str,
     create: encrypted_content::GroupCreate,
@@ -357,7 +356,6 @@ pub(crate) async fn handle_flame_sync(
 }
 
 #[cfg(test)]
-
 mod invitation_tests {
 
     use super::*;
@@ -604,7 +602,6 @@ mod invitation_tests {
 }
 
 #[cfg(test)]
-
 mod flame_tests {
 
     use super::*;

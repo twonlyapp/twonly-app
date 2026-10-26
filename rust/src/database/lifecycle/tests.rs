@@ -144,17 +144,15 @@ async fn cancelling_an_operation_joins_its_descendants_and_rejects_late_children
 
     let expected = operation.clone();
 
-    let child = operation
-        .scope(async {
-            spawn(async move {
-                assert!(Arc::ptr_eq(&Operation::current().unwrap().0, &expected.0));
+    let child = operation.scope_sync(|| {
+        spawn(async move {
+            assert!(Arc::ptr_eq(&Operation::current().unwrap().0, &expected.0));
 
-                started.send(()).unwrap();
+            started.send(()).unwrap();
 
-                std::future::pending::<()>().await;
-            })
+            std::future::pending::<()>().await;
         })
-        .await;
+    });
 
     ready.await.unwrap();
 
@@ -168,13 +166,11 @@ async fn cancelling_an_operation_joins_its_descendants_and_rejects_late_children
 
     let (started, ready) = oneshot::channel();
 
-    let late = operation
-        .scope(async {
-            spawn(async move {
-                let _ = started.send(());
-            })
+    let late = operation.scope_sync(|| {
+        spawn(async move {
+            let _ = started.send(());
         })
-        .await;
+    });
 
     assert!(late.await.unwrap_err().is_cancelled());
 
@@ -194,17 +190,15 @@ async fn abandoned_blocking_work_remains_owned_until_it_finishes() {
 
     let expected = operation.clone();
 
-    let child = operation
-        .scope(async {
-            spawn_blocking(move || {
-                assert!(Arc::ptr_eq(&Operation::current().unwrap().0, &expected.0));
+    let child = operation.scope_sync(|| {
+        spawn_blocking(move || {
+            assert!(Arc::ptr_eq(&Operation::current().unwrap().0, &expected.0));
 
-                started.send(()).unwrap();
+            started.send(()).unwrap();
 
-                finished.recv().unwrap();
-            })
+            finished.recv().unwrap();
         })
-        .await;
+    });
 
     ready.await.unwrap();
 

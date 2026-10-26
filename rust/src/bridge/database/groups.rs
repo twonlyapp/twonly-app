@@ -13,7 +13,7 @@ use crate::frb_generated::StreamSink;
 pub async fn list_groups(input: GroupQuery, transaction: &DatabaseSession) -> Result<Vec<Group>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::list(&mut **tx.transaction(), &input).await;
+    let result = queries::list(tx.transaction(), &input).await;
 
     tx.finish(result).await
 }
@@ -23,7 +23,7 @@ pub async fn list_group_members(
 ) -> Result<Vec<GroupMember>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::members(&mut **tx.transaction(), &input).await;
+    let result = queries::members(tx.transaction(), &input).await;
 
     tx.finish(result).await
 }
@@ -33,7 +33,7 @@ pub async fn get_group_contacts(
 ) -> Result<GroupMembersWithContacts> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::members_with_contacts(&mut **tx.transaction(), &input).await;
+    let result = queries::members_with_contacts(tx.transaction(), &input).await;
 
     tx.finish(result).await
 }
@@ -185,7 +185,7 @@ pub async fn watch_group_flame(
 pub async fn get_group(id: String, transaction: &DatabaseSession) -> Result<Option<Group>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::get(&mut **tx.transaction(), &id).await;
+    let result = queries::get(tx.transaction(), &id).await;
 
     tx.finish(result).await
 }

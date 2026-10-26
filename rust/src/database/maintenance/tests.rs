@@ -297,7 +297,6 @@ fn foreign_idle_process_blocks_replacement_and_process_death_releases_the_gate()
 
 #[test]
 #[ignore = "subprocess SQLite holder, invoked by maintenance tests"]
-
 fn maintenance_child() {
     initialize().unwrap();
 

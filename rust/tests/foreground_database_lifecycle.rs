@@ -386,7 +386,6 @@ fn retained_transactions_are_rolled_back_native_callbacks_run_and_resume_preserv
 
 #[test]
 #[ignore = "test-only subprocess lock probe"]
-
 fn foreground_lock_probe() {
     let path = std::env::var_os("TWONLY_FOREGROUND_LOCK_PROBE").unwrap();
 

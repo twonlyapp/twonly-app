@@ -41,7 +41,6 @@ impl KeyManager {
     }
 
     /// Tries to load the KeyManager from the secure keychain/local storage.
-
     pub fn try_from_keychain(storage: &SecureStorage) -> Result<Self> {
         let hex_key = storage
             .read(KEY_MANAGER_ID)?
@@ -55,7 +54,6 @@ impl KeyManager {
     }
 
     /// Stores the main key into the secure keychain/local storage.
-
     pub fn store_to_keychain(&self, storage: &SecureStorage) -> Result<()> {
         let _access = storage.identity_access()?;
 
@@ -84,7 +82,6 @@ impl KeyManager {
     }
 
     /// Removes the KeyManager from the secure keychain/local storage.
-
     pub fn remove_from_keychain(storage: &SecureStorage) -> Result<()> {
         let _access = storage.identity_access()?;
 
@@ -181,7 +178,6 @@ impl Drop for LegacySignalIdentityKey {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

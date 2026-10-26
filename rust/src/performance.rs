@@ -66,14 +66,7 @@ impl Session {
         let client = Arc::new(Client::with_options(ClientOptions {
             dsn: Some(dsn),
             release: Some(format!("eu.twonly@{}", env!("TWONLY_APP_FULL_VERSION")).into()),
-            environment: Some(
-                if cfg!(debug_assertions) || cfg!(feature = "dev-api") {
-                    "development"
-                } else {
-                    "production"
-                }
-                .into(),
-            ),
+            environment: Some(env!("TWONLY_BUILD_MODE").into()),
             traces_sample_rate: SAMPLE_RATE as f32,
             default_integrations: false,
             send_default_pii: false,

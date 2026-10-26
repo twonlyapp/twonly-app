@@ -13,7 +13,6 @@ pub(crate) mod snapshot;
 
 /// Retain the original key material for resume: another process may migrate
 /// passphrase to raw form while this process has every handle closed.
-
 pub(crate) struct Source {
     path: String,
     key: Option<zeroize::Zeroizing<String>>,

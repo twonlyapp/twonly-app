@@ -15,7 +15,7 @@ pub async fn list_messages(
 ) -> Result<Vec<StoredMessage>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::list(&mut **tx.transaction(), &input).await;
+    let result = queries::list(tx.transaction(), &input).await;
 
     tx.finish(result).await
 }
@@ -80,7 +80,7 @@ pub async fn delete_message_from_sender(
     if transaction.transaction.is_none() {
         let ctx = crate::context::Context::get_static()?;
 
-        if let Err(error) = crate::services::mediafiles::cleanup_pending_file_removals(&ctx).await {
+        if let Err(error) = crate::services::mediafiles::cleanup_pending_file_removals(ctx).await {
             tracing::warn!(%error, "pending media file cleanup will be retried");
         }
     }
@@ -157,7 +157,7 @@ pub async fn get_message(
 ) -> Result<Option<StoredMessage>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::get(&mut **tx.transaction(), &id).await;
+    let result = queries::get(tx.transaction(), &id).await;
 
     tx.finish(result).await
 }

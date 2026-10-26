@@ -23,7 +23,6 @@ use tokio::sync::Notify;
 /// Successful sends remain in the outbox until the peer acknowledges them.
 /// Keep their cooldown durable and apply it in the queue query, rather than
 /// repeatedly selecting them and logging one suppressed attempt per receipt.
-
 const RESEND_SUPPRESSION_SECONDS: i64 = 120;
 
 fn receipt_is_due(acknowledged: Option<i64>, last_retry: Option<i64>, now: i64) -> bool {
@@ -62,7 +61,6 @@ struct FlushState {
 /// Held for as long as a flush owns the claim. Dropping it without releasing
 /// it — an error or a panic on the way out — frees the claim for the next
 /// caller instead of blocking every later flush.
-
 struct FlushGuard<'a> {
     claim: &'a FlushClaim,
     released: bool,
@@ -71,7 +69,6 @@ struct FlushGuard<'a> {
 impl<'a> FlushGuard<'a> {
     /// Registers a flush for this caller. Returns `None` when one is already
     /// running, in which case it is marked dirty and will query once more.
-
     fn claim(state: &'a FlushClaim) -> Option<Self> {
         let mut claim = state.state.lock().unwrap_or_else(PoisonError::into_inner);
 
@@ -97,7 +94,6 @@ impl<'a> FlushGuard<'a> {
     /// otherwise clears the dirty flag and keeps the claim for one more pass.
     /// Both happen under one lock so a request cannot be dropped between the
     /// last query and the release.
-
     fn release_or_take_dirty(&mut self) -> bool {
         let mut claim = self
             .claim
@@ -527,7 +523,6 @@ async fn load_queued_receipt_row(
 
 /// Hidden game updates stay independent of purgeable chat rows in the outbox,
 /// but their acknowledgements belong to the announcement derived from them.
-
 async fn tracked_message_id<'e>(
     executor: impl sqlx::Executor<'e, Database = Sqlite>, message_id: Option<String>,
     queued_message: &[u8],
@@ -590,7 +585,6 @@ pub(crate) async fn prepare_queued_receipt_details(
 /// Encrypts the queued payload. Fetches a prekey bundle from the server when
 /// the contact has no v2 session yet, so the caller must have ruled out a
 /// deleted account first.
-
 async fn prepare_queued_receipt_from_row(
     ctx: &Arc<Context>, receipt_id: &str, row: PreparedQueuedReceiptRow,
 ) -> Result<PreparedQueuedReceipt> {
@@ -807,7 +801,6 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
 /// every sweep would repeat the same failing server round-trip. The receipt is
 /// kept, not dropped: `release_deferred_receipts` puts it back in the queue as
 /// soon as a session exists.
-
 async fn defer_receipt_until_session(
     database: &Arc<crate::database::app::AppDatabase>, receipt_id: &str,
 ) -> Result<()> {
@@ -829,7 +822,6 @@ async fn defer_receipt_until_session(
 ///
 /// Called wherever a v2 session appears: a prekey bundle fetch that succeeded,
 /// or an inbound message from the peer that opened a session on our side.
-
 pub(crate) async fn release_deferred_receipts(
     database: &Arc<crate::database::app::AppDatabase>, contact_id: i64,
 ) -> Result<()> {
@@ -855,7 +847,6 @@ pub async fn retransmit_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
 /// Unlike event-triggered flushes, a worker about to close its socket must wait
 /// for an existing flush. Register before claiming so completion or
 /// cancellation between the claim check and the await cannot lose the wake-up.
-
 pub(crate) async fn retransmit_queued_receipts_and_wait(ctx: &Arc<Context>) -> Result<()> {
     loop {
         let notified = ctx.queued_receipt_flush.finished.notified();
@@ -922,7 +913,6 @@ async fn due_receipt_ids(pool: &sqlx::SqlitePool, now: i64) -> Result<Vec<String
 
 /// Includes cooldown entries: the scheduler must retain the next chance to
 /// retry them, while contacts without a session or acceptance stay parked.
-
 pub(crate) async fn has_pending_receipts(ctx: &Arc<Context>) -> Result<bool> {
     let database = ctx.app_db.read().await.clone();
 
@@ -1035,7 +1025,6 @@ pub(crate) async fn handle_sender_delivery_receipt(
 /// the caller has to rebuild one before the requeued receipt can go out. The
 /// receipt is parked here so the flush that follows the caller's commit cannot
 /// send it through the session the peer just threw away.
-
 pub async fn handle_plaintext_content(
     _ctx: &Context, transaction: &mut Transaction<'_, Sqlite>, from_user_id: i64, receipt_id: &str,
     plaintext: proto::PlaintextContent,
@@ -1082,7 +1071,6 @@ pub async fn handle_plaintext_content(
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

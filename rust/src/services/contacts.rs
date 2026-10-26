@@ -77,7 +77,6 @@ impl ContactService {
     ///
     /// A session built from an inbound prekey message is enough to encrypt for
     /// the peer, even when the server holds no prekey bundle for them.
-
     pub(crate) async fn has_v2_session(&self, user_id: i64) -> Result<bool> {
         let rust_database = self.ctx.rust_db.read().await.clone();
 
@@ -383,7 +382,6 @@ impl ContactService {
 /// final: nothing queued for the account can be delivered, and asking about it
 /// again costs a round trip on every connection. A message the account sends
 /// after all clears the mark again, see `handle_decoded_server_message`.
-
 pub(crate) async fn mark_account_deleted(
     database: &crate::database::app::AppDatabase, user_id: i64,
 ) -> Result<()> {
@@ -425,7 +423,6 @@ pub(crate) async fn mark_account_deleted(
 }
 
 #[cfg(test)]
-
 mod tests {
     use super::*;
     use crate::api::messages::incoming::messages::{queue_encrypted_content, send_queued_receipt};

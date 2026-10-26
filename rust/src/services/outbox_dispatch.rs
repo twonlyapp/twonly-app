@@ -40,12 +40,10 @@ use std::sync::Arc;
 /// How long the native transfer keeps retrying an envelope. Past this the
 /// recipient's session has usually moved on far enough that the socket
 /// retransmission — which re-encrypts — is the better copy anyway.
-
 const DISPATCH_VALIDITY_SECONDS: i64 = 24 * 60 * 60;
 
 /// Handing over a very large backlog at once would write one request file per
 /// receipt; beyond this the socket is the more sensible route.
-
 const MAXIMUM_HANDOVERS: usize = 20;
 
 #[derive(FromRow)]
@@ -90,7 +88,6 @@ impl OutboxDispatchService {
     ///
     /// Called when the app is going away — backgrounded, or shutting down —
     /// which is exactly when the socket is about to stop being an option.
-
     pub async fn hand_pending_to_os(&self) -> Result<usize> {
         self.purge_expired().await?;
 
@@ -141,7 +138,6 @@ impl OutboxDispatchService {
     ///
     /// Returns whether anything was scheduled: a receipt that has meanwhile
     /// been sent, or one whose contact deleted their account, is not an error.
-
     pub async fn hand_to_os(&self, receipt_id: &str) -> Result<bool> {
         let Some(prepared) =
             messages::prepare_queued_receipt_details(&self.ctx, receipt_id).await?
@@ -230,7 +226,6 @@ impl OutboxDispatchService {
 
     /// Drops a job and its request file. The receipt is untouched: the socket
     /// path remains responsible for it either way.
-
     async fn forget(&self, receipt_id: &str) {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -248,7 +243,6 @@ impl OutboxDispatchService {
 
     /// Clears out jobs the native transfer has given up on. Nothing reports a
     /// finished transfer back, so age is the only signal there is.
-
     pub async fn purge_expired(&self) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
 

@@ -11,7 +11,7 @@ pub async fn webxdc_card_app(
 ) -> Result<Option<WebxdcCardApp>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::app(&mut **tx.transaction(), &id, version).await;
+    let result = queries::app(tx.transaction(), &id, version).await;
 
     tx.finish(result).await
 }
@@ -21,7 +21,7 @@ pub async fn webxdc_card_instance(
 ) -> Result<Option<WebxdcCardInstance>> {
     let mut tx = CommandTransaction::read(transaction).await?;
 
-    let result = queries::instance(&mut **tx.transaction(), &id).await;
+    let result = queries::instance(tx.transaction(), &id).await;
 
     tx.finish(result).await
 }

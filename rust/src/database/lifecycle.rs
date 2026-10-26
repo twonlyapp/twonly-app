@@ -46,7 +46,6 @@ pub(crate) struct Operation(Arc<State>);
 /// Native maintenance and the complete notification/render/finalize sequence
 /// share one admission slot. A queued job retains its own deadline and can be
 /// cancelled without adopting another job's pools or socket.
-
 pub(crate) async fn native_admission(
     operation: &Operation,
 ) -> Result<tokio::sync::OwnedSemaphorePermit> {
@@ -270,7 +269,6 @@ impl Drop for TaskTicket {
 
 /// Tokio does not inherit task locals. Background descendants must retain the
 /// original owner, including when they are sent to the foreground runtime.
-
 pub(crate) fn spawn<W>(work: W) -> tokio::task::JoinHandle<W::Output>
 where
     W: Future + Send + 'static,
@@ -331,7 +329,6 @@ where
 
 /// Running blocking work cannot be aborted by Tokio. Retain ownership until
 /// the closure exits; SQLite and chunked archive work observe cancellation.
-
 pub(crate) fn spawn_blocking<F, T>(work: F) -> tokio::task::JoinHandle<T>
 where
     F: FnOnce() -> T + Send + 'static,
@@ -392,7 +389,6 @@ impl Lease {
 
     /// The OS scheduler already owns this execution allowance. Registration
     /// precedes queueing, so expiration before worker start is not lost.
-
     pub(crate) fn external(operation: Operation) -> Self {
         let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
 
@@ -451,7 +447,6 @@ impl Drop for CancelOnDrop {
 }
 
 /// Only the owned task drops its lease, after `work` has awaited cleanup.
-
 pub(crate) async fn run<T, F, W>(work: F) -> Result<T>
 where
     T: Send + 'static,
@@ -505,7 +500,6 @@ where
 
 /// Nonblocking C entry point; cancellation is observed by the owned worker.
 #[unsafe(no_mangle)]
-
 pub extern "C" fn twonly_database_operation_cancel(id: u64) {
     let state = OPERATIONS.lock().unwrap().get(&id).and_then(Weak::upgrade);
 

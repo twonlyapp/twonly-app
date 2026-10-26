@@ -93,7 +93,6 @@ async fn upgrade_connection(connection: &mut SqliteConnection) -> Result<()> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

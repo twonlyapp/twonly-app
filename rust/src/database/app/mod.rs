@@ -54,7 +54,6 @@ pub const APP_SCHEMA_VERSION: i64 = 17;
 
 /// User-owned application tables in the current Rust schema. Rust-only outbox
 /// tables are deliberately absent because they are reconstructed locally.
-
 pub const APPLICATION_TABLES: &[&str] = &[
     "contacts",
     "groups",
@@ -80,7 +79,6 @@ pub const APPLICATION_TABLES: &[&str] = &[
 
 /// Tables copied one-to-one from the legacy Drift schema. Contact labels and
 /// shortcuts need a typed transformation into the unified contact-group tables.
-
 pub const LEGACY_COPY_TABLES: &[&str] = &[
     "contacts",
     "groups",
@@ -350,7 +348,6 @@ impl AppDatabase {
 
     /// Requery active watches after resume/reconnect, including commits made
     /// through a connection in another process that our hooks cannot observe.
-
     pub fn refresh_watches(&self) {
         let _ = self.changes.send(DatabaseChange {
             tables: BTreeSet::new(),
@@ -626,8 +623,15 @@ pub struct TableMigrationCount {
     pub rows: i64,
 }
 
-#[cfg(test)]
+impl Drop for AppDatabase {
+    fn drop(&mut self) {
+        if let Some(stop) = &self.reader_shutdown {
+            stop.cancel();
+        }
+    }
+}
 
+#[cfg(test)]
 mod change_notification_tests {
 
     use super::*;
@@ -767,13 +771,5 @@ mod change_notification_tests {
         assert_eq!(change.tables, BTreeSet::from(["app_metadata".to_owned()]));
 
         assert_eq!(changes.try_recv().unwrap_err(), TryRecvError::Empty);
-    }
-}
-
-impl Drop for AppDatabase {
-    fn drop(&mut self) {
-        if let Some(stop) = &self.reader_shutdown {
-            stop.cancel();
-        }
     }
 }

@@ -1,6 +1,22 @@
 use std::io::Result;
 
 fn main() -> Result<()> {
+    // Cargokit preserves Flutter's profile mode even though Cargo compiles it
+    // with --release. Standalone Cargo builds fall back to their own profile.
+    println!("cargo:rerun-if-env-changed=CARGOKIT_CONFIGURATION");
+    let build_mode = std::env::var("CARGOKIT_CONFIGURATION")
+        .ok()
+        .map(|mode| mode.to_ascii_lowercase())
+        .filter(|mode| matches!(mode.as_str(), "debug" | "profile" | "release"))
+        .unwrap_or_else(|| {
+            if std::env::var("PROFILE").as_deref() == Ok("debug") {
+                "debug".into()
+            } else {
+                "release".into()
+            }
+        });
+    println!("cargo:rustc-env=TWONLY_BUILD_MODE={build_mode}");
+
     // The version the server compares against its minimum version setting.
     // A build that cannot determine it has to fail here rather than ship a
     // placeholder, which the server would read as an ancient client.

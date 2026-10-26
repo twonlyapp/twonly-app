@@ -26,13 +26,11 @@ use tokio::sync::watch;
 
 /// A mailbox holding more messages than this is caught up behind the progress
 /// screen.
-
 pub(crate) const SYNC_THRESHOLD: i64 = 500;
 
 /// How long a catch-up may go without handling a single message before it is
 /// given up. Pages keep coming while the connection holds, so this only ends a
 /// catch-up whose connection is gone.
-
 const STALL_TIMEOUT: Duration = Duration::from_secs(120);
 
 const STALL_CHECK_INTERVAL: Duration = Duration::from_secs(15);
@@ -50,7 +48,6 @@ static LAST_PROGRESS: Mutex<Option<Instant>> = Mutex::new(None);
 
 /// Set while [`preview`] owns the channel. Real pages and drains are kept out
 /// of it meanwhile, and the catch-up cadence ignores the made-up progress.
-
 static PREVIEW: AtomicBool = AtomicBool::new(false);
 
 fn mark_progress() {
@@ -64,7 +61,6 @@ pub(crate) fn is_active() -> bool {
 /// Records how far the current mailbox page has got. `pending` is the server's
 /// count of waiting rows when it sent the page, the page included, and
 /// `handled` how many of the page's messages are done.
-
 pub(crate) fn record_page(pending: Option<u64>, handled: usize) {
     if PREVIEW.load(Ordering::Acquire) {
         return;
@@ -104,7 +100,6 @@ fn publish_page(pending: Option<u64>, handled: usize) {
 
 /// Moves `sync` to the state a page reports, and returns whether that counts
 /// as progress -- a catch-up starting, or a message less to go.
-
 fn advance(sync: &mut MailboxSyncProgress, pending: i64, handled: i64) -> bool {
     let remaining = pending.saturating_sub(handled).max(0);
 
@@ -142,7 +137,6 @@ fn advance(sync: &mut MailboxSyncProgress, pending: i64, handled: i64) -> bool {
 }
 
 /// Ends the catch-up once the server has nothing left to send.
-
 pub(crate) fn finish() {
     if PREVIEW.load(Ordering::Acquire) {
         return;
@@ -195,7 +189,6 @@ fn expire_if_stalled() {
 /// Plays a made-up catch-up of 3000 messages through the real progress
 /// channel, so the screen can be checked without a mailbox that full. Does
 /// nothing while a real catch-up runs.
-
 pub(crate) async fn preview() {
     const TOTAL: u64 = 3000;
     const PAGE: u64 = 100;
@@ -233,7 +226,6 @@ pub(crate) async fn preview() {
 /// Forwards the catch-up progress to Flutter, starting with the current state
 /// so a screen mounted halfway through shows it straight away. The stall check
 /// rides on this loop: only a device with a screen to unblock needs it.
-
 pub(crate) async fn stream(sink: StreamSink<MailboxSyncProgress>) -> Result<()> {
     let mut receiver = MAILBOX_SYNC.subscribe();
 

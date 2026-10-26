@@ -91,7 +91,6 @@ fn log_push_received(data_dir: &str, message_id: &str, sent_at_ms: i64) {
 /// Records native push arrival in app.log without starting a worker or opening
 /// the database. Only transport metadata belongs here, never the push payload.
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_notification_received(
     data_dir: *const c_char, message_id: *const c_char, sent_at_ms: i64,
 ) {
@@ -113,7 +112,6 @@ pub unsafe extern "C" fn twonly_notification_received(
 /// tasks it spawned have to outlive that call — a per-call runtime would drop
 /// them on the way out and leave `twonly_notification_finalize` with a dead
 /// connection.
-
 static NOTIFICATION_RUNTIME: LazyLock<Result<tokio::runtime::Runtime, String>> =
     LazyLock::new(|| {
         tokio::runtime::Builder::new_multi_thread()
@@ -129,7 +127,6 @@ pub(crate) fn runtime() -> Result<&'static tokio::runtime::Runtime, String> {
 
 /// A native callback with no render/acknowledge phase uses the same admission,
 /// cancellation and pool cleanup as a notification run.
-
 pub(crate) fn native_job<T, F, W>(
     config: InitConfig, budget: Duration, source: crate::log::LogSource, work: F,
 ) -> Result<T, String>
@@ -160,7 +157,6 @@ where
 /// `NativeNotificationResponse`. The returned pointer must be released with
 /// `twonly_notification_string_free`.
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_notification_process(
     database_dir: *const c_char, data_dir: *const c_char, locale: *const c_char, deadline_ms: u64,
 ) -> *mut c_char {
@@ -176,7 +172,6 @@ pub unsafe extern "C" fn twonly_notification_process(
 /// The budget covers queueing, initialization, rendering/acknowledgement and
 /// finalization together. Register before dispatching to a platform queue.
 #[unsafe(no_mangle)]
-
 pub extern "C" fn twonly_notification_run_create(budget_ms: u64) -> u64 {
     crate::native::background::cancel_maintenance_runs();
     Session::start(Duration::from_millis(budget_ms.clamp(1, 120_000)))
@@ -185,7 +180,6 @@ pub extern "C" fn twonly_notification_run_create(budget_ms: u64) -> u64 {
 }
 
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_notification_process_with_id(
     id: u64, database_dir: *const c_char, data_dir: *const c_char, locale: *const c_char,
     deadline_ms: u64,
@@ -269,13 +263,11 @@ pub unsafe extern "C" fn twonly_notification_process_with_id(
 /// skip — an OS that reclaims the worker first only defers this to the next
 /// wake-up or app launch.
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_notification_finalize(deadline_ms: u64) -> *mut c_char {
     unsafe { twonly_notification_finalize_with_id(LEGACY_RUN.load(Ordering::Acquire), deadline_ms) }
 }
 
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_notification_finalize_with_id(
     id: u64, deadline_ms: u64,
 ) -> *mut c_char {
@@ -317,7 +309,6 @@ pub unsafe extern "C" fn twonly_notification_finalize_with_id(
 /// Marks successfully scheduled native events as delivered. `event_ids_json`
 /// must be a JSON string array.
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_notification_acknowledge(
     event_ids_json: *const c_char,
 ) -> *mut c_char {
@@ -327,7 +318,6 @@ pub unsafe extern "C" fn twonly_notification_acknowledge(
 }
 
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_notification_acknowledge_with_id(
     id: u64, event_ids_json: *const c_char,
 ) -> *mut c_char {
@@ -379,7 +369,6 @@ pub unsafe extern "C" fn twonly_notification_acknowledge_with_id(
 
 /// Cancels and waits for actual cleanup without starting optional maintenance.
 #[unsafe(no_mangle)]
-
 pub extern "C" fn twonly_notification_run_finish(id: u64) {
     if let (Ok(session), Ok(runtime)) = (Session::find(id), runtime()) {
         let _ = runtime.block_on(session.finish());
@@ -388,7 +377,6 @@ pub extern "C" fn twonly_notification_run_finish(id: u64) {
 
 /// Releases a string returned by a Twonly notification C entry point.
 #[unsafe(no_mangle)]
-
 pub unsafe extern "C" fn twonly_notification_string_free(pointer: *mut c_char) {
     if !pointer.is_null() {
         // SAFETY: The pointer was allocated by `CString::into_raw` above and
@@ -398,7 +386,6 @@ pub unsafe extern "C" fn twonly_notification_string_free(pointer: *mut c_char) {
 }
 
 #[cfg(target_os = "android")]
-
 mod android_jni {
 
     use super::*;
@@ -407,7 +394,6 @@ mod android_jni {
     use jni::{Env, EnvUnowned};
 
     #[unsafe(no_mangle)]
-
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_setApplicationActive(
         _env: EnvUnowned<'_>, _class: JClass<'_>, active: jboolean,
     ) {
@@ -415,7 +401,6 @@ mod android_jni {
     }
 
     #[unsafe(no_mangle)]
-
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_createRun(
         _env: EnvUnowned<'_>, _class: JClass<'_>, budget_ms: jlong,
     ) -> jlong {
@@ -423,7 +408,6 @@ mod android_jni {
     }
 
     #[unsafe(no_mangle)]
-
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_cancelRun(
         _env: EnvUnowned<'_>, _class: JClass<'_>, id: jlong,
     ) {
@@ -431,7 +415,6 @@ mod android_jni {
     }
 
     #[unsafe(no_mangle)]
-
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_finishRun(
         _env: EnvUnowned<'_>, _class: JClass<'_>, id: jlong,
     ) {
@@ -451,28 +434,25 @@ mod android_jni {
     }
 
     #[unsafe(no_mangle)]
-
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_logPushReceived(
         mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, data_dir: JString<'_>,
         message_id: JString<'_>, sent_at_ms: jlong,
     ) {
         unowned_env
             .with_env(|env| {
-                Ok::<_, jni::errors::Error>({
-                    let _ = catch_unwind(AssertUnwindSafe(|| {
-                        if let (Ok(data_dir), Ok(message_id)) =
-                            (java_string(env, data_dir), java_string(env, message_id))
-                        {
-                            log_push_received(&data_dir, &message_id, sent_at_ms);
-                        }
-                    }));
-                })
+                let _ = catch_unwind(AssertUnwindSafe(|| {
+                    if let (Ok(data_dir), Ok(message_id)) =
+                        (java_string(env, data_dir), java_string(env, message_id))
+                    {
+                        log_push_received(&data_dir, &message_id, sent_at_ms);
+                    }
+                }));
+                Ok::<_, jni::errors::Error>(())
             })
             .resolve::<jni::errors::LogErrorAndDefault>()
     }
 
     #[unsafe(no_mangle)]
-
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_processWithId(
         mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, id: jlong, database_dir: JString<'_>,
         data_dir: JString<'_>, locale: JString<'_>, deadline_ms: jlong,
@@ -530,7 +510,6 @@ mod android_jni {
     }
 
     #[unsafe(no_mangle)]
-
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_finalizeWakeup(
         mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, id: jlong, deadline_ms: jlong,
     ) -> jstring {
@@ -562,7 +541,6 @@ mod android_jni {
     }
 
     #[unsafe(no_mangle)]
-
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_acknowledge(
         mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, id: jlong, event_ids_json: JString<'_>,
     ) -> jstring {
@@ -600,7 +578,6 @@ mod android_jni {
     }
 
     #[unsafe(no_mangle)]
-
     pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_storeFcmToken(
         mut unowned_env: EnvUnowned<'_>, _class: JClass<'_>, database_dir: JString<'_>,
         data_dir: JString<'_>, token: JString<'_>,

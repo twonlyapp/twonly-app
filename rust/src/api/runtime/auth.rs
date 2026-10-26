@@ -27,13 +27,11 @@ use tokio::sync::broadcast;
 ///
 /// Not to be confused with `UserConfig::app_version`, which is the local
 /// migration id and stays a purely client side concern.
-
 pub(crate) const APP_VERSION: &str = env!("TWONLY_APP_VERSION");
 
 /// Ends a handshake that a newer connection attempt has overtaken. The
 /// connection library logs every failed handshake as an error, so `crate::log`
 /// recognises this one by its text and leaves it out.
-
 pub(crate) const CONNECTION_REPLACED: &str = "connection was replaced";
 
 pub(crate) struct ApiAuthHandshaker {
@@ -501,7 +499,6 @@ impl Handshaker for ApiAuthHandshaker {
 /// `PurchasesProvider`, which re-reads it on every connection state change and
 /// would otherwise overwrite the plan it was just told about with the `Free`
 /// default.
-
 async fn persist_plan(context: &Context, plan: &str) {
     // A reconnect reports the same plan almost every time, and every write
     // pushes a config update into Flutter, so only changes are worth storing.
@@ -547,7 +544,6 @@ impl ApiClient {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::APP_VERSION;

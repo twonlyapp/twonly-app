@@ -31,7 +31,6 @@ pub(crate) enum DatabaseKey {
 
 impl MainKey {
     /// Generates a new cryptographically secure MainKey.
-
     pub fn generate() -> Self {
         let mut main_key = [0u8; 32];
 
@@ -45,19 +44,16 @@ impl MainKey {
     /// Download token required to download a backup.
     /// This ensures that the user who tries to download the backup must have
     /// knowledge over the main key
-
     pub fn get_backup_download_token(&self) -> [u8; 32] {
         self.derive_key(b"backup_download_token")
     }
 
     /// Uses as a password to authenitcate agains the server
-
     pub fn get_login_token(&self) -> [u8; 32] {
         self.derive_key(b"server_auth_token")
     }
 
     /// Derives the database encryption key.
-
     pub(crate) fn get_database_key(&self, db: DatabaseKey) -> String {
         let db_name: &[u8] = match db {
             DatabaseKey::RustDb => b"rust_db",
@@ -73,13 +69,11 @@ impl MainKey {
 
     /// Encrypts a backup payload.
     /// The backup key is derived using HKDF from the main key.
-
     pub fn encrypt_backup(&self, backup_payload: &[u8]) -> Vec<u8> {
         self.encrypt_with_info(b"backup_key", backup_payload)
     }
 
     /// Decrypts a backup payload.
-
     pub fn decrypt_backup(&self, encrypted_backup: &[u8]) -> Result<Vec<u8>> {
         self.decrypt_with_info(b"backup_key", encrypted_backup)
     }
@@ -156,7 +150,6 @@ impl MainKey {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

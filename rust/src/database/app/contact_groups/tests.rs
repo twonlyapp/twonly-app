@@ -69,7 +69,7 @@ async fn list_get_and_update_preserve_filters_styles_nulls_and_dates() {
 
     let id = create(&database, input("  Favorites  ")).await;
 
-    let original = queries::get(&mut *database.pool.acquire().await.unwrap(), id)
+    let original = queries::get(&mut database.pool.acquire().await.unwrap(), id)
         .await
         .unwrap()
         .unwrap();
@@ -260,7 +260,7 @@ async fn failed_replacement_rolls_back_existing_members_and_emits_no_change() {
 
     transaction.commit().await.unwrap();
 
-    let original = queries::members(&mut *database.pool.acquire().await.unwrap(), id)
+    let original = queries::members(&mut database.pool.acquire().await.unwrap(), id)
         .await
         .unwrap();
 
@@ -277,7 +277,7 @@ async fn failed_replacement_rolls_back_existing_members_and_emits_no_change() {
     transaction.rollback().await.unwrap();
 
     assert_eq!(
-        queries::members(&mut *database.pool.acquire().await.unwrap(), id)
+        queries::members(&mut database.pool.acquire().await.unwrap(), id)
             .await
             .unwrap(),
         original
@@ -373,7 +373,7 @@ async fn toggles_visibility_usage_sorting_and_delete_cascades() {
     transaction.commit().await.unwrap();
 
     assert!(
-        queries::members(&mut *database.pool.acquire().await.unwrap(), a)
+        queries::members(&mut database.pool.acquire().await.unwrap(), a)
             .await
             .unwrap()
             .is_empty()
@@ -411,7 +411,7 @@ async fn legacy_transaction_excludes_native_jobs_and_cannot_lose_their_writes_on
         .unwrap();
 
     assert_eq!(
-        queries::get(&mut *database.pool.acquire().await.unwrap(), id)
+        queries::get(&mut database.pool.acquire().await.unwrap(), id)
             .await
             .unwrap()
             .unwrap()
@@ -438,7 +438,7 @@ async fn utf16_name_limit_never_splits_an_emoji() {
     let id = create(&database, input(&format!("{}🌱", "a".repeat(23)))).await;
 
     assert_eq!(
-        queries::get(&mut *database.pool.acquire().await.unwrap(), id)
+        queries::get(&mut database.pool.acquire().await.unwrap(), id)
             .await
             .unwrap()
             .unwrap()

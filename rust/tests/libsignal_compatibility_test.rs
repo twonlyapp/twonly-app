@@ -17,8 +17,7 @@ async fn libsignal_compatibility_test() -> Result<(), Box<dyn std::error::Error>
 
     let bob_registration_id = 5678;
 
-    let mut bob_store =
-        InMemSignalProtocolStore::new(bob_identity.clone(), bob_registration_id).unwrap();
+    let mut bob_store = InMemSignalProtocolStore::new(bob_identity, bob_registration_id).unwrap();
 
     let bob_address = ProtocolAddress::new("bob".to_string(), DeviceId::try_from(1).unwrap());
 

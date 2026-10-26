@@ -1,7 +1,6 @@
 use crate::error::{Result, TwonlyError};
 
 #[cfg(target_os = "ios")]
-
 pub(crate) fn schedule(descriptor_json: &str) -> Result<()> {
     use std::ffi::CString;
     use std::os::raw::c_char;
@@ -38,7 +37,6 @@ pub(crate) fn schedule(descriptor_json: &str) -> Result<()> {
 }
 
 #[cfg(target_os = "android")]
-
 pub(crate) mod android {
 
     use super::*;
@@ -79,11 +77,9 @@ pub(crate) mod android {
     /// `JNI_OnLoad` runs before Rust logging exists, so failures there are
     /// recorded rather than logged, and reported by the first call that needs
     /// the class.
-
     static CLASS_ERROR: OnceLock<String> = OnceLock::new();
 
     #[unsafe(no_mangle)]
-
     pub unsafe extern "system" fn JNI_OnLoad(
         vm: *mut jni::sys::JavaVM, _reserved: *mut c_void,
     ) -> jint {
@@ -117,7 +113,7 @@ pub(crate) mod android {
                     Err(error) => {
                         // Leaving a ClassNotFoundException pending would abort
                         // the process the next time this thread enters the VM.
-                        let _ = env.exception_clear();
+                        env.exception_clear();
 
                         let _ = CLASS_ERROR.set(format!("{name}: {error}"));
                     }
@@ -198,9 +194,9 @@ pub(crate) mod android {
             // fatal error when the attachment is dropped, taking the process with
             // it. The scheduling failure is reported through `Result` instead.
             if env.exception_check() {
-                let _ = env.exception_describe();
+                env.exception_describe();
 
-                let _ = env.exception_clear();
+                env.exception_clear();
             }
 
             if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
@@ -232,7 +228,7 @@ pub(crate) mod android {
                 .and_then(|value| value.z());
 
             if env.exception_check() {
-                let _ = env.exception_clear();
+                env.exception_clear();
             }
 
             if result.map_err(|error| TwonlyError::Generic(error.to_string()))? {
@@ -253,13 +249,11 @@ pub(crate) use android::schedule;
 pub(crate) use android::recover;
 
 #[cfg(not(target_os = "android"))]
-
 pub(crate) fn recover(_descriptor_json: &str, _created_at: i64) -> Result<()> {
     Ok(())
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-
 pub(crate) fn schedule(_descriptor_json: &str) -> Result<()> {
     Err(TwonlyError::Generic(
         "native background transfer is only available on Android and iOS".into(),

@@ -11,22 +11,20 @@ pub struct FlutterUserDiscovery {}
 
 impl FlutterUserDiscovery {
     /// UI-facing read used to display the current discovery version.
-
     pub async fn get_current_version(callback_id: u32) -> Result<Vec<u8>> {
         CURRENT_CALLBACK_ID
             .scope(callback_id, async move {
-                Ok(get_twonly_flutter()?
+                get_twonly_flutter()?
                     .user_discovery
                     .get()
                     .await
                     .get_current_version()
-                    .await?)
+                    .await
             })
             .await
     }
 
     /// UI-facing hook used when a user manually changes contact verification.
-
     pub async fn update_verification_state_for_user(
         callback_id: u32, contact_id: i64, public_key_verified_timestamp: Option<i64>,
     ) -> Result<()> {

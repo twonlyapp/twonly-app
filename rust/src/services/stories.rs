@@ -26,22 +26,18 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 /// How long a story item is visible after its sender posted it.
-
 pub const STORY_LIFETIME_SECONDS: i64 = 24 * 60 * 60;
 
 /// "All contacts" reaches only existing chats with an exchange in the last
 /// month.
-
 pub const STORY_AUDIENCE_RECENT_EXCHANGE_SECONDS: i64 = 30 * 24 * 60 * 60;
 
 /// A story is announced only between people who sent each other a text or
 /// media message within this long.
-
 pub const STORY_ANNOUNCE_RECENT_EXCHANGE_SECONDS: i64 = 14 * 24 * 60 * 60;
 
 /// Whether the 1:1 chat `group_id` carried a text or media message, either
 /// way, within the last two weeks.
-
 pub(crate) async fn exchanged_recently(
     t: &mut Transaction<'_, Sqlite>, group_id: &str, now: i64,
 ) -> Result<bool> {
@@ -70,7 +66,6 @@ pub struct StoryAudience {
 /// The contacts `audience` reaches, in ascending order. Blocked and deleted
 /// contacts are left out, as are group members who left. "All contacts" also
 /// requires an existing direct chat with a text or media exchange in 30 days.
-
 pub(crate) async fn resolve_audience(
     t: &mut Transaction<'_, Sqlite>, audience: &StoryAudience, now: i64,
 ) -> Result<Vec<i64>> {
@@ -132,7 +127,6 @@ pub(crate) async fn resolve_audience(
 /// The 1:1 chats a story sent to `audience` would go to right now, one per
 /// contact it reaches. Explicit contact groups can include chats not created
 /// yet, by the id they will get. "All contacts" only includes existing chats.
-
 pub async fn audience_chats(ctx: &Arc<Context>, audience: &StoryAudience) -> Result<Vec<String>> {
     let user_id = ctx.user_id().await?;
 
@@ -153,7 +147,6 @@ pub async fn audience_chats(ctx: &Arc<Context>, audience: &StoryAudience) -> Res
 
 /// The 1:1 chat a story row for `contact_id` is filed under, created if the
 /// two never wrote to each other.
-
 pub(crate) async fn direct_chat(
     ctx: &Context, t: &mut Transaction<'_, Sqlite>, contact_id: i64,
 ) -> Result<String> {
@@ -180,7 +173,6 @@ pub(crate) async fn direct_chat(
 /// Removes story rows that are no longer a story. A row some message quotes is
 /// kept as a tombstone without media, so the quote can say the story is gone
 /// instead of pointing at nothing. Returns the media the rows let go of.
-
 pub(crate) async fn retire_rows(
     t: &mut Transaction<'_, Sqlite>, message_ids: &[String], now: i64,
 ) -> Result<BTreeSet<String>> {
@@ -237,7 +229,6 @@ pub(crate) async fn retire_rows(
 }
 
 /// Deletes the media files that `retire_rows` let go of and nothing else holds.
-
 pub(crate) async fn release_media(
     ctx: &Arc<Context>, t: &mut Transaction<'_, Sqlite>, media_ids: BTreeSet<String>,
 ) -> Result<()> {
@@ -273,7 +264,6 @@ pub(crate) async fn release_media(
 /// disappears from its sender's ring, and an own one stops being retried for
 /// recipients that never acknowledged it. Saved items stay, as ordinary stored
 /// media in their chat.
-
 pub async fn purge_expired(ctx: &Arc<Context>) -> Result<()> {
     let now = chrono::Utc::now().timestamp();
 
@@ -309,7 +299,6 @@ pub async fn purge_expired(ctx: &Arc<Context>) -> Result<()> {
 /// Takes one of the user's own story items down before it expires: every
 /// recipient is told to drop it if it was dispatched. Unsent uploads are
 /// cancelled first, so nobody receives either the story or a deletion.
-
 pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
     let lock = media_lock(media_id);
 
@@ -402,7 +391,6 @@ pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

@@ -3,7 +3,11 @@
  *
  */
 
-#![allow(clippy::derive_partial_eq_without_eq)]
+#![allow(
+    clippy::derive_partial_eq_without_eq,
+    clippy::large_enum_variant,
+    clippy::module_inception
+)]
 
 include!(concat!(env!("OUT_DIR"), "/websocket_protocol.rs"));
 

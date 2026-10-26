@@ -14,7 +14,6 @@ use crate::native::location::LocationFix;
 use std::path::Path;
 
 #[cfg(target_os = "ios")]
-
 pub(crate) fn save(
     path: &Path, is_video: bool, _name: &str, created_at_millis: i64, location: Option<LocationFix>,
 ) -> Result<()> {
@@ -67,7 +66,6 @@ pub(crate) fn save(
 }
 
 #[cfg(target_os = "android")]
-
 pub(crate) fn save(
     path: &Path, is_video: bool, name: &str, created_at_millis: i64, location: Option<LocationFix>,
 ) -> Result<()> {
@@ -111,9 +109,9 @@ pub(crate) fn save(
             .and_then(|value| value.z());
 
         if env.exception_check() {
-            let _ = env.exception_describe();
+            env.exception_describe();
 
-            let _ = env.exception_clear();
+            env.exception_clear();
         }
 
         if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
@@ -127,7 +125,6 @@ pub(crate) fn save(
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-
 pub(crate) fn save(
     _path: &Path, _is_video: bool, _name: &str, _created_at_millis: i64,
     _location: Option<LocationFix>,

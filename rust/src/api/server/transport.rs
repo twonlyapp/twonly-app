@@ -87,7 +87,6 @@ impl Server {
     /// Asks the server to (re)start a mailbox drain. It answers immediately;
     /// the messages themselves arrive as unsolicited `PendingMessagesV2`
     /// batches, so this must not be treated as a delivery round trip.
-
     pub(crate) async fn request_pending_messages(ctx: &Arc<Context>) -> Result<()> {
         Self::application(
             ctx,

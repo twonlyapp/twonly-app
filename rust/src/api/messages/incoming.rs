@@ -51,14 +51,12 @@ use std::sync::{Arc, LazyLock, Mutex, PoisonError, Weak};
 /// about to write. Waiting here keeps the duplicate off that connection until
 /// the first copy has committed, after which it takes the ordinary
 /// already-claimed path.
-
 static IN_FLIGHT_RECEIPTS: LazyLock<Mutex<HashMap<String, Weak<tokio::sync::Mutex<()>>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// The registry entry for one in-flight receipt. It keeps the only strong
 /// reference held by a handler that is not waiting, so dropping it once no
 /// other copy is queued takes the entry out of the registry again.
-
 struct InFlightReceipt {
     receipt_id: String,
     lock: Arc<tokio::sync::Mutex<()>>,
@@ -169,7 +167,6 @@ pub(crate) async fn handle_server_message(
 /// claim together with its plaintext one step ahead of the message itself,
 /// because the ratchet step decryption spends cannot be rolled back; a retry
 /// that finds that plaintext resumes from it instead of decrypting again.
-
 async fn acknowledge_pending_messages(
     ctx: &Arc<Context>, batch: server_to_client::PendingMessagesV2,
 ) -> client_to_server::Response {
@@ -294,7 +291,6 @@ pub(crate) async fn handle_request_new_pqc_prekeys(
 ///
 /// A refused rate-limit claim also falls back to `UNKNOWN`: the session stays
 /// as it is and the message fails, rather than two clients trading resets.
-
 async fn reset_unusable_session(
     ctx: &Arc<Context>, from_user_id: i64, error: &TwonlyError,
 ) -> DecryptionErrorType {
@@ -351,7 +347,6 @@ async fn reset_unusable_session(
 /// `establish_signal_session` writes through the pool, and the app database
 /// allows a single connection, so doing this under an open transaction would
 /// deadlock until the acquire timeout.
-
 async fn upgrade_legacy_session_to_v2(
     ctx: &Arc<Context>, database: &Arc<crate::database::app::AppDatabase>, from_user_id: i64,
 ) -> Result<()> {
@@ -394,7 +389,6 @@ async fn upgrade_legacy_session_to_v2(
 }
 
 /// How long a legacy peer is given to move to v2 before it is asked again.
-
 const LEGACY_UPGRADE_REQUEST_INTERVAL_SECS: i64 = 60 * 60;
 
 /// Claims the right to ask a legacy peer to move to v2, at most once per
@@ -407,7 +401,6 @@ const LEGACY_UPGRADE_REQUEST_INTERVAL_SECS: i64 = 60 * 60;
 /// resends would never end and would spend one of our one-time prekeys per
 /// round. Leaving the resends unanswered stops the loop: without a reply the
 /// old client does not send the message again.
-
 async fn claim_legacy_upgrade_request(
     t: &mut Transaction<'_, Sqlite>, contact_id: i64,
 ) -> Result<bool> {
@@ -446,7 +439,6 @@ async fn claim_legacy_upgrade_request(
 /// Entry point for one inbound server message, whichever transport carried it.
 /// Public so tests can deliver the same message twice and prove a redelivery is
 /// handled rather than dropped.
-
 pub async fn handle_decoded_server_message(
     ctx: &Arc<Context>, from_user_id: i64, message: proto::Message,
 ) -> Result<()> {
@@ -821,7 +813,6 @@ pub async fn handle_decoded_server_message(
 /// it, so keeping it as the current state would only encrypt more messages
 /// they cannot read. `establish_signal_session` then installs a session built
 /// from their current prekey bundle and releases everything parked for it.
-
 async fn rebuild_session_after_peer_reset(ctx: &Arc<Context>, from_user_id: i64) -> Result<()> {
     let outcome = rebuild_session(ctx, from_user_id).await;
 
@@ -889,7 +880,6 @@ pub(crate) enum Delivery {
 /// Dispatches already-decrypted client-to-client content to its concrete
 /// feature module. Transport decoding and Signal decryption do not belong in
 /// this dispatcher.
-
 pub(crate) async fn handle_encrypted(
     ctx: &Arc<Context>, t: &mut Transaction<'_, Sqlite>, from_user_id: i64, receipt_id: &str,
     content: proto::EncryptedContent,
@@ -934,7 +924,6 @@ pub(crate) async fn handle_encrypted(
 
 /// Whether the text, media or reaction in `content` is already stored here,
 /// so handling it again shows the user nothing new.
-
 async fn already_held(
     t: &mut Transaction<'_, Sqlite>, from_user_id: i64, content: &proto::EncryptedContent,
 ) -> Result<bool> {
@@ -1191,7 +1180,6 @@ async fn handle_encrypted_inner(
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

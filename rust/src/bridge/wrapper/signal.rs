@@ -85,7 +85,6 @@ impl RustSignal {
 
     /// Removes the current session with a contact and immediately establishes
     /// a fresh one while requiring the contact's stored identity key to match.
-
     pub async fn reset_contact_session(contact_id: i64) -> Result<()> {
         let ctx = Context::get_static()?;
 

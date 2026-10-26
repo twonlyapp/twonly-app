@@ -185,7 +185,6 @@ pub struct FrbMemoriesUploadUrls {
 }
 
 /// Flutter-facing facade for the Rust-owned API runtime.
-
 pub struct StickerLocation {
     pub latitude: f64,
     pub longitude: f64,
@@ -197,7 +196,6 @@ impl RustApi {
     /// Creates a transparent, message-sized sticker from a local image. Model
     /// inference and image encoding are CPU-heavy, so neither runs on Tokio's
     /// async worker threads.
-
     pub async fn create_sticker(image_path: String) -> Result<StickerOutput> {
         crate::database::lifecycle::spawn_blocking(move || stickers::create(Path::new(&image_path)))
             .await
@@ -234,7 +232,6 @@ impl RustApi {
 
     /// Path to a contact's avatar PNG, rendered from the stored SVG if it is
     /// missing. Returns `None` when the contact has no avatar at all.
-
     pub async fn ensure_avatar_png(contact_id: i64) -> Result<Option<String>> {
         let ctx = Context::get_static()?;
 
@@ -307,7 +304,6 @@ impl RustApi {
 
     /// Settles every background transfer this device believes is still in
     /// flight and resumes any upload a terminated process left behind.
-
     pub async fn finish_started_media_uploads() -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -316,7 +312,6 @@ impl RustApi {
 
     /// Creates the media row and its content-encryption material and returns
     /// the media id the UI addresses every later step by.
-
     pub async fn initialize_media_upload(
         media_type: String, display_limit_in_milliseconds: Option<i64>, is_draft_media: bool,
     ) -> Result<String> {
@@ -329,7 +324,6 @@ impl RustApi {
 
     /// Starts the optional location window for a Memory row created by the
     /// local save button rather than the outgoing-media initializer.
-
     pub async fn initialize_memory_location(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -338,7 +332,6 @@ impl RustApi {
 
     /// Warms the shared location cache if Memories or city stickers are
     /// enabled.
-
     pub async fn prewarm_memory_location() -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -346,7 +339,6 @@ impl RustApi {
     }
 
     /// Coordinates for native city lookup, available only with sticker opt-in.
-
     pub async fn current_location_for_sticker() -> Result<Option<StickerLocation>> {
         let ctx = Context::get_static()?;
 
@@ -360,7 +352,6 @@ impl RustApi {
 
     /// Creates one outgoing message per selected group, plus the story rows
     /// for `story_audience`, and starts the upload they all share.
-
     pub async fn send_media_to_groups(
         media_id: String, group_ids: Vec<String>, additional_message_data: Option<Vec<u8>>,
         widget_only: bool, story_audience: Option<StoryAudience>,
@@ -423,7 +414,6 @@ impl RustApi {
     /// only when images arrive. Cheaper than a full permission sync, which this
     /// deliberately does not do: editing a group does not change which widgets
     /// are placed.
-
     pub async fn refresh_widget_manifest() -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -431,7 +421,6 @@ impl RustApi {
     }
 
     /// Drops a single image a widget is showing, at the user's request.
-
     pub async fn delete_widget_media(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -439,7 +428,6 @@ impl RustApi {
     }
 
     /// Retries the media sends whose receipts are still marked for retry.
-
     pub async fn reupload_pending_media() -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -454,7 +442,6 @@ impl RustApi {
 
     /// Reports that a Flutter plugin step finished so Rust can record the
     /// derived state (thumbnail present, crop analyzed, new size and hash).
-
     pub async fn media_step_finished(media_id: String, kind: String) -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -464,7 +451,6 @@ impl RustApi {
     }
 
     /// Exports a stored media file to the user's photo library.
-
     pub async fn save_media_to_gallery(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -475,7 +461,6 @@ impl RustApi {
 
     /// Trims fully transparent borders an editor left around a stored image and
     /// refreshes the preview and content hash derived from it.
-
     pub async fn crop_media_transparent_borders(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -485,7 +470,6 @@ impl RustApi {
     }
 
     /// Deletes every file of a media item while keeping its row.
-
     pub async fn remove_media_files(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -494,7 +478,6 @@ impl RustApi {
 
     /// Gives up on a media file whose source could not be produced, marking
     /// its messages as deleted by the sender instead of retrying forever.
-
     pub async fn abandon_media(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -503,7 +486,6 @@ impl RustApi {
 
     /// Explains a send that stopped because the media was too large: the size
     /// it reached and the largest single object the plan accepts.
-
     pub async fn media_size_limit_report(media_id: String) -> Result<MediaSizeReport> {
         let ctx = Context::get_static()?;
 
@@ -513,7 +495,6 @@ impl RustApi {
     }
 
     /// Deletes temporary media whose messages are finished with it.
-
     pub async fn purge_media_temp_folder() -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -542,7 +523,6 @@ impl RustApi {
 
     /// Stores the cut the editor's video trimmer asked for. Both bounds are
     /// milliseconds into the recording, `None` keeps that end of the clip.
-
     pub async fn set_media_trim(
         media_id: String, trim_start_ms: Option<i64>, trim_end_ms: Option<i64>,
     ) -> Result<()> {
@@ -641,7 +621,6 @@ impl RustApi {
 
     /// Reloads identity and authentication settings from Rust-owned storage.
     /// No configuration values are accepted from the caller.
-
     pub async fn reload_configuration() -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -698,7 +677,6 @@ impl RustApi {
 
     /// Transcodes a captured video while the user is still editing it, so the
     /// send itself only has to encrypt and hand over.
-
     pub async fn prerender_media(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -707,7 +685,6 @@ impl RustApi {
 
     /// Hands every queued envelope to an OS-owned transfer. Used when the app
     /// is being torn down while messages are still unsent.
-
     pub async fn hand_outbox_to_os() -> Result<()> {
         let ctx = Context::get_static()?;
 
@@ -730,7 +707,6 @@ impl RustApi {
 
     /// Sends a protobuf ClientToServer envelope. Rust assigns the sequence ID
     /// and resolves this future with the matching ServerToClient response.
-
     pub async fn request_binary(bytes: Vec<u8>) -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
 
@@ -745,13 +721,11 @@ impl RustApi {
 
     /// Streams the progress of a large mailbox catch-up, starting with the
     /// current state.
-
     pub async fn mailbox_sync_progress(sink: StreamSink<MailboxSyncProgress>) -> Result<()> {
         crate::api::messages::mailbox_sync::stream(sink).await
     }
 
     /// Developer option: shows the catch-up screen with made-up numbers.
-
     pub async fn preview_mailbox_sync() -> Result<()> {
         // This UI preview owns no database work and must not be cancelled
         // with a foreground session, leaving its progress channel claimed.
@@ -1134,7 +1108,6 @@ impl RustApi {
     }
 
     #[allow(clippy::too_many_arguments)]
-
     pub async fn upload_pqc_pre_keys(
         public_identity_key: Vec<u8>, registration_id: i64, ecc_signed_prekey_id: i64,
         ecc_signed_prekey: Vec<u8>, ecc_signed_prekey_signature: Vec<u8>,
@@ -1184,7 +1157,6 @@ impl RustApi {
             .blocking(blocking.unwrap_or(false))
             .call()
             .await
-            .map_err(Into::into)
     }
 
     pub async fn send_encrypted_content_to_group(
@@ -1295,7 +1267,6 @@ impl RustApi {
     /// The number of pending notification events. iOS cannot derive its app
     /// icon badge from the delivered alerts, so the running app pushes this
     /// into `UNUserNotificationCenter` whenever the outbox changes.
-
     pub async fn notification_badge_count() -> Result<i64> {
         let ctx = Context::get_static()?;
 
@@ -1305,7 +1276,6 @@ impl RustApi {
 
     /// Acknowledges every pending notification of a conversation the user just
     /// opened and returns the native notification IDs to withdraw.
-
     pub async fn clear_conversation_notifications(conversation_id: String) -> Result<Vec<String>> {
         let ctx = Context::get_static()?;
 
@@ -1317,7 +1287,6 @@ impl RustApi {
 
     /// Acknowledges the pending contact-request notifications and returns the
     /// native notification IDs to withdraw.
-
     pub async fn clear_contact_request_notifications() -> Result<Vec<String>> {
         let ctx = Context::get_static()?;
 

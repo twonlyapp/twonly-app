@@ -27,7 +27,6 @@ pub struct LegacyTableMigrationCount {
 impl RustAppDatabase {
     /// Raw SQL is retained for the historical oracle and bridge assertions.
     /// Production commands use the typed database modules.
-
     pub async fn select_in_session(
         statement: String, arguments: Vec<SqlValue>,
         session: &crate::bridge::database::DatabaseSession,
@@ -50,7 +49,6 @@ impl RustAppDatabase {
 
     /// Upgrades the historical database with frozen Rust-owned SQL, closes it,
     /// then transactionally imports its application tables. Safe to retry.
-
     pub async fn migrate_legacy_database() -> Result<LegacyMigrationReport> {
         let context = get_twonly_flutter()?;
 
@@ -116,7 +114,6 @@ impl RustAppDatabase {
     /// An empty list means "assume every table changed". It is sent right
     /// after (re)subscribing, and whenever the broadcast channel drops
     /// notifications, so Dart never silently keeps stale rows on screen.
-
     pub async fn changes(control: &DatabaseWatch, sink: StreamSink<Vec<String>>) -> Result<()> {
         let context = get_twonly_flutter()?;
 

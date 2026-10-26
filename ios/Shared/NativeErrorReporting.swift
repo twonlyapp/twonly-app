@@ -49,6 +49,14 @@ enum NativeErrorReporting {
       : .main
     SentrySDK.start { options in
       options.dsn = dsn
+      // Read the containing app's mode so extension reports use the same value.
+      #if DEBUG
+      let fallbackEnvironment = "debug"
+      #else
+      let fallbackEnvironment = "release"
+      #endif
+      options.environment = (appBundle.object(forInfoDictionaryKey: "TwonlyBuildMode") as? String)?
+        .lowercased() ?? fallbackEnvironment
       let version = appBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
       let build = appBundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
       options.releaseName = "\(appBundle.bundleIdentifier ?? "eu.twonly")@\(version)+\(build)"

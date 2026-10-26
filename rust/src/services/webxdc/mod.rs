@@ -25,17 +25,14 @@ use sqlx::{Sqlite, Transaction};
 use std::sync::Arc;
 
 /// The spec's default ceiling for one serialised update.
-
 pub const SEND_UPDATE_MAX_SIZE: usize = 128_000;
 
 /// The spec's default pacing hint, advertised to apps as `sendUpdateInterval`.
-
 pub const SEND_UPDATE_INTERVAL_MS: i64 = 10_000;
 
 /// Bounds on how much an app may accumulate. An app is third-party code that
 /// can call `sendUpdate` in a loop, so both the count and the total size need a
 /// ceiling that does not depend on the app behaving.
-
 const MAX_UPDATES_PER_INSTANCE: i64 = 100_000;
 
 const MAX_PAYLOAD_BYTES_PER_INSTANCE: i64 = 32 * 1024 * 1024;
@@ -44,7 +41,6 @@ const MAX_PAYLOAD_BYTES_PER_INSTANCE: i64 = 32 * 1024 * 1024;
 /// two people playing a turn-based game quickly never reach it -- a move, a
 /// Mills capture after it, a seat claim and a score all count -- since a
 /// refused move has to be played again. An app sending in a loop still does.
-
 const MAX_UPDATES_PER_MINUTE: i64 = 30;
 
 const SYNC_CHUNK_BYTES: usize = 48 * 1024;
@@ -89,7 +85,6 @@ struct PendingUpdateRow {
 
 /// Text an app can put in front of the user, outside its own sandbox. Bounded
 /// so a chat row or a notification cannot be filled with app-controlled text.
-
 const MAX_INFO_CHARS: usize = 200;
 
 const MAX_SUMMARY_CHARS: usize = 64;
@@ -148,7 +143,6 @@ impl WebxdcService {
     /// Requests existing one-time app state after joining a group. Spawned so
     /// the group-create transaction can commit before the sender needs the app
     /// database connection.
-
     pub(crate) fn spawn_sync_request(ctx: &Arc<Context>, group_id: String, contact_id: i64) {
         let ctx = ctx.clone();
 
@@ -185,7 +179,6 @@ impl WebxdcService {
 
     /// Sends every one-time app and its authoritative update log to one new
     /// member. Transfers are hidden, encrypted contact-to-contact messages.
-
     pub async fn send_one_time_apps_to_contact(
         &self, group_id: &str, contact_id: i64,
     ) -> Result<()> {
@@ -522,7 +515,6 @@ impl WebxdcService {
 
     /// Places an app into a chat and tells the other members which app and
     /// which version, so every participant runs the same code.
-
     pub async fn create_instance(
         &self, group_id: String, app_id: String, version: i64,
     ) -> Result<String> {
@@ -627,7 +619,6 @@ impl WebxdcService {
     /// Records the instance a peer placed into a chat. Nothing is downloaded
     /// here: a message must not be able to make a device fetch a bundle, only
     /// the user tapping Start may.
-
     pub(crate) async fn handle_incoming_app(
         transaction: &mut Transaction<'_, Sqlite>, message_id: &str, group_id: &str,
         app: &proto::WebxdcApp,
@@ -669,7 +660,6 @@ impl WebxdcService {
     /// The instance is looked up by the id in the payload and checked against
     /// the chat the message actually arrived in, so a member of one chat cannot
     /// inject state into a game being played in another.
-
     pub(crate) async fn handle_incoming_update(
         transaction: &mut Transaction<'_, Sqlite>, message_id: &str, group_id: &str,
         sender_id: i64, update: &proto::WebxdcUpdate, received_at: i64,
@@ -804,7 +794,6 @@ impl WebxdcService {
     }
 
     #[allow(clippy::too_many_arguments)]
-
     async fn apply_pending_updates(
         transaction: &mut Transaction<'_, Sqlite>, instance_id: &str, app_id: &str, version: i64,
         group_id: &str,
@@ -902,7 +891,6 @@ impl WebxdcService {
     /// nothing extra is sent, and the id derived from the update's own message
     /// id makes a redelivery a no-op rather than a second announcement.
     #[allow(clippy::too_many_arguments)]
-
     async fn insert_info_message(
         transaction: &mut Transaction<'_, Sqlite>, instance_id: &str, app_id: &str, version: i64,
         group_id: &str, update_message_id: &str, sender_id: Option<i64>, info: &str,
@@ -974,7 +962,6 @@ impl WebxdcService {
     }
 
     /// The id of the chat row an update's `info` becomes.
-
     pub(crate) fn info_message_id(update_message_id: &str) -> String {
         format!("{update_message_id}-info")
     }
@@ -986,7 +973,6 @@ impl WebxdcService {
     /// number the same update differently, and neither ever sends its numbering
     /// to the other.
     #[allow(clippy::too_many_arguments)]
-
     async fn append_update(
         transaction: &mut Transaction<'_, Sqlite>, instance_id: &str, message_id: &str,
         sender_id: Option<i64>, payload: &str, info: Option<&str>, href: Option<&str>,
@@ -1067,7 +1053,7 @@ impl WebxdcService {
     ///
     /// Everything crossing the bridge from the webview is checked here rather
     /// than in `webxdc.js`, which the app can rewrite at will.
-
+    #[allow(clippy::too_many_arguments)]
     pub async fn send_update(
         &self, instance_id: String, payload: String, info: Option<String>, href: Option<String>,
         summary: Option<String>, document: Option<String>, notify: Option<String>,
@@ -1276,7 +1262,6 @@ impl WebxdcService {
     }
 
     /// Everything the app has not seen yet, in serial order.
-
     pub async fn updates_after(&self, instance_id: &str, serial: i64) -> Result<Vec<WebxdcUpdate>> {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -1308,7 +1293,6 @@ impl WebxdcService {
     /// Starts with local code. Only a missing bundle needs the network.
     /// Updates downloaded after a previous close are adopted here, before any
     /// files are served; an in-flight background download never changes a run.
-
     pub async fn prepare_bundle(&self, instance_id: &str) -> Result<std::path::PathBuf> {
         let instance = self
             .instance(instance_id)
@@ -1336,7 +1320,6 @@ impl WebxdcService {
 
     /// Downloads the newest published version and moves the instance to it.
     /// Only for a launch whose pinned version cannot be had any more.
-
     async fn adopt_newest(
         &self, instance: &WebxdcInstance, instance_id: &str,
     ) -> Result<Option<std::path::PathBuf>> {
@@ -1359,7 +1342,6 @@ impl WebxdcService {
 
     /// Checks and downloads after the app closes, without moving its pin.
     /// The user may already have reopened it when the network finishes.
-
     pub async fn cache_update(&self, instance_id: &str) -> Result<()> {
         let Some(instance) = self.instance(instance_id).await? else {
             return Ok(());
@@ -1384,7 +1366,6 @@ impl WebxdcService {
     /// running app asks for, so all of them have to come out of the one bundle
     /// the app started with. Only an instance that has never run here still
     /// needs its hash resolved, which is what the fallback is for.
-
     pub async fn pinned_bundle(&self, instance_id: &str) -> Result<std::path::PathBuf> {
         let instance = self
             .instance(instance_id)
@@ -1415,7 +1396,6 @@ impl WebxdcService {
     /// Adopts a newer version only if its complete, verified download is on
     /// disk. Never fetch here: cached apps must open even while the server
     /// is down.
-
     async fn apply_cached_update(
         &self, instance: &WebxdcInstance, instance_id: &str,
     ) -> Result<Option<std::path::PathBuf>> {
@@ -1452,7 +1432,6 @@ impl WebxdcService {
     /// Bundles are content addressed and shared between instances, so the file
     /// goes only once no instance is pinned to it. Best effort: a bundle left
     /// behind costs disk space and nothing else.
-
     async fn discard_unused_bundle(&self, sha256: &str) {
         let database = self.ctx.app_db.read().await.clone();
 
@@ -1474,7 +1453,6 @@ impl WebxdcService {
 
     /// Records the exact code an instance runs. Everything for the rest of this
     /// run -- the files served, the bundle verified -- follows from it.
-
     async fn pin(ctx: &Arc<Context>, instance_id: &str, version: i64, sha256: &str) -> Result<()> {
         let database = ctx.app_db.read().await.clone();
 
@@ -1491,7 +1469,6 @@ impl WebxdcService {
     }
 
     /// Current chat members, using the same instance-scoped IDs as selfAddr.
-
     pub async fn members(&self, instance_id: &str) -> Result<String> {
         let instance = self
             .instance(instance_id)
@@ -1537,7 +1514,6 @@ impl WebxdcService {
     /// Produced here rather than passed in, so what the app is told about its
     /// user is decided on this side. `selfAddr` is a per-instance pseudonym;
     /// `selfName` is the display name the chat already shows.
-
     pub async fn init_script_values(&self, instance_id: &str) -> Result<String> {
         let display_name = crate::user_config::UserConfig::load_from(&self.ctx)?
             .map(|config| config.display_name)
@@ -1561,7 +1537,6 @@ impl WebxdcService {
     /// Derived from the instance id, which every participant knows and nobody
     /// outside the chat does, so the same peer looks identical on every device
     /// while the same user in two different chats does not.
-
     pub fn address_for(instance_id: &str, user_id: i64) -> String {
         let mut mac = Hmac::<Sha256>::new_from_slice(instance_id.as_bytes())
             .expect("hmac accepts keys of any length");
@@ -1577,7 +1552,6 @@ impl WebxdcService {
     /// whose web storage the platform layer still has to clear. The update log
     /// is only half the state: an app is free to keep everything in
     /// `localStorage`, which no database delete can reach.
-
     pub async fn delete_instance(&self, instance_id: &str) -> Result<Option<String>> {
         let Some(instance) = self.instance(instance_id).await? else {
             return Ok(None);
@@ -1615,7 +1589,6 @@ impl WebxdcService {
 /// for, what it notifies for, and what it writes into the chat can never
 /// disagree -- an app cannot buy a push with an `info` that turns out to be
 /// nothing but spaces.
-
 pub(crate) fn announcement(update: &proto::WebxdcUpdate) -> Option<String> {
     sanitize(update.info.as_deref(), MAX_INFO_CHARS)
 }
@@ -1642,7 +1615,6 @@ fn sanitize(text: Option<&str>, max_chars: usize) -> Option<String> {
 
 /// `href` decides which document the app opens when a chat row is tapped, so it
 /// may only ever address the app's own files.
-
 fn sanitize_href(href: &str) -> Option<String> {
     let href = href.trim();
 
@@ -1666,7 +1638,6 @@ fn sanitize_href(href: &str) -> Option<String> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::{proto, sanitize, sanitize_href, Context, Result, WebxdcService};

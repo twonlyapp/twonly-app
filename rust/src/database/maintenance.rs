@@ -24,6 +24,8 @@ unsafe extern "C" {
 thread_local! {
     // Only synchronous native maintenance runs under this authorization. It
     // never crosses an await or grants other workers permission to open.
+    // Already const; clippy misreads the macro's expansion on Android.
+    #[allow(clippy::missing_const_for_thread_local)]
     static AUTHORIZED: RefCell<Option<Arc<Access>>> = const { RefCell::new(None) };
 }
 
@@ -46,7 +48,6 @@ const NATIVE_LEASE: &CStr = c"eu.twonly.database.physical-lifetime";
 
 /// Called under SQLx's native handle lock. The scalar-function anchor keeps
 /// this ticket alive beyond early client-data destruction and final rollback.
-
 pub(crate) unsafe fn set_owner(
     database: *mut libsqlite3_sys::sqlite3,
     operation: Option<crate::database::lifecycle::Operation>,
@@ -79,7 +80,6 @@ pub(crate) fn ensure_no_restore(database_dir: &Path) -> Result<()> {
 
 /// Settings use the application database's maintenance gate too. A config-only
 /// callback must not read or write through an unfinished file installation.
-
 pub(crate) fn settings_access(database_dir: &Path) -> Result<Arc<Access>> {
     let operation = crate::database::lifecycle::Operation::inherited();
 
@@ -183,7 +183,6 @@ fn lock(path: &Path, exclusive: bool) -> std::io::Result<Arc<Access>> {
 impl Exclusive {
     /// Fail promptly rather than waiting with locks while another process may
     /// be suspended. The caller preserves all live files on refusal.
-
     pub(crate) fn try_acquire(path: &Path) -> Result<Option<Self>> {
         initialize()?;
 

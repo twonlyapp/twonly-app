@@ -80,7 +80,6 @@ pub async fn cloud_only_count(
 
 /// Called after the server disables cloud storage. A missing local original
 /// removes its row, while file cleanup is queued in the same transaction.
-
 pub async fn finish_backup_disable(
     tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>, directory: PathBuf,
 ) -> Result<i64> {

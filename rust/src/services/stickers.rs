@@ -47,25 +47,21 @@ fn sticker_error(message: impl Into<String>) -> TwonlyError {
 
 /// Removes the background from `source`, trims transparent borders and returns
 /// a compact transparent WebP suitable for embedding in a text message.
-
 pub(crate) fn create(source: &Path) -> Result<StickerOutput> {
     encode_foreground(remove_background(source)?)
 }
 
 #[cfg(target_os = "android")]
-
 fn remove_background(source: &Path) -> Result<RgbaImage> {
     android::remove_background(source)
 }
 
 #[cfg(target_os = "ios")]
-
 fn remove_background(source: &Path) -> Result<RgbaImage> {
     crate::native::image::extract_foreground(source)
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-
 fn remove_background(_source: &Path) -> Result<RgbaImage> {
     Err(sticker_error(
         "sticker creation is only available on Android and iOS",
@@ -174,7 +170,6 @@ fn visible_bounds(image: &RgbaImage) -> Option<(u32, u32, u32, u32)> {
 
 /// Turns an existing sticker clockwise without running background removal
 /// again.
-
 pub(crate) fn rotate(webp: &[u8]) -> Result<StickerOutput> {
     if webp.is_empty() || webp.len() > MAX_STICKER_BYTES {
         return Err(sticker_error("sticker WebP has an invalid size"));
@@ -249,7 +244,6 @@ impl StickerOutput {
 
 /// Returns the sticker carried by additional message data after checking all
 /// wire bounds and its content digest.
-
 pub(crate) fn decode_additional(bytes: &[u8]) -> Result<Option<proto::StickerData>> {
     let data = proto::AdditionalMessageData::decode(bytes)?;
 
@@ -326,7 +320,6 @@ fn validate_sticker(sticker: &proto::StickerData) -> Result<()> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

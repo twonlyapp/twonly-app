@@ -18,7 +18,6 @@
 //!   is owned by the foreground database operation.
 
 /// How this platform is keeping a preparation alive.
-
 pub(crate) enum Preparation {
     /// The OS owns a job that runs the preparation itself; the caller must not
     /// start one.
@@ -33,7 +32,6 @@ pub(crate) enum Preparation {
 ///
 /// In-process preparation inherits the admitted database operation. It is
 /// deferred if no owner exists; durable media rows are resumed later.
-
 pub(crate) fn begin(media_id: &str) -> Preparation {
     #[cfg(target_os = "android")]
     {
@@ -51,7 +49,6 @@ pub(crate) fn begin(media_id: &str) -> Preparation {
 }
 
 #[cfg(target_os = "android")]
-
 mod android {
 
     use crate::error::{Result, TwonlyError};
@@ -79,9 +76,9 @@ mod android {
             // A pending Java exception would be raised as a fatal error when this
             // thread next enters the VM, taking the process with it.
             if env.exception_check() {
-                let _ = env.exception_describe();
+                env.exception_describe();
 
-                let _ = env.exception_clear();
+                env.exception_clear();
             }
 
             if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {

@@ -63,7 +63,6 @@ pub(crate) fn decrypt(key: &[u8], envelope: &[u8]) -> Result<Vec<u8>> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;

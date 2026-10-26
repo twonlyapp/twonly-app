@@ -104,7 +104,7 @@ async fn acknowledged_concurrent_domain_updates_and_markers_survive_encrypted_re
                 acknowledged.push((marker, id, format!("{worker}/{sequence}")));
 
                 assert_eq!(
-                    queries::get(&mut *database.pool.acquire().await.unwrap(), id)
+                    queries::get(&mut database.pool.acquire().await.unwrap(), id)
                         .await
                         .unwrap()
                         .unwrap()
@@ -139,7 +139,7 @@ async fn acknowledged_concurrent_domain_updates_and_markers_survive_encrypted_re
         assert_eq!(stored, id.to_string());
 
         assert_eq!(
-            queries::get(&mut *reopened.pool.acquire().await.unwrap(), id)
+            queries::get(&mut reopened.pool.acquire().await.unwrap(), id)
                 .await
                 .unwrap()
                 .unwrap()
@@ -149,7 +149,7 @@ async fn acknowledged_concurrent_domain_updates_and_markers_survive_encrypted_re
     }
 
     assert_eq!(
-        queries::get(&mut *reopened.pool.acquire().await.unwrap(), shared)
+        queries::get(&mut reopened.pool.acquire().await.unwrap(), shared)
             .await
             .unwrap()
             .unwrap()
@@ -250,7 +250,6 @@ fn committed_changes_survive_process_kill_and_uncommitted_changes_roll_back() {
 
 #[test]
 #[ignore = "test-only subprocess entry; invoked by the parent durability test"]
-
 fn durability_worker() {
     let directory = std::env::var_os("TWONLY_DURABILITY_FIXTURE")
         .expect("worker requires a synthetic fixture directory");

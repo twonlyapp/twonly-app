@@ -11,7 +11,6 @@ pub use super::table::MediaFile;
 impl MediaFile {
     /// Mark a media upload as successful when a receiver response proves that
     /// the message (and therefore the media) reached another client.
-
     pub async fn handle_response_from_receiver(
         transaction: &mut Transaction<'_, Sqlite>, message_id: &str,
     ) -> Result<()> {
@@ -41,7 +40,6 @@ impl MediaFile {
     /// being `uploaded` - a message added to a media that was uploaded earlier
     /// would then never leave the "sending" state, however long ago the
     /// recipient received it.
-
     pub async fn mark_uploaded(
         transaction: &mut Transaction<'_, Sqlite>, media_id: &str,
     ) -> Result<()> {

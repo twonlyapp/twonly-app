@@ -151,7 +151,6 @@ where
 }
 
 #[cfg(test)]
-
 mod refresh_tests {
 
     use super::*;

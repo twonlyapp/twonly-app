@@ -27,7 +27,6 @@ pub(crate) fn is_today(timestamp: i64) -> bool {
 /// Midnight of the current day in the user's timezone. Flame counters roll over
 /// at the local day boundary, so every comparison against "today" has to start
 /// here instead of at a UTC boundary.
-
 pub(crate) fn start_of_local_day() -> Result<i64> {
     Ok(Local
         .from_local_datetime(
@@ -47,7 +46,6 @@ pub(crate) fn new_uuid_v4() -> String {
 
 /// Media and message identifiers are time-ordered so that inserting them keeps
 /// the primary-key index append-only, matching what Drift generated before.
-
 pub(crate) fn new_uuid_v7() -> String {
     uuid::Uuid::now_v7().to_string()
 }
@@ -71,7 +69,6 @@ impl<T> Shared<T> {
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::{current_time, is_today, milliseconds_to_seconds};

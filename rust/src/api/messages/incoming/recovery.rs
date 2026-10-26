@@ -260,7 +260,6 @@ pub(crate) async fn handle_passwordless_recovery_heartbeat(
 }
 
 #[cfg(test)]
-
 mod tests {
 
     use super::*;
