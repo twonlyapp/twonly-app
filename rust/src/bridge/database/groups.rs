@@ -3,8 +3,8 @@ use super::{DatabaseSession, DatabaseWatch};
 use crate::bridge::get_twonly_flutter;
 pub use crate::database::app::groups::native::FlameState;
 pub use crate::database::app::groups::table::{
-    Group, GroupFilter, GroupHistory, GroupHistoryPatch, GroupMember, GroupMemberPatch,
-    GroupMembersQuery, GroupMembersWithContacts, GroupPatch, GroupQuery,
+    ChatListContact, Group, GroupFilter, GroupHistory, GroupHistoryPatch, GroupMember,
+    GroupMemberPatch, GroupMembersQuery, GroupMembersWithContacts, GroupPatch, GroupQuery,
 };
 use crate::database::app::groups::{queries, watches, writes};
 use crate::error::Result;
@@ -182,4 +182,26 @@ pub async fn get_group(id: String, transaction: &DatabaseSession) -> Result<Opti
     let result = queries::get(&mut **tx.transaction(), &id).await;
 
     tx.finish(result).await
+}
+
+pub async fn watch_chat_list_contacts(
+    control: &DatabaseWatch, sink: StreamSink<Vec<ChatListContact>>,
+) -> Result<()> {
+    watches::chat_list_contacts(
+        get_twonly_flutter()?.app_db.clone(),
+        control.cancellation.clone(),
+        move |value| sink.add(value).is_ok(),
+    )
+    .await
+}
+
+pub async fn watch_group_flames(
+    control: &DatabaseWatch, sink: StreamSink<std::collections::HashMap<String, FlameState>>,
+) -> Result<()> {
+    watches::flames(
+        get_twonly_flutter()?.app_db.clone(),
+        control.cancellation.clone(),
+        move |value| sink.add(value).is_ok(),
+    )
+    .await
 }

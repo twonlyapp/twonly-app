@@ -403,4 +403,5 @@ pub enum ContactCount {
     All,
     Blocked,
     Requested,
+    Accepted,
 }

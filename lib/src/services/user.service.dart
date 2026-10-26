@@ -75,6 +75,9 @@ class UserService {
     UserConfig config, {
     bool notify = true,
   }) async {
+    final changed =
+        !isUserCreated ||
+        !UserConfigApi.sameConfig(left: currentUser, right: config);
     currentUser = config;
     isUserCreated = true;
     try {
@@ -85,7 +88,7 @@ class UserService {
       // Reporting must not prevent login or updating the user's settings.
       Log.warn('Could not configure error reporting', e);
     }
-    if (notify) triggerUserUpdate();
+    if (notify && changed) triggerUserUpdate();
   }
 
   void triggerUserUpdate() {

@@ -32,6 +32,12 @@ impl UserConfigApi {
         config
     }
 
+    /// Structural equality includes byte buffers and nested configuration.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn same_config(left: UserConfig, right: UserConfig) -> bool {
+        left == right
+    }
+
     pub async fn save(config: UserConfig) -> Result<UserConfig> {
         let ctx = Context::get_static()?;
 

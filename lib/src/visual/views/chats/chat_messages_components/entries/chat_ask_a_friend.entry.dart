@@ -49,6 +49,26 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
   bool _isSent = false;
   AdditionalMessageData? _data;
 
+  // The chat rebuilds every visible bubble whenever its data changes. A watch
+  // created in build would restart on each of those rebuilds.
+  Stream<Contact?>? _headerContact;
+  Stream<Contact?>? _statusContact;
+
+  Stream<Contact?> _contact(int userId, {required bool header}) {
+    final shared = widget.contactsById;
+    if (shared != null) return Stream.value(shared[userId]);
+    Stream<Contact?> watch() => watchRustDatabase(
+      (control) => rust_contacts.watchContacts(
+        input: db_contacts.ContactQuery(
+          filter: db_contacts.ContactFilter.ids,
+          ids: Int64List.fromList([userId]),
+        ),
+        control: control,
+      ),
+    ).map((rows) => rows.isEmpty ? null : rows.single);
+    return header ? _headerContact ??= watch() : _statusContact ??= watch();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -206,17 +226,7 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
           mainAxisSize: MainAxisSize.min,
           children: [
             StreamBuilder<Contact?>(
-              stream: widget.contactsById == null
-                  ? watchRustDatabase(
-                      (control) => rust_contacts.watchContacts(
-                        input: db_contacts.ContactQuery(
-                          filter: db_contacts.ContactFilter.ids,
-                          ids: Int64List.fromList([userId].toList()),
-                        ),
-                        control: control,
-                      ),
-                    ).map((rows) => rows.isEmpty ? null : rows.single)
-                  : Stream.value(widget.contactsById![userId]),
+              stream: _contact(userId, header: true),
               builder: (context, snapshot) {
                 final contactInDb = snapshot.data;
                 return GestureDetector(
@@ -312,17 +322,7 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
               ),
             ] else ...[
               StreamBuilder<Contact?>(
-                stream: widget.contactsById == null
-                    ? watchRustDatabase(
-                        (control) => rust_contacts.watchContacts(
-                          input: db_contacts.ContactQuery(
-                            filter: db_contacts.ContactFilter.ids,
-                            ids: Int64List.fromList([userId].toList()),
-                          ),
-                          control: control,
-                        ),
-                      ).map((rows) => rows.isEmpty ? null : rows.single)
-                    : Stream.value(widget.contactsById![userId]),
+                stream: _contact(userId, header: false),
                 builder: (context, contactSnapshot) {
                   final contactInDb = contactSnapshot.data;
                   if (contactInDb != null) {
@@ -335,16 +335,9 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
                     );
                   }
 
-                  return StreamBuilder<UserDiscoveryAnnouncedUser?>(
-                    stream: watchRustDatabase(
-                      (control) =>
-                          rust_user_discovery.watchDiscoveryAnnouncement(
-                            id: userId,
-                            control: control,
-                          ),
-                    ),
-                    builder: (context, userSnapshot) {
-                      final announcedUser = userSnapshot.data;
+                  return _DiscoveryAnnouncementBuilder(
+                    userId: userId,
+                    builder: (context, announcedUser) {
                       if (announcedUser != null && announcedUser.isHidden) {
                         return const SizedBox.shrink();
                       }
@@ -404,4 +397,45 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
       ),
     );
   }
+}
+
+/// Owns its watch, so the announcement is not re-queried on every rebuild of
+/// the bubble around it.
+class _DiscoveryAnnouncementBuilder extends StatefulWidget {
+  const _DiscoveryAnnouncementBuilder({
+    required this.userId,
+    required this.builder,
+  });
+
+  final int userId;
+  final Widget Function(BuildContext, UserDiscoveryAnnouncedUser?) builder;
+
+  @override
+  State<_DiscoveryAnnouncementBuilder> createState() =>
+      _DiscoveryAnnouncementBuilderState();
+}
+
+class _DiscoveryAnnouncementBuilderState
+    extends State<_DiscoveryAnnouncementBuilder> {
+  late Stream<UserDiscoveryAnnouncedUser?> _announcement = _watch();
+
+  Stream<UserDiscoveryAnnouncedUser?> _watch() => watchRustDatabase(
+    (control) => rust_user_discovery.watchDiscoveryAnnouncement(
+      id: widget.userId,
+      control: control,
+    ),
+  );
+
+  @override
+  void didUpdateWidget(_DiscoveryAnnouncementBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.userId != widget.userId) _announcement = _watch();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      StreamBuilder<UserDiscoveryAnnouncedUser?>(
+        stream: _announcement,
+        builder: (context, snapshot) => widget.builder(context, snapshot.data),
+      );
 }

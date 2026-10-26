@@ -190,12 +190,17 @@ impl AppDatabase {
         let operations =
             std::sync::Arc::new(crate::database::lifecycle::pool::PoolOperations::new());
 
+        // Only the writer looks for commits from other processes. A reader's
+        // data_version also moves whenever this writer commits, and the
+        // release hook has already published those tables, so a reader that
+        // reported it would re-run every watch after each local write.
         let pool = Self::connect_pool(
             options.clone(),
             changes.clone(),
             operations.clone(),
             1,
             false,
+            true,
         )
         .await?;
 
@@ -207,8 +212,12 @@ impl AppDatabase {
                     .pragma("query_only", "ON"),
                 changes.clone(),
                 operations.clone(),
-                2,
+                // The chat list's whole-table summaries re-run on every message.
+                // A third reader keeps an open chat's own queries from waiting
+                // behind them.
+                3,
                 true,
+                false,
             )
             .await?;
 
@@ -248,7 +257,7 @@ impl AppDatabase {
     async fn connect_pool(
         options: SqliteConnectOptions, changes: broadcast::Sender<DatabaseChange>,
         operations: std::sync::Arc<crate::database::lifecycle::pool::PoolOperations>, maximum: u32,
-        lazy: bool,
+        lazy: bool, observes_external: bool,
     ) -> Result<SqlitePool> {
         let connect_operations = operations.clone();
 
@@ -290,7 +299,9 @@ impl AppDatabase {
                 Box::pin(async move {
                     operations.acquire(connection).await?;
 
-                    hooks.observe_external(connection, &changes).await?;
+                    if observes_external {
+                        hooks.observe_external(connection, &changes).await?;
+                    }
 
                     Ok(true)
                 })
@@ -357,9 +368,16 @@ impl AppDatabase {
             *last = std::time::Instant::now();
         }
 
-        // before_acquire compares each handle's own data_version. The pool
-        // retains no extra checkout/transaction between polls or on suspend.
-        let connection = self.read_pool.acquire().await?;
+        // A busy writer compares data_version when it is next handed out.
+        // Waiting for it here would only hold this watch behind that write.
+        if self.pool.size() > 0 && self.pool.num_idle() == 0 {
+            return Ok(());
+        }
+
+        // before_acquire compares the writer's own data_version, which moves
+        // only for commits made by other processes. The pool retains no extra
+        // checkout/transaction between polls or on suspend.
+        let connection = self.pool.acquire().await?;
 
         drop(connection);
 

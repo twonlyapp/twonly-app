@@ -527,7 +527,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 slivers: [
                   SliverFillViewport(
                     delegate: SliverChildListDelegate([
-                      const ChatListView(),
+                      ChatListView(active: _offsetFromOne > 0),
                       Container(),
                       const MemoriesView(),
                     ]),

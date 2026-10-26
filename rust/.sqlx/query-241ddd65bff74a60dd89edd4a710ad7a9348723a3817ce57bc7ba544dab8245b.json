@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT m.message_id AS \"message_id!\",\n                a.contact_id AS \"contact_id!\",\n                a.type AS \"type!\",\n                a.action_at AS \"action_at!\"\n            FROM message_actions a\n            JOIN chat_messages m\n            ON COALESCE(m.activity_message_id, m.message_id) = a.message_id\n            JOIN groups g\n            ON g.group_id = m.group_id\n            WHERE m.message_id IN (\n                SELECT value\n                FROM json_each(?)\n            )\n                AND (a.type = 'ackByUserAt'\n                    OR (a.type = 'sendFailed'\n                        AND g.is_direct_chat = 1\n                )\n            )\n            ORDER BY a.rowid\n        ",
+  "query": "\n            SELECT m.message_id AS \"message_id!\",\n                a.contact_id AS \"contact_id!\",\n                a.type AS \"type!\",\n                a.action_at AS \"action_at!\"\n            FROM (\n                SELECT DISTINCT value\n                FROM json_each(?)\n            ) requested\n            CROSS JOIN chat_messages m\n            ON m.message_id = requested.value\n            CROSS JOIN message_actions a\n            ON a.message_id = COALESCE(m.activity_message_id, m.message_id)\n            JOIN groups g\n            ON g.group_id = m.group_id\n            WHERE a.type = 'ackByUserAt'\n                OR (a.type = 'sendFailed'\n                    AND g.is_direct_chat = 1\n            )\n            ORDER BY a.rowid\n        ",
   "describe": {
     "columns": [
       {
@@ -53,10 +53,10 @@
     },
     "nullable": [
       false,
-      false,
+      null,
       false,
       false
     ]
   },
-  "hash": "c9fef2c5a1340aed87530ec1ba9e6e1d568ad8c84fb1f605019a43992510fc6f"
+  "hash": "241ddd65bff74a60dd89edd4a710ad7a9348723a3817ce57bc7ba544dab8245b"
 }

@@ -561,6 +561,32 @@ pub(crate) async fn ensure_contact_avatar_png(
     // Preferences are local, just like nicknames. If the preferred kind is no
     // longer shared by this contact, continue to use whichever is available.
     if prefer_photo.unwrap_or(1) != 0 || svg.is_none() {
+        let custom_path = |counter: i64| {
+            Path::new(&ctx.config.data_dir)
+                .join("avatars")
+                .join(format!("contact_{contact_id}_custom_{counter}.webp"))
+        };
+
+        // Every visible avatar resolves itself again whenever its row changes.
+        // The file name carries the counter, so an existing file already holds
+        // this photo and the bytes need not be read out of the database.
+        if let Some(counter) = sqlx::query_scalar::<_, i64>(
+            "SELECT applied_counter FROM received_custom_avatars WHERE contact_id = ? AND webp IS \
+             NOT NULL",
+        )
+        .bind(contact_id)
+        .fetch_optional(&database.read_pool)
+        .await?
+        {
+            let output = custom_path(counter);
+
+            if output.exists() {
+                return Ok(Some(output));
+            }
+        }
+
+        // Counter and bytes are read together: the photo may have been
+        // replaced since the lookup above.
         if let Some(custom) = sqlx::query(
             "SELECT applied_counter, webp FROM received_custom_avatars WHERE contact_id = ? AND \
              webp IS NOT NULL",
@@ -573,11 +599,9 @@ pub(crate) async fn ensure_contact_avatar_png(
 
             let webp: Vec<u8> = custom.get("webp");
 
-            let output = Path::new(&ctx.config.data_dir)
-                .join("avatars")
-                .join(format!("contact_{contact_id}_custom_{counter}.webp"));
-
-            return cache_avatar_bytes(output, webp).await.map(Some);
+            return cache_avatar_bytes(custom_path(counter), webp)
+                .await
+                .map(Some);
         }
     }
 
@@ -1051,6 +1075,26 @@ mod tests {
         .await?;
 
         assert_eq!(ensure_contact_avatar_png(&ctx, 7).await?, Some(photo));
+
+        // A replaced photo has a new counter, so the cached file of the old
+        // one must not answer for it.
+        let replacement = media_codec::encode_webp(
+            &DynamicImage::ImageRgba8(RgbaImage::from_pixel(8, 8, Rgba([4, 5, 6, 255]))),
+            90.0,
+        )?;
+
+        sqlx::query(
+            "UPDATE received_custom_avatars SET applied_counter = 1, webp = ? WHERE contact_id = 7",
+        )
+        .bind(&replacement)
+        .execute(&db.pool)
+        .await?;
+
+        let replaced = ensure_contact_avatar_png(&ctx, 7).await?.unwrap();
+
+        assert_eq!(replaced.file_name().unwrap(), "contact_7_custom_1.webp");
+
+        assert_eq!(std::fs::read(&replaced)?, replacement);
 
         sqlx::query("DELETE FROM received_custom_avatars WHERE contact_id = 7")
             .execute(&db.pool)

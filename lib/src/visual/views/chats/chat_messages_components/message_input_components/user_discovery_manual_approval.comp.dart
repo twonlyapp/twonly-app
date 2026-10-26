@@ -26,19 +26,33 @@ class UserDiscoveryManualApprovalComp extends StatefulWidget {
 
 class _UserDiscoveryManualApprovalCompState
     extends State<UserDiscoveryManualApprovalComp> {
+  // The composer rebuilds on every keystroke. A stream created in build would
+  // start a new database watch each time, so keep one per conversation.
+  late Stream<List<(Contact, GroupMember)>> _members = _watchMembers();
+
+  Stream<List<(Contact, GroupMember)>> _watchMembers() => watchRustDatabase(
+    (control) => rust_groups
+        .watchGroupContacts(
+          input: db_groups.GroupMembersQuery(
+            groupId: widget.group.groupId,
+          ),
+          control: control,
+        )
+        .map(joinedGroupContacts),
+  );
+
+  @override
+  void didUpdateWidget(UserDiscoveryManualApprovalComp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.group.groupId != widget.group.groupId) {
+      _members = _watchMembers();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<(Contact, GroupMember)>>(
-      stream: watchRustDatabase(
-        (control) => rust_groups
-            .watchGroupContacts(
-              input: db_groups.GroupMembersQuery(
-                groupId: widget.group.groupId,
-              ),
-              control: control,
-            )
-            .map(joinedGroupContacts),
-      ),
+      stream: _members,
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();

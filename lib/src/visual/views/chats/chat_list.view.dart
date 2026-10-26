@@ -1,13 +1,12 @@
 import 'dart:async';
 
 import 'package:clock/clock.dart';
-import 'package:flutter/foundation.dart' show setEquals;
+import 'package:flutter/foundation.dart' show listEquals, mapEquals, setEquals;
 import 'package:flutter/material.dart';
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
-    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/core/bridge.dart' show FlameState;
 import 'package:twonly/core/bridge/database/contact_groups.dart'
     as rust_contact_groups;
 import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
@@ -22,7 +21,6 @@ import 'package:twonly/core/bridge/database/user_discovery.dart'
     as rust_user_discovery;
 import 'package:twonly/core/database/app/contact_groups/table.dart';
 import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
-import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/database/app/key_verifications/table.dart';
@@ -44,6 +42,8 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/connection_status.comp.dart';
+import 'package:twonly/src/visual/components/flame_counter.comp.dart'
+    show emptyFlameState;
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
 import 'package:twonly/src/visual/components/story_preview.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
@@ -55,19 +55,26 @@ import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expi
 import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
 
 class ChatListView extends StatefulWidget {
-  const ChatListView({super.key});
+  const ChatListView({this.active = true, super.key});
+  final bool active;
   @override
   State<ChatListView> createState() => _ChatListViewState();
 }
 
 class _ChatListViewState extends State<ChatListView>
-    with AutomaticKeepAliveClientMixin<ChatListView> {
-  StreamSubscription<void>? _userSub;
+    with AutomaticKeepAliveClientMixin<ChatListView>, WidgetsBindingObserver {
+  bool _watching = false;
+  bool _appVisible = true;
+  final _flameRefresh = StreamController<void>.broadcast();
+  StreamSubscription<Map<String, FlameState>>? _flamesSub;
+  Map<String, FlameState> _flamesByGroup = {};
+  Timer? _flameDayTimer;
+  final Map<String, Map<String, MediaFile>> _mediaByGroup = {};
   StreamSubscription<List<Group>>? _contactsSub;
-  StreamSubscription<List<Contact>>? _contactsCountSub;
+  StreamSubscription<int>? _contactsCountSub;
   StreamSubscription<List<MediaFile>>? _precacheSub;
   StreamSubscription<List<GroupMember>>? _typingMembersSub;
-  StreamSubscription<List<(Contact, GroupMember)>>? _groupMembersSub;
+  StreamSubscription<List<ChatListContact>>? _groupMembersSub;
   StreamSubscription<List<StoredMessage>>? _unopenedMessagesSub;
   StreamSubscription<List<(String, StoredReaction)>>? _reactionsSub;
   StreamSubscription<List<StoredMessage>>? _latestMessagesSub;
@@ -86,7 +93,7 @@ class _ChatListViewState extends State<ChatListView>
   List<Group> _groupsArchived = [];
   Set<String> _typingGroupIds = {};
   List<GroupMember> _typingMembers = [];
-  Map<String, List<Contact>> _contactsByGroup = {};
+  Map<String, List<ChatListContact>> _contactsByGroup = {};
   Map<String, List<StoredMessage>> _unopenedMessagesByGroup = {};
   Map<String, StoredReaction> _lastReactionByGroup = {};
   Map<String, StoredMessage> _lastMessageByGroup = {};
@@ -110,19 +117,64 @@ class _ChatListViewState extends State<ChatListView>
   int _countContactRequest = 0;
   int _countAnnouncedUsers = 0;
   final ValueNotifier<int> _badgeCount = ValueNotifier(0);
-  late StreamSubscription<int?> _countContactRequestStream;
-  late StreamSubscription<int?> _countAnnouncedStream;
+  StreamSubscription<int>? _countContactRequestStream;
+  StreamSubscription<int>? _countAnnouncedStream;
 
   @override
   void initState() {
     super.initState();
-    initAsync();
-    _userSub = userService.onUserUpdated.listen((_) {
-      if (mounted) setState(() {});
-    });
+    WidgetsBinding.instance.addObserver(this);
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    _appVisible =
+        lifecycle != AppLifecycleState.paused &&
+        lifecycle != AppLifecycleState.hidden &&
+        lifecycle != AppLifecycleState.detached;
+    _syncWatchActivity();
   }
 
-  Future<void> initAsync() async {
+  @override
+  void didUpdateWidget(ChatListView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active != oldWidget.active) _syncWatchActivity();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final wasWatching = _watching;
+      _appVisible = true;
+      _syncWatchActivity();
+      if (wasWatching && _watching) _flameRefresh.add(null);
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      _appVisible = false;
+      _syncWatchActivity();
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _syncWatchActivity() {
+    if (widget.active && _appVisible) {
+      if (!_watching) _startWatches();
+    } else {
+      _stopWatches();
+    }
+  }
+
+  void _startWatches() {
+    _watching = true;
+    _scheduleFlameDayRefresh();
+    _flamesSub =
+        restartDatabaseWatch(
+          () => watchRustDatabase(
+            (control) => rust_groups.watchGroupFlames(control: control),
+          ),
+          _flameRefresh.stream,
+        ).listen((states) {
+          if (!mounted || !_watching) return;
+          setState(() => _flamesByGroup = states);
+        });
     final stream = watchRustDatabase(
       (control) => rust_groups.watchGroups(
         input: const db_groups.GroupQuery(
@@ -132,7 +184,7 @@ class _ChatListViewState extends State<ChatListView>
       ),
     );
     _contactsSub = stream.listen((groups) {
-      if (!mounted) return;
+      if (!mounted || !_watching) return;
       setState(() {
         _groupsNotPinned = groups
             .where((x) => !x.pinned && !x.archived)
@@ -145,18 +197,13 @@ class _ChatListViewState extends State<ChatListView>
 
     _contactsCountSub =
         watchRustDatabase(
-          (control) => rust_contacts.watchContacts(
-            input: db_contacts.ContactQuery(
-              filter: db_contacts.ContactFilter.accepted,
-              ids: Int64List(0),
-            ),
+          (control) => rust_contacts.watchContactsCount(
+            metric: db_contacts.ContactCount.accepted,
             control: control,
           ),
-        ).listen((
-          contacts,
-        ) {
-          if (!mounted) return;
-          _hasContacts.value = contacts.isNotEmpty;
+        ).listen((count) {
+          if (!mounted || !_watching) return;
+          _hasContacts.value = count > 0;
         });
 
     _countContactRequestStream =
@@ -166,11 +213,12 @@ class _ChatListViewState extends State<ChatListView>
             control: control,
           ),
         ).listen((update) {
-          if (!mounted) return;
+          if (!mounted || !_watching) return;
           _countContactRequest = update;
           _badgeCount.value = _countAnnouncedUsers + _countContactRequest;
         });
 
+    var discoveryThreshold = userService.currentUser.userDiscoveryThreshold;
     _countAnnouncedStream =
         restartDatabaseWatch(
           () => watchRustDatabase(
@@ -179,9 +227,14 @@ class _ChatListViewState extends State<ChatListView>
               control: control,
             ),
           ),
-          userService.onUserUpdated,
+          userService.onUserUpdated.where((_) {
+            final next = userService.currentUser.userDiscoveryThreshold;
+            if (next == discoveryThreshold) return false;
+            discoveryThreshold = next;
+            return true;
+          }),
         ).listen((update) {
-          if (!mounted) return;
+          if (!mounted || !_watching) return;
           _countAnnouncedUsers = update;
           _badgeCount.value = _countAnnouncedUsers + _countContactRequest;
         });
@@ -194,7 +247,7 @@ class _ChatListViewState extends State<ChatListView>
         ).listen((
           mediaFiles,
         ) {
-          if (!mounted) return;
+          if (!mounted || !_watching) return;
           for (final media in mediaFiles) {
             if (!_precachedMediaIds.contains(media.mediaId)) {
               _precachedMediaIds.add(media.mediaId);
@@ -224,7 +277,7 @@ class _ChatListViewState extends State<ChatListView>
         ).listen((
           members,
         ) {
-          if (!mounted) return;
+          if (!mounted || !_watching) return;
           _typingMembers = members;
           _updateTypingGroupIds();
         });
@@ -234,19 +287,18 @@ class _ChatListViewState extends State<ChatListView>
     );
     _groupMembersSub =
         watchRustDatabase(
-          (control) => rust_groups
-              .watchGroupContacts(
-                input: const db_groups.GroupMembersQuery(
-                  orderForChats: true,
-                ),
-                control: control,
-              )
-              .map(joinedGroupContacts),
+          (control) => rust_groups.watchChatListContacts(control: control),
         ).listen((rows) {
-          if (!mounted) return;
-          final contactsByGroup = <String, List<Contact>>{};
+          if (!mounted || !_watching) return;
+          final contactsByGroup = <String, List<ChatListContact>>{};
           for (final row in rows) {
-            contactsByGroup.putIfAbsent(row.$2.groupId, () => []).add(row.$1);
+            contactsByGroup.putIfAbsent(row.groupId, () => []).add(row);
+          }
+          for (final entry in contactsByGroup.entries) {
+            final previous = _contactsByGroup[entry.key];
+            if (listEquals(previous, entry.value)) {
+              contactsByGroup[entry.key] = previous!;
+            }
           }
           setState(() => _contactsByGroup = contactsByGroup);
         });
@@ -262,7 +314,7 @@ class _ChatListViewState extends State<ChatListView>
         ).listen((
           messages,
         ) {
-          if (!mounted) return;
+          if (!mounted || !_watching) return;
           final byGroup = <String, List<StoredMessage>>{};
           for (final message in messages) {
             byGroup.putIfAbsent(message.groupId, () => []).add(message);
@@ -281,7 +333,7 @@ class _ChatListViewState extends State<ChatListView>
         ).listen((
           rows,
         ) {
-          if (!mounted) return;
+          if (!mounted || !_watching) return;
           setState(
             () =>
                 _lastReactionByGroup = {for (final row in rows) row.$1: row.$2},
@@ -299,7 +351,7 @@ class _ChatListViewState extends State<ChatListView>
         ).listen((
           messages,
         ) {
-          if (!mounted) return;
+          if (!mounted || !_watching) return;
           setState(
             () => _lastMessageByGroup = {
               for (final message in messages) message.groupId: message,
@@ -318,7 +370,7 @@ class _ChatListViewState extends State<ChatListView>
               .map(orderedMediaFiles),
         ).listen(
           (mediaFiles) {
-            if (!mounted) return;
+            if (!mounted || !_watching) return;
             setState(
               () => _chatListMediaById = {
                 for (final mediaFile in mediaFiles)
@@ -335,7 +387,7 @@ class _ChatListViewState extends State<ChatListView>
             )
             .map((rows) => {for (final row in rows) row.groupId: row.status})
             .listen((statuses) {
-              if (!mounted) return;
+              if (!mounted || !_watching) return;
               setState(() => _verificationByGroup = statuses);
             });
     _contactGroupsSub =
@@ -354,7 +406,7 @@ class _ChatListViewState extends State<ChatListView>
         ).listen((
           rows,
         ) {
-          if (!mounted) return;
+          if (!mounted || !_watching) return;
           final contactGroups = <int, List<ContactGroup>>{};
           for (final row in rows) {
             contactGroups.putIfAbsent(row.$1, () => []).add(row.$2);
@@ -376,7 +428,7 @@ class _ChatListViewState extends State<ChatListView>
               }),
         ).listen(
           (rows) {
-            if (!mounted) return;
+            if (!mounted || !_watching) return;
             final contactGroups = <String, List<ContactGroup>>{};
             for (final row in rows) {
               contactGroups.putIfAbsent(row.$1, () => []).add(row.$2);
@@ -395,7 +447,7 @@ class _ChatListViewState extends State<ChatListView>
                 .map(receivedStoryItems),
           );
         })().listen((items) {
-          if (!mounted) return;
+          if (!mounted || !_watching) return;
           final byGroup = <String, List<StoryItem>>{};
           for (final item in items) {
             byGroup.putIfAbsent(item.message.groupId, () => []).add(item);
@@ -414,7 +466,7 @@ class _ChatListViewState extends State<ChatListView>
                 .map(ownStoryItems),
           );
         })().listen((items) {
-          if (!mounted) return;
+          if (!mounted || !_watching) return;
           setState(() => _ownStories = items);
           _scheduleOwnStoryExpiry();
         });
@@ -426,7 +478,7 @@ class _ChatListViewState extends State<ChatListView>
   }
 
   List<StoryBubbleItem> get _storyBubbles {
-    final contactsById = <int, Contact>{
+    final contactsById = <int, ChatListContact>{
       for (final contacts in _contactsByGroup.values)
         for (final contact in contacts) contact.userId: contact,
     };
@@ -441,7 +493,7 @@ class _ChatListViewState extends State<ChatListView>
     return buildStoryBubbleItems(
       stories: _storiesByGroup.values.expand((items) => items),
       labelFor: (story) => switch (contactsById[story.senderId]) {
-        final Contact contact => getContactDisplayName(contact),
+        final ChatListContact contact => getChatListContactDisplayName(contact),
         null =>
           groupsById[story.message.groupId]?.groupName ??
               story.senderId.toString(),
@@ -460,7 +512,7 @@ class _ChatListViewState extends State<ChatListView>
       postedAt: oldest.postedAt,
       now: clock.now(),
       onExpired: () {
-        if (!mounted) return;
+        if (!mounted || !_watching) return;
         setState(() {});
         _scheduleOwnStoryExpiry();
       },
@@ -486,7 +538,7 @@ class _ChatListViewState extends State<ChatListView>
       postedAt: oldest.postedAt,
       now: now,
       onExpired: () {
-        if (!mounted) return;
+        if (!mounted || !_watching) return;
         setState(() {});
         _scheduleReceivedStoryExpiry();
       },
@@ -507,13 +559,26 @@ class _ChatListViewState extends State<ChatListView>
   @override
   bool get wantKeepAlive => true;
 
-  @override
-  void dispose() {
+  void _scheduleFlameDayRefresh() {
+    _flameDayTimer?.cancel();
+    final now = clock.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    _flameDayTimer = Timer(tomorrow.difference(now), () {
+      if (!_watching) return;
+      _flameRefresh.add(null);
+      _scheduleFlameDayRefresh();
+    });
+  }
+
+  void _stopWatches() {
+    if (!_watching) return;
+    _watching = false;
+    _flamesSub?.cancel();
+    _flameDayTimer?.cancel();
     _contactsSub?.cancel();
     _contactsCountSub?.cancel();
-    _countContactRequestStream.cancel();
-    _countAnnouncedStream.cancel();
-    _userSub?.cancel();
+    _countContactRequestStream?.cancel();
+    _countAnnouncedStream?.cancel();
     _precacheSub?.cancel();
     _typingMembersSub?.cancel();
     _typingUpdateTimer?.cancel();
@@ -529,11 +594,20 @@ class _ChatListViewState extends State<ChatListView>
     _ownStoriesSub?.cancel();
     _ownStoryExpiry.cancel();
     _receivedStoryExpiry.cancel();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _stopWatches();
+    unawaited(_flameRefresh.close());
+    _hasContacts.dispose();
+    _badgeCount.dispose();
     super.dispose();
   }
 
   void _updateTypingGroupIds() {
-    if (!mounted) return;
+    if (!mounted || !_watching) return;
     final typingGroupIds = _typingMembers
         .where(isTyping)
         .map((member) => member.groupId)
@@ -555,12 +629,16 @@ class _ChatListViewState extends State<ChatListView>
       final mediaFile = _chatListMediaById[mediaId];
       if (mediaFile != null) mediaFiles[mediaId] = mediaFile;
     }
+    final previous = _mediaByGroup[groupId];
+    if (previous != null && mapEquals(previous, mediaFiles)) return previous;
+    _mediaByGroup[groupId] = mediaFiles;
     return mediaFiles;
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (!widget.active || !_appVisible) return const SizedBox.shrink();
     final plan = context.select<PurchasesProvider, SubscriptionPlan>(
       (p) => p.plan,
     );
@@ -682,6 +760,7 @@ class _ChatListViewState extends State<ChatListView>
             else
               Expanded(
                 child: ListView.builder(
+                  key: const PageStorageKey('chat-list'),
                   itemCount:
                       (storyBubbles.isNotEmpty ? 1 : 0) +
                       _groupsPinned.length +
@@ -721,7 +800,10 @@ class _ChatListViewState extends State<ChatListView>
                         key: ValueKey(group.groupId),
                         group: group,
                         isTyping: _typingGroupIds.contains(group.groupId),
-                        contacts: _contactsByGroup[group.groupId] ?? const [],
+                        chatContacts:
+                            _contactsByGroup[group.groupId] ?? const [],
+                        flameState:
+                            _flamesByGroup[group.groupId] ?? emptyFlameState,
                         unopenedMessages:
                             _unopenedMessagesByGroup[group.groupId] ?? const [],
                         lastReaction: _lastReactionByGroup[group.groupId],
@@ -751,7 +833,9 @@ class _ChatListViewState extends State<ChatListView>
                       key: ValueKey(group.groupId),
                       group: group,
                       isTyping: _typingGroupIds.contains(group.groupId),
-                      contacts: _contactsByGroup[group.groupId] ?? const [],
+                      chatContacts: _contactsByGroup[group.groupId] ?? const [],
+                      flameState:
+                          _flamesByGroup[group.groupId] ?? emptyFlameState,
                       unopenedMessages:
                           _unopenedMessagesByGroup[group.groupId] ?? const [],
                       lastReaction: _lastReactionByGroup[group.groupId],

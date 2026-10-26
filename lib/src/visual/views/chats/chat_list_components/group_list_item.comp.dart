@@ -4,6 +4,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge.dart' show FlameState;
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
@@ -20,7 +21,6 @@ import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
 import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/core/database/app/reactions/table.dart';
-import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/media_enums.dart';
@@ -46,6 +46,8 @@ class GroupListItemComp extends StatefulWidget {
     required this.group,
     this.isTyping,
     this.contacts,
+    this.chatContacts,
+    this.flameState,
     this.unopenedMessages,
     this.lastReaction,
     this.lastMessage,
@@ -59,6 +61,8 @@ class GroupListItemComp extends StatefulWidget {
   final Group group;
   final bool? isTyping;
   final List<Contact>? contacts;
+  final List<ChatListContact>? chatContacts;
+  final FlameState? flameState;
   final List<StoredMessage>? unopenedMessages;
   final StoredReaction? lastReaction;
   final StoredMessage? lastMessage;
@@ -85,7 +89,7 @@ class _UserListItem extends State<GroupListItemComp> {
   StreamSubscription<StoredMessage?>? _lastMessageStream;
   StreamSubscription<StoredReaction?>? _lastReactionStream;
   StreamSubscription<List<MediaFile>>? _lastMediaFilesStream;
-  Contact? _directContact;
+  int? _directContactId;
   StreamSubscription<List<Contact>>? _directContactStream;
   List<StoryItem> _storyItems = const [];
   StreamSubscription<List<StoryItem>>? _storyItemsStream;
@@ -114,7 +118,10 @@ class _UserListItem extends State<GroupListItemComp> {
   @override
   void didUpdateWidget(GroupListItemComp oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.contacts != oldWidget.contacts) _applyContacts();
+    if (widget.contacts != oldWidget.contacts ||
+        widget.chatContacts != oldWidget.chatContacts) {
+      _applyContacts();
+    }
     if (widget.lastReaction != oldWidget.lastReaction) {
       _lastReaction = widget.lastReaction;
     }
@@ -132,9 +139,18 @@ class _UserListItem extends State<GroupListItemComp> {
   }
 
   void _applyContacts() {
+    final shared = widget.chatContacts;
+    if (shared != null) {
+      _directContactId = widget.group.isDirectChat
+          ? shared.firstOrNull?.userId
+          : null;
+      _receiverDeletedAccount =
+          shared.length == 1 && shared.first.accountDeleted;
+      return;
+    }
     if (widget.contacts == null) return;
-    _directContact = widget.group.isDirectChat && widget.contacts!.isNotEmpty
-        ? widget.contacts!.first
+    _directContactId = widget.group.isDirectChat
+        ? widget.contacts!.firstOrNull?.userId
         : null;
     _receiverDeletedAccount =
         widget.contacts!.length == 1 && widget.contacts!.first.accountDeleted;
@@ -260,7 +276,7 @@ class _UserListItem extends State<GroupListItemComp> {
           });
     }
 
-    if (widget.contacts != null) {
+    if (widget.contacts != null || widget.chatContacts != null) {
       // Contact data is shared by the parent chat list.
     } else if (widget.group.isDirectChat) {
       _directContactStream =
@@ -280,8 +296,8 @@ class _UserListItem extends State<GroupListItemComp> {
                 if (!mounted) return;
                 if (contacts.isNotEmpty) {
                   setState(() {
-                    _directContact = contacts.first;
-                    _receiverDeletedAccount = _directContact!.accountDeleted;
+                    _directContactId = contacts.first.userId;
+                    _receiverDeletedAccount = contacts.first.accountDeleted;
                   });
                 }
               });
@@ -461,7 +477,11 @@ class _UserListItem extends State<GroupListItemComp> {
   /// that plays first, with the avatar small in its corner. Once all of it
   /// has been seen it is drawn softer.
   Widget _avatar() {
-    final avatar = AvatarIcon(group: widget.group, contacts: widget.contacts);
+    final avatar = AvatarIcon(
+      group: widget.group,
+      contacts: widget.contacts,
+      chatContacts: widget.chatContacts,
+    );
     if (!widget.group.isDirectChat) return avatar;
     final active = _activeStoryItems;
     if (active.isEmpty) return avatar;
@@ -475,6 +495,7 @@ class _UserListItem extends State<GroupListItemComp> {
       badge: AvatarIcon(
         group: widget.group,
         contacts: widget.contacts,
+        chatContacts: widget.chatContacts,
         fontSize: 9,
       ),
     );
@@ -507,130 +528,127 @@ class _UserListItem extends State<GroupListItemComp> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<void>(
-      stream: userService.onUserUpdated,
-      builder: (context, snapshot) {
-        return GroupContextMenu(
-          group: widget.group,
-          child: ListTile(
-            title: LayoutBuilder(
-              builder: (context, constraints) {
-                // Without labels the name may use the whole row.
-                final showBadges = widget.contactGroups.isNotEmpty;
-                // The name is capped instead of flexible so the badges get all
-                // of the space it does not use, rather than only half the row.
-                final nameMaxWidth = showBadges
-                    ? constraints.maxWidth * 0.6
-                    : constraints.maxWidth;
-                return Row(
-                  children: [
-                    ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: nameMaxWidth),
-                      child: Text(
-                        widget.group.groupName,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
+    return GroupContextMenu(
+      group: widget.group,
+      child: ListTile(
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            // Without labels the name may use the whole row.
+            final showBadges = widget.contactGroups.isNotEmpty;
+            // The name is capped instead of flexible so the badges get all
+            // of the space it does not use, rather than only half the row.
+            final nameMaxWidth = showBadges
+                ? constraints.maxWidth * 0.6
+                : constraints.maxWidth;
+            return Row(
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: nameMaxWidth),
+                  child: Text(
+                    widget.group.groupName,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+                const SizedBox(width: 3),
+                VerificationBadgeComp(
+                  group: widget.group,
+                  verificationStatus: widget.verificationStatus,
+                  useProvidedStatus: widget.useSharedSummary,
+                  showOnlyIfVerified: true,
+                  clickable: false,
+                  size: 12,
+                ),
+                if (showBadges) ...[
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: ContactGroupBadges(
+                      userId: _directContactId,
+                      groupId: widget.group.isDirectChat
+                          ? null
+                          : widget.group.groupId,
+                      contactGroups: widget.contactGroups,
                     ),
-                    const SizedBox(width: 3),
-                    VerificationBadgeComp(
-                      group: widget.group,
-                      verificationStatus: widget.verificationStatus,
-                      useProvidedStatus: widget.useSharedSummary,
-                      showOnlyIfVerified: true,
-                      clickable: false,
-                      size: 12,
-                    ),
-                    if (showBadges) ...[
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: ContactGroupBadges(
-                          userId: _directContact?.userId,
-                          groupId: widget.group.isDirectChat
-                              ? null
-                              : widget.group.groupId,
-                          contactGroups: widget.contactGroups,
-                        ),
-                      ),
-                    ],
-                  ],
-                );
-              },
-            ),
-            subtitle: _receiverDeletedAccount
-                ? Text(context.lang.userDeletedAccount)
-                : (_currentMessage == null)
-                ? (widget.group.totalMediaCounter == 0)
-                      ? Text(context.lang.chatsTapToSend)
-                      : Row(
-                          children: [
-                            LastMessageTimeComp(
-                              key: ValueKey(widget.group.groupId),
-                              dateTime: widget.group.lastMessageExchange,
-                            ),
-                            FlameCounterWidget(
-                              group: widget.group,
-                              prefix: true,
-                            ),
-                          ],
-                        )
-                : Row(
-                    children: [
-                      TypingIndicatorSubtitleComp(
-                        groupId: widget.group.groupId,
-                        isTyping: widget.isTyping,
-                      ),
-                      MessageSendStateIcon(
-                        _previewMessages,
-                        _previewMediaFiles,
-                        lastReaction: _lastReaction,
-                        group: widget.group,
-                        showDraft: true,
-                      ),
-                      const Text('•'),
-                      const SizedBox(width: 5),
-                      if (_currentMessage != null)
+                  ),
+                ],
+              ],
+            );
+          },
+        ),
+        subtitle: _receiverDeletedAccount
+            ? Text(context.lang.userDeletedAccount)
+            : (_currentMessage == null)
+            ? (widget.group.totalMediaCounter == 0)
+                  ? Text(context.lang.chatsTapToSend)
+                  : Row(
+                      children: [
                         LastMessageTimeComp(
                           key: ValueKey(widget.group.groupId),
-                          message: _currentMessage,
+                          dateTime: widget.group.lastMessageExchange,
                         ),
-                      FlameCounterWidget(
-                        group: widget.group,
-                        prefix: true,
-                      ),
-                    ],
+                        FlameCounterWidget(
+                          state: widget.flameState,
+                          group: widget.group,
+                          prefix: true,
+                        ),
+                      ],
+                    )
+            : Row(
+                children: [
+                  TypingIndicatorSubtitleComp(
+                    groupId: widget.group.groupId,
+                    isTyping: widget.isTyping,
                   ),
-            leading: GestureDetector(
-              onTap: _onAvatarTap,
-              child: _avatar(),
-            ),
-            trailing: (widget.group.leftGroup || _receiverDeletedAccount)
-                ? null
-                : IconButton(
-                    onPressed: () {
-                      if (_hasNonOpenedMediaFile) {
-                        context.push(
-                          Routes.chatsMessages(widget.group.groupId),
-                          extra: widget.group,
-                        );
-                      } else {
-                        context.push(
-                          Routes.chatsCameraSendTo,
-                          extra: widget.group,
-                        );
-                      }
-                    },
-                    icon: FaIcon(
-                      _hasNonOpenedMediaFile
-                          ? FontAwesomeIcons.solidComments
-                          : FontAwesomeIcons.camera,
-                      color: context.color.outline.withAlpha(150),
+                  MessageSendStateIcon(
+                    _previewMessages,
+                    _previewMediaFiles,
+                    lastReaction: _lastReaction,
+                    group: widget.group,
+                    showDraft: true,
+                  ),
+                  const Text('•'),
+                  const SizedBox(width: 5),
+                  if (_currentMessage != null)
+                    LastMessageTimeComp(
+                      key: ValueKey(widget.group.groupId),
+                      message: _currentMessage,
                     ),
+                  FlameCounterWidget(
+                    state: widget.flameState,
+                    group: widget.group,
+                    prefix: true,
                   ),
-            onTap: onTap,
-          ),
-        );
-      },
+                ],
+              ),
+        leading: GestureDetector(
+          onTap: _onAvatarTap,
+          child: _avatar(),
+        ),
+        trailing: (widget.group.leftGroup || _receiverDeletedAccount)
+            ? null
+            : IconButton(
+                onPressed: () {
+                  if (_hasNonOpenedMediaFile) {
+                    context.push(
+                      Routes.chatsMessages(widget.group.groupId),
+                      extra: widget.group,
+                    );
+                  } else {
+                    context.push(
+                      Routes.chatsCameraSendTo,
+                      extra: widget.group,
+                    );
+                  }
+                },
+                icon: FaIcon(
+                  _hasNonOpenedMediaFile
+                      ? FontAwesomeIcons.solidComments
+                      : FontAwesomeIcons.camera,
+                  color: context.color.outline.withAlpha(150),
+                ),
+              ),
+        onTap: onTap,
+      ),
     );
   }
 }

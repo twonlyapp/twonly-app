@@ -280,6 +280,15 @@ class _ChatListEntryState extends State<ChatListEntry> {
     return const ChatUnknownEntry();
   }
 
+  List<Contact>? _senderAvatarContacts() {
+    final sender = widget.userIdToContact?[widget.message.senderId];
+    if (sender != null) return [sender];
+    // The chat watches every sender's contact row. Until it arrives, an empty
+    // list keeps each avatar from starting a watch of its own that it would
+    // drop again a moment later.
+    return widget.useSharedData ? const [] : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final right = widget.message.senderId == null;
@@ -408,10 +417,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
                   ),
                   child: AvatarIcon(
                     contactId: widget.message.senderId,
-                    contacts:
-                        widget.userIdToContact?[widget.message.senderId] == null
-                        ? null
-                        : [widget.userIdToContact![widget.message.senderId]!],
+                    contacts: _senderAvatarContacts(),
                     fontSize: 12,
                   ),
                 ),

@@ -160,6 +160,14 @@ pub async fn count(connection: &mut SqliteConnection, metric: ContactCount) -> R
             .fetch_one(connection)
             .await?
         }
+        ContactCount::Accepted => {
+            sqlx::query_scalar!(
+                r#"SELECT COUNT(*) AS "count!" FROM contacts
+                   WHERE blocked = 0 AND accepted = 1 AND account_deleted = 0"#,
+            )
+            .fetch_one(connection)
+            .await?
+        }
         ContactCount::Requested => {
             sqlx::query_scalar!(
                 r#"

@@ -666,7 +666,13 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           .whereType<int>(),
       ..._referencedContactIds(),
     };
-    if (setEquals(_data.watchedContactIds, contactIds)) return;
+    // Every page, group action and pending bubble lands here. An extra row in
+    // the map is harmless, while a fresh watch re-reads every contact and
+    // redraws the list, so only restart it when a needed contact is missing.
+    if (_data.watchedContactIds.containsAll(contactIds) &&
+        (_subscriptions.contacts != null || contactIds.isEmpty)) {
+      return;
+    }
     _data.watchedContactIds = contactIds;
     unawaited(_subscriptions.contacts?.cancel());
     _subscriptions.contacts =

@@ -24,6 +24,7 @@ class AvatarIcon extends StatefulWidget {
     super.key,
     this.group,
     this.contacts,
+    this.chatContacts,
     this.contactId,
     this.myAvatar = false,
     this.fontSize = 20,
@@ -32,6 +33,7 @@ class AvatarIcon extends StatefulWidget {
   });
   final Group? group;
   final List<Contact>? contacts;
+  final List<ChatListContact>? chatContacts;
   final int? contactId;
   final bool myAvatar;
   final double? fontSize;
@@ -51,7 +53,7 @@ const _avatarCacheLimit = 200;
 // A received photo can change without changing the public profile counter.
 // Share one native invalidation stream across all visible contact avatars.
 StreamSubscription<List<String>>? _avatarDatabaseChanges;
-final StreamController<void> _avatarChanges = StreamController<void>.broadcast(
+final StreamController<List<String>> _avatarChanges = StreamController.broadcast(
   onListen: () {
     var first = true;
     _avatarDatabaseChanges = watchRustDatabaseChanges().listen(
@@ -61,8 +63,10 @@ final StreamController<void> _avatarChanges = StreamController<void>.broadcast(
           first = false;
           if (tables.isEmpty) return;
         }
-        if (tables.isEmpty || tables.contains('received_custom_avatars')) {
-          _avatarChanges.add(null);
+        if (tables.isEmpty ||
+            tables.contains('received_custom_avatars') ||
+            tables.contains('own_custom_avatar')) {
+          _avatarChanges.add(tables);
         }
       },
       onError: (Object error) {
@@ -84,8 +88,29 @@ void _cacheAvatarPath(String key, String path) {
   _avatarPathCache[key] = path;
 }
 
-String _avatarCacheKey(Contact contact) =>
-    '${contact.userId}:${contact.senderProfileCounter}:${contact.preferPhotoAvatar}';
+typedef _AvatarContact = ({
+  int userId,
+  int profileCounter,
+  bool? preferPhotoAvatar,
+  bool hasSvgAvatar,
+});
+
+_AvatarContact _contactAvatarKey(Contact contact) => (
+  userId: contact.userId,
+  profileCounter: contact.senderProfileCounter,
+  preferPhotoAvatar: contact.preferPhotoAvatar,
+  hasSvgAvatar: contact.avatarSvgCompressed?.isNotEmpty ?? false,
+);
+
+_AvatarContact _chatContactAvatarKey(ChatListContact contact) => (
+  userId: contact.userId,
+  profileCounter: contact.senderProfileCounter,
+  preferPhotoAvatar: contact.preferPhotoAvatar,
+  hasSvgAvatar: contact.hasSvgAvatar,
+);
+
+String _avatarCacheKey(_AvatarContact contact) =>
+    '${contact.userId}:${contact.profileCounter}:${contact.preferPhotoAvatar}:${contact.hasSvgAvatar}';
 
 class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
   double get _avatarSize => 2 * (widget.fontSize ?? 20);
@@ -106,7 +131,8 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
     );
   }
 
-  List<Contact> _avatarContacts = [];
+  List<_AvatarContact> _avatarContacts = [];
+  Map<int, List<int>?> _avatarSvgSources = {};
   final Map<String, String> _resolvedAvatarPaths = {};
   final Set<String> _failedAvatarKeys = {};
   Timer? _avatarRetry;
@@ -118,7 +144,7 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
   StreamSubscription<List<Contact>>? contactsStream;
   StreamSubscription<Contact?>? contactStream;
   StreamSubscription<void>? _userSub;
-  StreamSubscription<void>? _photoSub;
+  StreamSubscription<List<String>>? _photoSub;
 
   @override
   void initState() {
@@ -144,6 +170,7 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
   void didUpdateWidget(AvatarIcon oldWidget) {
     super.didUpdateWidget(oldWidget);
     if ((widget.contacts == null) != (oldWidget.contacts == null) ||
+        (widget.chatContacts == null) != (oldWidget.chatContacts == null) ||
         widget.group?.groupId != oldWidget.group?.groupId ||
         widget.contactId != oldWidget.contactId ||
         widget.myAvatar != oldWidget.myAvatar) {
@@ -154,20 +181,54 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
       initAsync();
       return;
     }
-    // Compare by value: callers commonly build a fresh list on every rebuild,
-    // and an identity check would restart the avatar probe every frame.
-    if (widget.contacts != null &&
-        !listEquals(widget.contacts, oldWidget.contacts)) {
-      _setAvatarContacts(widget.contacts!);
+    if (widget.chatContacts != null) {
+      _setAvatarContacts(
+        widget.chatContacts!.map(_chatContactAvatarKey).toList(),
+      );
+    } else if (widget.contacts != null) {
+      _setContacts(widget.contacts!);
     }
   }
 
-  void _setAvatarContacts(List<Contact> contacts) {
+  void _setContacts(List<Contact> contacts) {
+    // Legacy callers pass full contacts. Detect actual byte changes rather
+    // than buffer identity, including a payload arriving at the same counter.
+    final previous = _avatarContacts.toSet();
+    final changed = contacts
+        .where(
+          (contact) =>
+              previous.contains(_contactAvatarKey(contact)) &&
+              !listEquals(
+                _avatarSvgSources[contact.userId],
+                contact.avatarSvgCompressed,
+              ),
+        )
+        .toList();
+    _avatarSvgSources = {
+      for (final contact in contacts)
+        contact.userId: contact.avatarSvgCompressed,
+    };
+    _setAvatarContacts(contacts.map(_contactAvatarKey).toList());
+    for (final contact in changed) {
+      unawaited(_renderAvatarPng(_contactAvatarKey(contact)));
+    }
+  }
+
+  void _setAvatarContacts(List<_AvatarContact> contacts) {
+    // Byte fields in generated Contact equality use identity. Only these
+    // ordered keys determine the rendered avatars; photo changes invalidate
+    // independently through the shared database stream.
+    if (listEquals(_avatarContacts, contacts)) return;
+    final previousKeys = _avatarContacts.map(_avatarCacheKey).toSet();
     _avatarContacts = contacts;
     final keys = contacts.map(_avatarCacheKey).toSet();
     _resolvedAvatarPaths.removeWhere((key, _) => !keys.contains(key));
     _failedAvatarKeys.retainAll(keys);
-    unawaited(_refreshAvatarFiles());
+    for (final contact in contacts) {
+      if (!previousKeys.contains(_avatarCacheKey(contact))) {
+        unawaited(_renderAvatarPng(contact));
+      }
+    }
     if (mounted) setState(() {});
   }
 
@@ -221,7 +282,7 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _renderAvatarPng(Contact contact) async {
+  Future<void> _renderAvatarPng(_AvatarContact contact) async {
     final key = _avatarCacheKey(contact);
     final cached = _avatarPathCache[key];
     if (cached != null) {
@@ -295,7 +356,7 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
     );
   }
 
-  Widget getAvatarForContact(Contact contact) {
+  Widget getAvatarForContact(_AvatarContact contact) {
     final key = _avatarCacheKey(contact);
     final path = _resolvedAvatarPaths[key] ?? _avatarPathCache[key];
     return path == null ? errorBuilder(null, null, null) : _avatarImage(path);
@@ -306,14 +367,22 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
     bool active() => mounted && generation == _sourceGeneration;
     if (!widget.myAvatar &&
         (widget.contacts != null ||
+            widget.chatContacts != null ||
             widget.group != null ||
             widget.contactId != null)) {
-      _photoSub = _avatarChanges.stream.listen((_) {
-        if (active()) unawaited(_refreshAvatarFiles());
+      _photoSub = _avatarChanges.stream.listen((tables) {
+        if (active() &&
+            (tables.isEmpty || tables.contains('received_custom_avatars'))) {
+          unawaited(_refreshAvatarFiles());
+        }
       });
     }
-    if (widget.contacts != null) {
-      _setAvatarContacts(widget.contacts!);
+    if (widget.chatContacts != null) {
+      _setAvatarContacts(
+        widget.chatContacts!.map(_chatContactAvatarKey).toList(),
+      );
+    } else if (widget.contacts != null) {
+      _setContacts(widget.contacts!);
     } else if (widget.group != null) {
       groupStream =
           watchRustDatabase(
@@ -332,11 +401,21 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
                 contacts,
               ) {
                 if (!active()) return;
-                _setAvatarContacts(contacts);
+                _setContacts(contacts);
               });
     } else if (widget.myAvatar) {
+      var avatarKey = _myAvatarKey;
       _userSub = userService.onUserUpdated.listen((_) {
+        final next = _myAvatarKey;
+        if (next == avatarKey) return;
+        avatarKey = next;
         unawaited(_updateMyAvatar());
+      });
+      _photoSub = _avatarChanges.stream.listen((tables) {
+        if (active() &&
+            (tables.isEmpty || tables.contains('own_custom_avatar'))) {
+          unawaited(_updateMyAvatar());
+        }
       });
       unawaited(_updateMyAvatar());
     } else if (widget.contactId != null) {
@@ -353,11 +432,17 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
             contact,
           ) {
             if (!active()) return;
-            _setAvatarContacts(contact == null ? [] : [contact]);
+            _setContacts(contact == null ? [] : [contact]);
           });
     }
     if (mounted) setState(() {});
   }
+
+  (int, int, String?) get _myAvatarKey => (
+    userService.currentUser.userId,
+    userService.currentUser.avatarCounter,
+    userService.currentUser.avatarSvg,
+  );
 
   Future<void> _updateMyAvatar() async {
     // Rust resolves photo avatars as well as public SVG avatars, including

@@ -157,3 +157,15 @@ Future<Group?> getGroup({
   id: id,
   transaction: transaction,
 );
+
+Stream<List<ChatListContact>> watchChatListContacts({
+  required DatabaseWatch control,
+}) => RustLib.instance.api.crateBridgeDatabaseGroupsWatchChatListContacts(
+  control: control,
+);
+
+Stream<Map<String, FlameState>> watchGroupFlames({
+  required DatabaseWatch control,
+}) => RustLib.instance.api.crateBridgeDatabaseGroupsWatchGroupFlames(
+  control: control,
+);

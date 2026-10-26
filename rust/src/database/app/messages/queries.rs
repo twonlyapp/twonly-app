@@ -44,67 +44,53 @@ pub async fn list(
 ) -> Result<Vec<StoredMessage>> {
     if matches!(input.filter, MessageFilter::LatestByGroup) {
         return Ok(sqlx::query_as!(
-        StoredMessage,
-        r#"
+            StoredMessage,
+            r#"
             SELECT
-            group_id AS "group_id!",
-                    message_id AS "message_id!",
-                    activity_message_id AS "activity_message_id?: String",
-                    original_sender_id AS "original_sender_id?: i64",
-                    sender_id AS "sender_id?: i64",
-                    type AS "type!",
-                    content AS "content?",
-                    media_id AS "media_id?",
-                    additional_message_data AS "additional_message_data?",
-                    media_stored AS "media_stored!: bool",
-                    media_reopened AS "media_reopened!: bool",
-                    download_token AS "download_token?",
-                    quotes_message_id AS "quotes_message_id?",
-                    is_deleted_from_sender AS "is_deleted_from_sender!: bool",
-                    is_widget_media AS "is_widget_media!: bool",
-                    is_story AS "is_story!: bool",
-                    opened_at AS "opened_at?: i64",
-                    opened_by_all AS "opened_by_all?: i64",
-                    created_at AS "created_at!",
-                    modified_at AS "modified_at?",
-                    ack_by_user AS "ack_by_user?: i64",
-                    ack_by_server AS "ack_by_server?: i64"
-                FROM (
-                        SELECT m.group_id, m.message_id, m.activity_message_id, m.original_sender_id, m.sender_id, m.type, m.content, m.media_id,
-                            m.additional_message_data, m.media_stored, m.media_reopened, m.download_token,
-                            m.quotes_message_id, m.is_deleted_from_sender, m.is_widget_media, m.is_story,
-                            m.opened_at, m.opened_by_all, m.created_at, m.modified_at, m.ack_by_user,
-                            m.ack_by_server, ROW_NUMBER() OVER (
-                            PARTITION BY m.group_id
-                            ORDER BY m.created_at DESC, m.message_id DESC
-                        ) AS rank
-                        FROM chat_messages m
-                        JOIN groups g
-                        ON g.group_id = m.group_id
-                        LEFT JOIN media_files f
-                        ON f.media_id = m.media_id
-                        WHERE (m.is_story = 0
-                                OR m.media_stored = 1
-                        )
-                            AND (m.type != 'media'
-                                OR f.media_id IS NOT NULL
-                                OR m.is_deleted_from_sender = 1
-                        )
-                            AND (m.opened_at IS NULL
-                                OR m.media_stored = 1
-                                OR m.type = 'webxdcApp'
-                                OR m.opened_at > CAST(strftime('%s','now') AS INTEGER) -
-                                    g.delete_messages_after_milliseconds / 1000
-                        )
-                            AND (f.download_state IS NULL
-                                OR f.download_state != 'reuploadRequested'
-                        )
-                    )
-                    WHERE rank = 1
-                    ORDER BY group_id
+            m.group_id AS "group_id!",
+                    m.message_id AS "message_id!",
+                    m.activity_message_id AS "activity_message_id?: String",
+                    m.original_sender_id AS "original_sender_id?: i64",
+                    m.sender_id AS "sender_id?: i64",
+                    m.type AS "type!",
+                    m.content AS "content?",
+                    m.media_id AS "media_id?",
+                    m.additional_message_data AS "additional_message_data?",
+                    m.media_stored AS "media_stored!: bool",
+                    m.media_reopened AS "media_reopened!: bool",
+                    m.download_token AS "download_token?",
+                    m.quotes_message_id AS "quotes_message_id?",
+                    m.is_deleted_from_sender AS "is_deleted_from_sender!: bool",
+                    m.is_widget_media AS "is_widget_media!: bool",
+                    m.is_story AS "is_story!: bool",
+                    m.opened_at AS "opened_at?: i64",
+                    m.opened_by_all AS "opened_by_all?: i64",
+                    m.created_at AS "created_at!",
+                    m.modified_at AS "modified_at?",
+                    m.ack_by_user AS "ack_by_user?: i64",
+                    m.ack_by_server AS "ack_by_server?: i64"
+                FROM groups g
+                CROSS JOIN chat_messages m ON m.message_id = (
+                    SELECT candidate.message_id
+                    FROM chat_messages candidate
+                    LEFT JOIN media_files f ON f.media_id = candidate.media_id
+                    WHERE candidate.group_id = g.group_id
+                        AND (candidate.is_story = 0 OR candidate.media_stored = 1)
+                        AND (candidate.type != 'media' OR f.media_id IS NOT NULL
+                            OR candidate.is_deleted_from_sender = 1)
+                        AND (candidate.opened_at IS NULL OR candidate.media_stored = 1
+                            OR candidate.type = 'webxdcApp'
+                            OR candidate.opened_at > CAST(strftime('%s','now') AS INTEGER)
+                                - g.delete_messages_after_milliseconds / 1000)
+                        AND (f.download_state IS NULL OR f.download_state != 'reuploadRequested')
+                    ORDER BY candidate.created_at DESC, candidate.message_id DESC
+                    LIMIT 1
+                )
+                ORDER BY m.group_id
         "#,
-    )
-    .fetch_all(connection).await?);
+        )
+        .fetch_all(connection)
+        .await?);
     }
 
     macro_rules! select {
@@ -193,6 +179,10 @@ pub async fn list(
                 LEFT JOIN media_files f ON f.media_id = m.media_id JOIN groups g ON g.group_id = m.group_id
             "#,
             r#"
+                AND m.message_id IN (
+                    SELECT message_id FROM messages
+                    WHERE opened_at IS NULL OR type = 'webxdcApp'
+                )
                 AND m.opened_at IS NULL AND m.is_widget_media = 0 AND (m.is_story = 0 OR m.media_stored = 1)
                 AND m.is_deleted_from_sender = 0 AND (m.media_id IS NULL OR f.download_state IS NULL
                 OR f.download_state != 'reuploadRequested') AND (m.type != 'media' OR f.media_id IS NOT NULL
@@ -409,6 +399,10 @@ pub async fn actions(
 pub async fn delivery_actions(
     connection: &mut SqliteConnection, messages: &[String],
 ) -> Result<Vec<MessageAction>> {
+    // CROSS JOIN fixes the loop order: start from the requested ids and reach
+    // the actions through their primary key. Left to the planner, SQLite scans
+    // every action and probes the id list per row, which takes seconds once
+    // the table holds the actions of a long history.
     Ok(sqlx::query_as!(
         MessageAction,
         r#"
@@ -416,19 +410,19 @@ pub async fn delivery_actions(
                 a.contact_id AS "contact_id!",
                 a.type AS "type!",
                 a.action_at AS "action_at!"
-            FROM message_actions a
-            JOIN chat_messages m
-            ON COALESCE(m.activity_message_id, m.message_id) = a.message_id
+            FROM (
+                SELECT DISTINCT value
+                FROM json_each(?)
+            ) requested
+            CROSS JOIN chat_messages m
+            ON m.message_id = requested.value
+            CROSS JOIN message_actions a
+            ON a.message_id = COALESCE(m.activity_message_id, m.message_id)
             JOIN groups g
             ON g.group_id = m.group_id
-            WHERE m.message_id IN (
-                SELECT value
-                FROM json_each(?)
-            )
-                AND (a.type = 'ackByUserAt'
-                    OR (a.type = 'sendFailed'
-                        AND g.is_direct_chat = 1
-                )
+            WHERE a.type = 'ackByUserAt'
+                OR (a.type = 'sendFailed'
+                    AND g.is_direct_chat = 1
             )
             ORDER BY a.rowid
         "#,

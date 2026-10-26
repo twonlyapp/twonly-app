@@ -694,6 +694,102 @@ async fn delivery_status_excludes_group_failures_but_keeps_recipient_details() {
 
 #[tokio::test]
 
+async fn delivery_status_follows_app_activity_and_reads_only_the_requested_messages() {
+    use std::sync::Arc;
+
+    let directory = tempfile::tempdir().unwrap();
+
+    let database = open(directory.path().join("app.sqlite").to_str().unwrap()).await;
+
+    let mut tx = database.pool.begin().await.unwrap();
+
+    for statement in [
+        "INSERT INTO contacts(user_id, username) VALUES (7, 'recipient')",
+        "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('direct', 'Direct', 1)",
+        r#"
+            INSERT INTO messages(message_id, group_id, type, content)
+            VALUES ('game-card', 'direct', 'webxdcApp', NULL), ('move-info', 'direct', 'text', 'moved'),
+                ('plain', 'direct', 'text', 'hi')
+        "#,
+        r#"
+            INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token)
+            VALUES ('game-card', 'direct', 'game', 1, 'game-origin')
+        "#,
+        r#"
+            INSERT INTO webxdc_updates(instance_id, serial, message_id, payload, info, received_at)
+            VALUES ('game-card', 1, 'move', '{}', 'moved', 5)
+        "#,
+        r#"
+            INSERT INTO message_actions(message_id, contact_id, type)
+            VALUES ('move-info', 7, 'ackByUserAt'), ('plain', 7, 'ackByUserAt'),
+                ('game-card', 7, 'ackByServerAt')
+        "#,
+        // The history of every other chat: acknowledged messages nobody asked for.
+        r#"
+            WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 20000)
+            INSERT INTO messages(message_id, group_id, type, content)
+            SELECT 'history-' || i, 'direct', 'text', 'old' FROM n
+        "#,
+        r#"
+            INSERT INTO message_actions(message_id, contact_id, type)
+            SELECT message_id, 7, 'ackByUserAt' FROM messages WHERE message_id LIKE 'history-%'
+        "#,
+    ] {
+        sqlx::query(sqlx::AssertSqlSafe(statement))
+            .execute(&mut *tx)
+            .await
+            .unwrap();
+    }
+
+    // Count VM instructions rather than time: the cost must follow the
+    // requested ids, not the size of message_actions.
+    let thousands_of_instructions = Arc::new(AtomicUsize::new(0));
+
+    {
+        let counted = thousands_of_instructions.clone();
+
+        tx.lock_handle()
+            .await
+            .unwrap()
+            .set_progress_handler(1_000, move || {
+                counted.fetch_add(1, Ordering::Relaxed);
+
+                true
+            });
+    }
+
+    let actions = queries::delivery_actions(
+        &mut tx,
+        &["game-card".into(), "plain".into(), "plain".into()],
+    )
+    .await
+    .unwrap();
+
+    tx.lock_handle().await.unwrap().remove_progress_handler();
+
+    // The card reports the receipt of its latest move, each message once.
+    assert_eq!(
+        actions
+            .iter()
+            .map(|row| (row.message_id.as_str(), row.r#type.as_str()))
+            .collect::<Vec<_>>(),
+        vec![("game-card", "ackByUserAt"), ("plain", "ackByUserAt")]
+    );
+
+    let spent = thousands_of_instructions.load(Ordering::Relaxed);
+
+    assert!(
+        spent < 100,
+        "delivery status for two messages ran {spent}k instructions over 20k unrelated actions"
+    );
+
+    tx.commit().await.unwrap();
+
+    database.pool.close().await;
+}
+
+#[tokio::test]
+
 async fn patches_only_fire_sender_deletion_triggers_when_the_flag_is_present() {
     use crate::database::app::patch::NullableText;
 

@@ -166,6 +166,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<Map<String, FlameState>>
+  dco_decode_StreamSink_Map_String_flame_state_None_Sse(dynamic raw);
+
+  @protected
   RustStreamSink<ApiEvent> dco_decode_StreamSink_api_event_Sse(dynamic raw);
 
   @protected
@@ -201,6 +205,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustStreamSink<List<String>> dco_decode_StreamSink_list_String_Sse(
     dynamic raw,
   );
+
+  @protected
+  RustStreamSink<List<ChatListContact>>
+  dco_decode_StreamSink_list_chat_list_contact_Sse(dynamic raw);
 
   @protected
   RustStreamSink<List<Contact>> dco_decode_StreamSink_list_contact_Sse(
@@ -498,6 +506,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   WebxdcInstanceInfo dco_decode_box_autoadd_webxdc_instance_info(dynamic raw);
 
   @protected
+  ChatListContact dco_decode_chat_list_contact(dynamic raw);
+
+  @protected
   ChatMediaLink dco_decode_chat_media_link(dynamic raw);
 
   @protected
@@ -655,6 +666,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<BackupTableSize> dco_decode_list_backup_table_size(dynamic raw);
+
+  @protected
+  List<ChatListContact> dco_decode_list_chat_list_contact(dynamic raw);
 
   @protected
   List<ChatMediaLink> dco_decode_list_chat_media_link(dynamic raw);
@@ -1290,6 +1304,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<Map<String, FlameState>>
+  sse_decode_StreamSink_Map_String_flame_state_None_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RustStreamSink<ApiEvent> sse_decode_StreamSink_api_event_Sse(
     SseDeserializer deserializer,
   );
@@ -1333,6 +1353,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustStreamSink<List<String>> sse_decode_StreamSink_list_String_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<List<ChatListContact>>
+  sse_decode_StreamSink_list_chat_list_contact_Sse(
     SseDeserializer deserializer,
   );
 
@@ -1726,6 +1752,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ChatListContact sse_decode_chat_list_contact(SseDeserializer deserializer);
+
+  @protected
   ChatMediaLink sse_decode_chat_media_link(SseDeserializer deserializer);
 
   @protected
@@ -1919,6 +1948,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<BackupTableSize> sse_decode_list_backup_table_size(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<ChatListContact> sse_decode_list_chat_list_contact(
     SseDeserializer deserializer,
   );
 
@@ -2707,6 +2741,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_Map_String_flame_state_None_Sse(
+    RustStreamSink<Map<String, FlameState>> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_StreamSink_api_event_Sse(
     RustStreamSink<ApiEvent> self,
     SseSerializer serializer,
@@ -2763,6 +2803,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_StreamSink_list_String_Sse(
     RustStreamSink<List<String>> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_list_chat_list_contact_Sse(
+    RustStreamSink<List<ChatListContact>> self,
     SseSerializer serializer,
   );
 
@@ -3247,6 +3293,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_chat_list_contact(
+    ChatListContact self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_chat_media_link(ChatMediaLink self, SseSerializer serializer);
 
   @protected
@@ -3486,6 +3538,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_backup_table_size(
     List<BackupTableSize> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_chat_list_contact(
+    List<ChatListContact> self,
     SseSerializer serializer,
   );
 

@@ -400,4 +400,145 @@ mod refresh_tests {
 
         database.pool.close().await;
     }
+
+    #[tokio::test]
+
+    async fn local_writes_wake_only_dependent_watches_and_external_commits_still_arrive() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let directory = tempfile::tempdir().unwrap();
+
+        let path = directory.path().join("app.sqlite");
+
+        let database = Arc::new(
+            AppDatabase::new(path.to_str().unwrap(), None, false)
+                .await
+                .unwrap(),
+        );
+
+        database.run_migrations().await.unwrap();
+
+        let databases = Arc::new(RwLock::new(database.clone()));
+
+        let cancellation = CancellationToken::new();
+
+        // Like the app's watches, both read through the WAL readers only.
+        let watch = |dependencies: &'static [&'static str], statement: &'static str| {
+            let evaluations = Arc::new(AtomicUsize::new(0));
+
+            let counted = evaluations.clone();
+
+            let (sender, receiver) = tokio::sync::mpsc::unbounded_channel();
+
+            let task = tokio::spawn(snapshots(
+                databases.clone(),
+                dependencies,
+                cancellation.clone(),
+                move |database| {
+                    counted.fetch_add(1, Ordering::SeqCst);
+
+                    async move {
+                        Ok(sqlx::query_scalar::<_, i64>(statement)
+                            .fetch_one(&database.read_pool)
+                            .await?)
+                    }
+                },
+                move |value| sender.send(value).is_ok(),
+            ));
+
+            (evaluations, receiver, task)
+        };
+
+        let (_, mut contacts, contacts_task) =
+            watch(&["contacts"], "SELECT COUNT(*) FROM contacts");
+
+        let (group_evaluations, mut groups, groups_task) =
+            watch(&["groups"], "SELECT COUNT(*) FROM groups");
+
+        assert_eq!(contacts.recv().await, Some(0));
+
+        assert_eq!(groups.recv().await, Some(0));
+
+        for user in 1..=3_i64 {
+            sqlx::query("INSERT INTO contacts(user_id, username) VALUES (?, 'local')")
+                .bind(user)
+                .execute(&database.pool)
+                .await
+                .unwrap();
+
+            assert_eq!(
+                tokio::time::timeout(Duration::from_secs(2), contacts.recv())
+                    .await
+                    .unwrap(),
+                Some(user)
+            );
+        }
+
+        // Give the readers and the external-change poll time to report a
+        // change they should not report.
+        tokio::time::sleep(Duration::from_millis(1_200)).await;
+
+        assert_eq!(group_evaluations.load(Ordering::SeqCst), 1);
+
+        let external = SqlitePool::connect(&format!("sqlite://{}", path.display()))
+            .await
+            .unwrap();
+
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('outside', 'Outside')")
+            .execute(&external)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            tokio::time::timeout(Duration::from_secs(2), groups.recv())
+                .await
+                .unwrap(),
+            Some(1)
+        );
+
+        // Watches now rely on the published tables alone, so rows removed by
+        // a foreign key cascade must be published as well.
+        sqlx::query(
+            "INSERT INTO messages(message_id, group_id, type) VALUES ('m', 'outside', 'text')",
+        )
+        .execute(&database.pool)
+        .await
+        .unwrap();
+
+        let mut changes = database.subscribe();
+
+        sqlx::query("DELETE FROM groups WHERE group_id = 'outside'")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+
+        let published = loop {
+            let change = tokio::time::timeout(Duration::from_secs(1), changes.recv())
+                .await
+                .unwrap()
+                .unwrap();
+
+            if !change.tables.is_empty() {
+                break change.tables;
+            }
+        };
+
+        assert!(published.contains("groups"), "{published:?}");
+
+        assert!(published.contains("messages"), "{published:?}");
+
+        cancellation.cancel();
+
+        for task in [contacts_task, groups_task] {
+            tokio::time::timeout(Duration::from_secs(1), task)
+                .await
+                .unwrap()
+                .unwrap()
+                .unwrap();
+        }
+
+        external.close().await;
+
+        database.close().await;
+    }
 }

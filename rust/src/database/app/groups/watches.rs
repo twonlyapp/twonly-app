@@ -144,3 +144,35 @@ pub async fn flame(
     )
     .await
 }
+
+/// Contact blobs, counters and typing timestamps never cross this stream.
+pub async fn chat_list_contacts(
+    databases: Arc<RwLock<Arc<AppDatabase>>>, cancellation: CancellationToken,
+    emit: impl Fn(Vec<ChatListContact>) -> bool,
+) -> Result<()> {
+    watch::snapshots(
+        databases,
+        &["group_members", "contacts"],
+        cancellation,
+        |database| async move {
+            queries::chat_list_contacts(&mut *database.read_pool.acquire().await?).await
+        },
+        emit,
+    )
+    .await
+}
+
+/// Resolve the global best friend once for every chat-list refresh.
+pub async fn flames(
+    databases: Arc<RwLock<Arc<AppDatabase>>>, cancellation: CancellationToken,
+    emit: impl Fn(std::collections::HashMap<String, FlameState>) -> bool,
+) -> Result<()> {
+    watch::snapshots(
+        databases,
+        &["groups"],
+        cancellation,
+        |database| async move { Group::flame_states(&database.read_pool, None).await },
+        emit,
+    )
+    .await
+}

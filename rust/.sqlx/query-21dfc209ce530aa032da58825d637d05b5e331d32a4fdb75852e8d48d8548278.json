@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT\n            group_id AS \"group_id!\",\n                    message_id AS \"message_id!\",\n                    activity_message_id AS \"activity_message_id?: String\",\n                    original_sender_id AS \"original_sender_id?: i64\",\n                    sender_id AS \"sender_id?: i64\",\n                    type AS \"type!\",\n                    content AS \"content?\",\n                    media_id AS \"media_id?\",\n                    additional_message_data AS \"additional_message_data?\",\n                    media_stored AS \"media_stored!: bool\",\n                    media_reopened AS \"media_reopened!: bool\",\n                    download_token AS \"download_token?\",\n                    quotes_message_id AS \"quotes_message_id?\",\n                    is_deleted_from_sender AS \"is_deleted_from_sender!: bool\",\n                    is_widget_media AS \"is_widget_media!: bool\",\n                    is_story AS \"is_story!: bool\",\n                    opened_at AS \"opened_at?: i64\",\n                    opened_by_all AS \"opened_by_all?: i64\",\n                    created_at AS \"created_at!\",\n                    modified_at AS \"modified_at?\",\n                    ack_by_user AS \"ack_by_user?: i64\",\n                    ack_by_server AS \"ack_by_server?: i64\"\n                FROM (\n                        SELECT m.group_id, m.message_id, m.activity_message_id, m.original_sender_id, m.sender_id, m.type, m.content, m.media_id,\n                            m.additional_message_data, m.media_stored, m.media_reopened, m.download_token,\n                            m.quotes_message_id, m.is_deleted_from_sender, m.is_widget_media, m.is_story,\n                            m.opened_at, m.opened_by_all, m.created_at, m.modified_at, m.ack_by_user,\n                            m.ack_by_server, ROW_NUMBER() OVER (\n                            PARTITION BY m.group_id\n                            ORDER BY m.created_at DESC, m.message_id DESC\n                        ) AS rank\n                        FROM chat_messages m\n                        JOIN groups g\n                        ON g.group_id = m.group_id\n                        LEFT JOIN media_files f\n                        ON f.media_id = m.media_id\n                        WHERE (m.is_story = 0\n                                OR m.media_stored = 1\n                        )\n                            AND (m.type != 'media'\n                                OR f.media_id IS NOT NULL\n                                OR m.is_deleted_from_sender = 1\n                        )\n                            AND (m.opened_at IS NULL\n                                OR m.media_stored = 1\n                                OR m.type = 'webxdcApp'\n                                OR m.opened_at > CAST(strftime('%s','now') AS INTEGER) -\n                                    g.delete_messages_after_milliseconds / 1000\n                        )\n                            AND (f.download_state IS NULL\n                                OR f.download_state != 'reuploadRequested'\n                        )\n                    )\n                    WHERE rank = 1\n                    ORDER BY group_id\n        ",
+  "query": "\n            SELECT\n            m.group_id AS \"group_id!\",\n                    m.message_id AS \"message_id!\",\n                    m.activity_message_id AS \"activity_message_id?: String\",\n                    m.original_sender_id AS \"original_sender_id?: i64\",\n                    m.sender_id AS \"sender_id?: i64\",\n                    m.type AS \"type!\",\n                    m.content AS \"content?\",\n                    m.media_id AS \"media_id?\",\n                    m.additional_message_data AS \"additional_message_data?\",\n                    m.media_stored AS \"media_stored!: bool\",\n                    m.media_reopened AS \"media_reopened!: bool\",\n                    m.download_token AS \"download_token?\",\n                    m.quotes_message_id AS \"quotes_message_id?\",\n                    m.is_deleted_from_sender AS \"is_deleted_from_sender!: bool\",\n                    m.is_widget_media AS \"is_widget_media!: bool\",\n                    m.is_story AS \"is_story!: bool\",\n                    m.opened_at AS \"opened_at?: i64\",\n                    m.opened_by_all AS \"opened_by_all?: i64\",\n                    m.created_at AS \"created_at!\",\n                    m.modified_at AS \"modified_at?\",\n                    m.ack_by_user AS \"ack_by_user?: i64\",\n                    m.ack_by_server AS \"ack_by_server?: i64\"\n                FROM groups g\n                CROSS JOIN chat_messages m ON m.message_id = (\n                    SELECT candidate.message_id\n                    FROM chat_messages candidate\n                    LEFT JOIN media_files f ON f.media_id = candidate.media_id\n                    WHERE candidate.group_id = g.group_id\n                        AND (candidate.is_story = 0 OR candidate.media_stored = 1)\n                        AND (candidate.type != 'media' OR f.media_id IS NOT NULL\n                            OR candidate.is_deleted_from_sender = 1)\n                        AND (candidate.opened_at IS NULL OR candidate.media_stored = 1\n                            OR candidate.type = 'webxdcApp'\n                            OR candidate.opened_at > CAST(strftime('%s','now') AS INTEGER)\n                                - g.delete_messages_after_milliseconds / 1000)\n                        AND (f.download_state IS NULL OR f.download_state != 'reuploadRequested')\n                    ORDER BY candidate.created_at DESC, candidate.message_id DESC\n                    LIMIT 1\n                )\n                ORDER BY m.group_id\n        ",
   "describe": {
     "columns": [
       {
@@ -50,7 +50,7 @@
       {
         "name": "sender_id?: i64",
         "ordinal": 4,
-        "type_info": "Null",
+        "type_info": "Integer",
         "origin": "Expression"
       },
       {
@@ -177,13 +177,13 @@
       {
         "name": "opened_at?: i64",
         "ordinal": 16,
-        "type_info": "Null",
+        "type_info": "Integer",
         "origin": "Expression"
       },
       {
         "name": "opened_by_all?: i64",
         "ordinal": 17,
-        "type_info": "Null",
+        "type_info": "Integer",
         "origin": "Expression"
       },
       {
@@ -211,13 +211,13 @@
       {
         "name": "ack_by_user?: i64",
         "ordinal": 20,
-        "type_info": "Null",
+        "type_info": "Integer",
         "origin": "Expression"
       },
       {
         "name": "ack_by_server?: i64",
         "ordinal": 21,
-        "type_info": "Null",
+        "type_info": "Integer",
         "origin": "Expression"
       }
     ],
@@ -227,27 +227,27 @@
     "nullable": [
       false,
       false,
-      false,
-      true,
-      null,
-      false,
       true,
       true,
       true,
       false,
+      true,
+      true,
+      true,
+      false,
       false,
       true,
       true,
       false,
       false,
       false,
-      null,
-      null,
+      true,
+      true,
       false,
       true,
-      null,
-      null
+      true,
+      true
     ]
   },
-  "hash": "40bd08ec91a0dbab9c10497f4c29a5fe6380b95e1a3e46548672cdb46f9078aa"
+  "hash": "21dfc209ce530aa032da58825d637d05b5e331d32a4fdb75852e8d48d8548278"
 }

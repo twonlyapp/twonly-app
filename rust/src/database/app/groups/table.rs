@@ -174,3 +174,21 @@ pub struct GroupMembersWithContacts {
     pub members: Vec<GroupMember>,
     pub contacts: Vec<crate::database::app::contacts::table::Contact>,
 }
+
+/// Only the contact fields rendered by the chat list. Member timestamps affect
+/// ordering, but typing/open pings and media counters are not snapshot values.
+#[derive(Debug, Clone, PartialEq, Eq, sqlx::FromRow)]
+#[frb(name = "ChatListContact")]
+pub struct ChatListContact {
+    /// A profile counter can arrive before the avatar payload itself.
+    #[frb(default = false)]
+    pub has_svg_avatar: bool,
+    pub group_id: String,
+    pub user_id: i64,
+    pub username: String,
+    pub display_name: Option<String>,
+    pub nick_name: Option<String>,
+    pub sender_profile_counter: i64,
+    pub prefer_photo_avatar: Option<bool>,
+    pub account_deleted: bool,
+}

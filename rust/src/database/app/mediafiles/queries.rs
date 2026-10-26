@@ -158,12 +158,24 @@ pub async fn list(connection: &mut SqliteConnection, input: &MediaQuery) -> Resu
             "#,
             input.group_id.as_deref()
         ),
+        // SQLCipher can otherwise choose the dense history index for text-only
+        // chats. These two branches must use their sparse candidate indexes.
         MediaFilter::ChatList => select!(
             r#"
-                JOIN (SELECT media_id, opened_at, ROW_NUMBER() OVER (PARTITION BY group_id
-                ORDER BY created_at DESC, message_id DESC) AS rank FROM messages WHERE media_id IS NOT NULL
-                AND (is_story = 0 OR media_stored = 1)) ranked ON ranked.media_id = f.media_id
-                WHERE ranked.rank = 1 OR ranked.opened_at IS NULL GROUP BY f.media_id ORDER BY f.rowid
+                WHERE f.media_id IN (
+                    SELECT m.media_id FROM messages m INDEXED BY idx_messages_chat_unopened
+                    WHERE (m.opened_at IS NULL OR m.type = 'webxdcApp')
+                        AND m.opened_at IS NULL AND m.media_id IS NOT NULL
+                        AND (m.is_story = 0 OR m.media_stored = 1)
+                    UNION
+                    SELECT (
+                        SELECT m.media_id FROM messages m INDEXED BY idx_messages_chat_media
+                        WHERE m.group_id = g.group_id AND m.media_id IS NOT NULL
+                            AND (m.is_story = 0 OR m.media_stored = 1)
+                        ORDER BY m.created_at DESC, m.message_id DESC LIMIT 1
+                    ) FROM groups g
+                )
+                ORDER BY f.rowid
             "#
         ),
         MediaFilter::ByHash => select!(

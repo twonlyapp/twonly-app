@@ -8,6 +8,60 @@ import '../contacts/table.dart';
 import '../patch.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+/// Only the contact fields rendered by the chat list. Member timestamps affect
+/// ordering, but typing/open pings and media counters are not snapshot values.
+class ChatListContact {
+  /// A profile counter can arrive before the avatar payload itself.
+  final bool hasSvgAvatar;
+  final String groupId;
+  final PlatformInt64 userId;
+  final String username;
+  final String? displayName;
+  final String? nickName;
+  final PlatformInt64 senderProfileCounter;
+  final bool? preferPhotoAvatar;
+  final bool accountDeleted;
+
+  const ChatListContact({
+    this.hasSvgAvatar = false,
+    required this.groupId,
+    required this.userId,
+    required this.username,
+    this.displayName,
+    this.nickName,
+    required this.senderProfileCounter,
+    this.preferPhotoAvatar,
+    required this.accountDeleted,
+  });
+
+  @override
+  int get hashCode =>
+      hasSvgAvatar.hashCode ^
+      groupId.hashCode ^
+      userId.hashCode ^
+      username.hashCode ^
+      displayName.hashCode ^
+      nickName.hashCode ^
+      senderProfileCounter.hashCode ^
+      preferPhotoAvatar.hashCode ^
+      accountDeleted.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ChatListContact &&
+          runtimeType == other.runtimeType &&
+          hasSvgAvatar == other.hasSvgAvatar &&
+          groupId == other.groupId &&
+          userId == other.userId &&
+          username == other.username &&
+          displayName == other.displayName &&
+          nickName == other.nickName &&
+          senderProfileCounter == other.senderProfileCounter &&
+          preferPhotoAvatar == other.preferPhotoAvatar &&
+          accountDeleted == other.accountDeleted;
+}
+
 class Group {
   final String groupId;
   final bool isGroupAdmin;

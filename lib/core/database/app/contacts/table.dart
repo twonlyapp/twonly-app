@@ -156,6 +156,7 @@ enum ContactCount {
   all,
   blocked,
   requested,
+  accepted,
 }
 
 enum ContactFilter {

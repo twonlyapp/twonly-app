@@ -35,6 +35,15 @@ class UserConfigApi {
   static Future<UserConfig?> load() =>
       RustLib.instance.api.crateBridgeUserConfigUserConfigApiLoad();
 
+  /// Structural equality includes byte buffers and nested configuration.
+  static bool sameConfig({
+    required UserConfig left,
+    required UserConfig right,
+  }) => RustLib.instance.api.crateBridgeUserConfigUserConfigApiSameConfig(
+    left: left,
+    right: right,
+  );
+
   static Future<UserConfig> save({required UserConfig config}) => RustLib
       .instance
       .api
