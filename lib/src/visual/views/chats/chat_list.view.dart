@@ -1,11 +1,11 @@
 import 'dart:async';
-
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart' show listEquals, mapEquals, setEquals;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart' show SpanStatus;
 import 'package:twonly/core/bridge.dart' show FlameState;
 import 'package:twonly/core/bridge/database/contact_groups.dart'
     as rust_contact_groups;
@@ -35,6 +35,7 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/performance_tracking.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
@@ -64,6 +65,9 @@ class ChatListView extends StatefulWidget {
 class _ChatListViewState extends State<ChatListView>
     with AutomaticKeepAliveClientMixin<ChatListView>, WidgetsBindingObserver {
   bool _watching = false;
+  PerformanceTrace? _loadTrace;
+  Timer? _loadTimeout;
+  final Set<String> _initialSnapshots = {};
   bool _appVisible = true;
   final _flameRefresh = StreamController<void>.broadcast();
   StreamSubscription<Map<String, FlameState>>? _flamesSub;
@@ -163,6 +167,31 @@ class _ChatListViewState extends State<ChatListView>
   }
 
   void _startWatches() {
+    _initialSnapshots.clear();
+    _loadTrace = PerformanceTracking.start(PerformanceOperation.chatListLoad);
+    if (_loadTrace != null) {
+      _loadTimeout = Timer(const Duration(seconds: 15), () {
+        final trace = _loadTrace;
+        _loadTrace = null;
+        unawaited(trace?.finish(status: const SpanStatus.deadlineExceeded()));
+      });
+    }
+    PerformanceTracking.withParent(_loadTrace, _subscribeWatches);
+  }
+
+  void _initialSnapshot(String name) {
+    if (_loadTrace == null || !_watching) return;
+    _initialSnapshots.add(name);
+    if (_initialSnapshots.length != 5) return;
+    final trace = _loadTrace;
+    _loadTrace = null;
+    _loadTimeout?.cancel();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(trace?.finish());
+    });
+  }
+
+  void _subscribeWatches() {
     _watching = true;
     _scheduleFlameDayRefresh();
     _flamesSub =
@@ -185,6 +214,7 @@ class _ChatListViewState extends State<ChatListView>
     );
     _contactsSub = stream.listen((groups) {
       if (!mounted || !_watching) return;
+      _initialSnapshot('groups');
       setState(() {
         _groupsNotPinned = groups
             .where((x) => !x.pinned && !x.archived)
@@ -300,6 +330,7 @@ class _ChatListViewState extends State<ChatListView>
               contactsByGroup[entry.key] = previous!;
             }
           }
+          _initialSnapshot('contacts');
           setState(() => _contactsByGroup = contactsByGroup);
         });
     _unopenedMessagesSub =
@@ -319,6 +350,7 @@ class _ChatListViewState extends State<ChatListView>
           for (final message in messages) {
             byGroup.putIfAbsent(message.groupId, () => []).add(message);
           }
+          _initialSnapshot('unopened');
           setState(() => _unopenedMessagesByGroup = byGroup);
         });
     _reactionsSub =
@@ -352,6 +384,7 @@ class _ChatListViewState extends State<ChatListView>
           messages,
         ) {
           if (!mounted || !_watching) return;
+          _initialSnapshot('latest');
           setState(
             () => _lastMessageByGroup = {
               for (final message in messages) message.groupId: message,
@@ -371,6 +404,7 @@ class _ChatListViewState extends State<ChatListView>
         ).listen(
           (mediaFiles) {
             if (!mounted || !_watching) return;
+            _initialSnapshot('media');
             setState(
               () => _chatListMediaById = {
                 for (final mediaFile in mediaFiles)
@@ -573,6 +607,9 @@ class _ChatListViewState extends State<ChatListView>
   void _stopWatches() {
     if (!_watching) return;
     _watching = false;
+    _loadTimeout?.cancel();
+    unawaited(_loadTrace?.finish(status: const SpanStatus.cancelled()));
+    _loadTrace = null;
     _flamesSub?.cancel();
     _flameDayTimer?.cancel();
     _contactsSub?.cancel();

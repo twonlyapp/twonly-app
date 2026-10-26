@@ -45,7 +45,11 @@ pub async fn count(
         ],
         cancellation,
         move |database| async move {
-            queries::count_suggestions(&mut *database.read_pool.acquire().await?, threshold).await
+            queries::count_suggestions(
+                &mut *crate::performance::acquire(&database.read_pool).await?,
+                threshold,
+            )
+            .await
         },
         emit,
     )
@@ -61,8 +65,11 @@ pub async fn announcement(
         &["user_discovery_announced_users"],
         cancellation,
         move |database| async move {
-
-            queries::get(&mut *database.read_pool.acquire().await?, id).await
+            queries::get(
+                &mut *crate::performance::acquire(&database.read_pool).await?,
+                id,
+            )
+            .await
         },
         emit,
     )
@@ -80,7 +87,8 @@ macro_rules! table_watch {
                 &[$table],
                 cancellation,
                 |database| async move {
-                    queries::$name(&mut *database.read_pool.acquire().await?).await
+                    queries::$name(&mut *crate::performance::acquire(&database.read_pool).await?)
+                        .await
                 },
                 emit,
             )

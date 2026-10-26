@@ -91,35 +91,38 @@ pub async fn change_key_verification(
 pub async fn watch_contact_verifications(
     contact: i64, control: &DatabaseWatch, sink: StreamSink<ContactVerifications>,
 ) -> Result<()> {
-    watches::contact(
-        get_twonly_flutter()?.app_db.clone(),
-        contact,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::contact(
+            get_twonly_flutter()?.app_db.clone(),
+            contact,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_transferred_verifications(
     contact: i64, control: &DatabaseWatch, sink: StreamSink<TransferredVerifications>,
 ) -> Result<()> {
-    watches::transferred(
-        get_twonly_flutter()?.app_db.clone(),
-        contact,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::transferred(
+            get_twonly_flutter()?.app_db.clone(),
+            contact,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_groups_verification(
     group: Option<String>, control: &DatabaseWatch, sink: StreamSink<Vec<GroupVerification>>,
 ) -> Result<()> {
-    watches::groups(
-        get_twonly_flutter()?.app_db.clone(),
-        group,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::groups(
+            get_twonly_flutter()?.app_db.clone(),
+            group,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }

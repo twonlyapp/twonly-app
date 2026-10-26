@@ -75,10 +75,11 @@ pub async fn remove_sticker(hash: String, transaction: &DatabaseSession) -> Resu
 pub async fn watch_stickers(
     control: &DatabaseWatch, sink: StreamSink<StickerCollection>,
 ) -> Result<()> {
-    watches::collection(
-        get_twonly_flutter()?.app_db.clone(),
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::collection(
+            get_twonly_flutter()?.app_db.clone(),
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }

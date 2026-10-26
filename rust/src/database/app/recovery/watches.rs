@@ -22,7 +22,12 @@ pub async fn contacts(
         DEPENDENCIES,
         cancellation,
         move |database| async move {
-            queries::contacts(&mut *database.read_pool.acquire().await?, selection, None).await
+            queries::contacts(
+                &mut *crate::performance::acquire(&database.read_pool).await?,
+                selection,
+                None,
+            )
+            .await
         },
         emit,
     )
@@ -38,7 +43,11 @@ pub async fn count(
         DEPENDENCIES,
         cancellation,
         move |database| async move {
-            queries::count(&mut *database.read_pool.acquire().await?, selection).await
+            queries::count(
+                &mut *crate::performance::acquire(&database.read_pool).await?,
+                selection,
+            )
+            .await
         },
         emit,
     )

@@ -92,24 +92,26 @@ pub async fn cloud_only_media_count(
 pub async fn watch_media_files(
     input: MediaQuery, control: &DatabaseWatch, sink: StreamSink<MediaCollection>,
 ) -> Result<()> {
-    watches::media(
-        get_twonly_flutter()?.app_db.clone(),
-        input,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::media(
+            get_twonly_flutter()?.app_db.clone(),
+            input,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_chat_media_files(
     control: &DatabaseWatch, sink: StreamSink<ChatMediaSnapshot>,
 ) -> Result<()> {
-    watches::by_chat(
-        get_twonly_flutter()?.app_db.clone(),
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::by_chat(
+            get_twonly_flutter()?.app_db.clone(),
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn missing_media_month_dates(transaction: &DatabaseSession) -> Result<Vec<i64>> {

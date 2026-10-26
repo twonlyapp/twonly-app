@@ -71,35 +71,38 @@ pub async fn reset_contacts_recovery(transaction: &DatabaseSession) -> Result<()
 pub async fn watch_contacts(
     input: ContactQuery, control: &DatabaseWatch, sink: StreamSink<Vec<Contact>>,
 ) -> Result<()> {
-    watches::contacts(
-        get_twonly_flutter()?.app_db.clone(),
-        input,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::contacts(
+            get_twonly_flutter()?.app_db.clone(),
+            input,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_contacts_count(
     metric: ContactCount, control: &DatabaseWatch, sink: StreamSink<i64>,
 ) -> Result<()> {
-    watches::count(
-        get_twonly_flutter()?.app_db.clone(),
-        metric,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::count(
+            get_twonly_flutter()?.app_db.clone(),
+            metric,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_contact_photo(
     id: i64, control: &DatabaseWatch, sink: StreamSink<bool>,
 ) -> Result<()> {
-    watches::photo(
-        get_twonly_flutter()?.app_db.clone(),
-        id,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::photo(
+            get_twonly_flutter()?.app_db.clone(),
+            id,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }

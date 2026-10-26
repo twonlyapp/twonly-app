@@ -16,6 +16,7 @@ mod frb_generated;
 mod keys;
 pub mod log;
 mod native;
+mod performance;
 mod secure_storage;
 pub mod services;
 pub mod signal;

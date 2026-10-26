@@ -97,39 +97,42 @@ pub async fn watch_contact_groups(
     filter: ContactGroupFilter, user_id: Option<i64>, group_id: Option<String>,
     control: &DatabaseWatch, sink: StreamSink<Vec<ContactGroup>>,
 ) -> Result<()> {
-    watches::groups(
-        get_twonly_flutter()?.app_db.clone(),
-        filter,
-        user_id,
-        group_id,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::groups(
+            get_twonly_flutter()?.app_db.clone(),
+            filter,
+            user_id,
+            group_id,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_contact_group_ids(
     user_id: Option<i64>, group_id: Option<String>, control: &DatabaseWatch,
     sink: StreamSink<Vec<i64>>,
 ) -> Result<()> {
-    watches::membership_ids(
-        get_twonly_flutter()?.app_db.clone(),
-        user_id,
-        group_id,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::membership_ids(
+            get_twonly_flutter()?.app_db.clone(),
+            user_id,
+            group_id,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_contact_group_labels(
     for_users: bool, control: &DatabaseWatch, sink: StreamSink<ContactGroupLabels>,
 ) -> Result<()> {
-    watches::labels(
-        get_twonly_flutter()?.app_db.clone(),
-        for_users,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::labels(
+            get_twonly_flutter()?.app_db.clone(),
+            for_users,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }

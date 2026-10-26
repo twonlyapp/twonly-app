@@ -29,23 +29,25 @@ pub async fn webxdc_card_instance(
 pub async fn watch_webxdc_card(
     id: String, control: &DatabaseWatch, sink: StreamSink<Option<WebxdcCardInstance>>,
 ) -> Result<()> {
-    watches::instance(
-        get_twonly_flutter()?.app_db.clone(),
-        id,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::instance(
+            get_twonly_flutter()?.app_db.clone(),
+            id,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_webxdc_serial(
     id: String, control: &DatabaseWatch, sink: StreamSink<i64>,
 ) -> Result<()> {
-    watches::serial(
-        get_twonly_flutter()?.app_db.clone(),
-        id,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::serial(
+            get_twonly_flutter()?.app_db.clone(),
+            id,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }

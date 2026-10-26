@@ -42,6 +42,15 @@ pub async fn get(connection: &mut SqliteConnection, id: &str) -> Result<Option<S
 pub async fn list(
     connection: &mut SqliteConnection, input: &MessageQuery,
 ) -> Result<Vec<StoredMessage>> {
+    let name = match input.filter {
+        MessageFilter::LatestByGroup => "sqlite.messages.latest_by_group",
+        MessageFilter::Unopened => "sqlite.messages.unopened",
+        MessageFilter::MediaUnopened => "sqlite.messages.unopened_media",
+        MessageFilter::Page => "sqlite.messages.page",
+        MessageFilter::Last => "sqlite.messages.last",
+        _ => "sqlite.messages.list",
+    };
+    crate::performance::rows(name, async {
     if matches!(input.filter, MessageFilter::LatestByGroup) {
         return Ok(sqlx::query_as!(
             StoredMessage,
@@ -302,6 +311,7 @@ pub async fn list(
     }
 
     Ok(rows)
+    }).await
 }
 
 pub async fn unopened_media(connection: &mut SqliteConnection) -> Result<Vec<MediaFile>> {

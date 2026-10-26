@@ -6,6 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `traced`
+
 /// Refresh process-local watches after an external background commit/resume.
 Future<void> refreshDatabaseWatches() =>
     RustLib.instance.api.crateBridgeDatabaseRefreshDatabaseWatches();
@@ -22,4 +24,6 @@ abstract class DatabaseWatch implements RustOpaqueInterface {
 
   factory DatabaseWatch() =>
       RustLib.instance.api.crateBridgeDatabaseDatabaseWatchNew();
+
+  void setTraceContext({required String context});
 }

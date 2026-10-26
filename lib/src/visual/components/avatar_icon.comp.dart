@@ -14,6 +14,7 @@ import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/services/performance_tracking.service.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -53,7 +54,8 @@ const _avatarCacheLimit = 200;
 // A received photo can change without changing the public profile counter.
 // Share one native invalidation stream across all visible contact avatars.
 StreamSubscription<List<String>>? _avatarDatabaseChanges;
-final StreamController<List<String>> _avatarChanges = StreamController.broadcast(
+final StreamController<List<String>>
+_avatarChanges = StreamController.broadcast(
   onListen: () {
     var first = true;
     _avatarDatabaseChanges = watchRustDatabaseChanges().listen(
@@ -301,7 +303,7 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
       final render = _pendingAvatarRenders.putIfAbsent(
         key,
         () =>
-            RustApi.ensureAvatarPng(contactId: contact.userId).whenComplete(() {
+            PerformanceTracking.resolveAvatar(contact.userId).whenComplete(() {
               _pendingAvatarRenders.remove(key);
             }),
       );

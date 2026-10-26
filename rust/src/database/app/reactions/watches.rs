@@ -17,7 +17,13 @@ pub async fn messages(
         move |database| {
             let ids = ids.clone();
 
-            async move { queries::list(&mut *database.read_pool.acquire().await?, &ids).await }
+            async move {
+                queries::list(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &ids,
+                )
+                .await
+            }
         },
         emit,
     )
@@ -35,7 +41,13 @@ pub async fn last(
         move |database| {
             let group = group.clone();
 
-            async move { queries::last(&mut *database.read_pool.acquire().await?, &group).await }
+            async move {
+                queries::last(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &group,
+                )
+                .await
+            }
         },
         emit,
     )
@@ -51,7 +63,8 @@ pub async fn latest(
         &["reactions", "messages"],
         cancellation,
         |database| async move {
-            queries::latest_by_group(&mut *database.read_pool.acquire().await?).await
+            queries::latest_by_group(&mut *crate::performance::acquire(&database.read_pool).await?)
+                .await
         },
         emit,
     )

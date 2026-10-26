@@ -20,7 +20,7 @@ pub async fn groups(
 
             async move {
                 queries::list(
-                    &mut *database.read_pool.acquire().await?,
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
                     filter,
                     user_id,
                     group_id.as_deref(),
@@ -46,7 +46,7 @@ pub async fn membership_ids(
 
             async move {
                 queries::membership_ids(
-                    &mut *database.read_pool.acquire().await?,
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
                     user_id,
                     group_id.as_deref(),
                 )
@@ -67,7 +67,11 @@ pub async fn labels(
         &["contact_groups", "contact_group_members"],
         cancellation,
         move |database| async move {
-            queries::labels(&mut *database.read_pool.acquire().await?, for_users).await
+            queries::labels(
+                &mut *crate::performance::acquire(&database.read_pool).await?,
+                for_users,
+            )
+            .await
         },
         emit,
     )

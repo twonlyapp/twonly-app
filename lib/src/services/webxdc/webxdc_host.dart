@@ -239,6 +239,7 @@ class WebxdcHost {
     }
     final id = message['id'];
     if (instanceId == null || instanceId != arguments['instanceId']) {
+      Log.warn('webxdc ${message['method']} from an app that is not open');
       return jsonEncode({'id': id, 'error': 'this app is not open'});
     }
 
@@ -294,7 +295,10 @@ class WebxdcHost {
       }
     } catch (error) {
       // Rust refuses an update that is too large, too frequent, or belongs to
-      // an instance that has gone away. The app sees a rejected promise.
+      // an instance that has gone away. The app sees a rejected promise; an
+      // app that ignores it has lost a move nobody else ever receives, so the
+      // reason is kept here.
+      Log.warn('webxdc ${message['method']} was refused: $error');
       return jsonEncode({'id': id, 'error': '$error'});
     }
   }

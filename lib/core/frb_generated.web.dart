@@ -30,6 +30,7 @@ import 'bridge/database/webxdc.dart';
 import 'bridge/groups.dart';
 import 'bridge/live_location.dart';
 import 'bridge/logging.dart';
+import 'bridge/performance.dart';
 import 'bridge/stories.dart';
 import 'bridge/user_config.dart';
 import 'bridge/webxdc.dart';

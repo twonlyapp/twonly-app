@@ -91,60 +91,65 @@ pub async fn delete_message_from_sender(
 pub async fn watch_messages(
     input: MessageQuery, control: &DatabaseWatch, sink: StreamSink<Vec<StoredMessage>>,
 ) -> Result<()> {
-    watches::messages(
-        get_twonly_flutter()?.app_db.clone(),
-        input,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::messages(
+            get_twonly_flutter()?.app_db.clone(),
+            input,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_unopened_media(
     control: &DatabaseWatch, sink: StreamSink<MediaCollection>,
 ) -> Result<()> {
-    watches::unopened_media(
-        get_twonly_flutter()?.app_db.clone(),
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::unopened_media(
+            get_twonly_flutter()?.app_db.clone(),
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_message_actions(
     id: String, control: &DatabaseWatch, sink: StreamSink<MessageActionsWithContacts>,
 ) -> Result<()> {
-    watches::actions(
-        get_twonly_flutter()?.app_db.clone(),
-        id,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::actions(
+            get_twonly_flutter()?.app_db.clone(),
+            id,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_delivery_actions(
     ids: Vec<String>, control: &DatabaseWatch, sink: StreamSink<Vec<MessageAction>>,
 ) -> Result<()> {
-    watches::delivery_actions(
-        get_twonly_flutter()?.app_db.clone(),
-        ids,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::delivery_actions(
+            get_twonly_flutter()?.app_db.clone(),
+            ids,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_message_history(
     id: String, control: &DatabaseWatch, sink: StreamSink<Vec<MessageHistory>>,
 ) -> Result<()> {
-    watches::history(
-        get_twonly_flutter()?.app_db.clone(),
-        id,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::history(
+            get_twonly_flutter()?.app_db.clone(),
+            id,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn get_message(

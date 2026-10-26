@@ -542,9 +542,10 @@ pub(crate) fn current_user_avatar_path(ctx: &Context) -> Result<Option<PathBuf>>
 pub(crate) async fn ensure_contact_avatar_png(
     ctx: &Context, contact_id: i64,
 ) -> Result<Option<PathBuf>> {
-    let database = ctx.app_db.read().await.clone();
+    crate::performance::measure("avatar.resolve", "media.avatar", async {
+        let database = ctx.app_db.read().await.clone();
 
-    let row: Option<(Option<Vec<u8>>, i64, Option<i64>)> = sqlx::query_as(
+        let row: Option<(Option<Vec<u8>>, i64, Option<i64>)> = sqlx::query_as(
         "SELECT avatar_svg_compressed, sender_profile_counter, prefer_photo_avatar FROM contacts \
          WHERE user_id = ?",
     )
@@ -552,25 +553,25 @@ pub(crate) async fn ensure_contact_avatar_png(
     .fetch_optional(&database.read_pool)
     .await?;
 
-    let Some((svg, profile_counter, prefer_photo)) = row else {
-        return Ok(None);
-    };
-
-    let svg = svg.filter(|bytes| !bytes.is_empty());
-
-    // Preferences are local, just like nicknames. If the preferred kind is no
-    // longer shared by this contact, continue to use whichever is available.
-    if prefer_photo.unwrap_or(1) != 0 || svg.is_none() {
-        let custom_path = |counter: i64| {
-            Path::new(&ctx.config.data_dir)
-                .join("avatars")
-                .join(format!("contact_{contact_id}_custom_{counter}.webp"))
+        let Some((svg, profile_counter, prefer_photo)) = row else {
+            return Ok(None);
         };
 
-        // Every visible avatar resolves itself again whenever its row changes.
-        // The file name carries the counter, so an existing file already holds
-        // this photo and the bytes need not be read out of the database.
-        if let Some(counter) = sqlx::query_scalar::<_, i64>(
+        let svg = svg.filter(|bytes| !bytes.is_empty());
+
+        // Preferences are local, just like nicknames. If the preferred kind is no
+        // longer shared by this contact, continue to use whichever is available.
+        if prefer_photo.unwrap_or(1) != 0 || svg.is_none() {
+            let custom_path = |counter: i64| {
+                Path::new(&ctx.config.data_dir)
+                    .join("avatars")
+                    .join(format!("contact_{contact_id}_custom_{counter}.webp"))
+            };
+
+            // Every visible avatar resolves itself again whenever its row changes.
+            // The file name carries the counter, so an existing file already holds
+            // this photo and the bytes need not be read out of the database.
+            if let Some(counter) = sqlx::query_scalar::<_, i64>(
             "SELECT applied_counter FROM received_custom_avatars WHERE contact_id = ? AND webp IS \
              NOT NULL",
         )
@@ -585,9 +586,9 @@ pub(crate) async fn ensure_contact_avatar_png(
             }
         }
 
-        // Counter and bytes are read together: the photo may have been
-        // replaced since the lookup above.
-        if let Some(custom) = sqlx::query(
+            // Counter and bytes are read together: the photo may have been
+            // replaced since the lookup above.
+            if let Some(custom) = sqlx::query(
             "SELECT applied_counter, webp FROM received_custom_avatars WHERE contact_id = ? AND \
              webp IS NOT NULL",
         )
@@ -603,28 +604,30 @@ pub(crate) async fn ensure_contact_avatar_png(
                 .await
                 .map(Some);
         }
-    }
+        }
 
-    let Some(svg) = svg else {
-        return Ok(None);
-    };
+        let Some(svg) = svg else {
+            return Ok(None);
+        };
 
-    let output = contact_avatar_path(ctx, contact_id, profile_counter);
+        let output = contact_avatar_path(ctx, contact_id, profile_counter);
 
-    if output.exists() {
-        return Ok(Some(output));
-    }
+        if output.exists() {
+            return Ok(Some(output));
+        }
 
-    // Rasterising is CPU bound, so it must not run on an async worker.
-    let render_output = output.clone();
+        // Rasterising is CPU bound, so it must not run on an async worker.
+        let render_output = output.clone();
 
-    crate::database::lifecycle::spawn_blocking(move || {
-        render_cached(&render_output, || render_with_max_dimension(&svg, 256.0))
+        crate::database::lifecycle::spawn_blocking(move || {
+            render_cached(&render_output, || render_with_max_dimension(&svg, 256.0))
+        })
+        .await
+        .map_err(|error| TwonlyError::Generic(format!("avatar render task failed: {error}")))??;
+
+        Ok(Some(output))
     })
     .await
-    .map_err(|error| TwonlyError::Generic(format!("avatar render task failed: {error}")))??;
-
-    Ok(Some(output))
 }
 
 /// Matches the group avatar in Flutter: up to three active members, ordered
@@ -635,9 +638,10 @@ pub(crate) async fn ensure_contact_avatar_png(
 pub(crate) async fn ensure_group_avatar_png(
     ctx: &Context, group_id: &str,
 ) -> Result<Option<PathBuf>> {
-    let database = ctx.app_db.read().await.clone();
+    crate::performance::measure("avatar.group.resolve", "media.avatar", async {
+        let database = ctx.app_db.read().await.clone();
 
-    let members: Vec<i64> = sqlx::query_scalar(
+        let members: Vec<i64> = sqlx::query_scalar(
         "SELECT c.user_id FROM contacts c JOIN group_members m ON m.contact_id = c.user_id WHERE \
          m.group_id = ? AND (m.member_state IS NULL OR m.member_state != 'leftGroup') ORDER BY \
          m.last_message DESC, c.user_id ASC",
@@ -646,60 +650,66 @@ pub(crate) async fn ensure_group_avatar_png(
     .fetch_all(&database.pool)
     .await?;
 
-    let mut paths = Vec::with_capacity(3);
+        let mut paths = Vec::with_capacity(3);
 
-    for member in members {
-        match ensure_contact_avatar_png(ctx, member).await {
-            Ok(Some(path)) => paths.push(path),
-            Ok(None) => {}
-            Err(error) => {
-                tracing::warn!(%error, member, "failed to prepare group member avatar");
+        for member in members {
+            match ensure_contact_avatar_png(ctx, member).await {
+                Ok(Some(path)) => paths.push(path),
+                Ok(None) => {}
+                Err(error) => {
+                    tracing::warn!(%error, member, "failed to prepare group member avatar");
+                }
+            }
+
+            if paths.len() == 3 {
+                break;
             }
         }
 
-        if paths.len() == 3 {
-            break;
-        }
-    }
-
-    if paths.is_empty() {
-        return Ok(None);
-    }
-
-    let directory = Path::new(&ctx.config.data_dir).join("notification_avatars");
-
-    let output = crate::database::lifecycle::spawn_blocking(move || -> Result<Option<PathBuf>> {
-        let images: Vec<RgbaImage> = paths
-            .iter()
-            .filter_map(|path| image::open(path).ok().map(|image| image.to_rgba8()))
-            .collect();
-
-        if images.is_empty() {
+        if paths.is_empty() {
             return Ok(None);
         }
 
-        let png = compose_group_avatar(&images);
+        let directory = Path::new(&ctx.config.data_dir).join("notification_avatars");
 
-        let mut bytes = Cursor::new(Vec::new());
+        let output =
+            crate::database::lifecycle::spawn_blocking(move || -> Result<Option<PathBuf>> {
+                let images: Vec<RgbaImage> = paths
+                    .iter()
+                    .filter_map(|path| image::open(path).ok().map(|image| image.to_rgba8()))
+                    .collect();
 
-        DynamicImage::ImageRgba8(png)
-            .write_to(&mut bytes, image::ImageFormat::Png)
+                if images.is_empty() {
+                    return Ok(None);
+                }
+
+                let png = compose_group_avatar(&images);
+
+                let mut bytes = Cursor::new(Vec::new());
+
+                DynamicImage::ImageRgba8(png)
+                    .write_to(&mut bytes, image::ImageFormat::Png)
+                    .map_err(|error| {
+                        TwonlyError::Generic(format!("group avatar encoding failed: {error}"))
+                    })?;
+
+                let bytes = bytes.into_inner();
+
+                let output =
+                    directory.join(format!("group-{}.png", hex::encode(Sha256::digest(&bytes))));
+
+                write_cached_bytes(&output, &bytes)?;
+
+                Ok(Some(output))
+            })
+            .await
             .map_err(|error| {
-                TwonlyError::Generic(format!("group avatar encoding failed: {error}"))
-            })?;
+                TwonlyError::Generic(format!("group avatar render task failed: {error}"))
+            })??;
 
-        let bytes = bytes.into_inner();
-
-        let output = directory.join(format!("group-{}.png", hex::encode(Sha256::digest(&bytes))));
-
-        write_cached_bytes(&output, &bytes)?;
-
-        Ok(Some(output))
+        Ok(output)
     })
     .await
-    .map_err(|error| TwonlyError::Generic(format!("group avatar render task failed: {error}")))??;
-
-    Ok(output)
 }
 
 fn compose_group_avatar(images: &[RgbaImage]) -> RgbaImage {

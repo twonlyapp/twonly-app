@@ -38,6 +38,8 @@ libsqlite3-sys = { version = "=0.38.2", features = [
 ] }
 tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "sync", "time"] }
 tracing = "0.1.44"
+# Performance protocol/client only: mobile SDKs retain native crash ownership.
+sentry = { package = "sentry-core", version = "=0.46.2", default-features = false, features = ["client"] }
 tracing-log = "0.2"
 prost = "0.14.1"
 blahaj = "0.7.0"

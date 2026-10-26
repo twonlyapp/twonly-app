@@ -18,7 +18,13 @@ pub async fn messages(
         move |database| {
             let input = input.clone();
 
-            async move { queries::list(&mut *database.read_pool.acquire().await?, &input).await }
+            async move {
+                queries::list(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &input,
+                )
+                .await
+            }
         },
         emit,
     )
@@ -34,7 +40,8 @@ pub async fn unopened_media(
         &["messages", "media_files"],
         cancellation,
         |database| async move {
-            queries::unopened_media(&mut *database.read_pool.acquire().await?).await
+            queries::unopened_media(&mut *crate::performance::acquire(&database.read_pool).await?)
+                .await
         },
         move |rows| {
             let mut seen = std::collections::HashSet::new();
@@ -90,7 +97,11 @@ pub async fn delivery_actions(
             let ids = ids.clone();
 
             async move {
-                queries::delivery_actions(&mut *database.read_pool.acquire().await?, &ids).await
+                queries::delivery_actions(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &ids,
+                )
+                .await
             }
         },
         emit,
@@ -109,7 +120,13 @@ pub async fn history(
         move |database| {
             let id = id.clone();
 
-            async move { queries::history(&mut *database.read_pool.acquire().await?, &id).await }
+            async move {
+                queries::history(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &id,
+                )
+                .await
+            }
         },
         emit,
     )

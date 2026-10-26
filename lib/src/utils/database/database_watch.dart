@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:twonly/core/bridge/database.dart';
 import 'package:twonly/core/bridge/wrapper/app_database.dart';
+import 'package:twonly/src/services/performance_tracking.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 Stream<List<String>> watchRustDatabaseChanges() =>
@@ -15,6 +16,7 @@ Stream<T> watchRustDatabase<T>(Stream<T> Function(DatabaseWatch) create) {
     onListen: () {
       try {
         control = DatabaseWatch();
+        PerformanceTracking.attachToWatch(control!);
         subscription = create(control!).listen(
           controller.add,
           onError: controller.addError,

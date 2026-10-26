@@ -46,23 +46,25 @@ pub async fn store_recovery_shares(
 pub async fn watch_recovery_contacts(
     selection: RecoveryContacts, control: &DatabaseWatch, sink: StreamSink<Vec<Contact>>,
 ) -> Result<()> {
-    watches::contacts(
-        get_twonly_flutter()?.app_db.clone(),
-        selection,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::contacts(
+            get_twonly_flutter()?.app_db.clone(),
+            selection,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_recovery_count(
     selection: RecoveryContacts, control: &DatabaseWatch, sink: StreamSink<i64>,
 ) -> Result<()> {
-    watches::count(
-        get_twonly_flutter()?.app_db.clone(),
-        selection,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::count(
+            get_twonly_flutter()?.app_db.clone(),
+            selection,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }

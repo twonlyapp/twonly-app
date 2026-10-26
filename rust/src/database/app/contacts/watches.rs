@@ -17,7 +17,13 @@ pub async fn contacts(
         move |database| {
             let input = input.clone();
 
-            async move { queries::list(&mut *database.read_pool.acquire().await?, &input).await }
+            async move {
+                queries::list(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &input,
+                )
+                .await
+            }
         },
         emit,
     )
@@ -33,7 +39,11 @@ pub async fn count(
         &["contacts"],
         cancellation,
         move |database| async move {
-            queries::count(&mut *database.read_pool.acquire().await?, metric).await
+            queries::count(
+                &mut *crate::performance::acquire(&database.read_pool).await?,
+                metric,
+            )
+            .await
         },
         emit,
     )
@@ -49,7 +59,11 @@ pub async fn photo(
         &["contacts", "received_custom_avatars"],
         cancellation,
         move |database| async move {
-            queries::has_photo(&mut *database.read_pool.acquire().await?, id).await
+            queries::has_photo(
+                &mut *crate::performance::acquire(&database.read_pool).await?,
+                id,
+            )
+            .await
         },
         emit,
     )

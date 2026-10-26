@@ -107,73 +107,79 @@ pub async fn increase_group_exchange(
 pub async fn watch_groups(
     input: GroupQuery, control: &DatabaseWatch, sink: StreamSink<Vec<Group>>,
 ) -> Result<()> {
-    watches::groups(
-        get_twonly_flutter()?.app_db.clone(),
-        input,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::groups(
+            get_twonly_flutter()?.app_db.clone(),
+            input,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_group_members(
     input: GroupMembersQuery, control: &DatabaseWatch, sink: StreamSink<Vec<GroupMember>>,
 ) -> Result<()> {
-    watches::members(
-        get_twonly_flutter()?.app_db.clone(),
-        input,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::members(
+            get_twonly_flutter()?.app_db.clone(),
+            input,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_group_contacts(
     input: GroupMembersQuery, control: &DatabaseWatch, sink: StreamSink<GroupMembersWithContacts>,
 ) -> Result<()> {
-    watches::contacts(
-        get_twonly_flutter()?.app_db.clone(),
-        input,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::contacts(
+            get_twonly_flutter()?.app_db.clone(),
+            input,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_group_history(
     group: String, since: Option<i64>, control: &DatabaseWatch, sink: StreamSink<Vec<GroupHistory>>,
 ) -> Result<()> {
-    watches::history(
-        get_twonly_flutter()?.app_db.clone(),
-        group,
-        since,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::history(
+            get_twonly_flutter()?.app_db.clone(),
+            group,
+            since,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_groups_total_media(
     control: &DatabaseWatch, sink: StreamSink<i64>,
 ) -> Result<()> {
-    watches::total_media(
-        get_twonly_flutter()?.app_db.clone(),
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::total_media(
+            get_twonly_flutter()?.app_db.clone(),
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_group_flame(
     group: String, control: &DatabaseWatch, sink: StreamSink<FlameState>,
 ) -> Result<()> {
-    watches::flame(
-        get_twonly_flutter()?.app_db.clone(),
-        group,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::flame(
+            get_twonly_flutter()?.app_db.clone(),
+            group,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn get_group(id: String, transaction: &DatabaseSession) -> Result<Option<Group>> {
@@ -187,21 +193,23 @@ pub async fn get_group(id: String, transaction: &DatabaseSession) -> Result<Opti
 pub async fn watch_chat_list_contacts(
     control: &DatabaseWatch, sink: StreamSink<Vec<ChatListContact>>,
 ) -> Result<()> {
-    watches::chat_list_contacts(
-        get_twonly_flutter()?.app_db.clone(),
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::chat_list_contacts(
+            get_twonly_flutter()?.app_db.clone(),
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_group_flames(
     control: &DatabaseWatch, sink: StreamSink<std::collections::HashMap<String, FlameState>>,
 ) -> Result<()> {
-    watches::flames(
-        get_twonly_flutter()?.app_db.clone(),
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::flames(
+            get_twonly_flutter()?.app_db.clone(),
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }

@@ -24,6 +24,7 @@ use tokio_util::sync::CancellationToken;
 
 pub struct DatabaseWatch {
     pub(super) cancellation: CancellationToken,
+    trace_context: std::sync::Mutex<Option<String>>,
 }
 
 impl DatabaseWatch {
@@ -32,7 +33,31 @@ impl DatabaseWatch {
     pub fn new() -> Self {
         Self {
             cancellation: CancellationToken::new(),
+            trace_context: std::sync::Mutex::new(None),
         }
+    }
+
+    #[frb(sync)]
+    pub fn set_trace_context(&self, context: String) {
+        if crate::performance::enabled()
+            && context.len() <= 128
+            && context
+                .bytes()
+                .all(|byte| byte.is_ascii_hexdigit() || byte == b'-')
+        {
+            if let Ok(mut parent) = self.trace_context.lock() {
+                *parent = Some(context);
+            }
+        }
+    }
+
+    pub(super) async fn traced<T>(&self, future: impl std::future::Future<Output = T>) -> T {
+        let parent = self
+            .trace_context
+            .lock()
+            .ok()
+            .and_then(|mut context| context.take());
+        crate::performance::with_parent(parent, future).await
     }
 
     #[frb(sync)]

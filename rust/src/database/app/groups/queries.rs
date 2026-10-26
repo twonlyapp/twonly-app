@@ -250,16 +250,19 @@ pub async fn total_media(connection: &mut SqliteConnection) -> Result<i64> {
 }
 
 pub async fn chat_list_contacts(connection: &mut SqliteConnection) -> Result<Vec<ChatListContact>> {
-    Ok(sqlx::query_as!(
-        ChatListContact,
-        r#"SELECT gm.group_id, c.user_id, c.username, c.display_name, c.nick_name,
+    crate::performance::rows("sqlite.groups.chat_list_contacts", async {
+        Ok(sqlx::query_as!(
+            ChatListContact,
+            r#"SELECT gm.group_id, c.user_id, c.username, c.display_name, c.nick_name,
                   (c.avatar_svg_compressed IS NOT NULL AND length(c.avatar_svg_compressed) > 0)
                     AS "has_svg_avatar!: bool",
                   c.sender_profile_counter, c.prefer_photo_avatar AS "prefer_photo_avatar?: bool",
                   c.account_deleted AS "account_deleted!: bool"
            FROM group_members gm JOIN contacts c ON c.user_id = gm.contact_id
            ORDER BY gm.group_id, gm.last_message DESC, gm.contact_id"#,
-    )
-    .fetch_all(connection)
-    .await?)
+        )
+        .fetch_all(connection)
+        .await?)
+    })
+    .await
 }

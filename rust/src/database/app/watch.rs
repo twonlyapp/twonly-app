@@ -36,6 +36,10 @@ where
     F: Future<Output = Result<T>>,
     E: Fn(T) -> bool,
 {
+    let watcher = std::any::type_name::<Q>();
+    let watcher = watcher.split("::app::").nth(1).unwrap_or(watcher);
+    let watcher = watcher.split("::{{closure}}").next().unwrap_or(watcher);
+    let operation = format!("db.watch.{}", watcher.replace("::watches::", "."));
     loop {
         if cancellation.is_cancelled() {
             return Ok(());
@@ -71,14 +75,17 @@ where
 
             let operations = current.operations.clone();
 
+            let mut trace = crate::performance::Trace::start(&operation, "db.watch");
             let result = tokio::select! {
                 _ = cancellation.cancelled() => return Ok(()),
-                result = query(current) => result,
+                result = trace.scope(query(current)) => result,
             };
+            trace.status(result.is_ok());
 
             let value = match result {
                 Err(_) if operations.suspended() => continue,
                 Err(error) if transient(&error) => {
+                    drop(trace);
                     tracing::warn!(%error, "database watch will retry after temporary storage failure");
                     tokio::select! {
                         _ = cancellation.cancelled() => return Ok(()),
@@ -95,13 +102,19 @@ where
                 Ok(value) => value,
             };
 
-            if previous.as_ref() != Some(&value) {
+            let changed = previous.as_ref() != Some(&value);
+            trace.boolean("snapshot.changed", changed);
+            if changed {
                 previous = Some(value.clone());
 
-                if !emit(value) {
+                let mut emission = trace.child("database.snapshot.emit", "bridge.serialize");
+                let accepted = emit(value);
+                emission.status(accepted);
+                if !accepted {
                     return Ok(());
                 }
             }
+            drop(trace);
 
             loop {
                 tokio::select! {

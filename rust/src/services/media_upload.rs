@@ -475,79 +475,85 @@ impl MediaUploadService {
     /// getting a second encoding pass over an already encoded file.
 
     pub async fn prerender(&self, media_id: &str) -> Result<()> {
-        let lock = media_lock(media_id);
+        crate::performance::measure("media.prerender", "media.render", async {
+            let lock = media_lock(media_id);
 
-        let _guard = lock.lock().await;
+            let _guard = lock.lock().await;
 
-        let Some(media) = self.load(media_id).await? else {
-            return Ok(());
-        };
+            let Some(media) = self.load(media_id).await? else {
+                return Ok(());
+            };
 
-        // Anything past `initialized` is either being sent or already sent, and
-        // a pre-render would race the send for the same output file.
-        if media.media_type != "video" || media.upload_state.as_deref() != Some("initialized") {
-            return Ok(());
-        }
+            // Anything past `initialized` is either being sent or already sent, and
+            // a pre-render would race the send for the same output file.
+            if media.media_type != "video" || media.upload_state.as_deref() != Some("initialized") {
+                return Ok(());
+            }
 
-        let files = MediaFileService::new(&self.ctx);
+            let files = MediaFileService::new(&self.ctx);
 
-        let fingerprint = render_fingerprint(&media);
+            let fingerprint = render_fingerprint(&media);
 
-        if files.prerender_matches(media_id, &fingerprint) {
-            return Ok(());
-        }
+            if files.prerender_matches(media_id, &fingerprint) {
+                return Ok(());
+            }
 
-        let original = files.original_path(media_id, &media.media_type);
+            let original = files.original_path(media_id, &media.media_type);
 
-        if !original.exists() {
-            return Ok(());
-        }
+            if !original.exists() {
+                return Ok(());
+            }
 
-        // A marker from earlier settings would otherwise outlive its clip.
-        files.discard_prerender(media_id);
+            // A marker from earlier settings would otherwise outlive its clip.
+            files.discard_prerender(media_id);
 
-        let output = files.prerendered_path(media_id);
+            let output = files.prerendered_path(media_id);
 
-        MediaFileService::ensure_parent(&output)?;
+            MediaFileService::ensure_parent(&output)?;
 
-        let (trim_start_ms, trim_end_ms) = trim_bounds(&media);
+            let (trim_start_ms, trim_end_ms) = trim_bounds(&media);
 
-        let request = video::RenderRequest {
-            media_id: media_id.to_owned(),
-            input: original,
-            overlay: None,
-            output: output.clone(),
-            remove_audio: media.remove_audio.unwrap_or(0) != 0,
-            trim_start_ms,
-            trim_end_ms,
-        };
+            let request = video::RenderRequest {
+                media_id: media_id.to_owned(),
+                input: original,
+                overlay: None,
+                output: output.clone(),
+                remove_audio: media.remove_audio.unwrap_or(0) != 0,
+                trim_start_ms,
+                trim_end_ms,
+            };
 
-        if let Err(error) = blocking(move || video::render(&request)).await {
-            // The send path renders from the original, so this costs nothing
-            // beyond the time already spent.
-            tracing::info!(media_id, %error, "pre-rendering the video failed");
+            if let Err(error) = blocking(move || video::render(&request)).await {
+                // The send path renders from the original, so this costs nothing
+                // beyond the time already spent.
+                tracing::info!(media_id, %error, "pre-rendering the video failed");
 
-            remove_file(&output);
+                remove_file(&output);
 
-            return Ok(());
-        }
+                return Ok(());
+            }
 
-        files.write_prerender_marker(media_id, &fingerprint)?;
+            files.write_prerender_marker(media_id, &fingerprint)?;
 
-        tracing::info!(media_id, "pre-rendered the captured video");
+            tracing::info!(media_id, "pre-rendered the captured video");
 
-        Ok(())
+            Ok(())
+        })
+        .await
     }
 
     /// Advances one media file as far towards "scheduled" as it can get right
     /// now. Safe to call repeatedly and from maintenance passes.
 
     pub async fn start_upload(&self, media_id: &str) -> Result<()> {
-        let lock = media_lock(media_id);
+        crate::performance::measure("media.upload", "http.client", async {
+            let lock = media_lock(media_id);
 
-        let _guard = lock.lock().await;
+            let _guard = lock.lock().await;
 
-        self.start_upload_locked(media_id).await
+            self.start_upload_locked(media_id).await
+        })
+        .await
     }
 
     async fn start_upload_locked(&self, media_id: &str) -> Result<()> {

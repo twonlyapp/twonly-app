@@ -14,7 +14,9 @@ pub async fn all(
         databases,
         &["receipts"],
         cancellation,
-        |database| async move { queries::list(&mut *database.read_pool.acquire().await?).await },
+        |database| async move {
+            queries::list(&mut *crate::performance::acquire(&database.read_pool).await?).await
+        },
         emit,
     )
     .await

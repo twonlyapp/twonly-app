@@ -21,36 +21,39 @@ pub async fn get_received_stories(
 pub async fn watch_received_stories(
     cutoff: i64, group: Option<String>, control: &DatabaseWatch, sink: StreamSink<ReceivedStories>,
 ) -> Result<()> {
-    watches::received(
-        get_twonly_flutter()?.app_db.clone(),
-        cutoff,
-        group,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::received(
+            get_twonly_flutter()?.app_db.clone(),
+            cutoff,
+            group,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_own_stories(
     cutoff: i64, control: &DatabaseWatch, sink: StreamSink<OwnStories>,
 ) -> Result<()> {
-    watches::own(
-        get_twonly_flutter()?.app_db.clone(),
-        cutoff,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::own(
+            get_twonly_flutter()?.app_db.clone(),
+            cutoff,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }
 
 pub async fn watch_story_viewers(
     media: String, control: &DatabaseWatch, sink: StreamSink<StoryViewers>,
 ) -> Result<()> {
-    watches::viewers(
-        get_twonly_flutter()?.app_db.clone(),
-        media,
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::viewers(
+            get_twonly_flutter()?.app_db.clone(),
+            media,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }

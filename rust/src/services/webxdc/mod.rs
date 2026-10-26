@@ -40,9 +40,12 @@ const MAX_UPDATES_PER_INSTANCE: i64 = 100_000;
 
 const MAX_PAYLOAD_BYTES_PER_INSTANCE: i64 = 32 * 1024 * 1024;
 
-/// Sending burst allowance, counted over the trailing minute.
+/// Sending burst allowance, counted over the trailing minute. High enough that
+/// two people playing a turn-based game quickly never reach it -- a move, a
+/// Mills capture after it, a seat claim and a score all count -- since a
+/// refused move has to be played again. An app sending in a loop still does.
 
-const MAX_UPDATES_PER_MINUTE: i64 = 12;
+const MAX_UPDATES_PER_MINUTE: i64 = 30;
 
 const SYNC_CHUNK_BYTES: usize = 48 * 1024;
 
@@ -1319,7 +1322,39 @@ impl WebxdcService {
             return Ok(path);
         }
 
-        self.pinned_bundle(instance_id).await
+        match self.pinned_bundle(instance_id).await {
+            Ok(path) => Ok(path),
+            // A release replaces every older version in the store, so a card
+            // placed before it can point at one the server no longer has.
+            // Starting the newest is what the next launch would do anyway.
+            Err(error) => match self.adopt_newest(&instance, instance_id).await {
+                Ok(Some(path)) => Ok(path),
+                _ => Err(error),
+            },
+        }
+    }
+
+    /// Downloads the newest published version and moves the instance to it.
+    /// Only for a launch whose pinned version cannot be had any more.
+
+    async fn adopt_newest(
+        &self, instance: &WebxdcInstance, instance_id: &str,
+    ) -> Result<Option<std::path::PathBuf>> {
+        let store = self.store();
+
+        store.refresh_catalog().await?;
+
+        let Some((version, sha256)) = store.newest_published(&instance.app_id).await? else {
+            return Ok(None);
+        };
+
+        if version <= instance.version {
+            return Ok(None);
+        }
+
+        store.ensure_bundle(&sha256).await?;
+
+        self.apply_cached_update(instance, instance_id).await
     }
 
     /// Checks and downloads after the app closes, without moving its pin.

@@ -210,27 +210,30 @@ impl MediaFileService {
     /// handler. Wait until that transaction becomes visible before claiming it.
 
     pub async fn download_when_available(&self, media_id: &str) -> Result<()> {
-        for _ in 0..40 {
-            let database = self.ctx.app_db.read().await.clone();
+        crate::performance::measure("media.download", "http.client", async {
+            for _ in 0..40 {
+                let database = self.ctx.app_db.read().await.clone();
 
-            let state = sqlx::query_scalar!(
-                "SELECT download_state FROM media_files WHERE media_id = ?",
-                media_id,
-            )
-            .fetch_optional(&database.pool)
-            .await?
-            .flatten();
+                let state = sqlx::query_scalar!(
+                    "SELECT download_state FROM media_files WHERE media_id = ?",
+                    media_id,
+                )
+                .fetch_optional(&database.pool)
+                .await?
+                .flatten();
 
-            match state.as_deref() {
-                Some("pending") => return self.download(media_id).await,
-                Some(_) => return Ok(()),
-                None => tokio::time::sleep(Duration::from_millis(50)).await,
+                match state.as_deref() {
+                    Some("pending") => return self.download(media_id).await,
+                    Some(_) => return Ok(()),
+                    None => tokio::time::sleep(Duration::from_millis(50)).await,
+                }
             }
-        }
 
-        Err(TwonlyError::Generic(format!(
-            "media {media_id} was not committed in time"
-        )))
+            Err(TwonlyError::Generic(format!(
+                "media {media_id} was not committed in time"
+            )))
+        })
+        .await
     }
 
     async fn download_claimed(&self, media_id: &str) -> Result<()> {

@@ -458,6 +458,8 @@ impl Context {
                         webxdc_visibility: Default::default(),
                     });
 
+                    crate::performance::initialize(&ctx);
+
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");
                     }
@@ -523,6 +525,8 @@ impl Context {
                         media_retransmission: Mutex::new(()),
                         webxdc_visibility: Default::default(),
                     });
+
+                    crate::performance::initialize(&ctx);
 
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");

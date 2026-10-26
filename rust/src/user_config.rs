@@ -591,6 +591,10 @@ impl UserConfig {
         file.sync_all()?;
 
         std::fs::rename(&temporary, &path)?;
+        crate::performance::configuration_saved(
+            &context.config.data_dir,
+            config.allow_error_tracking_via_sentry,
+        );
 
         Ok(normalized)
     }

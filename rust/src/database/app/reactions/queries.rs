@@ -60,8 +60,9 @@ pub async fn last(
 }
 
 pub async fn latest_by_group(connection: &mut SqliteConnection) -> Result<Vec<GroupReaction>> {
-    let rows = sqlx::query!(
-        r#"
+    crate::performance::rows("sqlite.reactions.latest_by_group", async {
+        let rows = sqlx::query!(
+            r#"
             SELECT group_id AS "group_id!",
                 message_id AS "message_id!",
                 emoji AS "emoji!",
@@ -84,22 +85,24 @@ pub async fn latest_by_group(connection: &mut SqliteConnection) -> Result<Vec<Gr
             WHERE rank = 1
             ORDER BY group_id
         "#,
-    )
-    .fetch_all(connection)
-    .await?;
+        )
+        .fetch_all(connection)
+        .await?;
 
-    Ok(rows
-        .into_iter()
-        .map(|row| GroupReaction {
-            group_id: row.group_id,
-            reaction: StoredReaction {
-                message_id: row.message_id,
-                emoji: row.emoji,
-                sender_id: row.sender_id,
-                created_at: row.created_at,
-            },
-        })
-        .collect())
+        Ok(rows
+            .into_iter()
+            .map(|row| GroupReaction {
+                group_id: row.group_id,
+                reaction: StoredReaction {
+                    message_id: row.message_id,
+                    emoji: row.emoji,
+                    sender_id: row.sender_id,
+                    created_at: row.created_at,
+                },
+            })
+            .collect())
+    })
+    .await
 }
 
 pub async fn with_contacts(

@@ -11,6 +11,7 @@ pub mod database;
 pub mod groups;
 pub mod live_location;
 pub mod logging;
+pub mod performance;
 pub mod stories;
 pub mod user_config;
 pub mod webxdc;

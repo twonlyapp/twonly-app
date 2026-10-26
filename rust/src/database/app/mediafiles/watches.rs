@@ -17,7 +17,13 @@ pub async fn media(
         move |database| {
             let input = input.clone();
 
-            async move { queries::list(&mut *database.read_pool.acquire().await?, &input).await }
+            async move {
+                queries::list(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &input,
+                )
+                .await
+            }
         },
         move |rows| {
             let mut seen = std::collections::HashSet::new();

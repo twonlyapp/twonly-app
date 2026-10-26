@@ -50,6 +50,11 @@ pub async fn get(connection: &mut SqliteConnection, id: &str) -> Result<Option<M
 }
 
 pub async fn list(connection: &mut SqliteConnection, input: &MediaQuery) -> Result<Vec<MediaFile>> {
+    let name = match input.filter {
+        MediaFilter::ChatList => "sqlite.media.chat_list",
+        _ => "sqlite.media.list",
+    };
+    crate::performance::rows(name, async {
     // Each expansion contains only SQL literals; SQLx checks every filter at build
     // time.
     macro_rules! select {
@@ -190,6 +195,7 @@ pub async fn list(connection: &mut SqliteConnection, input: &MediaQuery) -> Resu
             "#
         ),
     })
+    }).await
 }
 
 pub async fn by_chat(connection: &mut SqliteConnection) -> Result<ChatMediaSnapshot> {

@@ -73,10 +73,11 @@ pub async fn update_receipts(
 }
 
 pub async fn watch_receipts(control: &DatabaseWatch, sink: StreamSink<Vec<Receipt>>) -> Result<()> {
-    watches::all(
-        get_twonly_flutter()?.app_db.clone(),
-        control.cancellation.clone(),
-        move |value| sink.add(value).is_ok(),
-    )
-    .await
+    control
+        .traced(watches::all(
+            get_twonly_flutter()?.app_db.clone(),
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
 }

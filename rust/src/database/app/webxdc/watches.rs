@@ -17,7 +17,13 @@ pub async fn instance(
         move |database| {
             let id = id.clone();
 
-            async move { queries::instance(&mut *database.read_pool.acquire().await?, &id).await }
+            async move {
+                queries::instance(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &id,
+                )
+                .await
+            }
         },
         emit,
     )
@@ -35,7 +41,13 @@ pub async fn serial(
         move |database| {
             let id = id.clone();
 
-            async move { queries::serial(&mut *database.read_pool.acquire().await?, &id).await }
+            async move {
+                queries::serial(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &id,
+                )
+                .await
+            }
         },
         emit,
     )

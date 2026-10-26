@@ -70,7 +70,11 @@ pub async fn groups(
             let group = group.clone();
 
             async move {
-                queries::groups(&mut *database.read_pool.acquire().await?, group.as_deref()).await
+                queries::groups(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    group.as_deref(),
+                )
+                .await
             }
         },
         emit,

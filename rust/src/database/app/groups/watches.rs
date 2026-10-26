@@ -18,7 +18,13 @@ pub async fn groups(
         move |database| {
             let input = input.clone();
 
-            async move { queries::list(&mut *database.read_pool.acquire().await?, &input).await }
+            async move {
+                queries::list(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &input,
+                )
+                .await
+            }
         },
         emit,
     )
@@ -36,7 +42,13 @@ pub async fn members(
         move |database| {
             let input = input.clone();
 
-            async move { queries::members(&mut *database.read_pool.acquire().await?, &input).await }
+            async move {
+                queries::members(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &input,
+                )
+                .await
+            }
         },
         emit,
     )
@@ -81,7 +93,12 @@ pub async fn history(
             let group = group.clone();
 
             async move {
-                queries::history(&mut *database.read_pool.acquire().await?, &group, since).await
+                queries::history(
+                    &mut *crate::performance::acquire(&database.read_pool).await?,
+                    &group,
+                    since,
+                )
+                .await
             }
         },
         emit,
@@ -98,8 +115,8 @@ pub async fn total_media(
         &["groups"],
         cancellation,
         |database| async move {
-
-            queries::total_media(&mut *database.read_pool.acquire().await?).await
+            queries::total_media(&mut *crate::performance::acquire(&database.read_pool).await?)
+                .await
         },
         emit,
     )
@@ -155,7 +172,10 @@ pub async fn chat_list_contacts(
         &["group_members", "contacts"],
         cancellation,
         |database| async move {
-            queries::chat_list_contacts(&mut *database.read_pool.acquire().await?).await
+            queries::chat_list_contacts(
+                &mut *crate::performance::acquire(&database.read_pool).await?,
+            )
+            .await
         },
         emit,
     )
