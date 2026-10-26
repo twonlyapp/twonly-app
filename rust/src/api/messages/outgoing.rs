@@ -146,7 +146,11 @@ pub async fn send_c2c_message_to_contact(
 
     let db_app = ctx.app_db.read().await.clone();
 
-    let mut t = db_app.pool.begin().await?;
+    // Metadata reads precede receipt writes. Reserve the writer before taking
+    // that snapshot: a native worker/process may otherwise commit in between,
+    // making SQLite reject the read-to-write upgrade with SQLITE_BUSY_SNAPSHOT
+    // immediately, regardless of the busy timeout.
+    let mut t = db_app.pool.begin_with("BEGIN IMMEDIATE").await?;
 
     decorate_content(ctx, &mut t, contact_id, &mut content, message_id.is_some()).await?;
 
@@ -260,6 +264,61 @@ pub async fn send_c2c_message_to_contact(
 mod tests {
 
     use super::*;
+
+    #[cfg(feature = "sqlite-wal")]
+    #[tokio::test]
+    async fn outgoing_receipt_waits_for_an_external_writer_before_reading_metadata() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"ben","displayName":"Ben"}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'anna')")
+            .execute(&database.pool)
+            .await?;
+
+        // A second pool represents a native worker in another process. WAL
+        // allows our metadata reads while it writes, but cannot upgrade their
+        // snapshot into a writer. The receipt must wait before those reads.
+        let competing = database.reopen().await?;
+        let mut writer = competing.pool.begin().await?;
+        sqlx::query("UPDATE contacts SET display_name = 'Anna' WHERE user_id = 7")
+            .execute(&mut *writer)
+            .await?;
+        let sending_context = ctx.clone();
+        let mut sending = tokio::spawn(async move {
+            send_c2c_message_to_contact()
+                .ctx(&sending_context)
+                .contact_id(7)
+                .encrypted_content(proto::EncryptedContent::default().encode_to_vec())
+                .call()
+                .await
+        });
+        assert!(
+            tokio::time::timeout(std::time::Duration::from_millis(100), &mut sending)
+                .await
+                .is_err()
+        );
+        writer.commit().await?;
+        tokio::time::timeout(std::time::Duration::from_secs(5), sending)
+            .await
+            .unwrap()
+            .unwrap()?;
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM receipts WHERE contact_id = 7")
+                .fetch_one(&database.pool)
+                .await?,
+            1
+        );
+        competing.close().await;
+        Ok(())
+    }
 
     #[tokio::test]
 
