@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT m.message_id, m.additional_message_data, n.content AS \"content!: String\"\n           FROM messages m JOIN chat_messages c ON c.activity_message_id = m.message_id\n           JOIN notification_outbox n ON n.message_id = m.message_id\n           WHERE m.type = 'text' AND n.kind = 'webxdc' AND n.content IS NOT NULL\n           ORDER BY n.created_at",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "additional_message_data",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "additional_message_data"
+          }
+        }
+      },
+      {
+        "name": "content!: String",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "content"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "a8edf9fed52c9b228cc65a3f8b652632f492f7f6081937b6e0b4963bb2de3abc"
+}

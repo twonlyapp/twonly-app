@@ -923,5 +923,8 @@
   "notificationGameTurn": "لعب {gameName}. حان دورك.",
   "notificationGameWon": "لعب {gameName}. لقد فزت.",
   "notificationGameLost": "لعب {gameName}. لقد خسرت.",
-  "notificationGameFallbackName": "لعبة"
+  "notificationGameFallbackName": "لعبة",
+  "chatGameTurn": "حان دورك.",
+  "chatGameWon": "لقد فزت.",
+  "chatGameLost": "لقد خسرت."
 }

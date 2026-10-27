@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twonly/core/bridge.dart' show FlameState;
@@ -29,6 +30,7 @@ import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_sticker.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_webxdc.entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input.dart';
 
 import '../../helpers/native_database.dart';
@@ -254,8 +256,8 @@ void main() {
         "DELETE FROM messages WHERE message_id IN (SELECT message_id || '-info' FROM webxdc_updates WHERE instance_id = 'timeline-card')",
       );
       await testDatabase.customStatement(
-        "INSERT INTO messages(message_id,group_id,sender_id,type,content,created_at) VALUES (?,'chat',?,'text','Automatic move text',?)",
-        ['$id-info', sender, start + offset],
+        "INSERT INTO messages(message_id,group_id,sender_id,type,content,created_at) VALUES (?,'chat',?,'text',?,?)",
+        ['$id-info', sender, 'Move: $summary', start + offset],
       );
       await testDatabase.customStatement(
         "UPDATE messages SET created_at = ? WHERE message_id = 'timeline-card'",
@@ -272,12 +274,22 @@ void main() {
     await pumpNative(
       tester,
       until: () =>
-          find.text('Your turn').evaluate().isNotEmpty &&
+          find.text('Move: Your turn').evaluate().isNotEmpty &&
           find.text('Between game turns').evaluate().isNotEmpty,
     );
     expect(card, findsOneWidget);
     expect(find.text('Automatic move text'), findsNothing);
     expect(tester.getCenter(card).dx, lessThan(400));
+    final gameTime = find.descendant(
+      of: card,
+      matching: find.byType(FriendlyMessageTime),
+    );
+    expect(gameTime, findsOneWidget);
+    expect(
+      tester.widget<FriendlyMessageTime>(gameTime).message.createdAtSeconds,
+      start + 5,
+    );
+    expect(find.text('Your turn'), findsNothing);
     expect(
       tester.getTopLeft(card).dy,
       lessThan(tester.getTopLeft(find.text('Between game turns')).dy),
@@ -291,7 +303,7 @@ void main() {
     await pumpNative(
       tester,
       until: () =>
-          find.text("Player's turn").evaluate().isNotEmpty &&
+          find.text("Move: Player's turn").evaluate().isNotEmpty &&
           tester.getCenter(card).dx > 400,
     );
     expect(card, findsOneWidget);
@@ -301,11 +313,93 @@ void main() {
       greaterThan(tester.getTopLeft(find.text('Between game turns')).dy),
     );
 
+    expect(gameTime, findsOneWidget);
+    expect(
+      find.descendant(of: card, matching: find.byType(ThreeRotatingDots)),
+      findsOneWidget,
+    );
+    await runNative(tester, () async {
+      await testDatabase.customStatement(
+        "UPDATE messages SET ack_by_server = ? WHERE message_id = 'mine-info'",
+        [start + 31],
+      );
+    });
+    await pumpNative(
+      tester,
+      until: () => find
+          .descendant(
+            of: card,
+            matching: find.byIcon(FontAwesomeIcons.check.data),
+          )
+          .evaluate()
+          .isNotEmpty,
+    );
+    await runNative(tester, () async {
+      await testDatabase.customStatement(
+        "INSERT INTO message_actions(message_id,contact_id,type,action_at) VALUES ('mine-info',7,'ackByUserAt',?)",
+        [start + 31],
+      );
+    });
+    await pumpNative(
+      tester,
+      until: () => find
+          .descendant(
+            of: card,
+            matching: find.byIcon(FontAwesomeIcons.checkDouble.data),
+          )
+          .evaluate()
+          .isNotEmpty,
+    );
+    expect(
+      find.descendant(of: card, matching: find.byType(ThreeRotatingDots)),
+      findsNothing,
+    );
+    await runNative(
+      tester,
+      () => testDatabase.customStatement(
+        "UPDATE messages SET opened_at = ? WHERE message_id = 'mine-info'",
+        [start + 32],
+      ),
+    );
+    await pumpNative(
+      tester,
+      until: () => find
+          .descendant(
+            of: card,
+            matching: find.byIcon(FontAwesomeIcons.solidEye.data),
+          )
+          .evaluate()
+          .isNotEmpty,
+    );
+
+    await runNative(
+      tester,
+      () => testDatabase.customStatement(
+        "INSERT INTO messages(message_id,group_id,type,content,created_at) VALUES ('mine-following','chat','text','After my move',?)",
+        [start + 33],
+      ),
+    );
+    await pumpNative(tester, until: () => gameTime.evaluate().isEmpty);
+    expect(
+      find.descendant(
+        of: card,
+        matching: find.byIcon(FontAwesomeIcons.solidEye.data),
+      ),
+      findsNothing,
+    );
+    await runNative(
+      tester,
+      () => testDatabase.customStatement(
+        "DELETE FROM messages WHERE message_id = 'mine-following'",
+      ),
+    );
+    await pumpNative(tester, until: () => gameTime.evaluate().isNotEmpty);
+
     await runNative(tester, () => turn('reply', 7, 30, 'Your next turn'));
     await pumpNative(
       tester,
       until: () =>
-          find.text('Your next turn').evaluate().isNotEmpty &&
+          find.text('Move: Your next turn').evaluate().isNotEmpty &&
           tester.getCenter(card).dx < 400,
     );
     await pumpNative(
@@ -330,6 +424,29 @@ void main() {
     expect(entry.message.senderId, 7);
     expect(entry.message.originalSenderId, 7);
     expect(entry.message.createdAtSeconds, start + 30);
+    expect(gameTime, findsOneWidget);
+    expect(
+      find.descendant(of: gameTime, matching: find.byType(FaIcon)),
+      findsNothing,
+    );
+    await runNative(
+      tester,
+      () => testDatabase.customStatement(
+        "INSERT INTO messages(message_id,group_id,sender_id,type,content,created_at) VALUES ('following','chat',7,'text','After the game',?)",
+        [start + 35],
+      ),
+    );
+    await pumpNative(tester, until: () => gameTime.evaluate().isEmpty);
+    expect(find.text('Move: Your next turn'), findsOneWidget);
+    expect(gameTime, findsNothing);
+    await runNative(
+      tester,
+      () => testDatabase.customStatement(
+        "DELETE FROM messages WHERE message_id = 'following'",
+      ),
+    );
+    await pumpNative(tester, until: () => gameTime.evaluate().isNotEmpty);
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await flush(tester);
   });

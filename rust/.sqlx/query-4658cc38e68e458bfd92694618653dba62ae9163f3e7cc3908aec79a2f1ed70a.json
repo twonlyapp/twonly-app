@@ -68,12 +68,7 @@
         "name": "content?",
         "ordinal": 6,
         "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "messages",
-            "name": "content"
-          }
-        }
+        "origin": "Expression"
       },
       {
         "name": "media_id?",
@@ -90,12 +85,7 @@
         "name": "additional_message_data?",
         "ordinal": 8,
         "type_info": "Blob",
-        "origin": {
-          "Table": {
-            "table": "messages",
-            "name": "additional_message_data"
-          }
-        }
+        "origin": "Expression"
       },
       {
         "name": "media_stored!: bool",

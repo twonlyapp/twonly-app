@@ -107,6 +107,9 @@ message WebxdcOrigin {
     string instance_id = 1;
     string app_id      = 2;
     int64  version     = 3;
+    // Local presentation metadata on automatic activity rows. Uses the same
+    // recipient-specific text or outcome descriptor as the notification outbox.
+    optional string notification_content = 4;
 }
 
 // The app itself is never sent. Peers resolve the id and version against the

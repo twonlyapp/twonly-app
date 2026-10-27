@@ -431,6 +431,8 @@ impl AppDatabase {
                 TwonlyError::Generic(format!("App database migration failed: {error}"))
             })?;
 
+        webxdc::queries::restore_notification_content(&self.pool).await?;
+
         sqlx::query!(
             r#"
                 INSERT INTO app_metadata(key, value)

@@ -71,6 +71,7 @@ pub(crate) async fn handle_additional_data_message(
                 from_user_id,
                 update,
                 timestamp,
+                crate::user_config::UserConfig::load_required_from(ctx)?.user_id,
             )
             .await?;
         } else if let Err(error) = verify_shared_contacts(ctx, tr, from_user_id, data).await {

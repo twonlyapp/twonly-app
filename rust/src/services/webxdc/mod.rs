@@ -77,6 +77,7 @@ struct PendingUpdateRow {
     sender_id: i64,
     payload: String,
     info: Option<String>,
+    notification_content: Option<String>,
     href: Option<String>,
     summary: Option<String>,
     document: Option<String>,
@@ -676,13 +677,16 @@ impl WebxdcService {
     /// inject state into a game being played in another.
     pub(crate) async fn handle_incoming_update(
         transaction: &mut Transaction<'_, Sqlite>, message_id: &str, group_id: &str,
-        sender_id: i64, update: &proto::WebxdcUpdate, received_at: i64,
+        sender_id: i64, update: &proto::WebxdcUpdate, received_at: i64, self_user_id: i64,
     ) -> Result<()> {
         if update.instance_id.is_empty() || update.payload.len() > SEND_UPDATE_MAX_SIZE {
             tracing::warn!("invalid webxdc update, dropping");
 
             return Ok(());
         }
+
+        let notification_content =
+            crate::services::notifications::webxdc_notification_content(update, self_user_id);
 
         let instance = sqlx::query!(
             r#"SELECT group_id AS "group_id!: String", app_id AS "app_id!: String",
@@ -726,8 +730,8 @@ impl WebxdcService {
             sqlx::query!(
                 r#"INSERT INTO webxdc_pending_updates
                        (message_id, instance_id, group_id, sender_id, payload,
-                        info, href, summary, document, received_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        info, href, summary, document, received_at, notification_content)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                    ON CONFLICT(message_id) DO NOTHING"#,
                 message_id,
                 &update.instance_id,
@@ -738,7 +742,8 @@ impl WebxdcService {
                 &update.href,
                 &update.summary,
                 &update.document,
-                received_at
+                received_at,
+                notification_content
             )
             .execute(&mut **transaction)
             .await?;
@@ -802,6 +807,7 @@ impl WebxdcService {
                 Some(sender_id),
                 info,
                 received_at,
+                notification_content.as_deref(),
             )
             .await?;
         }
@@ -816,7 +822,7 @@ impl WebxdcService {
     ) -> Result<()> {
         let rows = sqlx::query_as!(
             PendingUpdateRow,
-            r#"SELECT message_id, sender_id, payload, info, href, summary, document, received_at
+            r#"SELECT message_id, sender_id, payload, info, notification_content, href, summary, document, received_at
                FROM webxdc_pending_updates
                WHERE instance_id = ? AND group_id = ?
                ORDER BY received_at, message_id"#,
@@ -881,6 +887,7 @@ impl WebxdcService {
                     Some(row.sender_id),
                     info,
                     row.received_at,
+                    row.notification_content.as_deref(),
                 )
                 .await?;
             }
@@ -913,7 +920,7 @@ impl WebxdcService {
     async fn insert_info_message(
         transaction: &mut Transaction<'_, Sqlite>, instance_id: &str, app_id: &str, version: i64,
         group_id: &str, update_message_id: &str, sender_id: Option<i64>, info: &str,
-        created_at: i64,
+        created_at: i64, notification_content: Option<&str>,
     ) -> Result<()> {
         let latest: Option<String> = sqlx::query_scalar!(
             "SELECT message_id FROM webxdc_updates
@@ -958,6 +965,7 @@ impl WebxdcService {
                 instance_id: instance_id.to_owned(),
                 app_id: app_id.to_owned(),
                 version,
+                notification_content: notification_content.map(str::to_owned),
             }),
             ..Default::default()
         };
@@ -1219,6 +1227,7 @@ impl WebxdcService {
                 None,
                 info,
                 now,
+                None,
             )
             .await?;
         }
@@ -1717,6 +1726,7 @@ mod tests {
             8,
             &update("Alice's turn"),
             200,
+            42,
         )
         .await?;
         let rows = queries::list(&mut tx, &page).await?;
@@ -1727,6 +1737,7 @@ mod tests {
             ["card", "ordinary"]
         );
         assert_eq!(rows[0].r#type, "webxdcApp");
+        assert_eq!(rows[0].content.as_deref(), Some("Played a move"));
         assert_eq!(rows[0].sender_id, Some(8));
         assert_eq!(rows[0].created_at, 200);
         assert!(queries::get(&mut tx, "first-info").await?.is_none());
@@ -1755,6 +1766,7 @@ mod tests {
             ["ordinary", "card"]
         );
         assert_eq!(rows[1].sender_id, None);
+        assert_eq!(rows[1].content.as_deref(), Some("My move"));
         let mine = rows[1].created_at;
         let raw_sender: Option<i64> =
             sqlx::query_scalar("SELECT sender_id FROM messages WHERE message_id = 'card'")
@@ -1792,6 +1804,7 @@ mod tests {
             8,
             &update("My turn"),
             mine + 2,
+            42,
         )
         .await?;
         assert_eq!(
@@ -1832,6 +1845,7 @@ mod tests {
             7,
             &update("Newest turn"),
             mine + 4,
+            42,
         )
         .await?;
         // An old read receipt, an out-of-order move, and a duplicate cannot
@@ -1844,6 +1858,7 @@ mod tests {
             8,
             &update("Stale subtitle"),
             mine - 1,
+            42,
         )
         .await?;
         WebxdcService::handle_incoming_update(
@@ -1853,6 +1868,7 @@ mod tests {
             8,
             &update("Duplicate subtitle"),
             mine + 8,
+            42,
         )
         .await?;
         let before_same_second = queries::get(&mut tx, "card").await?.unwrap();
@@ -1863,6 +1879,7 @@ mod tests {
             7,
             &update("Newest turn"),
             mine + 4,
+            42,
         )
         .await?;
         let current = queries::get(&mut tx, "card").await?.unwrap();
@@ -1919,6 +1936,7 @@ mod tests {
             8,
             &update("Rolled back"),
             mine + 6,
+            42,
         )
         .await?;
         tx.rollback().await?;
@@ -2162,6 +2180,7 @@ mod tests {
                     ..Default::default()
                 },
                 at,
+                42,
             )
             .await?;
 
@@ -2270,6 +2289,7 @@ mod tests {
                     ..Default::default()
                 },
                 timestamp,
+                42,
             )
             .await?;
 
@@ -2522,9 +2542,10 @@ mod tests {
                 href: None,
                 summary: Some("Trip updated".into()),
                 document: Some("2 expenses".into()),
-                notify: None,
+                notify: Some(serde_json::json!({WebxdcService::address_for("card", 42): "Your expense was added"}).to_string()),
             },
             250,
+            42,
         )
         .await?;
 
@@ -2570,6 +2591,22 @@ mod tests {
         .await?;
 
         assert_eq!(announcements, 1);
+        let card = crate::database::app::messages::queries::get(
+            &mut *database.read_pool.acquire().await?,
+            "card",
+        )
+        .await?
+        .unwrap();
+        let origin = <proto::AdditionalMessageData as prost::Message>::decode(
+            card.additional_message_data.as_deref().unwrap(),
+        )?
+        .webxdc_origin
+        .unwrap();
+        assert_eq!(
+            origin.notification_content.as_deref(),
+            Some("Your expense was added")
+        );
+        assert_eq!(updates[1].info.as_deref(), Some("Taxi"));
 
         Ok(())
     }
@@ -2821,6 +2858,7 @@ mod tests {
                 None,
                 "Alice is on turn",
                 1234,
+                None,
             )
             .await?;
         }

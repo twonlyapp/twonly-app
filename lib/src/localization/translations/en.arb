@@ -1306,5 +1306,8 @@
   "@notificationGameWon": {"placeholders": {"gameName": {"type": "String"}}},
   "notificationGameLost": "has played {gameName}. You have lost.",
   "@notificationGameLost": {"placeholders": {"gameName": {"type": "String"}}},
-  "notificationGameFallbackName": "a game"
+  "notificationGameFallbackName": "a game",
+  "chatGameTurn": "It is your turn.",
+  "chatGameWon": "You have won.",
+  "chatGameLost": "You have lost."
 }

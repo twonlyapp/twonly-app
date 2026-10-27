@@ -5643,6 +5643,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'a game'**
   String get notificationGameFallbackName;
+
+  /// No description provided for @chatGameTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'It is your turn.'**
+  String get chatGameTurn;
+
+  /// No description provided for @chatGameWon.
+  ///
+  /// In en, this message translates to:
+  /// **'You have won.'**
+  String get chatGameWon;
+
+  /// No description provided for @chatGameLost.
+  ///
+  /// In en, this message translates to:
+  /// **'You have lost.'**
+  String get chatGameLost;
 }
 
 class _AppLocalizationsDelegate

@@ -1272,5 +1272,8 @@
   "notificationGameTurn": "hat {gameName} gespielt. Du bist am Zug.",
   "notificationGameWon": "hat {gameName} gespielt. Du hast gewonnen.",
   "notificationGameLost": "hat {gameName} gespielt. Du hast verloren.",
-  "notificationGameFallbackName": "ein Spiel"
+  "notificationGameFallbackName": "ein Spiel",
+  "chatGameTurn": "Du bist am Zug.",
+  "chatGameWon": "Du hast gewonnen.",
+  "chatGameLost": "Du hast verloren."
 }

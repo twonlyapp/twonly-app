@@ -3422,4 +3422,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationGameFallbackName => 'لعبة';
+
+  @override
+  String get chatGameTurn => 'حان دورك.';
+
+  @override
+  String get chatGameWon => 'لقد فزت.';
+
+  @override
+  String get chatGameLost => 'لقد خسرت.';
 }

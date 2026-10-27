@@ -3336,4 +3336,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationGameFallbackName => 'a game';
+
+  @override
+  String get chatGameTurn => 'It is your turn.';
+
+  @override
+  String get chatGameWon => 'You have won.';
+
+  @override
+  String get chatGameLost => 'You have lost.';
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT message_id, sender_id, payload, info, href, summary, document, received_at\n               FROM webxdc_pending_updates\n               WHERE instance_id = ? AND group_id = ?\n               ORDER BY received_at, message_id",
+  "query": "SELECT message_id, sender_id, payload, info, notification_content, href, summary, document, received_at\n               FROM webxdc_pending_updates\n               WHERE instance_id = ? AND group_id = ?\n               ORDER BY received_at, message_id",
   "describe": {
     "columns": [
       {
@@ -48,8 +48,19 @@
         }
       },
       {
-        "name": "href",
+        "name": "notification_content",
         "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_pending_updates",
+            "name": "notification_content"
+          }
+        }
+      },
+      {
+        "name": "href",
+        "ordinal": 5,
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -60,7 +71,7 @@
       },
       {
         "name": "summary",
-        "ordinal": 5,
+        "ordinal": 6,
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -71,7 +82,7 @@
       },
       {
         "name": "document",
-        "ordinal": 6,
+        "ordinal": 7,
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -82,7 +93,7 @@
       },
       {
         "name": "received_at",
-        "ordinal": 7,
+        "ordinal": 8,
         "type_info": "Integer",
         "origin": {
           "Table": {
@@ -103,8 +114,9 @@
       true,
       true,
       true,
+      true,
       false
     ]
   },
-  "hash": "75b1315e4024e35fe735fd3212475f809224abaddb575f7d7278d50e3c7518df"
+  "hash": "40033273fb5c8a096a618eb9561da0187ee06f04e0c54c058e5ee84f80f6ec88"
 }

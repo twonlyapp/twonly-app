@@ -65,10 +65,15 @@ fn webxdc_announcement(
     )
     .ok()?;
 
-    let update = data.webxdc_update?;
+    webxdc_notification_content(&data.webxdc_update?, user_id)
+}
 
+/// Shared by push notifications and the game's latest chat activity.
+pub(crate) fn webxdc_notification_content(
+    update: &proto::WebxdcUpdate, user_id: i64,
+) -> Option<String> {
     // Keep chat announcements shared, but only wake recipients selected by the app.
-    let announcement = crate::services::webxdc::announcement(&update)?;
+    let announcement = crate::services::webxdc::announcement(update)?;
 
     match update.notify.as_deref() {
         None => Some(announcement),
@@ -83,14 +88,14 @@ fn webxdc_announcement(
 
             match recipients.get(&address)? {
                 crate::services::webxdc::AppNotification::Text(text) => {
-                    let mut notification = update;
+                    let mut notification = update.clone();
                     notification.info = Some(text.clone());
                     crate::services::webxdc::announcement(&notification)
                 }
                 crate::services::webxdc::AppNotification::Game { game } => {
                     serde_json::to_string(&GameNotificationContent {
                         webxdc_game: *game,
-                        instance_id: update.instance_id,
+                        instance_id: update.instance_id.clone(),
                     })
                     .ok()
                 }
@@ -2959,7 +2964,33 @@ mod tests {
                 notify: Some(serde_json::json!({WebxdcService::address_for(&instance_id,42): {"game":outcome}}).to_string()),
                 ..Default::default()
             };
-            WebxdcService::handle_incoming_update(&mut tx, outcome, "g", 7, &update, 1).await?;
+            WebxdcService::handle_incoming_update(&mut tx, outcome, "g", 7, &update, 1, 42).await?;
+            let card = crate::database::app::messages::queries::get(&mut tx, &instance_id)
+                .await?
+                .unwrap();
+            let origin = <proto::AdditionalMessageData as prost::Message>::decode(
+                card.additional_message_data.as_deref().unwrap(),
+            )?
+            .webxdc_origin
+            .unwrap();
+            assert_eq!(
+                origin.notification_content,
+                webxdc_notification_content(&update, 42),
+                "the bubble and push must carry the same recipient's outcome"
+            );
+            assert_eq!(card.content, update.info);
+            if outcome == "turn" {
+                // Simulate a card written before recipient-specific metadata
+                // was saved alongside the shared announcement.
+                let mut old = <proto::AdditionalMessageData as prost::Message>::decode(
+                    card.additional_message_data.as_deref().unwrap(),
+                )?;
+                old.webxdc_origin.as_mut().unwrap().notification_content = None;
+                sqlx::query("UPDATE messages SET additional_message_data = ? WHERE message_id = 'turn-info'")
+                    .bind(prost::Message::encode_to_vec(&old))
+                    .execute(&mut *tx)
+                    .await?;
+            }
             let data = proto::AdditionalMessageData {
                 webxdc_update: Some(update),
                 ..Default::default()
@@ -2979,6 +3010,30 @@ mod tests {
             record_incoming_event(&ctx, &mut tx, 7, outcome, &content).await?;
         }
         tx.commit().await?;
+        sqlx::query("DELETE FROM app_metadata WHERE key = 'webxdc_notification_content_restored'")
+            .execute(&database.pool)
+            .await?;
+        for _ in 0..2 {
+            crate::database::app::webxdc::queries::restore_notification_content(&database.pool)
+                .await?;
+        }
+        let restored = crate::database::app::messages::queries::get(
+            &mut *database.read_pool.acquire().await?,
+            "card-turn",
+        )
+        .await?
+        .unwrap();
+        let restored = <proto::AdditionalMessageData as prost::Message>::decode(
+            restored.additional_message_data.as_deref().unwrap(),
+        )?
+        .webxdc_origin
+        .unwrap()
+        .notification_content
+        .unwrap();
+        assert_eq!(
+            serde_json::from_str::<serde_json::Value>(&restored)?["webxdc_game"],
+            "turn"
+        );
         for (locale, expected) in [
             (
                 "en",
@@ -3083,7 +3138,8 @@ mod tests {
                 ..Default::default()
             };
 
-            WebxdcService::handle_incoming_update(&mut tx, message_id, "g", 7, &update, 1).await?;
+            WebxdcService::handle_incoming_update(&mut tx, message_id, "g", 7, &update, 1, 42)
+                .await?;
 
             let data = proto::AdditionalMessageData {
                 r#type: proto::additional_message_data::Type::WebxdcUpdate as i32,
@@ -3116,6 +3172,7 @@ mod tests {
                 7,
                 data.webxdc_update.as_ref().unwrap(),
                 1,
+                42,
             )
             .await?;
 

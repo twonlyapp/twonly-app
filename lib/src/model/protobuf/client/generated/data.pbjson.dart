@@ -424,13 +424,27 @@ const WebxdcOrigin$json = {
     {'1': 'instance_id', '3': 1, '4': 1, '5': 9, '10': 'instanceId'},
     {'1': 'app_id', '3': 2, '4': 1, '5': 9, '10': 'appId'},
     {'1': 'version', '3': 3, '4': 1, '5': 3, '10': 'version'},
+    {
+      '1': 'notification_content',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'notificationContent',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_notification_content'},
   ],
 };
 
 /// Descriptor for `WebxdcOrigin`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List webxdcOriginDescriptor = $convert.base64Decode(
     'CgxXZWJ4ZGNPcmlnaW4SHwoLaW5zdGFuY2VfaWQYASABKAlSCmluc3RhbmNlSWQSFQoGYXBwX2'
-    'lkGAIgASgJUgVhcHBJZBIYCgd2ZXJzaW9uGAMgASgDUgd2ZXJzaW9u');
+    'lkGAIgASgJUgVhcHBJZBIYCgd2ZXJzaW9uGAMgASgDUgd2ZXJzaW9uEjYKFG5vdGlmaWNhdGlv'
+    'bl9jb250ZW50GAQgASgJSABSE25vdGlmaWNhdGlvbkNvbnRlbnSIAQFCFwoVX25vdGlmaWNhdG'
+    'lvbl9jb250ZW50');
 
 @$core.Deprecated('Use webxdcAppDescriptor instead')
 const WebxdcApp$json = {

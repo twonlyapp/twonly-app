@@ -84,7 +84,9 @@ class FriendlyMessageTime extends StatelessWidget {
         ),
       );
     }
-    if (message.type != MessageType.text.name || message.senderId != null) {
+    if ((message.type != MessageType.text.name &&
+            message.type != MessageType.webxdcApp.name) ||
+        message.senderId != null) {
       return null;
     }
 

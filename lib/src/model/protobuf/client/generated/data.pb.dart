@@ -1007,11 +1007,14 @@ class WebxdcOrigin extends $pb.GeneratedMessage {
     $core.String? instanceId,
     $core.String? appId,
     $fixnum.Int64? version,
+    $core.String? notificationContent,
   }) {
     final result = create();
     if (instanceId != null) result.instanceId = instanceId;
     if (appId != null) result.appId = appId;
     if (version != null) result.version = version;
+    if (notificationContent != null)
+      result.notificationContent = notificationContent;
     return result;
   }
 
@@ -1030,6 +1033,7 @@ class WebxdcOrigin extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'instanceId')
     ..aOS(2, _omitFieldNames ? '' : 'appId')
     ..aInt64(3, _omitFieldNames ? '' : 'version')
+    ..aOS(4, _omitFieldNames ? '' : 'notificationContent')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1077,6 +1081,17 @@ class WebxdcOrigin extends $pb.GeneratedMessage {
   $core.bool hasVersion() => $_has(2);
   @$pb.TagNumber(3)
   void clearVersion() => $_clearField(3);
+
+  /// Local presentation metadata on automatic activity rows. Uses the same
+  /// recipient-specific text or outcome descriptor as the notification outbox.
+  @$pb.TagNumber(4)
+  $core.String get notificationContent => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set notificationContent($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasNotificationContent() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearNotificationContent() => $_clearField(4);
 }
 
 /// The app itself is never sent. Peers resolve the id and version against the
@@ -1263,7 +1278,8 @@ class WebxdcUpdate extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   void clearDocument() => $_clearField(6);
 
-  /// JSON map of app-scoped member addresses to notification text.
+  /// JSON map of app-scoped member addresses to notification text or
+  /// {"game":"turn"|"won"|"lost"}, localized by the receiving twonly host.
   /// Absent preserves legacy broadcast; an empty map notifies nobody.
   @$pb.TagNumber(7)
   $core.String get notify => $_getSZ(6);

@@ -3368,4 +3368,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notificationGameFallbackName => 'ein Spiel';
+
+  @override
+  String get chatGameTurn => 'Du bist am Zug.';
+
+  @override
+  String get chatGameWon => 'Du hast gewonnen.';
+
+  @override
+  String get chatGameLost => 'Du hast verloren.';
 }

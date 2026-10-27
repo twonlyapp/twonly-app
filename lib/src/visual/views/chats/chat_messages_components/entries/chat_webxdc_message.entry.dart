@@ -7,6 +7,7 @@ import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart'
     show AdditionalMessageData, WebxdcOrigin;
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc_host.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_text_entry.dart';
@@ -200,7 +201,9 @@ class _ChatWebxdcMessageEntryState extends State<ChatWebxdcMessageEntry> {
                     textColor: widget.info.textColor,
                   ),
                 ),
-                FriendlyMessageTime(message: widget.message),
+                if (widget.info.displayTime ||
+                    widget.message.modifiedAt != null)
+                  FriendlyMessageTime(message: widget.message),
               ],
             ),
           ],
