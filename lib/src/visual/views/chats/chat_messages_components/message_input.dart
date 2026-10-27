@@ -21,6 +21,7 @@ import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -447,13 +448,15 @@ class _MessageInputState extends State<MessageInput>
     });
     if (widget.group.isDirectChat) {
       final members = joinedGroupContacts(
-        await rust_groups.getGroupContacts(
-          input: db_groups.GroupMembersQuery(
-            groupId: widget.group.groupId,
-            orderForChats: true,
+        await watchRustDatabase(
+          (control) => rust_groups.watchGroupContacts(
+            input: db_groups.GroupMembersQuery(
+              groupId: widget.group.groupId,
+              orderForChats: true,
+            ),
+            control: control,
           ),
-          transaction: currentDatabaseSession(),
-        ),
+        ).first,
       ).map((row) => row.$1).toList(growable: false);
       if (members.isNotEmpty) {
         await rust_contacts.updateContact(
@@ -472,13 +475,15 @@ class _MessageInputState extends State<MessageInput>
   Future<void> _loadContactId() async {
     if (widget.group.isDirectChat) {
       final members = joinedGroupContacts(
-        await rust_groups.getGroupContacts(
-          input: db_groups.GroupMembersQuery(
-            groupId: widget.group.groupId,
-            orderForChats: true,
+        await watchRustDatabase(
+          (control) => rust_groups.watchGroupContacts(
+            input: db_groups.GroupMembersQuery(
+              groupId: widget.group.groupId,
+              orderForChats: true,
+            ),
+            control: control,
           ),
-          transaction: currentDatabaseSession(),
-        ),
+        ).first,
       ).map((row) => row.$1).toList(growable: false);
       if (members.isNotEmpty && mounted) {
         setState(() {

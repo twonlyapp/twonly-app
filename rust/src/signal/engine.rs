@@ -684,7 +684,7 @@ impl RustSignalEngine {
         )
         .assert_send()
         .await
-        .map_err(|e| TwonlyError::Signal(e.to_string()))?;
+        .map_err(TwonlyError::from)?;
 
         let serialized = ciphertext.serialize();
 
@@ -707,7 +707,7 @@ impl RustSignalEngine {
         let d_id = DeviceId::try_from(device_id)
             .map_err(|_| TwonlyError::Generic(format!("Invalid device id: {}", device_id)))?;
 
-        let remote_address = ProtocolAddress::new(name, d_id);
+        let remote_address = ProtocolAddress::new(name.clone(), d_id);
 
         let local_address = ProtocolAddress::new(
             self.local_name.clone(),
@@ -767,6 +767,16 @@ impl RustSignalEngine {
                 return Err(TwonlyError::Signal("Invalid message type".to_string()));
             }
         };
+
+        // Only authenticated traffic proves a repaired session works. A
+        // bundle fetch alone must not replenish the reset budget.
+        if let Err(error) =
+            crate::signal::reset::SessionResetLimiter::clear(&store.pool, &name, device_id).await
+        {
+            // The ratchet step is already durable. Return the plaintext even
+            // if this bookkeeping fails, so a retry cannot lose the message.
+            tracing::warn!(%error, "could not clear the recovered Signal session's reset budget");
+        }
 
         Ok(plaintext.to_vec())
     }

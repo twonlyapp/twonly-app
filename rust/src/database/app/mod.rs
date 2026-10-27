@@ -47,6 +47,7 @@ pub(crate) mod transaction;
 pub mod user_discovery;
 pub(crate) mod watch;
 pub mod webxdc;
+pub(crate) mod writer_holder;
 
 pub const APP_DATABASE_FILE: &str = "app_db.sqlite";
 
@@ -255,13 +256,22 @@ impl AppDatabase {
     async fn connect_pool(
         options: SqliteConnectOptions, changes: broadcast::Sender<DatabaseChange>,
         operations: std::sync::Arc<crate::database::lifecycle::pool::PoolOperations>, maximum: u32,
-        lazy: bool, observes_external: bool,
+        lazy: bool, writer: bool,
     ) -> Result<SqlitePool> {
         let connect_operations = operations.clone();
 
         let acquire_operations = operations.clone();
 
         let release_operations = operations.clone();
+
+        // SQLx runs the connect and acquire hooks in the acquiring task.
+        let holder = writer.then(|| std::sync::Arc::new(writer_holder::WriterHolder::new()));
+
+        let connect_holder = holder.clone();
+
+        let acquire_holder = holder.clone();
+
+        let release_holder = holder.clone();
 
         let hooks = changes::ConnectionChanges::default();
 
@@ -281,6 +291,10 @@ impl AppDatabase {
 
                 let operations = connect_operations.clone();
 
+                if let Some(holder) = &connect_holder {
+                    holder.acquired();
+                }
+
                 Box::pin(async move {
                     hooks.install(connection).await?;
 
@@ -294,10 +308,14 @@ impl AppDatabase {
 
                 let changes = acquire_changes.clone();
 
+                if let Some(holder) = &acquire_holder {
+                    holder.acquired();
+                }
+
                 Box::pin(async move {
                     operations.acquire(connection).await?;
 
-                    if observes_external {
+                    if writer {
                         hooks.observe_external(connection, &changes).await?;
                     }
 
@@ -311,6 +329,10 @@ impl AppDatabase {
 
                 let operations = release_operations.clone();
 
+                if let Some(holder) = &release_holder {
+                    holder.released();
+                }
+
                 Box::pin(async move {
                     if !hooks.release(connection, &changes).await? {
                         return Ok(false);
@@ -321,14 +343,30 @@ impl AppDatabase {
             });
 
         if lazy {
-            Ok(pool.connect_lazy_with(options))
-        } else {
-            Ok(pool.connect_with(options).await?)
+            return Ok(pool.connect_lazy_with(options));
         }
+
+        let pool = pool.connect_with(options).await?;
+
+        // `connect_with` returns its test connection to the pool without the
+        // release hook.
+        if let Some(holder) = &holder {
+            holder.released();
+        }
+
+        Ok(pool)
     }
 
-    pub async fn close(&self) {
-        tokio::join!(self.pool.close(), self.read_pool.close());
+    /// Like `Pool::close`, admission closes on the call, before the first poll.
+    /// Idle connections close only once the returned future runs.
+    pub fn close(&self) -> impl std::future::Future<Output = ()> + '_ {
+        let writer = self.pool.close();
+
+        let readers = self.read_pool.close();
+
+        async move {
+            tokio::join!(writer, readers);
+        }
     }
 
     pub(crate) async fn reopen(&self) -> Result<Self> {

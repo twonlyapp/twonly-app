@@ -87,6 +87,13 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
             tracing::warn!(%error, "Signal key maintenance failed");
         }
 
+        if let Err(error) = crate::services::messages::MessageService::new(&ctx)
+            .recover_unqueued_text()
+            .await
+        {
+            tracing::warn!(%error, "failed to recover text messages without an outbox entry");
+        }
+
         // Direct-media uploads consume Rust-owned slots, so keep their cache
         // warm whenever an authenticated connection becomes available.
         if let Err(error) = DirectMediaUploadService::new(&ctx).preload_slots().await {

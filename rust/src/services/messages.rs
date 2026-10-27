@@ -6,7 +6,9 @@
 use crate::api::messages::incoming::messages::{
     self, queue_encrypted_content, send_queued_receipt,
 };
-use crate::api::messages::outgoing::{decorate_content, send_c2c_message_to_contact};
+use crate::api::messages::outgoing::{
+    decorate_content, prepare_user_discovery, send_c2c_message_to_contact,
+};
 use crate::api::proto::client::{self as proto, encrypted_content};
 use crate::context::Context;
 use crate::database::app::contacts::table::Contact;
@@ -16,6 +18,10 @@ use crate::user_config::UserConfig;
 use prost::Message as _;
 use std::sync::Arc;
 
+// Match the server mailbox lifetime. Older rows without receipts may already
+// have been delivered by builds that did not persist server acknowledgements.
+const TEXT_RECOVERY_MAX_AGE_SECONDS: i64 = 60 * 24 * 60 * 60;
+
 pub struct MessageService {
     ctx: Arc<Context>,
 }
@@ -23,6 +29,76 @@ pub struct MessageService {
 impl MessageService {
     pub fn new(ctx: &Arc<Context>) -> Self {
         Self { ctx: ctx.clone() }
+    }
+
+    /// Older builds committed the message before asynchronously creating its
+    /// outbox. A pause in that gap left no receipt for any retry sweep to find.
+    pub(crate) async fn recover_unqueued_text(&self) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let cutoff = chrono::Utc::now().timestamp() - TEXT_RECOVERY_MAX_AGE_SECONDS;
+        let ids = sqlx::query_scalar!(
+            "SELECT m.message_id FROM messages m WHERE m.sender_id IS NULL
+             AND m.type = 'text' AND m.content IS NOT NULL
+             AND m.ack_by_server IS NULL AND m.ack_by_user IS NULL
+             AND m.is_deleted_from_sender = 0
+             AND m.created_at >= ?
+             AND NOT EXISTS (SELECT 1 FROM receipts r WHERE r.message_id = m.message_id)
+             AND EXISTS (SELECT 1 FROM group_members gm JOIN contacts c ON c.user_id = gm.contact_id
+                         JOIN groups g ON g.group_id = gm.group_id
+                         WHERE gm.group_id = m.group_id AND g.left_group = 0 AND c.account_deleted = 0
+                         AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup'))
+             ORDER BY m.created_at, m.message_id",
+            cutoff,
+        )
+        .fetch_all(&database.pool)
+        .await?;
+        if ids.is_empty() {
+            return Ok(());
+        }
+        prepare_user_discovery(&self.ctx, true).await?;
+        for id in ids {
+            // Native background code uses another SQLite connection. Reserve
+            // the writer before reading so its writes cannot invalidate our snapshot.
+            let mut t = database.pool.begin_with("BEGIN IMMEDIATE").await?;
+            let Some(message) = crate::database::app::messages::queries::get(&mut t, &id).await?
+            else {
+                continue;
+            };
+            // Recheck under the writer: a concurrent recovery or late delivery
+            // receipt may have resolved this row since the initial scan.
+            if message.ack_by_server.is_some()
+                || message.ack_by_user.is_some()
+                || message.is_deleted_from_sender
+                || message.created_at < cutoff
+            {
+                continue;
+            }
+            let queued = sqlx::query_scalar!(
+                "SELECT EXISTS(SELECT 1 FROM receipts WHERE message_id = ?)",
+                id
+            )
+            .fetch_one(&mut *t)
+            .await?
+                != 0;
+            if queued {
+                continue;
+            }
+            let content = proto::EncryptedContent {
+                text_message: Some(encrypted_content::TextMessage {
+                    sender_message_id: id.clone(),
+                    text: message.content.unwrap_or_default(),
+                    timestamp: message.created_at * 1000,
+                    quote_message_id: message.quotes_message_id,
+                    additional_message_data: message.additional_message_data,
+                }),
+                ..Default::default()
+            }
+            .encode_to_vec();
+            self.send_to_group_in_transaction(&mut t, message.group_id, content, Some(id), false)
+                .await?;
+            t.commit().await?;
+        }
+        Ok(())
     }
 
     pub async fn send_to_group(
@@ -81,10 +157,8 @@ impl MessageService {
     /// would wait thirty seconds for a connection that cannot be freed until
     /// this call returns.
     ///
-    /// That is also why `message_id` has to stay `None` here: a persisted
-    /// message asks user discovery for a version, which needs it initialized,
-    /// and initializing it writes through the pool. Callers with a message id
-    /// go through [`Self::send_to_group`], which sends outside a transaction.
+    /// Persisted messages require [`prepare_user_discovery`] before the caller
+    /// opens its transaction. Initializing it here would reacquire the writer.
     pub async fn send_to_group_in_transaction(
         &self, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: String,
         encrypted_content: Vec<u8>, message_id: Option<String>,
@@ -100,8 +174,8 @@ impl MessageService {
             || content.text_message.is_some()
         {
             sqlx::query!(
-                "UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER) \
-                 WHERE group_id = ?",
+                "UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER), \
+                 deleted_content = 0 WHERE group_id = ?",
                 group_id
             )
             .execute(&mut **t)
@@ -268,6 +342,8 @@ impl MessageService {
             crate::services::stickers::validate_additional_if_sticker(data)?;
         }
 
+        prepare_user_discovery(&self.ctx, true).await?;
+
         let database = self.ctx.app_db.read().await.clone();
 
         let message_id = message_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
@@ -299,10 +375,6 @@ impl MessageService {
 
         Group::record_text_or_media(&mut t, &group_id, timestamp / 1000).await?;
 
-        // The commit hook installed on the connection publishes `groups` and
-        // `messages` on its own, so the chat list is already on its way.
-        t.commit().await?;
-
         let content = proto::EncryptedContent {
             text_message: Some(encrypted_content::TextMessage {
                 sender_message_id: message_id.clone(),
@@ -315,25 +387,19 @@ impl MessageService {
         }
         .encode_to_vec();
 
-        // The message row already carries the "not acknowledged yet" state the
-        // bubble shows, so a failure here is reported the same way a failed
-        // network send is: the bubble stays unacknowledged until a retry sweep
-        // gets it through.
-        let ctx = self.ctx.clone();
+        // Persist the retryable plaintext outbox with the visible message.
+        // Suspending or terminating the app after this commit cannot strand
+        // a bubble without a receipt for the reconnect sweep to deliver.
+        self.send_to_group_in_transaction(
+            &mut t,
+            group_id,
+            content,
+            Some(message_id.clone()),
+            false,
+        )
+        .await?;
 
-        let sent_message_id = message_id.clone();
-
-        crate::database::lifecycle::spawn(async move {
-            if let Err(error) = Self::new(&ctx)
-                .send_to_group(group_id, content, Some(sent_message_id.clone()), false)
-                .await
-            {
-                tracing::warn!(
-                    message_id = sent_message_id,
-                    "sending the text message failed: {error}"
-                );
-            }
-        });
+        t.commit().await?;
 
         Ok(message_id)
     }
@@ -687,6 +753,144 @@ impl MessageService {
 mod pending_text_tests {
 
     use super::*;
+
+    #[tokio::test]
+    async fn recovery_leaves_texts_older_than_the_mailbox_lifetime_unqueued() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'peer');
+             INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat');
+             INSERT INTO group_members(group_id, contact_id) VALUES ('chat', 7);",
+        )
+        .execute(&database.pool)
+        .await?;
+        let cutoff = chrono::Utc::now().timestamp() - TEXT_RECOVERY_MAX_AGE_SECONDS;
+        for (id, created_at) in [("too-old", cutoff - 60), ("recent-enough", cutoff + 60)] {
+            sqlx::query(
+                "INSERT INTO messages(message_id, group_id, type, content, created_at)
+                 VALUES (?, 'chat', 'text', 'Retained text', ?)",
+            )
+            .bind(id)
+            .bind(created_at)
+            .execute(&database.pool)
+            .await?;
+        }
+        for _ in 0..2 {
+            MessageService::new(&ctx).recover_unqueued_text().await?;
+        }
+        let queued: Vec<String> = sqlx::query_scalar("SELECT message_id FROM receipts")
+            .fetch_all(&database.pool)
+            .await?;
+        assert_eq!(queued, vec!["recent-enough"]);
+        let old_rows: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE message_id = 'too-old'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(old_rows, 1, "keep old local history without resending it");
+        database.close().await;
+        ctx.rust_db.read().await.pool.close().await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn reconnect_recovers_an_old_unqueued_text_once_and_keeps_delivered_messages_finished(
+    ) -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'peer');
+             INSERT INTO groups(group_id, group_name, left_group) VALUES ('chat', 'Chat', 0), ('left', 'Left', 1);
+             INSERT INTO group_members(group_id, contact_id) VALUES ('chat', 7);
+             INSERT INTO group_members(group_id, contact_id) VALUES ('left', 7);
+             INSERT INTO messages(message_id, group_id, type, content, ack_by_server)
+             VALUES ('stranded', 'chat', 'text', 'Retained text', NULL),
+                    ('delivered', 'chat', 'text', 'Already delivered', 123),
+                    ('left', 'left', 'text', 'Do not resend after leaving', NULL);",
+        )
+        .execute(&database.pool)
+        .await?;
+        for _ in 0..2 {
+            MessageService::new(&ctx).recover_unqueued_text().await?;
+        }
+        let pending: Vec<String> =
+            sqlx::query_scalar("SELECT message_id FROM receipts ORDER BY message_id")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(pending, vec!["stranded"]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn a_text_is_not_committed_without_its_durable_delivery_receipt() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'peer');
+             INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat');
+             INSERT INTO group_members(group_id, contact_id) VALUES ('chat', 7);
+             CREATE TRIGGER fail_receipt BEFORE INSERT ON receipts
+             BEGIN SELECT RAISE(ABORT, 'receipt storage failed'); END;",
+        )
+        .execute(&database.pool)
+        .await?;
+        let result = MessageService::new(&ctx)
+            .insert_and_send_text(
+                "chat".into(),
+                "Keep retryable".into(),
+                None,
+                None,
+                Some("pending".into()),
+                None,
+            )
+            .await;
+        assert!(
+            result.is_err(),
+            "a failed outbox insertion must reach the composer"
+        );
+        let count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE message_id = 'pending'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(
+            count, 0,
+            "do not leave an unacknowledged bubble which no receipt sweep can find"
+        );
+        sqlx::query("DROP TRIGGER fail_receipt")
+            .execute(&database.pool)
+            .await?;
+        MessageService::new(&ctx)
+            .insert_and_send_text(
+                "chat".into(),
+                "Keep retryable".into(),
+                None,
+                None,
+                Some("pending".into()),
+                None,
+            )
+            .await?;
+        let count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM receipts WHERE message_id = 'pending'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(
+            count, 1,
+            "the receipt must already exist when persistence returns"
+        );
+        Ok(())
+    }
 
     #[tokio::test]
 

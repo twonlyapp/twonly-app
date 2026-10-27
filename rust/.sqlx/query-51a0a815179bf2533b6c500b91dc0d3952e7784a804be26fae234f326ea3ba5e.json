@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET upload_state = 'preprocessing' WHERE media_id = ? AND (? OR upload_state = 'backgroundUploadTaskStarted')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "51a0a815179bf2533b6c500b91dc0d3952e7784a804be26fae234f326ea3ba5e"
+}

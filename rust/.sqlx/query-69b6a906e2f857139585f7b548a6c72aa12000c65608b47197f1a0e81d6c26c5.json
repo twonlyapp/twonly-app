@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT DISTINCT m.media_id AS \"media_id!: String\"\n               FROM receipts r\n               JOIN messages m ON m.message_id = r.message_id\n               JOIN groups g ON g.group_id = m.group_id\n               JOIN group_members gm ON gm.group_id = m.group_id AND gm.contact_id = r.contact_id\n               WHERE m.sender_id IS NULL AND m.media_id IS NOT NULL\n                 AND g.is_direct_chat = 0 AND gm.member_state = 'leftGroup'\n                 AND (? IS NULL OR m.group_id = ?)",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id!: String",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "media_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "69b6a906e2f857139585f7b548a6c72aa12000c65608b47197f1a0e81d6c26c5"
+}

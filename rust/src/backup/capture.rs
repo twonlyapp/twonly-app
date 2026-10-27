@@ -40,7 +40,9 @@ async fn writer_pool(source: &SqlitePool, operation: &Operation) -> Result<Sqlit
     let operations = std::sync::Arc::new(PoolOperations::new());
 
     Ok(SqlitePoolOptions::new()
-        .max_connections(1)
+        // One connection holds the writer reservation, the other copies the
+        // store under it.
+        .max_connections(2)
         .after_connect(move |connection, _| {
             let operations = operations.clone();
 
@@ -80,8 +82,9 @@ where
     F: std::future::Future<Output = Result<()>>,
 {
     // Checked no-op writes promote the deferred transactions to writer
-    // reservations without altering rows or publishing invalidations. Separate
-    // connections perform VACUUM INTO while these reservations hold the cut.
+    // reservations without altering rows or publishing invalidations. The
+    // pools' second connections perform VACUUM INTO while these reservations
+    // hold the cut.
     let mut app_writer = app.begin().await?;
 
     sqlx::query!("UPDATE app_metadata SET value = value WHERE 0")
@@ -118,19 +121,14 @@ where
         }
     }
 
-    crate::database::snapshot::create(
-        &ctx.app_db.read().await.pool,
-        &directory.join("app_db.sqlite"),
-        operation,
-    )
-    .await?;
+    // Copy through the capture pools, never the live ones. A live connection
+    // can belong to a transaction whose next write waits for the reservation
+    // above, so waiting for that connection here waited for ourselves until
+    // SQLite's busy timeout or the pool's acquire timeout gave up.
+    crate::database::snapshot::create(app, &directory.join("app_db.sqlite"), operation).await?;
 
-    crate::database::snapshot::create(
-        &ctx.rust_db.read().await.pool,
-        &directory.join("signal-working.sqlite"),
-        operation,
-    )
-    .await?;
+    crate::database::snapshot::create(signal, &directory.join("signal-working.sqlite"), operation)
+        .await?;
 
     signal_writer.rollback().await?;
 

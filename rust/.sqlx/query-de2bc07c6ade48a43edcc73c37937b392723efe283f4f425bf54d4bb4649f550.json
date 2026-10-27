@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM direct_media_upload_jobs WHERE media_id = ?)",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM direct_media_upload_jobs WHERE media_id = ?)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "de2bc07c6ade48a43edcc73c37937b392723efe283f4f425bf54d4bb4649f550"
+}

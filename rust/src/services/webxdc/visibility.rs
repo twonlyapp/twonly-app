@@ -86,6 +86,13 @@ impl Visibility {
 
         Ok(())
     }
+
+    /// The lock file is in the App Group, and iOS kills a process suspended
+    /// while holding a lock there (0xdead10cc). Release it from the native
+    /// background callback too: Flutter's own pause event may still be queued.
+    pub(crate) fn clear(&self) {
+        *self.lease.lock().unwrap_or_else(|error| error.into_inner()) = None;
+    }
 }
 
 pub(crate) fn visible_instance(directory: &Path) -> Option<String> {
@@ -183,6 +190,32 @@ mod tests {
         drop(visibility);
 
         assert_eq!(visible_instance(directory.path()), None);
+
+        Ok(())
+    }
+
+    #[test]
+
+    fn backgrounding_releases_the_lock_until_flutter_sets_it_again() -> std::io::Result<()> {
+        let _guard = TEST_LOCK.lock().unwrap();
+
+        let directory = tempfile::tempdir()?;
+
+        let visibility = Visibility::default();
+
+        visibility.set(directory.path(), Some("connect4-chat-a"))?;
+
+        visibility.clear();
+
+        assert_eq!(visible_instance(directory.path()), None);
+
+        // Resume reports the same instance again; it must not look unchanged.
+        visibility.set(directory.path(), Some("connect4-chat-a"))?;
+
+        assert_eq!(
+            visible_instance(directory.path()).as_deref(),
+            Some("connect4-chat-a")
+        );
 
         Ok(())
     }

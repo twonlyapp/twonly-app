@@ -180,6 +180,8 @@ pub(crate) fn visibility(active: bool) {
         super::cancel_native();
 
         if let Ok(context) = Context::get_static() {
+            context.webxdc_visibility.clear();
+
             context.request_foreground_suspend();
         }
     }

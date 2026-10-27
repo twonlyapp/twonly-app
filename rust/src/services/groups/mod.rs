@@ -93,6 +93,16 @@ struct PendingCompaction {
     state: EncryptedGroupState,
 }
 
+/// What applying a fetched group state leaves for after its transaction, where
+/// network round trips are allowed again.
+struct AppliedGroupState {
+    updated: bool,
+    compaction: Option<PendingCompaction>,
+    /// Members stored as `[Unknown]` contacts, whose usernames still have to
+    /// be looked up.
+    unknown_members: Vec<i64>,
+}
+
 /// When each member was last asked to resend its group public key.
 ///
 /// Process-local on purpose: the point is to keep one session from re-asking a
@@ -563,7 +573,11 @@ impl GroupService {
 
         let mut t = database.pool.begin().await?;
 
-        let (updated, compaction) = self
+        let AppliedGroupState {
+            updated,
+            compaction,
+            unknown_members,
+        } = self
             .apply_fetched_group_state(&mut t, &group_id, server)
             .await?;
 
@@ -594,6 +608,14 @@ impl GroupService {
             }
         }
 
+        // Before the flush below: a member whose account is gone gets marked
+        // deleted here, which drops the key request queued for them.
+        if !unknown_members.is_empty() {
+            if let Err(error) = Server::refresh_usernames(&self.ctx, unknown_members).await {
+                tracing::warn!(group_id, %error, "could not look up new group members");
+            }
+        }
+
         // `apply_state` may have queued public-key requests. Nothing else
         // flushes them here -- this is not an inbound-message path -- and they
         // would otherwise wait for the next reconnect.
@@ -609,13 +631,14 @@ impl GroupService {
     }
 
     /// Applies a group state that has already been fetched. Database work
-    /// only: the admin-side compaction of leave-appends is handed back to the
-    /// caller instead of sent from here, because it is a network round trip
-    /// and this runs while the caller holds the app database's one connection.
+    /// only: the admin-side compaction of leave-appends and the lookup of
+    /// unknown members are handed back to the caller instead of done from here,
+    /// because they are network round trips and this runs while the caller
+    /// holds the app database's one connection.
     async fn apply_fetched_group_state(
         &self, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: &str,
         server: Option<crate::api::proto::http_requests::GroupState>,
-    ) -> Result<(bool, Option<PendingCompaction>)> {
+    ) -> Result<AppliedGroupState> {
         let group = GroupRecord::load_in_transaction(t, group_id).await?;
 
         let Some(server) = server else {
@@ -626,7 +649,11 @@ impl GroupService {
                 .execute(t)
                 .await?;
 
-            return Ok((false, None));
+            return Ok(AppliedGroupState {
+                updated: false,
+                compaction: None,
+                unknown_members: Vec::new(),
+            });
         };
 
         let state_key = group.state_key()?;
@@ -726,10 +753,15 @@ impl GroupService {
                 }
             });
 
-        self.apply_state(t, group_id, server.version_id as i64, &group_state)
+        let unknown_members = self
+            .apply_state(t, group_id, server.version_id as i64, &group_state)
             .await?;
 
-        Ok((true, compaction))
+        Ok(AppliedGroupState {
+            updated: true,
+            compaction,
+            unknown_members,
+        })
     }
 
     /// Reads the group state, applies `change`, and writes it back, re-reading
@@ -1427,10 +1459,17 @@ impl GroupService {
         Ok(())
     }
 
+    /// Returns the members that were not contacts yet. They are stored as
+    /// hidden `[Unknown]` contacts, and the caller looks up their usernames
+    /// after committing. Looking them up here was a network round trip under
+    /// the app database's one connection, and for an account the server no
+    /// longer knows, a deadlock: the API error handler marks it deleted through
+    /// the pool, waiting for the connection this transaction holds. The refresh
+    /// then failed after the acquire timeout and was retried on every connect.
     async fn apply_state(
         &self, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group_id: &str, version: i64,
         group_state: &EncryptedGroupState,
-    ) -> Result<()> {
+    ) -> Result<Vec<i64>> {
         let local_user_id = self.ctx.user_id().await?;
 
         let joined = group_state.member_ids.contains(&local_user_id);
@@ -1456,6 +1495,8 @@ impl GroupService {
             .execute(t)
             .await?;
 
+        let mut unknown_members = Vec::new();
+
         for &contact_id in &group_state.member_ids {
             if contact_id == local_user_id {
                 continue;
@@ -1464,27 +1505,14 @@ impl GroupService {
             let exists = Contact::exists(t, contact_id).await?;
 
             if !exists {
-                let user = match Server::get_user_by_id(&self.ctx, contact_id).await? {
-                    ServerResult::Ok(u) => u,
-                    ServerResult::ErrorCode(code) => {
-                        return Err(TwonlyError::Generic(format!(
-                            "Failed to get user by id: {}",
-                            code
-                        )));
-                    }
-                };
-
-                let username = String::from_utf8(user.username.ok_or_else(|| {
-                    TwonlyError::Generic("user response has no username".into())
-                })?)?;
-
                 UpdateContact::builder()
                     .user_id(contact_id)
-                    .username(username)
                     .deleted_by_user(true)
                     .build()
                     .insert_on_conflict_update(t)
                     .await?;
+
+                unknown_members.push(contact_id);
             }
 
             let member_state = if group_state.admin_ids.contains(&contact_id) {
@@ -1510,7 +1538,7 @@ impl GroupService {
         // refreshes first discovers the other with an empty key and requests it.
         Self::queue_missing_group_public_key_requests(t, group_id).await?;
 
-        Ok(())
+        Ok(unknown_members)
     }
 }
 
@@ -1724,6 +1752,91 @@ mod membership_repair_tests {
         }
 
         assert_eq!(invitations, 1);
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod state_apply_tests {
+
+    use super::*;
+
+    /// Members who are not contacts yet were looked up on the server inside
+    /// the refresh transaction. For a deleted account that lookup deadlocked
+    /// against the transaction, so every connect stalled the app for the
+    /// acquire timeout and the refresh never committed.
+    #[tokio::test]
+
+    async fn members_who_are_not_contacts_are_stored_without_a_server_lookup() -> anyhow::Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+
+        let data_dir = directory.path().join("data");
+
+        std::fs::create_dir_all(data_dir.join("keyvalue"))?;
+
+        std::fs::write(
+            data_dir.join("keyvalue/user.json"),
+            serde_json::to_vec(&crate::user_config::UserConfig {
+                user_id: 1,
+                username: "me".into(),
+                display_name: "Me".into(),
+                is_user_discovery_enabled: false,
+                ..Default::default()
+            })?,
+        )?;
+
+        let ctx = Context::init_for_testing(directory.path().join("database"), data_dir).await?;
+
+        crate::api::ApiRuntime::close(&ctx).await?;
+
+        ctx.inject_test_user_id(1).await?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice')")
+            .execute(&database.pool)
+            .await?;
+
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('refresh', 'Old')")
+            .execute(&database.pool)
+            .await?;
+
+        let state = EncryptedGroupState {
+            group_name: "New".into(),
+            member_ids: vec![1, 7, 9],
+            admin_ids: vec![9],
+            ..Default::default()
+        };
+
+        let mut t = database.pool.begin().await?;
+
+        let unknown = tokio::time::timeout(
+            Duration::from_secs(5),
+            GroupService::new(&ctx).apply_state(&mut t, "refresh", 2, &state),
+        )
+        .await??;
+
+        t.commit().await?;
+
+        assert_eq!(unknown, vec![9]);
+
+        let contact: (String, i64) =
+            sqlx::query_as("SELECT username, deleted_by_user FROM contacts WHERE user_id = 9")
+                .fetch_one(&database.pool)
+                .await?;
+
+        assert_eq!(contact, ("[Unknown]".into(), 1));
+
+        let members: Vec<(i64, String)> = sqlx::query_as(
+            "SELECT contact_id, member_state FROM group_members WHERE group_id = 'refresh' ORDER \
+             BY contact_id",
+        )
+        .fetch_all(&database.pool)
+        .await?;
+
+        assert_eq!(members, vec![(7, "normal".into()), (9, "admin".into())]);
 
         Ok(())
     }

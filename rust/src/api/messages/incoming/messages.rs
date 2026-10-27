@@ -13,6 +13,8 @@ use crate::database::app::mediafiles::native::MediaFile;
 use crate::database::app::receipts::table::{NewReceipt, Receipt};
 use crate::error::{Result, TwonlyError};
 use crate::services::contacts::ContactService;
+use crate::services::media_upload::stored_download_token;
+use crate::services::mediafiles::{DownloadAvailability, MediaFileService};
 use crate::utils::new_uuid_v4;
 use prost::Message as ProstMessage;
 use proto::encrypted_content::error_messages::Type;
@@ -456,12 +458,10 @@ async fn encrypt_v2_with_session_recovery(
     };
 
     match encrypt(plaintext.clone()).await {
-        Err(TwonlyError::Signal(message))
-            if message.contains("session with") & message.contains("not found") =>
-        {
+        Err(TwonlyError::SignalSessionUnusable(_)) => {
             tracing::warn!(
                 contact_id,
-                "Signal session missing; rebuilding it from the server prekey bundle"
+                "Signal sender session unusable; rebuilding it from the server prekey bundle"
             );
 
             ContactService::new(ctx)
@@ -657,6 +657,46 @@ pub(crate) async fn prepare_queued_receipt(
         .map(|receipt| receipt.message.encode_to_vec()))
 }
 
+/// Failed decryptions move uploaded media onto the socket retry path. Keep
+/// its lifetime checks here even after a session reset clears the server ack.
+async fn queued_media_is_sendable<F, Fut>(
+    pool: &sqlx::SqlitePool, receipt_id: &str, row: &PreparedQueuedReceiptRow, now: i64,
+    availability: F,
+) -> Result<bool>
+where
+    F: FnOnce(Vec<u8>) -> Fut,
+    Fut: std::future::Future<Output = DownloadAvailability>,
+{
+    let Some(token) = stored_download_token(&row.message) else {
+        return Ok(true);
+    };
+    let message_id = row.message_id.as_deref().unwrap_or_default();
+    let expired_story = sqlx::query_scalar!(
+        "SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ? AND is_story = 1 AND \
+         created_at <= ?)",
+        message_id,
+        now - crate::services::stories::STORY_LIFETIME_SECONDS
+    )
+    .fetch_one(pool)
+    .await?
+        != 0;
+
+    // Unknown means a transient failure or an older server; only a positive
+    // Gone result proves that this envelope cannot deliver its attachment.
+    if !expired_story && availability(token).await != DownloadAvailability::Gone {
+        return Ok(true);
+    }
+    tracing::info!(
+        receipt_id,
+        expired_story,
+        "dropping an expired media envelope"
+    );
+    sqlx::query!("DELETE FROM receipts WHERE receipt_id = ?", receipt_id)
+        .execute(pool)
+        .await?;
+    Ok(false)
+}
+
 pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) -> Result<()> {
     let started = std::time::Instant::now();
 
@@ -682,6 +722,18 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
     if row.account_deleted != 0 {
         crate::services::contacts::mark_account_deleted(&app_db, row.contact_id).await?;
 
+        return Ok(());
+    }
+
+    if !queued_media_is_sendable(
+        &app_db.pool,
+        receipt_id,
+        &row,
+        chrono::Utc::now().timestamp(),
+        |token| async move { MediaFileService::download_availability(&token).await },
+    )
+    .await?
+    {
         return Ok(());
     }
 
@@ -1118,6 +1170,11 @@ pub async fn handle_plaintext_content(
             mark_for_retry = CAST(strftime('%s', 'now') AS INTEGER),
             retry_count = retry_count + 1,
             decryption_failures = decryption_failures + 1,
+            -- The peer received the envelope, so a media attachment already
+            -- reached the server. Re-encrypt this retained plaintext over the
+            -- socket; restarting the upload can fail when the original source
+            -- was removed after the OS accepted its durable request files.
+            will_be_retried_by_media_upload = 0,
             -- A suspect session is retried only after the resend suppression
             -- window, which runs from `last_retry` once the server took it.
             ack_by_server_at = CASE
@@ -1162,6 +1219,232 @@ pub async fn handle_plaintext_content(
 mod tests {
 
     use super::*;
+
+    #[tokio::test]
+    async fn socket_media_retries_keep_download_and_story_lifetime_guards_after_session_reset(
+    ) -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let database = crate::database::app::AppDatabase::new(
+            directory.path().join("app.sqlite").to_str().unwrap(),
+            None,
+            false,
+        )
+        .await?;
+        database.run_migrations().await?;
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'peer');
+             INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat');",
+        )
+        .execute(&database.pool)
+        .await?;
+        let now = chrono::Utc::now().timestamp();
+        // None reproduces a peer-requested session rebuild, which clears the
+        // acknowledgement even though this attachment has already uploaded.
+        for ack in [Some(now - 300), None] {
+            for (story_age, status, sendable) in [
+                (None, DownloadAvailability::Available, true),
+                (None, DownloadAvailability::Gone, false),
+                (None, DownloadAvailability::Unknown, true),
+                (Some(0), DownloadAvailability::Available, true),
+                (Some(0), DownloadAvailability::Gone, false),
+                (Some(0), DownloadAvailability::Unknown, true),
+                (
+                    Some(crate::services::stories::STORY_LIFETIME_SECONDS),
+                    DownloadAvailability::Available,
+                    false,
+                ),
+            ] {
+                let id = new_uuid_v4();
+                let created_at = now - story_age.unwrap_or(0);
+                sqlx::query(
+                    "INSERT INTO messages(message_id, group_id, type, is_story, created_at)
+                     VALUES (?, 'chat', 'media', ?, ?)",
+                )
+                .bind(&id)
+                .bind(story_age.is_some())
+                .bind(created_at)
+                .execute(&database.pool)
+                .await?;
+                let media = proto::encrypted_content::Media {
+                    sender_message_id: id.clone(),
+                    r#type: proto::encrypted_content::media::Type::Image as i32,
+                    timestamp: created_at * 1000,
+                    download_token: Some(vec![9; 32]),
+                    ..Default::default()
+                };
+                let content = if story_age.is_some() {
+                    proto::EncryptedContent {
+                        story: Some(proto::encrypted_content::Story {
+                            media: Some(media),
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }
+                } else {
+                    proto::EncryptedContent {
+                        media: Some(media),
+                        ..Default::default()
+                    }
+                };
+                let envelope = proto::Message {
+                    r#type: proto::message::Type::CiphertextV2 as i32,
+                    encrypted_content: Some(content.encode_to_vec()),
+                    ..Default::default()
+                }
+                .encode_to_vec();
+                sqlx::query(
+                    "INSERT INTO receipts(receipt_id, contact_id, message_id, message,
+                                          ack_by_server_at, decryption_failures, mark_for_retry)
+                     VALUES (?, 7, ?, ?, ?, 1, ?)",
+                )
+                .bind(&id)
+                .bind(&id)
+                .bind(envelope)
+                .bind(ack)
+                .bind(now)
+                .execute(&database.pool)
+                .await?;
+                let row = load_queued_receipt_row(&database.pool, &id).await?.unwrap();
+                assert!(due_receipt_ids(&database.pool, now).await?.contains(&id));
+                let called = std::sync::atomic::AtomicBool::new(false);
+                let called_ref = &called;
+                let pool = &database.pool;
+                let actual =
+                    queued_media_is_sendable(&database.pool, &id, &row, now, |token| async move {
+                        called_ref.store(true, std::sync::atomic::Ordering::Relaxed);
+                        assert_eq!(token, vec![9; 32]);
+                        // Availability checks must not pin the writer while
+                        // waiting on the network.
+                        let transaction = tokio::time::timeout(
+                            std::time::Duration::from_secs(1),
+                            pool.begin_with("BEGIN IMMEDIATE"),
+                        )
+                        .await
+                        .unwrap()
+                        .unwrap();
+                        transaction.rollback().await.unwrap();
+                        status
+                    })
+                    .await?;
+                assert_eq!(
+                    actual, sendable,
+                    "age={story_age:?}, status={status:?}, ack={ack:?}"
+                );
+                assert_eq!(
+                    called.load(std::sync::atomic::Ordering::Relaxed),
+                    story_age != Some(crate::services::stories::STORY_LIFETIME_SECONDS),
+                    "expired stories must not contact the server",
+                );
+                let remaining: i64 =
+                    sqlx::query_scalar("SELECT COUNT(*) FROM receipts WHERE receipt_id = ?")
+                        .bind(&id)
+                        .fetch_one(&database.pool)
+                        .await?;
+                assert_eq!(remaining, i64::from(sendable));
+            }
+        }
+        database.close().await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn migration_recovers_only_media_envelopes_that_failed_decryption() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let database = crate::database::app::AppDatabase::new(
+            directory.path().join("app.sqlite").to_str().unwrap(),
+            None,
+            false,
+        )
+        .await?;
+        database.run_migrations().await?;
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'peer');
+            INSERT INTO receipts(receipt_id, contact_id, message, will_be_retried_by_media_upload,
+                                 decryption_failures, deferred_until_session, ack_by_server_at)
+            VALUES ('failed', 7, x'01', 1, 1, 123, 456),
+                   ('uploading', 7, x'02', 1, 0, NULL, NULL);",
+        )
+        .execute(&database.pool)
+        .await?;
+        sqlx::raw_sql(include_str!(
+            "../../../database/app/migrations/0053_recover_media_decryption_retries.sql"
+        ))
+        .execute(&database.pool)
+        .await?;
+        let failed: (i64, Option<i64>, Option<i64>) = sqlx::query_as(
+            "SELECT will_be_retried_by_media_upload, deferred_until_session, ack_by_server_at FROM receipts WHERE receipt_id = 'failed'",
+        ).fetch_one(&database.pool).await?;
+        assert_eq!(failed, (0, Some(123), Some(456)));
+        let uploading: i64 = sqlx::query_scalar(
+            "SELECT will_be_retried_by_media_upload FROM receipts WHERE receipt_id = 'uploading'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(
+            uploading, 1,
+            "do not resend attachments that are still waiting for their first upload"
+        );
+        database.close().await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn a_media_decryption_failure_resends_the_envelope_without_needing_the_source_file(
+    ) -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'peer')")
+            .execute(&database.pool)
+            .await?;
+        let content = proto::EncryptedContent {
+            media: Some(proto::encrypted_content::Media {
+                sender_message_id: "uploaded-image".into(),
+                download_token: Some(vec![9; 32]),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let mut t = database.pool.begin().await?;
+        let original = queue_encrypted_content(&mut t, 7, content.clone(), true).await?;
+        sqlx::query("UPDATE receipts SET will_be_retried_by_media_upload = 1 WHERE receipt_id = ?")
+            .bind(&original)
+            .execute(&mut *t)
+            .await?;
+        let repair = handle_plaintext_content(
+            &ctx,
+            &mut t,
+            7,
+            &original,
+            proto::PlaintextContent {
+                retry_control_error: Some(proto::plaintext_content::RetryErrorMessage {}),
+                ..Default::default()
+            },
+        )
+        .await?;
+        assert_eq!(repair, SessionRepair::None);
+        t.commit().await?;
+        let pending = due_receipt_ids(&database.pool, chrono::Utc::now().timestamp()).await?;
+        assert_eq!(
+            pending.len(),
+            1,
+            "the socket sweep must pick up the failed media envelope"
+        );
+        assert_ne!(pending[0], original);
+        let bytes: Vec<u8> =
+            sqlx::query_scalar("SELECT message FROM receipts WHERE receipt_id = ?")
+                .bind(&pending[0])
+                .fetch_one(&database.pool)
+                .await?;
+        let envelope = proto::Message::decode(bytes.as_slice())?;
+        let retained =
+            proto::EncryptedContent::decode(envelope.encrypted_content.unwrap().as_slice())?;
+        assert_eq!(retained.media.unwrap().download_token, Some(vec![9; 32]));
+        Ok(())
+    }
 
     #[tokio::test]
     async fn recipient_receipts_finish_native_dispatch_without_server_acknowledgement() -> Result<()>

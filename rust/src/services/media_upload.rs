@@ -17,7 +17,7 @@ use crate::database::app::mediafiles::native::MediaFile;
 use crate::error::{Result, TwonlyError};
 use crate::native::{gallery, prepare, video};
 use crate::services::direct_media_upload::{DirectMediaUploadService, MAX_ATTACHMENT_DISPATCHES};
-use crate::services::mediafiles::{DownloadAvailability, MediaFileService};
+use crate::services::mediafiles::MediaFileService;
 use crate::services::messages::MessageService;
 use crate::services::stories::{self, StoryAudience};
 use crate::services::{media_codec, media_exif};
@@ -117,7 +117,7 @@ pub struct MediaSizeReport {
 /// The download token a stored media envelope carries. A queued receipt keeps
 /// its content in plaintext until it is sent; older receipts stored the content
 /// itself rather than the message around it.
-fn stored_download_token(message: &[u8]) -> Option<Vec<u8>> {
+pub(crate) fn stored_download_token(message: &[u8]) -> Option<Vec<u8>> {
     fn token(content: EncryptedContent) -> Option<Vec<u8>> {
         content
             .media
@@ -993,36 +993,8 @@ impl MediaUploadService {
         }
 
         if receipt.ack_by_server_at.is_some() {
-            // The server took this envelope once, so its download token was
-            // valid then; resending it is enough while it still is. It is gone
-            // once the receiver opened the media and sent `DownloadDone`, or
-            // once the server dropped the upload after its lifetime. Resent
-            // then, it only reaches a receiver that no longer holds the
-            // message, as new media it cannot download: an alert for a chat row
-            // that stays hidden. A receiver that still needs the media asks for
-            // a reupload itself, so there is nothing left for this receipt to
-            // deliver.
-            if let Some(token) = stored_download_token(&receipt.message) {
-                if MediaFileService::download_availability(&token).await
-                    == DownloadAvailability::Gone
-                {
-                    tracing::info!(
-                        receipt.receipt_id,
-                        receipt.contact_id,
-                        message_id,
-                        "dropping a media envelope whose download is gone"
-                    );
-
-                    sqlx::query!(
-                        "DELETE FROM receipts WHERE receipt_id = ?",
-                        &receipt.receipt_id
-                    )
-                    .execute(&database.pool)
-                    .await?;
-
-                    return Ok(());
-                }
-            }
+            // The socket sender checks download availability too, including
+            // retries moved off the upload path after a decryption failure.
 
             drop(database);
 

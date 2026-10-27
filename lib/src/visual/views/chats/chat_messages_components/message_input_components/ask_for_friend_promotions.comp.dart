@@ -86,14 +86,17 @@ class _AskForFriendPromotionsCompState extends State<AskForFriendPromotionsComp>
     }
 
     final members = joinedGroupContacts(
-      await rust_groups.getGroupContacts(
-        input: db_groups.GroupMembersQuery(
-          groupId: widget.group.groupId,
-          orderForChats: true,
+      await watchRustDatabase(
+        (control) => rust_groups.watchGroupContacts(
+          input: db_groups.GroupMembersQuery(
+            groupId: widget.group.groupId,
+            orderForChats: true,
+          ),
+          control: control,
         ),
-        transaction: currentDatabaseSession(),
-      ),
+      ).first,
     ).map((row) => row.$1).toList(growable: false);
+    if (!mounted) return;
     if (members.isEmpty) {
       setState(() {
         _contact = null;

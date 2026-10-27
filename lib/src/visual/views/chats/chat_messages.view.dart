@@ -397,13 +397,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     }, onError: failed);
 
     final groupContacts = joinedGroupContacts(
-      await rust_groups.getGroupContacts(
-        input: db_groups.GroupMembersQuery(
-          groupId: widget.groupId,
-          orderForChats: true,
+      await watchRustDatabase(
+        (control) => rust_groups.watchGroupContacts(
+          input: db_groups.GroupMembersQuery(
+            groupId: widget.groupId,
+            orderForChats: true,
+          ),
+          control: control,
         ),
-        transaction: currentDatabaseSession(),
-      ),
+      ).first,
     ).map((row) => row.$1).toList(growable: false);
     if (!active()) return;
     if (mounted) {
@@ -487,13 +489,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         .toSet();
     final missingMediaFiles = missingMediaIds.isEmpty
         ? const <MediaFile>[]
-        : await rust_mediafiles.listMediaFiles(
-            input: db_mediafiles.MediaQuery(
-              filter: db_mediafiles.MediaFilter.ids,
-              ids: missingMediaIds.toList().toList(),
+        : (await watchRustDatabase(
+            (control) => rust_mediafiles.watchMediaFiles(
+              input: db_mediafiles.MediaQuery(
+                filter: db_mediafiles.MediaFilter.ids,
+                ids: missingMediaIds.toList(),
+              ),
+              control: control,
             ),
-            transaction: currentDatabaseSession(),
-          );
+          ).first).files;
     if (!mounted || revision != _loadedMessagesRevision) return;
 
     if (missingMediaFiles.isNotEmpty) {

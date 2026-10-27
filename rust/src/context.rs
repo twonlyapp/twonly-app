@@ -841,14 +841,20 @@ impl Context {
 
         let close_signal = owns_signal.then(|| signal.pool.close());
 
-        let network =
-            if (owns_app || app.pool.is_closed()) && (owns_signal || signal.pool.is_closed()) {
-                ApiRuntime::close(self).await
-            } else {
-                Ok(())
-            };
+        let close_network =
+            (owns_app || app.pool.is_closed()) && (owns_signal || signal.pool.is_closed());
 
-        tokio::join!(
+        // Idle connections hold App Group file locks, and iOS kills a process
+        // suspended with one (0xdead10cc). Never let a slow WebSocket shutdown
+        // keep them open.
+        let (network, (), ()) = tokio::join!(
+            async {
+                if close_network {
+                    ApiRuntime::close(self).await
+                } else {
+                    Ok(())
+                }
+            },
             async {
                 if let Some(close) = close_app {
                     close.await;
@@ -906,9 +912,10 @@ impl Context {
 
         crate::database::app::transaction::abort_for_operation(operation).await;
 
-        let network = ApiRuntime::close(self).await;
-
-        tokio::join!(
+        // The UIKit assertion ends after this cleanup. Idle connections must
+        // not wait for the WebSocket shutdown: see finish_native_databases.
+        let (network, (), ()) = tokio::join!(
+            ApiRuntime::close(self),
             async {
                 if let Some(close) = close_app {
                     close.await;

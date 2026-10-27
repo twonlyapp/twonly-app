@@ -12,7 +12,6 @@ import 'package:twonly/core/database/app/key_verifications/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
-import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -64,14 +63,17 @@ class _InChatGroupOverviewState extends State<InChatGroupOverview>
   Future<void> _initVerificationCheck() async {
     if (widget.group.isDirectChat) {
       final contacts = joinedGroupContacts(
-        await rust_groups.getGroupContacts(
-          input: db_groups.GroupMembersQuery(
-            groupId: widget.group.groupId,
-            orderForChats: true,
+        await watchRustDatabase(
+          (control) => rust_groups.watchGroupContacts(
+            input: db_groups.GroupMembersQuery(
+              groupId: widget.group.groupId,
+              orderForChats: true,
+            ),
+            control: control,
           ),
-          transaction: currentDatabaseSession(),
-        ),
+        ).first,
       ).map((row) => row.$1).toList(growable: false);
+      if (!mounted) return;
       if (contacts.isNotEmpty) {
         _directContact = contacts.first;
         _verificationSub =

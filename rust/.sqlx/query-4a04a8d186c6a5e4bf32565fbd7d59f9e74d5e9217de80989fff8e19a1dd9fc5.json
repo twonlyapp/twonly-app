@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE receipts SET ack_by_server_at = NULL, last_retry = NULL, deferred_until_session = NULL WHERE contact_id = ? AND decryption_failures > 0",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "4a04a8d186c6a5e4bf32565fbd7d59f9e74d5e9217de80989fff8e19a1dd9fc5"
+}

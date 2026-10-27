@@ -289,8 +289,9 @@ pub(crate) async fn handle_request_new_pqc_prekeys(
 /// (a duplicate, an identity change, a storage failure) keeps the plain
 /// `UNKNOWN` error, whose retry the peer already knows how to handle.
 ///
-/// A refused rate-limit claim also falls back to `UNKNOWN`: the session stays
-/// as it is and the message fails, rather than two clients trading resets.
+/// A refused rate-limit claim leaves the session untouched. Diverged sessions
+/// fall back to `UNKNOWN`; a missing private prekey keeps requesting a new
+/// session, since retrying that same prekey message cannot recover the key.
 async fn reset_unusable_session(
     ctx: &Arc<Context>, from_user_id: i64, error: &TwonlyError,
 ) -> DecryptionErrorType {
@@ -306,7 +307,16 @@ async fn reset_unusable_session(
     let rust_database = ctx.rust_db.read().await.clone();
 
     match SessionResetLimiter::claim(&rust_database.pool, &name, 1).await {
-        Ok(false) => return DecryptionErrorType::Unknown,
+        Ok(false) => {
+            // An unavailable private key cannot be recovered by retrying the
+            // old ciphertext. Keep asking for a fresh peer session without
+            // repeatedly archiving our session or spending reset budget.
+            return if matches!(error, TwonlyError::SignalPreKeyUnavailable(_)) {
+                DecryptionErrorType::SessionResetRequired
+            } else {
+                DecryptionErrorType::Unknown
+            };
+        }
         Ok(true) => {}
         Err(error) => {
             tracing::warn!(from_user_id, "could not claim a session reset: {error}");
@@ -871,13 +881,19 @@ async fn rebuild_session(
         .establish_signal_session(from_user_id, None)
         .await?;
 
-    // The peer asked for exactly this, so the repair worked and the next
-    // unrelated failure starts from a full budget rather than what this one
-    // spent. A rebuild we started ourselves is only proven once the peer reads
-    // it; clearing here would let every further failure spend another of the
-    // peer's one-time prekeys.
+    // A fresh bundle lets us retry the peer's retained plaintext immediately;
+    // keeping the old server acknowledgement would suppress it for two minutes.
+    // Do not clear reset budget here: a fetch does not prove the peer can
+    // decrypt. The Signal engine clears it on successful authenticated traffic.
     if repair == SessionRepair::PeerReset {
-        SessionResetLimiter::clear(&rust_database.pool, &name, 1).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query!(
+            "UPDATE receipts SET ack_by_server_at = NULL, last_retry = NULL, \
+             deferred_until_session = NULL WHERE contact_id = ? AND decryption_failures > 0",
+            from_user_id,
+        )
+        .execute(&database.pool)
+        .await?;
     }
 
     tracing::info!(from_user_id, ?repair, "rebuilt the signal session");
@@ -1203,6 +1219,9 @@ async fn handle_encrypted_inner(
         "client2client content in receipt {receipt_id} is not implemented in Rust"
     )))
 }
+
+#[cfg(test)]
+mod recovery_tests;
 
 #[cfg(test)]
 mod tests {

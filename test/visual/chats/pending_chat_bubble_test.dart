@@ -38,8 +38,23 @@ class _OutgoingApi extends NativeTestApi {
   final List<StoredMessage> requests = [];
   final List<Completer<String>> completions = [];
   bool failMessageWatch = false;
+  bool failGroupContactRead = false;
   Completer<void>? messageWatchGate;
   final openedMessages = <String>[];
+
+  @override
+  Future<GroupMembersWithContacts> crateBridgeDatabaseGroupsGetGroupContacts({
+    required GroupMembersQuery input,
+    required DatabaseSession transaction,
+  }) {
+    if (failGroupContactRead) {
+      throw StateError('pool timed out while waiting for an open connection');
+    }
+    return super.crateBridgeDatabaseGroupsGetGroupContacts(
+      input: input,
+      transaction: transaction,
+    );
+  }
 
   @override
   Future<void> crateBridgeApiRustApiNotifyMessagesOpened({
@@ -140,6 +155,7 @@ void main() {
       ..openedMessages.clear()
       ..completions.clear()
       ..failMessageWatch = false
+      ..failGroupContactRead = false
       ..messageWatchGate = null;
     await locator.reset();
     await TestDatabase.create();
@@ -317,6 +333,41 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await flush(tester);
   });
+
+  testWidgets(
+    'chat bootstrap uses recovering watches when one-shot contact reads fail',
+    (tester) async {
+      await runNative(
+        tester,
+        () => testDatabase.insert(
+          StoredMessage(
+            groupId: 'chat',
+            messageId: 'recovering-chat',
+            type: 'text',
+            content: 'Available during recovery',
+            mediaStored: false,
+            mediaReopened: false,
+            isDeletedFromSender: false,
+            isWidgetMedia: false,
+            isStory: false,
+            createdAtSeconds: databaseSeconds(DateTime.now()),
+          ),
+        ),
+      );
+      api.failGroupContactRead = true;
+      await openChat(tester);
+      await pumpNative(
+        tester,
+        until: () =>
+            find.byKey(const Key('recovering-chat')).evaluate().isNotEmpty,
+      );
+      expect(find.byType(MessageInput), findsOneWidget);
+      expect(find.text('Try again'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await flush(tester);
+    },
+  );
 
   testWidgets(
     'conversation opens without a loader before its first message snapshot',

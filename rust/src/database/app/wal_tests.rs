@@ -61,6 +61,28 @@ async fn normal_sync_is_applied_to_writer_readers_and_reopened_connections() {
 
 #[tokio::test]
 
+async fn close_stops_admission_before_it_is_awaited() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("app.sqlite");
+    let key = "0101010101010101010101010101010101010101010101010101010101010101";
+    let database = AppDatabase::new(path.to_str().unwrap(), Some(key), false)
+        .await
+        .unwrap();
+    database.run_migrations().await.unwrap();
+
+    // Lifecycle cleanup creates this future, then shuts the network down.
+    let closing = database.close();
+    assert!(database.pool.is_closed());
+    assert!(database.read_pool.is_closed());
+    assert!(database.pool.acquire().await.is_err());
+
+    closing.await;
+    assert_eq!(database.pool.size(), 0);
+    assert_eq!(database.read_pool.size(), 0);
+}
+
+#[tokio::test]
+
 async fn shipped_engine_contains_the_wal_reset_fix() {
     assert!(unsafe { libsqlite3_sys::sqlite3_libversion_number() } >= 3_051_003);
 }

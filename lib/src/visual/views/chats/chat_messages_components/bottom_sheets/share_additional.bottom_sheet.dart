@@ -14,6 +14,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -61,13 +62,15 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
       );
       if (group.isDirectChat) {
         final members = joinedGroupContacts(
-          await rust_groups.getGroupContacts(
-            input: db_groups.GroupMembersQuery(
-              groupId: group.groupId,
-              orderForChats: true,
+          await watchRustDatabase(
+            (control) => rust_groups.watchGroupContacts(
+              input: db_groups.GroupMembersQuery(
+                groupId: group.groupId,
+                orderForChats: true,
+              ),
+              control: control,
             ),
-            transaction: currentDatabaseSession(),
-          ),
+          ).first,
         ).map((row) => row.$1).toList(growable: false);
         if (members.isNotEmpty) {
           await rust_contacts.updateContact(

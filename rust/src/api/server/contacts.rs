@@ -91,7 +91,19 @@ impl Server {
         .fetch_all(&database.pool)
         .await?;
 
-        for user_id in contacts {
+        Self::refresh_usernames(ctx, contacts).await
+    }
+
+    /// Looks up the usernames of contacts that were stored without one. An
+    /// account the server no longer knows is marked deleted by the API error
+    /// handler and skipped.
+    ///
+    /// Never call this inside a transaction: that error handler writes through
+    /// the pool, and the app database has a single write connection.
+    pub(crate) async fn refresh_usernames(ctx: &Arc<Context>, user_ids: Vec<i64>) -> Result<()> {
+        let database = ctx.app_db.read().await.clone();
+
+        for user_id in user_ids {
             let user = match Self::get_user_by_id(ctx, user_id).await? {
                 ServerResult::Ok(u) => u,
                 ServerResult::ErrorCode(_) => continue,

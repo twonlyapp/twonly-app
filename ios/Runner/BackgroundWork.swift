@@ -308,6 +308,12 @@ private enum DatabaseExecutionCoordinator {
   fileprivate static func expire() {
     dispatchPrecondition(condition: .onQueue(.main))
     expired = true
+    // Rust releases each lease only after closing its SQLite connections. A
+    // lease still open here means iOS is about to suspend us with App Group
+    // locks held, which it answers with a 0xdead10cc kill.
+    if !leases.isEmpty {
+      NativeErrorReporting.failure("database_cleanup_outlived_assertion")
+    }
     cancelDatabaseOperations()
     // Expiration is an emergency terminal event, not extra cleanup time.
     // Late lease releases become no-ops for this UIKit assertion.

@@ -79,7 +79,7 @@ pub enum TwonlyError {
     SecureStorageError,
 
     #[error("{0}")]
-    SqliteError(#[from] sqlx::Error),
+    SqliteError(#[source] sqlx::Error),
 
     #[error("encrypted media is {bytes} bytes but the plan allows {limit}")]
     MediaTooLarge { bytes: i64, limit: i64 },
@@ -212,6 +212,18 @@ impl From<String> for TwonlyError {
 impl From<aes_gcm::Error> for TwonlyError {
     fn from(_: aes_gcm::Error) -> Self {
         TwonlyError::AesGcm
+    }
+}
+
+impl From<sqlx::Error> for TwonlyError {
+    fn from(error: sqlx::Error) -> Self {
+        // `?` converts in the task that waited, which is the one that can tell
+        // whether it was waiting for itself.
+        if matches!(error, sqlx::Error::PoolTimedOut) {
+            crate::database::app::writer_holder::report_pool_timeout();
+        }
+
+        TwonlyError::SqliteError(error)
     }
 }
 

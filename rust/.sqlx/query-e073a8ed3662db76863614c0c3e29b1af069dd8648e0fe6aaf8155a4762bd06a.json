@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT m.message_id FROM messages m WHERE m.sender_id IS NULL\n             AND m.type = 'text' AND m.content IS NOT NULL\n             AND m.ack_by_server IS NULL AND m.ack_by_user IS NULL\n             AND m.is_deleted_from_sender = 0\n             AND m.created_at >= ?\n             AND NOT EXISTS (SELECT 1 FROM receipts r WHERE r.message_id = m.message_id)\n             AND EXISTS (SELECT 1 FROM group_members gm JOIN contacts c ON c.user_id = gm.contact_id\n                         JOIN groups g ON g.group_id = gm.group_id\n                         WHERE gm.group_id = m.group_id AND g.left_group = 0 AND c.account_deleted = 0\n                         AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup'))\n             ORDER BY m.created_at, m.message_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e073a8ed3662db76863614c0c3e29b1af069dd8648e0fe6aaf8155a4762bd06a"
+}
