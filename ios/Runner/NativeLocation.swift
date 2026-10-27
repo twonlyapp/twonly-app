@@ -217,13 +217,10 @@ final class NativeLiveLocation: NSObject, CLLocationManagerDelegate {
       request["fix"] = [location.coordinate.latitude, location.coordinate.longitude,
         location.horizontalAccuracy, Int64(location.timestamp.timeIntervalSince1970 * 1000)] as [Any]
     }
-    worker.async {
-      let response = Self.run(directory: directory, request: request)
-      DispatchQueue.main.async {
-        self.busy = false
-        if response?["ok"] as? Bool == true && response?["session"] is NSNull {
-          self.stop(expectedSession: session, completion: {})
-        }
+    runProtected(directory: directory, request: request) { response in
+      self.busy = false
+      if response?["ok"] as? Bool == true && response?["session"] is NSNull {
+        self.stop(expectedSession: session, completion: {})
       }
     }
   }
@@ -242,9 +239,34 @@ final class NativeLiveLocation: NSObject, CLLocationManagerDelegate {
     let center = UNUserNotificationCenter.current()
     center.removeDeliveredNotifications(withIdentifiers: [Self.notificationId])
     center.removePendingNotificationRequests(withIdentifiers: [Self.notificationId])
+    guard let directory else { completion(); return }
+    runProtected(directory: directory, request: ["action": "stop", "session_id": expectedSession]) { _ in
+      completion()
+    }
+  }
+
+  /// Each run opens the App Group databases, and iOS kills an app suspended
+  /// while holding a lock there (0xdead10cc). Location updates alone do not
+  /// keep the process running: `stop` turns them off before its final write.
+  /// Called on the main queue; `completion` runs there after Rust has closed
+  /// every connection it opened.
+  private func runProtected(
+    directory: String, request: [String: Any], completion: @escaping ([String: Any]?) -> Void
+  ) {
+    var assertion = UIBackgroundTaskIdentifier.invalid
+    let release = {
+      guard assertion != .invalid else { return }
+      UIApplication.shared.endBackgroundTask(assertion)
+      assertion = .invalid
+    }
+    // The native job's own budget is a few seconds, far below this allowance.
+    assertion = UIApplication.shared.beginBackgroundTask(withName: "eu.twonly.live-location", expirationHandler: release)
     worker.async {
-      if let directory { _ = Self.run(directory: directory, request: ["action": "stop", "session_id": expectedSession]) }
-      DispatchQueue.main.async(execute: completion)
+      let response = Self.run(directory: directory, request: request)
+      DispatchQueue.main.async {
+        release()
+        completion(response)
+      }
     }
   }
 

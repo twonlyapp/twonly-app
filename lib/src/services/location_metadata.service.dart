@@ -74,6 +74,7 @@ class LocationMetadataService with WidgetsBindingObserver {
       await RustApi.prewarmMemoryLocation();
       if (stickersEnabled) await currentCity();
     } on Object catch (error) {
+      if (isBackgroundCancellation(error)) return;
       Log.warn('Could not warm up location: $error');
     }
   }
@@ -153,7 +154,9 @@ class LocationMetadataService with WidgetsBindingObserver {
         }
       }
     } on Object catch (error) {
-      Log.warn('Could not resolve location sticker city: $error');
+      if (!isBackgroundCancellation(error)) {
+        Log.warn('Could not resolve location sticker city: $error');
+      }
       return null;
     }
   }

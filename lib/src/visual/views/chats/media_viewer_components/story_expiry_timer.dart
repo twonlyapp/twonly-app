@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:twonly/src/database/daos/stories.dao.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 
 typedef StoryTimerFactory =
     Timer Function(

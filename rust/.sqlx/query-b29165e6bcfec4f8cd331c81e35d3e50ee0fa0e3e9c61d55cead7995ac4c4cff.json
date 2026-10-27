@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO received_custom_avatars(contact_id, applied_counter, webp, sha256, width, height) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(contact_id) DO UPDATE SET applied_counter = excluded.applied_counter, webp = excluded.webp, sha256 = excluded.sha256, width = excluded.width, height = excluded.height",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "b29165e6bcfec4f8cd331c81e35d3e50ee0fa0e3e9c61d55cead7995ac4c4cff"
+}

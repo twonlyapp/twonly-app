@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT content_hash, webp FROM stickers WHERE content_hash IN (SELECT value FROM json_each(?))\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "content_hash",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stickers",
+            "name": "content_hash"
+          }
+        }
+      },
+      {
+        "name": "webp",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "stickers",
+            "name": "webp"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "8b0205c8956dac20c3efb02d93b7c2a4af968d45a86c13d81ba859abd8293936"
+}

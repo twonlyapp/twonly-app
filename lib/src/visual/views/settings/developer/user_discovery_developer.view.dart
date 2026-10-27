@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/user_discovery.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/user_discovery.dart'
+    as rust_user_discovery;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/user_discovery/table.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class UserDiscoveryDeveloperView extends StatefulWidget {
@@ -14,12 +21,18 @@ class UserDiscoveryDeveloperView extends StatefulWidget {
 
 class _UserDiscoveryDeveloperViewState
     extends State<UserDiscoveryDeveloperView> {
-  UserDiscoveryDao get dao => twonlyDB.userDiscoveryDao;
-
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<Contact>>(
-      stream: twonlyDB.contactsDao.watchAllContacts(),
+      stream: watchRustDatabase(
+        (control) => rust_contacts.watchContacts(
+          input: db_contacts.ContactQuery(
+            filter: db_contacts.ContactFilter.all,
+            ids: Int64List(0),
+          ),
+          control: control,
+        ),
+      ),
       builder: (context, contactSnapshot) {
         final contacts = contactSnapshot.data ?? [];
         final contactNames = {for (final c in contacts) c.userId: c.username};
@@ -37,7 +50,11 @@ class _UserDiscoveryDeveloperViewState
             children: [
               _TableExpansionTile<UserDiscoveryAnnouncedUser>(
                 title: 'Announced Users',
-                stream: dao.watchAllAnnouncedUsers(),
+                stream: watchRustDatabase(
+                  (control) => rust_user_discovery.watchDiscoveryAnnouncements(
+                    control: control,
+                  ),
+                ),
                 itemBuilder: (context, user) => ListTile(
                   title: Text(user.username ?? 'No Username'),
                   subtitle: Text(
@@ -50,7 +67,11 @@ class _UserDiscoveryDeveloperViewState
               ),
               _TableExpansionTile<UserDiscoveryUserRelation>(
                 title: 'User Relations',
-                stream: dao.watchAllUserRelations(),
+                stream: watchRustDatabase(
+                  (control) => rust_user_discovery.watchDiscoveryRelations(
+                    control: control,
+                  ),
+                ),
                 itemBuilder: (context, relation) => ListTile(
                   title: Text(
                     'From: ${getName(relation.fromContactId)} → To: ${getName(relation.announcedUserId)}',
@@ -62,7 +83,10 @@ class _UserDiscoveryDeveloperViewState
               ),
               _TableExpansionTile<UserDiscoveryOtherPromotion>(
                 title: 'Other Promotions',
-                stream: dao.watchAllOtherPromotions(),
+                stream: watchRustDatabase(
+                  (control) => rust_user_discovery
+                      .watchDiscoveryOtherPromotions(control: control),
+                ),
                 itemBuilder: (context, promotion) => ListTile(
                   title: Text(
                     'From: ${getName(promotion.fromContactId)}, Public ID: ${promotion.publicId}',
@@ -76,7 +100,11 @@ class _UserDiscoveryDeveloperViewState
               ),
               _TableExpansionTile<UserDiscoveryOwnPromotion>(
                 title: 'Own Promotions',
-                stream: dao.watchAllOwnPromotions(),
+                stream: watchRustDatabase(
+                  (control) => rust_user_discovery.watchDiscoveryOwnPromotions(
+                    control: control,
+                  ),
+                ),
                 itemBuilder: (context, promotion) => ListTile(
                   title: Text('Contact: ${getName(promotion.contactId)}'),
                   subtitle: Text('Version: ${promotion.versionId}'),
@@ -84,7 +112,11 @@ class _UserDiscoveryDeveloperViewState
               ),
               _TableExpansionTile<UserDiscoveryShare>(
                 title: 'Shares',
-                stream: dao.watchAllShares(),
+                stream: watchRustDatabase(
+                  (control) => rust_user_discovery.watchDiscoveryShares(
+                    control: control,
+                  ),
+                ),
                 itemBuilder: (context, share) => ListTile(
                   title: Text('Share ID: ${share.shareId}'),
                   subtitle: Text('Contact: ${getName(share.contactId)}'),

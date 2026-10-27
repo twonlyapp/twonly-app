@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT webp, sha256, width, height FROM own_custom_avatar WHERE singleton = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "webp",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "webp"
+          }
+        }
+      },
+      {
+        "name": "sha256",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "sha256"
+          }
+        }
+      },
+      {
+        "name": "width",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "width"
+          }
+        }
+      },
+      {
+        "name": "height",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "own_custom_avatar",
+            "name": "height"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "88c21ea0434c2d59be403633afc346b43eb7fc7b91196f6f893c93b67513f5fa"
+}

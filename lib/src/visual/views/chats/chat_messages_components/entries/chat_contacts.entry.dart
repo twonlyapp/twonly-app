@@ -1,14 +1,22 @@
 import 'dart:convert';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/visual/components/add_contact_dialog.comp.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
@@ -24,7 +32,7 @@ class ChatContactsEntry extends StatefulWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final BorderRadiusGeometry borderRadius;
   final BubbleInfo info;
   final Map<int, Contact>? contactsById;
@@ -120,7 +128,7 @@ class _ContactRow extends StatefulWidget {
   });
 
   final SharedContact contact;
-  final Message message;
+  final StoredMessage message;
   final Color foregroundColor;
   final Map<int, Contact>? contactsById;
 
@@ -163,22 +171,25 @@ class _ContactRowState extends State<_ContactRow> {
         _isLoading = true;
       });
 
-      final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
-        ContactsCompanion(
-          username: Value(username),
-          userId: Value(userdata.userId),
-          requested: const Value(false),
-          blocked: const Value(false),
-          deletedByUser: const Value(false),
+      final added = await rust_contacts.upsertContact(
+        patch: ContactPatch(
+          username: username,
+          userId: userdata.userId,
+          requested: false,
+          blocked: false,
+          deletedByUser: false,
           joinedAt: userdata.joinedAt == null
-              ? const Value.absent()
-              : Value(
-                  DateTime.fromMillisecondsSinceEpoch(
-                    userdata.joinedAt! * Duration.millisecondsPerSecond,
-                    isUtc: true,
+              ? null
+              : NullableInt(
+                  value: databaseNullableSeconds(
+                    DateTime.fromMillisecondsSinceEpoch(
+                      userdata.joinedAt! * Duration.millisecondsPerSecond,
+                      isUtc: true,
+                    ),
                   ),
                 ),
         ),
+        transaction: currentDatabaseSession(),
       );
 
       if (added > 0) {
@@ -212,7 +223,15 @@ class _ContactRowState extends State<_ContactRow> {
       );
     }
     return StreamBuilder<Contact?>(
-      stream: twonlyDB.contactsDao.watchContact(widget.contact.userId.toInt()),
+      stream: watchRustDatabase(
+        (control) => rust_contacts.watchContacts(
+          input: db_contacts.ContactQuery(
+            filter: db_contacts.ContactFilter.ids,
+            ids: Int64List.fromList([widget.contact.userId.toInt()].toList()),
+          ),
+          control: control,
+        ),
+      ).map((rows) => rows.isEmpty ? null : rows.single),
       builder: (context, snapshot) {
         return _buildContactRow(snapshot.data);
       },

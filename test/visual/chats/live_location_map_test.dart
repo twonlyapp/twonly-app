@@ -7,9 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/components/location_map.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
@@ -141,31 +143,34 @@ class _ChatPreviewRoute extends MaterialPageRoute<void> {
   void forward() => controller!.forward();
 }
 
-Message _message(String id, {int? senderId, bool location = false}) => Message(
-  groupId: 'group',
-  messageId: id,
-  senderId: senderId,
-  type: 'text',
-  content: 'Call',
-  additionalMessageData: location
-      ? AdditionalMessageData(
-          type: AdditionalMessageData_Type.LIVE_LOCATION,
-          liveLocation: LiveLocationData(
-            sessionId: 'session',
-            messageId: id,
-            expiresAtMs: Int64(DateTime.now().millisecondsSinceEpoch + 60000),
-            latitude: 52,
-            longitude: 13,
-          ),
-        ).writeToBuffer()
-      : null,
-  mediaStored: false,
-  mediaReopened: false,
-  isDeletedFromSender: false,
-  isWidgetMedia: false,
-  isStory: false,
-  createdAt: DateTime(2026),
-);
+StoredMessage _message(String id, {int? senderId, bool location = false}) =>
+    StoredMessage(
+      groupId: 'group',
+      messageId: id,
+      senderId: senderId,
+      type: 'text',
+      content: 'Call',
+      additionalMessageData: location
+          ? AdditionalMessageData(
+              type: AdditionalMessageData_Type.LIVE_LOCATION,
+              liveLocation: LiveLocationData(
+                sessionId: 'session',
+                messageId: id,
+                expiresAtMs: Int64(
+                  DateTime.now().millisecondsSinceEpoch + 60000,
+                ),
+                latitude: 52,
+                longitude: 13,
+              ),
+            ).writeToBuffer()
+          : null,
+      mediaStored: false,
+      mediaReopened: false,
+      isDeletedFromSender: false,
+      isWidgetMedia: false,
+      isStory: false,
+      createdAtSeconds: databaseSeconds(DateTime(2026)),
+    );
 
 Group _group() => Group(
   groupId: 'group',
@@ -181,10 +186,10 @@ Group _group() => Group(
   totalMediaCounter: 0,
   alsoBestFriend: false,
   deleteMessagesAfterMilliseconds: 0,
-  createdAt: DateTime(2026),
+  createdAtSeconds: databaseSeconds(DateTime(2026)),
   flameCounter: 0,
   maxFlameCounter: 0,
-  lastMessageExchange: DateTime(2026),
+  lastMessageExchangeSeconds: databaseSeconds(DateTime(2026)),
 );
 
 Widget _app({required Widget home, GlobalKey<NavigatorState>? navigator}) =>
@@ -289,7 +294,7 @@ void main() {
         final previous = _message('previous', senderId: sender);
         final next = _message('next', senderId: sender);
 
-        Future<void> show({Message? before, Message? after}) =>
+        Future<void> show({StoredMessage? before, StoredMessage? after}) =>
             tester.pumpWidget(
               _app(
                 home: Scaffold(

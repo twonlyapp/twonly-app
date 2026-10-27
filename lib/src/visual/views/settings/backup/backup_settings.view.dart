@@ -18,10 +18,9 @@ import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/pro_badge.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/settings/backup/backup_utils.dart';
-import 'package:twonly/src/visual/views/settings/backup/components/recovery_card.comp.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/backup_schedule.comp.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/recovery_options.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/memories_backup_detail.view.dart';
-import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/status.passwordless_recovery.comp.dart';
-import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/setup.passwordless_recovery.view.dart';
 
 class BackupView extends StatefulWidget {
   const BackupView({super.key});
@@ -122,35 +121,9 @@ class _BackupViewState extends State<BackupView> {
                 ),
                 const SizedBox(height: 24),
 
-                if (hasPasswordless)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: PasswordLessRecoveryStatus(),
-                  )
-                else
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: RecoveryCard(
-                      icon: FontAwesomeIcons.shieldHeart,
-                      title: context.lang.backupRecoveryOptionAFriends,
-                      subtitle: context.lang.backupRecoveryOptionAMicrocopy,
-                      onTap: () =>
-                          context.navPush(const PasswordLessRecoverySetup()),
-                    ),
-                  ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: RecoveryCard(
-                    isEnabled: hasPassword,
-                    icon: FontAwesomeIcons.key,
-                    title: context.lang.backupRecoveryOptionBPassword,
-                    subtitle: hasPassword
-                        ? context.lang.backupChangePassword
-                        : context.lang.backupRecoveryOptionBMicrocopy,
-                    onTap: () =>
-                        context.push(Routes.settingsBackupSetup, extra: true),
-                  ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: RecoveryOptionsComp(),
                 ),
 
                 const SizedBox(height: 32),
@@ -254,6 +227,9 @@ class _BackupViewState extends State<BackupView> {
                           }
                         },
                 ),
+
+                if (userService.currentUser.isDeveloper)
+                  const BackupScheduleTile(),
 
                 const SizedBox(height: 32),
                 Center(

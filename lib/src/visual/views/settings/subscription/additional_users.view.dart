@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -78,8 +80,9 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
         RustApi.addAdditionalUser(userId: selectedUserId),
       );
       if (res.isError && mounted) {
-        final contact = await twonlyDB.contactsDao.getContactById(
-          selectedUserId,
+        final contact = await rust_contacts.getContact(
+          id: selectedUserId,
+          transaction: currentDatabaseSession(),
         );
         if (contact != null && mounted) {
           if (res.error == ErrorCode.UserIsNotInFreePlan) {
@@ -179,9 +182,10 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
   }
 
   Future<void> initAsync() async {
-    final contact = await twonlyDB.contactsDao
-        .getContactByUserId(widget.account.userId)
-        .getSingleOrNull();
+    final contact = await rust_contacts.getContact(
+      id: widget.account.userId,
+      transaction: currentDatabaseSession(),
+    );
     if (contact != null) {
       username = getContactDisplayName(contact);
       setState(() {});

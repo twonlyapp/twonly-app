@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO app_metadata(key, value) VALUES ('busy-owner', 'must-not-run')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "6735969e6652251cab42bd2a287758a2e00e87fa9bce6dd6dc9b258722bc6191"
+}

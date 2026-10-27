@@ -14,8 +14,8 @@
 //! * Android runs the preparation inside a `WorkManager` job, which survives
 //!   the task being swiped away and is re-run after a reboot.
 //! * iOS cannot outlive a force quit at all, so the preparation stays in this
-//!   process under a `UIApplication` background task assertion, which buys the
-//!   roughly thirty seconds that a backgrounded app is still allowed to run.
+//!   process under a `UIApplication` background task assertion, whose lifetime
+//!   is owned by the foreground database operation.
 
 /// How this platform is keeping a preparation alive.
 pub(crate) enum Preparation {
@@ -23,39 +23,15 @@ pub(crate) enum Preparation {
     /// start one.
     #[cfg_attr(not(target_os = "android"), allow(dead_code))]
     Scheduled,
-    /// The preparation belongs to this process. The caller runs it and holds
-    /// the guard for as long as it does.
-    InProcess(Guard),
-}
-
-/// Releases the platform's background execution assertion when dropped.
-pub(crate) struct Guard {
-    #[cfg_attr(not(target_os = "ios"), allow(dead_code))]
-    assertion: Option<u64>,
-}
-
-impl Guard {
-    /// A guard for a platform that offers no assertion to take.
-    #[cfg_attr(target_os = "ios", allow(dead_code))]
-    pub(crate) fn unprotected() -> Self {
-        Self { assertion: None }
-    }
-}
-
-impl Drop for Guard {
-    fn drop(&mut self) {
-        #[cfg(target_os = "ios")]
-        if let Some(assertion) = self.assertion.take() {
-            ios::end_background_task(assertion);
-        }
-    }
+    /// The preparation belongs to this process and inherits its caller's
+    /// admitted operation through completion and cleanup.
+    InProcess,
 }
 
 /// Asks the platform to protect the preparation of `media_id`.
 ///
-/// Never fails: a platform that cannot protect the work still has to prepare
-/// it, and an interrupted preparation is picked up by the next maintenance
-/// pass. The reason is logged so a missing native hook is visible.
+/// In-process preparation inherits the admitted database operation. It is
+/// deferred if no owner exists; durable media rows are resumed later.
 pub(crate) fn begin(media_id: &str) -> Preparation {
     #[cfg(target_os = "android")]
     {
@@ -66,86 +42,52 @@ pub(crate) fn begin(media_id: &str) -> Preparation {
             }
         }
     }
-    #[cfg(target_os = "ios")]
-    {
-        let _ = media_id;
-        return Preparation::InProcess(Guard {
-            assertion: ios::begin_background_task(),
-        });
-    }
-    #[cfg(not(target_os = "ios"))]
-    {
-        let _ = media_id;
-        Preparation::InProcess(Guard::unprotected())
-    }
+
+    let _ = media_id;
+
+    Preparation::InProcess
 }
 
 #[cfg(target_os = "android")]
 mod android {
+
     use crate::error::{Result, TwonlyError};
-    use crate::native::transfer::android::jni_env;
+    use crate::native::transfer::android::with_env;
     use jni::objects::{JObject, JValue};
 
     pub(super) fn schedule(media_id: &str) -> Result<()> {
         let prepare = crate::native::transfer::android::prepare_class()?;
-        let mut env = jni_env()?;
-        let media_id = env
-            .new_string(media_id)
-            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
-        let media_id = JObject::from(media_id);
-        let call = env
-            .call_static_method(
-                prepare,
-                "schedule",
-                "(Ljava/lang/String;)Z",
-                &[JValue::Object(&media_id)],
-            )
-            .and_then(|value| value.z());
-        // A pending Java exception would be raised as a fatal error when this
-        // thread next enters the VM, taking the process with it.
-        if env.exception_check().unwrap_or(false) {
-            let _ = env.exception_describe();
-            let _ = env.exception_clear();
-        }
-        if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
-            Ok(())
-        } else {
-            Err(TwonlyError::Generic(
-                "Android rejected the media preparation job".into(),
-            ))
-        }
-    }
-}
 
-#[cfg(target_os = "ios")]
-mod ios {
-    use std::os::raw::c_char;
+        with_env(|env| {
+            let media_id = jni::objects::JString::from_str(env, media_id)
+                .map_err(|error| TwonlyError::Generic(error.to_string()))?;
 
-    type BeginBackgroundTask = unsafe extern "C" fn() -> u64;
-    type EndBackgroundTask = unsafe extern "C" fn(u64);
+            let media_id = JObject::from(media_id);
 
-    fn symbol(name: &std::ffi::CStr) -> Option<*mut std::ffi::c_void> {
-        // The implementation lives in the app executable, so it is resolved at
-        // runtime rather than being required when the cdylib is linked.
-        let pointer = unsafe { libc::dlsym(libc::RTLD_DEFAULT, name.as_ptr().cast::<c_char>()) };
-        (!pointer.is_null()).then_some(pointer)
-    }
+            let call = env
+                .call_static_method(
+                    prepare,
+                    jni::jni_str!("schedule"),
+                    jni::jni_sig!("(Ljava/lang/String;)Z"),
+                    &[JValue::Object(&media_id)],
+                )
+                .and_then(|value| value.z());
 
-    pub(super) fn begin_background_task() -> Option<u64> {
-        let callback = symbol(c"twonly_begin_background_task")?;
-        // SAFETY: the Swift @_cdecl declaration has this exact C ABI signature.
-        let callback: BeginBackgroundTask = unsafe { std::mem::transmute(callback) };
-        let identifier = unsafe { callback() };
-        // UIBackgroundTaskInvalid is reported as zero.
-        (identifier != 0).then_some(identifier)
-    }
+            // A pending Java exception would be raised as a fatal error when this
+            // thread next enters the VM, taking the process with it.
+            if env.exception_check() {
+                env.exception_describe();
 
-    pub(super) fn end_background_task(identifier: u64) {
-        let Some(callback) = symbol(c"twonly_end_background_task") else {
-            return;
-        };
-        // SAFETY: the Swift @_cdecl declaration has this exact C ABI signature.
-        let callback: EndBackgroundTask = unsafe { std::mem::transmute(callback) };
-        unsafe { callback(identifier) };
+                env.exception_clear();
+            }
+
+            if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
+                Ok(())
+            } else {
+                Err(TwonlyError::Generic(
+                    "Android rejected the media preparation job".into(),
+                ))
+            }
+        })
     }
 }

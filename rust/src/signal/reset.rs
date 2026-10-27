@@ -40,6 +40,7 @@ impl SessionResetLimiter {
     /// alone and let the message fail.
     pub(crate) async fn claim(pool: &SqlitePool, name: &str, device_id: u32) -> Result<bool> {
         let now = crate::utils::current_time().timestamp();
+
         let window_start = now - RESET_WINDOW;
 
         // One statement so two inbound messages racing on the same peer cannot
@@ -109,12 +110,14 @@ impl SessionResetLimiter {
         )
         .execute(pool)
         .await?;
+
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use crate::database::signal::Database;
 
@@ -122,7 +125,9 @@ mod tests {
         let database = Database::new(&"sqlite::memory:".to_string(), None, false)
             .await
             .unwrap();
+
         database.run_migrations().await.unwrap();
+
         database.pool.clone()
     }
 
@@ -145,20 +150,25 @@ mod tests {
     }
 
     #[tokio::test]
+
     async fn the_cooldown_holds_off_a_second_reset_for_the_same_peer() {
         let pool = test_pool().await;
 
         assert!(SessionResetLimiter::claim(&pool, "1", 1).await.unwrap());
+
         // The repair from the first claim is still in flight.
         assert!(!SessionResetLimiter::claim(&pool, "1", 1).await.unwrap());
+
         // A different peer has its own budget.
         assert!(SessionResetLimiter::claim(&pool, "2", 1).await.unwrap());
 
         age_by(&pool, "1", RESET_COOLDOWN).await;
+
         assert!(SessionResetLimiter::claim(&pool, "1", 1).await.unwrap());
     }
 
     #[tokio::test]
+
     async fn a_peer_that_cannot_be_repaired_runs_out_of_budget() {
         let pool = test_pool().await;
 
@@ -167,6 +177,7 @@ mod tests {
                 SessionResetLimiter::claim(&pool, "1", 1).await.unwrap(),
                 "reset {reset} is within the budget"
             );
+
             age_by(&pool, "1", RESET_COOLDOWN).await;
         }
 
@@ -176,14 +187,17 @@ mod tests {
         // Ageing past the window starts the budget over, so a peer that broke
         // long ago is not blocked forever.
         age_by(&pool, "1", RESET_WINDOW).await;
+
         assert!(SessionResetLimiter::claim(&pool, "1", 1).await.unwrap());
     }
 
     #[tokio::test]
+
     async fn a_repaired_session_starts_from_a_full_budget() {
         let pool = test_pool().await;
 
         assert!(SessionResetLimiter::claim(&pool, "1", 1).await.unwrap());
+
         SessionResetLimiter::clear(&pool, "1", 1).await.unwrap();
 
         // Neither the cooldown nor the spent budget survives the clear.

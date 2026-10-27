@@ -4,6 +4,7 @@
  */
 
 pub mod incoming;
+pub(crate) mod mailbox_sync;
 pub mod outgoing;
 
 pub(crate) fn content_type_kind(

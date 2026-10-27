@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT media_id FROM messages WHERE message_id = ? AND sender_id IS ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "media_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "8ac64f4eb7fcb44c445c2b02d2e5bbee5f2f78d879a51e653539cbaf64b35d8e"
+}

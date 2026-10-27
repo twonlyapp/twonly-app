@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT DISTINCT contact_group_id FROM (\n             SELECT contact_group_id FROM contact_group_members WHERE user_id = ?\n             UNION\n             SELECT cgm.contact_group_id\n             FROM contact_group_members cgm\n             JOIN group_members gm ON gm.group_id = cgm.group_id\n             WHERE gm.contact_id = ?\n           ) ORDER BY contact_group_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_group_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "contact_group_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "48bfb2c4b54abad93098fbad7f6bba5529028f35bb6848cdb00366f114dce9ec"
+}

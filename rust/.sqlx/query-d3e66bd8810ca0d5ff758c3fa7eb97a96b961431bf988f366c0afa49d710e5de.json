@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                            RELEASE rust_domain_command\n                        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "d3e66bd8810ca0d5ff758c3fa7eb97a96b961431bf988f366c0afa49d710e5de"
+}

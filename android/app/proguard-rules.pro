@@ -25,6 +25,9 @@
 -keep,allowoptimization class eu.twonly.directmedia.DirectMediaPrepare {
     public static boolean schedule(java.lang.String);
 }
+-keep,allowoptimization class eu.twonly.directmedia.NativeMediaTransferBridge {
+    private static native void report(java.lang.String, java.lang.String, java.lang.String, long, long, long, int, int);
+}
 -keep,allowoptimization class eu.twonly.media.NativeImageCodec {
     public static boolean decodeToPng(java.lang.String, java.lang.String);
 }

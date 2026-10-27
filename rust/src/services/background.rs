@@ -16,7 +16,6 @@
 use crate::api::messages::incoming::messages;
 use crate::api::runtime::ApiRuntime;
 use crate::bridge::api::ApiConnectionState;
-use crate::bridge::InitConfig;
 use crate::context::Context;
 use crate::error::Result;
 use crate::services::direct_media_upload::DirectMediaUploadService;
@@ -29,13 +28,96 @@ use std::time::Duration;
 /// parts of the flush that need it. A background job has a hard budget of its
 /// own, so this stays well inside it.
 const AUTHENTICATION_TIMEOUT: Duration = Duration::from_secs(20);
+
 const AUTHENTICATION_POLL: Duration = Duration::from_millis(250);
+
 /// Mailbox delivery and the final receipt flush share one bounded window.
 /// On expiry their durable rows remain owned by the native scheduler.
 const MESSAGE_DRAIN_TIMEOUT: Duration = Duration::from_secs(20);
 
+/// Foreground work belongs to the Rust operation, so suspension cancels and
+/// drains it and the next foreground epoch retries it without a Dart timer.
+pub(crate) fn schedule_foreground_maintenance(ctx: &Arc<Context>) {
+    let ctx = ctx.clone();
+
+    crate::database::lifecycle::spawn(async move {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+
+        if let Err(error) = purge_expired_data(&ctx).await {
+            tracing::warn!(%error, "foreground expiry cleanup failed");
+        }
+    });
+
+    crate::database::lifecycle::spawn(async {
+        tokio::time::sleep(Duration::from_secs(120)).await;
+
+        let cleaned = crate::database::lifecycle::spawn_blocking(crate::log::clean_log_file).await;
+
+        if !matches!(cleaned, Ok(Ok(()))) {
+            tracing::warn!(?cleaned, "log cleanup failed");
+        }
+    });
+}
+
+/// The first Flutter launch still imports the historical store after Rust
+/// initialization. Maintenance must see the imported rows before it runs.
+pub(crate) async fn wait_for_legacy_import(ctx: &Context) -> Result<()> {
+    let database = ctx.app_db.read().await.clone();
+
+    while !database.is_legacy_import_complete().await? {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
+
+    Ok(())
+}
+
+async fn purge_expired_data(ctx: &Arc<Context>) -> Result<()> {
+    wait_for_legacy_import(ctx).await?;
+
+    if let Err(error) = crate::services::stories::purge_expired(ctx).await {
+        tracing::warn!(%error, "could not purge expired stories");
+    }
+
+    let now = chrono::Utc::now();
+
+    let database = ctx.app_db.read().await.clone();
+
+    let mut transaction = database.pool.begin().await?;
+
+    crate::database::app::messages::writes::purge(&mut transaction, now.timestamp_millis()).await?;
+
+    let undelivered = crate::database::app::messages::writes::purge_undelivered_media(
+        &mut transaction,
+        now.timestamp() - crate::services::media_upload::SERVER_UPLOAD_LIFETIME_SECONDS,
+    )
+    .await?;
+
+    crate::database::app::receipts::writes::purge(
+        &mut transaction,
+        (now - chrono::Duration::days(45)).timestamp(),
+    )
+    .await?;
+
+    transaction.commit().await?;
+
+    if undelivered > 0 {
+        tracing::info!(
+            count = undelivered,
+            "deleted own media nobody received before its upload expired"
+        );
+
+        if let Err(error) = crate::services::mediafiles::cleanup_pending_file_removals(ctx).await {
+            tracing::warn!(%error, "pending media file cleanup will be retried");
+        }
+    }
+
+    MediaUploadService::new(ctx).purge_temp_folder().await
+}
+
 /// What a maintenance run should do.
 pub enum Job {
+    /// Automatic backups get their own OS grant, separate from message work.
+    Backup,
     /// Prepare one media file and hand it to the OS uploader. This is the job
     /// scheduled the moment the user hits send.
     PrepareMedia(String),
@@ -55,9 +137,26 @@ pub struct RunOutcome {
 ///
 /// Safe to call concurrently with a running app: every step it performs is the
 /// same idempotent one the app runs itself, guarded by the same locks.
-pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
-    Context::init_notification(config).await?;
-    let ctx = Context::get_static()?.clone();
+pub(crate) async fn run(ctx: Arc<Context>, job: Job) -> Result<RunOutcome> {
+    if matches!(job, Job::Backup) {
+        // An automatic job must never export databases during a visible app
+        // session. A later scheduler retry gets a fresh execution allowance.
+        let completed = if ctx.is_flutter_runtime() {
+            false
+        } else {
+            let operation = crate::database::lifecycle::Operation::current()
+                .expect("native background jobs own an operation");
+            crate::backup::upload::run(&ctx, false, &operation).await?
+        };
+        return Ok(RunOutcome {
+            pending_uploads: !completed,
+            pending_messages: false,
+        });
+    }
+    if let Err(error) = crate::services::mediafiles::cleanup_pending_file_removals(&ctx).await {
+        tracing::warn!(%error, "pending media file cleanup will be retried");
+    }
+
     // Authentication can drain a small mailbox before the worker reaches its
     // final wait. Sampling after connecting would miss that completion.
     let mailbox_generation = ctx.mailbox_generation();
@@ -72,6 +171,7 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
     // connection the app is relying on. The app's own post-authentication sweep
     // already does all of this, so the job sticks to the media work.
     let owns_connection = !ctx.is_flutter_runtime();
+
     let connected = if owns_connection {
         connect_and_authenticate(&ctx).await
     } else {
@@ -80,6 +180,7 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
             Ok(ApiConnectionState::Authenticated)
         )
     };
+
     if !connected {
         tracing::info!("background maintenance is running without a server connection");
     } else if owns_connection && ctx.mailbox_generation() == mailbox_generation {
@@ -89,6 +190,7 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
     }
 
     match &job {
+        Job::Backup => unreachable!(),
         Job::PrepareMedia(media_id) => {
             MediaUploadService::new(&ctx).start_upload(media_id).await?;
         }
@@ -97,9 +199,11 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
             if let Err(error) = crate::services::stories::purge_expired(&ctx).await {
                 tracing::warn!(%error, "could not purge expired stories");
             }
+
             if let Err(error) = MediaUploadService::new(&ctx).finish_started_uploads().await {
                 tracing::warn!(%error, "could not finish started media uploads");
             }
+
             if let Err(error) = MediaUploadService::new(&ctx).reupload_pending().await {
                 tracing::warn!(%error, "could not retry pending media reuploads");
             }
@@ -111,15 +215,18 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
     // synchronously instead and tell WorkManager to retry durably while a job
     // is still waiting for the server.
     let direct_uploads = DirectMediaUploadService::new(&ctx);
+
     if let Err(error) = direct_uploads.reconcile().await {
         tracing::warn!(%error, "could not reconcile direct-media uploads");
     }
+
     let pending_uploads = direct_uploads
         .pending_job_count()
         .await
         .map(|count| count > 0)
         .unwrap_or_else(|error| {
             tracing::warn!(%error, "could not count pending direct-media uploads");
+
             // A failed count must not let the OS discard the only durable retry.
             true
         });
@@ -130,8 +237,15 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
         if let Err(error) = ApiRuntime::replay_outbox(&ctx).await {
             tracing::warn!(%error, "could not replay the API outbox");
         }
+
         if let Err(error) = DirectMediaUploadService::new(&ctx).preload_slots().await {
             tracing::warn!(%error, "could not preload direct-media upload slots");
+        }
+
+        // After the job's own work, so a pending token never delays a send.
+        // A visible app registers through Dart's single registration owner.
+        if let Err(error) = crate::services::notifications::synchronize_fcm_token(&ctx).await {
+            tracing::warn!(%error, "native FCM registration remains pending");
         }
     } else if owns_connection {
         // Nothing can be sent right now, so leave the envelopes with the OS,
@@ -146,21 +260,24 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
     } else {
         !owns_connection
     };
-    let pending_messages = owns_connection
-        && ctx.is_notification_runtime()
-        && (!messages_finished
-            || messages::has_pending_receipts(&ctx)
-                .await
-                .unwrap_or_else(|error| {
-                    tracing::warn!(%error, "could not count pending receipts");
-                    true
-                }));
 
-    // Flutter may have claimed a process that WorkManager started while this
-    // run was in flight. Never close the replacement foreground client.
-    if owns_connection && ctx.is_notification_runtime() {
-        ApiRuntime::close(&ctx).await?;
-    }
+    let pending_registration = owns_connection
+        && crate::user_config::UserConfig::load_from(&ctx)?
+            .is_some_and(|user| user.update_fcm_token && user.fcm_token.is_some());
+    let pending_messages = pending_registration
+        || (owns_connection
+            && ctx.is_notification_runtime()
+            && (!messages_finished
+                || messages::has_pending_receipts(&ctx)
+                    .await
+                    .unwrap_or_else(|error| {
+                        tracing::warn!(%error, "could not count pending receipts");
+
+                        true
+                    })));
+
+    // The native entry point owns cancellation, producer shutdown and actual
+    // database closure, including errors and expiration before this return.
     Ok(RunOutcome {
         pending_uploads,
         pending_messages,
@@ -173,6 +290,7 @@ pub async fn run(config: InitConfig, job: Job) -> Result<RunOutcome> {
 async fn finish_message_work(ctx: &Arc<Context>, generation: u64, budget: Duration) -> bool {
     match tokio::time::timeout(budget, async {
         ctx.wait_for_mailbox_after(generation).await;
+
         messages::retransmit_queued_receipts_and_wait(ctx).await
     })
     .await
@@ -180,10 +298,12 @@ async fn finish_message_work(ctx: &Arc<Context>, generation: u64, budget: Durati
         Ok(Ok(())) => true,
         Ok(Err(error)) => {
             tracing::warn!(%error, "could not finish background receipt flush");
+
             false
         }
         Err(_) => {
             tracing::info!("background message drain window elapsed; retaining work for retry");
+
             false
         }
     }
@@ -199,109 +319,264 @@ async fn connect_and_authenticate(ctx: &Arc<Context>) -> bool {
     ) {
         return true;
     }
+
     if let Err(error) = ApiRuntime::connect(ctx).await {
         tracing::info!(%error, "background maintenance could not connect");
+
         return false;
     }
+
     let deadline = tokio::time::Instant::now() + AUTHENTICATION_TIMEOUT;
+
     while tokio::time::Instant::now() < deadline {
         match ApiRuntime::connection_state(ctx).await {
             Ok(ApiConnectionState::Authenticated) => return true,
-            Ok(ApiConnectionState::PermanentlyRejected) => return false,
+            Ok(ApiConnectionState::PermanentlyRejected | ApiConnectionState::Suspended) => {
+                return false
+            }
             _ => tokio::time::sleep(AUTHENTICATION_POLL).await,
         }
     }
+
     false
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[tokio::test]
-    async fn shutdown_waits_for_mailbox_and_the_existing_receipt_flush() -> Result<()> {
+
+    async fn expiry_waits_for_import_and_retries_after_foreground_cancellation() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx = Context::init_for_testing(
             directory.path().join("database"),
             directory.path().join("data"),
         )
         .await?;
-        let generation = ctx.mailbox_generation();
+
         let database = ctx.app_db.read().await.clone();
+
+        // Context now completes import before exposing a runtime. Recreate an
+        // incomplete import explicitly to exercise the maintenance guard.
+        sqlx::query("DELETE FROM app_metadata WHERE key = 'legacy_import_complete'")
+            .execute(&database.pool)
+            .await?;
+
+        sqlx::query!(
+            r#"
+                INSERT INTO groups(group_id, group_name, delete_messages_after_milliseconds)
+                VALUES ('expiry', 'Expiry', 1000)
+            "#,
+        )
+        .execute(&database.pool)
+        .await?;
+
+        sqlx::query!(
+            r#"
+                INSERT INTO messages(
+                    message_id, group_id, type, created_at, opened_by_all, is_story, media_stored
+                )
+                VALUES ('expired-message', 'expiry', 'text', 1, 1, 0, 0),
+                    ('current-message', 'expiry', 'text', 1, NULL, 0, 0),
+                    ('expired-story', 'expiry', 'text', 1, NULL, 1, 0),
+                    ('saved-story', 'expiry', 'text', 1, NULL, 1, 1)
+            "#,
+        )
+        .execute(&database.pool)
+        .await?;
+
+        let now = chrono::Utc::now().timestamp();
+
+        sqlx::query!(
+            r#"
+                INSERT INTO received_receipts(receipt_id, created_at)
+                VALUES ('expired-receipt', 1), ('current-receipt', ?)
+            "#,
+            now,
+        )
+        .execute(&database.pool)
+        .await?;
+
+        let operation = crate::database::lifecycle::Operation::foreground();
+
+        let mut pending = operation.scope_sync(|| {
+            let ctx = ctx.clone();
+
+            crate::database::lifecycle::spawn(async move { purge_expired_data(&ctx).await })
+        });
+
+        assert!(
+            tokio::time::timeout(Duration::from_millis(50), &mut pending)
+                .await
+                .is_err()
+        );
+
+        operation.cancel();
+
+        tokio::time::timeout(Duration::from_secs(2), operation.drain())
+            .await
+            .unwrap();
+
+        assert!(pending.await.unwrap_err().is_cancelled());
+
+        assert_eq!(
+            sqlx::query_scalar!("SELECT COUNT(*) FROM messages")
+                .fetch_one(&database.pool)
+                .await?,
+            4,
+        );
+
+        database.complete_empty_legacy_import().await?;
+
+        // A new foreground owner retries locally even without authentication.
+        let resumed = crate::database::lifecycle::Operation::foreground();
+
+        tokio::time::timeout(
+            Duration::from_secs(5),
+            resumed.scope(purge_expired_data(&ctx)),
+        )
+        .await
+        .unwrap()?;
+
+        assert_eq!(
+            sqlx::query_scalar!("SELECT message_id FROM messages ORDER BY message_id")
+                .fetch_all(&database.pool)
+                .await?,
+            ["current-message", "saved-story"],
+        );
+
+        assert_eq!(
+            sqlx::query_scalar!("SELECT receipt_id FROM received_receipts ORDER BY receipt_id")
+                .fetch_all(&database.pool)
+                .await?,
+            ["current-receipt"],
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+
+    async fn shutdown_waits_for_mailbox_and_the_existing_receipt_flush() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+
+        let generation = ctx.mailbox_generation();
+
+        let database = ctx.app_db.read().await.clone();
+
         // Hold the single connection so the existing flush cannot finish.
         let transaction = database.pool.begin().await?;
+
         let active = {
             let ctx = ctx.clone();
+
             tokio::spawn(async move { messages::retransmit_queued_receipts(&ctx).await })
         };
+
         tokio::task::yield_now().await;
+
         let finishing = {
             let ctx = ctx.clone();
+
             tokio::spawn(async move {
                 finish_message_work(&ctx, generation, Duration::from_secs(2)).await
             })
         };
+
         tokio::task::yield_now().await;
+
         assert!(
             !finishing.is_finished(),
             "authentication alone is not a drained mailbox"
         );
+
         ctx.mark_mailbox_drained();
+
         tokio::task::yield_now().await;
+
         assert!(
             !finishing.is_finished(),
             "the active flush still owns database work"
         );
+
         transaction.commit().await?;
+
         active.await.unwrap()?;
+
         assert!(finishing.await.unwrap());
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn shutdown_recognises_a_mailbox_drained_before_the_wait() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx = Context::init_for_testing(
             directory.path().join("database"),
             directory.path().join("data"),
         )
         .await?;
+
         let generation = ctx.mailbox_generation();
+
         ctx.mark_mailbox_drained();
+
         assert!(finish_message_work(&ctx, generation, Duration::from_secs(1)).await);
+
         Ok(())
     }
 
     #[tokio::test]
+
     async fn shutdown_deadline_keeps_unfinished_receipts_durable() -> Result<()> {
         let directory = tempfile::tempdir()?;
+
         let ctx = Context::init_for_testing(
             directory.path().join("database"),
             directory.path().join("data"),
         )
         .await?;
+
         let database = ctx.app_db.read().await.clone();
-        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'peer')")
+
+        sqlx::query!("INSERT INTO contacts(user_id, username) VALUES (7, 'peer')")
             .execute(&database.pool)
             .await?;
-        sqlx::query(
+
+        sqlx::query!(
             "INSERT INTO receipts(receipt_id, contact_id, message) VALUES ('unsent', 7, x'00')",
         )
         .execute(&database.pool)
         .await?;
+
         let generation = ctx.mailbox_generation();
+
         tokio::time::pause();
+
         assert!(!finish_message_work(&ctx, generation, Duration::from_secs(1)).await);
+
         tokio::time::resume();
+
         assert!(messages::has_pending_receipts(&ctx).await?);
+
         assert_eq!(
-            sqlx::query_scalar::<_, i64>(
-                "SELECT COUNT(*) FROM receipts WHERE receipt_id = 'unsent'"
-            )
-            .fetch_one(&database.pool)
-            .await?,
+            sqlx::query_scalar!("SELECT COUNT(*) FROM receipts WHERE receipt_id = 'unsent'")
+                .fetch_one(&database.pool)
+                .await?,
             1
         );
+
         Ok(())
     }
 }

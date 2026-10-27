@@ -1,17 +1,21 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/mediafiles/media_download_policy.dart'
     as received;
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
@@ -31,7 +35,7 @@ class ChatMediaEntry extends StatefulWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final Group group;
   final List<MemoryItem> galleryItems;
   final MediaFileService mediaService;
@@ -116,9 +120,13 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
         onlyReturnEncryptedData: false,
         blocking: true,
       );
-      await twonlyDB.messagesDao.updateMessageId(
-        widget.message.messageId,
-        const MessagesCompanion(openedAt: Value(null)),
+      await rust_messages.updateMessages(
+        id: widget.message.messageId,
+        byMedia: false,
+        patch: MessagePatch(
+          openedAt: NullableInt(value: databaseNullableSeconds(null)),
+        ),
+        transaction: currentDatabaseSession(),
       );
     }
   }

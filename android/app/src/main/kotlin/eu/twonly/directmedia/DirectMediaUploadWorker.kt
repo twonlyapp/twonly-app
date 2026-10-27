@@ -32,12 +32,20 @@ class DirectMediaUploadWorker(
         super.onStopped()
     }
 
+    override fun getForegroundInfo(): ForegroundInfo =
+        foregroundInfo(inputData.getString(ATTACHMENT_ID).orEmpty())
+
     override fun doWork(): Result {
         NativeErrorReporting.breadcrumb(applicationContext, "media_upload_started")
         val attachmentId = inputData.getString(ATTACHMENT_ID) ?: return Result.failure()
         val role = inputData.getString(ROLE) ?: return Result.failure()
         val expiresAt = inputData.getLong(EXPIRES_AT, 0)
         if (expiresAt <= System.currentTimeMillis() / 1_000) return Result.failure()
+        val started = SystemClock.elapsedRealtime()
+        val queuedMs = (System.currentTimeMillis() -
+            inputData.getLong(QUEUED_AT_MS, System.currentTimeMillis())).coerceAtLeast(0)
+        var httpMs = 0L
+        var status = 0
         return try {
             recordActivity()
             // Extend the execution budget for long uploads when permitted.
@@ -47,7 +55,12 @@ class DirectMediaUploadWorker(
             val path = inputData.getString(DESCRIPTOR_PATH) ?: return Result.failure()
             val descriptor = JSONObject(File(path).readText(Charsets.UTF_8))
             val request = descriptor.getJSONObject(role)
-            val status = transfer.upload(request, ::recordActivity)
+            val httpStarted = SystemClock.elapsedRealtime()
+            try {
+                status = transfer.upload(request, ::recordActivity)
+            } finally {
+                httpMs = SystemClock.elapsedRealtime() - httpStarted
+            }
             Log.i(TAG, "Transfer $attachmentId/$role attempt=$runAttemptCount HTTP=$status")
             if (status in 200..299) {
                 // Completion owns its own durable retry, so a failed completion
@@ -70,6 +83,13 @@ class DirectMediaUploadWorker(
             }
             Log.w(TAG, "Transfer $attachmentId/$role attempt=$runAttemptCount failed", error)
             if (expiresAt > System.currentTimeMillis() / 1_000) Result.retry() else Result.failure()
+        } finally {
+            // Enqueue completion before waking Rust: a Ready status may cause
+            // reconciliation to remove the immutable request files.
+            NativeMediaTransferBridge.finished(
+                applicationContext.filesDir.absolutePath, attachmentId, role,
+                queuedMs, SystemClock.elapsedRealtime() - started, httpMs, status, runAttemptCount,
+            )
         }
     }
 
@@ -113,6 +133,7 @@ class DirectMediaUploadWorker(
         const val DESCRIPTOR_PATH = "descriptor_path"
         const val EXPIRES_AT = "expires_at"
         const val LAST_ACTIVITY_MS = "last_activity_ms"
+        const val QUEUED_AT_MS = "queued_at_ms"
         private const val TAG = "TwonlyMediaTransfer"
         private const val CHANNEL_ID = "twonly_direct_media_upload"
     }

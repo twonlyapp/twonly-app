@@ -1,20 +1,25 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -159,7 +164,12 @@ class MemoriesCloudService {
       if (await RustApi.connectionState() != ApiConnectionState.authenticated) {
         return;
       }
-      final memories = await twonlyDB.mediaFilesDao.getMemoriesToBackup();
+      final memories = await rust_mediafiles.listMediaFiles(
+        input: const db_mediafiles.MediaQuery(
+          filter: db_mediafiles.MediaFilter.memoriesToBackup,
+        ),
+        transaction: currentDatabaseSession(),
+      );
       if (memories.isEmpty) {
         return;
       }
@@ -284,8 +294,7 @@ class MemoriesCloudService {
           mediaId: mediaFile.mediaId,
         );
       } catch (error, stackTrace) {
-        final message =
-            'Could not get upload URLs for memory ${mediaFile.mediaId}';
+        const message = 'Could not get upload URLs for memory';
         if (_expectedUploadFailure(error)) {
           // The row remains queued and the periodic worker retries it.
           Log.warn(message, error, stackTrace);
@@ -295,11 +304,10 @@ class MemoriesCloudService {
         return false;
       }
 
-      await twonlyDB.mediaFilesDao.updateMedia(
-        mediaFile.mediaId,
-        const MediaFilesCompanion(
-          cloudState: Value(CloudState.pending),
-        ),
+      await rust_mediafiles.updateMediaFiles(
+        id: mediaFile.mediaId,
+        patch: MediaFilePatch(cloudState: CloudState.pending.name),
+        transaction: currentDatabaseSession(),
       );
 
       final mediaKey = getRandomUint8List(32);
@@ -331,35 +339,29 @@ class MemoriesCloudService {
       }
 
       // 3. Confirm upload
-      final confirmRes = await rustApiResult(
-        RustApi.confirmMemoriesUpload(mediaId: mediaFile.mediaId),
+      // Preserve the actual transport/API failure for retry classification.
+      // rustApiResult reduces timeouts and disconnects to an Unknown code.
+      await RustApi.confirmMemoriesUpload(mediaId: mediaFile.mediaId);
+      await rust_mediafiles.updateMediaFiles(
+        id: mediaFile.mediaId,
+        patch: MediaFilePatch(cloudState: CloudState.uploaded.name),
+        transaction: currentDatabaseSession(),
       );
-      if (confirmRes.isSuccess) {
-        await twonlyDB.mediaFilesDao.updateMedia(
-          mediaFile.mediaId,
-          const MediaFilesCompanion(
-            cloudState: Value(CloudState.uploaded),
-          ),
-        );
-        Log.info(
-          'Cloud backup complete and confirmed for ${mediaFile.mediaId}',
-        );
-        return true;
-      } else {
-        throw Exception('Server confirmation failed: ${confirmRes.error}');
-      }
+      Log.info(
+        'Cloud backup complete and confirmed for ${mediaFile.mediaId}',
+      );
+      return true;
     } catch (error, stackTrace) {
-      final message = 'Error backing up memory ${mediaFile.mediaId}';
+      const message = 'Error backing up memory';
       if (_expectedUploadFailure(error)) {
         Log.warn(message, error, stackTrace);
       } else {
         Log.error(message, error: error, stackTrace: stackTrace);
       }
-      await twonlyDB.mediaFilesDao.updateMedia(
-        mediaFile.mediaId,
-        const MediaFilesCompanion(
-          cloudState: Value(CloudState.none),
-        ),
+      await rust_mediafiles.updateMediaFiles(
+        id: mediaFile.mediaId,
+        patch: MediaFilePatch(cloudState: CloudState.none.name),
+        transaction: currentDatabaseSession(),
       );
       return false;
     }
@@ -420,9 +422,17 @@ class MemoriesCloudService {
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode != 200 && response.statusCode != 204) {
+      // Request/host IDs and payload sizes differ on every attempt. Retain
+      // diagnostics locally and report only the stable status and S3 code.
+      Log.warn(
+        'S3 upload rejected (${encryptedBytes.length} encrypted bytes): '
+        '${response.body}',
+      );
+      final code = RegExp(
+        r'<Code>\s*([A-Za-z][A-Za-z0-9]{0,99})\s*</Code>',
+      ).firstMatch(response.body)?.group(1);
       throw Exception(
-        'S3 upload failed: ${response.statusCode} '
-        '(${encryptedBytes.length} encrypted bytes) - ${response.body}',
+        'S3 upload failed: ${response.statusCode} (${code ?? 'Unknown'})',
       );
     }
   }

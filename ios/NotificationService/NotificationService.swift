@@ -6,11 +6,10 @@ import rust_lib_twonly
 
 private let runtimeAppGroup = "group.eu.twonly.runtime"
 
-/// Budget for the work deferred behind the alert. Behind a rendered alert it
-/// runs after the content handler has fired, so the system may reclaim the
-/// extension before it ends; a wake-up with nothing to render spends it up
-/// front instead, where the whole budget is actually available.
+/// Optional maintenance runs before releasing the content handler. The whole
+/// push shares one earlier deadline, reserving time for native lock cleanup.
 private let finalizeDeadlineMs: UInt64 = 5_000
+private let notificationRunBudgetMs: UInt64 = 25_000
 
 private struct NativeNotificationResponse: Decodable {
   let ok: Bool
@@ -33,13 +32,7 @@ private struct NativeNotificationPresentation: Decodable {
 private struct NativeNotificationBatch: Decodable {
   let additions: [NativeNotificationAddition]
   let removals: [String]
-  let badgeCount: Int64
   let completed: Bool
-
-  enum CodingKeys: String, CodingKey {
-    case additions, removals, completed
-    case badgeCount = "badge_count"
-  }
 }
 
 private struct NativeNotificationAddition: Decodable {
@@ -93,6 +86,7 @@ private struct RenderedNotification {
 final class NotificationService: UNNotificationServiceExtension {
   private let finishLock = NSLock()
   private var hasFinished = false
+  private var runID: UInt64 = 0
   private var contentHandler: ((UNNotificationContent) -> Void)?
   private var fallbackContent: UNNotificationContent?
 
@@ -103,8 +97,25 @@ final class NotificationService: UNNotificationServiceExtension {
     NSLog("Native push received: requestId=%@", request.identifier)
     NativeErrorReporting.startIfAllowed()
     NativeErrorReporting.breadcrumb("notification_processing_started")
+    finishLock.lock()
     self.contentHandler = contentHandler
     fallbackContent = request.content
+    finishLock.unlock()
+
+    let run = twonly_notification_run_create(notificationRunBudgetMs)
+    finishLock.lock()
+    runID = run
+    let alreadyFinished = hasFinished
+    finishLock.unlock()
+    if alreadyFinished {
+      twonly_database_operation_cancel(run)
+      DispatchQueue.global(qos: .userInitiated).async { twonly_notification_run_finish(run) }
+      return
+    }
+    guard run != 0 else {
+      deliverFallback(reason: "notification runtime is unavailable", operation: "notification_runtime")
+      return
+    }
 
     guard let runtimeDirectory = Self.runtimeDirectory() else {
       deliverFallback(reason: "shared runtime directory is unavailable", operation: "notification_storage")
@@ -118,7 +129,7 @@ final class NotificationService: UNNotificationServiceExtension {
     }
 
     DispatchQueue.global(qos: .userInitiated).async {
-      guard let response = Self.processWakeup(runtimeDirectory: runtimeDirectory) else {
+      guard let response = Self.processWakeup(run: run, runtimeDirectory: runtimeDirectory) else {
         self.deliverFallback(reason: "notification worker returned no response", operation: "notification_response")
         return
       }
@@ -137,7 +148,7 @@ final class NotificationService: UNNotificationServiceExtension {
         // story the user muted or one that already expired — so the deferred
         // work runs while the extension is still guaranteed its time, rather
         // than after the content handler has made it eligible for termination.
-        Self.finalizeRuntime()
+        Self.finalizeRuntime(run: run)
         // The worker ran and decided there is nothing to announce. With the
         // notification filtering entitlement, empty content drops the push
         // instead of showing its "You got a new message" placeholder.
@@ -145,7 +156,7 @@ final class NotificationService: UNNotificationServiceExtension {
         self.finish(with: UNNotificationContent())
         return
       }
-      self.render(batch: batch, original: request.content)
+      self.render(batch: batch, original: request.content, run: run)
     }
   }
 
@@ -153,13 +164,14 @@ final class NotificationService: UNNotificationServiceExtension {
     deliverFallback(reason: "notification service extension timed out", operation: "notification_expired")
   }
 
-  private func render(batch: NativeNotificationBatch, original: UNNotificationContent) {
+  private func render(batch: NativeNotificationBatch, original: UNNotificationContent, run: UInt64) {
+    guard !isCompleting else { return }
     let center = UNUserNotificationCenter.current()
     center.getDeliveredNotifications { [weak self] delivered in
       self?.render(
         groups: Self.groupedAdditions(batch.additions, delivered: delivered.map(\.request)),
-        badgeCount: batch.badgeCount,
-        original: original
+        original: original,
+        run: run
       )
     }
   }
@@ -194,8 +206,9 @@ final class NotificationService: UNNotificationServiceExtension {
   }
 
   private func render(
-    groups: [RenderedNotification], badgeCount: Int64, original: UNNotificationContent
+    groups: [RenderedNotification], original: UNNotificationContent, run: UInt64
   ) {
+    guard !isCompleting else { return }
     let center = UNUserNotificationCenter.current()
     let group = DispatchGroup()
     let stateLock = NSLock()
@@ -205,8 +218,11 @@ final class NotificationService: UNNotificationServiceExtension {
 
     for (index, rendered) in groups.enumerated() {
       group.enter()
-      communicationContent(for: rendered, badgeCount: badgeCount, original: original) {
-        content in
+      communicationContent(for: rendered, original: original) { content in
+        guard !self.isCompleting else {
+          group.leave()
+          return
+        }
         let isFinal = index == groups.count - 1
         if isFinal {
           stateLock.lock()
@@ -241,24 +257,23 @@ final class NotificationService: UNNotificationServiceExtension {
     }
 
     group.notify(queue: .global(qos: .userInitiated)) { [weak self] in
+      guard let self, !self.isCompleting else { return }
       stateLock.lock()
       let eventIds = deliveredEventIds
       let content = finalContent
       let replacedIds = replacedRequestIds
       stateLock.unlock()
-      Self.acknowledge(eventIds: eventIds)
+      Self.acknowledge(run: run, eventIds: eventIds)
       center.removeDeliveredNotifications(withIdentifiers: replacedIds)
-      self?.finish(with: content)
-      // The alert is on screen. Whatever time the system still grants this
-      // extension goes to the deferred work; being terminated part-way only
-      // defers it to the next wake-up or app launch.
-      Self.finalizeRuntime()
+      // Returning the extension's content handler makes it eligible for
+      // termination. Finish all database work and close first.
+      Self.finalizeRuntime(run: run)
+      self.finish(with: content)
     }
   }
 
   private func communicationContent(
     for rendered: RenderedNotification,
-    badgeCount: Int64,
     original: UNNotificationContent,
     completion: @escaping (UNNotificationContent) -> Void
   ) {
@@ -268,7 +283,8 @@ final class NotificationService: UNNotificationServiceExtension {
     mutable.title = addition.senderName
     mutable.body = rendered.body
     mutable.threadIdentifier = addition.notificationGroup
-    mutable.badge = NSNumber(value: badgeCount)
+    // twonly shows no app icon badge; 0 also clears one left by an older build.
+    mutable.badge = 0
     mutable.sound = .default
     var userInfo = mutable.userInfo
     if let conversationId = addition.conversationId {
@@ -335,6 +351,12 @@ final class NotificationService: UNNotificationServiceExtension {
     }
   }
 
+  private var isCompleting: Bool {
+    finishLock.lock()
+    defer { finishLock.unlock() }
+    return hasFinished
+  }
+
   private func finish(with content: UNNotificationContent) {
     finishLock.lock()
     guard !hasFinished else {
@@ -343,10 +365,17 @@ final class NotificationService: UNNotificationServiceExtension {
     }
     hasFinished = true
     let handler = contentHandler
+    let run = runID
     fallbackContent = nil
     contentHandler = nil
     finishLock.unlock()
-    handler?(content)
+    // Expiration stays nonblocking on the calling thread. The content handler
+    // runs only once the Rust supervisor has acknowledged actual cleanup.
+    twonly_database_operation_cancel(run)
+    DispatchQueue.global(qos: .userInitiated).async {
+      twonly_notification_run_finish(run)
+      handler?(content)
+    }
   }
 
   private func deliverFallback(
@@ -356,11 +385,14 @@ final class NotificationService: UNNotificationServiceExtension {
   ) {
     NativeErrorReporting.failure(operation)
     NSLog("Delivering Twonly wake-up fallback notification: \(reason)")
+    finishLock.lock()
+    let fallback = fallbackContent
+    finishLock.unlock()
     guard let presentation else {
-      finish(with: fallbackContent ?? UNMutableNotificationContent())
+      finish(with: fallback ?? UNMutableNotificationContent())
       return
     }
-    let content = (fallbackContent?.mutableCopy() as? UNMutableNotificationContent)
+    let content = (fallback?.mutableCopy() as? UNMutableNotificationContent)
       ?? UNMutableNotificationContent()
     content.title = presentation.title
     content.body = presentation.body
@@ -374,6 +406,11 @@ final class NotificationService: UNNotificationServiceExtension {
       )
     else { return nil }
     let directory = container.appendingPathComponent("runtime", isDirectory: true)
+    // A push may arrive before the first foreground launch after an upgrade.
+    // Leave its mailbox pending until the complete legacy store is installed.
+    guard FileManager.default.fileExists(
+      atPath: directory.appendingPathComponent(".runtime_storage_migrated_v1").path
+    ) else { return nil }
     do {
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
       try (directory as NSURL).setResourceValue(
@@ -387,12 +424,12 @@ final class NotificationService: UNNotificationServiceExtension {
     }
   }
 
-  private static func processWakeup(runtimeDirectory: String) -> NativeNotificationResponse? {
+  private static func processWakeup(run: UInt64, runtimeDirectory: String) -> NativeNotificationResponse? {
     let locale = Locale.current.identifier
     let pointer = runtimeDirectory.withCString { databaseDirectory in
       runtimeDirectory.withCString { dataDirectory in
         locale.withCString { locale in
-          twonly_notification_process(databaseDirectory, dataDirectory, locale, 22_000)
+          twonly_notification_process_with_id(run, databaseDirectory, dataDirectory, locale, 20_000)
         }
       }
     }
@@ -410,8 +447,8 @@ final class NotificationService: UNNotificationServiceExtension {
     }
   }
 
-  private static func finalizeRuntime() {
-    guard let pointer = twonly_notification_finalize(finalizeDeadlineMs) else { return }
+  private static func finalizeRuntime(run: UInt64) {
+    guard let pointer = twonly_notification_finalize_with_id(run, finalizeDeadlineMs) else { return }
     defer { twonly_notification_string_free(pointer) }
     let json = String(cString: pointer)
     guard
@@ -429,11 +466,11 @@ final class NotificationService: UNNotificationServiceExtension {
     }
   }
 
-  private static func acknowledge(eventIds: [String]) {
+  private static func acknowledge(run: UInt64, eventIds: [String]) {
     guard !eventIds.isEmpty, let data = try? JSONEncoder().encode(eventIds),
       let json = String(data: data, encoding: .utf8)
     else { return }
-    let pointer = json.withCString { twonly_notification_acknowledge($0) }
+    let pointer = json.withCString { twonly_notification_acknowledge_with_id(run, $0) }
     guard let pointer else { return }
     twonly_notification_string_free(pointer)
   }

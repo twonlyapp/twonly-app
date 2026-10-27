@@ -1,0 +1,122 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT j.attachment_id, j.media_id, j.multipart_path, j.manifest_path,\n                      j.complete_body_path, s.capability, j.expires_at,\n                      j.reupload_requested_by, j.reupload_targets\n               FROM direct_media_upload_jobs j\n               JOIN direct_media_upload_slots s ON s.attachment_id = j.attachment_id\n               WHERE j.state IN ('prepared', 'scheduled', 'waiting_for_server')",
+  "describe": {
+    "columns": [
+      {
+        "name": "attachment_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "attachment_id"
+          }
+        }
+      },
+      {
+        "name": "media_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "multipart_path",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "multipart_path"
+          }
+        }
+      },
+      {
+        "name": "manifest_path",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "manifest_path"
+          }
+        }
+      },
+      {
+        "name": "complete_body_path",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "complete_body_path"
+          }
+        }
+      },
+      {
+        "name": "capability",
+        "ordinal": 5,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_slots",
+            "name": "capability"
+          }
+        }
+      },
+      {
+        "name": "expires_at",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "expires_at"
+          }
+        }
+      },
+      {
+        "name": "reupload_requested_by",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "reupload_requested_by"
+          }
+        }
+      },
+      {
+        "name": "reupload_targets",
+        "ordinal": 8,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "reupload_targets"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "5bdf5a5e9f03e0a9734cada2f6f31fe76d6ae390cd744fdb3a272afcee52643c"
+}

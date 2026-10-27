@@ -1,16 +1,22 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/key_verifications.dart'
+    as rust_key_verifications;
 import 'package:twonly/core/bridge/wrapper/signal.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
+import 'package:twonly/src/model/contact_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/providers/routing.provider.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/verification_success_dialog.comp.dart';
@@ -36,7 +42,10 @@ class KeyVerificationService {
 
   static Future<List<int>> getNewSecretVerificationToken() async {
     final token = getRandomUint8List(16);
-    await twonlyDB.keyVerificationDao.insertVerificationToken(token);
+    await rust_key_verifications.insertVerificationToken(
+      token: token,
+      transaction: currentDatabaseSession(),
+    );
     return token.toList();
   }
 
@@ -65,7 +74,10 @@ class KeyVerificationService {
   }
 
   static Future<void> handleVerificationSucceeded(int fromUserId) async {
-    final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
+    final contact = await rust_contacts.getContact(
+      id: fromUserId,
+      transaction: currentDatabaseSession(),
+    );
     final context = rootNavigatorKey.currentContext;
     if (context != null && context.mounted && contact != null) {
       unawaited(
@@ -99,10 +111,14 @@ class KeyVerificationService {
 
     if (publicIdentityKey.equals(sharedPublicIdentityKey)) {
       Log.info('Verified a user which was shared by a contact');
-      await twonlyDB.keyVerificationDao.addKeyVerification(
-        contactId,
-        VerificationType.contactSharedByVerified,
+      await rust_key_verifications.changeKeyVerification(
+        contact: contactId,
+        kind: VerificationType.contactSharedByVerified.name,
         verifiedBy: senderId,
+        updateDiscovery: userService.currentUser.isUserDiscoveryEnabled,
+        verifiedAt: clock.now().millisecondsSinceEpoch,
+        callbackId: isolateCallbackId,
+        transaction: currentDatabaseSession(),
       );
     } else {
       Log.error('Public identity keys do not match for contact $contactId');

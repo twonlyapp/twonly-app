@@ -25,27 +25,20 @@ const MAX_ENTRY_BYTES: u64 = 32 * 1024 * 1024;
 /// The scheme handler already answers requests for anything else with a 403
 /// without touching the network, so this is defence in depth: CSP has a history
 /// of gaps (WebRTC, prefetch, plugins) and is not load bearing on its own.
-const CONTENT_SECURITY_POLICY: &str = "default-src 'self'; \
-     script-src 'self' 'unsafe-inline' 'unsafe-eval'; \
-     style-src 'self' 'unsafe-inline'; \
-     img-src 'self' data: blob:; \
-     media-src 'self' data: blob:; \
-     font-src 'self' data:; \
-     connect-src 'self' data: blob:; \
-     worker-src 'self' blob:; \
-     object-src 'none'; \
-     base-uri 'none'; \
-     form-action 'none'; \
-     frame-src 'none'; \
-     frame-ancestors 'none'";
+const CONTENT_SECURITY_POLICY: &str =
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' \
+     'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' \
+     data:; connect-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri \
+     'none'; form-action 'none'; frame-src 'none'; frame-ancestors 'none'";
 
 /// Every powerful feature a webview can hand a page, switched off. The native
 /// permission callbacks deny these too; a header costs nothing and covers the
 /// features whose prompts a platform might answer on its own.
 const PERMISSIONS_POLICY: &str = "accelerometer=(), ambient-light-sensor=(), autoplay=(), \
-     camera=(), display-capture=(), encrypted-media=(), geolocation=(), gyroscope=(), \
-     magnetometer=(), microphone=(), midi=(), payment=(), publickey-credentials-get=(), \
-     screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()";
+                                  camera=(), display-capture=(), encrypted-media=(), \
+                                  geolocation=(), gyroscope=(), magnetometer=(), microphone=(), \
+                                  midi=(), payment=(), publickey-credentials-get=(), \
+                                  screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()";
 
 pub struct HttpResponse {
     pub status: u16,
@@ -101,11 +94,13 @@ fn entry_name(request_path: &str) -> Option<String> {
         .next()
         .unwrap_or_default()
         .trim_start_matches('/');
+
     let path = percent_decode(path)?;
 
     if path.is_empty() {
         return Some("index.html".to_string());
     }
+
     if path.len() > 512
         || path.contains('\\')
         || path.contains('\0')
@@ -115,26 +110,35 @@ fn entry_name(request_path: &str) -> Option<String> {
     {
         return None;
     }
+
     if path.ends_with('/') {
         return Some(format!("{path}index.html"));
     }
+
     Some(path)
 }
 
 fn percent_decode(input: &str) -> Option<String> {
     let bytes = input.as_bytes();
+
     let mut out = Vec::with_capacity(bytes.len());
+
     let mut index = 0;
+
     while index < bytes.len() {
         if bytes[index] == b'%' {
             let hex = input.get(index + 1..index + 3)?;
+
             out.push(u8::from_str_radix(hex, 16).ok()?);
+
             index += 3;
         } else {
             out.push(bytes[index]);
+
             index += 1;
         }
     }
+
     String::from_utf8(out).ok()
 }
 
@@ -142,6 +146,7 @@ fn percent_decode(input: &str) -> Option<String> {
 /// opaque download with `nosniff`, so an unexpected file cannot become script.
 fn mime_for(name: &str) -> &'static str {
     let extension = name.rsplit('.').next().unwrap_or_default().to_lowercase();
+
     match extension.as_str() {
         "html" | "htm" => "text/html; charset=utf-8",
         "js" | "mjs" => "text/javascript; charset=utf-8",
@@ -199,6 +204,7 @@ pub fn serve(bundle_path: &Path, request_path: &str, init: &str) -> HttpResponse
         Ok(None) => HttpResponse::not_found(),
         Err(error) => {
             tracing::warn!("serving {name} from a webxdc bundle failed: {error}");
+
             HttpResponse::not_found()
         }
     }
@@ -206,15 +212,19 @@ pub fn serve(bundle_path: &Path, request_path: &str, init: &str) -> HttpResponse
 
 fn read_entry(bundle_path: &Path, name: &str) -> Result<Option<Vec<u8>>> {
     let file = std::fs::File::open(bundle_path)?;
+
     let mut archive = zip::ZipArchive::new(std::io::BufReader::new(file))?;
+
     let mut entry = match archive.by_name(name) {
         Ok(entry) => entry,
         Err(zip::result::ZipError::FileNotFound) => return Ok(None),
         Err(error) => return Err(error.into()),
     };
+
     if !entry.is_file() {
         return Ok(None);
     }
+
     if entry.size() > MAX_ENTRY_BYTES {
         return Err(TwonlyError::Generic(format!(
             "webxdc entry {name} declares {} bytes",
@@ -226,24 +236,32 @@ fn read_entry(bundle_path: &Path, name: &str) -> Result<Option<Vec<u8>>> {
     // declaration is attacker controlled and a lying header must not be able to
     // turn into an unbounded allocation.
     let mut body = Vec::with_capacity(entry.size().min(1024 * 1024) as usize);
+
     std::io::Read::take(&mut entry, MAX_ENTRY_BYTES + 1).read_to_end(&mut body)?;
+
     if body.len() as u64 > MAX_ENTRY_BYTES {
         return Err(TwonlyError::Generic(format!(
             "webxdc entry {name} expanded past the entry limit"
         )));
     }
+
     Ok(Some(body))
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::entry_name;
 
     #[test]
+
     fn empty_and_directory_paths_resolve_to_index() {
         assert_eq!(entry_name("/").as_deref(), Some("index.html"));
+
         assert_eq!(entry_name("").as_deref(), Some("index.html"));
+
         assert_eq!(entry_name("/sub/").as_deref(), Some("sub/index.html"));
+
         assert_eq!(
             entry_name("/index.html?v=2#top").as_deref(),
             Some("index.html")
@@ -251,6 +269,7 @@ mod tests {
     }
 
     #[test]
+
     fn traversal_is_refused_in_every_encoding() {
         for path in [
             "/../secrets",
@@ -266,8 +285,10 @@ mod tests {
     }
 
     #[test]
+
     fn ordinary_paths_survive() {
         assert_eq!(entry_name("/main.js").as_deref(), Some("main.js"));
+
         assert_eq!(
             entry_name("/assets/my%20image.png").as_deref(),
             Some("assets/my image.png")

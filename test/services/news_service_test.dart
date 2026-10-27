@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -94,11 +95,10 @@ void main() {
       return http.Response.bytes(utf8.encode(rssXml), 200);
     });
 
-    await newsServiceInstance.init();
     expect(newsServiceInstance.hasLoadedBefore, isFalse);
     expect(newsServiceInstance.unreadCountNotifier.value, 0);
 
-    await newsServiceInstance.fetchFeed(client: mockClient);
+    await newsServiceInstance.init(client: mockClient);
 
     expect(newsServiceInstance.hasLoadedBefore, isTrue);
     expect(newsServiceInstance.entries.length, 1);
@@ -111,13 +111,50 @@ void main() {
     );
   });
 
+  for (final status in [0, 503, 404]) {
+    test(
+      'feed failure $status preserves cached content and uses the right severity',
+      () async {
+        final success = MockClient(
+          (_) async => http.Response.bytes(utf8.encode(rssXml), 200),
+        );
+        await newsServiceInstance.fetchFeed(client: success);
+        success.close();
+        final previousEntries = newsServiceInstance.entries;
+        final previousDownload = newsServiceInstance.lastDownloadedAt;
+        final records = <LogRecord>[];
+        final previousLevel = Logger.root.level;
+        Logger.root.level = Level.ALL;
+        final subscription = Logger.root.onRecord.listen(records.add);
+        final failed = MockClient((_) async {
+          if (status == 0) {
+            throw const SocketException('Network is unreachable');
+          }
+          return http.Response('', status);
+        });
+        try {
+          await newsServiceInstance.fetchFeed(client: failed);
+          expect(newsServiceInstance.entries, same(previousEntries));
+          expect(newsServiceInstance.lastDownloadedAt, previousDownload);
+          expect(
+            records.single.level,
+            status == 404 ? Level.SHOUT : Level.WARNING,
+          );
+        } finally {
+          failed.close();
+          await subscription.cancel();
+          Logger.root.level = previousLevel;
+        }
+      },
+    );
+  }
+
   test('Subsequent fetch feed detects new articles as unread', () async {
     final mockClient1 = MockClient((request) async {
       return http.Response.bytes(utf8.encode(rssXml), 200);
     });
 
-    await newsServiceInstance.init();
-    await newsServiceInstance.fetchFeed(client: mockClient1);
+    await newsServiceInstance.init(client: mockClient1);
 
     expect(newsServiceInstance.unreadCountNotifier.value, 0);
 
@@ -140,8 +177,7 @@ void main() {
       return http.Response.bytes(utf8.encode(rssXml), 200);
     });
 
-    await newsServiceInstance.init();
-    await newsServiceInstance.fetchFeed(client: mockClient1);
+    await newsServiceInstance.init(client: mockClient1);
 
     final mockClient2 = MockClient((request) async {
       return http.Response.bytes(utf8.encode(rssXmlWithTwoItems), 200);
@@ -159,8 +195,7 @@ void main() {
       return http.Response.bytes(utf8.encode(rssXml), 200);
     });
 
-    await newsServiceInstance.init();
-    await newsServiceInstance.fetchFeed(client: mockClient);
+    await newsServiceInstance.init(client: mockClient);
 
     final newServiceInstance = NewsService();
     await newServiceInstance.init();

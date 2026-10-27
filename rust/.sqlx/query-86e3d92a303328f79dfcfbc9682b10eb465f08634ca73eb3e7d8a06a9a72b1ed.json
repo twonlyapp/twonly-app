@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    UPDATE groups\n                    SET group_id = CASE WHEN ? THEN ? ELSE group_id END,\n                        is_group_admin = CASE WHEN ? THEN ? ELSE is_group_admin END,\n                        is_direct_chat = CASE WHEN ? THEN ? ELSE is_direct_chat END,\n                        pinned = CASE WHEN ? THEN ? ELSE pinned END,\n                        archived = CASE WHEN ? THEN ? ELSE archived END,\n                        joined_group = CASE WHEN ? THEN ? ELSE joined_group END,\n                        left_group = CASE WHEN ? THEN ? ELSE left_group END,\n                        deleted_content = CASE WHEN ? THEN ? ELSE deleted_content END,\n                        state_version_id = CASE WHEN ? THEN ? ELSE state_version_id END,\n                        state_encryption_key = CASE WHEN ? THEN ? ELSE state_encryption_key END,\n                        my_group_private_key = CASE WHEN ? THEN ? ELSE my_group_private_key END,\n                        group_name = CASE WHEN ? THEN ? ELSE group_name END,\n                        draft_message = CASE WHEN ? THEN ? ELSE draft_message END,\n                        total_media_counter = CASE WHEN ? THEN ? ELSE total_media_counter END,\n                        also_best_friend = CASE WHEN ? THEN ? ELSE also_best_friend END,\n                        delete_messages_after_milliseconds = CASE WHEN ? THEN ? ELSE delete_messages_after_milliseconds END,\n                        created_at = CASE WHEN ? THEN ? ELSE created_at END,\n                        last_message_send = CASE WHEN ? THEN ? ELSE last_message_send END,\n                        last_message_received = CASE WHEN ? THEN ? ELSE last_message_received END,\n                        last_flame_counter_change = CASE WHEN ? THEN ? ELSE last_flame_counter_change END,\n                        last_flame_sync = CASE WHEN ? THEN ? ELSE last_flame_sync END,\n                        flame_counter = CASE WHEN ? THEN ? ELSE flame_counter END,\n                        max_flame_counter = CASE WHEN ? THEN ? ELSE max_flame_counter END,\n                        max_flame_counter_from = CASE WHEN ? THEN ? ELSE max_flame_counter_from END,\n                        last_message_exchange = CASE WHEN ? THEN ? ELSE last_message_exchange END\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 50
+    },
+    "nullable": []
+  },
+  "hash": "86e3d92a303328f79dfcfbc9682b10eb465f08634ca73eb3e7d8a06a9a72b1ed"
+}

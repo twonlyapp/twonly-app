@@ -15,10 +15,7 @@ use std::sync::Arc;
 
 impl Server {
     pub async fn request_memories_upload(
-        ctx: &Arc<Context>,
-        size: i64,
-        original_date: i64,
-        media_id: String,
+        ctx: &Arc<Context>, size: i64, original_date: i64, media_id: String,
     ) -> Result<ServerResult<proto::server_to_client::response::MemoriesUploadUrls>> {
         let bytes = Self::application(
             ctx,
@@ -56,9 +53,7 @@ impl Server {
     }
 
     pub async fn get_memories_url(
-        ctx: &Arc<Context>,
-        media_id: String,
-        thumbnail: bool,
+        ctx: &Arc<Context>, media_id: String, thumbnail: bool,
     ) -> Result<ServerResult<proto::server_to_client::response::MemoriesUrl>> {
         let bytes = Self::application(
             ctx,
@@ -78,8 +73,7 @@ impl Server {
     }
 
     pub async fn confirm_memories_upload(
-        ctx: &Arc<Context>,
-        media_id: String,
+        ctx: &Arc<Context>, media_id: String,
     ) -> Result<ServerResult<()>> {
         server_ok!(
             Self::application(

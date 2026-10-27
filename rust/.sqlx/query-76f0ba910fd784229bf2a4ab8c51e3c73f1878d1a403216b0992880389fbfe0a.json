@@ -1,0 +1,170 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n            receipt_id AS \"receipt_id!\",\n                contact_id AS \"contact_id!\",\n                message_id AS \"message_id?\",\n                message AS \"message!\",\n                contact_will_sends_receipt AS \"contact_will_sends_receipt!\",\n                will_be_retried_by_media_upload AS \"will_be_retried_by_media_upload!\",\n                mark_for_retry AS \"mark_for_retry?\",\n                mark_for_retry_after_accepted AS \"mark_for_retry_after_accepted?\",\n                ack_by_server_at AS \"ack_by_server_at?\",\n                retry_count AS \"retry_count!\",\n                last_retry AS \"last_retry?\",\n                created_at AS \"created_at!\",\n                wake_receiver AS \"wake_receiver!\"\n            FROM receipts ORDER BY rowid\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "receipt_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "receipt_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "message_id?",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "message!",
+        "ordinal": 3,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "message"
+          }
+        }
+      },
+      {
+        "name": "contact_will_sends_receipt!",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "contact_will_sends_receipt"
+          }
+        }
+      },
+      {
+        "name": "will_be_retried_by_media_upload!",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "will_be_retried_by_media_upload"
+          }
+        }
+      },
+      {
+        "name": "mark_for_retry?",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "mark_for_retry"
+          }
+        }
+      },
+      {
+        "name": "mark_for_retry_after_accepted?",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "mark_for_retry_after_accepted"
+          }
+        }
+      },
+      {
+        "name": "ack_by_server_at?",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "ack_by_server_at"
+          }
+        }
+      },
+      {
+        "name": "retry_count!",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "retry_count"
+          }
+        }
+      },
+      {
+        "name": "last_retry?",
+        "ordinal": 10,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "last_retry"
+          }
+        }
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 11,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "wake_receiver!",
+        "ordinal": 12,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "wake_receiver"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "76f0ba910fd784229bf2a4ab8c51e3c73f1878d1a403216b0992880389fbfe0a"
+}

@@ -6,9 +6,9 @@
 pub(crate) mod backup_password_keys;
 mod identity_key;
 mod main_key;
+pub(crate) mod restore;
 
-use crate::error::Result;
-use crate::error::TwonlyError;
+use crate::error::{Result, TwonlyError};
 pub(crate) use crate::keys::backup_password_keys::BackupPasswordKeys;
 pub(crate) use crate::keys::identity_key::signal_identity_key::SignalIdentityKey;
 pub(crate) use crate::keys::main_key::{DatabaseKey, MainKey};
@@ -18,9 +18,11 @@ use std::collections::HashMap;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 const KEY_MANAGER_ID: &str = "twonly_key_manager";
+
 const KEY_MANAGER_V2_PREFIX: &[u8] = b"TWONLY_KEY_MANAGER_V2\0";
 
 #[derive(Debug, PartialEq, Zeroize, ZeroizeOnDrop, Serialize, Deserialize)]
+
 pub(crate) struct KeyManager {
     pub(crate) user_id: Option<i64>,
     pub(crate) main_key: MainKey,
@@ -44,16 +46,36 @@ impl KeyManager {
             .read(KEY_MANAGER_ID)?
             .ok_or_else(|| TwonlyError::MissingMainKey)?;
 
-        let bytes = hex::decode(hex_key)?;
+        let hex_key = zeroize::Zeroizing::new(hex_key);
+
+        let bytes = zeroize::Zeroizing::new(hex::decode(&*hex_key)?);
 
         Self::from_bytes(&bytes)
     }
 
     /// Stores the main key into the secure keychain/local storage.
     pub fn store_to_keychain(&self, storage: &SecureStorage) -> Result<()> {
-        let serialized = self.to_bytes()?;
+        let _access = storage.identity_access()?;
 
-        let hex_key = hex::encode(serialized);
+        if _access.is_some() {
+            if let Some(active) = storage.read(KEY_MANAGER_ID)? {
+                let active = zeroize::Zeroizing::new(active);
+
+                let bytes = zeroize::Zeroizing::new(hex::decode(&*active)?);
+
+                if Self::from_bytes(&bytes)?.main_key != self.main_key {
+                    return Err(TwonlyError::Generic(
+                        "The database identity changed; reopen the context before writing keys"
+                            .into(),
+                    ));
+                }
+            }
+        }
+
+        let serialized = zeroize::Zeroizing::new(self.to_bytes()?);
+
+        let hex_key = zeroize::Zeroizing::new(hex::encode(&*serialized));
+
         storage.write(KEY_MANAGER_ID, &hex_key)?;
 
         Ok(())
@@ -61,15 +83,24 @@ impl KeyManager {
 
     /// Removes the KeyManager from the secure keychain/local storage.
     pub fn remove_from_keychain(storage: &SecureStorage) -> Result<()> {
+        let _access = storage.identity_access()?;
+
+        restore::discard(storage)?;
+
         storage.delete(KEY_MANAGER_ID)?;
+
         Ok(())
     }
 
     pub(crate) fn to_bytes(&self) -> Result<Vec<u8>> {
         let payload = postcard::to_allocvec(self)?;
+
         let mut serialized = Vec::with_capacity(KEY_MANAGER_V2_PREFIX.len() + payload.len());
+
         serialized.extend_from_slice(KEY_MANAGER_V2_PREFIX);
+
         serialized.extend_from_slice(&payload);
+
         Ok(serialized)
     }
 
@@ -82,11 +113,13 @@ impl KeyManager {
         // embedded a signed-prekey HashMap in the Signal identity. Read that
         // shape once and discard the obsolete private-key copy during migration.
         let legacy: LegacyKeyManager = postcard::from_bytes(bytes)?;
+
         Ok(legacy.into_current())
     }
 }
 
 #[derive(Deserialize)]
+
 struct LegacyKeyManager {
     user_id: Option<i64>,
     main_key: MainKey,
@@ -108,6 +141,7 @@ impl LegacyKeyManager {
 }
 
 #[derive(Deserialize)]
+
 struct LegacySignalIdentityKey {
     identity_key_pair_structure: Vec<u8>,
     registration_id: i64,
@@ -119,7 +153,9 @@ impl LegacySignalIdentityKey {
         for value in self.pre_key_store.values_mut() {
             value.zeroize();
         }
+
         self.pre_key_store.clear();
+
         SignalIdentityKey {
             identity_key_pair_structure: std::mem::take(&mut self.identity_key_pair_structure),
             registration_id: self.registration_id,
@@ -130,19 +166,24 @@ impl LegacySignalIdentityKey {
 impl Drop for LegacySignalIdentityKey {
     fn drop(&mut self) {
         self.identity_key_pair_structure.zeroize();
+
         self.registration_id.zeroize();
+
         for value in self.pre_key_store.values_mut() {
             value.zeroize();
         }
+
         self.pre_key_store.clear();
     }
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[derive(Serialize)]
+
     struct OldKeyManager<'a> {
         user_id: Option<i64>,
         main_key: &'a MainKey,
@@ -151,6 +192,7 @@ mod tests {
     }
 
     #[derive(Serialize)]
+
     struct OldSignalIdentity {
         identity_key_pair_structure: Vec<u8>,
         registration_id: i64,
@@ -158,8 +200,10 @@ mod tests {
     }
 
     #[test]
+
     fn reads_legacy_key_manager_and_drops_pre_key_store() {
         let key_manager = KeyManager::generate().unwrap();
+
         let legacy = OldKeyManager {
             user_id: Some(42),
             main_key: &key_manager.main_key,
@@ -170,10 +214,13 @@ mod tests {
             }),
             backup_password: None,
         };
+
         let bytes = postcard::to_allocvec(&legacy).unwrap();
 
         let migrated = KeyManager::from_bytes(&bytes).unwrap();
+
         assert_eq!(migrated.user_id, Some(42));
+
         assert_eq!(
             migrated.signal_identity,
             Some(SignalIdentityKey {
@@ -184,10 +231,14 @@ mod tests {
     }
 
     #[test]
+
     fn v2_roundtrip_is_prefixed() {
         let key_manager = KeyManager::generate().unwrap();
+
         let bytes = key_manager.to_bytes().unwrap();
+
         assert!(bytes.starts_with(KEY_MANAGER_V2_PREFIX));
+
         assert_eq!(KeyManager::from_bytes(&bytes).unwrap(), key_manager);
     }
 }

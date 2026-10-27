@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COUNT(*) FROM group_members gm\n                   JOIN contacts c ON c.user_id = gm.contact_id\n                   WHERE gm.group_id = ? AND c.account_deleted = 0\n                     AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')",
+  "describe": {
+    "columns": [
+      {
+        "name": "COUNT(*)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "aacadeb74e8fd0991657906e2e964731cfbff754856091de35faaf88747cfb97"
+}

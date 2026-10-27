@@ -9,13 +9,32 @@ use crate::utils::milliseconds_to_seconds;
 use sqlx::{Sqlite, Transaction};
 
 pub(crate) async fn handle_typing_indicator(
-    t: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    group_id: &str,
+    t: &mut Transaction<'_, Sqlite>, from_user_id: i64, group_id: &str,
     indicator: encrypted_content::TypingIndicator,
 ) -> Result<()> {
     let created_at = milliseconds_to_seconds(indicator.created_at);
+
+    if indicator.chat_closed {
+        // A close that was overtaken by a newer open must not hide it again.
+        sqlx::query!(
+            r#"
+            UPDATE group_members
+            SET last_chat_opened = NULL, last_type_indicator = NULL
+            WHERE group_id = ? AND contact_id = ?
+                AND (last_chat_opened IS NULL OR last_chat_opened <= ?)
+            "#,
+            group_id,
+            from_user_id,
+            created_at,
+        )
+        .execute(&mut **t)
+        .await?;
+
+        return Ok(());
+    }
+
     let typing = indicator.is_typing.then_some(created_at);
+
     sqlx::query!(
         r#"
         UPDATE group_members
@@ -29,5 +48,6 @@ pub(crate) async fn handle_typing_indicator(
     )
     .execute(&mut **t)
     .await?;
+
     Ok(())
 }

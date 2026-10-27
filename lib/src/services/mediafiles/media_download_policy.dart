@@ -1,7 +1,12 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 
 /// Flutter only decides whether the user's network policy permits a download.
 /// Transfer, validation, decryption, hashing, and state changes are Rust-owned.
@@ -10,8 +15,12 @@ Future<void> tryDownloadAllMediaFiles({bool force = false}) async {
     await RustApi.downloadPendingMedia();
     return;
   }
-  final mediaFiles = await twonlyDB.mediaFilesDao
-      .getAllMediaFilesPendingDownload();
+  final mediaFiles = await rust_mediafiles.listMediaFiles(
+    input: const db_mediafiles.MediaQuery(
+      filter: db_mediafiles.MediaFilter.pendingDownload,
+    ),
+    transaction: currentDatabaseSession(),
+  );
   for (final media in mediaFiles) {
     if (await isAllowedToDownload(media.type)) {
       await RustApi.downloadMedia(mediaId: media.mediaId);

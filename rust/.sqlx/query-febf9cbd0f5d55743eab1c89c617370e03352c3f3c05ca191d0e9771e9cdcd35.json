@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT session_id, expires_at_ms FROM live_location_sessions LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "session_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "live_location_sessions",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "name": "expires_at_ms",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "live_location_sessions",
+            "name": "expires_at_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "febf9cbd0f5d55743eab1c89c617370e03352c3f3c05ca191d0e9771e9cdcd35"
+}

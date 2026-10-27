@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE notification_outbox SET cleared_at = ?\n        WHERE conversation_id = ? AND cleared_at IS NULL\n          AND (\n              kind NOT IN ('twonly', 'image', 'video', 'audio', 'story')\n              OR EXISTS (\n                  SELECT 1 FROM messages\n                  WHERE messages.message_id = notification_outbox.message_id\n                    AND messages.opened_at IS NOT NULL\n              )\n          )\n        RETURNING notification_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "notification_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "notification_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "37dd2ec3c25bfe3fda6715c970cbf2f583042a3839556253bff0cffdeca66d1a"
+}

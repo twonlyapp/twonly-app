@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE FROM contact_group_members WHERE contact_group_id = ? AND user_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "3f4b6a3fef6b9bab01ce605728dc5a486ac951d2ac056fcc0b63c6c2c94a244a"
+}

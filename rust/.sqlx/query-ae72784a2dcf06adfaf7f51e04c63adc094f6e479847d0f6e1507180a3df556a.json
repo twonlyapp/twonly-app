@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = ? AND contact_id = ? AND \n             (member_state IS NULL OR member_state != 'leftGroup')) AS \"sender_is_member!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "sender_is_member!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ae72784a2dcf06adfaf7f51e04c63adc094f6e479847d0f6e1507180a3df556a"
+}

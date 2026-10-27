@@ -10,7 +10,7 @@ use crate::bridge::api::{ApiEvent, ApiEventKind, RustApi};
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
 use crate::services::media_upload::MediaUploadService;
-use chacha20poly1305::aead::{AeadInPlace, KeyInit};
+use chacha20poly1305::aead::{AeadInOut, KeyInit};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce, Tag};
 use prost::Message as _;
 use sha2::{Digest, Sha256};
@@ -31,7 +31,40 @@ fn download_lock(media_id: &str) -> Arc<Mutex<()>> {
     let mut locks = DOWNLOAD_LOCKS
         .lock()
         .unwrap_or_else(|error| error.into_inner());
+
     locks.entry(media_id.to_owned()).or_default().clone()
+}
+
+fn download_url(token: &[u8]) -> String {
+    format!(
+        "{}download/{}",
+        RustApi::api_base_url("https".into()),
+        hex::encode(token)
+    )
+}
+
+/// What the server says about a download token without transferring its
+/// object.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+
+pub(crate) enum DownloadAvailability {
+    Available,
+    /// The server does not know the token, or its object is gone, so the
+    /// download can only end in a reupload request.
+    Gone,
+    /// No answer either way: a network failure, a storage outage, or a server
+    /// that predates the check and refuses the method.
+    Unknown,
+}
+
+impl DownloadAvailability {
+    fn from_status(status: reqwest::StatusCode) -> Self {
+        match status.as_u16() {
+            200..=299 => Self::Available,
+            403 | 410 => Self::Gone,
+            _ => Self::Unknown,
+        }
+    }
 }
 
 struct DownloadMedia {
@@ -66,6 +99,7 @@ impl MediaFileService {
     /// downloader it lets in then races the first over the same files.
     pub async fn download_pending(&self) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
+
         // The background wake-up runs this on a budget of a few seconds, so the
         // order decides what actually gets through: widget media is the whole
         // reason that wake-up happened, and newer media is what the user is
@@ -77,6 +111,7 @@ impl MediaFileService {
         )
         .fetch_all(&database.pool)
         .await?;
+
         drop(database);
 
         for media_id in media_ids {
@@ -84,14 +119,26 @@ impl MediaFileService {
                 tracing::warn!(media_id, %error, "media download failed");
             }
         }
+
         Ok(())
     }
 
     pub async fn download(&self, media_id: &str) -> Result<()> {
+        self.download_with(media_id, || self.download_claimed(media_id))
+            .await
+    }
+
+    async fn download_with<F, Fut>(&self, media_id: &str, transfer: F) -> Result<()>
+    where
+        F: FnOnce() -> Fut,
+        Fut: std::future::Future<Output = Result<()>>,
+    {
         let lock = download_lock(media_id);
+
         let _guard = lock.lock().await;
 
         let database = self.ctx.app_db.read().await.clone();
+
         // Nothing in this process holds the transfer any more, so a claim left
         // over from a process the OS reclaimed mid-download is recoverable.
         sqlx::query!(
@@ -101,6 +148,7 @@ impl MediaFileService {
         )
         .execute(&database.pool)
         .await?;
+
         let claimed = sqlx::query!(
             r#"UPDATE media_files SET download_state = 'downloading'
                WHERE media_id = ? AND download_state = 'pending'"#,
@@ -109,11 +157,13 @@ impl MediaFileService {
         .execute(&database.pool)
         .await?
         .rows_affected();
+
         if claimed == 0 {
             return Ok(());
         }
 
-        let result = self.download_claimed(media_id).await;
+        let result = transfer().await;
+
         if result.is_err() {
             sqlx::query!(
                 r#"UPDATE media_files SET download_state = 'pending'
@@ -123,34 +173,67 @@ impl MediaFileService {
             .execute(&database.pool)
             .await?;
         }
-        result
+
+        match result {
+            Err(TwonlyError::MediaDownloadUnavailable(error)) => {
+                tracing::warn!(media_id, %error, "media download deferred until a retry");
+                Ok(())
+            }
+            result => result,
+        }
+    }
+
+    /// Asks the server, with an `OPTIONS` request, whether a download token
+    /// still leads to an object. Cheap enough for the notification path, which
+    /// must not download whole files before it shows anything.
+    pub(crate) async fn download_availability(token: &[u8]) -> DownloadAvailability {
+        let Ok(client) = crate::api::http::client_builder().build() else {
+            return DownloadAvailability::Unknown;
+        };
+
+        match client
+            .request(reqwest::Method::OPTIONS, download_url(token))
+            .timeout(Duration::from_secs(3))
+            .send()
+            .await
+        {
+            Ok(response) => DownloadAvailability::from_status(response.status()),
+            Err(_) => DownloadAvailability::Unknown,
+        }
     }
 
     /// Incoming media is inserted inside a transaction owned by the message
     /// handler. Wait until that transaction becomes visible before claiming it.
     pub async fn download_when_available(&self, media_id: &str) -> Result<()> {
-        for _ in 0..40 {
-            let database = self.ctx.app_db.read().await.clone();
-            let state = sqlx::query_scalar!(
-                "SELECT download_state FROM media_files WHERE media_id = ?",
-                media_id,
-            )
-            .fetch_optional(&database.pool)
-            .await?
-            .flatten();
-            match state.as_deref() {
-                Some("pending") => return self.download(media_id).await,
-                Some(_) => return Ok(()),
-                None => tokio::time::sleep(Duration::from_millis(50)).await,
+        crate::performance::measure("media.download", "http.client", async {
+            for _ in 0..40 {
+                let database = self.ctx.app_db.read().await.clone();
+
+                let state = sqlx::query_scalar!(
+                    "SELECT download_state FROM media_files WHERE media_id = ?",
+                    media_id,
+                )
+                .fetch_optional(&database.pool)
+                .await?
+                .flatten();
+
+                match state.as_deref() {
+                    Some("pending") => return self.download(media_id).await,
+                    Some(_) => return Ok(()),
+                    None => tokio::time::sleep(Duration::from_millis(50)).await,
+                }
             }
-        }
-        Err(TwonlyError::Generic(format!(
-            "media {media_id} was not committed in time"
-        )))
+
+            Err(TwonlyError::Generic(format!(
+                "media {media_id} was not committed in time"
+            )))
+        })
+        .await
     }
 
     async fn download_claimed(&self, media_id: &str) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
+
         let messages = sqlx::query!(
             r#"SELECT m.message_id, m.sender_id, c.account_deleted
                FROM messages m
@@ -166,43 +249,54 @@ impl MediaFileService {
                 sqlx::query_scalar!("SELECT type FROM media_files WHERE media_id = ?", media_id,)
                     .fetch_optional(&database.pool)
                     .await?;
+
             sqlx::query!("DELETE FROM media_files WHERE media_id = ?", media_id)
                 .execute(&database.pool)
                 .await?;
+
             if let Some(media_type) = media_type {
                 self.remove_files(media_id, &media_type)?;
             }
+
             return Ok(());
         }
+
         if messages.len() != 1 {
             return Err(TwonlyError::Generic(format!(
                 "media {media_id} has {} original messages",
                 messages.len()
             )));
         }
+
         let message = &messages[0];
+
         if message.sender_id.is_none() {
             return Err(TwonlyError::Generic(format!(
                 "media {media_id} has no sender"
             )));
         }
+
         if message.account_deleted.unwrap_or(1) != 0 {
             let media_type =
                 sqlx::query_scalar!("SELECT type FROM media_files WHERE media_id = ?", media_id,)
                     .fetch_optional(&database.pool)
                     .await?;
+
             sqlx::query!("DELETE FROM media_files WHERE media_id = ?", media_id)
                 .execute(&database.pool)
                 .await?;
+
             sqlx::query!(
                 "DELETE FROM messages WHERE message_id = ?",
                 message.message_id
             )
             .execute(&database.pool)
             .await?;
+
             if let Some(media_type) = media_type {
                 self.remove_files(media_id, &media_type)?;
             }
+
             return Ok(());
         }
 
@@ -218,6 +312,7 @@ impl MediaFileService {
         .ok_or_else(|| TwonlyError::Generic(format!("media {media_id} not found")))?;
 
         let encrypted_path = self.encrypted_path(&media.media_id, &media.media_type);
+
         if !encrypted_path.exists() && !self.fetch_encrypted(&media, &encrypted_path).await? {
             return Ok(());
         }
@@ -228,33 +323,43 @@ impl MediaFileService {
             // from a key that genuinely does not match: without this, one
             // truncated download poisons every later attempt at the same file.
             tracing::warn!(media_id, %error, "media decryption failed; downloading it again");
+
             let _ = std::fs::remove_file(&encrypted_path);
+
             if !self.fetch_encrypted(&media, &encrypted_path).await? {
                 return Ok(());
             }
+
             if let Err(error) = self.decrypt(&media, &encrypted_path).await {
                 tracing::warn!(media_id, %error, "media decryption failed; requesting reupload");
+
                 let _ = std::fs::remove_file(&encrypted_path);
+
                 self.request_reupload(media_id).await?;
+
                 return Ok(());
             }
         }
+
         if let Err(error) = MediaUploadService::new(&self.ctx)
             .create_story_thumbnail(media_id)
             .await
         {
             tracing::warn!(media_id, %error, "could not create the story thumbnail");
         }
-        let is_widget = sqlx::query_scalar::<_, i64>(
+
+        let is_widget = sqlx::query_scalar!(
             "SELECT is_widget_media FROM media_files WHERE media_id = ?",
+            media_id
         )
-        .bind(media_id)
         .fetch_optional(&database.pool)
         .await?
         .unwrap_or(0)
             != 0;
+
         if is_widget {
             crate::services::home_widget::refresh_manifest(&self.ctx).await?;
+
             // Rewriting the manifest changes nothing on the home screen by
             // itself: both platforms keep drawing what they built earlier. The
             // widgets are native, so only Flutter can ask them to redraw, and
@@ -265,6 +370,7 @@ impl MediaFileService {
                 message: None,
             });
         }
+
         Ok(())
     }
 
@@ -279,38 +385,63 @@ impl MediaFileService {
     /// has been requested instead.
     async fn fetch_encrypted(&self, media: &DownloadMedia, encrypted_path: &Path) -> Result<bool> {
         let media_id = &media.media_id;
-        let token = media.download_token.as_deref().ok_or_else(|| {
-            TwonlyError::Generic(format!("media {media_id} has no download token"))
-        })?;
-        let url = format!(
-            "{}download/{}",
-            RustApi::api_base_url("https".into()),
-            hex::encode(token)
-        );
-        let response = reqwest::Client::new()
-            .get(url)
+
+        let token = media
+            .download_token
+            .as_deref()
+            .ok_or_else(|| TwonlyError::Generic("media has no download token".into()))?;
+
+        let response = crate::api::http::client_builder()
+            .build()
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?
+            .get(download_url(token))
             .timeout(Duration::from_secs(30))
             .send()
             .await
-            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+            // reqwest includes the URL in Display, including the secret token.
+            .map_err(|error| {
+                TwonlyError::MediaDownloadUnavailable(error.without_url().to_string())
+            })?;
+
         let status = response.status();
+
         if status == reqwest::StatusCode::NOT_FOUND || status == reqwest::StatusCode::FORBIDDEN {
+            // 403 is a token the server does not know, 404 an object that is
+            // gone. Which one it was is the first question about a reupload.
+            tracing::warn!(
+                media_id,
+                status = status.as_u16(),
+                "media download was refused; requesting a reupload"
+            );
+
             self.request_reupload(media_id).await?;
+
             return Ok(false);
         }
+
         if !status.is_success() {
-            return Err(TwonlyError::Generic(format!(
-                "media download returned HTTP {status}"
-            )));
+            let reason = format!("media download returned HTTP {status}");
+            return Err(
+                if status.is_server_error() || status == reqwest::StatusCode::TOO_MANY_REQUESTS {
+                    TwonlyError::MediaDownloadUnavailable(reason)
+                } else {
+                    TwonlyError::Generic(reason)
+                },
+            );
         }
-        let bytes = response
-            .bytes()
-            .await
-            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+
+        let bytes = response.bytes().await.map_err(|error| {
+            TwonlyError::MediaDownloadUnavailable(error.without_url().to_string())
+        })?;
+
         let partial_path = self.partial_download_path(media_id, &media.media_type);
+
         Self::ensure_parent(&partial_path)?;
+
         std::fs::write(&partial_path, bytes)?;
+
         std::fs::rename(&partial_path, encrypted_path)?;
+
         Ok(true)
     }
 
@@ -318,9 +449,11 @@ impl MediaFileService {
         let key = media.encryption_key.as_deref().ok_or_else(|| {
             TwonlyError::Generic(format!("media {} has no encryption key", media.media_id))
         })?;
+
         let nonce = media.encryption_nonce.as_deref().ok_or_else(|| {
             TwonlyError::Generic(format!("media {} has no encryption nonce", media.media_id))
         })?;
+
         let mac = media.encryption_mac.as_deref().ok_or_else(|| {
             TwonlyError::Generic(format!("media {} has no encryption MAC", media.media_id))
         })?;
@@ -337,21 +470,28 @@ impl MediaFileService {
             return Err(TwonlyError::Generic("invalid media encryption MAC".into()));
         }
 
-        let nonce = Nonce::from_slice(nonce);
-        let tag = Tag::from_slice(mac);
+        let nonce = Nonce::try_from(nonce).expect("nonce length was checked");
+
+        let tag = Tag::try_from(mac).expect("tag length was checked");
+
         let mut bytes = std::fs::read(encrypted_path)?;
-        cipher.decrypt_in_place_detached(nonce, b"", &mut bytes, tag)?;
+
+        cipher.decrypt_inout_detached(&nonce, b"", bytes.as_mut_slice().into(), &tag)?;
 
         let temp_path = self.temp_path(&media.media_id, &media.media_type);
+
         Self::ensure_parent(&temp_path)?;
+
         std::fs::write(&temp_path, &bytes)?;
 
         let hash = Sha256::digest(&bytes).to_vec();
+
         let size = bytes.len() as i64;
 
         // Keep the file update and state transition ordered: ready is only
         // visible after the plaintext has been written successfully.
         let database = self.ctx.app_db.read().await.clone();
+
         sqlx::query!(
             r#"UPDATE media_files SET download_state = 'ready', stored_file_hash = ?,
                       size_in_bytes = ?
@@ -364,11 +504,13 @@ impl MediaFileService {
         .await?;
 
         std::fs::remove_file(encrypted_path)?;
+
         Ok(())
     }
 
     pub async fn request_reupload(&self, media_id: &str) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
+
         // Widget media is marked opened the moment it arrives, since nobody
         // ever opens it in a chat. Asking only for what has not been opened
         // would therefore never ask for it at all, and the state set below
@@ -412,21 +554,25 @@ impl MediaFileService {
                 .call()
                 .await?;
         }
+
         Ok(())
     }
 
     pub async fn retry_pending_reuploads(&self) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
+
         let media_ids = sqlx::query_scalar!(
             "SELECT media_id FROM media_files WHERE download_state = 'reuploadRequested'"
         )
         .fetch_all(&database.pool)
         .await?;
+
         drop(database);
 
         for media_id in media_ids {
             self.request_reupload(&media_id).await?;
         }
+
         Ok(())
     }
 
@@ -438,14 +584,12 @@ impl MediaFileService {
                 Err(error) => return Err(error.into()),
             }
         }
+
         Ok(())
     }
 
     pub async fn remove_files_if_deleted(
-        &self,
-        t: &mut Transaction<'_, Sqlite>,
-        media_id: &str,
-        media_type: &str,
+        &self, t: &mut Transaction<'_, Sqlite>, media_id: &str, media_type: &str,
     ) -> Result<()> {
         let still_exists = sqlx::query_scalar!(
             "SELECT EXISTS(SELECT 1 FROM media_files WHERE media_id = ?)",
@@ -458,12 +602,15 @@ impl MediaFileService {
         if !still_exists {
             self.remove_files(media_id, media_type)?;
         }
+
         Ok(())
     }
 
     fn paths(&self, media_id: &str, media_type: &str) -> Vec<PathBuf> {
         let extension = Self::extension(media_type);
+
         let base = PathBuf::from(&self.ctx.config.data_dir).join("mediafiles");
+
         vec![
             base.join("tmp").join(format!("{media_id}.{extension}")),
             base.join("tmp")
@@ -490,11 +637,7 @@ impl MediaFileService {
     /// Flutter view layer derive these names from the media id, so they must
     /// stay in sync with `MediaFileService` on the Dart side.
     fn media_path(
-        &self,
-        directory: &str,
-        media_id: &str,
-        suffix: &str,
-        extension: &str,
+        &self, directory: &str, media_id: &str, suffix: &str, extension: &str,
     ) -> PathBuf {
         PathBuf::from(&self.ctx.config.data_dir)
             .join("mediafiles")
@@ -538,8 +681,11 @@ impl MediaFileService {
     /// the clip is whole.
     pub(crate) fn write_prerender_marker(&self, media_id: &str, fingerprint: &str) -> Result<()> {
         let marker = self.prerender_marker_path(media_id);
+
         Self::ensure_parent(&marker)?;
+
         std::fs::write(&marker, fingerprint.as_bytes())?;
+
         Ok(())
     }
 
@@ -549,12 +695,14 @@ impl MediaFileService {
         if !self.prerendered_path(media_id).exists() {
             return false;
         }
+
         std::fs::read_to_string(self.prerender_marker_path(media_id))
             .is_ok_and(|marker| marker == fingerprint)
     }
 
     pub(crate) fn discard_prerender(&self, media_id: &str) {
         let _ = std::fs::remove_file(self.prerendered_path(media_id));
+
         let _ = std::fs::remove_file(self.prerender_marker_path(media_id));
     }
 
@@ -597,6 +745,107 @@ impl MediaFileService {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
         }
+
+        Ok(())
+    }
+}
+
+/// Retry committed removals without deleting files for rolled-back commands.
+pub(crate) async fn cleanup_pending_file_removals(ctx: &Arc<Context>) -> Result<()> {
+    let database = ctx.app_db.read().await.clone();
+
+    let service = MediaFileService::new(ctx);
+
+    crate::database::app::messages::writes::drain_file_removals(&database, |id, kind| {
+        service.remove_files(id, kind)
+    })
+    .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn a_transport_failure_keeps_the_download_pending_and_a_later_retry_completes(
+    ) -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query(
+            "INSERT INTO media_files(media_id, type, download_state) VALUES ('retry', 'image', \
+             'pending')",
+        )
+        .execute(&database.pool)
+        .await?;
+        let service = MediaFileService::new(&ctx);
+
+        service
+            .download_with("retry", || async {
+                Err(TwonlyError::MediaDownloadUnavailable(
+                    "connection reset by peer".into(),
+                ))
+            })
+            .await?;
+        let state: String =
+            sqlx::query_scalar("SELECT download_state FROM media_files WHERE media_id = 'retry'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(state, "pending");
+
+        service
+            .download_with("retry", || async {
+                sqlx::query(
+                    "UPDATE media_files SET download_state = 'ready' WHERE media_id = 'retry'",
+                )
+                .execute(&database.pool)
+                .await?;
+                Ok(())
+            })
+            .await?;
+        let state: String =
+            sqlx::query_scalar("SELECT download_state FROM media_files WHERE media_id = 'retry'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(state, "ready");
+        service
+            .download_with("retry", || async {
+                panic!("a ready download must not be transferred twice")
+            })
+            .await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn a_non_transport_failure_remains_an_error_and_does_not_strand_the_claim() -> Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query(
+            "INSERT INTO media_files(media_id, type, download_state) VALUES ('broken', 'image', \
+             'pending')",
+        )
+        .execute(&database.pool)
+        .await?;
+        let error = MediaFileService::new(&ctx)
+            .download_with("broken", || async {
+                Err(TwonlyError::Generic(
+                    "invalid media encryption nonce".into(),
+                ))
+            })
+            .await
+            .unwrap_err();
+        assert!(matches!(error, TwonlyError::Generic(_)));
+        let state: String =
+            sqlx::query_scalar("SELECT download_state FROM media_files WHERE media_id = 'broken'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(state, "pending");
         Ok(())
     }
 }

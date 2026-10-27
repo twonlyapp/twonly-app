@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "ROLLBACK",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "587fa628a9fe4642ac0e22825a97e81d388af674f7251a9fb699f96901dcb710"
+}

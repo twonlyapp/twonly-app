@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:path/path.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart'
     show memoriesCloudService;
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class MediaFileService {
@@ -29,20 +32,20 @@ class MediaFileService {
   }
 
   static Future<MediaFileService?> fromMediaId(String mediaId) async {
-    final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(mediaId);
+    final mediaFile = await rust_mediafiles.getMediaFile(
+      id: mediaId,
+      transaction: currentDatabaseSession(),
+    );
     if (mediaFile == null) return null;
     return MediaFileService(
       mediaFile,
     );
   }
 
-  /// Rust decides which temporary media a message is finished with; this only
-  /// triggers the sweep.
-  static Future<void> purgeTempFolder() => RustApi.purgeMediaTempFolder();
-
   Future<void> updateFromDB() async {
-    final updated = await twonlyDB.mediaFilesDao.getMediaFileById(
-      mediaFile.mediaId,
+    final updated = await rust_mediafiles.getMediaFile(
+      id: mediaFile.mediaId,
+      transaction: currentDatabaseSession(),
     );
     if (updated != null) {
       mediaFile = updated;

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                        ROLLBACK TO app_scope\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "ef0712165feeae4d48099ffebf617e43624101750ec6d145bd40d09f2cd74297"
+}

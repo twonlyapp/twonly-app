@@ -8,6 +8,7 @@ import 'package:twonly/src/services/api/connection_lifecycle.dart';
 import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// The ApiProvider is responsible for communicating with the server.
@@ -31,6 +32,15 @@ class ApiService {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   late final StreamSubscription<ApiEvent> _apiEventSubscription;
   late final _connectionLifecycle = ConnectionLifecycle(
+    hasActiveConnection: () async =>
+        switch (await rust_api.RustApi.connectionState()) {
+          ApiConnectionState.authenticated ||
+          ApiConnectionState.authenticating ||
+          ApiConnectionState.connected ||
+          ApiConnectionState.connecting ||
+          ApiConnectionState.reconnecting => true,
+          _ => false,
+        },
     readNetworkAvailable: () async =>
         !(await Connectivity().checkConnectivity()).contains(
           ConnectivityResult.none,
@@ -80,19 +90,10 @@ class ApiService {
       return;
     }
 
-    await FcmNotificationService.initFCMAfterAuthenticated();
+    unawaited(FcmNotificationService.initFCMAfterAuthenticated());
 
     if (!AppState.isAppInBackground) {
-      unawaitedRustCall(
-        rust_api.RustApi.reuploadPendingMedia(),
-        'reuploadPendingMedia',
-      );
-      unawaitedRustCall(
-        rust_api.RustApi.refreshContactJoinedDates(),
-        'refreshContactJoinedDates',
-      );
-
-      twonlyDB.markUpdated();
+      refreshDatabaseSubscriptions();
       // resetUserDiscoveryRequestUpdates();
       memoriesCloudService.init();
     }
@@ -103,11 +104,19 @@ class ApiService {
       return;
     }
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
-      _,
+      results,
     ) {
-      unawaited(_connectionLifecycle.networkChanged());
+      unawaited(_networkChanged(results));
     });
-    await _connectionLifecycle.networkChanged();
+    await _networkChanged(await Connectivity().checkConnectivity());
+  }
+
+  Future<void> _networkChanged(List<ConnectivityResult> results) {
+    // The initial query and stream often report the same route. Preserve real
+    // Wi-Fi/mobile changes while coalescing identical startup notifications.
+    final types = results.map((result) => result.index).toSet().toList()
+      ..sort();
+    return _connectionLifecycle.networkChanged(identity: types.join(','));
   }
 
   Future<void> dispose() async {

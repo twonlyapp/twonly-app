@@ -1,0 +1,47 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT m.media_id AS \"media_id!\",\n                MIN(m.created_at) AS \"posted_at!\",\n                COUNT(*) AS \"recipient_count!\",\n                SUM(CASE\n                WHEN m.opened_at IS NULL THEN 0\n                ELSE 1\n                END\n            ) AS \"viewer_count!\"\n            FROM messages m\n            JOIN media_files f\n            ON f.media_id = m.media_id\n            WHERE m.is_story = 1\n                AND m.sender_id IS NULL\n                AND m.created_at > ?\n            GROUP BY m.media_id\n            ORDER BY \"posted_at!\",\n                m.media_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "posted_at!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "recipient_count!",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "viewer_count!",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0bb2f4f227adc79b27633bcb0a14eb8d0d6a32e28473c80e779ba8571b3e5868"
+}

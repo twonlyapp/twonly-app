@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT id AS \"id!\",\n                contact_group_id AS \"contact_group_id!\",\n                user_id AS \"user_id?\",\n                group_id AS \"group_id?\"\n            FROM contact_group_members\n            WHERE contact_group_id = ?\n            ORDER BY id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "contact_group_id!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "contact_group_id"
+          }
+        }
+      },
+      {
+        "name": "user_id?",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "name": "group_id?",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "group_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "bfe0bb431a91fc2eb73ec56277e4e11ce411da14876636714f7be417e9522512"
+}

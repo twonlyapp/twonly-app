@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT applied_counter, webp AS \"webp!\" FROM received_custom_avatars\n                   WHERE contact_id = ? AND webp IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "applied_counter",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "received_custom_avatars",
+            "name": "applied_counter"
+          }
+        }
+      },
+      {
+        "name": "webp!",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "received_custom_avatars",
+            "name": "webp"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "caa96d5b40c1d958bc8bef8ed91308e235bbc826c81f6d8c68393e0ffe8d4c18"
+}

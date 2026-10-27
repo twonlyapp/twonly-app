@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT group_id AS \"group_id!\",\n                message_id AS \"message_id!\",\n                emoji AS \"emoji!\",\n                sender_id,\n                created_at AS \"created_at!\"\n            FROM (\n                SELECT m.group_id,\n                    r.message_id,\n                    r.emoji,\n                    r.sender_id,\n                    r.created_at,\n                    ROW_NUMBER() OVER (\n                        PARTITION BY m.group_id\n                        ORDER BY m.created_at DESC, r.created_at DESC, r.rowid DESC\n                    ) AS rank\n                FROM reactions r\n                JOIN messages m ON m.message_id = r.message_id\n                WHERE m.is_story = 0 OR m.media_stored = 1\n            )\n            WHERE rank = 1\n            ORDER BY group_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "message_id!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "reactions",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "emoji!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "reactions",
+            "name": "emoji"
+          }
+        }
+      },
+      {
+        "name": "sender_id",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "reactions",
+            "name": "sender_id"
+          }
+        }
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "reactions",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "a901b628d659aa38a15bccd2eb3a1260afe09bfc639afa9a966afaa85adba8de"
+}

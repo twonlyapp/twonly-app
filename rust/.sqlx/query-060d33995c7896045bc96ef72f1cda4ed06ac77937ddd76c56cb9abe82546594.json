@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                UPDATE group_members\n                SET last_message = ?\n                WHERE group_id = ?\n                    AND contact_id = ?\n                    AND (last_message IS NULL\n                        OR last_message < ?\n                )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "060d33995c7896045bc96ef72f1cda4ed06ac77937ddd76c56cb9abe82546594"
+}

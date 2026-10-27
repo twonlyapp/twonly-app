@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO app_metadata(key, value) VALUES ('flutter-owner', 'works')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "a6d75045a461a9f4d304b9ed19edaaeb4df4412e82e0ea1798188ad694a26f9d"
+}

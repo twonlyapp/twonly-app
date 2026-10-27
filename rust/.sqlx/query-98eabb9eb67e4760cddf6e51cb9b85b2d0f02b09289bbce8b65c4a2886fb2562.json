@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT instance_id FROM webxdc_instances WHERE group_id = ? AND app_id = ? LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "instance_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "instance_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "98eabb9eb67e4760cddf6e51cb9b85b2d0f02b09289bbce8b65c4a2886fb2562"
+}

@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT media_id, type FROM media_files WHERE stored = 1 AND cloud_state = 'uploaded'",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "type",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "b1f2ec384fbc9addffa975bcc95aafa19473bbdc12c57c48067940b074a166c7"
+}

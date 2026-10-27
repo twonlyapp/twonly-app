@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET upload_state = 'preprocessing', reupload_requested_by = ?, reupload_targets = ?\n               WHERE media_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "955174371217c0323462d15dea4eea413596291c355086f2eb2bfb9b67ffc7e9"
+}

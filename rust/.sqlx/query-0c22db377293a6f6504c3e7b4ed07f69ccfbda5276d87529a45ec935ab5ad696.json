@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT m.message_id AS \"value!\"\n            FROM messages m\n            JOIN media_files f\n            ON f.media_id = m.media_id\n            WHERE f.stored_file_hash = ?\n                AND m.sender_id = ?\n                AND m.is_widget_media = 0\n                AND m.is_story = 0\n                AND m.opened_at IS NULL\n            ORDER BY m.rowid\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0c22db377293a6f6504c3e7b4ed07f69ccfbda5276d87529a45ec935ab5ad696"
+}

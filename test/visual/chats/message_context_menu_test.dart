@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_context_menu.dart';
 
@@ -28,7 +30,7 @@ void main() {
                 valueListenable: showRow,
                 builder: (context, visible, child) => visible
                     ? MessageContextMenu(
-                        message: Message(
+                        message: StoredMessage(
                           groupId: 'chat',
                           messageId: 'message',
                           type: 'text',
@@ -38,7 +40,7 @@ void main() {
                           isDeletedFromSender: false,
                           isWidgetMedia: false,
                           isStory: false,
-                          createdAt: now,
+                          createdAtSeconds: databaseSeconds(now),
                         ),
                         group: Group(
                           groupId: 'chat',
@@ -54,10 +56,10 @@ void main() {
                           totalMediaCounter: 0,
                           alsoBestFriend: false,
                           deleteMessagesAfterMilliseconds: 0,
-                          createdAt: now,
+                          createdAtSeconds: databaseSeconds(now),
                           flameCounter: 0,
                           maxFlameCounter: 0,
-                          lastMessageExchange: now,
+                          lastMessageExchangeSeconds: databaseSeconds(now),
                         ),
                         onResponseTriggered: () {},
                         galleryItems: const [],

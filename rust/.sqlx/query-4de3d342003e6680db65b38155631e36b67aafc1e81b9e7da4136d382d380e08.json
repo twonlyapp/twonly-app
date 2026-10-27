@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT maximum_object_bytes FROM direct_media_upload_slots ORDER BY created_at DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "maximum_object_bytes",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_slots",
+            "name": "maximum_object_bytes"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4de3d342003e6680db65b38155631e36b67aafc1e81b9e7da4136d382d380e08"
+}

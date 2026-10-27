@@ -2,10 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/key_verifications.dart'
+    as rust_key_verifications;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/key_verifications/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/key_verification.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
@@ -55,43 +62,80 @@ class _InChatGroupOverviewState extends State<InChatGroupOverview>
 
   Future<void> _initVerificationCheck() async {
     if (widget.group.isDirectChat) {
-      final contacts = await twonlyDB.groupsDao.getGroupContact(
-        widget.group.groupId,
-      );
+      final contacts = joinedGroupContacts(
+        await watchRustDatabase(
+          (control) => rust_groups.watchGroupContacts(
+            input: db_groups.GroupMembersQuery(
+              groupId: widget.group.groupId,
+              orderForChats: true,
+            ),
+            control: control,
+          ),
+        ).first,
+      ).map((row) => row.$1).toList(growable: false);
+      if (!mounted) return;
       if (contacts.isNotEmpty) {
         _directContact = contacts.first;
-        _verificationSub = twonlyDB.keyVerificationDao
-            .watchContactVerification(_directContact!.userId)
-            .listen((verifications) {
+        _verificationSub =
+            watchRustDatabase(
+              (control) => rust_key_verifications
+                  .watchContactVerifications(
+                    contact: _directContact!.userId,
+                    control: control,
+                  )
+                  .map(contactVerifications),
+            ).listen((verifications) {
               _verifications = verifications;
               _updateVerificationState();
             });
-        _transferredTrustSub = twonlyDB.keyVerificationDao
-            .watchTransferredTrustVerifications(_directContact!.userId)
-            .listen((transferredTrust) {
+        _transferredTrustSub =
+            watchRustDatabase(
+              (control) => rust_key_verifications
+                  .watchTransferredVerifications(
+                    contact: _directContact!.userId,
+                    control: control,
+                  )
+                  .map(transferredVerifications),
+            ).listen((transferredTrust) {
               _transferredTrust = transferredTrust;
               _updateVerificationState();
             });
       }
     } else {
-      _verificationSub = twonlyDB.keyVerificationDao
-          .watchAllGroupMembersVerified(widget.group.groupId)
-          .listen((status) {
-            if (mounted) {
-              setState(() {
-                _isVerified = status == VerificationStatus.trusted;
+      _verificationSub =
+          watchRustDatabase(
+                (control) => rust_key_verifications.watchGroupsVerification(
+                  group: widget.group.groupId,
+                  control: control,
+                ),
+              )
+              .map(
+                (rows) => rows.isEmpty
+                    ? VerificationStatus.notTrusted
+                    : rows.single.status,
+              )
+              .listen((status) {
+                if (mounted) {
+                  setState(() {
+                    _isVerified = status == VerificationStatus.trusted;
+                  });
+                }
               });
-            }
-          });
-      _unverifiedCountSub = twonlyDB.keyVerificationDao
-          .watchUnverifiedGroupMembersCount(widget.group.groupId)
-          .listen((count) {
-            if (mounted) {
-              setState(() {
-                _unverifiedCount = count;
+      _unverifiedCountSub =
+          watchRustDatabase(
+                (control) => rust_key_verifications.watchGroupsVerification(
+                  group: widget.group.groupId,
+                  control: control,
+                ),
+              )
+              .map((rows) => rows.isEmpty ? 0 : rows.single.unverifiedCount)
+              .listen((count) {
+                if (mounted) {
+                  setState(() {
+                    _unverifiedCount = count;
+                  });
+                }
               });
-            }
-          });
     }
   }
 

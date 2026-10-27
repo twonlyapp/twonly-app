@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,13 +10,13 @@ import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 
+import '../helpers/native_database.dart';
 import '../mocks/platform_channels.dart';
 import '../mocks/user_config.dart';
 
@@ -71,11 +70,8 @@ void main() {
   setUp(() async {
     setupPlatformChannelMocks();
     await locator.reset();
-    final dbFile = File('${tempDir.path}/twonly.sqlite');
+    await TestDatabase.create();
     locator
-      ..registerSingleton<TwonlyDB>(
-        TwonlyDB(NativeDatabase(dbFile)),
-      )
       ..registerSingleton<UserService>(UserService())
       ..registerSingleton<ApiService>(ApiService());
 
@@ -98,9 +94,7 @@ void main() {
   });
 
   tearDown(() async {
-    try {
-      await twonlyDB.close();
-    } catch (_) {}
+    try {} catch (_) {}
   });
 
   tearDownAll(() async {
@@ -198,10 +192,9 @@ void main() {
         final recoveredUserId = await RustKeyManager.getUserId();
         expect(recoveredUserId, 1);
 
-        // Restore mock DB to prevent tearDown crash (deleteLocalUserData overrides it)
-        locator.unregister<TwonlyDB>();
-        final dbFile = File('${tempDir.path}/twonly.sqlite');
-        locator.registerSingleton<TwonlyDB>(TwonlyDB(NativeDatabase(dbFile)));
+        // Reset fixture rows after the recovery attempt.
+
+        await TestDatabase.create();
       },
     );
   });

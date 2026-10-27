@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE own_custom_avatar SET accepted_contacts_only = ?, source_revision = source_revision + CASE WHEN accepted_contacts_only != ? THEN 1 ELSE 0 END WHERE singleton = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "7310d6f486fcc468231e800aff9f02a1041e2a33459016d6926ee904e2382271"
+}

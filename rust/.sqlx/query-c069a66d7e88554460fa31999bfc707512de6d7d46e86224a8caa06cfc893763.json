@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO contacts(user_id, username) VALUES (7, 'native-watch')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "c069a66d7e88554460fa31999bfc707512de6d7d46e86224a8caa06cfc893763"
+}

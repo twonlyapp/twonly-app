@@ -1,38 +1,45 @@
 import 'dart:io';
 
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/components/story_preview.comp.dart';
 import 'package:twonly/src/visual/components/story_strip.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/last_message_time.comp.dart';
 
+import '../../helpers/native_database.dart';
+
 void main() {
-  late TwonlyDB database;
+  late TestDatabase database;
   late Directory support;
 
   setUp(() async {
     support = Directory.systemTemp.createTempSync('story_strip_test');
     AppEnvironment.initTesting(customSupportDir: support.path);
-    database = TwonlyDB(NativeDatabase.memory());
+    database = await TestDatabase.create();
     await database.customStatement(
       "INSERT INTO media_files(media_id, type) VALUES ('new', 'image'), ('old', 'video')",
     );
   });
 
   tearDown(() async {
-    await database.close();
     support.deleteSync(recursive: true);
   });
 
   Future<List<StoryStripItem>> items(WidgetTester tester) async {
     final files = await tester.runAsync(
       () async => [
-        (await database.mediaFilesDao.getMediaFileById('new'))!,
-        (await database.mediaFilesDao.getMediaFileById('old'))!,
+        (await rust_mediafiles.getMediaFile(
+          id: 'new',
+          transaction: currentDatabaseSession(),
+        ))!,
+        (await rust_mediafiles.getMediaFile(
+          id: 'old',
+          transaction: currentDatabaseSession(),
+        ))!,
       ],
     );
     final now = DateTime.now();

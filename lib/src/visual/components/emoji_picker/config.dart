@@ -169,6 +169,7 @@ class ResizeConfig {
   const ResizeConfig({
     this.enabled = true,
     this.showDragHandle = true,
+    this.expandOnScroll = false,
     this.maxHeight,
     this.maxHeightFactor = 0.85,
     this.handleColor,
@@ -189,6 +190,9 @@ class ResizeConfig {
   /// Whether the drag indicator and its resize gesture are shown.
   final bool showDragHandle;
 
+  /// Expand to the maximum height before scrolling through emoji.
+  final bool expandOnScroll;
+
   final double? maxHeight;
   final double maxHeightFactor;
 
@@ -206,6 +210,7 @@ class ResizeConfig {
     return other is ResizeConfig &&
         other.enabled == enabled &&
         other.showDragHandle == showDragHandle &&
+        other.expandOnScroll == expandOnScroll &&
         other.maxHeight == maxHeight &&
         other.maxHeightFactor == maxHeightFactor &&
         other.handleColor == handleColor &&
@@ -220,6 +225,7 @@ class ResizeConfig {
   int get hashCode => Object.hash(
     enabled,
     showDragHandle,
+    expandOnScroll,
     maxHeight,
     maxHeightFactor,
     handleColor,

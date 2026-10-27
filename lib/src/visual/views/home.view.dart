@@ -7,15 +7,21 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/release_notes.comp.dart';
@@ -26,6 +32,7 @@ import 'package:twonly/src/visual/views/camera/camera_preview_components/main_ca
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_list.view.dart';
 import 'package:twonly/src/visual/views/memories/memories.view.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/backup_reminder_sheet.comp.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({
@@ -225,7 +232,15 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     try {
       final group = tap.senderId == null
           ? null
-          : await twonlyDB.groupsDao.getDirectChat(tap.senderId!);
+          : await rust_groups
+                .listGroups(
+                  input: db_groups.GroupQuery(
+                    filter: db_groups.GroupFilter.directContact,
+                    contactId: tap.senderId,
+                  ),
+                  transaction: currentDatabaseSession(),
+                )
+                .then((rows) => rows.isEmpty ? null : rows.single);
       if (!mounted) return;
       routerProvider.go(
         group == null ? Routes.chats : Routes.chatsMessages(group.groupId),
@@ -301,7 +316,15 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       }
     }
 
-    final draftMedia = await twonlyDB.mediaFilesDao.getDraftMediaFile();
+    final draftMedia = await (() async {
+      final files = await rust_mediafiles.listMediaFiles(
+        input: const db_mediafiles.MediaQuery(
+          filter: db_mediafiles.MediaFilter.draft,
+        ),
+        transaction: currentDatabaseSession(),
+      );
+      return files.isEmpty ? null : files.single;
+    })();
     if (draftMedia != null) {
       await _openEditor(MediaFileService(draftMedia));
     }
@@ -362,10 +385,22 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _releaseNotesCheckScheduled = false;
       if (!mounted || _activePageIdx != 0 || !_isViewActive()) return;
-      unawaited(
-        ReleaseNotesPresenter.showIfNeeded(context, releaseNotes060(context)),
-      );
+      unawaited(_showStartupSheets());
     });
+  }
+
+  Future<void> _showStartupSheets() async {
+    final releaseNotesShown = await ReleaseNotesPresenter.showIfNeeded(
+      context,
+      releaseNotes060(context),
+    );
+    // One sheet per app start is enough.
+    if (releaseNotesShown) {
+      BackupReminderPresenter.skipThisSession();
+      return;
+    }
+    if (!mounted) return;
+    await BackupReminderPresenter.showIfNeeded(context);
   }
 
   @override
@@ -492,7 +527,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 slivers: [
                   SliverFillViewport(
                     delegate: SliverChildListDelegate([
-                      const ChatListView(),
+                      ChatListView(active: _offsetFromOne > 0),
                       Container(),
                       const MemoriesView(),
                     ]),

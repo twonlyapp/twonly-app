@@ -1,19 +1,30 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/key_verifications.dart'
+    as rust_key_verifications;
 import 'package:twonly/core/bridge/wrapper/signal.dart';
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/contact_enums.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
@@ -45,6 +56,8 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
     if (!context.mounted) return false;
 
     switch (result.status) {
+      case QrCodeLinkStatus.contactRequested:
+        break;
       case QrCodeLinkStatus.newContact:
         await context.navPush(
           AddContactViaQrLinkView(
@@ -110,7 +123,15 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
 
   late final List<Contact> contacts;
   try {
-    contacts = await twonlyDB.contactsDao.getContactsByUsername(username);
+    contacts = await rust_contacts.listContacts(
+      input: db_contacts.ContactQuery(
+        filter: db_contacts.ContactFilter.usernames,
+        ids: Int64List(0),
+        username: username,
+        username2: '_______',
+      ),
+      transaction: currentDatabaseSession(),
+    );
   } catch (e) {
     Log.warn('Could not load contact for verification link: $e');
     if (context.mounted) await _showVerificationLinkError(context);
@@ -175,9 +196,13 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
         customOk: context.lang.gotLinkFromFriend,
       );
       if (markAsVerified) {
-        await twonlyDB.keyVerificationDao.addKeyVerification(
-          contact.userId,
-          VerificationType.link,
+        await rust_key_verifications.changeKeyVerification(
+          contact: contact.userId,
+          kind: VerificationType.link.name,
+          updateDiscovery: userService.currentUser.isUserDiscoveryEnabled,
+          verifiedAt: clock.now().millisecondsSinceEpoch,
+          callbackId: isolateCallbackId,
+          transaction: currentDatabaseSession(),
         );
       }
       if (context.mounted) {

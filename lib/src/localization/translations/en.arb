@@ -83,6 +83,8 @@
   "locationStickerSettingSubtitle": "Shows your city or country, or coordinates if no place name is available. Your location is shared only when you select the location filter.",
   "locationStickerLoading": "Finding your location…",
   "liveLocationMenu": "Location",
+  "memoriesMenu": "Memories",
+  "memoriesLoadFailed": "The memory could not be loaded.",
   "liveLocationTitle": "Live location",
   "liveLocationExplanation": "Share your current location in this chat. Everyone in this group can see it. Only your latest location is kept.",
   "liveLocationDuration": "Share for",
@@ -470,6 +472,8 @@
   "groupActionYour": "your",
   "notificationFillerIn": "in",
   "notificationLiveLocation": "shared their live location{inGroup}.",
+  "notificationMention": "mentioned you in a message{inGroup}.",
+  "chatMentionUnknownUser": "Unknown user",
   "notificationText": "sent a message{inGroup}.",
   "notificationTextMessages": "sent {count} messages{inGroup}.",
   "notificationTwonly": "sent a twonly{inGroup}.",
@@ -545,9 +549,14 @@
   "finishSetupCardTitle": "Complete your profile",
   "finishSetupCardDesc": "You are almost there! Finish setting up your account to get the most out of twonly.",
   "finishSetupCardAction": "Resume Setup",
-  "missingBackupCardTitle": "Setup backup",
-  "missingBackupCardDesc": "We have improved the backup mechanism, which requires you to set it up again.",
-  "missingBackupCardAction": "Set up now",
+  "backupReminderTitle": "Activate your backup",
+  "backupReminderDesc": "Without a backup, there is no way to recover your account if you lose your phone or delete the app. Set up at least one of the options below.",
+  "passwordlessRecoveryReminderTitle": "Forgot your password?",
+  "passwordlessRecoveryReminderDesc": "If you ever forget your password, this is how you get your account back: your trusted friends can help you recover it without the password.",
+  "passwordlessRecoveryReminderHide": "Don't show again",
+  "passwordlessRecoveryReminderHideTitle": "Hide this reminder?",
+  "passwordlessRecoveryReminderHideDesc": "If you lose your password, there is no other way to recover your account.",
+  "passwordlessRecoveryReminderEnable": "Enable",
   "onboardingFinishLater": "Finish later",
   "onboardingProfileTitle": "Choose your look",
   "onboardingProfileBody": "Select an avatar and a display name that friends will see.",
@@ -1030,9 +1039,6 @@
     }
   },
   "recoverPasswordlessRecoverNowBtn": "Recover now",
-  "missingRecoveryContactsCardTitle": "Account Recovery",
-  "missingRecoveryContactsCardDesc": "Select Recovery Contacts to help you recover your account without requiring a password.",
-  "missingRecoveryContactsCardAction": "Select Contacts",
   "memoriesBackupLimitReached": "Cloud backup limit reached! Please upgrade your plan or free up space.",
   "settingsStorageLocal": "Local storage",
   "settingsStorageNoCloudBackupCard": "Back up your memories to the cloud to free up local space and ensure you never lose your pictures. All end-to-end encrypted.",
@@ -1283,5 +1289,25 @@
       }
     }
   },
-  "mediaSendFailed": "Send failed"
+  "mediaSendFailed": "Send failed",
+  "mailboxSyncTitle": "Synchronizing twonly",
+  "mailboxSyncBody": "twonly is synchronizing this device and downloading your messages. Please keep the app open until it is done.",
+  "mailboxSyncRemaining": "{count, plural, =1{1 message left} other{{count} messages left}}",
+  "@mailboxSyncRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationGameTurn": "has played {gameName}. It is your turn.",
+  "@notificationGameTurn": {"placeholders": {"gameName": {"type": "String"}}},
+  "notificationGameWon": "has played {gameName}. You have won.",
+  "@notificationGameWon": {"placeholders": {"gameName": {"type": "String"}}},
+  "notificationGameLost": "has played {gameName}. You have lost.",
+  "@notificationGameLost": {"placeholders": {"gameName": {"type": "String"}}},
+  "notificationGameFallbackName": "a game",
+  "chatGameTurn": "It is your turn.",
+  "chatGameWon": "You have won.",
+  "chatGameLost": "You have lost."
 }

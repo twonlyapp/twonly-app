@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM contacts c JOIN group_members gm ON gm.contact_id = \n             c.user_id JOIN groups g ON g.group_id = gm.group_id WHERE c.user_id = ? AND \n             c.blocked = 0 AND gm.group_id = ? AND g.left_group = 0 AND (gm.member_state IS NULL \n             OR gm.member_state != 'leftGroup')) AS \"eligible!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "eligible!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "444dc1b11460e998243477933b19d25d95ca7aa6f16bc63a79ad272ffd57e2c0"
+}

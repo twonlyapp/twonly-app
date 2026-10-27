@@ -61,12 +61,11 @@ internal fun buildNativeChatNotification(
     } else {
         latest.senderName
     }
-    val defaultAvatar = BitmapFactory.decodeResource(context.resources, R.drawable.logo)
-    // A missing avatar means the contact has none; never retain a removed one.
+    // A missing avatar means the contact has none; never retain a removed one,
+    // and never substitute a placeholder for it.
     val senders = ordered.groupBy(NativeNotificationAddition::senderId).mapValues { (id, entries) ->
-        val avatar = entries.last().avatarPath?.let(BitmapFactory::decodeFile)
-        val icon = avatar?.let(IconCompat::createWithBitmap)
-            ?: IconCompat.createWithBitmap(defaultAvatar)
+        val icon = entries.last().avatarPath?.let(BitmapFactory::decodeFile)
+            ?.let(IconCompat::createWithBitmap)
         Person.Builder().setName(entries.last().senderName).setKey(id.toString())
             .setIcon(icon).build()
     }
@@ -82,9 +81,9 @@ internal fun buildNativeChatNotification(
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
     val conversationAvatar = if (latest.isGroup) {
-        latest.conversationAvatarPath?.let(BitmapFactory::decodeFile) ?: defaultAvatar
+        latest.conversationAvatarPath?.let(BitmapFactory::decodeFile)
     } else {
-        requireNotNull(senders.getValue(latest.senderId).icon?.loadDrawable(context)).toBitmap()
+        senders.getValue(latest.senderId).icon?.loadDrawable(context)?.toBitmap()
     }
     val builder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -120,7 +119,9 @@ internal fun buildNativeChatNotification(
             try {
                 val shortcut = ShortcutInfoCompat.Builder(context, nativeNotificationKey(latest))
                     .setShortLabel(conversationTitle)
-                    .setIcon(conversationShortcutIcon(context, conversationAvatar))
+                    .apply {
+                        conversationAvatar?.let { setIcon(conversationShortcutIcon(context, it)) }
+                    }
                     .setPersons(messages.mapNotNull { it.person }.distinctBy { it.key }.toTypedArray())
                     .setLongLived(true)
                     .setLocusId(LocusIdCompat(nativeNotificationKey(latest)))

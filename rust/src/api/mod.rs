@@ -4,6 +4,7 @@
  */
 
 pub(crate) mod groups;
+pub(crate) mod http;
 pub mod messages;
 pub mod proto;
 pub(super) mod runtime;
@@ -11,4 +12,5 @@ pub(super) mod server;
 
 #[doc(hidden)]
 pub use runtime::ApiRuntime;
-pub use server::{prekeys::PqcPreKeyInput, Server};
+pub use server::prekeys::PqcPreKeyInput;
+pub use server::Server;

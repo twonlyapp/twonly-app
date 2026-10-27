@@ -1,15 +1,16 @@
-import 'package:drift/drift.dart' show DatabaseConnection;
-import 'package:drift/native.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/webxdc/webxdc_host.dart';
 import 'package:twonly/src/visual/views/webxdc/webxdc_app.view.dart';
 
-class _WebxdcApi implements RustLibApi {
+import '../helpers/native_database.dart';
+
+class _WebxdcApi extends NativeTestApi {
   final visibleInstances = <String?>[];
 
   @override
@@ -28,31 +29,158 @@ class _WebxdcApi implements RustLibApi {
 
 void main() {
   final api = _WebxdcApi();
-  setUpAll(() => RustLib.initMock(api: api));
+  final platformCalls = <MethodCall>[];
+  final hcppCalls = <MethodCall>[];
+  setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
   setUp(() async {
     api.visibleInstances.clear();
+    platformCalls.clear();
+    hcppCalls.clear();
+    WebxdcHost.hybridComposition = false;
     await locator.reset();
-    locator.registerSingleton<TwonlyDB>(
-      TwonlyDB.forTesting(
-        DatabaseConnection(
-          NativeDatabase.memory(),
-          closeStreamsSynchronously: true,
-        ),
-      ),
-    );
+    await TestDatabase.create();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           SystemChannels.platform_views,
-          (_) async => null,
+          (call) async {
+            platformCalls.add(call);
+            if (call.method == 'create') return 0;
+            if (call.method == 'resize') {
+              final arguments = call.arguments as Map<Object?, Object?>;
+              return {
+                'width': arguments['width'],
+                'height': arguments['height'],
+              };
+            }
+            return null;
+          },
+        );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          SystemChannels.platform_views_2,
+          (call) async {
+            hcppCalls.add(call);
+            return null;
+          },
         );
   });
   tearDown(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform_views, null);
-    await twonlyDB.close();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform_views_2, null);
+    WebxdcHost.hybridComposition = false;
+
     await locator.reset();
   });
+
+  for (final hcpp in [false, true]) {
+    testWidgets(
+      'Android ${hcpp ? 'HCPP' : 'texture'} forwards page taps after the opening transition has settled',
+      (tester) async {
+        WebxdcHost.hybridComposition = hcpp;
+        final navigator = GlobalKey<NavigatorState>();
+        await tester.pumpWidget(
+          MaterialApp(
+            navigatorKey: navigator,
+            home: const Scaffold(body: Text('Chat')),
+          ),
+        );
+        navigator.currentState!.push<void>(
+          MaterialPageRoute(
+            builder: (_) => const WebxdcAppView(
+              launch: WebxdcLaunch(
+                instanceId: 'game',
+                appId: 'game',
+                origin: 'origin',
+                title: 'Game',
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final surface = find.byType(AndroidViewSurface);
+        await tester.tap(surface);
+        await tester.pump();
+
+        final calls = hcpp ? hcppCalls : platformCalls;
+        final touches = calls
+            .where((call) => call.method == 'touch')
+            .map((call) => call.arguments as List<Object?>)
+            .toList();
+        expect(touches, hasLength(2));
+        expect(touches.map((event) => event[3]), [0, 1]); // Down, up.
+        final create = calls.singleWhere(
+          (call) => call.method == 'create',
+        );
+        final parameters = create.arguments as Map<Object?, Object?>;
+        expect(touches.every((event) => event[0] == parameters['id']), isTrue);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
+  }
+
+  testWidgets(
+    'reopening a game while its last screen is closing keeps the new one bound',
+    (tester) async {
+      WebxdcHost.initialize();
+      const codec = StandardMethodCodec();
+      Future<String> callBridge() async {
+        final reply = Completer<ByteData?>();
+        await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+          'eu.twonly/webxdc',
+          codec.encodeMethodCall(
+            const MethodCall('bridge', {
+              'instanceId': 'game',
+              'message': '{"id":1,"method":"noSuchMethod"}',
+            }),
+          ),
+          reply.complete,
+        );
+        return codec.decodeEnvelope((await reply.future)!) as String;
+      }
+
+      Route<void> gameRoute() => MaterialPageRoute(
+        builder: (_) => const WebxdcAppView(
+          launch: WebxdcLaunch(
+            instanceId: 'game',
+            appId: 'game',
+            origin: 'origin',
+            title: 'Game',
+          ),
+        ),
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      final navigator = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navigator,
+          home: const Scaffold(body: Text('Chat')),
+        ),
+      );
+      navigator.currentState!.push(gameRoute());
+      await tester.pumpAndSettle();
+
+      // Closed, and opened again before the closing animation is over: the
+      // old screen is disposed only after the new one has attached.
+      navigator.currentState!.pop();
+      await tester.pump();
+      navigator.currentState!.push(gameRoute());
+      await tester.pumpAndSettle();
+
+      expect(api.visibleInstances.last, 'game');
+      expect(await callBridge(), contains('unknown method'));
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      expect(api.visibleInstances.last, isNull);
+      expect(await callBridge(), contains('this app is not open'));
+    },
+  );
 
   for (final appId in ['backend-uploaded-game', 'expenses']) {
     testWidgets(
@@ -107,7 +235,10 @@ void main() {
         await tester.pumpWidget(const SizedBox.shrink());
         expect(api.visibleInstances.last, isNull);
       },
-      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+      variant: const TargetPlatformVariant({
+        TargetPlatform.android,
+        TargetPlatform.iOS,
+      }),
     );
   }
 }

@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM outbox_dispatch_jobs WHERE receipt_id = ? RETURNING body_path",
+  "describe": {
+    "columns": [
+      {
+        "name": "body_path",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "outbox_dispatch_jobs",
+            "name": "body_path"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "43f4e94c8cf906484289808d227b01b80e18459ca48fc55fa9cfa85d26dbfef1"
+}

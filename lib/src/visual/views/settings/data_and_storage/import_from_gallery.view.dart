@@ -2,17 +2,21 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:exif/exif.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/android_photo_picker.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart'
     show AppColor, ShortCutsExtension, sha256File;
@@ -85,7 +89,13 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
 
         final hash = Uint8List.fromList(sha256.convert(bytes).bytes);
 
-        final exists = await twonlyDB.mediaFilesDao.getMediaByHash(hash);
+        final exists = await rust_mediafiles.listMediaFiles(
+          input: db_mediafiles.MediaQuery(
+            filter: db_mediafiles.MediaFilter.byHash,
+            hash: hash,
+          ),
+          transaction: currentDatabaseSession(),
+        );
         if (exists.isNotEmpty) {
           final mediaFile = exists.first;
           final mediaService = MediaFileService(mediaFile);
@@ -101,28 +111,25 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
 
         const type = MediaType.image;
 
-        final mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
-          MediaFilesCompanion(
-            type: const Value(type),
-            createdAt: Value(createdAt),
-            storedFileHash: Value(hash),
-            stored: const Value(true),
+        final mediaFile = await rust_mediafiles.upsertMediaFile(
+          patch: MediaFilePatch(
+            type: type.name,
+            createdAt: databaseSeconds(createdAt),
+            storedFileHash: NullableBytes(value: hash),
+            stored: true,
           ),
+          transaction: currentDatabaseSession(),
         );
 
-        if (mediaFile != null) {
-          final mediaService = MediaFileService(mediaFile);
-          await mediaService.storedPath.parent.create(recursive: true);
-          await File(mediaService.storedPath.path).writeAsBytes(bytes);
+        final mediaService = MediaFileService(mediaFile);
+        await mediaService.storedPath.parent.create(recursive: true);
+        await File(mediaService.storedPath.path).writeAsBytes(bytes);
 
-          await mediaService.refreshStoredMetadata();
-          await mediaService.createThumbnail();
-          unawaited(mediaService.cropTransparentBorders());
+        await mediaService.refreshStoredMetadata();
+        await mediaService.createThumbnail();
+        unawaited(mediaService.cropTransparentBorders());
 
-          importedCount++;
-        } else {
-          failedCount++;
-        }
+        importedCount++;
       } catch (e) {
         failedCount++;
       }
@@ -348,7 +355,13 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
 
         final hash = Uint8List.fromList(await sha256File(file));
 
-        final exists = await twonlyDB.mediaFilesDao.getMediaByHash(hash);
+        final exists = await rust_mediafiles.listMediaFiles(
+          input: db_mediafiles.MediaQuery(
+            filter: db_mediafiles.MediaFilter.byHash,
+            hash: hash,
+          ),
+          transaction: currentDatabaseSession(),
+        );
         if (exists.isNotEmpty) {
           final mediaFile = exists.first;
           final mediaService = MediaFileService(mediaFile);
@@ -385,21 +398,24 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
               r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
             );
             if (uuidRegex.hasMatch(baseName)) {
-              final existing = await twonlyDB.mediaFilesDao.getMediaFileById(
-                baseName,
+              final existing = await rust_mediafiles.getMediaFile(
+                id: baseName,
+                transaction: currentDatabaseSession(),
               );
               if (existing != null) {
                 final mediaService = MediaFileService(existing);
                 if (!mediaService.storedPath.existsSync()) {
-                  await twonlyDB.mediaFilesDao.updateMedia(
-                    baseName,
-                    MediaFilesCompanion(
-                      storedFileHash: Value(hash),
-                      stored: const Value(true),
+                  await rust_mediafiles.updateMediaFiles(
+                    id: baseName,
+                    patch: MediaFilePatch(
+                      storedFileHash: NullableBytes(value: hash),
+                      stored: true,
                     ),
+                    transaction: currentDatabaseSession(),
                   );
-                  mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
-                    baseName,
+                  mediaFile = await rust_mediafiles.getMediaFile(
+                    id: baseName,
+                    transaction: currentDatabaseSession(),
                   );
                   isRestored = true;
                 }
@@ -411,13 +427,14 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
         }
 
         if (!isRestored) {
-          mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
-            MediaFilesCompanion(
-              type: Value(type),
-              createdAt: Value(createdAt),
-              storedFileHash: Value(hash),
-              stored: const Value(true),
+          mediaFile = await rust_mediafiles.upsertMediaFile(
+            patch: MediaFilePatch(
+              type: type.name,
+              createdAt: databaseSeconds(createdAt),
+              storedFileHash: NullableBytes(value: hash),
+              stored: true,
             ),
+            transaction: currentDatabaseSession(),
           );
         }
 

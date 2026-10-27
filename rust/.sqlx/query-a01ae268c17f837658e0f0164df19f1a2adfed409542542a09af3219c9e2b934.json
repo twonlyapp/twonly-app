@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM receipts WHERE receipt_id IN (\n               SELECT r.receipt_id FROM receipts r\n               JOIN messages m ON m.message_id = r.message_id\n               JOIN groups g ON g.group_id = m.group_id\n               JOIN group_members gm ON gm.group_id = m.group_id AND gm.contact_id = r.contact_id\n               WHERE m.media_id = ? AND m.sender_id IS NULL\n                 AND g.is_direct_chat = 0 AND gm.member_state = 'leftGroup'\n           )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "a01ae268c17f837658e0f0164df19f1a2adfed409542542a09af3219c9e2b934"
+}

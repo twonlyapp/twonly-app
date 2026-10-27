@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/stickers/table.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/services/stickers/sticker_cache.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker/bottom_action_bar.dart';
 import 'package:twonly/src/visual/components/sticker_preview.dialog.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
-import 'package:twonly/src/visual/views/memories/sticker_source_picker.view.dart';
+import 'package:twonly/src/visual/views/memories/memories_picker.view.dart';
 
 class StickerPicker extends StatefulWidget {
   const StickerPicker({
-    required this.onEmojiPressed,
     required this.onStickerSelected,
+    this.onEmojiPressed,
     this.selectCreatedSticker = false,
     super.key,
   });
 
-  final VoidCallback onEmojiPressed;
+  final VoidCallback? onEmojiPressed;
   final ValueChanged<LocalSticker> onStickerSelected;
   final bool selectCreatedSticker;
 
@@ -25,8 +26,7 @@ class StickerPicker extends StatefulWidget {
 }
 
 class _StickerPickerState extends State<StickerPicker> {
-  late final Stream<List<LocalSticker>> _stickers = twonlyDB.stickersDao
-      .watchAll();
+  late final Stream<List<LocalSticker>> _stickers = watchCachedStickers();
   bool _creating = false;
 
   Future<void> _createSticker() async {
@@ -35,7 +35,8 @@ class _StickerPickerState extends State<StickerPicker> {
     try {
       final imagePath = await Navigator.of(context).push<String>(
         MaterialPageRoute(
-          builder: (context) => const StickerSourcePickerView(),
+          builder: (context) =>
+              MemoriesPickerView(title: context.lang.createSticker),
         ),
       );
       if (!mounted || imagePath == null) return;
@@ -63,31 +64,50 @@ class _StickerPickerState extends State<StickerPicker> {
           final isLoading = !snapshot.hasData && !snapshot.hasError;
           final stickers = snapshot.data ?? const <LocalSticker>[];
           final hasStickers = stickers.isNotEmpty;
+          final addButton = hasStickers
+              ? IconButton(
+                  key: const Key('stickerPickerHeaderAdd'),
+                  tooltip: context.lang.createSticker,
+                  padding: const EdgeInsets.only(bottom: 2),
+                  onPressed: _creating ? null : _createSticker,
+                  icon: _creating
+                      ? const ThreeRotatingDots(size: 22)
+                      : Icon(
+                          Icons.add_photo_alternate_outlined,
+                          color: color.secondary,
+                        ),
+                )
+              : null;
           return Column(
             children: [
-              PickerBottomBar(
-                backgroundColor: color.surfaceContainer,
-                buttonIconColor: color.secondary,
-                emojiButtonLabel: 'Emoji',
-                stickerButtonLabel: context.lang.sticker,
-                showStickerButton: true,
-                stickerSelected: true,
-                onEmojiButtonPressed: widget.onEmojiPressed,
-                trailing: hasStickers
-                    ? IconButton(
-                        key: const Key('stickerPickerHeaderAdd'),
-                        tooltip: context.lang.createSticker,
-                        padding: const EdgeInsets.only(bottom: 2),
-                        onPressed: _creating ? null : _createSticker,
-                        icon: _creating
-                            ? const ThreeRotatingDots(size: 22)
-                            : Icon(
-                                Icons.add_photo_alternate_outlined,
-                                color: color.secondary,
-                              ),
-                      )
-                    : null,
-              ),
+              if (widget.onEmojiPressed != null)
+                PickerBottomBar(
+                  backgroundColor: color.surfaceContainer,
+                  buttonIconColor: color.secondary,
+                  emojiButtonLabel: 'Emoji',
+                  stickerButtonLabel: context.lang.sticker,
+                  showStickerButton: true,
+                  stickerSelected: true,
+                  onEmojiButtonPressed: widget.onEmojiPressed,
+                  trailing: addButton,
+                )
+              else
+                SizedBox(
+                  height: 48,
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 48),
+                      Expanded(
+                        child: Text(
+                          context.lang.stickers,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      SizedBox(width: 48, child: addButton),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: isLoading
                     ? const Center(child: ThreeRotatingDots(size: 26))

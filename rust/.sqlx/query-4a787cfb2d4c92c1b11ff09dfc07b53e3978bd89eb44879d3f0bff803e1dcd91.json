@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO signal_pre_keys(pre_key_id, record_bytes) VALUES (?, ?)\n            ON CONFLICT(pre_key_id) DO UPDATE SET record_bytes = excluded.record_bytes\n            WHERE signal_pre_keys.record_bytes = excluded.record_bytes\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "4a787cfb2d4c92c1b11ff09dfc07b53e3978bd89eb44879d3f0bff803e1dcd91"
+}

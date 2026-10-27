@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    SELECT COUNT(*) AS \"count!\" FROM contacts WHERE recovery_is_trusted_friend = 1\n                ",
+  "describe": {
+    "columns": [
+      {
+        "name": "count!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5ce4e2ff2a9964049ae2bb2ef4f4e5988fadddd5196916d31a57cd1a0268ea59"
+}

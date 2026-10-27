@@ -3,14 +3,18 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/stories.dart' as stories;
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -92,8 +96,22 @@ class _ShareImageView extends State<ShareImageView> {
     super.initState();
 
     final groups = widget.sendToWidget
-        ? twonlyDB.groupsDao.watchGroupsAllowedForWidgetShare()
-        : twonlyDB.groupsDao.watchGroupsForShareImage();
+        ? watchRustDatabase(
+            (control) => rust_groups.watchGroups(
+              input: const db_groups.GroupQuery(
+                filter: db_groups.GroupFilter.widgetShare,
+              ),
+              control: control,
+            ),
+          )
+        : watchRustDatabase(
+            (control) => rust_groups.watchGroups(
+              input: const db_groups.GroupQuery(
+                filter: db_groups.GroupFilter.shareImage,
+              ),
+              control: control,
+            ),
+          );
     allGroupSub = groups.listen((allGroups) async {
       if (!mounted) return;
       if (widget.sendToWidget) {
@@ -107,7 +125,7 @@ class _ShareImageView extends State<ShareImageView> {
       setState(() {
         _allGroups = allGroups;
       });
-      await updateGroups(_allGroups.where((x) => !x.archived).toList());
+      await _filterUsers(lastQuery);
     });
 
     unawaited(initAsync());
@@ -166,9 +184,14 @@ class _ShareImageView extends State<ShareImageView> {
         otherUsers.add(group);
       }
     }
-    otherUsers.sort(
-      (a, b) => b.lastMessageExchange.compareTo(a.lastMessageExchange),
-    );
+    // Selected chats lead the list, archived or not, so a preselected
+    // receiver is in view without scrolling for it.
+    otherUsers.sort((a, b) {
+      final aSelected = widget.selectedGroupIds.contains(a.groupId);
+      final bSelected = widget.selectedGroupIds.contains(b.groupId);
+      if (aSelected != bSelected) return aSelected ? -1 : 1;
+      return b.lastMessageExchange.compareTo(a.lastMessageExchange);
+    });
 
     setState(() {
       _bestFriends = bestFriends;
@@ -200,7 +223,17 @@ class _ShareImageView extends State<ShareImageView> {
     await updateGroups(usersFiltered);
   }
 
+  /// A selection made outside the list, e.g. through a contact group, moves
+  /// the chat to the top of it.
   void updateSelectedGroupIds(String groupId, bool checked) {
+    widget.updateSelectedGroupIds(groupId, checked);
+    setState(() {});
+    unawaited(_filterUsers(lastQuery));
+  }
+
+  /// A chat ticked in the list itself stays where it is, so the rows do not
+  /// move under the finger.
+  void _updateSelectedGroupIdsInList(String groupId, bool checked) {
     widget.updateSelectedGroupIds(groupId, checked);
     setState(() {});
   }
@@ -388,7 +421,7 @@ class _ShareImageView extends State<ShareImageView> {
                   UserList(
                     _otherUsers,
                     selectedGroupIds: widget.selectedGroupIds,
-                    updateSelectedGroupIds: updateSelectedGroupIds,
+                    updateSelectedGroupIds: _updateSelectedGroupIdsInList,
                   ),
               ],
             ],

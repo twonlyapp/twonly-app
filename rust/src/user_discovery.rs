@@ -34,6 +34,7 @@ fn is_supported_threshold(threshold: u32) -> bool {
 include!(concat!(env!("OUT_DIR"), "/user_discovery.rs"));
 
 #[derive(Clone, sqlx::FromRow)]
+
 pub struct OtherPromotion {
     pub promotion_id: u32,
     pub public_id: i64,
@@ -44,6 +45,7 @@ pub struct OtherPromotion {
 }
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
+
 pub struct AnnouncedUser {
     pub user_id: UserID,
     pub public_key: Vec<u8>,
@@ -51,6 +53,7 @@ pub struct AnnouncedUser {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+
 struct UserDiscoveryConfig {
     /// The number of required shares to get the secret
     threshold: u8,
@@ -72,6 +75,7 @@ struct UserDiscoveryConfig {
 
 pub struct UserDiscovery {
     config_path: PathBuf,
+    database_dir: PathBuf,
     key_manager: Arc<Mutex<KeyManager>>,
     rust_db: Arc<RwLock<Arc<Database>>>,
     config_lock: Arc<Mutex<()>>,
@@ -83,9 +87,13 @@ impl UserDiscovery {
     /// the API runtime only invokes this lifecycle hook.
     pub async fn on_connected(&self, ctx: &Arc<Context>) -> Result<()> {
         let database = ctx.app_db.read().await.clone();
+
+        // A deleted account never gets a username, so without its mark it
+        // would be asked about on every connection, forever.
         let announcements = sqlx::query!(
             r#"SELECT announced_user_id, announced_public_key
-               FROM user_discovery_announced_users WHERE username IS NULL"#
+               FROM user_discovery_announced_users
+               WHERE username IS NULL AND account_deleted = 0"#
         )
         .fetch_all(&database.pool)
         .await?;
@@ -93,15 +101,23 @@ impl UserDiscovery {
         for announcement in announcements {
             let user = match Server::get_user_by_id(ctx, announcement.announced_user_id).await? {
                 ServerResult::Ok(user) => user,
+                // The API error handler has already marked the account.
+                ServerResult::ErrorCode(code)
+                    if code == crate::api::proto::error::ErrorCode::UserIdNotFound as i32 =>
+                {
+                    continue;
+                }
                 ServerResult::ErrorCode(code) => {
                     tracing::warn!(
                         user_id = announcement.announced_user_id,
                         code,
                         "could not refresh announced user"
                     );
+
                     continue;
                 }
             };
+
             if user.public_identity_key.as_deref()
                 != Some(announcement.announced_public_key.as_slice())
             {
@@ -109,30 +125,36 @@ impl UserDiscovery {
                     user_id = announcement.announced_user_id,
                     "server returned a different identity key for announced user"
                 );
+
                 continue;
             }
+
             let Some(username) = user.username else {
                 continue;
             };
 
             let username = String::from_utf8(username)?;
+
             sqlx::query!(
-                "UPDATE user_discovery_announced_users SET username = ? WHERE announced_user_id = ?",
+                "UPDATE user_discovery_announced_users SET username = ? WHERE announced_user_id = \
+                 ?",
                 username,
                 announcement.announced_user_id,
             )
             .execute(&database.pool)
             .await?;
         }
+
         Ok(())
     }
+
     pub fn new(
-        data_dir: &str,
-        key_manager: Arc<Mutex<KeyManager>>,
+        data_dir: &str, database_dir: &str, key_manager: Arc<Mutex<KeyManager>>,
         rust_db: Arc<RwLock<Arc<Database>>>,
     ) -> Result<Self> {
         Ok(Self {
             config_path: PathBuf::from(data_dir).join("user_discovery_config.json"),
+            database_dir: PathBuf::from(database_dir),
             key_manager,
             rust_db,
             config_lock: Arc::default(),
@@ -149,47 +171,60 @@ impl UserDiscovery {
         let discovery_config_path =
             PathBuf::from(&ctx.config.data_dir).join("user_discovery_config.json");
 
-        let settings_are_current = std::fs::read_to_string(&discovery_config_path)
-            .ok()
-            .and_then(|value| serde_json::from_str::<serde_json::Value>(&value).ok())
-            .is_some_and(|value| {
-                value.get("threshold").and_then(serde_json::Value::as_u64)
-                    == Some(u64::from(config.user_discovery_threshold))
-                    && value
-                        .get("share_promotion")
-                        .and_then(serde_json::Value::as_bool)
-                        == Some(config.user_discovery_share_promotion)
-            });
+        let settings_are_current = {
+            let _store = crate::database::maintenance::settings_access(&self.database_dir)?;
+
+            std::fs::read_to_string(&discovery_config_path)
+                .ok()
+                .and_then(|value| serde_json::from_str::<serde_json::Value>(&value).ok())
+                .is_some_and(|value| {
+                    value.get("threshold").and_then(serde_json::Value::as_u64)
+                        == Some(u64::from(config.user_discovery_threshold))
+                        && value
+                            .get("share_promotion")
+                            .and_then(serde_json::Value::as_bool)
+                            == Some(config.user_discovery_share_promotion)
+                })
+        };
 
         if settings_are_current {
             let database = ctx.app_db.read().await.clone();
+
             let has_shares =
                 sqlx::query_scalar!("SELECT EXISTS(SELECT 1 FROM user_discovery_shares LIMIT 1)")
                     .fetch_one(&database.pool)
                     .await?
                     != 0;
+
             if has_shares {
                 return Ok(());
             }
         }
 
         let key_manager = ctx.key_manager.lock().await;
+
         let user_id = key_manager.user_id.ok_or_else(|| {
             TwonlyError::Generic("cannot initialize user discovery without user ID".into())
         })?;
+
         let identity = key_manager
             .signal_identity
             .as_ref()
             .ok_or(TwonlyError::SignalIdentityNotFound)?;
+
         let identity = IdentityKeyPair::try_from(identity.identity_key_pair_structure.as_slice())
             .map_err(|error| {
             TwonlyError::Generic(format!("invalid Signal identity: {error}"))
         })?;
+
         let public_key = identity.identity_key().serialize().to_vec();
+
         drop(key_manager);
 
         let database = ctx.app_db.read().await.clone();
+
         let mut transaction = database.pool.begin().await?;
+
         self.initialize_or_update(
             config.user_discovery_threshold,
             user_id,
@@ -198,19 +233,25 @@ impl UserDiscovery {
             &mut transaction,
         )
         .await?;
+
         transaction.commit().await?;
+
         Ok(())
     }
 
     async fn sign_data(&self, input_data: &[u8]) -> Result<Vec<u8>> {
         let key_manager = self.key_manager.lock().await;
+
         let identity = key_manager
             .signal_identity
             .as_ref()
             .ok_or_else(|| TwonlyError::UserDiscoveryStore("no Signal identity found".into()))?;
+
         let key_pair = IdentityKeyPair::try_from(identity.identity_key_pair_structure.as_slice())
             .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
         let mut csprng = rand::rngs::StdRng::from_os_rng();
+
         key_pair
             .private_key()
             .calculate_signature_for_multipart_message(&[input_data], &mut csprng)
@@ -219,15 +260,13 @@ impl UserDiscovery {
     }
 
     async fn verify_signature(
-        &self,
-        input_data: &[u8],
-        public_key: &[u8],
-        signature: &[u8],
+        &self, input_data: &[u8], public_key: &[u8], signature: &[u8],
     ) -> Result<bool> {
         let identity = match IdentityKey::decode(public_key) {
             Ok(identity) => identity,
             Err(_) => return Ok(false),
         };
+
         Ok(identity
             .public_key()
             .verify_signature(input_data, signature))
@@ -235,6 +274,7 @@ impl UserDiscovery {
 
     async fn verify_stored_pubkey(&self, contact_id: UserID, public_key: &[u8]) -> Result<bool> {
         let database = self.rust_db.read().await.clone();
+
         let stored = sqlx::query_scalar!(
             "SELECT identity_key FROM signal_identities WHERE name = ?",
             contact_id.to_string(),
@@ -242,12 +282,14 @@ impl UserDiscovery {
         .fetch_optional(&database.pool)
         .await
         .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
         Ok(stored.as_deref() == Some(public_key))
     }
 
     /// Initializes or updates the user discovery.
     ///
-    /// This function will generate new verification shares and update the config.
+    /// This function will generate new verification shares and update the
+    /// config.
     ///
     /// # Arguments
     ///
@@ -257,15 +299,12 @@ impl UserDiscovery {
     ///
     /// # Returns
     ///
-    /// * `Ok(())` - If the user discovery was initialized or updated successfully
-    /// * `Err(TwonlyError)` - If the user discovery was not initialized or updated successfully
-    ///
+    /// * `Ok(())` - If the user discovery was initialized or updated
+    ///   successfully
+    /// * `Err(TwonlyError)` - If the user discovery was not initialized or
+    ///   updated successfully
     pub async fn initialize_or_update(
-        &self,
-        threshold: u8,
-        user_id: UserID,
-        public_key: Vec<u8>,
-        share_promotion: bool,
+        &self, threshold: u8, user_id: UserID, public_key: Vec<u8>, share_promotion: bool,
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<()> {
         if threshold < MIN_USER_DISCOVERY_THRESHOLD {
@@ -273,11 +312,15 @@ impl UserDiscovery {
                 "user discovery threshold must be at least {MIN_USER_DISCOVERY_THRESHOLD}"
             )));
         }
+
         tracing::info!("Protocols: initialize_or_update started, getting config from store");
+
         let config = match self.read_config() {
             Ok(config) => {
                 let mut config: UserDiscoveryConfig = serde_json::from_str(&config)?;
+
                 config.threshold = threshold;
+
                 config
             }
             Err(_) => UserDiscoveryConfig {
@@ -297,11 +340,13 @@ impl UserDiscovery {
         };
 
         tracing::info!("Protocols: signing data");
+
         let signature = self.sign_data(&signed_data.encode_to_vec()).await?;
 
         debug_assert_eq!(threshold, config.threshold);
 
         tracing::info!("Protocols: setting up announcements");
+
         let verification_shares = self
             .setup_announcements(&config, signed_data, signature, t)
             .await?;
@@ -321,34 +366,39 @@ impl UserDiscovery {
             };
 
             final_config.public_id = public_id;
+
             final_config.announcement_version += 1;
+
             final_config.verification_shares = verification_shares;
+
             final_config.share_promotion = share_promotion;
+
             final_config.threshold = threshold;
 
             self.write_config(&final_config)?;
         }
 
         tracing::info!("Protocols: initialize_or_update finished");
+
         Ok(())
     }
 
     ///
     /// Returns the current version of the owner's user discovery state.
     ///
-    /// The version is incremented every time the user discovery is initialized or updated.
-    /// It should be send contacts which participate in the user discovery, so they can
-    /// check if there is new data available for them using the `get_new_messages` function
-    /// on there side.  
+    /// The version is incremented every time the user discovery is initialized
+    /// or updated. It should be send contacts which participate in the user
+    /// discovery, so they can check if there is new data available for them
+    /// using the `get_new_messages` function on there side.  
     ///
     ///
     /// # Returns
     ///
     /// * `Ok(Vec<u8>)` - The current version of the user discovery
     /// * `Err(TwonlyError)` - If there where errors in the store.
-    ///
     pub async fn get_current_version(&self) -> Result<Vec<u8>> {
         let config = self.get_config_snapshot().await?;
+
         Ok(UserDiscoveryVersion {
             announcement: config.announcement_version,
             promotion: config.promotion_version,
@@ -357,27 +407,30 @@ impl UserDiscovery {
     }
 
     ///
-    /// Returns all new user discovery messages for the provided contact and his current version.
+    /// Returns all new user discovery messages for the provided contact and his
+    /// current version.
     ///
     /// # Arguments
     ///
     /// * `contact_id` - The contact id of the user
-    /// * `received_version` - The version of the user discovery the contact has received so far
+    /// * `received_version` - The version of the user discovery the contact has
+    ///   received so far
     ///
     /// # Returns
     ///
     /// * `Ok(Vec<Vec<u8>>)` - The new user discovery messages
-    /// * `Err(TwonlyError)` - If there where errors in the store or if the received version is invalid.
-    ///
+    /// * `Err(TwonlyError)` - If there where errors in the store or if the
+    ///   received version is invalid.
     pub async fn get_new_messages(
-        &self,
-        contact_id: UserID,
-        received_version: &[u8],
+        &self, contact_id: UserID, received_version: &[u8],
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<Vec<Vec<u8>>> {
         let mut messages = vec![];
+
         let received_version = UserDiscoveryVersion::decode(received_version)?;
+
         let config = self.get_config_snapshot().await?;
+
         let version = Some(UserDiscoveryVersion {
             announcement: config.announcement_version,
             promotion: config.promotion_version,
@@ -395,12 +448,14 @@ impl UserDiscovery {
                 share
             } else {
                 let row = sqlx::query!(
-                    "SELECT share_id, share FROM user_discovery_shares WHERE contact_id IS NULL LIMIT 1"
+                    "SELECT share_id, share FROM user_discovery_shares WHERE contact_id IS NULL \
+                     LIMIT 1"
                 )
                 .fetch_optional(&mut **t)
                 .await
                 .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?
                 .ok_or(TwonlyError::NoSharesLeft)?;
+
                 sqlx::query!(
                     "UPDATE user_discovery_shares SET contact_id = ? WHERE share_id = ?",
                     contact_id,
@@ -409,6 +464,7 @@ impl UserDiscovery {
                 .execute(&mut **t)
                 .await
                 .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
                 row.share
             };
 
@@ -421,7 +477,7 @@ impl UserDiscovery {
                         verification_shares: config.verification_shares.clone(),
                         share_promotion: config.share_promotion,
                     }),
-                    version: version.clone(),
+                    version,
                     ..Default::default()
                 }
                 .encode_to_vec(),
@@ -436,11 +492,14 @@ impl UserDiscovery {
             .fetch_all(&mut **t)
             .await
             .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
             let size = promoting_messages.len();
+
             let mut filtered: Vec<Vec<u8>> = promoting_messages
                 .into_iter()
                 .filter(|message| !message.is_empty())
                 .collect();
+
             if filtered.len() != size {
                 filtered.push(
                     UserDiscoveryMessage {
@@ -450,6 +509,7 @@ impl UserDiscovery {
                     .encode_to_vec(),
                 );
             }
+
             messages.extend(filtered);
         }
 
@@ -457,19 +517,19 @@ impl UserDiscovery {
     }
 
     /// Returns the latest version for this discovery.
-    /// Before calling this function the application must sure that contact_id is qualified to be announced.
+    /// Before calling this function the application must sure that contact_id
+    /// is qualified to be announced.
     pub async fn handle_new_messages(
-        &self,
-        contact_id: UserID,
-        public_key_verified_timestamp: Option<i64>,
-        messages: Vec<Vec<u8>>,
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        &self, contact_id: UserID, public_key_verified_timestamp: Option<i64>,
+        messages: Vec<Vec<u8>>, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<()> {
         for message in messages {
             let Ok(message) = UserDiscoveryMessage::decode(message.as_slice()) else {
                 tracing::warn!("Could not parse the message. Continue to the next message...");
+
                 continue;
             };
+
             let Some(version) = message.version else {
                 continue;
             };
@@ -497,6 +557,7 @@ impl UserDiscovery {
 
             // Always update the version...
             let version = version.encode_to_vec();
+
             sqlx::query!(
                 "UPDATE contacts SET user_discovery_version = ? WHERE user_id = ?",
                 version,
@@ -511,9 +572,7 @@ impl UserDiscovery {
     }
 
     pub async fn update_verification_state_for_user(
-        &self,
-        contact_id: UserID,
-        public_key_verified_timestamp: Option<i64>,
+        &self, contact_id: UserID, public_key_verified_timestamp: Option<i64>,
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<()> {
         let current_promotion = sqlx::query_scalar!(
@@ -524,6 +583,7 @@ impl UserDiscovery {
         .fetch_optional(&mut **t)
         .await
         .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
         let Some(current_promotion) = current_promotion else {
             // User does not participate...
             return Ok(());
@@ -533,15 +593,20 @@ impl UserDiscovery {
 
         let Some(old_promotion) = old_message.user_discovery_promotion else {
             tracing::warn!("A contact should only have a promotion message...");
+
             return Ok(());
         };
 
         // Read-modify-write the config to get the new promotion_version
         let mut new_promotion_version = 0u32;
+
         let mut announcement_version = 0u32;
+
         self.read_modify_write_config(|config| {
             config.promotion_version += 1;
+
             new_promotion_version = config.promotion_version;
+
             announcement_version = config.announcement_version;
         })
         .await?;
@@ -562,6 +627,7 @@ impl UserDiscovery {
         };
 
         let promotion = message.encode_to_vec();
+
         sqlx::query!(
             "UPDATE user_discovery_own_promotions SET promotion = X'' WHERE contact_id = ?",
             contact_id,
@@ -569,6 +635,7 @@ impl UserDiscovery {
         .execute(&mut **t)
         .await
         .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
         sqlx::query!(
             "INSERT INTO user_discovery_own_promotions(contact_id, promotion) VALUES (?, ?)",
             contact_id,
@@ -582,10 +649,7 @@ impl UserDiscovery {
     }
 
     async fn setup_announcements(
-        &self,
-        config: &UserDiscoveryConfig,
-        signed_data: SignedData,
-        signature: Vec<u8>,
+        &self, config: &UserDiscoveryConfig, signed_data: SignedData, signature: Vec<u8>,
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<Vec<Vec<u8>>> {
         tracing::debug!(
@@ -601,6 +665,7 @@ impl UserDiscovery {
         .encode_to_vec();
 
         let sharks = Sharks(config.threshold);
+
         let dealer = sharks.dealer(&encrypted_announcement);
 
         let mut shares: Vec<Vec<u8>> = dealer
@@ -626,6 +691,7 @@ impl UserDiscovery {
         let mut verification_shares = vec![];
 
         let split_index = shares.len() - (config.threshold - 1) as usize;
+
         verification_shares.extend(shares.drain(split_index..));
 
         // `WHERE 1` is load-bearing: without a WHERE clause SQLite takes the
@@ -636,6 +702,7 @@ impl UserDiscovery {
             .execute(&mut **t)
             .await
             .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
         for share in shares {
             sqlx::query!(
                 "INSERT INTO user_discovery_shares (share) VALUES (?)",
@@ -656,14 +723,20 @@ impl UserDiscovery {
     }
 
     fn read_config(&self) -> Result<String> {
+        let _store = crate::database::maintenance::settings_access(&self.database_dir)?;
+
         if !self.config_path.is_file() {
             return Err(TwonlyError::UserDiscoveryNotInitialized);
         }
+
         Ok(std::fs::read_to_string(&self.config_path)?)
     }
 
     fn write_config(&self, config: &UserDiscoveryConfig) -> Result<()> {
+        let _store = crate::database::maintenance::settings_access(&self.database_dir)?;
+
         std::fs::write(&self.config_path, serde_json::to_string_pretty(config)?)?;
+
         Ok(())
     }
 
@@ -678,28 +751,33 @@ impl UserDiscovery {
             tokio::time::timeout(std::time::Duration::from_secs(10), self.config_lock.lock())
                 .await
                 .ok();
+
+        let _store = crate::database::maintenance::settings_access(&self.database_dir)?;
+
         let mut config: UserDiscoveryConfig = serde_json::from_str(&self.read_config()?)?;
+
         mutate(&mut config);
+
         self.write_config(&config)?;
+
         Ok(())
     }
 
     async fn handle_user_discovery_announcement(
-        &self,
-        contact_id: UserID,
-        public_key_verified_timestamp: Option<i64>,
-        uda: UserDiscoveryAnnouncement,
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        &self, contact_id: UserID, public_key_verified_timestamp: Option<i64>,
+        uda: UserDiscoveryAnnouncement, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<()> {
         tracing::info!("Got a user discovery announcement from {contact_id}.");
 
         if !is_supported_threshold(uda.threshold) {
             tracing::warn!(
-                "Ignoring user-discovery announcement with unsupported threshold {} (expected {}..={}).",
+                "Ignoring user-discovery announcement with unsupported threshold {} (expected \
+                 {}..={}).",
                 uda.threshold,
                 MIN_USER_DISCOVERY_THRESHOLD,
                 u8::MAX
             );
+
             return Ok(());
         }
 
@@ -709,13 +787,16 @@ impl UserDiscovery {
                 uda.threshold,
                 uda.verification_shares.len(),
             );
+
             return Ok(());
         }
 
         let sharks = Sharks(uda.threshold as u8);
 
         let mut all_shares = uda.verification_shares.clone();
+
         all_shares.push(uda.announcement_share.clone());
+
         let shares: Vec<_> = all_shares
             .iter()
             .filter_map(|x| Share::try_from(x.as_slice()).ok())
@@ -764,10 +845,14 @@ impl UserDiscovery {
                 if uda.share_promotion {
                     // Read-modify-write the config to get the new promotion_version
                     let mut new_promotion_version = 0u32;
+
                     let mut announcement_version = 0u32;
+
                     self.read_modify_write_config(|config| {
                         config.promotion_version += 1;
+
                         new_promotion_version = config.promotion_version;
+
                         announcement_version = config.announcement_version;
                     })
                     .await?;
@@ -788,15 +873,19 @@ impl UserDiscovery {
                     };
 
                     let promotion = message.encode_to_vec();
+
                     sqlx::query!(
-                        "UPDATE user_discovery_own_promotions SET promotion = X'' WHERE contact_id = ?",
+                        "UPDATE user_discovery_own_promotions SET promotion = X'' WHERE \
+                         contact_id = ?",
                         contact_id,
                     )
                     .execute(&mut **t)
                     .await
                     .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
                     sqlx::query!(
-                        "INSERT INTO user_discovery_own_promotions(contact_id, promotion) VALUES (?, ?)",
+                        "INSERT INTO user_discovery_own_promotions(contact_id, promotion) VALUES \
+                         (?, ?)",
                         contact_id,
                         promotion,
                     )
@@ -826,7 +915,8 @@ impl UserDiscovery {
                 )
                 .await?;
 
-                // As we no now the public_id from the user, all promotions up to this point are also known, so add these to the relations database as well
+                // As we no now the public_id from the user, all promotions up to this point are
+                // also known, so add these to the relations database as well
                 let promotions = self
                     .get_other_promotions_by_public_id(uda.public_id, t)
                     .await?;
@@ -848,25 +938,26 @@ impl UserDiscovery {
     }
 
     async fn handle_user_discovery_promotion(
-        &self,
-        from_contact_id: UserID,
-        udp: UserDiscoveryPromotion,
+        &self, from_contact_id: UserID, udp: UserDiscoveryPromotion,
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<()> {
         tracing::debug!("Received a new UDP with public_id = {}.", &udp.public_id);
 
         if !is_supported_threshold(udp.threshold) {
             tracing::warn!(
-                "Ignoring user-discovery promotion with unsupported threshold {} (expected {}..={}).",
+                "Ignoring user-discovery promotion with unsupported threshold {} (expected \
+                 {}..={}).",
                 udp.threshold,
                 MIN_USER_DISCOVERY_THRESHOLD,
                 u8::MAX
             );
+
             return Ok(());
         }
 
         if udp.announcement_share.is_empty() {
             tracing::info!("Got empty announcement share. Ignoring it..");
+
             return Ok(());
         }
 
@@ -892,6 +983,7 @@ impl UserDiscovery {
                 from_contact_id,
                 contact.user_id
             );
+
             // The user is already known, just propagate the relation ship
             self.push_new_user_relation(
                 from_contact_id,
@@ -900,6 +992,7 @@ impl UserDiscovery {
                 t,
             )
             .await?;
+
             return Ok(());
         }
 
@@ -907,11 +1000,14 @@ impl UserDiscovery {
             .get_other_promotions_by_public_id(udp.public_id, t)
             .await?;
 
-        // Deduplicate shares by their raw bytes to prevent invalid Shamir's Secret Sharing recoveries.
-        // Multiple identical shares (e.g. due to contact resending promotions, or DB duplicate writes)
-        // will cause `recover` to interpolate incorrectly and return garbage bytes.
+        // Deduplicate shares by their raw bytes to prevent invalid Shamir's Secret
+        // Sharing recoveries. Multiple identical shares (e.g. due to contact
+        // resending promotions, or DB duplicate writes) will cause `recover` to
+        // interpolate incorrectly and return garbage bytes.
         let mut unique_shares_set = HashSet::new();
+
         let mut unique_promotions = Vec::new();
+
         for p in promotions {
             if unique_shares_set.insert(p.announcement_share.clone()) {
                 unique_promotions.push(p);
@@ -920,10 +1016,12 @@ impl UserDiscovery {
 
         if unique_promotions.len() < udp.threshold as usize {
             tracing::debug!(
-                "Not enough unique shares ({} < {}) to decrypt announcement. Waiting for next share.",
+                "Not enough unique shares ({} < {}) to decrypt announcement. Waiting for next \
+                 share.",
                 unique_promotions.len(),
                 udp.threshold
             );
+
             return Ok(());
         }
 
@@ -938,12 +1036,15 @@ impl UserDiscovery {
         match Sharks(udp.threshold as u8).recover(&shares) {
             Ok(secret) => {
                 tracing::debug!("Could decrypt announcement.");
+
                 let asd = AnnouncementShareDecrypted::decode(secret.as_slice())?;
+
                 if let Some(signed_data) = asd.signed_data {
                     if udp.public_id != signed_data.public_id {
                         tracing::warn!(
                             "Mismatch of the announced public id and the signed public id "
                         );
+
                         return Ok(());
                     }
 
@@ -971,6 +1072,7 @@ impl UserDiscovery {
                     let config = self.get_config_snapshot().await?;
 
                     let user_id = config.user_id;
+
                     for promotion in unique_promotions {
                         // Do not store the announcement of the users itself.
                         // Or in case the promotion promotes myself
@@ -979,11 +1081,13 @@ impl UserDiscovery {
                         {
                             continue;
                         }
+
                         tracing::debug!(
                             "NEW PROMOTION: {:x} knows {:x}",
                             promotion.from_contact_id,
                             announced_user.user_id
                         );
+
                         self.push_new_user_relation(
                             promotion.from_contact_id,
                             announced_user.clone(),
@@ -993,6 +1097,7 @@ impl UserDiscovery {
                         .await?;
                     }
                 }
+
                 Ok(())
             }
             Err(err) => Err(TwonlyError::ShamirsSecret(err.to_string())),
@@ -1000,9 +1105,7 @@ impl UserDiscovery {
     }
 
     async fn store_other_promotion(
-        &self,
-        promotion: OtherPromotion,
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        &self, promotion: OtherPromotion, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<()> {
         sqlx::query!(
             r#"
@@ -1026,13 +1129,12 @@ impl UserDiscovery {
         .execute(&mut **t)
         .await
         .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
         Ok(())
     }
 
     async fn get_announced_user_by_public_id(
-        &self,
-        public_id: i64,
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        &self, public_id: i64, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<Option<AnnouncedUser>> {
         let row = sqlx::query!(
             r#"
@@ -1045,6 +1147,7 @@ impl UserDiscovery {
         .fetch_optional(&mut **t)
         .await
         .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
         Ok(row.map(|row| AnnouncedUser {
             user_id: row.announced_user_id,
             public_key: row.announced_public_key,
@@ -1053,9 +1156,7 @@ impl UserDiscovery {
     }
 
     async fn get_other_promotions_by_public_id(
-        &self,
-        public_id: i64,
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        &self, public_id: i64, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<Vec<OtherPromotion>> {
         let rows = sqlx::query!(
             r#"
@@ -1069,6 +1170,7 @@ impl UserDiscovery {
         .fetch_all(&mut **t)
         .await
         .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
         rows.into_iter()
             .map(|row| {
                 Ok(OtherPromotion {
@@ -1086,11 +1188,8 @@ impl UserDiscovery {
     }
 
     async fn push_new_user_relation(
-        &self,
-        from_contact_id: UserID,
-        announced_user: AnnouncedUser,
-        public_key_verified_timestamp: Option<i64>,
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        &self, from_contact_id: UserID, announced_user: AnnouncedUser,
+        public_key_verified_timestamp: Option<i64>, t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<()> {
         sqlx::query!(
             r#"
@@ -1109,6 +1208,7 @@ impl UserDiscovery {
         .execute(&mut **t)
         .await
         .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
         sqlx::query!(
             r#"
             INSERT INTO user_discovery_user_relations (
@@ -1124,6 +1224,7 @@ impl UserDiscovery {
         .execute(&mut **t)
         .await
         .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
+
         Ok(())
     }
 }
@@ -1145,17 +1246,22 @@ impl Default for UserDiscoveryConfig {
 
 #[cfg(test)]
 mod tests {
+
     use super::{is_supported_threshold, MIN_USER_DISCOVERY_THRESHOLD};
 
     #[test]
+
     fn only_accepts_supported_discovery_thresholds() {
         assert!(!is_supported_threshold(u32::from(
             MIN_USER_DISCOVERY_THRESHOLD - 1
         )));
+
         assert!(is_supported_threshold(u32::from(
             MIN_USER_DISCOVERY_THRESHOLD
         )));
+
         assert!(is_supported_threshold(u32::from(u8::MAX)));
+
         assert!(!is_supported_threshold(u32::from(u8::MAX) + 1));
     }
 }

@@ -1,14 +1,19 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/groups.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/group_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -87,13 +92,14 @@ class GroupMemberContextMenu extends StatelessWidget {
   }
 
   Future<void> _makeContactRequest(BuildContext context) async {
-    await twonlyDB.contactsDao.updateContact(
-      member.contactId,
-      const ContactsCompanion(
-        accepted: Value(false),
-        requested: Value(false),
-        deletedByUser: Value(false),
+    await rust_contacts.updateContact(
+      id: member.contactId,
+      patch: const ContactPatch(
+        accepted: false,
+        requested: false,
+        deletedByUser: false,
       ),
+      transaction: currentDatabaseSession(),
     );
     await RustApi.sendEncryptedContent(
       contactId: member.contactId,
@@ -126,9 +132,15 @@ class GroupMemberContextMenu extends StatelessWidget {
           ContextMenuItem(
             title: context.lang.contextMenuOpenChat,
             onTap: () async {
-              final directChat = await twonlyDB.groupsDao.getDirectChat(
-                contact.userId,
-              );
+              final directChat = await rust_groups
+                  .listGroups(
+                    input: db_groups.GroupQuery(
+                      filter: db_groups.GroupFilter.directContact,
+                      contactId: contact.userId,
+                    ),
+                    transaction: currentDatabaseSession(),
+                  )
+                  .then((rows) => rows.isEmpty ? null : rows.single);
               if (directChat == null) {
                 // create
                 return;

@@ -5,6 +5,52 @@ import 'package:twonly/src/services/api/connection_lifecycle.dart';
 
 void main() {
   test(
+    'duplicate network notifications coalesce while route changes reconnect',
+    () async {
+      var updates = 0;
+      final lifecycle = ConnectionLifecycle(
+        readNetworkAvailable: () async => true,
+        applyNetworkAvailable: (_) async {
+          updates++;
+        },
+        applyBackground: (_) async {},
+        onError: (error, stack) => fail('$error'),
+      );
+      await Future.wait([
+        lifecycle.networkChanged(identity: 'wifi'),
+        lifecycle.networkChanged(identity: 'wifi'),
+        lifecycle.networkChanged(identity: 'mobile'),
+      ]);
+      expect(updates, 2);
+    },
+  );
+  test('initial online status preserves startup authentication', () async {
+    final applied = <bool>[];
+    final lifecycle = ConnectionLifecycle(
+      readNetworkAvailable: () async => true,
+      hasActiveConnection: () async => true,
+      applyNetworkAvailable: (available) async => applied.add(available),
+      applyBackground: (_) async {},
+      onError: (error, stack) => fail('$error'),
+    );
+    await lifecycle.networkChanged(identity: 'wifi');
+    expect(applied, isEmpty);
+    await lifecycle.networkChanged(identity: 'mobile');
+    expect(applied, [true]);
+  });
+  test('initial online status restores a retained offline runtime', () async {
+    final applied = <bool>[];
+    final lifecycle = ConnectionLifecycle(
+      readNetworkAvailable: () async => true,
+      hasActiveConnection: () async => false,
+      applyNetworkAvailable: (available) async => applied.add(available),
+      applyBackground: (_) async {},
+      onError: (error, stack) => fail('$error'),
+    );
+    await lifecycle.networkChanged(identity: 'wifi');
+    expect(applied, [true]);
+  });
+  test(
     'resume waits for pause and refreshes reachability before reconnecting',
     () async {
       final paused = Completer<void>();

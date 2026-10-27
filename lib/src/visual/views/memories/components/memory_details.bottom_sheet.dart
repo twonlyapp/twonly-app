@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class MemoryDetailsSheet extends StatelessWidget {

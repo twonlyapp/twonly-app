@@ -278,6 +278,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get liveLocationMenu => 'الموقع';
 
   @override
+  String get memoriesMenu => 'الذكريات';
+
+  @override
+  String get memoriesLoadFailed => 'تعذّر تحميل الذكرى.';
+
+  @override
   String get liveLocationTitle => 'الموقع المباشر';
 
   @override
@@ -1377,6 +1383,14 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String notificationMention(Object inGroup) {
+    return 'أشار إليك في رسالة$inGroup.';
+  }
+
+  @override
+  String get chatMentionUnknownUser => 'مستخدم غير معروف';
+
+  @override
   String notificationText(Object inGroup) {
     return 'رسالة جديدة$inGroup.';
   }
@@ -1624,14 +1638,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get finishSetupCardAction => 'متابعة الإعداد';
 
   @override
-  String get missingBackupCardTitle => 'إعداد النسخ الاحتياطي';
+  String get backupReminderTitle => 'فعّل النسخ الاحتياطي';
 
   @override
-  String get missingBackupCardDesc =>
-      'لقد حسّنّا آلية النسخ الاحتياطي، ولهذا يلزمك إعدادها من جديد.';
+  String get backupReminderDesc =>
+      'بدون نسخة احتياطية، لا توجد أي طريقة لاستعادة حسابك إذا فقدت هاتفك أو حذفت التطبيق. فعّل خيارًا واحدًا على الأقل من الخيارات أدناه.';
 
   @override
-  String get missingBackupCardAction => 'أعدّه الآن';
+  String get passwordlessRecoveryReminderTitle => 'هل نسيت كلمة المرور؟';
+
+  @override
+  String get passwordlessRecoveryReminderDesc =>
+      'إذا نسيت كلمة المرور يومًا ما، فهذه هي طريقة استعادة حسابك: يمكن لأصدقائك الموثوقين مساعدتك في استعادته دون كلمة المرور.';
+
+  @override
+  String get passwordlessRecoveryReminderHide => 'عدم الإظهار مرة أخرى';
+
+  @override
+  String get passwordlessRecoveryReminderHideTitle => 'إخفاء هذا التذكير؟';
+
+  @override
+  String get passwordlessRecoveryReminderHideDesc =>
+      'إذا فقدت كلمة المرور، فلن تكون هناك أي طريقة أخرى لاستعادة حسابك.';
+
+  @override
+  String get passwordlessRecoveryReminderEnable => 'تفعيل';
 
   @override
   String get onboardingFinishLater => 'الإكمال لاحقًا';
@@ -2715,16 +2746,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recoverPasswordlessRecoverNowBtn => 'استعد الآن';
 
   @override
-  String get missingRecoveryContactsCardTitle => 'استعادة الحساب';
-
-  @override
-  String get missingRecoveryContactsCardDesc =>
-      'اختر جهات اتصال للاستعادة لتساعدك في استعادة حسابك دون الحاجة إلى كلمة مرور.';
-
-  @override
-  String get missingRecoveryContactsCardAction => 'اختر جهات الاتصال';
-
-  @override
   String get memoriesBackupLimitReached =>
       'تم الوصول إلى حد النسخ الاحتياطي السحابي! يُرجى ترقية خطتك أو إخلاء بعض المساحة.';
 
@@ -3362,4 +3383,52 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mediaSendFailed => 'تعذّر الإرسال';
+
+  @override
+  String get mailboxSyncTitle => 'جارٍ مزامنة twonly';
+
+  @override
+  String get mailboxSyncBody =>
+      'يقوم twonly بمزامنة هذا الجهاز وتنزيل رسائلك. يُرجى إبقاء التطبيق مفتوحًا حتى تكتمل العملية.';
+
+  @override
+  String mailboxSyncRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تبقّت $count رسالة',
+      many: 'تبقّت $count رسالة',
+      few: 'تبقّت $count رسائل',
+      two: 'تبقّت رسالتان',
+      one: 'تبقّت رسالة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationGameTurn(String gameName) {
+    return 'لعب $gameName. حان دورك.';
+  }
+
+  @override
+  String notificationGameWon(String gameName) {
+    return 'لعب $gameName. لقد فزت.';
+  }
+
+  @override
+  String notificationGameLost(String gameName) {
+    return 'لعب $gameName. لقد خسرت.';
+  }
+
+  @override
+  String get notificationGameFallbackName => 'لعبة';
+
+  @override
+  String get chatGameTurn => 'حان دورك.';
+
+  @override
+  String get chatGameWon => 'لقد فزت.';
+
+  @override
+  String get chatGameLost => 'لقد خسرت.';
 }

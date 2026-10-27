@@ -44,6 +44,10 @@ message PendingMessageV2 {
 
 message PendingMessagesV2 {
   repeated PendingMessageV2 messages = 1;
+  // Rows still waiting in the recipient's mailbox when this page was sent,
+  // this page included. Lets a client show how far a large catch-up has got.
+  // Absent when the server could not count them.
+  optional uint64 pending_count = 2;
 }
 
 message Response {

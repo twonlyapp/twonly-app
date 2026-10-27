@@ -6,9 +6,3 @@ targets:
       - pubspec.yaml
       - lib/$lib$
       - $package$
-    builders:
-      drift_dev:
-        options:
-          databases:
-            twonly_db: lib/src/database/twonly.db.dart
-          schema_dir: lib/src/database/schemas

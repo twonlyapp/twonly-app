@@ -1,16 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_flashbacks.model.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database_values.dart';
 
 MemoryItem _memory(DateTime date) => MemoryItem(
   mediaService: MediaFileService(
     MediaFile(
       mediaId: date.toIso8601String(),
-      type: MediaType.image,
-      cloudState: CloudState.none,
+      typeName: MediaType.image.name,
+      cloudStateName: CloudState.none.name,
       requiresAuthentication: false,
       stored: true,
       isDraftMedia: false,
@@ -19,7 +20,7 @@ MemoryItem _memory(DateTime date) => MemoryItem(
       hasCropAnalyzed: false,
       hasThumbnail: true,
       galleryExportPending: false,
-      createdAt: date,
+      createdAtSeconds: databaseSeconds(date),
     ),
   ),
   messages: [],

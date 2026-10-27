@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO messages(message_id, group_id, sender_id, type, media_id, media_stored, opened_at,\n                created_at)\n            VALUES (?, 'mock_group_gallery', ?, 'media', ?, 1, ?, ?)\n            ON CONFLICT(message_id) DO UPDATE\n            SET sender_id = excluded.sender_id, media_id = excluded.media_id,\n                media_stored = 1, opened_at = excluded.opened_at, created_at = excluded.created_at\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "f342ab23e1875fb0d8086443f3af8fb8f96c6cf3284e12310cd47760470900c0"
+}

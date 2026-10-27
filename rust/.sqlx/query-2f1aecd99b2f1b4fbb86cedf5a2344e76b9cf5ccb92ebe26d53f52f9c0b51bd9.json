@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE own_custom_avatar SET webp = NULL, sha256 = NULL, width = NULL, height = NULL, source_revision = source_revision + CASE WHEN webp IS NULL THEN 0 ELSE 1 END WHERE singleton = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "2f1aecd99b2f1b4fbb86cedf5a2344e76b9cf5ccb92ebe26d53f52f9c0b51bd9"
+}

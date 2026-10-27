@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT r.message_id,\n                r.emoji,\n                r.sender_id,\n                r.created_at\n            FROM reactions r\n            JOIN messages m\n            ON m.message_id = r.message_id\n            WHERE m.group_id = ?\n                AND (m.is_story = 0\n                    OR m.media_stored = 1\n            )\n            ORDER BY m.created_at DESC,\n                r.created_at DESC,\n                r.rowid DESC\n            LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "reactions",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "emoji",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "reactions",
+            "name": "emoji"
+          }
+        }
+      },
+      {
+        "name": "sender_id",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "reactions",
+            "name": "sender_id"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "reactions",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "71e1772b159d88e8f54fbb0aeb1a5904e91cd48a578098f840f722a47f788668"
+}

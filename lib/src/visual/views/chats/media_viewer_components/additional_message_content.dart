@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/utils/contact_name.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AdditionalMessageContent extends StatelessWidget {
   const AdditionalMessageContent(this.message, {super.key});
 
-  final Message message;
+  final StoredMessage message;
 
   @override
   Widget build(BuildContext context) {

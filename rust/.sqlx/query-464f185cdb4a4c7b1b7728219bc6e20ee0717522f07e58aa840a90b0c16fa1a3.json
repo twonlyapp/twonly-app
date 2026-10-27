@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    UPDATE groups\n                    SET group_name = ?\n                    WHERE is_direct_chat = 1\n                        AND EXISTS (\n                        SELECT 1\n                        FROM group_members\n                        WHERE group_members.group_id = groups.group_id\n                            AND contact_id = ?\n                    )\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "464f185cdb4a4c7b1b7728219bc6e20ee0717522f07e58aa840a90b0c16fa1a3"
+}

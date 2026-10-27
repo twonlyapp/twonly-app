@@ -1,24 +1,25 @@
-import 'package:drift/drift.dart' show DatabaseConnection;
-import 'package:drift/native.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/live_location.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/live_location.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_location.bottom_sheet.dart';
 
+import '../helpers/native_database.dart';
 import '../mocks/user_config.dart';
 
-class _LocationApi implements RustLibApi {
+class _LocationApi extends NativeTestApi {
   final events = <String>[];
   LiveLocationSession? current;
   List<String>? groups;
@@ -88,7 +89,7 @@ void main() {
   var nativeStarts = true;
   final nativeCalls = <MethodCall>[];
 
-  setUpAll(() => RustLib.initMock(api: api));
+  setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
   setUp(() async {
     await locator.reset();
@@ -238,12 +239,15 @@ void main() {
   );
 
   Future<Group> chat() async {
-    final db = TwonlyDB.forTesting(DatabaseConnection(NativeDatabase.memory()));
-    await db
-        .into(db.groups)
-        .insert(GroupsCompanion.insert(groupId: 'chat-a', groupName: 'Chat A'));
-    final group = (await db.groupsDao.getGroup('chat-a'))!;
-    await db.close();
+    final db = await TestDatabase.create();
+    await db.insert(
+      const GroupPatch(groupId: 'chat-a', groupName: 'Chat A'),
+    );
+    final group = (await rust_groups.getGroup(
+      id: 'chat-a',
+      transaction: currentDatabaseSession(),
+    ))!;
+
     return group;
   }
 
@@ -252,7 +256,9 @@ void main() {
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(body: ShareLocationView(group: await chat())),
+        home: Scaffold(
+          body: ShareLocationView(group: await runNative(tester, chat)),
+        ),
       ),
     );
     await tester.pumpAndSettle();

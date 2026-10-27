@@ -41,6 +41,9 @@ class UserService {
         updateUser(user);
 
         if (config == user) {
+          // Another runtime may already have saved the requested value. Keep
+          // this isolate and its listeners in sync even when no write is needed.
+          await userService._applyRustUserConfig(config);
           return;
         }
 
@@ -72,6 +75,9 @@ class UserService {
     UserConfig config, {
     bool notify = true,
   }) async {
+    final changed =
+        !isUserCreated ||
+        !UserConfigApi.sameConfig(left: currentUser, right: config);
     currentUser = config;
     isUserCreated = true;
     try {
@@ -82,7 +88,7 @@ class UserService {
       // Reporting must not prevent login or updating the user's settings.
       Log.warn('Could not configure error reporting', e);
     }
-    if (notify) triggerUserUpdate();
+    if (notify && changed) triggerUserUpdate();
   }
 
   void triggerUserUpdate() {

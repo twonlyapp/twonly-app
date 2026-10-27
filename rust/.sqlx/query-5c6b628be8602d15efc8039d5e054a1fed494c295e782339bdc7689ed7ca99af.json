@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM receipts WHERE receipt_id IN (SELECT receipt_id FROM live_location_outbox)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "5c6b628be8602d15efc8039d5e054a1fed494c295e782339bdc7689ed7ca99af"
+}

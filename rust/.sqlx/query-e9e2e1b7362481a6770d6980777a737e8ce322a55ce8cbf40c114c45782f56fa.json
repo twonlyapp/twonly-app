@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET gallery_export_pending = 0 WHERE media_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "e9e2e1b7362481a6770d6980777a737e8ce322a55ce8cbf40c114c45782f56fa"
+}

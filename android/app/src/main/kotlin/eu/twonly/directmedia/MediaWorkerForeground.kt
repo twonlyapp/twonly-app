@@ -12,9 +12,10 @@ import java.util.concurrent.TimeUnit
  * A background retry may be allowed to run as a job but forbidden to start a
  * foreground service. In that case keep doing the work within the normal
  * WorkManager budget; stopped uploads are cancelled by onStopped(). */
-internal fun Worker.setForegroundWhenAllowed(info: ForegroundInfo) {
+internal fun Worker.setForegroundWhenAllowed(info: ForegroundInfo): Boolean {
     try {
         setForegroundAsync(info).get(10, TimeUnit.SECONDS)
+        return true
     } catch (error: Exception) {
         val cause = if (error is ExecutionException) error.cause else error
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
@@ -22,5 +23,6 @@ internal fun Worker.setForegroundWhenAllowed(info: ForegroundInfo) {
             throw error
         }
         Log.i("TwonlyMediaTransfer", "Foreground start restricted; continuing as background work")
+        return false
     }
 }

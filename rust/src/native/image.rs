@@ -19,24 +19,30 @@ pub(crate) fn extract_foreground(input: &Path) -> Result<::image::RgbaImage> {
     type ExtractForeground = unsafe extern "C" fn(*const c_char, *const c_char) -> i32;
 
     let output = std::env::temp_dir().join(format!("sticker-{}.png", uuid::Uuid::new_v4()));
+
     let input = CString::new(input.as_os_str().as_encoded_bytes())
         .map_err(|_| TwonlyError::Generic("image path contains a NUL byte".into()))?;
+
     let output_c = CString::new(output.as_os_str().as_encoded_bytes())
         .map_err(|_| TwonlyError::Generic("image path contains a NUL byte".into()))?;
+
     let callback = unsafe {
         libc::dlsym(
             libc::RTLD_DEFAULT,
             c"twonly_extract_sticker_foreground".as_ptr(),
         )
     };
+
     if callback.is_null() {
         return Err(TwonlyError::Generic(
             "iOS sticker foreground extraction is unavailable".into(),
         ));
     }
+
     // SAFETY: the public Swift @_cdecl has this exact C ABI signature. Both
     // path strings remain alive until the synchronous callback returns.
     let callback: ExtractForeground = unsafe { std::mem::transmute(callback) };
+
     let result = match unsafe { callback(input.as_ptr(), output_c.as_ptr()) } {
         1 => ::image::open(&output)
             .map(|image| image.to_rgba8())
@@ -51,8 +57,10 @@ pub(crate) fn extract_foreground(input: &Path) -> Result<::image::RgbaImage> {
             "iOS could not extract a sticker from this image".into(),
         )),
     };
+
     // Clean up on decoding errors and partial native writes as well.
     let _ = std::fs::remove_file(output);
+
     result
 }
 
@@ -65,19 +73,25 @@ pub(crate) fn decode_to_png(input: &Path, output: &Path) -> Result<()> {
 
     let input = CString::new(input.as_os_str().as_encoded_bytes())
         .map_err(|_| TwonlyError::Generic("image path contains a NUL byte".into()))?;
+
     let output = CString::new(output.as_os_str().as_encoded_bytes())
         .map_err(|_| TwonlyError::Generic("image path contains a NUL byte".into()))?;
+
     // The implementation lives in the app executable, so it is resolved at
     // runtime rather than required when the standalone cdylib is linked.
     let symbol = c"twonly_decode_image_to_png";
+
     let callback = unsafe { libc::dlsym(libc::RTLD_DEFAULT, symbol.as_ptr()) };
+
     if callback.is_null() {
         return Err(TwonlyError::Generic(
             "iOS image decoding is unavailable".into(),
         ));
     }
+
     // SAFETY: the Swift @_cdecl declaration has this exact stable C ABI signature.
     let callback: DecodeImage = unsafe { std::mem::transmute(callback) };
+
     // SAFETY: Swift copies both strings before this call returns.
     if unsafe { callback(input.as_ptr(), output.as_ptr()) } {
         Ok(())
@@ -90,40 +104,47 @@ pub(crate) fn decode_to_png(input: &Path, output: &Path) -> Result<()> {
 
 #[cfg(target_os = "android")]
 pub(crate) fn decode_to_png(input: &Path, output: &Path) -> Result<()> {
-    use crate::native::transfer::android::{jni_env, media_codec_class};
+    use crate::native::transfer::android::{media_codec_class, with_env};
     use jni::objects::{JObject, JValue};
 
     let class = media_codec_class()?;
-    let mut env = jni_env()?;
-    let input = env
-        .new_string(input.to_string_lossy().as_ref())
-        .map_err(|error| TwonlyError::Generic(error.to_string()))?;
-    let output = env
-        .new_string(output.to_string_lossy().as_ref())
-        .map_err(|error| TwonlyError::Generic(error.to_string()))?;
-    let input = JObject::from(input);
-    let output = JObject::from(output);
-    let call = env
-        .call_static_method(
-            class,
-            "decodeToPng",
-            "(Ljava/lang/String;Ljava/lang/String;)Z",
-            &[JValue::Object(&input), JValue::Object(&output)],
-        )
-        .and_then(|value| value.z());
-    // A pending Java exception would abort the process once this thread returns
-    // to the VM, so it is cleared and reported as a plain error instead.
-    if env.exception_check().unwrap_or(false) {
-        let _ = env.exception_describe();
-        let _ = env.exception_clear();
-    }
-    if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
-        Ok(())
-    } else {
-        Err(TwonlyError::Generic(
-            "Android could not decode this image".into(),
-        ))
-    }
+
+    with_env(|env| {
+        let input = jni::objects::JString::from_str(env, input.to_string_lossy().as_ref())
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+
+        let output = jni::objects::JString::from_str(env, output.to_string_lossy().as_ref())
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+
+        let input = JObject::from(input);
+
+        let output = JObject::from(output);
+
+        let call = env
+            .call_static_method(
+                class,
+                jni::jni_str!("decodeToPng"),
+                jni::jni_sig!("(Ljava/lang/String;Ljava/lang/String;)Z"),
+                &[JValue::Object(&input), JValue::Object(&output)],
+            )
+            .and_then(|value| value.z());
+
+        // A pending Java exception would abort the process once this thread returns
+        // to the VM, so it is cleared and reported as a plain error instead.
+        if env.exception_check() {
+            env.exception_describe();
+
+            env.exception_clear();
+        }
+
+        if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
+            Ok(())
+        } else {
+            Err(TwonlyError::Generic(
+                "Android could not decode this image".into(),
+            ))
+        }
+    })
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]

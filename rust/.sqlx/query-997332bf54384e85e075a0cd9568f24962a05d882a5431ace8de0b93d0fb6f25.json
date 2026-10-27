@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contacts SET sender_profile_counter = sender_profile_counter WHERE user_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "997332bf54384e85e075a0cd9568f24962a05d882a5431ace8de0b93d0fb6f25"
+}

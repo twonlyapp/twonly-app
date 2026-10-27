@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/location_map.dart';
@@ -16,7 +16,7 @@ class ChatLiveLocationEntry extends StatefulWidget {
     required this.info,
     super.key,
   });
-  final Message message;
+  final StoredMessage message;
   final LiveLocationData location;
   final BorderRadius borderRadius;
   final BubbleInfo info;

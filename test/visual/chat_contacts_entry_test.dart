@@ -1,23 +1,25 @@
-import 'package:drift/drift.dart' hide isNotNull;
-import 'package:drift/native.dart';
+import 'dart:typed_data';
+
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_contacts.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 
+import '../helpers/native_database.dart';
 import '../mocks/user_config.dart';
 
-Message buildMessage(List<int>? payload) => Message(
+StoredMessage buildMessage(List<int>? payload) => StoredMessage(
   groupId: 'group-1',
   messageId: 'msg-1',
   senderId: 42,
@@ -28,7 +30,7 @@ Message buildMessage(List<int>? payload) => Message(
   isDeletedFromSender: false,
   isWidgetMedia: false,
   isStory: false,
-  createdAt: DateTime.now(),
+  createdAtSeconds: databaseSeconds(DateTime.now()),
 );
 
 BubbleInfo buildInfo() => BubbleInfo()
@@ -45,16 +47,8 @@ BubbleInfo buildInfo() => BubbleInfo()
 void main() {
   setUp(() async {
     await locator.reset();
-    locator
-      ..registerSingleton<TwonlyDB>(
-        TwonlyDB.forTesting(
-          DatabaseConnection(
-            NativeDatabase.memory(),
-            closeStreamsSynchronously: true,
-          ),
-        ),
-      )
-      ..registerSingleton<UserService>(UserService());
+    await TestDatabase.create();
+    locator.registerSingleton<UserService>(UserService());
 
     userService.currentUser = testUserConfig(
       userId: 0x133337,

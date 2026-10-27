@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT a.announced_user_id AS \"value!\"\n                FROM user_discovery_announced_users a\n            JOIN user_discovery_user_relations r\n            ON r.announced_user_id = a.announced_user_id\n            JOIN contacts c\n            ON c.user_id = r.from_contact_id\n            WHERE a.username IS NOT NULL\n                AND c.accepted = 1\n                AND c.blocked = 0\n                AND c.deleted_by_user = 0\n                AND c.account_deleted = 0\n                AND (? = 0\n                    OR (a.is_hidden = 0\n                        AND (NOT EXISTS(\n                            SELECT 1\n                            FROM contacts known\n                            WHERE known.user_id = a.announced_user_id\n                        )\n                            OR EXISTS(\n                            SELECT 1\n                            FROM contacts known\n                            WHERE known.user_id = a.announced_user_id\n                                AND known.deleted_by_user = 1\n                                AND known.accepted = 0\n                                AND known.blocked = 0\n                                AND known.account_deleted = 0\n                        )\n                    )\n                )\n            )\n                AND (? = 0\n                    OR a.was_shown_to_the_user = 0\n            )\n            GROUP BY a.announced_user_id\n            HAVING COUNT(*) >= ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_announced_users",
+            "name": "announced_user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "712e9ef3d33eb31ca1eee2646bdadcf778fc7a0d3527d77d0cab4bab055a7423"
+}

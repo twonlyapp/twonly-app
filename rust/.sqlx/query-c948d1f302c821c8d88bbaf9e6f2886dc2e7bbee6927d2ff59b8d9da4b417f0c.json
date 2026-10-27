@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                SELECT EXISTS(SELECT 1 FROM media_files WHERE media_id = ?) AS \"value!: bool\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c948d1f302c821c8d88bbaf9e6f2886dc2e7bbee6927d2ff59b8d9da4b417f0c"
+}

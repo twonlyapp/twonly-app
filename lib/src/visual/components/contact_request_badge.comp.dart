@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
 
@@ -12,7 +14,12 @@ class ContactRequestBadgeComp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<int?>(
-      stream: twonlyDB.contactsDao.watchContactsRequestedCount(),
+      stream: watchRustDatabase(
+        (control) => rust_contacts.watchContactsCount(
+          metric: db_contacts.ContactCount.requested,
+          control: control,
+        ),
+      ),
       builder: (context, snapshot) {
         final count = snapshot.data ?? 0;
         if (count == 0) {

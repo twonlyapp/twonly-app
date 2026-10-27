@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_notification_listener.dart';
+
+import '../../mocks/database_watch.dart';
 
 class _NotificationApi implements RustLibApi {
   late StreamController<List<String>> changes;
@@ -11,8 +14,12 @@ class _NotificationApi implements RustLibApi {
   Completer<void>? pendingClear;
 
   @override
-  Stream<List<String>> crateBridgeWrapperAppDatabaseRustAppDatabaseChanges() =>
-      changes.stream;
+  DatabaseWatch crateBridgeDatabaseDatabaseWatchNew() => TestDatabaseWatch();
+
+  @override
+  Stream<List<String>> crateBridgeWrapperAppDatabaseRustAppDatabaseChanges({
+    required DatabaseWatch control,
+  }) => changes.stream;
 
   @override
   Future<List<String>> crateBridgeApiRustApiClearConversationNotifications({

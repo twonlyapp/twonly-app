@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT chunk_index, chunk_count, payload_sha256, payload\n               FROM webxdc_sync_chunks\n               WHERE transfer_id = ? AND sender_id = ?\n               ORDER BY chunk_index",
+  "describe": {
+    "columns": [
+      {
+        "name": "chunk_index",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_sync_chunks",
+            "name": "chunk_index"
+          }
+        }
+      },
+      {
+        "name": "chunk_count",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_sync_chunks",
+            "name": "chunk_count"
+          }
+        }
+      },
+      {
+        "name": "payload_sha256",
+        "ordinal": 2,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "webxdc_sync_chunks",
+            "name": "payload_sha256"
+          }
+        }
+      },
+      {
+        "name": "payload",
+        "ordinal": 3,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "webxdc_sync_chunks",
+            "name": "payload"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0e9457c7c118cec1779d9f9c1831df9e0747e482e58388e84c20ecb4d1c0dd79"
+}

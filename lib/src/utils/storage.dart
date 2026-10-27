@@ -1,10 +1,9 @@
 import 'dart:async';
-import 'dart:ui';
+import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/error_reporting.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -18,28 +17,35 @@ Future<bool> deleteLocalUserData({bool removeCredentials = false}) async {
     await RustKeyManager.removeLocalCredentials();
     Log.info('Removed the local credentials.');
   }
-  // The database files are deleted a few lines down either way, so a drift
-  // isolate that no longer answers must not block the whole recovery.
-  try {
-    await twonlyDB.close().timeout(const Duration(seconds: 5));
-    Log.info('Closed the app database.');
-  } catch (e) {
-    Log.warn('Could not close the app database, deleting it anyway', e);
+  final privateDir = await getApplicationSupportDirectory();
+  // iOS runtime data lives in the App Group. Also clear the old private copy
+  // so it cannot bring back an abandoned account during a later migration.
+  final directories = {
+    privateDir.path,
+    AppEnvironment.supportDir,
+    AppEnvironment.cacheDir,
+  };
+  for (final path in directories) {
+    _clearDirectory(Directory(path));
   }
-  // Wait for the background drift isolate to potentially shut down
-  await Future.delayed(const Duration(milliseconds: 200));
-
-  // Remove port mappings to prevent connecting to an old, detached isolate that holds a deleted DB file.
-  IsolateNameServer.removePortNameMapping('drift-db/twonly');
-  IsolateNameServer.removePortNameMapping('drift-db/twonly/control');
-
-  final appDir = await getApplicationSupportDirectory();
-  if (appDir.existsSync()) {
-    appDir.deleteSync(recursive: true);
-  }
-  locator
-    ..unregister<TwonlyDB>()
-    ..registerLazySingleton<TwonlyDB>(TwonlyDB.new);
   Log.info('Deleted the local user data.');
   return true;
+}
+
+void _clearDirectory(Directory directory) {
+  if (!directory.existsSync()) return;
+  for (final entity in directory.listSync(followLinks: false)) {
+    // Keep shared lock inodes and the iOS migration marker. Removing either
+    // would let another process bypass admission or re-import old private data.
+    if (entity.path.endsWith('.twonly-maintenance.lock') ||
+        entity.path == '${directory.path}/.runtime_storage_migrated_v1') {
+      continue;
+    }
+    if (entity is Directory) {
+      _clearDirectory(entity);
+      if (entity.listSync(followLinks: false).isEmpty) entity.deleteSync();
+    } else {
+      entity.deleteSync();
+    }
+  }
 }

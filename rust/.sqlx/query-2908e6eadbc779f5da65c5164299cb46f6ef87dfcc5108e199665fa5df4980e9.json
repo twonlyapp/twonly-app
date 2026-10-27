@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT widget_sharing_allowed FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "widget_sharing_allowed",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "widget_sharing_allowed"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2908e6eadbc779f5da65c5164299cb46f6ef87dfcc5108e199665fa5df4980e9"
+}

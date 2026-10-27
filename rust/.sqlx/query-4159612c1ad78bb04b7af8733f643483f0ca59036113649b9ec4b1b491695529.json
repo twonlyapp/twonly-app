@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT app_id AS \"app_id!\",\n                version AS \"version!\",\n                name AS \"name!\",\n                name_translations AS \"name_translations!\",\n                icon AS \"icon?\"\n            FROM webxdc_apps\n            WHERE app_id = ? AND version = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "app_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "app_id"
+          }
+        }
+      },
+      {
+        "name": "version!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "name": "name!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "name_translations!",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "name_translations"
+          }
+        }
+      },
+      {
+        "name": "icon?",
+        "ordinal": 4,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "icon"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "4159612c1ad78bb04b7af8733f643483f0ca59036113649b9ec4b1b491695529"
+}

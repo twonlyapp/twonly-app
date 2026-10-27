@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                DELETE\n                FROM pending_media_file_removals\n                WHERE media_id = (\n                    SELECT media_id\n                    FROM pending_media_file_removals\n                    ORDER BY rowid\n                    LIMIT 1\n                ) RETURNING media_id,\n                    media_type\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "pending_media_file_removals",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "media_type",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "pending_media_file_removals",
+            "name": "media_type"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "f7871b8cca6e0003a2d8c0829a2305132a319cb23463fb0e9652d19f4b98db4f"
+}

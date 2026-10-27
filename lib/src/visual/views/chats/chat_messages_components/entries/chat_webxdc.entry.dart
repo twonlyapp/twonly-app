@@ -2,21 +2,22 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc_host.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/webxdc_app_icon.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/game_chat_messages.dart';
 import 'package:twonly/src/visual/views/webxdc/webxdc_app.view.dart';
 
-/// The card an app shows in a chat: icon, name, whatever the app last put in
-/// its summary or document, and when it arrived. Tapping it starts the app.
+/// The card an app shows in a chat: icon, name, latest announcement and its
+/// time/delivery state. Tapping it starts the app.
 ///
-/// Every string here except the app's own name comes from `webxdc_instances`,
-/// where Rust already stripped control characters and bounded the length. This
-/// widget renders them as plain text and does nothing else with them: they are
-/// written by third-party code and sit next to real messages.
+/// Rust bounds and sanitizes app-written text. Game outcomes use the same
+/// reader-localized status as push notifications, without their game prefix.
 class ChatWebxdcEntry extends StatefulWidget {
   const ChatWebxdcEntry({
     required this.message,
@@ -25,7 +26,7 @@ class ChatWebxdcEntry extends StatefulWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final BorderRadiusGeometry borderRadius;
   final BubbleInfo info;
 
@@ -40,9 +41,9 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
   /// rebuilds -- which any incoming message causes -- and each new one starts
   /// out empty, so the card would blank out and the icon would visibly reload
   /// every time anything else in the chat changed.
-  StreamSubscription<WebxdcInstance?>? _subscription;
-  WebxdcInstance? _instance;
-  WebxdcApp? _app;
+  StreamSubscription<WebxdcCardInstance?>? _subscription;
+  WebxdcCardInstance? _instance;
+  WebxdcCardApp? _app;
 
   @override
   void initState() {
@@ -87,7 +88,7 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
     ).listen(_onInstance);
   }
 
-  Future<void> _onInstance(WebxdcInstance? instance) async {
+  Future<void> _onInstance(WebxdcCardInstance? instance) async {
     if (!mounted) return;
     setState(() => _instance = instance);
     if (instance == null) return;
@@ -118,7 +119,7 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
 
   /// Downloading and verifying the bundle happens here and nowhere else: a
   /// message arriving in a chat never causes a fetch, only this tap does.
-  Future<void> _start(BuildContext context, WebxdcInstance instance) async {
+  Future<void> _start(BuildContext context, WebxdcCardInstance instance) async {
     final messenger = ScaffoldMessenger.of(context);
     final unavailable = context.lang.webxdcUnavailable;
     final languages = readerLanguages(context);
@@ -134,10 +135,18 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
 
   Widget _card(
     BuildContext context,
-    WebxdcInstance instance,
-    WebxdcApp? app,
+    WebxdcCardInstance instance,
+    WebxdcCardApp? app,
   ) {
-    final subtitle = instance.document ?? instance.summary;
+    final name = app == null
+        ? instance.appId
+        : WebxdcService.localizedName(app, readerLanguages(context));
+    final subtitle = gameMessageText(
+      widget.message,
+      context.lang,
+    );
+    final showTime =
+        widget.info.displayTime || widget.message.modifiedAt != null;
     // The card sits on a message bubble, whose color is the same in either
     // theme, so what it is drawn in follows the bubble and not the surface.
     final foreground = widget.info.textColor;
@@ -146,66 +155,70 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
     // The whole card starts the app; the chevron is what says so.
     return GestureDetector(
       onTap: () => _start(context, instance),
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.8,
-        ),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: widget.info.color,
-          borderRadius: widget.borderRadius,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            WebxdcAppIcon(
-              app: app,
-              size: 40,
-              radius: 8,
-              color: foreground,
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: IntrinsicWidth(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.sizeOf(context).width * 0.8,
+            minWidth: widget.info.minWidth,
+          ),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: widget.info.color,
+            borderRadius: widget.borderRadius,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    // The store name in the reader's language, not anything
-                    // the running app chose.
-                    app == null
-                        ? instance.appId
-                        : WebxdcService.localizedName(
-                            app,
-                            readerLanguages(context),
+                  WebxdcAppIcon(
+                    app: app,
+                    size: 40,
+                    radius: 8,
+                    color: foreground,
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: foreground,
                           ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: foreground,
+                        ),
+                        if (subtitle.isNotEmpty)
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: secondary,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  if (subtitle != null && subtitle.isNotEmpty)
-                    Text(
-                      subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: secondary,
-                      ),
-                    ),
+                  const SizedBox(width: 4),
+                  FaIcon(
+                    FontAwesomeIcons.angleRight,
+                    size: 16,
+                    color: secondary,
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(width: 4),
-            FaIcon(
-              FontAwesomeIcons.angleRight,
-              size: 16,
-              color: secondary,
-            ),
-          ],
+              if (showTime) ...[
+                const SizedBox(height: 2),
+                FriendlyMessageTime(message: widget.message),
+              ],
+            ],
+          ),
         ),
       ),
     );

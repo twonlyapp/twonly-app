@@ -8,6 +8,7 @@ use sqlx::{Sqlite, SqlitePool, Transaction};
 use crate::error::{Result, TwonlyError};
 
 #[derive(sqlx::FromRow, Clone)]
+
 pub(crate) struct GroupRecord {
     pub group_id: String,
     pub group_name: String,
@@ -32,8 +33,7 @@ impl GroupRecord {
     }
 
     pub async fn load_in_transaction(
-        transaction: &mut Transaction<'_, Sqlite>,
-        group_id: &str,
+        transaction: &mut Transaction<'_, Sqlite>, group_id: &str,
     ) -> Result<Self> {
         sqlx::query_as!(
             Self,

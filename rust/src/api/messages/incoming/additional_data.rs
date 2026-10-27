@@ -5,11 +5,9 @@
 
 use crate::api::proto::client::{self as proto, encrypted_content};
 use crate::context::Context;
-use crate::database::app::tables::Group;
-use crate::database::app::tables::KeyVerificationType;
-use crate::database::app::tables::Message;
-use crate::database::app::tables::NewKeyVerification;
-use crate::database::app::tables::{MessageType, NewMessage};
+use crate::database::app::groups::native::Group;
+use crate::database::app::key_verifications::table::{KeyVerificationType, NewKeyVerification};
+use crate::database::app::messages::native::{Message, MessageType, NewMessage};
 use crate::error::Result;
 use crate::services::webxdc::WebxdcService;
 use crate::utils::milliseconds_to_seconds;
@@ -17,13 +15,11 @@ use prost::Message as ProstMessage;
 use sqlx::{Sqlite, Transaction};
 
 pub(crate) async fn handle_additional_data_message(
-    ctx: &std::sync::Arc<Context>,
-    tr: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    group_id: &str,
-    message: encrypted_content::AdditionalDataMessage,
+    ctx: &std::sync::Arc<Context>, tr: &mut Transaction<'_, Sqlite>, from_user_id: i64,
+    group_id: &str, message: encrypted_content::AdditionalDataMessage,
 ) -> Result<()> {
     Message::check_message_owner(tr, &message.sender_message_id, from_user_id).await?;
+
     let timestamp = milliseconds_to_seconds(message.timestamp);
 
     // Additional metadata is optional. Keep accepting the containing message if
@@ -33,6 +29,7 @@ pub(crate) async fn handle_additional_data_message(
             Ok(data) => Some(data),
             Err(error) => {
                 tracing::warn!("failed to decode additional message data: {error}");
+
                 None
             }
         },
@@ -47,11 +44,14 @@ pub(crate) async fn handle_additional_data_message(
                         .await?;
                 }
             }
+
             return Ok(());
         } else if data.webxdc_sync_request.is_some() {
             let ctx = ctx.clone();
+
             let group_id = group_id.to_owned();
-            tokio::spawn(async move {
+
+            crate::database::lifecycle::spawn(async move {
                 if let Err(error) = WebxdcService::new(&ctx)
                     .send_one_time_apps_to_contact(&group_id, from_user_id)
                     .await
@@ -71,6 +71,7 @@ pub(crate) async fn handle_additional_data_message(
                 from_user_id,
                 update,
                 timestamp,
+                crate::user_config::UserConfig::load_required_from(ctx)?.user_id,
             )
             .await?;
         } else if let Err(error) = verify_shared_contacts(ctx, tr, from_user_id, data).await {
@@ -110,9 +111,7 @@ pub(crate) async fn handle_additional_data_message(
 }
 
 async fn verify_shared_contacts(
-    ctx: &Context,
-    tr: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
+    ctx: &Context, tr: &mut Transaction<'_, Sqlite>, from_user_id: i64,
     data: &proto::AdditionalMessageData,
 ) -> Result<()> {
     if data.r#type != proto::additional_message_data::Type::Contacts as i32 {
@@ -124,6 +123,7 @@ async fn verify_shared_contacts(
     for contact in &data.contacts {
         if contact.public_identity_key.is_empty() {
             tracing::info!("shared contact carries no public key, skipping verification");
+
             continue;
         }
 
@@ -136,11 +136,13 @@ async fn verify_shared_contacts(
 
         let Some(stored_identity) = stored_identity else {
             tracing::info!("no public key stored for contact");
+
             continue;
         };
 
         if stored_identity != contact.public_identity_key {
             tracing::warn!("shared contact public identity key does not match");
+
             continue;
         }
 
@@ -153,6 +155,7 @@ async fn verify_shared_contacts(
         .await?;
 
         let verified_at = chrono::Utc::now().timestamp_millis();
+
         ctx.user_discovery
             .get()
             .await
@@ -161,5 +164,6 @@ async fn verify_shared_contacts(
 
         tracing::info!("verified a contact from shared additional data");
     }
+
     Ok(())
 }

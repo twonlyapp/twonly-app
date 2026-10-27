@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/stories.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/stories.dart' as rust_stories;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_icon_button.element.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_viewers.bottom_sheet.dart';
@@ -41,7 +42,11 @@ class OwnStoryBottomBar extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         StreamBuilder<List<StoryViewer>>(
-          stream: twonlyDB.storiesDao.watchStoryViewers(media.mediaId),
+          stream: watchRustDatabase(
+            (control) => rust_stories
+                .watchStoryViewers(media: media.mediaId, control: control)
+                .map(storyViewers),
+          ),
           builder: (context, snapshot) {
             final seen = (snapshot.data ?? const [])
                 .where((viewer) => viewer.openedAt != null)

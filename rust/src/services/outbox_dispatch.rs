@@ -41,17 +41,20 @@ use std::sync::Arc;
 /// recipient's session has usually moved on far enough that the socket
 /// retransmission — which re-encrypts — is the better copy anyway.
 const DISPATCH_VALIDITY_SECONDS: i64 = 24 * 60 * 60;
+
 /// Handing over a very large backlog at once would write one request file per
 /// receipt; beyond this the socket is the more sensible route.
 const MAXIMUM_HANDOVERS: usize = 20;
 
 #[derive(FromRow)]
+
 struct ExpiredJob {
     body_path: String,
 }
 
 /// Mirrors the single-request form of the descriptor the native uploaders read.
 #[derive(Serialize)]
+
 struct NativeRequest {
     role: String,
     url: String,
@@ -61,6 +64,7 @@ struct NativeRequest {
 }
 
 #[derive(Serialize)]
+
 struct NativeDescriptor {
     attachment_id: String,
     expires_at: i64,
@@ -88,7 +92,8 @@ impl OutboxDispatchService {
         self.purge_expired().await?;
 
         let database = self.ctx.app_db.read().await.clone();
-        let receipt_ids = sqlx::query_scalar::<_, String>(
+
+        let receipt_ids = sqlx::query_scalar!(
             r#"SELECT receipt_id FROM receipts
                WHERE will_be_retried_by_media_upload = 0
                  AND deferred_until_session IS NULL
@@ -101,13 +106,15 @@ impl OutboxDispatchService {
                  ))
                ORDER BY created_at
                LIMIT ?"#,
+            MAXIMUM_HANDOVERS as i64
         )
-        .bind(MAXIMUM_HANDOVERS as i64)
         .fetch_all(&database.pool)
         .await?;
+
         drop(database);
 
         let mut handed = 0;
+
         for receipt_id in receipt_ids {
             match self.hand_to_os(&receipt_id).await {
                 Ok(true) => handed += 1,
@@ -119,9 +126,11 @@ impl OutboxDispatchService {
                 }
             }
         }
+
         if handed > 0 {
             tracing::info!(handed, "handed queued envelopes to the OS transfer");
         }
+
         Ok(handed)
     }
 
@@ -137,6 +146,7 @@ impl OutboxDispatchService {
         };
 
         let dispatch_id = new_uuid_v7();
+
         let batch = OutboxDispatchBatch {
             dispatches: vec![OutboxDispatch {
                 dispatch_id: dispatch_id.clone(),
@@ -147,13 +157,19 @@ impl OutboxDispatchService {
         };
 
         let directory = self.job_dir().join(&dispatch_id);
+
         std::fs::create_dir_all(&directory)?;
+
         let body_path = directory.join("dispatch.pb");
+
         std::fs::write(&body_path, batch.encode_to_vec())?;
 
         let expires_at = chrono::Utc::now().timestamp() + DISPATCH_VALIDITY_SECONDS;
+
         let user_id = self.ctx.user_id().await?;
+
         let login_token = self.ctx.key_manager.lock().await.main_key.get_login_token();
+
         let descriptor = NativeDescriptor {
             attachment_id: format!("outbox-{dispatch_id}"),
             expires_at,
@@ -177,29 +193,34 @@ impl OutboxDispatchService {
         };
 
         let database = self.ctx.app_db.read().await.clone();
+
         // The row is written before the hand-off so a process death between the
         // two leaves a job the expiry sweep can clean up, rather than a file
         // nothing knows about.
-        sqlx::query(
+        sqlx::query!(
             r#"INSERT INTO outbox_dispatch_jobs
                (receipt_id, dispatch_id, contact_id, body_path, expires_at, created_at)
                VALUES (?, ?, ?, ?, ?, ?)"#,
+            receipt_id,
+            &dispatch_id,
+            prepared.contact_id,
+            body_path.to_string_lossy(),
+            expires_at,
+            chrono::Utc::now().timestamp()
         )
-        .bind(receipt_id)
-        .bind(&dispatch_id)
-        .bind(prepared.contact_id)
-        .bind(body_path.to_string_lossy().as_ref())
-        .bind(expires_at)
-        .bind(chrono::Utc::now().timestamp())
         .execute(&database.pool)
         .await?;
+
         drop(database);
 
         let descriptor_json = serde_json::to_string(&descriptor)?;
+
         if let Err(error) = transfer::schedule(&descriptor_json) {
             self.forget(receipt_id).await;
+
             return Err(error);
         }
+
         Ok(true)
     }
 
@@ -207,12 +228,15 @@ impl OutboxDispatchService {
     /// path remains responsible for it either way.
     async fn forget(&self, receipt_id: &str) {
         let database = self.ctx.app_db.read().await.clone();
-        let removed = sqlx::query_as::<_, ExpiredJob>(
+
+        let removed = sqlx::query_as!(
+            ExpiredJob,
             "DELETE FROM outbox_dispatch_jobs WHERE receipt_id = ? RETURNING body_path",
+            receipt_id
         )
-        .bind(receipt_id)
         .fetch_optional(&database.pool)
         .await;
+
         if let Ok(Some(job)) = removed {
             Self::remove_job_files(&job.body_path);
         }
@@ -222,7 +246,9 @@ impl OutboxDispatchService {
     /// finished transfer back, so age is the only signal there is.
     pub async fn purge_expired(&self) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
-        let expired = sqlx::query_as::<_, ExpiredJob>(
+
+        let expired = sqlx::query_as!(
+            ExpiredJob,
             r#"DELETE FROM outbox_dispatch_jobs
                WHERE expires_at <= CAST(strftime('%s','now') AS INTEGER)
                   OR receipt_id NOT IN (SELECT receipt_id FROM receipts)
@@ -230,14 +256,17 @@ impl OutboxDispatchService {
         )
         .fetch_all(&database.pool)
         .await?;
+
         for job in expired {
             Self::remove_job_files(&job.body_path);
         }
+
         Ok(())
     }
 
     fn remove_job_files(body_path: &str) {
         let path = PathBuf::from(body_path);
+
         match std::fs::remove_file(&path) {
             Ok(()) => {}
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
@@ -245,6 +274,7 @@ impl OutboxDispatchService {
                 tracing::warn!(path = %path.display(), %error, "could not remove a dispatch body");
             }
         }
+
         if let Some(parent) = path.parent() {
             let _ = std::fs::remove_dir(parent);
         }

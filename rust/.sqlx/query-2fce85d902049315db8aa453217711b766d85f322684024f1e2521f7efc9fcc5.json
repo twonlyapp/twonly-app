@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM messages WHERE group_id = ? AND message_id IN (\n                SELECT message_id || '-info' FROM webxdc_updates\n                WHERE instance_id = ? AND message_id != ?\n            )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "2fce85d902049315db8aa453217711b766d85f322684024f1e2521f7efc9fcc5"
+}

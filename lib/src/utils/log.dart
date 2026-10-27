@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:logging/logging.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/core/bridge/logging.dart' as rust_logging;
@@ -9,27 +10,35 @@ class Log {
   static bool _isInitialized = false;
   static bool _rustSinkReady = false;
   static const int _maxBufferedRecords = 1000;
-  static final List<LogRecord> _bufferedRecords = [];
+  static final List<({LogRecord record, bool inBackground})> _bufferedRecords =
+      [];
 
   static void init() {
     if (_isInitialized) return;
     _isInitialized = true;
     Logger.root.level = Level.ALL;
     Logger.root.onRecord.listen((record) {
+      final lifecycle = WidgetsBinding.instance.lifecycleState;
+      final inBackground = switch (lifecycle) {
+        AppLifecycleState.hidden ||
+        AppLifecycleState.paused ||
+        AppLifecycleState.detached => true,
+        _ => false,
+      };
       if (_rustSinkReady) {
-        if (!_writeLogToRust(record)) {
+        if (!_writeLogToRust(record, inBackground)) {
           _rustSinkReady = false;
-          _buffer(record);
+          _buffer(record, inBackground);
         }
       } else {
-        _buffer(record);
+        _buffer(record, inBackground);
       }
       if (!kReleaseMode) {
         if (!Platform.environment.containsKey('FLUTTER_TEST') ||
             record.level >= Level.WARNING) {
           // ignore: avoid_print
           print(
-            '${record.level.name} [f] [twonly] ${record.loggerName} > ${_formatRecord(record)}',
+            '${record.level.name} [${inBackground ? 'b' : 'f'}] [twonly] ${record.loggerName} > ${_formatRecord(record)}',
           );
         }
       }
@@ -41,26 +50,26 @@ class Log {
   static void enableRustSink() {
     if (_rustSinkReady) return;
     _rustSinkReady = true;
-    final pending = List<LogRecord>.of(_bufferedRecords);
+    final pending = List.of(_bufferedRecords);
     _bufferedRecords.clear();
     for (var i = 0; i < pending.length; i++) {
-      if (_writeLogToRust(pending[i])) continue;
+      if (_writeLogToRust(pending[i].record, pending[i].inBackground)) continue;
       _rustSinkReady = false;
       for (var j = i; j < pending.length; j++) {
-        _buffer(pending[j]);
+        _buffer(pending[j].record, pending[j].inBackground);
       }
       break;
     }
   }
 
-  static void _buffer(LogRecord record) {
+  static void _buffer(LogRecord record, bool inBackground) {
     if (_bufferedRecords.length == _maxBufferedRecords) {
       _bufferedRecords.removeAt(0);
     }
-    _bufferedRecords.add(record);
+    _bufferedRecords.add((record: record, inBackground: inBackground));
   }
 
-  static bool _writeLogToRust(LogRecord record) {
+  static bool _writeLogToRust(LogRecord record, bool inBackground) {
     try {
       rust_logging.writeLog(
         level: switch (record.level) {
@@ -72,9 +81,7 @@ class Log {
         },
         source: record.loggerName,
         message: _formatRecord(record),
-        // Background work runs natively now; anything logged from Dart is by
-        // definition the foreground runtime.
-        inBackground: false,
+        inBackground: inBackground,
       );
       return true;
     } catch (error) {
@@ -171,10 +178,6 @@ Future<String> loadLogFile() async {
 
 Future<String> readLast1000Lines() async {
   return rust_logging.readLastLogLines(lineCount: 1000);
-}
-
-Future<void> cleanLogFile() async {
-  return rust_logging.cleanLogFile();
 }
 
 Future<bool> deleteLogFile() async {

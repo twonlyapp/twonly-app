@@ -1,13 +1,24 @@
 import 'dart:convert';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/user_discovery.dart'
+    as rust_user_discovery;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/core/database/app/user_discovery/table.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -23,7 +34,7 @@ class ChatAskAFriendEntry extends StatefulWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final BorderRadiusGeometry borderRadius;
   final BubbleInfo info;
   final Map<int, Contact>? contactsById;
@@ -37,6 +48,26 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
   String? _username;
   bool _isSent = false;
   AdditionalMessageData? _data;
+
+  // The chat rebuilds every visible bubble whenever its data changes. A watch
+  // created in build would restart on each of those rebuilds.
+  Stream<Contact?>? _headerContact;
+  Stream<Contact?>? _statusContact;
+
+  Stream<Contact?> _contact(int userId, {required bool header}) {
+    final shared = widget.contactsById;
+    if (shared != null) return Stream.value(shared[userId]);
+    Stream<Contact?> watch() => watchRustDatabase(
+      (control) => rust_contacts.watchContacts(
+        input: db_contacts.ContactQuery(
+          filter: db_contacts.ContactFilter.ids,
+          ids: Int64List.fromList([userId]),
+        ),
+        control: control,
+      ),
+    ).map((rows) => rows.isEmpty ? null : rows.single);
+    return header ? _headerContact ??= watch() : _statusContact ??= watch();
+  }
 
   @override
   void initState() {
@@ -69,20 +100,28 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
     try {
       if (_isSent) {
         // Try getting from contacts
-        final contact = await twonlyDB.contactsDao.getContactById(userId);
+        final contact = await rust_contacts.getContact(
+          id: userId,
+          transaction: currentDatabaseSession(),
+        );
         if (contact != null) {
           _username = contact.displayName ?? contact.username;
         } else {
           // Try getting from announced users
-          final announced = await twonlyDB.userDiscoveryDao
-              .getAnnouncedUserById(userId);
+          final announced = await rust_user_discovery.getDiscoveryAnnouncement(
+            id: userId,
+            transaction: currentDatabaseSession(),
+          );
           if (announced != null && announced.username != null) {
             _username = announced.username;
           }
         }
       } else {
         // Receiver side: try contacts first
-        final contact = await twonlyDB.contactsDao.getContactById(userId);
+        final contact = await rust_contacts.getContact(
+          id: userId,
+          transaction: currentDatabaseSession(),
+        );
         if (contact != null) {
           _username = contact.displayName ?? contact.username;
         } else {
@@ -109,11 +148,10 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
 
   Future<void> _hideUser() async {
     if (_data == null || !_data!.hasAskAboutUserId()) return;
-    await twonlyDB.userDiscoveryDao.updateAnnouncedUser(
-      _data!.askAboutUserId.toInt(),
-      const UserDiscoveryAnnouncedUsersCompanion(
-        isHidden: Value(true),
-      ),
+    await rust_user_discovery.updateDiscoveryAnnouncement(
+      id: _data!.askAboutUserId.toInt(),
+      patch: const UserDiscoveryAnnouncedUserPatch(isHidden: true),
+      transaction: currentDatabaseSession(),
     );
   }
 
@@ -129,22 +167,25 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
         userdata = await RustApi.getUserById(userId: userId);
       } catch (_) {}
       if (userdata != null) {
-        await twonlyDB.contactsDao.insertOnConflictUpdate(
-          ContactsCompanion(
-            username: Value(utf8.decode(userdata.username)),
-            userId: Value(userdata.userId),
-            requested: const Value(false),
-            blocked: const Value(false),
-            deletedByUser: const Value(false),
+        await rust_contacts.upsertContact(
+          patch: ContactPatch(
+            username: utf8.decode(userdata.username),
+            userId: userdata.userId,
+            requested: false,
+            blocked: false,
+            deletedByUser: false,
             joinedAt: userdata.joinedAt == null
-                ? const Value.absent()
-                : Value(
-                    DateTime.fromMillisecondsSinceEpoch(
-                      userdata.joinedAt! * Duration.millisecondsPerSecond,
-                      isUtc: true,
+                ? null
+                : NullableInt(
+                    value: databaseNullableSeconds(
+                      DateTime.fromMillisecondsSinceEpoch(
+                        userdata.joinedAt! * Duration.millisecondsPerSecond,
+                        isUtc: true,
+                      ),
                     ),
                   ),
           ),
+          transaction: currentDatabaseSession(),
         );
         await RustApi.tryRequestContactById(
           contactId: userdata.userId,
@@ -185,9 +226,7 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
           mainAxisSize: MainAxisSize.min,
           children: [
             StreamBuilder<Contact?>(
-              stream: widget.contactsById == null
-                  ? twonlyDB.contactsDao.watchContact(userId)
-                  : Stream.value(widget.contactsById![userId]),
+              stream: _contact(userId, header: true),
               builder: (context, snapshot) {
                 final contactInDb = snapshot.data;
                 return GestureDetector(
@@ -283,9 +322,7 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
               ),
             ] else ...[
               StreamBuilder<Contact?>(
-                stream: widget.contactsById == null
-                    ? twonlyDB.contactsDao.watchContact(userId)
-                    : Stream.value(widget.contactsById![userId]),
+                stream: _contact(userId, header: false),
                 builder: (context, contactSnapshot) {
                   final contactInDb = contactSnapshot.data;
                   if (contactInDb != null) {
@@ -298,12 +335,9 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
                     );
                   }
 
-                  return StreamBuilder<UserDiscoveryAnnouncedUser?>(
-                    stream: twonlyDB.userDiscoveryDao.watchAnnouncedUser(
-                      userId,
-                    ),
-                    builder: (context, userSnapshot) {
-                      final announcedUser = userSnapshot.data;
+                  return _DiscoveryAnnouncementBuilder(
+                    userId: userId,
+                    builder: (context, announcedUser) {
                       if (announcedUser != null && announcedUser.isHidden) {
                         return const SizedBox.shrink();
                       }
@@ -363,4 +397,45 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
       ),
     );
   }
+}
+
+/// Owns its watch, so the announcement is not re-queried on every rebuild of
+/// the bubble around it.
+class _DiscoveryAnnouncementBuilder extends StatefulWidget {
+  const _DiscoveryAnnouncementBuilder({
+    required this.userId,
+    required this.builder,
+  });
+
+  final int userId;
+  final Widget Function(BuildContext, UserDiscoveryAnnouncedUser?) builder;
+
+  @override
+  State<_DiscoveryAnnouncementBuilder> createState() =>
+      _DiscoveryAnnouncementBuilderState();
+}
+
+class _DiscoveryAnnouncementBuilderState
+    extends State<_DiscoveryAnnouncementBuilder> {
+  late Stream<UserDiscoveryAnnouncedUser?> _announcement = _watch();
+
+  Stream<UserDiscoveryAnnouncedUser?> _watch() => watchRustDatabase(
+    (control) => rust_user_discovery.watchDiscoveryAnnouncement(
+      id: widget.userId,
+      control: control,
+    ),
+  );
+
+  @override
+  void didUpdateWidget(_DiscoveryAnnouncementBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.userId != widget.userId) _announcement = _watch();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      StreamBuilder<UserDiscoveryAnnouncedUser?>(
+        stream: _announcement,
+        builder: (context, snapshot) => widget.builder(context, snapshot.data),
+      );
 }

@@ -9,7 +9,9 @@ use std::string::FromUtf8Error;
 use thiserror::Error;
 use zip::result::ZipError;
 
-pub type Result<T> = core::result::Result<T, TwonlyError>;
+// Match the standard Result shape while defaulting to our application error.
+// One-argument bridge results retain their existing Dart string exceptions.
+pub type Result<T, E = TwonlyError> = core::result::Result<T, E>;
 
 macro_rules! twonly_error {
     ($message:expr) => {
@@ -24,6 +26,7 @@ macro_rules! twonly_error {
 pub(crate) use twonly_error;
 
 #[derive(Error, Debug)]
+
 pub enum TwonlyError {
     #[error("global twonly is not initialized")]
     Initialization,
@@ -42,6 +45,9 @@ pub enum TwonlyError {
 
     #[error("Could not find the given database")]
     DatabaseNotFound,
+
+    #[error("message is retained pending contact acceptance")]
+    ContactAcceptancePending,
 
     #[error("main_key could not be loaded from the key_chain")]
     MissingMainKey,
@@ -73,7 +79,7 @@ pub enum TwonlyError {
     SecureStorageError,
 
     #[error("{0}")]
-    SqliteError(#[from] sqlx::Error),
+    SqliteError(#[source] sqlx::Error),
 
     #[error("encrypted media is {bytes} bytes but the plan allows {limit}")]
     MediaTooLarge { bytes: i64, limit: i64 },
@@ -83,6 +89,11 @@ pub enum TwonlyError {
 
     #[error("media has no remaining recipients")]
     MediaHasNoRecipients,
+
+    /// The attachment remains pending and can be retried after the network or
+    /// object store recovers. Its URL must never contain the download token.
+    #[error("media download temporarily unavailable: {0}")]
+    MediaDownloadUnavailable(String),
 
     /// The group server refused a state update because it was written against
     /// a version it no longer holds. Somebody else changed the group first, so
@@ -175,6 +186,16 @@ pub enum TwonlyError {
     #[error("Signal session is unusable: {0}")]
     SignalSessionUnusable(String),
 
+    /// Local private prekeys are missing or malformed. Repair our published
+    /// bundle before asking the peer to build another session from it.
+    #[error("local Signal prekey is unavailable: {0}")]
+    SignalPreKeyUnavailable(String),
+
+    /// Storage failure is retryable and must never reset a healthy session or
+    /// acknowledge an envelope whose decryption did not become durable.
+    #[error("Signal storage failed: {0}")]
+    SignalStorage(String),
+
     /// The peer sent a message this session already ratcheted past. The
     /// session is healthy; the message is simply a duplicate and must not
     /// trigger a reset.
@@ -194,11 +215,24 @@ impl From<aes_gcm::Error> for TwonlyError {
     }
 }
 
+impl From<sqlx::Error> for TwonlyError {
+    fn from(error: sqlx::Error) -> Self {
+        // `?` converts in the task that waited, which is the one that can tell
+        // whether it was waiting for itself.
+        if matches!(error, sqlx::Error::PoolTimedOut) {
+            crate::database::app::writer_holder::report_pool_timeout();
+        }
+
+        TwonlyError::SqliteError(error)
+    }
+}
+
 impl From<libsignal_protocol::SignalProtocolError> for TwonlyError {
     fn from(error: libsignal_protocol::SignalProtocolError) -> Self {
         use libsignal_protocol::SignalProtocolError as Error;
 
         let message = error.to_string();
+
         match error {
             // libsignal collapses every failed candidate session into a single
             // `InvalidMessage`; the per-session causes ("post-quantum ratchet
@@ -208,13 +242,15 @@ impl From<libsignal_protocol::SignalProtocolError> for TwonlyError {
             Error::InvalidMessage(..)
             | Error::SessionNotFound(..)
             | Error::InvalidSessionStructure(..)
-            | Error::InvalidRegistrationId(..)
+            | Error::InvalidRegistrationId(..) => TwonlyError::SignalSessionUnusable(message),
             // A restored backup can lack the private prekey for a bundle the
             // server still hands out, so inbound sessions built from it can
             // never be opened either.
-            | Error::InvalidPreKeyId
-            | Error::InvalidSignedPreKeyId
-            | Error::InvalidKyberPreKeyId => TwonlyError::SignalSessionUnusable(message),
+            Error::InvalidPreKeyId | Error::InvalidSignedPreKeyId | Error::InvalidKyberPreKeyId => {
+                TwonlyError::SignalPreKeyUnavailable(message)
+            }
+
+            Error::ApplicationCallbackError(..) => TwonlyError::SignalStorage(message),
 
             Error::DuplicatedMessage(..) => TwonlyError::SignalDuplicateMessage(message),
 

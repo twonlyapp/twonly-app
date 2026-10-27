@@ -11,6 +11,10 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import eu.twonly.R
 import eu.twonly.NativeErrorReporting
+import eu.twonly.notifications.NativeNotificationBridge
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.messaging.FirebaseMessaging
+import java.util.concurrent.TimeUnit
 import org.json.JSONObject
 
 /**
@@ -28,19 +32,27 @@ class MediaPrepareWorker(
     appContext: Context,
     params: WorkerParameters,
 ) : Worker(appContext, params) {
+    override fun getForegroundInfo(): ForegroundInfo = foregroundInfo()
+
     override fun doWork(): Result {
         NativeErrorReporting.breadcrumb(applicationContext, "media_preparation_started")
         val mediaId = inputData.getString(MEDIA_ID)
         return try {
-            if (mediaId != null) {
+            val foregroundService = if (mediaId != null) {
                 // Only a user-visible send justifies a foreground service; the
                 // periodic flush runs as ordinary background work.
                 setForegroundWhenAllowed(foregroundInfo())
-            }
+            } else false
             if (isStopped) return Result.retry()
             val directory = applicationContext.filesDir.absolutePath
+            if (inputData.getBoolean(REFRESH_FCM_TOKEN, false)) {
+                val token = Tasks.await(FirebaseMessaging.getInstance().token, 15, TimeUnit.SECONDS)
+                if (isStopped) return Result.retry()
+                val stored = JSONObject(NativeNotificationBridge.storeFcmToken(directory, directory, token))
+                check(stored.optBoolean("ok")) { stored.optString("error", "Token storage failed") }
+            }
             val response = JSONObject(
-                NativeMediaPrepareBridge.run(directory, directory, mediaId),
+                NativeMediaPrepareBridge.run(directory, directory, mediaId, foregroundService),
             )
             if (response.optBoolean("ok", false)) {
                 // A bounded mailbox/outbox drain can also leave work behind.
@@ -55,7 +67,9 @@ class MediaPrepareWorker(
             } else if (runAttemptCount < MAX_RETRIES) {
                 Result.retry()
             } else {
-                NativeErrorReporting.failure(applicationContext, "media_preparation")
+                NativeErrorReporting.rustFailure(
+                    applicationContext, "media_preparation", response.optString("error"),
+                )
                 // Giving up here loses nothing: the media row still says the
                 // send is unfinished, so the next flush picks it up again.
                 Result.failure()
@@ -92,6 +106,7 @@ class MediaPrepareWorker(
     }
 
     companion object {
+        const val REFRESH_FCM_TOKEN = "refresh_fcm_token"
         const val MEDIA_ID = "media_id"
         private const val CHANNEL_ID = "twonly_direct_media_upload"
         private const val NOTIFICATION_ID = 0x7A01

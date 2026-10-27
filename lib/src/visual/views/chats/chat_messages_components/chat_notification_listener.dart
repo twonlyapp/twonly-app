@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:twonly/core/bridge/wrapper/app_database.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// Acknowledges chat activity for as long as the conversation is on screen.
@@ -44,7 +44,7 @@ class _ChatNotificationListenerState extends State<ChatNotificationListener>
     _arrivals = NativeNotificationService.arrivals.listen(
       (_) => unawaited(_clearNotifications()),
     );
-    _changes = RustAppDatabase.changes().listen(
+    _changes = watchRustDatabaseChanges().listen(
       (tables) {
         if (tables.isEmpty || tables.contains('notification_outbox')) {
           unawaited(_clearNotifications());

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET reupload_requested_by = NULL, reupload_targets = NULL\n                       WHERE media_id = ? AND reupload_requested_by IS ? AND reupload_targets IS ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "407afbeaa17c3661eaf5dd6a8d6feedbf8b2dff1093d770cb63db49147a78cb6"
+}

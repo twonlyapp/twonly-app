@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT last_chat_opened, last_type_indicator FROM group_members WHERE group_id = ? AND contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "last_chat_opened",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "last_chat_opened"
+          }
+        }
+      },
+      {
+        "name": "last_type_indicator",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "last_type_indicator"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "bcdb008c3e6b039b5976b0ad28d9e56cebbceed78635f00d15b18db100c0dd50"
+}

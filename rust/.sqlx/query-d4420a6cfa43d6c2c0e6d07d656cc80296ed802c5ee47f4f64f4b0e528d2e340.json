@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM messages older\n               WHERE older.is_story = 1 AND older.sender_id IS NULL\n                 AND older.group_id = ? AND older.media_id IS NOT NULL\n                 AND older.created_at > ?\n                 AND (older.created_at < ?\n                      OR (older.created_at = ? AND older.message_id < ?))\n           ) OR EXISTS(\n               SELECT 1 FROM messages direct\n               JOIN group_members gm ON gm.group_id = direct.group_id\n               WHERE direct.media_id = ? AND direct.is_story = 0 AND gm.contact_id = ?\n           ) OR EXISTS(\n               SELECT 1 FROM message_actions action\n               WHERE action.message_id = ? AND action.contact_id = ?\n                 AND action.type IN ('ackByServerAt', 'ackByUserAt')\n           ) OR NOT EXISTS(\n               SELECT 1 FROM groups chat\n               WHERE chat.group_id = ? AND chat.last_text_or_media_at > ?\n           )",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(\n               SELECT 1 FROM messages older\n               WHERE older.is_story = 1 AND older.sender_id IS NULL\n                 AND older.group_id = ? AND older.media_id IS NOT NULL\n                 AND older.created_at > ?\n                 AND (older.created_at < ?\n                      OR (older.created_at = ? AND older.message_id < ?))\n           ) OR EXISTS(\n               SELECT 1 FROM messages direct\n               JOIN group_members gm ON gm.group_id = direct.group_id\n               WHERE direct.media_id = ? AND direct.is_story = 0 AND gm.contact_id = ?\n           ) OR EXISTS(\n               SELECT 1 FROM message_actions action\n               WHERE action.message_id = ? AND action.contact_id = ?\n                 AND action.type IN ('ackByServerAt', 'ackByUserAt')\n           ) OR NOT EXISTS(\n               SELECT 1 FROM groups chat\n               WHERE chat.group_id = ? AND chat.last_text_or_media_at > ?\n           )",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 11
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d4420a6cfa43d6c2c0e6d07d656cc80296ed802c5ee47f4f64f4b0e528d2e340"
+}

@@ -1,0 +1,314 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    SELECT g.group_id AS \"group_id!\",\n                        g.is_group_admin AS \"is_group_admin!: bool\",\n                        g.is_direct_chat AS \"is_direct_chat!: bool\",\n                        g.pinned AS \"pinned!: bool\",\n                        g.archived AS \"archived!: bool\",\n                        g.joined_group AS \"joined_group!: bool\",\n                        g.left_group AS \"left_group!: bool\",\n                        g.deleted_content AS \"deleted_content!: bool\",\n                        g.state_version_id AS \"state_version_id!\",\n                        g.state_encryption_key AS \"state_encryption_key?\",\n                        g.my_group_private_key AS \"my_group_private_key?\",\n                        g.group_name AS \"group_name!\",\n                        g.draft_message AS \"draft_message?\",\n                        g.total_media_counter AS \"total_media_counter!\",\n                        g.also_best_friend AS \"also_best_friend!: bool\",\n                        g.delete_messages_after_milliseconds AS \"delete_messages_after_milliseconds!\",\n                        g.created_at AS \"created_at!\",\n                        g.last_message_send AS \"last_message_send?\",\n                        g.last_message_received AS \"last_message_received?\",\n                        g.last_flame_counter_change AS \"last_flame_counter_change?\",\n                        g.last_flame_sync AS \"last_flame_sync?\",\n                        g.flame_counter AS \"flame_counter!\",\n                        g.max_flame_counter AS \"max_flame_counter!\",\n                        g.max_flame_counter_from AS \"max_flame_counter_from?\",\n                        g.last_message_exchange AS \"last_message_exchange!\"\n                    FROM groups g\n                \n                WHERE group_id = ? ORDER BY rowid\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "is_group_admin!: bool",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "is_group_admin"
+          }
+        }
+      },
+      {
+        "name": "is_direct_chat!: bool",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "is_direct_chat"
+          }
+        }
+      },
+      {
+        "name": "pinned!: bool",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "pinned"
+          }
+        }
+      },
+      {
+        "name": "archived!: bool",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "archived"
+          }
+        }
+      },
+      {
+        "name": "joined_group!: bool",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "joined_group"
+          }
+        }
+      },
+      {
+        "name": "left_group!: bool",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "left_group"
+          }
+        }
+      },
+      {
+        "name": "deleted_content!: bool",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "deleted_content"
+          }
+        }
+      },
+      {
+        "name": "state_version_id!",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "state_version_id"
+          }
+        }
+      },
+      {
+        "name": "state_encryption_key?",
+        "ordinal": 9,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "state_encryption_key"
+          }
+        }
+      },
+      {
+        "name": "my_group_private_key?",
+        "ordinal": 10,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "my_group_private_key"
+          }
+        }
+      },
+      {
+        "name": "group_name!",
+        "ordinal": 11,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "group_name"
+          }
+        }
+      },
+      {
+        "name": "draft_message?",
+        "ordinal": 12,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "draft_message"
+          }
+        }
+      },
+      {
+        "name": "total_media_counter!",
+        "ordinal": 13,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "total_media_counter"
+          }
+        }
+      },
+      {
+        "name": "also_best_friend!: bool",
+        "ordinal": 14,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "also_best_friend"
+          }
+        }
+      },
+      {
+        "name": "delete_messages_after_milliseconds!",
+        "ordinal": 15,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "delete_messages_after_milliseconds"
+          }
+        }
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 16,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "last_message_send?",
+        "ordinal": 17,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_message_send"
+          }
+        }
+      },
+      {
+        "name": "last_message_received?",
+        "ordinal": 18,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_message_received"
+          }
+        }
+      },
+      {
+        "name": "last_flame_counter_change?",
+        "ordinal": 19,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_flame_counter_change"
+          }
+        }
+      },
+      {
+        "name": "last_flame_sync?",
+        "ordinal": 20,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_flame_sync"
+          }
+        }
+      },
+      {
+        "name": "flame_counter!",
+        "ordinal": 21,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "flame_counter"
+          }
+        }
+      },
+      {
+        "name": "max_flame_counter!",
+        "ordinal": 22,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "max_flame_counter"
+          }
+        }
+      },
+      {
+        "name": "max_flame_counter_from?",
+        "ordinal": 23,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "max_flame_counter_from"
+          }
+        }
+      },
+      {
+        "name": "last_message_exchange!",
+        "ordinal": 24,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_message_exchange"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "ea5a2b0947923ddbc7de47bdfad84e1fabadb9d194bb7790b06590a562dd05dd"
+}

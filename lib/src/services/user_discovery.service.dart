@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:twonly/core/bridge/wrapper/user_discovery.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/user_discovery/types.pb.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class UserDiscoveryService {

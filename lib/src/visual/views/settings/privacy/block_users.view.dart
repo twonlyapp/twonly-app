@@ -1,8 +1,13 @@
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
@@ -23,7 +28,15 @@ class _PrivacyViewBlockUsers extends State<BlockUsersView> {
   @override
   void initState() {
     super.initState();
-    allUsers = twonlyDB.contactsDao.watchAllContacts();
+    allUsers = watchRustDatabase(
+      (control) => rust_contacts.watchContacts(
+        input: db_contacts.ContactQuery(
+          filter: db_contacts.ContactFilter.all,
+          ids: Int64List(0),
+        ),
+        control: control,
+      ),
+    );
   }
 
   @override
@@ -92,8 +105,12 @@ class UserList extends StatelessWidget {
 
   Future<void> block(BuildContext context, int userId, bool? value) async {
     if (value != null) {
-      final update = ContactsCompanion(blocked: Value(value));
-      await twonlyDB.contactsDao.updateContact(userId, update);
+      final update = ContactPatch(blocked: value);
+      await rust_contacts.updateContact(
+        id: userId,
+        patch: update,
+        transaction: currentDatabaseSession(),
+      );
     }
   }
 

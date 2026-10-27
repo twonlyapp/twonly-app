@@ -1,22 +1,25 @@
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
-import 'package:drift/drift.dart' show DatabaseConnection;
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:twonly/core/bridge/database/stickers.dart' as rust_stickers;
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/stickers/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/core/services/stickers.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/services/stickers/sticker_cache.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:twonly/src/visual/components/location_sticker.dart';
@@ -24,13 +27,14 @@ import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_sticker.entry.dart';
-import 'package:twonly/src/visual/views/memories/sticker_source_picker.view.dart';
+import 'package:twonly/src/visual/views/memories/memories_picker.view.dart';
 
+import '../../helpers/native_database.dart';
 import '../../mocks/user_config.dart';
 
 // Rust tests exercise the real WebP codec; here a PNG-backed mock lets us test
 // the complete dialog, database replacement and picker refresh.
-class _StickerApi implements RustLibApi {
+class _StickerApi extends NativeTestApi {
   bool failRotation = false;
   final rotationInputs = <Uint8List>[];
 
@@ -82,20 +86,15 @@ Widget _app(Widget child) => MaterialApp(
   ),
 );
 
-Future<void> _settle(WidgetTester tester) async {
-  await tester.runAsync(
-    () => Future<void>.delayed(const Duration(milliseconds: 50)),
-  );
-  await tester.pumpAndSettle();
-}
+Future<void> _settle(WidgetTester tester) => pumpNative(tester);
 
 void main() {
-  late TwonlyDB database;
+  late TestDatabase database;
   final api = _StickerApi();
 
-  setUpAll(() {
+  setUpAll(() async {
     AppEnvironment.initTesting();
-    RustLib.initMock(api: api);
+    await initializeNativeDatabase(api: api);
   });
   tearDownAll(RustLib.dispose);
 
@@ -105,18 +104,12 @@ void main() {
       ..rotationInputs.clear();
     SharedPreferences.setMockInitialValues({});
     await locator.reset();
-    database = TwonlyDB.forTesting(
-      DatabaseConnection(
-        NativeDatabase.memory(),
-        closeStreamsSynchronously: true,
-      ),
-    );
-    locator.registerSingleton<TwonlyDB>(database);
+    database = await TestDatabase.create();
+
     await database.customSelect('SELECT 1').get();
   });
 
   tearDown(() async {
-    await database.close();
     await locator.reset();
   });
 
@@ -213,6 +206,40 @@ void main() {
     },
   );
 
+  testWidgets('scrolling the stickers expands the picker like the emoji', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        EmojiPicker(
+          alternateView: StickerPicker(
+            onEmojiPressed: () {},
+            onStickerSelected: (_) {},
+          ),
+          config: const Config(
+            height: 300,
+            checkPlatformCompatibility: false,
+            resizeConfig: ResizeConfig(expandOnScroll: true, maxHeight: 420),
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+    final container = find.byKey(const Key('emojiPickerResizableContainer'));
+    final grid = find.byType(GridView);
+    final gesture = await tester.startGesture(tester.getCenter(grid));
+    await gesture.moveBy(const Offset(0, -20));
+    await gesture.moveBy(const Offset(0, -80));
+    await tester.pump();
+    expect(tester.getSize(container).height, greaterThan(300));
+    expect(tester.getSize(container).height, lessThan(420));
+    await gesture.moveBy(const Offset(0, -200));
+    await tester.pump();
+    expect(tester.getSize(container).height, 420);
+    await gesture.up();
+    await _settle(tester);
+  });
+
   testWidgets('new sticker opens Memories with a Gallery option', (
     tester,
   ) async {
@@ -232,7 +259,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.add_photo_alternate_outlined));
     await _settle(tester);
 
-    expect(find.byType(StickerSourcePickerView), findsOneWidget);
+    expect(find.byType(MemoriesPickerView), findsOneWidget);
     expect(find.text('Gallery'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -274,7 +301,7 @@ void main() {
     await tester.pumpWidget(
       _app(
         ChatStickerEntry(
-          message: Message(
+          message: StoredMessage(
             groupId: 'group',
             messageId: 'message',
             senderId: 42,
@@ -284,7 +311,7 @@ void main() {
             isDeletedFromSender: false,
             isWidgetMedia: false,
             isStory: false,
-            createdAt: DateTime.now(),
+            createdAtSeconds: databaseSeconds(DateTime.now()),
           ),
           sticker: _sticker(),
         ),
@@ -297,14 +324,14 @@ void main() {
     expect(find.text('Save sticker'), findsOneWidget);
     expect(find.text('Rotate sticker'), findsNothing);
     expect(
-      await tester.runAsync(() => database.stickersDao.watchAll().first),
+      await tester.runAsync(() => watchCachedStickers().first),
       isEmpty,
     );
     await tester.tap(find.byType(MyButton));
     await _settle(tester);
     expect(find.byType(Dialog), findsNothing);
     expect(
-      await tester.runAsync(() => database.stickersDao.watchAll().first),
+      await tester.runAsync(() => watchCachedStickers().first),
       hasLength(1),
     );
     await tester.tap(find.byType(ChatStickerEntry));
@@ -314,7 +341,7 @@ void main() {
     await tester.tap(find.byType(MyButton));
     await _settle(tester);
     expect(
-      await tester.runAsync(() => database.stickersDao.watchAll().first),
+      await tester.runAsync(() => watchCachedStickers().first),
       isEmpty,
     );
     expect(find.byType(ChatStickerEntry), findsOneWidget);
@@ -348,14 +375,14 @@ void main() {
       greaterThan(tester.getBottomLeft(find.text('Delete sticker')).dy),
     );
     expect(
-      await tester.runAsync(() => database.stickersDao.watchAll().first),
+      await tester.runAsync(() => watchCachedStickers().first),
       hasLength(1),
     );
     await tester.tap(find.widgetWithText(MyButton, 'Delete sticker'));
     await _settle(tester);
     expect(find.byType(Dialog), findsNothing);
     expect(
-      await tester.runAsync(() => database.stickersDao.watchAll().first),
+      await tester.runAsync(() => watchCachedStickers().first),
       isEmpty,
     );
     expect(selected, isFalse);
@@ -374,8 +401,16 @@ void main() {
       final bytes = img.encodePng(source);
       final hash = sha256.convert(bytes).toString();
       await tester.runAsync(() async {
-        await database.stickersDao.save(webp: bytes, width: 3, height: 2);
-        await database.stickersDao.recordUse(hash);
+        await rust_stickers.saveSticker(
+          webp: bytes,
+          width: 3,
+          height: 2,
+          transaction: currentDatabaseSession(),
+        );
+        await rust_stickers.recordStickerUse(
+          hash: hash,
+          transaction: currentDatabaseSession(),
+        );
       });
       LocalSticker? selected;
       await tester.pumpWidget(
@@ -397,7 +432,7 @@ void main() {
       expect(find.byType(Dialog), findsOneWidget);
       expect(selected, isNull);
       final rotated = (await tester.runAsync(
-        () => database.stickersDao.watchAll().first,
+        () => watchCachedStickers().first,
       ))!.single;
       expect((rotated.width, rotated.height), (2, 3));
       expect(rotated.usageCount, 1);
@@ -427,7 +462,7 @@ void main() {
       await tester.tap(find.widgetWithText(MyButton, 'Delete sticker'));
       await _settle(tester);
       expect(
-        await tester.runAsync(() => database.stickersDao.watchAll().first),
+        await tester.runAsync(() => watchCachedStickers().first),
         isEmpty,
       );
       await tester.pumpWidget(const SizedBox.shrink());
@@ -459,7 +494,12 @@ void main() {
     await _settle(tester);
     expect(find.text('The sticker could not be rotated.'), findsOneWidget);
     expect(
-      await tester.runAsync(() => database.stickersDao.getByHash(hash)),
+      await tester.runAsync(
+        () => rust_stickers.getSticker(
+          hash: hash,
+          transaction: currentDatabaseSession(),
+        ),
+      ),
       isNotNull,
     );
     api.failRotation = false;
@@ -468,14 +508,19 @@ void main() {
     expect(find.text('The sticker could not be rotated.'), findsNothing);
     expect(api.rotationInputs, [_image, _image]);
     expect(
-      await tester.runAsync(() => database.stickersDao.getByHash(hash)),
+      await tester.runAsync(
+        () => rust_stickers.getSticker(
+          hash: hash,
+          transaction: currentDatabaseSession(),
+        ),
+      ),
       isNull,
     );
     await tester.tap(find.widgetWithText(MyButton, 'Delete sticker'));
     await _settle(tester);
     expect(find.byType(Dialog), findsNothing);
     expect(
-      await tester.runAsync(() => database.stickersDao.watchAll().first),
+      await tester.runAsync(() => watchCachedStickers().first),
       isEmpty,
     );
     await tester.pumpWidget(const SizedBox.shrink());

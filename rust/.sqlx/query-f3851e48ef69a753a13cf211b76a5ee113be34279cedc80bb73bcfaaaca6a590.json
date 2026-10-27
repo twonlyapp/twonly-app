@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO notification_outbox (\n                event_id, notification_id, sender_id, message_id, kind, created_at\n            ) VALUES ('patch-trigger', 'patch-trigger', 7, 'a', 'message', 1)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "f3851e48ef69a753a13cf211b76a5ee113be34279cedc80bb73bcfaaaca6a590"
+}

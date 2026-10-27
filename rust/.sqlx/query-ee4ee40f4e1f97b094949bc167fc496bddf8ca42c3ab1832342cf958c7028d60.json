@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE\n            FROM receipts\n            WHERE EXISTS (\n                SELECT 1\n                FROM contacts\n                WHERE contacts.user_id = receipts.contact_id\n                    AND contacts.account_deleted = 1\n            )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "ee4ee40f4e1f97b094949bc167fc496bddf8ca42c3ab1832342cf958c7028d60"
+}

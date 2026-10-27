@@ -3,22 +3,28 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/globals.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/helpers/memory_map_countries.helper.dart';
 import 'package:twonly/src/visual/themes/dark.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/memories/components/memories_map_gallery.comp.dart';
 import 'package:twonly/src/visual/views/memories/memories_map.view.dart';
+
+import '../../helpers/native_database.dart';
 
 class _MapPlatform extends MapLibrePlatform {
   @override
@@ -173,13 +179,13 @@ class _MapRoute extends MaterialPageRoute<void> {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadMemoryMapCountries);
-  late TwonlyDB database;
+  late TestDatabase database;
   late _MapPlatform platform;
   late Directory support;
 
   setUp(() async {
-    database = TwonlyDB(NativeDatabase.memory());
-    locator.registerSingleton<TwonlyDB>(database);
+    database = await TestDatabase.create();
+
     platform = _MapPlatform();
     final originalFactory = MapLibrePlatform.createInstance;
     MapLibrePlatform.createInstance = () => platform;
@@ -189,8 +195,16 @@ void main() {
     await database.customStatement(
       "INSERT INTO media_files(media_id, type, stored, has_thumbnail, location_latitude, location_longitude) VALUES('berlin', 'image', 1, 1, 52, 13), ('new-york', 'image', 1, 1, 40.7, -74)",
     );
-    for (final file
-        in await database.mediaFilesDao.watchGeotaggedMemories().first) {
+    for (final file in await watchRustDatabase(
+      (control) => rust_mediafiles
+          .watchMediaFiles(
+            input: const db_mediafiles.MediaQuery(
+              filter: db_mediafiles.MediaFilter.geotagged,
+            ),
+            control: control,
+          )
+          .map(orderedMediaFiles),
+    ).first) {
       MediaFileService(file).thumbnailPath.writeAsBytesSync(
         base64Decode(
           'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
@@ -200,8 +214,6 @@ void main() {
   });
 
   tearDown(() async {
-    await locator.unregister<TwonlyDB>();
-    await database.close();
     support.deleteSync(recursive: true);
   });
 
@@ -377,8 +389,11 @@ void main() {
   testWidgets('starts by framing the country with the most memories', (
     tester,
   ) async {
-    await database.customStatement(
-      "INSERT INTO media_files(media_id, type, stored, location_latitude, location_longitude) VALUES('hamburg', 'image', 1, 53.5511, 9.9937), ('munich', 'image', 1, 48.1351, 11.582)",
+    await runNative(
+      tester,
+      () => database.customStatement(
+        "INSERT INTO media_files(media_id, type, stored, location_latitude, location_longitude) VALUES('hamburg', 'image', 1, 53.5511, 9.9937), ('munich', 'image', 1, 48.1351, 11.582)",
+      ),
     );
     await load(tester);
     final map = tester.widget<MapLibreMap>(find.byType(MapLibreMap));
@@ -391,7 +406,13 @@ void main() {
   testWidgets('opening an image location centers the map on that image', (
     tester,
   ) async {
-    final media = await database.mediaFilesDao.getMediaFileById('new-york');
+    final media = await runNative(
+      tester,
+      () => rust_mediafiles.getMediaFile(
+        id: 'new-york',
+        transaction: currentDatabaseSession(),
+      ),
+    );
     await load(tester, initialMedia: media);
     final map = tester.widget<MapLibreMap>(find.byType(MapLibreMap));
     expect(map.initialCameraPosition!.target, const LatLng(40.7, -74));

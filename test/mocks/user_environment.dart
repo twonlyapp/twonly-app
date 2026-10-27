@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:drift/drift.dart' hide isNotNull, isNull;
-import 'package:drift/native.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 
+import '../helpers/native_database.dart';
 import 'user_config.dart';
 
 base class ZoneIOOverrides extends IOOverrides {
@@ -50,7 +48,6 @@ Future<T> runInZone<T>(
     () => runZoned(
       computation,
       zoneValues: {
-        #twonlyDB: env.db,
         #userService: env.userService,
         #apiService: api,
         #userId: env.userId,
@@ -64,24 +61,17 @@ class UserEnvironment {
   UserEnvironment({
     required this.userId,
     required this.username,
-    required this.db,
     required this.userService,
   });
   final int userId;
   final String username;
-  final TwonlyDB db;
   final UserService userService;
 
   static Future<UserEnvironment> create(
     int userId,
     String username,
   ) async {
-    final db = TwonlyDB.forTesting(
-      DatabaseConnection(
-        NativeDatabase.memory(),
-        closeStreamsSynchronously: true,
-      ),
-    );
+    await TestDatabase.create();
 
     final us = UserService();
     // ignore: cascade_invocations
@@ -99,7 +89,6 @@ class UserEnvironment {
     return UserEnvironment(
       userId: userId,
       username: username,
-      db: db,
       userService: us,
     );
   }

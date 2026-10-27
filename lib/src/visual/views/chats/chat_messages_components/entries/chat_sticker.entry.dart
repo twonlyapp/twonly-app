@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/sticker_preview.dialog.dart';
@@ -14,7 +14,7 @@ class ChatStickerEntry extends StatelessWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final StickerData sticker;
 
   @override

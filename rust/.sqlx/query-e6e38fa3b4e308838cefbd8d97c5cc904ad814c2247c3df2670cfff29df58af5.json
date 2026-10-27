@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT native_descriptor_json FROM direct_media_upload_jobs WHERE attachment_id = ? AND state = 'prepared' AND expires_at > CAST(strftime('%s','now') AS INTEGER)",
+  "describe": {
+    "columns": [
+      {
+        "name": "native_descriptor_json",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "native_descriptor_json"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e6e38fa3b4e308838cefbd8d97c5cc904ad814c2247c3df2670cfff29df58af5"
+}

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage/chat_storage_overview.view.dart';
@@ -28,7 +32,16 @@ class _ManageStorageViewState extends State<ManageStorageView> {
   }
 
   Future<void> _loadStats() async {
-    final stats = await twonlyDB.mediaFilesDao.getStorageStats();
+    final stats = {
+      for (final stat in await rust_mediafiles.mediaStorageStats(
+        directory: MediaFileService.buildDirectoryPath(
+          'stored',
+          AppEnvironment.supportDir,
+        ).path,
+        transaction: currentDatabaseSession(),
+      ))
+        MediaType.values.byName(stat.mediaType): stat.bytes,
+    };
     if (mounted) {
       setState(() {
         _stats = stats;
@@ -92,9 +105,7 @@ class _ManageStorageViewState extends State<ManageStorageView> {
                         child: Text(
                           context.lang.backupFreeSpaceWithCloud,
                           style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ),
                       Icon(
@@ -119,9 +130,9 @@ class _ManageStorageViewState extends State<ManageStorageView> {
           const SizedBox(height: 8),
           Text(
             formatBytes(totalBytes),
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
           Container(

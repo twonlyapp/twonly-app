@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/reactions/table.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/all_reactions.bottom_sheet.dart';
@@ -15,8 +16,8 @@ class ReactionRow extends StatelessWidget {
     super.key,
   });
 
-  final List<Reaction> reactions;
-  final Message message;
+  final List<StoredReaction> reactions;
+  final StoredMessage message;
 
   Future<void> _showReactionMenu(BuildContext context) async {
     // ignore: inference_failure_on_function_invocation

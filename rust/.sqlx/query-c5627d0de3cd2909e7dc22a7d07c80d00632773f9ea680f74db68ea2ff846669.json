@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE contact_groups SET usage_counter = usage_counter + 1 WHERE id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "c5627d0de3cd2909e7dc22a7d07c80d00632773f9ea680f74db68ea2ff846669"
+}

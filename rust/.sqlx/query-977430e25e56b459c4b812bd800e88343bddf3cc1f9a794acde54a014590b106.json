@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO groups(group_id, group_name, delete_messages_after_milliseconds)\n                VALUES ('expiry', 'Expiry', 1000)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "977430e25e56b459c4b812bd800e88343bddf3cc1f9a794acde54a014590b106"
+}

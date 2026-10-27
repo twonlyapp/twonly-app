@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/webxdc.dart' as rust_webxdc;
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/shared/select_contacts.view.dart';
@@ -32,20 +36,17 @@ class WebxdcHost {
   /// The instance currently on screen. A page may only ever act on this one:
   /// the id in a bridge message is checked against it rather than obeyed.
   static String? _openInstanceId;
+
+  /// The screen currently bound to the runtime. Closing a screen ends only its
+  /// own session: the same game reopened while the old screen is still
+  /// animating away has the same instance id, and must not be unbound by it.
+  static WebxdcSession? _session;
   static StreamSubscription<void>? _updateSubscription;
   static int _deliveredSerial = 0;
   static VoidCallback? _closeView;
 
-  /// Whether this device composites the webview with Hybrid Composition++.
-  ///
-  /// HCPP hands the webview to the system compositor through `SurfaceControl`
-  /// rather than merging the raster and platform threads, which is what keeps a
-  /// route transition smooth while an app is on screen -- the predictive back
-  /// gesture above all, since it transforms the whole outgoing route on every
-  /// frame of the drag. It needs the engine opt-in in the manifest and Vulkan
-  /// on API 34 or newer, so the answer belongs to the device rather than to the
-  /// app being opened and is asked once, here. Everything else falls back to
-  /// the texture path, which composites the webview like any other layer.
+  /// Whether the engine supports HCPP on this device, with the manifest opt-in.
+  /// Other devices use texture composition for the embedded WebView.
   static bool hybridComposition = false;
 
   static void initialize() {
@@ -59,7 +60,6 @@ class WebxdcHost {
     try {
       hybridComposition = await HybridAndroidViewController.checkIfSupported();
     } catch (error) {
-      // An engine built without the opt-in does not answer this at all.
       hybridComposition = false;
     }
   }
@@ -73,13 +73,15 @@ class WebxdcHost {
   /// its state and nothing is reloaded. Android only: WebKit offers no
   /// equivalent, and the transition there does not transform the platform view
   /// the way the predictive back gesture does.
-  static Future<void> setPaused({required bool paused}) async {
+  static Future<void> setPaused(
+    WebxdcSession session, {
+    required bool paused,
+  }) async {
     if (defaultTargetPlatform != TargetPlatform.android) return;
-    final instanceId = _openInstanceId;
-    if (instanceId == null) return;
+    if (!identical(_session, session)) return;
     try {
       await _channel.invokeMethod<void>('setPaused', {
-        'instanceId': instanceId,
+        'instanceId': session.instanceId,
         'paused': paused,
       });
     } on PlatformException catch (error) {
@@ -131,32 +133,41 @@ class WebxdcHost {
   /// Until this is called nothing may act on the instance, and once `detach`
   /// runs nothing may again: a bridge message naming any other instance is
   /// refused rather than obeyed.
-  static void attach(String instanceId, {required VoidCallback close}) {
+  static WebxdcSession attach(
+    String instanceId, {
+    required VoidCallback close,
+  }) {
+    final session = WebxdcSession._(instanceId);
+    _session = session;
     _openInstanceId = instanceId;
     _closeView = close;
     _deliveredSerial = 0;
     unawaited(_updateSubscription?.cancel());
-    _updateSubscription = WebxdcService.watchUpdates().listen(
+    _updateSubscription = WebxdcService.watchUpdates(instanceId).listen(
       (_) => unawaited(_pushPendingUpdates()),
     );
+    return session;
   }
 
-  static void detach(String instanceId) {
-    if (_openInstanceId != instanceId) return;
-    setVisible(instanceId, visible: false);
+  static void detach(WebxdcSession session) {
+    if (!identical(_session, session)) return;
+    setVisible(session, visible: false);
     unawaited(_updateSubscription?.cancel());
     _updateSubscription = null;
+    _session = null;
     _openInstanceId = null;
     _closeView = null;
     // Closing never waits for the server; downloaded code is used next time.
-    unawaited(WebxdcService.cacheUpdate(instanceId));
+    unawaited(WebxdcService.cacheUpdate(session.instanceId));
   }
 
   /// Native notification workers share this state, including the iOS extension.
-  static void setVisible(String instanceId, {required bool visible}) {
-    if (_openInstanceId != instanceId) return;
+  static void setVisible(WebxdcSession session, {required bool visible}) {
+    if (!identical(_session, session)) return;
     try {
-      rust_webxdc.setVisibleInstance(instanceId: visible ? instanceId : null);
+      rust_webxdc.setVisibleInstance(
+        instanceId: visible ? session.instanceId : null,
+      );
     } catch (error) {
       Log.warn('updating webxdc visibility failed: $error');
     }
@@ -228,6 +239,7 @@ class WebxdcHost {
     }
     final id = message['id'];
     if (instanceId == null || instanceId != arguments['instanceId']) {
+      Log.warn('webxdc ${message['method']} from an app that is not open');
       return jsonEncode({'id': id, 'error': 'this app is not open'});
     }
 
@@ -283,7 +295,10 @@ class WebxdcHost {
       }
     } catch (error) {
       // Rust refuses an update that is too large, too frequent, or belongs to
-      // an instance that has gone away. The app sees a rejected promise.
+      // an instance that has gone away. The app sees a rejected promise; an
+      // app that ignores it has lost a move nobody else ever receives, so the
+      // reason is kept here.
+      Log.warn('webxdc ${message['method']} was refused: $error');
       return jsonEncode({'id': id, 'error': '$error'});
     }
   }
@@ -416,7 +431,15 @@ class WebxdcHost {
     if (selected == null || selected.isEmpty) return;
 
     for (final contactId in selected) {
-      final group = await twonlyDB.groupsDao.getDirectChat(contactId);
+      final group = await rust_groups
+          .listGroups(
+            input: db_groups.GroupQuery(
+              filter: db_groups.GroupFilter.directContact,
+              contactId: contactId,
+            ),
+            transaction: currentDatabaseSession(),
+          )
+          .then((rows) => rows.isEmpty ? null : rows.single);
       if (group == null) continue;
       await RustApi.insertAndSendText(
         groupId: group.groupId,
@@ -482,6 +505,16 @@ class WebxdcHost {
       Log.warn('delivering webxdc updates failed: ${error.message}');
     }
   }
+}
+
+/// One screen's hold on the runtime, from `attach` until its own `detach`.
+///
+/// Compared by identity, never by instance id: two screens of the same game
+/// share an id, but only the newest one may act.
+final class WebxdcSession {
+  WebxdcSession._(this.instanceId);
+
+  final String instanceId;
 }
 
 /// One `sendToChat` call, after checking.

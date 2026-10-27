@@ -46,7 +46,12 @@
           JSON.stringify({ id: id, method: method, params: params || {} })
         );
         if (typeof reply === 'string' && reply.length > 0) {
-          window.__twonlyWebxdcDeliver(JSON.parse(reply));
+          const message = JSON.parse(reply);
+          // A reply the platform produced itself -- the call timed out, or
+          // Flutter was gone -- does not know which call it answers, and would
+          // otherwise leave this promise pending forever.
+          if (message.id === undefined) message.id = id;
+          window.__twonlyWebxdcDeliver(message);
         }
       } catch (error) {
         pending.delete(id);
@@ -96,6 +101,11 @@
     // independently and rejects what exceeds them.
     sendUpdateInterval: init.sendUpdateInterval,
     sendUpdateMaxSize: init.sendUpdateMaxSize,
+
+    // What this host understands beyond the spec. Apps ship through the store
+    // to every twonly version at once, and an older one refuses a whole update
+    // over a `notify` value it cannot read, so an app checks here first.
+    twonly: Object.freeze({ gameNotifications: true }),
 
     getMembers: function () {
       return call('getMembers');

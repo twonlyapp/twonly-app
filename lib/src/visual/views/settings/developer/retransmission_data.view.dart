@@ -1,12 +1,21 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hashlib/random.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/receipts.dart' as rust_receipts;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/core/database/app/receipts/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 
@@ -67,33 +76,45 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
   }
 
   Future<void> initAsync() async {
-    subscriptionContacts = twonlyDB.contactsDao.watchAllContacts().listen((
-      updated,
-    ) {
-      if (!mounted) return;
-      for (final contact in updated) {
-        contacts[contact.userId] = contact;
-      }
-      if (retransmissions.isNotEmpty) {
-        messages = RetransMsg.fromRaw(retransmissions, contacts);
-      }
-      setState(() {});
-    });
-    subscriptionRetransmission = twonlyDB.receiptsDao.watchAll().listen((
-      updated,
-    ) {
-      if (!mounted) return;
-      retransmissions = updated.reversed.toList();
-      if (contacts.isNotEmpty) {
-        messages = RetransMsg.fromRaw(retransmissions, contacts);
-      }
-      _contactCount = {};
-      for (final retransmission in updated) {
-        _contactCount[retransmission.contactId] =
-            (_contactCount[retransmission.contactId] ?? 0) + 1;
-      }
-      setState(() {});
-    });
+    subscriptionContacts =
+        watchRustDatabase(
+          (control) => rust_contacts.watchContacts(
+            input: db_contacts.ContactQuery(
+              filter: db_contacts.ContactFilter.all,
+              ids: Int64List(0),
+            ),
+            control: control,
+          ),
+        ).listen((
+          updated,
+        ) {
+          if (!mounted) return;
+          for (final contact in updated) {
+            contacts[contact.userId] = contact;
+          }
+          if (retransmissions.isNotEmpty) {
+            messages = RetransMsg.fromRaw(retransmissions, contacts);
+          }
+          setState(() {});
+        });
+    subscriptionRetransmission =
+        watchRustDatabase(
+          (control) => rust_receipts.watchReceipts(control: control),
+        ).listen((
+          updated,
+        ) {
+          if (!mounted) return;
+          retransmissions = updated.reversed.toList();
+          if (contacts.isNotEmpty) {
+            messages = RetransMsg.fromRaw(retransmissions, contacts);
+          }
+          _contactCount = {};
+          for (final retransmission in updated) {
+            _contactCount[retransmission.contactId] =
+                (_contactCount[retransmission.contactId] ?? 0) + 1;
+          }
+          setState(() {});
+        });
   }
 
   Future<void> deleteAllForSelectedUser() async {
@@ -103,7 +124,12 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
       'This will delete all retransmission messages for ${contacts[_filterForUserId!]!.username}',
     );
     if (ok) {
-      await twonlyDB.receiptsDao.deleteReceiptForUser(_filterForUserId!);
+      await rust_receipts.deleteReceipts(
+        target: rust_receipts.ReceiptSelection.contact,
+        id: '',
+        contact: _filterForUserId!,
+        transaction: currentDatabaseSession(),
+      );
     }
   }
 
@@ -191,12 +217,17 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
                   trailing: FilledButton.icon(
                     onPressed: () async {
                       final newReceiptId = uuid.v4();
-                      await twonlyDB.receiptsDao.updateReceipt(
-                        retrans.receipt.receiptId,
-                        ReceiptsCompanion(
-                          receiptId: Value(newReceiptId),
-                          ackByServerAt: const Value(null),
+                      await rust_receipts.updateReceipts(
+                        target: rust_receipts.ReceiptSelection.id,
+                        id: retrans.receipt.receiptId,
+                        contact: 0,
+                        patch: ReceiptPatch(
+                          receiptId: newReceiptId,
+                          ackByServerAt: NullableInt(
+                            value: databaseNullableSeconds(null),
+                          ),
                         ),
+                        transaction: currentDatabaseSession(),
                       );
                       await RustApi.sendQueuedMessage(receiptId: newReceiptId);
                     },

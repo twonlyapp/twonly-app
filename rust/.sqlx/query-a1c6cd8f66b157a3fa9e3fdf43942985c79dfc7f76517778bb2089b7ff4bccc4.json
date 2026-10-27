@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT COUNT(*) AS \"count!\"\n            FROM contacts\n            WHERE requested = 1\n                AND accepted = 0\n                AND deleted_by_user = 0\n                AND blocked = 0\n                AND account_deleted = 0\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "count!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a1c6cd8f66b157a3fa9e3fdf43942985c79dfc7f76517778bb2089b7ff4bccc4"
+}

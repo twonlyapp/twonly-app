@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM direct_media_upload_slots WHERE state = 'cached' AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "5c1c7789533849a905d48f79178fca8808fe15654cd3f8a375bc20c53aeb92c9"
+}

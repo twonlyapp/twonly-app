@@ -86,4 +86,47 @@ class NativeErrorReportingTest {
         assertEquals("Native background operation failed: notification_processing", events.single().message!!.formatted)
         assertEquals("notification_processing", events.single().getTag("native_operation"))
     }
+
+    @Test
+    fun rustLifecycleCancellationDoesNotOpenAnIssue() {
+        NativeErrorReporting.setEnabled(context, true)
+        for (reason in listOf(
+            "Database operation cancelled; retry when active",
+            "Native database admission cancelled",
+            "Notification run cancelled",
+            "Notification run is closing",
+        )) {
+            NativeErrorReporting.rustFailure(context, "notification_processing", reason)
+        }
+        assertTrue(events.isEmpty())
+    }
+
+    @Test
+    fun rustFailuresGroupByOperationAndSafeReasonWithoutSendingRawData() {
+        NativeErrorReporting.setEnabled(context, true)
+        for ((error, reason) in listOf(
+            "attempted to acquire a connection on a closed pool" to "database_pool_closed",
+            "pool timed out while waiting for an open connection" to "database_pool_timeout",
+            "background maintenance panicked" to "panic",
+            "main_key could not be loaded from the key_chain" to "secure_storage",
+            "SELECT private-message FROM contacts WHERE user_id = 123" to "unknown",
+            "private-message cancelled" to "unknown",
+            "Notification run is closed or unknown" to "unknown",
+            null to "unknown",
+        )) {
+            NativeErrorReporting.rustFailure(context, "media_preparation", error)
+            val event = events.last()
+            assertEquals(reason, event.getTag("native_failure_reason"))
+            assertEquals(listOf("native-background", "media_preparation", reason), event.fingerprints)
+            assertEquals("Native background operation failed: media_preparation ($reason)", event.message!!.formatted)
+            assertFalse(event.message!!.formatted!!.contains("private-message"))
+        }
+        assertEquals(8, events.size)
+    }
+
+    @Test
+    fun rustFailuresStillRequireConsent() {
+        NativeErrorReporting.rustFailure(context, "media_preparation", "background maintenance panicked")
+        assertTrue(events.isEmpty())
+    }
 }

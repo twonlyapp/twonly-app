@@ -1,17 +1,29 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 
+import '../../mocks/database_watch.dart';
 import '../../mocks/user_config.dart';
 
 class _AvatarApi implements RustLibApi {
   String? path;
+  late StreamController<List<String>> changes;
+
+  @override
+  DatabaseWatch crateBridgeDatabaseDatabaseWatchNew() => TestDatabaseWatch();
+
+  @override
+  Stream<List<String>> crateBridgeWrapperAppDatabaseRustAppDatabaseChanges({
+    required DatabaseWatch control,
+  }) => changes.stream;
 
   @override
   Future<String?> crateBridgeApiRustApiCurrentUserAvatarPath() async => path;
@@ -38,10 +50,13 @@ void main() {
       currentSetupPage: null,
       appVersion: 100,
     );
-    api.path = null;
+    api
+      ..path = null
+      ..changes = StreamController<List<String>>.broadcast();
   });
 
   tearDown(() async {
+    await api.changes.close();
     await locator.reset();
   });
 
@@ -73,13 +88,13 @@ void main() {
     expect(find.byType(SvgPicture), findsOneWidget);
 
     api.path = photoPath;
-    userService.triggerUserUpdate();
+    api.changes.add(['own_custom_avatar']);
     await tester.pump();
     await tester.pump();
     expectPhoto(tester);
 
     api.path = null;
-    userService.triggerUserUpdate();
+    api.changes.add(['own_custom_avatar']);
     await tester.pump();
     await tester.pump();
     expect(find.byType(Image), findsNothing);

@@ -1,23 +1,25 @@
 import 'dart:io';
 
-import 'package:drift/drift.dart' hide Column, isNull;
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/elements/my_icon_button.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/own_story_bottom_bar.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_viewers.bottom_sheet.dart';
 
-class _StoryApi implements RustLibApi {
+import '../../helpers/native_database.dart';
+
+class _StoryApi extends NativeTestApi {
   final deleted = <String>[];
 
   @override
@@ -38,11 +40,11 @@ class _StoryApi implements RustLibApi {
 
 void main() {
   final api = _StoryApi();
-  late TwonlyDB database;
+  late TestDatabase database;
   late Directory directory;
   late MediaFile media;
 
-  setUpAll(() => RustLib.initMock(api: api));
+  setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
 
   setUp(() async {
@@ -50,13 +52,8 @@ void main() {
     api.deleted.clear();
     directory = await Directory.systemTemp.createTemp('story-info-');
     AppEnvironment.initTesting(customSupportDir: directory.path);
-    database = TwonlyDB.forTesting(
-      DatabaseConnection(
-        NativeDatabase.memory(),
-        closeStreamsSynchronously: true,
-      ),
-    );
-    locator.registerSingleton<TwonlyDB>(database);
+    database = await TestDatabase.create();
+
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     for (final statement in [
       "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'Opened friend', 1), (8, 'Received friend', 1), (9, 'Pending friend', 1)",
@@ -68,7 +65,10 @@ void main() {
     ]) {
       await database.customStatement(statement);
     }
-    media = (await database.mediaFilesDao.getMediaFileById('story'))!;
+    media = (await rust_mediafiles.getMediaFile(
+      id: 'story',
+      transaction: currentDatabaseSession(),
+    ))!;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           const MethodChannel('screen_protector'),
@@ -82,7 +82,7 @@ void main() {
           const MethodChannel('screen_protector'),
           null,
         );
-    await database.close();
+
     await locator.reset();
     await directory.delete(recursive: true);
     AppEnvironment.initTesting();
@@ -131,7 +131,6 @@ void main() {
       await tester.runAsync(
         () => database.customUpdate(
           "INSERT INTO message_actions(message_id, contact_id, type) VALUES ('s9', 9, 'ackByUserAt')",
-          updates: {database.messageActions},
         ),
       );
       await settle(tester);
@@ -182,7 +181,6 @@ void main() {
       await tester.runAsync(() async {
         await database.customUpdate(
           "UPDATE media_files SET upload_state = 'backgroundUploadTaskStarted' WHERE media_id = 'story'",
-          updates: {database.mediaFiles},
         );
         final localMedia = MediaFileService(media);
         await File(
@@ -190,12 +188,15 @@ void main() {
         ).copy(localMedia.tempPath.path);
       });
       await pump(tester, const MediaViewerView.story(StorySource.own()));
+      await pumpNative(
+        tester,
+        until: () => find.byType(OwnStoryBottomBar).evaluate().isNotEmpty,
+      );
       expect(find.byType(OwnStoryBottomBar), findsOneWidget);
 
       await tester.runAsync(
         () => database.customUpdate(
           "UPDATE media_files SET upload_state = 'uploaded' WHERE media_id = 'story'",
-          updates: {database.mediaFiles},
         ),
       );
       await settle(tester);

@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT message_id FROM webxdc_updates\n             WHERE instance_id = ? AND info IS NOT NULL\n             ORDER BY received_at DESC, serial DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_updates",
+            "name": "message_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d3de4ec697996773197973c2a0eef08843767d6ffa6c2b5394d522f89c492064"
+}

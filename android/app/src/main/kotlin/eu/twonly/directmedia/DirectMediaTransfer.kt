@@ -9,6 +9,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import eu.twonly.MyApplication
@@ -108,7 +109,7 @@ object DirectMediaTransfer {
         workName(attachmentId, role), policy, request(attachmentId, role, descriptor, expiresAt),
     )
 
-    private fun request(
+    internal fun request(
         attachmentId: String,
         role: String,
         descriptorFile: File,
@@ -119,9 +120,13 @@ object DirectMediaTransfer {
             .putString(DirectMediaUploadWorker.ROLE, role)
             .putString(DirectMediaUploadWorker.DESCRIPTOR_PATH, descriptorFile.absolutePath)
             .putLong(DirectMediaUploadWorker.EXPIRES_AT, expiresAt)
+            .putLong(DirectMediaUploadWorker.QUEUED_AT_MS, System.currentTimeMillis())
             .build()
         return OneTimeWorkRequest.Builder(DirectMediaUploadWorker::class.java)
             .setInputData(data)
+            // The upload and its finalization are part of the same user send
+            // as preparation. Every handoff must retain that urgency.
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .setConstraints(
                 Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build(),
             )

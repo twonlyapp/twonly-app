@@ -1,21 +1,23 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 
 import '../mocks/platform_channels.dart';
@@ -66,9 +68,6 @@ void main() {
         ),
       );
 
-      if (locator.isRegistered<TwonlyDB>()) {
-        await locator.unregister<TwonlyDB>();
-      }
       if (locator.isRegistered<UserService>()) {
         await locator.unregister<UserService>();
       }
@@ -77,11 +76,6 @@ void main() {
       }
 
       locator
-        ..registerFactory<TwonlyDB>(() {
-          final db = Zone.current[#twonlyDB] as TwonlyDB?;
-          if (db != null) return db;
-          throw StateError('No TwonlyDB in active Zone.');
-        })
         ..registerFactory<UserService>(() {
           final us = Zone.current[#userService] as UserService?;
           if (us != null) return us;
@@ -112,19 +106,21 @@ void main() {
         // 1. Create a dummy media file
         final mediaId = 'test_media_${DateTime.now().millisecondsSinceEpoch}';
 
-        await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
-          MediaFilesCompanion(
-            mediaId: Value(mediaId),
-            createdAt: Value(DateTime.now()),
-            stored: const Value(true),
-            hasThumbnail: const Value(true),
-            cloudState: const Value(CloudState.none),
-            type: const Value(MediaType.image),
+        await rust_mediafiles.upsertMediaFile(
+          patch: MediaFilePatch(
+            mediaId: mediaId,
+            createdAt: databaseSeconds(DateTime.now()),
+            stored: true,
+            hasThumbnail: true,
+            cloudState: CloudState.none.name,
+            type: MediaType.image.name,
           ),
+          transaction: currentDatabaseSession(),
         );
 
-        final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
-          mediaId,
+        final mediaFile = await rust_mediafiles.getMediaFile(
+          id: mediaId,
+          transaction: currentDatabaseSession(),
         );
         expect(mediaFile, isNotNull);
         expect(mediaFile!.cloudState, CloudState.none);
@@ -144,8 +140,9 @@ void main() {
         await memoriesCloudService.checkUploads();
 
         // 3. Verify that the media has cloudState == uploaded
-        final finalMedia = await twonlyDB.mediaFilesDao.getMediaFileById(
-          mediaId,
+        final finalMedia = await rust_mediafiles.getMediaFile(
+          id: mediaId,
+          transaction: currentDatabaseSession(),
         );
         expect(finalMedia, isNotNull);
 

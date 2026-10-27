@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT media_id, type FROM media_files WHERE stored = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "type",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "5aad6c997b81eb0f6ddf796ba53ea7f9b659ed51f49a3359d1c5f9d7a1a6ca8c"
+}

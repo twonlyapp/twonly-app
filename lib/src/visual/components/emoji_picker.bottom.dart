@@ -1,7 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/database/stickers.dart' as rust_stickers;
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
 import 'package:twonly/src/visual/components/sticker_picker.dart';
@@ -63,8 +66,9 @@ class _EmojiPickerBottomState extends State<EmojiPickerBottom> {
                           },
                           onStickerSelected: (sticker) {
                             unawaitedRustCall(
-                              twonlyDB.stickersDao.recordUse(
-                                sticker.contentHash,
+                              rust_stickers.recordStickerUse(
+                                hash: sticker.contentHash,
+                                transaction: currentDatabaseSession(),
                               ),
                               'recordStickerUse',
                             );

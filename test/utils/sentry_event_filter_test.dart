@@ -1,8 +1,66 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/src/utils/sentry_event_filter.dart';
 
 void main() {
+  test('uncaught connectivity errors become local warnings', () async {
+    final records = <LogRecord>[];
+    final previous = Logger.root.level;
+    Logger.root.level = Level.ALL;
+    final subscription = Logger.root.onRecord.listen(records.add);
+    try {
+      final network = SentryEvent(
+        exceptions: [
+          SentryException(type: 'ClientException', value: 'Connection aborted'),
+          SentryException(
+            type: 'OSError',
+            value: 'OS Error: Connection aborted, errno = 103',
+          ),
+        ],
+      );
+      expect(filterSentryEvent(network, Hint()), isNull);
+      await Future<void>.delayed(Duration.zero);
+      expect(records.single.level, Level.WARNING);
+      expect(records.single.message, contains('Connection aborted'));
+    } finally {
+      await subscription.cancel();
+      Logger.root.level = previous;
+    }
+  });
+
+  test(
+    'database, permission, certificate and mixed failures remain reportable',
+    () {
+      for (final exceptions in [
+        [
+          SentryException(
+            type: 'AnyhowException',
+            value: 'pool timed out while waiting for an open connection',
+          ),
+        ],
+        [
+          SentryException(
+            type: 'OSError',
+            value: 'Permission denied, errno = 13',
+          ),
+        ],
+        [
+          SentryException(
+            type: 'HandshakeException',
+            value: 'CERTIFICATE_VERIFY_FAILED: Hostname mismatch',
+          ),
+        ],
+        [
+          SentryException(type: 'SocketException', value: 'Offline'),
+          SentryException(type: 'StateError', value: 'Invalid state'),
+        ],
+      ]) {
+        final original = SentryEvent(exceptions: exceptions);
+        expect(filterSentryEvent(original, Hint()), same(original));
+      }
+    },
+  );
   SentryEvent event({
     String type = 'LateError',
     String field = '_channel@1661297868',
@@ -43,4 +101,147 @@ void main() {
       expect(filterSentryEvent(original, Hint()), same(original));
     }
   });
+
+  test('normalizes identifier variants found in GlitchTip issue messages', () {
+    const firstId = '11111111-2222-4333-8444-555555555555';
+    const secondId = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
+    final firstToken = 'a' * 64;
+    final secondToken = 'b' * 64;
+    final variants = [
+      (
+        'Exception: Failed to render avatar for 6880667202433343488: '
+            'AnyhowException(attempted to acquire a connection on a closed pool)',
+        'Exception: Failed to render avatar for 1827181605: '
+            'AnyhowException(attempted to acquire a connection on a closed pool)',
+      ),
+      (
+        'AnyhowException(error sending request for url '
+            '(https://api.twonly.eu/api/download/$firstToken))',
+        'AnyhowException(error sending request for url '
+            '(https://api.twonly.eu/api/download/$secondToken))',
+      ),
+      (
+        'Could not decrypt message (V2) from 123456789: '
+            'AnyhowException(Signal protocol error: message with old counter 7 / 5)',
+        'Could not decrypt message (V2) from 987654321: '
+            'AnyhowException(Signal protocol error: message with old counter 22 / 21)',
+      ),
+      (
+        'Could not encrypt message (V2) for target 123456789: '
+            'session with 123456789.1 not found: message_encrypt',
+        'Could not encrypt message (V2) for target 987654321: '
+            'session with 987654321.2 not found: message_encrypt',
+      ),
+      (
+        '[$firstId] Could not encrypt the message (V2) for user 123456789.',
+        '[$secondId] Could not encrypt the message (V2) for user 987654321.',
+      ),
+      (
+        'untrusted identity for address 123456789.1',
+        'untrusted identity for address 987654321.2',
+      ),
+      (
+        'Could not generate ciphertext message for 123456789',
+        'Could not generate ciphertext message for 987654321',
+      ),
+      (
+        'Could not get upload URLs for memory $firstId',
+        'Could not get upload URLs for memory $secondId',
+      ),
+      (
+        'Error backing up memory $firstId: PathNotFoundException: '
+            "Cannot open file, path = '/cache/thumb_$firstId.encrypted'",
+        'Error backing up memory $secondId: PathNotFoundException: '
+            "Cannot open file, path = '/cache/thumb_$secondId.encrypted'",
+      ),
+      (
+        'Media file not found for $firstId => $secondId',
+        'Media file not found for $secondId => $firstId',
+      ),
+      (
+        'S3 upload failed: 400 (1000 encrypted bytes) - <Error> '
+            '<Code>EntityTooLarge</Code><RequestId>request-a</RequestId>'
+            '<HostId>host-a</HostId></Error>',
+        'S3 upload failed: 400 (2000 encrypted bytes) - <Error> '
+            '<Code>EntityTooLarge</Code><RequestId>request-b</RequestId>'
+            '<HostId>host-b</HostId></Error>',
+      ),
+      (
+        'Connection reset by peer, errno = 104, port = 49142',
+        'Connection reset by peer, errno = 104, port = 45090',
+      ),
+    ];
+    for (final (first, second) in variants) {
+      final normalized = normalizeReportedError(first);
+      expect(normalized, isNot(first));
+      expect(normalized, normalizeReportedError(second));
+      expect(normalizeReportedError(normalized), normalized);
+    }
+  });
+
+  test('preserves failure reasons, HTTP status codes and OS error codes', () {
+    for (final message in [
+      'S3 upload failed: 400 (EntityTooLarge)',
+      'S3 upload failed: 403 (AccessDenied)',
+      'Connection reset by peer, errno = 104',
+      'Signal protocol error: invalid prekey identifier',
+      'Signal protocol error: invalid Whisper message: decryption failed',
+    ]) {
+      expect(normalizeReportedError(message), message);
+    }
+  });
+
+  test('avatar grouping preserves different failure reasons', () {
+    final closedPool = normalizeReportedError(
+      'Failed to render avatar for -123: '
+      'attempted to acquire a connection on a closed pool',
+    );
+    final invalidSvg = normalizeReportedError(
+      'Failed to render avatar for 456: invalid SVG',
+    );
+    expect(closedPool, contains('avatar for <user>:'));
+    expect(invalidSvg, contains('avatar for <user>:'));
+    expect(closedPool, isNot(invalidSvg));
+  });
+
+  test(
+    'normalizes every exception and log message without losing metadata',
+    () {
+      const raw = 'Could not decrypt message (V2) from 123456789';
+      final frame = SentryStackFrame(
+        function: 'decrypt',
+        fileName: 'signal.dart',
+      );
+      final mechanism = Mechanism(type: 'generic', handled: false);
+      final original = SentryEvent(
+        level: SentryLevel.fatal,
+        exceptions: [
+          SentryException(type: '_Exception', value: raw),
+          SentryException(
+            type: 'AnyhowException',
+            value: 'untrusted identity for address 123456789.1',
+            mechanism: mechanism,
+            stackTrace: SentryStackTrace(frames: [frame]),
+          ),
+        ],
+        message: SentryMessage(raw, template: raw, params: [raw, 42]),
+      );
+      final logContext = {'message': raw, 'other': 'retained'};
+      original.contexts['log'] = logContext;
+
+      final filtered = filterSentryEvent(original, Hint())!;
+      expect(filtered.level, SentryLevel.fatal);
+      expect(filtered.exceptions!.first.type, '_Exception');
+      expect(filtered.exceptions!.last.type, 'AnyhowException');
+      expect(filtered.exceptions!.last.mechanism, same(mechanism));
+      expect(filtered.exceptions!.last.stackTrace!.frames.single, same(frame));
+      final json = filtered.toJson().toString();
+      expect(json, isNot(contains('123456789')));
+      expect(json, contains('untrusted identity'));
+      expect(filtered.message!.params!.last, 42);
+      expect((filtered.contexts['log'] as Map)['other'], 'retained');
+      // The scope's original context must remain untouched.
+      expect(logContext['message'], raw);
+    },
+  );
 }

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO app_metadata(key, value) VALUES ('notification-panic', 'must-roll-back')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "fb48f61fc6c654de0d2ce25cbf44f0dffa0bdac5a4c4ffcd6e46283a345b9f51"
+}

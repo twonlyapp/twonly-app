@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT data FROM live_location_pending WHERE message_id = ? AND group_id = ? AND sender_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "data",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "live_location_pending",
+            "name": "data"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f128f0721d2dc22c596cf9ac6fd86896eb6ace163083ac9b7d844ebbeb89dfd8"
+}

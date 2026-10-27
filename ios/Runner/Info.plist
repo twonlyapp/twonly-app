@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>TwonlyBuildMode</key>
+	<string>$(CONFIGURATION)</string>
 	<key>AppGroupId</key>
 	<string>$(CUSTOM_GROUP_ID)</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
@@ -95,6 +97,7 @@
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>eu.twonly.outbox-flush</string>
+		<string>eu.twonly.backup</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

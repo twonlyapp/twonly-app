@@ -1,13 +1,18 @@
 import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/location_metadata.service.dart';
 import 'package:twonly/src/services/mediafiles/media_download_policy.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -25,7 +30,16 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
   @override
   void initState() {
     super.initState();
-    _storageStatsFuture = twonlyDB.mediaFilesDao.getStorageStats();
+    _storageStatsFuture = (() async => {
+      for (final stat in await rust_mediafiles.mediaStorageStats(
+        directory: MediaFileService.buildDirectoryPath(
+          'stored',
+          AppEnvironment.supportDir,
+        ).path,
+        transaction: currentDatabaseSession(),
+      ))
+        MediaType.values.byName(stat.mediaType): stat.bytes,
+    })();
   }
 
   Future<void> showAutoDownloadOptions(

@@ -49,6 +49,14 @@ enum NativeErrorReporting {
       : .main
     SentrySDK.start { options in
       options.dsn = dsn
+      // Read the containing app's mode so extension reports use the same value.
+      #if DEBUG
+      let fallbackEnvironment = "debug"
+      #else
+      let fallbackEnvironment = "release"
+      #endif
+      options.environment = (appBundle.object(forInfoDictionaryKey: "TwonlyBuildMode") as? String)?
+        .lowercased() ?? fallbackEnvironment
       let version = appBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
       let build = appBundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
       options.releaseName = "\(appBundle.bundleIdentifier ?? "eu.twonly")@\(version)+\(build)"
@@ -75,9 +83,23 @@ enum NativeErrorReporting {
     SentrySDK.addBreadcrumb(breadcrumb)
   }
 
+  static func warning(_ operation: String) {
+    NSLog("Twonly background operation deferred: %@", operation)
+    guard isAllowed else { return }
+    let breadcrumb = Breadcrumb(level: .warning, category: "native.background")
+    breadcrumb.message = operation
+    SentrySDK.addBreadcrumb(breadcrumb)
+  }
+
   /// Operation names only: Rust errors may contain message content, paths or
   /// credentials. Never attach the push payload or the worker's raw response.
   static func failure(_ operation: String) {
+    // iOS may end any background grant. The worker cancels safely and the next
+    // grant retries it; expiration is not an application failure.
+    if operation.hasSuffix("_expired") {
+      warning(operation)
+      return
+    }
     guard isAllowed else { return }
     SentrySDK.capture(message: "Native background operation failed: \(operation)") { scope in
       scope.setLevel(.error)

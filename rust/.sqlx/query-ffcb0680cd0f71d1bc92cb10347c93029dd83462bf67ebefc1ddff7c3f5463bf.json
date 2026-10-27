@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT DISTINCT COALESCE(m.activity_message_id, m.message_id) AS \"receipt_target!: String\"\n         FROM json_each(?) requested\n         LEFT JOIN webxdc_updates u ON substr(requested.value, -5) = '-info'\n             AND u.message_id = substr(requested.value, 1, length(requested.value) - 5)\n             AND u.info IS NOT NULL\n         JOIN chat_messages m ON m.message_id = COALESCE(u.instance_id, requested.value)\n         WHERE m.sender_id = ? AND (requested.value = m.message_id\n             OR requested.value = m.activity_message_id)",
+  "describe": {
+    "columns": [
+      {
+        "name": "receipt_target!: String",
+        "ordinal": 0,
+        "type_info": "Null",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "ffcb0680cd0f71d1bc92cb10347c93029dd83462bf67ebefc1ddff7c3f5463bf"
+}

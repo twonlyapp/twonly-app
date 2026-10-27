@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ? AND is_story = 1 AND created_at <= ?)",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM messages WHERE message_id = ? AND is_story = 1 AND created_at <= ?)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3b39e80eba10f193d60075bbc2d737a2c0bf336a3cc3a8badcf8334bfe17fc6a"
+}

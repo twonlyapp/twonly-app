@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT receipt_id FROM received_receipts ORDER BY receipt_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "receipt_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "received_receipts",
+            "name": "receipt_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9c966e8b50936bdfb971cdbb095c1c9dd7fd74bacbc8e924f3c6dc80bb7ad375"
+}

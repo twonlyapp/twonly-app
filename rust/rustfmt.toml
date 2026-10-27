@@ -1,0 +1,6 @@
+imports_granularity = "Module"
+blank_lines_lower_bound = 0
+fn_params_layout = "Compressed"
+format_strings = true
+wrap_comments = true
+ignore = ["src/frb_generated.rs"]

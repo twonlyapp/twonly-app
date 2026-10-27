@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    DELETE FROM media_files WHERE media_id = ?\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "be296ea8fab7c0f7664351b5822628ae8d3fb5d8a0f74578604a1c05e6b8ce81"
+}

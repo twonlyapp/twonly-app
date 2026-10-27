@@ -15,7 +15,7 @@ pub(crate) mod client;
 pub(crate) mod helpers;
 pub(crate) mod request;
 
-pub(crate) use client::{API_EVENTS, ApiClient};
+pub(crate) use client::{ApiClient, API_EVENTS};
 use helpers::*;
 
 #[doc(hidden)]
@@ -24,18 +24,46 @@ pub struct ApiRuntime {}
 impl ApiRuntime {
     pub(crate) async fn initialize(ctx: &Arc<Context>) -> Result<()> {
         let config = ApiConfig::from_rust_state(ctx).await?;
+
         ctx.api_client
             .set(tokio::sync::RwLock::new(ApiClient::new(ctx, config)))
             .map_err(|_| TwonlyError::Initialization)
     }
 
     pub async fn reload_configuration(ctx: &Arc<Context>) -> Result<()> {
+        Self::reload_configuration_deferred(ctx).await?;
+
+        let client = Self::client(ctx).await?;
+
+        if client
+            .network_available
+            .load(std::sync::atomic::Ordering::Acquire)
+        {
+            client.connect().await?;
+        }
+
+        Ok(())
+    }
+
+    pub(crate) async fn reload_configuration_deferred(ctx: &Arc<Context>) -> Result<()> {
         let replacement = ApiClient::new(ctx, ApiConfig::from_rust_state(ctx).await?);
+
         let current = Self::client(ctx).await?;
+
+        replacement.network_available.store(
+            current
+                .network_available
+                .load(std::sync::atomic::Ordering::Acquire),
+            std::sync::atomic::Ordering::Release,
+        );
+
         let slot = ctx.api_client.get().ok_or(TwonlyError::Initialization)?;
+
         *slot.write().await = replacement;
+
         current.close().await;
-        Self::client(ctx).await?.connect().await
+
+        Ok(())
     }
 
     pub async fn connect(ctx: &Arc<Context>) -> Result<()> {
@@ -44,6 +72,7 @@ impl ApiRuntime {
 
     pub async fn close(ctx: &Arc<Context>) -> Result<()> {
         Self::client(ctx).await?.close().await;
+
         Ok(())
     }
 
@@ -56,6 +85,7 @@ impl ApiRuntime {
             .await?
             .requested_background
             .store(in_background, std::sync::atomic::Ordering::Release);
+
         Self::restore_background_policy(ctx).await
     }
 
@@ -65,16 +95,28 @@ impl ApiRuntime {
 
     pub(crate) async fn restore_background_policy(ctx: &Arc<Context>) -> Result<()> {
         let client = Self::client(ctx).await?;
+
         let in_background = client
             .requested_background
             .load(std::sync::atomic::Ordering::Acquire);
+
         let sharing = crate::services::live_location::active(ctx)
             .await?
             .is_some_and(|session| session.expires_at_ms > chrono::Utc::now().timestamp_millis());
+
         client.set_background(in_background && !sharing).await
     }
 
     pub async fn set_network_available(ctx: &Arc<Context>, available: bool) -> Result<()> {
+        if ctx.is_suspended() {
+            Self::client(ctx)
+                .await?
+                .network_available
+                .store(available, std::sync::atomic::Ordering::Release);
+
+            return Ok(());
+        }
+
         Self::client(ctx)
             .await?
             .set_network_available(available)
@@ -87,25 +129,29 @@ impl ApiRuntime {
 
     pub async fn request_binary(ctx: &Arc<Context>, bytes: Vec<u8>) -> Result<Vec<u8>> {
         let client = Self::client(ctx).await?;
+
         if client.ws_client.lock().await.is_none() {
             client.connect().await?;
         }
+
         client.request(bytes).await
     }
 
     pub async fn request_authenticated(
-        ctx: &Arc<Context>,
-        bytes: Vec<u8>,
-        contact_id: Option<i64>,
+        ctx: &Arc<Context>, bytes: Vec<u8>, contact_id: Option<i64>,
     ) -> Result<Vec<u8>> {
         let client = Self::client(ctx).await?;
+
         if client.ws_client.lock().await.is_none() {
             client.connect().await?;
         }
+
         let response = client.request(bytes.clone()).await?;
+
         match response_error_code(&response)? {
             None => {
                 client.handle_success_metadata(&response).await?;
+
                 Ok(response)
             }
             Some(code)
@@ -114,41 +160,50 @@ impl ApiRuntime {
                 client.set_state(ApiConnectionState::Connected).await;
 
                 let retried = client.request(bytes).await?;
+
                 if let Some(code) = response_error_code(&retried)? {
                     client.handle_api_error(code, contact_id).await?;
+
                     return Ok(retried);
                 }
+
                 client.handle_success_metadata(&retried).await?;
+
                 Ok(retried)
             }
             Some(code) => {
                 client.handle_api_error(code, contact_id).await?;
+
                 Ok(response)
             }
         }
     }
 
     pub async fn request_durable_authenticated(
-        ctx: &Arc<Context>,
-        bytes: Vec<u8>,
-        operation_kind: &str,
+        ctx: &Arc<Context>, bytes: Vec<u8>, operation_kind: &str,
     ) -> Result<Vec<u8>> {
         let client = Self::client(ctx).await?;
+
         if client.ws_client.lock().await.is_none() {
             client.connect().await?;
         }
+
         let response = client.request_durable(bytes, operation_kind).await?;
+
         if let Some(code) = response_error_code(&response)? {
             client.handle_api_error(code, None).await?;
         }
+
         Ok(response)
     }
 
     pub(crate) async fn replay_outbox(ctx: &Arc<Context>) -> Result<()> {
         let database = ctx.app_db.read().await.clone();
+
         let rows = sqlx::query!("SELECT sequence_id, payload FROM api_outbox ORDER BY created_at")
             .fetch_all(&database.pool)
             .await?;
+
         for row in rows {
             match Self::request_authenticated(ctx, row.payload, None).await {
                 Ok(_) => {
@@ -164,36 +219,46 @@ impl ApiRuntime {
                 }
             }
         }
+
         Ok(())
     }
 
     pub(crate) async fn replay_legacy_raw_outbox(ctx: &Arc<Context>) -> Result<()> {
         use base64::Engine as _;
+
         let path = std::path::Path::new(&ctx.config.data_dir)
             .join("keyvalue")
             .join("rawbytes-to-retransmit.json");
+
         if !path.exists() {
             return Ok(());
         }
+
         let value: serde_json::Value = serde_json::from_slice(&std::fs::read(&path)?)
             .map_err(|error| TwonlyError::Generic(format!("invalid legacy outbox: {error}")))?;
+
         let Some(messages) = value.as_object() else {
             return Err(TwonlyError::Generic(
                 "legacy outbox is not an object".into(),
             ));
         };
+
         for encoded in messages.values() {
             let encoded = encoded.as_str().ok_or_else(|| {
                 TwonlyError::Generic("legacy outbox payload is not a string".into())
             })?;
+
             let bytes = base64::engine::general_purpose::STANDARD
                 .decode(encoded)
                 .map_err(|error| {
                     TwonlyError::Generic(format!("invalid legacy outbox payload: {error}"))
                 })?;
+
             Self::request_authenticated(ctx, bytes, None).await?;
         }
+
         std::fs::remove_file(path)?;
+
         Ok(())
     }
 
@@ -209,6 +274,7 @@ impl ApiRuntime {
         // connection. Send a snapshot after subscribing so Dart can use it as
         // a readiness handshake and no connection events are lost at startup.
         let state = Self::connection_state(ctx).await?;
+
         if sink
             .add(ApiEvent {
                 kind: ApiEventKind::ConnectionStateChanged,
@@ -220,7 +286,7 @@ impl ApiRuntime {
             return Ok(());
         }
 
-        tokio::spawn(async move {
+        crate::database::lifecycle::spawn(async move {
             loop {
                 match receiver.recv().await {
                     Ok(event) => {
@@ -239,11 +305,13 @@ impl ApiRuntime {
                 }
             }
         });
+
         Ok(())
     }
 
     pub(crate) async fn client(ctx: &Arc<Context>) -> Result<Arc<ApiClient>> {
         let client = ctx.api_client.get().ok_or(TwonlyError::Initialization)?;
+
         Ok(client.read().await.clone())
     }
 }

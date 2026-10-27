@@ -15,5 +15,6 @@ internal object NativeMediaPrepareBridge {
         databaseDirectory: String,
         dataDirectory: String,
         mediaId: String?,
+        foregroundService: Boolean,
     ): String
 }

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE stickers\n            SET usage_count = usage_count + 1,\n                last_used_at = CAST(strftime('%s', 'now') AS INTEGER)\n            WHERE content_hash = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "a67711b4ddf2c5a96f3d2705fa03c789e5436b1867b6e37b5e814b6a0892253c"
+}

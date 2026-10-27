@@ -17,7 +17,8 @@ check_exports() {
   missing=0
   for symbol in \
   twonly_schedule_direct_media_uploads \
-  twonly_begin_background_task \
+  twonly_begin_database_operation \
+  twonly_database_is_foreground \
   twonly_end_background_task \
   twonly_decode_image_to_png \
   twonly_extract_sticker_foreground \

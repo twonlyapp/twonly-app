@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "PRAGMA cipher_integrity_check",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "1c44d8591e1123647831a4f0a4013ace5460b696747a5f2cb624b465339294d6"
+}

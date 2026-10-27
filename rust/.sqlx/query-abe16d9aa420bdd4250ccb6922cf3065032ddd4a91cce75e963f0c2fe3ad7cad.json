@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                                ROLLBACK TO rust_domain_command\n                            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "abe16d9aa420bdd4250ccb6922cf3065032ddd4a91cce75e963f0c2fe3ad7cad"
+}

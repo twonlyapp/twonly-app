@@ -1,0 +1,134 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT cg.id AS \"id!\",\n            cg.name AS \"name!\",\n            cg.emoji AS \"emoji?\",\n            cg.text_color AS \"text_color!\",\n            cg.background_color AS \"background_color!\",\n            cg.show_as_shortcut AS \"show_as_shortcut!: bool\",\n            cg.show_as_label AS \"show_as_label!: bool\",\n            cg.share_stories AS \"share_stories!: bool\",\n            cg.usage_counter AS \"usage_counter!\",\n            cg.created_at AS \"created_at!\" FROM contact_groups cg WHERE cg.id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "name!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "emoji?",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "emoji"
+          }
+        }
+      },
+      {
+        "name": "text_color!",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "text_color"
+          }
+        }
+      },
+      {
+        "name": "background_color!",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "background_color"
+          }
+        }
+      },
+      {
+        "name": "show_as_shortcut!: bool",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "show_as_shortcut"
+          }
+        }
+      },
+      {
+        "name": "show_as_label!: bool",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "show_as_label"
+          }
+        }
+      },
+      {
+        "name": "share_stories!: bool",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "share_stories"
+          }
+        }
+      },
+      {
+        "name": "usage_counter!",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "usage_counter"
+          }
+        }
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2c1748ef2df1d1b367c604d649d6c360405a1a2f79855573aa21af191a8c6801"
+}

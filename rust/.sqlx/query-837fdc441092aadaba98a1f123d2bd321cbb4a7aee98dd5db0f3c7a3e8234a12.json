@@ -1,0 +1,40 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT group_id AS \"group_id!\",\n                MIN(trust) AS \"status!: i64\",\n                SUM(CASE\n                WHEN trust = 0 THEN 1\n                ELSE 0\n                END\n            ) AS \"unverified_count!: i64\"\n            FROM (\n                SELECT gm.group_id, CASE\n                WHEN EXISTS(\n                    SELECT 1\n                    FROM key_verifications kv\n                    WHERE kv.contact_id = gm.contact_id\n                ) THEN 2\n                WHEN EXISTS(\n                    SELECT 1\n                    FROM user_discovery_user_relations ur\n                    WHERE ur.announced_user_id = gm.contact_id\n                        AND ur.public_key_verified_timestamp IS NOT NULL\n                        AND ur.from_contact_id != gm.contact_id\n                        AND EXISTS(\n                        SELECT 1\n                        FROM key_verifications kv\n                        WHERE kv.contact_id = ur.from_contact_id\n                    )\n                ) THEN 1\n                ELSE 0\n                END AS trust\n                FROM group_members gm\n                WHERE ? IS NULL\n                    OR gm.group_id = ?\n            )\n            GROUP BY group_id\n            ORDER BY group_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "status!: i64",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "unverified_count!: i64",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "837fdc441092aadaba98a1f123d2bd321cbb4a7aee98dd5db0f3c7a3e8234a12"
+}

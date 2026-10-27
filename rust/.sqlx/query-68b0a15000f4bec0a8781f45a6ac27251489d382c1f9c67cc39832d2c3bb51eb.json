@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM webxdc_pending_updates WHERE instance_id = ? AND group_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "68b0a15000f4bec0a8781f45a6ac27251489d382c1f9c67cc39832d2c3bb51eb"
+}

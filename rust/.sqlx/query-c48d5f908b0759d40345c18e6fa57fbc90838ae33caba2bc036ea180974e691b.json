@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT account_deleted FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "account_deleted",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "account_deleted"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c48d5f908b0759d40345c18e6fa57fbc90838ae33caba2bc036ea180974e691b"
+}

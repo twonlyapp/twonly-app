@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE webxdc_instances\n               SET summary = COALESCE(?, summary),\n                   document = COALESCE(?, document),\n                   last_update_at = ?\n               WHERE instance_id = ? AND ? >= COALESCE((\n                   SELECT MAX(received_at) FROM webxdc_updates WHERE instance_id = ?\n               ), ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "f54ccbbf74f1a28c4d180e0e60624c2dcecc1c697551a512bfe50305f406b162"
+}

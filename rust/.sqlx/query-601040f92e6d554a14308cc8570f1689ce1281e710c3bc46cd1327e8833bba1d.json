@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                WITH RECURSIVE rows(n) AS (\n                    VALUES(1) UNION ALL SELECT n + 1 FROM rows WHERE n < 10000000\n                )\n                INSERT INTO app_metadata(key, value)\n                SELECT 'notification-interrupt-' || n, 'must-roll-back' FROM rows\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "601040f92e6d554a14308cc8570f1689ce1281e710c3bc46cd1327e8833bba1d"
+}

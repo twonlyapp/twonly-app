@@ -6,11 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
@@ -93,9 +98,18 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
 
   void _subscribe() {
     unawaited(_subscription?.cancel());
-    _subscription = twonlyDB.mediaFilesDao
-        .watchGeotaggedMemories(favoritesOnly: widget.favoritesOnly)
-        .listen(
+    _subscription =
+        watchRustDatabase(
+          (control) => rust_mediafiles
+              .watchMediaFiles(
+                input: db_mediafiles.MediaQuery(
+                  filter: db_mediafiles.MediaFilter.geotagged,
+                  favoritesOnly: widget.favoritesOnly,
+                ),
+                control: control,
+              )
+              .map(orderedMediaFiles),
+        ).listen(
           _onMemories,
           onError: (Object error, StackTrace stack) {
             Log.error('Could not load map memories: $error');

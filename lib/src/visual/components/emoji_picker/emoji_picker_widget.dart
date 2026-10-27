@@ -7,6 +7,7 @@
  */
 
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:twonly/src/visual/components/emoji_picker/category_view/category.dart';
@@ -201,6 +202,22 @@ class EmojiPickerState extends State<EmojiPicker> {
   // Current height while the user is resizing the picker.
   double? _currentPickerHeight;
 
+  late final ScrollController _emojiScrollController =
+      _expandingScrollController();
+
+  // Handed to [EmojiPicker.alternateView] as its primary scroll controller, so
+  // a vertical list in there (the sticker grid) expands the picker as well.
+  // A separate instance: while switching views both grids are briefly
+  // attached, and the emoji view reads `offset`, which needs a single position.
+  late final ScrollController _alternateScrollController =
+      _expandingScrollController();
+
+  _ExpandingEmojiScrollController _expandingScrollController() =>
+      _ExpandingEmojiScrollController(
+        consumeScroll: _consumeResizeScroll,
+        canExpand: () => _remainingExpansion > 0,
+      );
+
   // Internal helper
   final _emojiPickerInternalUtils = EmojiPickerInternalUtils();
 
@@ -282,7 +299,13 @@ class EmojiPickerState extends State<EmojiPicker> {
   @override
   Widget build(BuildContext context) {
     if (widget.alternateView != null) {
-      return _buildPickerSurface(widget.alternateView!);
+      return _buildPickerSurface(
+        PrimaryScrollController(
+          controller: _alternateScrollController,
+          automaticallyInheritForPlatforms: TargetPlatform.values.toSet(),
+          child: widget.alternateView!,
+        ),
+      );
     }
     if (!_loaded) {
       return _buildPickerSurface(
@@ -539,8 +562,47 @@ class EmojiPickerState extends State<EmojiPicker> {
 
   Widget _buildEmojiView() {
     return widget.customWidget == null
-        ? DefaultEmojiPickerView(widget.config, _state, _showSearchView)
+        ? DefaultEmojiPickerView(
+            widget.config,
+            _state,
+            _showSearchView,
+            scrollController: _emojiScrollController,
+          )
         : widget.customWidget!(widget.config, _state, _showSearchView);
+  }
+
+  double get _remainingExpansion {
+    final initialHeight = widget.config.height;
+    final resizeConfig = widget.config.resizeConfig;
+    if (initialHeight == null ||
+        !resizeConfig.enabled ||
+        !resizeConfig.expandOnScroll) {
+      return 0;
+    }
+    return (_maximumPickerHeight(initialHeight) -
+            (_currentPickerHeight ?? initialHeight))
+        .clamp(0, double.infinity);
+  }
+
+  /// Grows (positive [offset]) or shrinks the picker between its configured
+  /// and its maximum height, returning the part of [offset] that was not used.
+  double _consumeResizeScroll(double offset) {
+    final initialHeight = widget.config.height;
+    final resizeConfig = widget.config.resizeConfig;
+    if (initialHeight == null ||
+        !resizeConfig.enabled ||
+        !resizeConfig.expandOnScroll) {
+      return offset;
+    }
+    final currentHeight = _currentPickerHeight ?? initialHeight;
+    final nextHeight = (currentHeight + offset).clamp(
+      initialHeight,
+      _maximumPickerHeight(initialHeight),
+    );
+    if (nextHeight != currentHeight) {
+      setState(() => _currentPickerHeight = nextHeight);
+    }
+    return offset - (nextHeight - currentHeight);
   }
 
   Widget _buildPickerSurface(Widget content) {
@@ -685,10 +747,81 @@ class EmojiPickerState extends State<EmojiPicker> {
 
   @override
   void dispose() {
+    _emojiScrollController.dispose();
+    _alternateScrollController.dispose();
     widget.controller?.removeListener(_onControllerChanged);
     widget.textEditingController?.removeListener(
       _scrollToCursorAfterTextChange,
     );
     super.dispose();
+  }
+}
+
+/// Uses user scroll input to resize the picker before or after moving its
+/// content.
+class _ExpandingEmojiScrollController extends ScrollController {
+  _ExpandingEmojiScrollController({
+    required this.consumeScroll,
+    required this.canExpand,
+  });
+
+  final double Function(double) consumeScroll;
+  final bool Function() canExpand;
+
+  @override
+  ScrollPosition createScrollPosition(
+    ScrollPhysics physics,
+    ScrollContext context,
+    ScrollPosition? oldPosition,
+  ) => _ExpandingEmojiScrollPosition(
+    physics: physics,
+    context: context,
+    oldPosition: oldPosition,
+    consumeScroll: consumeScroll,
+    canExpand: canExpand,
+  );
+}
+
+class _ExpandingEmojiScrollPosition extends ScrollPositionWithSingleContext {
+  _ExpandingEmojiScrollPosition({
+    required super.physics,
+    required super.context,
+    required this.consumeScroll,
+    required this.canExpand,
+    super.oldPosition,
+  });
+
+  final double Function(double) consumeScroll;
+  final bool Function() canExpand;
+
+  @override
+  void applyUserOffset(double delta) {
+    _scrollOrResize(-delta, (offset) => super.applyUserOffset(-offset));
+  }
+
+  @override
+  void pointerScroll(double delta) {
+    _scrollOrResize(delta, super.pointerScroll);
+  }
+
+  /// Grows the picker before its content scrolls down, and shrinks it back
+  /// once the content scrolled up to the top again.
+  void _scrollOrResize(double offset, void Function(double) scroll) {
+    if (offset < 0) {
+      final double toTop = math.min(
+        0,
+        math.max(offset, minScrollExtent - pixels),
+      );
+      if (toTop != 0) scroll(toTop);
+      offset -= toTop;
+    }
+    if (offset == 0) return;
+    final remaining = consumeScroll(offset);
+    if (remaining != 0) scroll(remaining);
+  }
+
+  @override
+  void goBallistic(double velocity) {
+    super.goBallistic(velocity > 0 && canExpand() ? 0 : velocity);
   }
 }

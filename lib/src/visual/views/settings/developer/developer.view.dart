@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:clock/clock.dart';
-import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,19 +10,30 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:twonly/core/bridge/api.dart' as rust_api;
+import 'package:twonly/core/bridge/database/diagnostics.dart'
+    as rust_diagnostics;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/diagnostics/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/backup_reminder_sheet.comp.dart';
 import 'package:twonly/src/visual/views/settings/developer/database_sizes_developer.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/home_widget_developer.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/user_discovery_developer.view.dart';
@@ -53,94 +62,51 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
 
     try {
       final now = clock.now();
-      const groupId = 'mock_group_gallery';
-
-      // Ensure mock group exists
-      await twonlyDB.groupsDao.createNewGroup(
-        const GroupsCompanion(
-          groupId: Value(groupId),
-          groupName: Value('Mock Gallery Group'),
-          isDirectChat: Value(false),
-          joinedGroup: Value(true),
-        ),
-      );
-
       const size = Size(360, 640);
-
-      // Batch database entries using cascades for extreme operational speed and clean linting
-      await twonlyDB.batch((batch) async {
-        for (var i = 0; i < 1000; i++) {
-          final mediaId = 'mock_gen_$i';
-          final authorIndex = i % 12;
-          final contactId = 9000000 + authorIndex;
-
-          late DateTime itemDate;
-          if (i < 200) {
-            // Spread over the last month
-            itemDate = now.subtract(Duration(minutes: i * 216));
-          } else if (i < 400) {
-            // Spread between 1 month and 1 year ago
-            final localI = i - 200;
-            itemDate = now.subtract(
-              Duration(days: 30, minutes: localI * 2412),
-            );
-          } else if (i < 600) {
-            // Around a year ago
-            final localI = i - 400;
-            itemDate = now.subtract(
-              Duration(days: 365, minutes: localI * 216),
-            );
-          } else if (i < 800) {
-            // Around three years ago
-            final localI = i - 600;
-            itemDate = now.subtract(
-              Duration(days: 1095, minutes: localI * 216),
-            );
-          } else {
-            // Around four years ago
-            final localI = i - 800;
-            itemDate = now.subtract(
-              Duration(days: 1460, minutes: localI * 216),
-            );
-          }
-
-          batch
-            ..insert(
-              twonlyDB.contacts,
-              ContactsCompanion(
-                userId: Value(contactId),
-                username: Value('mock_user_$authorIndex'),
-                displayName: Value('Author $authorIndex'),
-              ),
-              mode: InsertMode.insertOrReplace,
-            )
-            ..insert(
-              twonlyDB.mediaFiles,
-              MediaFilesCompanion(
-                mediaId: Value(mediaId),
-                type: const Value(MediaType.image),
-                stored: const Value(true),
-                createdAt: Value(itemDate),
-                createdAtMonth: Value(DateFormat('MMMM yyyy').format(itemDate)),
-              ),
-              mode: InsertMode.insertOrReplace,
-            )
-            ..insert(
-              twonlyDB.messages,
-              MessagesCompanion(
-                messageId: Value('mock_msg_$i'),
-                groupId: const Value(groupId),
-                senderId: Value(contactId),
-                type: const Value('media'),
-                mediaId: Value(mediaId),
-                mediaStored: const Value(true),
-                openedAt: Value(now),
-                createdAt: Value(itemDate),
-              ),
-              mode: InsertMode.insertOrReplace,
-            );
+      final items = <MockGalleryItem>[];
+      for (var i = 0; i < 1000; i++) {
+        late DateTime itemDate;
+        if (i < 200) {
+          // Spread over the last month
+          itemDate = now.subtract(Duration(minutes: i * 216));
+        } else if (i < 400) {
+          // Spread between 1 month and 1 year ago
+          final localI = i - 200;
+          itemDate = now.subtract(
+            Duration(days: 30, minutes: localI * 2412),
+          );
+        } else if (i < 600) {
+          // Around a year ago
+          final localI = i - 400;
+          itemDate = now.subtract(
+            Duration(days: 365, minutes: localI * 216),
+          );
+        } else if (i < 800) {
+          // Around three years ago
+          final localI = i - 600;
+          itemDate = now.subtract(
+            Duration(days: 1095, minutes: localI * 216),
+          );
+        } else {
+          // Around four years ago
+          final localI = i - 800;
+          itemDate = now.subtract(
+            Duration(days: 1460, minutes: localI * 216),
+          );
         }
-      });
+
+        items.add(
+          MockGalleryItem(
+            createdAt: itemDate.millisecondsSinceEpoch ~/ 1000,
+            month: DateFormat('MMMM yyyy').format(itemDate),
+          ),
+        );
+      }
+      await rust_diagnostics.seedMockGallery(
+        items: items,
+        openedAt: now.millisecondsSinceEpoch ~/ 1000,
+        transaction: currentDatabaseSession(),
+      );
 
       // Render custom vector avatars and background colors efficiently
       for (var i = 0; i < 1000; i++) {
@@ -218,7 +184,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
           final bytes = byteData.buffer.asUint8List();
           final mediaFile = MediaFile(
             mediaId: mediaId,
-            type: MediaType.image,
+            typeName: MediaType.image.name,
             stored: true,
             requiresAuthentication: false,
             isDraftMedia: false,
@@ -227,8 +193,8 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
             hasCropAnalyzed: false,
             hasThumbnail: false,
             galleryExportPending: false,
-            cloudState: CloudState.none,
-            createdAt: now,
+            cloudStateName: CloudState.none.name,
+            createdAtSeconds: databaseSeconds(now),
           );
           final mediaService = MediaFileService(mediaFile);
 
@@ -263,7 +229,10 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
   Future<void> _generate1000RandomMessages() async {
     if (!kDebugMode || _isGeneratingMockMessages) return;
 
-    final groups = await twonlyDB.groupsDao.getAllGroups();
+    final groups = await rust_groups.listGroups(
+      input: const db_groups.GroupQuery(filter: db_groups.GroupFilter.all),
+      transaction: currentDatabaseSession(),
+    );
     groups.sort((a, b) => a.groupName.compareTo(b.groupName));
     if (!mounted) return;
     if (groups.isEmpty) {
@@ -288,62 +257,21 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
 
     setState(() => _isGeneratingMockMessages = true);
     try {
-      final members = await twonlyDB.groupsDao.getGroupNonLeftMembers(
-        group.groupId,
+      final now = clock.now();
+      final idPrefix = 'debug_${now.microsecondsSinceEpoch}';
+      final inserted = await rust_diagnostics.seedMockMessages(
+        group: group.groupId,
+        count: 1000,
+        now: now.millisecondsSinceEpoch ~/ 1000,
+        prefix: idPrefix,
+        transaction: currentDatabaseSession(),
       );
-      if (members.isEmpty) {
+      if (inserted == 0) {
         if (mounted) {
           showSnackbar(context, 'The selected group has no active members.');
         }
         return;
       }
-
-      const samples = [
-        'Hey! How is everyone doing?',
-        'This is a randomly generated debug message.',
-        'Did anyone see this?',
-        'Sounds good to me!',
-        'I will check that later.',
-        'That made me laugh 😄',
-        'What do you think?',
-        'Let’s do it!',
-        'Quick update from my side.',
-        'Testing a longer message to see how the chat bubble wraps across multiple lines in this conversation.',
-      ];
-      final random = Random();
-      final now = clock.now();
-      final idPrefix = 'debug_${now.microsecondsSinceEpoch}';
-
-      await twonlyDB.batch((batch) {
-        for (var i = 0; i < 1000; i++) {
-          final member = members[random.nextInt(members.length)];
-          final createdAt = now.subtract(Duration(seconds: 1000 - i));
-          final sample = samples[random.nextInt(samples.length)];
-          batch.insert(
-            twonlyDB.messages,
-            MessagesCompanion(
-              groupId: Value(group.groupId),
-              messageId: Value('${idPrefix}_$i'),
-              senderId: Value(member.contactId),
-              type: const Value('text'),
-              content: Value('$sample #${i + 1}'),
-              openedAt: Value(now),
-              ackByServer: Value(createdAt),
-              ackByUser: Value(createdAt),
-              createdAt: Value(createdAt),
-            ),
-          );
-        }
-      });
-      await twonlyDB.groupsDao.updateGroup(
-        group.groupId,
-        GroupsCompanion(
-          archived: const Value(false),
-          deletedContent: const Value(false),
-          lastMessageReceived: Value(now),
-          lastMessageExchange: Value(now),
-        ),
-      );
 
       if (mounted) {
         showSnackbar(
@@ -424,6 +352,29 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                     context.navPush(const UserDiscoveryDeveloperView()),
               ),
               ListTile(
+                title: const Text('Preview Mailbox Sync'),
+                subtitle: const Text('Fake catch-up of 3000 messages'),
+                onTap: () => unawaited(rust_api.RustApi.previewMailboxSync()),
+              ),
+              ListTile(
+                title: const Text('Show Backup Reminder'),
+                onTap: () => unawaited(
+                  showBackupReminderSheet(
+                    context,
+                    BackupReminder.missingBackup,
+                  ),
+                ),
+              ),
+              ListTile(
+                title: const Text('Show Trusted Friends Reminder'),
+                onTap: () => unawaited(
+                  showBackupReminderSheet(
+                    context,
+                    BackupReminder.passwordlessRecovery,
+                  ),
+                ),
+              ),
+              ListTile(
                 title: const Text('Home Widget State'),
                 subtitle: const Text('What the widget reads'),
                 onTap: () => context.navPush(const HomeWidgetDeveloperView()),
@@ -438,7 +389,9 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                     dbCopyFile.deleteSync();
                   }
                   try {
-                    await twonlyDB.customStatement("VACUUM INTO '$dbCopyPath'");
+                    await rust_diagnostics.exportDebugDatabase(
+                      path: dbCopyPath,
+                    );
                     if (dbCopyFile.existsSync()) {
                       await SharePlus.instance.share(
                         ShareParams(
@@ -468,19 +421,29 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 ListTile(
                   title: const Text('Make it possible to reset flames'),
                   onTap: () async {
-                    final chats = await twonlyDB.groupsDao.getAllDirectChats();
+                    final chats = await rust_groups.listGroups(
+                      input: const db_groups.GroupQuery(
+                        filter: db_groups.GroupFilter.direct,
+                      ),
+                      transaction: currentDatabaseSession(),
+                    );
 
                     for (final chat in chats) {
-                      await twonlyDB.groupsDao.updateGroup(
-                        chat.groupId,
-                        GroupsCompanion(
-                          flameCounter: const Value(0),
-                          maxFlameCounter: const Value(365),
-                          lastFlameCounterChange: Value(clock.now()),
-                          maxFlameCounterFrom: Value(
-                            clock.now().subtract(const Duration(days: 1)),
+                      await rust_groups.updateGroup(
+                        id: chat.groupId,
+                        patch: GroupPatch(
+                          flameCounter: 0,
+                          maxFlameCounter: 365,
+                          lastFlameCounterChange: NullableInt(
+                            value: databaseNullableSeconds(clock.now()),
+                          ),
+                          maxFlameCounterFrom: NullableInt(
+                            value: databaseNullableSeconds(
+                              clock.now().subtract(const Duration(days: 1)),
+                            ),
                           ),
                         ),
+                        transaction: currentDatabaseSession(),
                       );
                     }
                     await HapticFeedback.heavyImpact();

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE notification_outbox\n            SET cleared_at = ?\n            WHERE message_id = ?\n              AND cleared_at IS NULL\n              AND kind IN ('text', 'response', 'mention', 'sticker', 'live_location', 'image', 'video', 'audio', 'twonly', 'webxdc', 'story', 'story_reply', 'story_reaction')\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "e969d999702d82156812cfea07fac086dc3e8a5ac5f9a1f613587725ec9a24fe"
+}

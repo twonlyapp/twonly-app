@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO contacts(user_id, username) VALUES (7, 'peer')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "ba97c6449d3fb6365b1658736f146a13b3271a94343bf2419ccc50bc09c06a09"
+}

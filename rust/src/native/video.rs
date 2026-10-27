@@ -50,22 +50,31 @@ impl RenderRequest {
 
 /// The platform reports progress from its own thread — Android's main looper,
 /// a GCD timer on iOS — which is not inside the async runtime. Keep the runtime
-/// for each active render only. A process-wide `OnceLock<Handle>` used to retain
-/// the first WorkManager runtime forever, even after that runtime was destroyed.
+/// for each active render only. A process-wide `OnceLock<Handle>` used to
+/// retain the first WorkManager runtime forever, even after that runtime was
+/// destroyed.
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
-static PROGRESS_RUNTIMES: LazyLock<Mutex<HashMap<String, tokio::runtime::Handle>>> =
+static PROGRESS_RUNTIMES: LazyLock<Mutex<HashMap<String, ProgressOwner>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
+
+#[derive(Clone)]
+
+struct ProgressOwner {
+    media_id: String,
+    runtime: tokio::runtime::Handle,
+    operation: Option<crate::database::lifecycle::Operation>,
+}
 
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
 struct ProgressRuntimeGuard {
-    media_id: String,
+    id: String,
 }
 
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
 impl Drop for ProgressRuntimeGuard {
     fn drop(&mut self) {
         if let Ok(mut runtimes) = PROGRESS_RUNTIMES.lock() {
-            runtimes.remove(&self.media_id);
+            runtimes.remove(&self.id);
         }
     }
 }
@@ -73,13 +82,47 @@ impl Drop for ProgressRuntimeGuard {
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
 fn remember_runtime(media_id: &str) -> Option<ProgressRuntimeGuard> {
     let handle = tokio::runtime::Handle::try_current().ok()?;
+
+    let id = uuid::Uuid::new_v4().to_string();
+
+    PROGRESS_RUNTIMES.lock().ok()?.insert(
+        id.clone(),
+        ProgressOwner {
+            media_id: media_id.to_owned(),
+            runtime: handle,
+            operation: crate::database::lifecycle::Operation::inherited(),
+        },
+    );
+
+    Some(ProgressRuntimeGuard { id })
+}
+
+fn is_cancelled(id: &str) -> bool {
     PROGRESS_RUNTIMES
         .lock()
-        .ok()?
-        .insert(media_id.to_owned(), handle);
-    Some(ProgressRuntimeGuard {
-        media_id: media_id.to_owned(),
+        .ok()
+        .and_then(|jobs| jobs.get(id).cloned())
+        .is_none_or(|owner| {
+            owner
+                .operation
+                .as_ref()
+                .is_some_and(|operation| operation.cancelled())
+        })
+}
+
+/// Pollable from codec threads without Flutter or the originating runtime.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn twonly_video_is_cancelled(id: *const std::ffi::c_char) -> bool {
+    std::panic::catch_unwind(|| {
+        if id.is_null() {
+            return true;
+        }
+
+        unsafe { std::ffi::CStr::from_ptr(id) }
+            .to_str()
+            .map_or(true, is_cancelled)
     })
+    .unwrap_or(true)
 }
 
 /// Reports transcoding progress back into the media row so the send state in
@@ -89,36 +132,63 @@ fn report_progress(media_id: &str, percent: i64) {
     let Ok(ctx) = crate::context::Context::get_static() else {
         return;
     };
-    let Some(runtime) = PROGRESS_RUNTIMES
+
+    let Some(owner) = PROGRESS_RUNTIMES
         .lock()
         .ok()
         .and_then(|runtimes| runtimes.get(media_id).cloned())
     else {
         return;
     };
+
     let ctx = ctx.clone();
-    let media_id = media_id.to_owned();
-    runtime.spawn(async move {
+
+    if owner
+        .operation
+        .as_ref()
+        .is_some_and(|operation| operation.cancelled())
+    {
+        return;
+    }
+
+    let media_id = owner.media_id.clone();
+
+    let work = async move {
         let database = ctx.app_db.read().await.clone();
-        if let Err(error) =
-            sqlx::query("UPDATE media_files SET pre_progressing_process = ? WHERE media_id = ?")
-                .bind(percent.clamp(0, 100))
-                .bind(&media_id)
-                .execute(&database.pool)
-                .await
+
+        if let Err(error) = sqlx::query!(
+            r#"
+                UPDATE media_files
+                SET pre_progressing_process = ?
+                WHERE media_id = ?
+                "#,
+            percent.clamp(0, 100),
+            media_id,
+        )
+        .execute(&database.pool)
+        .await
         {
             tracing::warn!(media_id, %error, "could not store video render progress");
         }
-    });
+    };
+
+    if let Some(operation) = owner.operation {
+        operation.scope_sync(|| crate::database::lifecycle::spawn_on(&owner.runtime, work));
+    } else {
+        crate::database::lifecycle::spawn_on(&owner.runtime, work);
+    }
 }
 
 #[cfg(target_os = "ios")]
 pub(crate) fn render(request: &RenderRequest) -> Result<()> {
-    let _progress_runtime = remember_runtime(&request.media_id);
+    let progress_runtime = remember_runtime(&request.media_id)
+        .ok_or_else(|| TwonlyError::Generic("Video rendering requires an owned runtime".into()))?;
+
     use std::ffi::{CStr, CString};
     use std::os::raw::{c_char, c_int};
 
     type ProgressCallback = unsafe extern "C" fn(*const c_char, c_int);
+
     type RenderVideo = unsafe extern "C" fn(
         *const c_char,
         *const c_char,
@@ -137,8 +207,10 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
             if media_id.is_null() {
                 return;
             }
+
             // SAFETY: Swift passes the same NUL-terminated string it was handed.
             let media_id = unsafe { CStr::from_ptr(media_id) };
+
             if let Ok(media_id) = media_id.to_str() {
                 report_progress(media_id, i64::from(percent));
             }
@@ -149,23 +221,31 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
         CString::new(path.as_os_str().as_encoded_bytes())
             .map_err(|_| TwonlyError::Generic("video path contains a NUL byte".into()))
     };
+
     let input = to_c(&request.input)?;
+
     let output = to_c(&request.output)?;
+
     let overlay = request.overlay.as_ref().map(to_c).transpose()?;
-    let media_id = CString::new(request.media_id.as_str())
+
+    let media_id = CString::new(progress_runtime.id.as_str())
         .map_err(|_| TwonlyError::Generic("media id contains a NUL byte".into()))?;
 
     let symbol = c"twonly_render_video";
+
     // The implementation lives in the app executable, so it is resolved at
     // runtime instead of being required when the cdylib is linked.
     let callback = unsafe { libc::dlsym(libc::RTLD_DEFAULT, symbol.as_ptr()) };
+
     if callback.is_null() {
         return Err(TwonlyError::Generic(
             "iOS video rendering is unavailable".into(),
         ));
     }
+
     // SAFETY: the Swift @_cdecl declaration has this exact stable C ABI signature.
     let callback: RenderVideo = unsafe { std::mem::transmute(callback) };
+
     // SAFETY: Swift copies every string before returning, and the progress
     // function pointer is only called for the duration of this call.
     let rendered = unsafe {
@@ -182,6 +262,7 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
             progress,
         )
     };
+
     if rendered {
         Ok(())
     } else {
@@ -193,72 +274,109 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
 
 #[cfg(target_os = "android")]
 pub(crate) fn render(request: &RenderRequest) -> Result<()> {
-    let _progress_runtime = remember_runtime(&request.media_id);
-    use crate::native::transfer::android::{jni_env, video_codec_class};
+    let progress_runtime = remember_runtime(&request.media_id)
+        .ok_or_else(|| TwonlyError::Generic("Video rendering requires an owned runtime".into()))?;
+
+    use crate::native::transfer::android::{video_codec_class, with_env};
     use jni::objects::{JObject, JValue};
 
     let class = video_codec_class()?;
-    let mut env = jni_env()?;
-    let string = |value: &str| {
-        env.new_string(value)
-            .map_err(|error| TwonlyError::Generic(error.to_string()))
-    };
-    let input = JObject::from(string(&request.input.to_string_lossy())?);
-    let output = JObject::from(string(&request.output.to_string_lossy())?);
-    let media_id = JObject::from(string(&request.media_id)?);
-    let overlay = match request.overlay.as_ref() {
-        Some(path) => JObject::from(string(&path.to_string_lossy())?),
-        None => JObject::null(),
-    };
 
-    let call = env
-        .call_static_method(
-            class,
-            "render",
-            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJJLjava/lang/String;)Z",
-            &[
-                JValue::Object(&input),
-                JValue::Object(&overlay),
-                JValue::Object(&output),
-                JValue::Bool(u8::from(request.remove_audio)),
-                JValue::Long(request.trim_start_or_negative()),
-                JValue::Long(request.trim_end_or_negative()),
-                JValue::Object(&media_id),
-            ],
-        )
-        .and_then(|value| value.z());
-    // A pending Java exception would abort the process once this thread returns
-    // to the VM, so it is cleared and reported as a plain error instead.
-    if env.exception_check().unwrap_or(false) {
-        let _ = env.exception_describe();
-        let _ = env.exception_clear();
-    }
-    if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
-        Ok(())
-    } else {
-        Err(TwonlyError::Generic(
-            "Android could not render the video".into(),
-        ))
-    }
+    with_env(|env| {
+        let mut string = |value: &str| {
+            jni::objects::JString::from_str(env, value)
+                .map_err(|error| TwonlyError::Generic(error.to_string()))
+        };
+
+        let input = JObject::from(string(&request.input.to_string_lossy())?);
+
+        let output = JObject::from(string(&request.output.to_string_lossy())?);
+
+        let media_id = JObject::from(string(&progress_runtime.id)?);
+
+        let overlay = match request.overlay.as_ref() {
+            Some(path) => JObject::from(string(&path.to_string_lossy())?),
+            None => JObject::null(),
+        };
+
+        let call = env
+            .call_static_method(
+                class,
+                jni::jni_str!("render"),
+                jni::jni_sig!(
+                    "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJJLjava/lang/String;\
+                     )Z"
+                ),
+                &[
+                    JValue::Object(&input),
+                    JValue::Object(&overlay),
+                    JValue::Object(&output),
+                    JValue::Bool(request.remove_audio),
+                    JValue::Long(request.trim_start_or_negative()),
+                    JValue::Long(request.trim_end_or_negative()),
+                    JValue::Object(&media_id),
+                ],
+            )
+            .and_then(|value| value.z());
+
+        // A pending Java exception would abort the process once this thread returns
+        // to the VM, so it is cleared and reported as a plain error instead.
+        if env.exception_check() {
+            env.exception_describe();
+
+            env.exception_clear();
+        }
+
+        if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
+            Ok(())
+        } else {
+            Err(TwonlyError::Generic(
+                "Android could not render the video".into(),
+            ))
+        }
+    })
 }
 
 /// Progress reported by the Android renderer while `render` is blocked.
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
+pub extern "system" fn Java_eu_twonly_media_NativeVideoCodec_isCancelled(
+    mut unowned_env: jni::EnvUnowned, _class: jni::objects::JClass, job_id: jni::objects::JString,
+) -> jni::sys::jboolean {
+    unowned_env
+        .with_env(|env| {
+            Ok::<_, jni::errors::Error>({
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    job_id
+                        .try_to_string(env)
+                        .map_or(true, |id| is_cancelled(&id))
+                }))
+                .unwrap_or(true)
+            })
+        })
+        .resolve::<jni::errors::LogErrorAndDefault>()
+}
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_eu_twonly_media_NativeVideoCodec_reportProgress(
-    mut env: jni::JNIEnv,
-    _class: jni::objects::JClass,
-    media_id: jni::objects::JString,
-    percent: jni::sys::jint,
+    mut unowned_env: jni::EnvUnowned, _class: jni::objects::JClass,
+    media_id: jni::objects::JString, percent: jni::sys::jint,
 ) {
-    // This runs on Android's main looper. Unwinding back into the VM would
-    // abort the process, so a panic can only cost this one progress update.
-    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        let Ok(media_id) = env.get_string(&media_id) else {
-            return;
-        };
-        report_progress(&media_id.to_string_lossy(), i64::from(percent));
-    }));
+    unowned_env
+        .with_env(|env| {
+            // This runs on Android's main looper. Unwinding back into the VM would
+            // abort the process, so a panic can only cost this one progress update.
+            let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let Ok(media_id) = media_id.try_to_string(env) else {
+                    return;
+                };
+
+                report_progress(&media_id, i64::from(percent));
+            }));
+            Ok::<_, jni::errors::Error>(())
+        })
+        .resolve::<jni::errors::LogErrorAndDefault>()
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -281,17 +399,24 @@ pub(crate) fn extract_frame(input: &Path, output: &Path) -> Result<()> {
         CString::new(path.as_os_str().as_encoded_bytes())
             .map_err(|_| TwonlyError::Generic("video path contains a NUL byte".into()))
     };
+
     let input = to_c(input)?;
+
     let output = to_c(output)?;
+
     let symbol = c"twonly_extract_video_frame";
+
     let callback = unsafe { libc::dlsym(libc::RTLD_DEFAULT, symbol.as_ptr()) };
+
     if callback.is_null() {
         return Err(TwonlyError::Generic(
             "iOS frame extraction is unavailable".into(),
         ));
     }
+
     // SAFETY: the Swift @_cdecl declaration has this exact stable C ABI signature.
     let callback: ExtractFrame = unsafe { std::mem::transmute(callback) };
+
     // SAFETY: Swift copies both strings before this call returns.
     if unsafe { callback(input.as_ptr(), output.as_ptr()) } {
         Ok(())
@@ -304,36 +429,44 @@ pub(crate) fn extract_frame(input: &Path, output: &Path) -> Result<()> {
 
 #[cfg(target_os = "android")]
 pub(crate) fn extract_frame(input: &Path, output: &Path) -> Result<()> {
-    use crate::native::transfer::android::{jni_env, video_codec_class};
+    use crate::native::transfer::android::{video_codec_class, with_env};
     use jni::objects::{JObject, JValue};
 
     let class = video_codec_class()?;
-    let mut env = jni_env()?;
-    let string = |value: &str| {
-        env.new_string(value)
-            .map_err(|error| TwonlyError::Generic(error.to_string()))
-    };
-    let input = JObject::from(string(&input.to_string_lossy())?);
-    let output = JObject::from(string(&output.to_string_lossy())?);
-    let call = env
-        .call_static_method(
-            class,
-            "extractFrame",
-            "(Ljava/lang/String;Ljava/lang/String;)Z",
-            &[JValue::Object(&input), JValue::Object(&output)],
-        )
-        .and_then(|value| value.z());
-    if env.exception_check().unwrap_or(false) {
-        let _ = env.exception_describe();
-        let _ = env.exception_clear();
-    }
-    if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
-        Ok(())
-    } else {
-        Err(TwonlyError::Generic(
-            "Android could not extract a video frame".into(),
-        ))
-    }
+
+    with_env(|env| {
+        let mut string = |value: &str| {
+            jni::objects::JString::from_str(env, value)
+                .map_err(|error| TwonlyError::Generic(error.to_string()))
+        };
+
+        let input = JObject::from(string(&input.to_string_lossy())?);
+
+        let output = JObject::from(string(&output.to_string_lossy())?);
+
+        let call = env
+            .call_static_method(
+                class,
+                jni::jni_str!("extractFrame"),
+                jni::jni_sig!("(Ljava/lang/String;Ljava/lang/String;)Z"),
+                &[JValue::Object(&input), JValue::Object(&output)],
+            )
+            .and_then(|value| value.z());
+
+        if env.exception_check() {
+            env.exception_describe();
+
+            env.exception_clear();
+        }
+
+        if call.map_err(|error| TwonlyError::Generic(error.to_string()))? {
+            Ok(())
+        } else {
+            Err(TwonlyError::Generic(
+                "Android could not extract a video frame".into(),
+            ))
+        }
+    })
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -341,4 +474,47 @@ pub(crate) fn extract_frame(_input: &Path, _output: &Path) -> Result<()> {
     Err(TwonlyError::Generic(
         "platform frame extraction is only available on Android and iOS".into(),
     ))
+}
+
+#[cfg(test)]
+mod cancellation_tests {
+
+    use super::*;
+    use crate::database::lifecycle::Operation;
+
+    #[tokio::test]
+
+    async fn render_generations_keep_cancellation_and_cleanup_separate() {
+        let first = Operation::foreground();
+
+        let next = Operation::foreground();
+
+        let old = first.scope_sync(|| remember_runtime("same-media").unwrap());
+
+        let new = next.scope_sync(|| remember_runtime("same-media").unwrap());
+
+        assert!(!is_cancelled(&old.id));
+
+        assert!(!is_cancelled(&new.id));
+
+        first.cancel();
+
+        assert!(is_cancelled(&old.id));
+
+        assert!(!is_cancelled(&new.id));
+
+        let old_id = old.id.clone();
+
+        drop(old);
+
+        assert!(is_cancelled(&old_id));
+
+        assert!(!is_cancelled(&new.id));
+
+        next.cancel();
+
+        assert!(is_cancelled(&new.id));
+
+        drop(new);
+    }
 }

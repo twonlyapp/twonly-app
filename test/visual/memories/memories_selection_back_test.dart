@@ -1,30 +1,36 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:drift/drift.dart' show Value;
-import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/memories.view.dart';
 
+import '../../helpers/native_database.dart';
 import '../../mocks/user_config.dart';
 
-class _MemoriesApi implements RustLibApi {
+class _MemoriesApi extends NativeTestApi {
   final cloudDeletes = <String>[];
   Exception? cloudError;
 
@@ -57,9 +63,9 @@ class _PurchasesProvider extends ChangeNotifier
 
 void main() {
   final api = _MemoriesApi();
-  setUpAll(() => RustLib.initMock(api: api));
+  setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
-  late TwonlyDB database;
+  late TestDatabase database;
   late Directory support;
   late _PurchasesProvider purchases;
 
@@ -67,10 +73,8 @@ void main() {
     api
       ..cloudDeletes.clear()
       ..cloudError = null;
-    database = TwonlyDB(NativeDatabase.memory());
-    locator
-      ..registerSingleton<TwonlyDB>(database)
-      ..registerSingleton<UserService>(UserService());
+    database = await TestDatabase.create();
+    locator.registerSingleton<UserService>(UserService());
     userService.currentUser = testUserConfig(
       userId: 1,
       username: 'test',
@@ -85,8 +89,16 @@ void main() {
     await database.customStatement(
       "INSERT INTO media_files(media_id, type, stored, has_thumbnail) VALUES('first', 'image', 1, 1), ('second', 'image', 1, 1)",
     );
-    for (final file
-        in await database.mediaFilesDao.watchAllStoredMediaFiles().first) {
+    for (final file in await watchRustDatabase(
+      (control) => rust_mediafiles
+          .watchMediaFiles(
+            input: const db_mediafiles.MediaQuery(
+              filter: db_mediafiles.MediaFilter.stored,
+            ),
+            control: control,
+          )
+          .map(orderedMediaFiles),
+    ).first) {
       MediaFileService(file).thumbnailPath.writeAsBytesSync(
         base64Decode(
           'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
@@ -97,8 +109,7 @@ void main() {
 
   tearDown(() async {
     await locator.unregister<UserService>();
-    await locator.unregister<TwonlyDB>();
-    await database.close();
+
     purchases.dispose();
     support.deleteSync(recursive: true);
   });
@@ -115,9 +126,10 @@ void main() {
         });
         if (cloudFailure) {
           await tester.runAsync(
-            () => database.mediaFilesDao.updateMedia(
-              'first',
-              const MediaFilesCompanion(cloudState: Value(CloudState.uploaded)),
+            () => rust_mediafiles.updateMediaFiles(
+              id: 'first',
+              patch: MediaFilePatch(cloudState: CloudState.uploaded.name),
+              transaction: currentDatabaseSession(),
             ),
           );
           api.cloudError = Exception('API error code 500');
@@ -189,11 +201,15 @@ void main() {
           );
           expect(find.textContaining('API error code 500'), findsOneWidget);
         } else {
+          await pumpNative(tester, until: () => target.evaluate().isEmpty);
           expect(api.cloudDeletes, isEmpty);
           expect(target, findsNothing);
           expect(
             await tester.runAsync(
-              () => database.mediaFilesDao.getMediaFileById('first'),
+              () => rust_mediafiles.getMediaFile(
+                id: 'first',
+                transaction: currentDatabaseSession(),
+              ),
             ),
             isNull,
           );

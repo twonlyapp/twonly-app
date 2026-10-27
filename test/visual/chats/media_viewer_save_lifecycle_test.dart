@@ -3,18 +3,54 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/groups.dao.dart';
-import 'package:twonly/src/database/daos/messages.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer.view.dart';
 
+import '../../mocks/database_watch.dart';
+
+class _TestSession implements DatabaseSession {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _GalleryApi implements RustLibApi {
+  final storedMessages = <String>[];
+  @override
+  DatabaseSession crateBridgeDatabaseDatabaseSessionNew() => _TestSession();
+  @override
+  DatabaseWatch crateBridgeDatabaseDatabaseWatchNew() => TestDatabaseWatch();
+  @override
+  Stream<List<StoredMessage>> crateBridgeDatabaseMessagesWatchMessages({
+    required MessageQuery input,
+    required DatabaseWatch control,
+  }) => const Stream.empty();
+  @override
+  Future<void> crateBridgeDatabaseMessagesUpdateMessages({
+    required String id,
+    required bool byMedia,
+    required MessagePatch patch,
+    required DatabaseSession transaction,
+  }) async {
+    expectSync(patch.mediaStored, isTrue);
+    storedMessages.add(id);
+  }
+
+  @override
+  Future<void> crateBridgeDatabaseGroupsUpdateGroup({
+    required String id,
+    required GroupPatch patch,
+    required DatabaseSession transaction,
+  }) async {}
+
   final receipts = <pb.EncryptedContent>[];
   Completer<void>? pendingReceipt;
 
@@ -29,44 +65,6 @@ class _GalleryApi implements RustLibApi {
     receipts.add(pb.EncryptedContent.fromBuffer(content));
     await pendingReceipt?.future;
   }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _ViewerMessages implements MessagesDao {
-  final storedMessages = <String>[];
-
-  @override
-  Stream<List<Message>> watchMediaNotOpened(String groupId) =>
-      const Stream.empty();
-
-  @override
-  Future<void> updateMessageId(
-    String messageId,
-    MessagesCompanion updatedValues,
-  ) async {
-    expectSync(updatedValues.mediaStored.value, isTrue);
-    storedMessages.add(messageId);
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _ViewerGroups implements GroupsDao {
-  @override
-  Future<void> updateGroup(String groupId, GroupsCompanion updates) async {}
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _ViewerDatabase implements TwonlyDB {
-  @override
-  final _ViewerMessages messagesDao = _ViewerMessages();
-  @override
-  final _ViewerGroups groupsDao = _ViewerGroups();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -100,7 +98,6 @@ void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
   const screenProtector = MethodChannel('screen_protector');
   final api = _GalleryApi();
-  late _ViewerDatabase database;
   late _PendingMedia media;
 
   setUpAll(() => RustLib.initMock(api: api));
@@ -111,8 +108,8 @@ void main() {
       ..receipts.clear()
       ..pendingReceipt = null;
     await locator.reset();
-    database = _ViewerDatabase();
-    locator.registerSingleton<TwonlyDB>(database);
+    api.storedMessages.clear();
+
     binding.defaultBinaryMessenger.setMockMethodCallHandler(
       screenProtector,
       (_) async => null,
@@ -137,7 +134,7 @@ void main() {
     // ignore: avoid_dynamic_calls, cascade_invocations
     state
       ..currentMedia = media
-      ..currentMessage = Message(
+      ..currentMessage = StoredMessage(
         groupId: 'chat',
         messageId: 'message',
         type: 'media',
@@ -147,7 +144,7 @@ void main() {
         isDeletedFromSender: false,
         isWidgetMedia: false,
         isStory: false,
-        createdAt: DateTime(2026),
+        createdAtSeconds: databaseSeconds(DateTime(2026)),
       );
     // ignore: avoid_dynamic_calls
     return state.onPressedSaveToGallery as Future<void> Function();
@@ -160,7 +157,7 @@ void main() {
     await save();
 
     expect(media.saves, 0);
-    expect(database.messagesDao.storedMessages, isEmpty);
+    expect(api.storedMessages, isEmpty);
     expect(api.receipts, isEmpty);
     expect(tester.takeException(), isNull);
   });
@@ -179,7 +176,7 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       media.stored.complete();
       await tester.pump();
-      expect(database.messagesDao.storedMessages, ['message']);
+      expect(api.storedMessages, ['message']);
       expect(api.receipts, hasLength(1));
 
       api.pendingReceipt!.complete();

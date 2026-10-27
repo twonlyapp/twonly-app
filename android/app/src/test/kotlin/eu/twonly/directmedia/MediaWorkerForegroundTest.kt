@@ -1,10 +1,12 @@
 package eu.twonly.directmedia
 
 import android.app.Application
+import android.app.Notification
 import android.app.ForegroundServiceStartNotAllowedException
 import android.content.Context
 import androidx.work.Data
 import androidx.work.ForegroundUpdater
+import androidx.work.ForegroundInfo
 import androidx.work.ListenableWorker
 import androidx.work.ProgressUpdater
 import androidx.work.WorkerFactory
@@ -30,6 +32,17 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class MediaWorkerForegroundTest {
+    @Test
+    fun promotionResultReflectsWhetherTheServiceStarted() {
+        for (allowed in listOf(true, false)) {
+            val worker = worker(Data.EMPTY, ForegroundUpdater { _, _, _ ->
+                if (allowed) Futures.immediateVoidFuture()
+                else Futures.immediateFailedFuture<Void>(ForegroundServiceStartNotAllowedException("background start"))
+            })
+            assertEquals(allowed, worker.setForegroundWhenAllowed(ForegroundInfo(1, Notification())))
+        }
+    }
+
     private fun worker(input: Data, foregroundUpdater: ForegroundUpdater): DirectMediaUploadWorker {
         val executor = Executor { it.run() }
         val params = WorkerParameters(
@@ -100,6 +113,9 @@ class MediaWorkerForegroundTest {
                 foregroundAttempts++
                 Futures.immediateVoidFuture()
             })
+            // WorkManager asks for this before starting expedited work on
+            // Android < 12. A missing override fails before doWork is called.
+            assertNotNull(worker.getForegroundInfoAsync().get(2, TimeUnit.SECONDS))
             assertEquals(ListenableWorker.Result.success(), worker.doWork())
             assertEquals(1, foregroundAttempts)
             assertNotNull(server.takeRequest(2, TimeUnit.SECONDS))

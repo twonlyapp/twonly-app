@@ -1,0 +1,98 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT type AS media_type, requires_authentication,\n                      display_limit_in_milliseconds, encryption_key, encryption_nonce,\n                      reupload_requested_by, reupload_targets\n               FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_type",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "requires_authentication",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "requires_authentication"
+          }
+        }
+      },
+      {
+        "name": "display_limit_in_milliseconds",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "display_limit_in_milliseconds"
+          }
+        }
+      },
+      {
+        "name": "encryption_key",
+        "ordinal": 3,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "encryption_key"
+          }
+        }
+      },
+      {
+        "name": "encryption_nonce",
+        "ordinal": 4,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "encryption_nonce"
+          }
+        }
+      },
+      {
+        "name": "reupload_requested_by",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "reupload_requested_by"
+          }
+        }
+      },
+      {
+        "name": "reupload_targets",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "reupload_targets"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "8d7e9dba4bea7f83de48c576b672a017eca362e2c6ed59fc1269cf38e6e16465"
+}

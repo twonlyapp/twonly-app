@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT media_id, location_deadline_at AS \"location_deadline_at!\"\n           FROM media_files WHERE location_status = 'pending'",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "location_deadline_at!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "location_deadline_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "f475f9a02bfbf94cf3d98bef416fd577c3b5019c897adad472782c01d608a433"
+}

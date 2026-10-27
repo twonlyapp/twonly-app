@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO key_verifications(contact_id, type, verified_by) VALUES (?, ?, ?)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "edf1ad911e2500ceee24bfc5da20122ba8abf31905bcff2c19f744112430a6bc"
+}

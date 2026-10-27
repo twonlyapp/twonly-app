@@ -1,10 +1,14 @@
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/daos/user_discovery.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -33,8 +37,12 @@ class OpenRequestsListComp extends StatelessWidget {
         constraints: const BoxConstraints(),
         icon: const Icon(Icons.close, size: 18),
         onPressed: () async {
-          const update = ContactsCompanion(deletedByUser: Value(true));
-          await twonlyDB.contactsDao.updateContact(contact.userId, update);
+          const update = ContactPatch(deletedByUser: true);
+          await rust_contacts.updateContact(
+            id: contact.userId,
+            patch: update,
+            transaction: currentDatabaseSession(),
+          );
         },
       ),
     ];
@@ -69,11 +77,12 @@ class OpenRequestsListComp extends StatelessWidget {
               context.lang.contactBlockBody,
             );
             if (block) {
-              const update = ContactsCompanion(blocked: Value(true));
+              const update = ContactPatch(blocked: true);
               if (context.mounted) {
-                await twonlyDB.contactsDao.updateContact(
-                  contact.userId,
-                  update,
+                await rust_contacts.updateContact(
+                  id: contact.userId,
+                  patch: update,
+                  transaction: currentDatabaseSession(),
                 );
               }
             }
@@ -97,18 +106,16 @@ class OpenRequestsListComp extends StatelessWidget {
             ],
           ),
           onPressed: () async {
-            await twonlyDB.contactsDao.updateContact(
-              contact.userId,
-              const ContactsCompanion(
-                accepted: Value(true),
-                requested: Value(false),
-              ),
+            await rust_contacts.updateContact(
+              id: contact.userId,
+              patch: const ContactPatch(accepted: true, requested: false),
+              transaction: currentDatabaseSession(),
             );
-            await twonlyDB.groupsDao.createNewDirectChat(
-              contact.userId,
-              GroupsCompanion(
-                groupName: Value(getContactDisplayName(contact)),
-              ),
+            await rust_groups.createDirectGroup(
+              contact: contact.userId,
+              ownId: userService.currentUser.userId,
+              patch: GroupPatch(groupName: getContactDisplayName(contact)),
+              transaction: currentDatabaseSession(),
             );
             await RustApi.sendEncryptedContent(
               contactId: contact.userId,
@@ -144,13 +151,14 @@ class OpenRequestsListComp extends StatelessWidget {
             onlyReturnEncryptedData: false,
             blocking: true,
           );
-          await twonlyDB.contactsDao.updateContact(
-            contact.userId,
-            const ContactsCompanion(
-              accepted: Value(false),
-              requested: Value(false),
-              deletedByUser: Value(true),
+          await rust_contacts.updateContact(
+            id: contact.userId,
+            patch: const ContactPatch(
+              accepted: false,
+              requested: false,
+              deletedByUser: true,
             ),
+            transaction: currentDatabaseSession(),
           );
         },
       ),

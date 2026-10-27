@@ -9,11 +9,14 @@ pub mod bridge;
 pub mod context;
 pub mod database;
 mod error;
+
 pub use error::TwonlyError;
+
 mod frb_generated;
 mod keys;
 pub mod log;
 mod native;
+mod performance;
 mod secure_storage;
 pub mod services;
 pub mod signal;

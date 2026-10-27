@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/network_failure.dart';
 
 class BlogEntry {
   BlogEntry({
@@ -61,11 +62,16 @@ class NewsService {
   File get _cacheFile =>
       File(join(AppEnvironment.supportDir, 'news_feed.json'));
 
-  Future<void> init() async {
+  Future<void> init({http.Client? client}) async {
     try {
       await loadCache();
     } catch (e) {
       Log.error('Failed to load news cache: $e');
+    }
+    final lastDownload = lastDownloadedAt;
+    if (lastDownload == null ||
+        DateTime.now().difference(lastDownload) >= const Duration(days: 7)) {
+      await fetchFeed(client: client);
     }
   }
 
@@ -135,7 +141,15 @@ class NewsService {
           ? await client.get(Uri.parse(url))
           : await http.get(Uri.parse(url));
       if (response.statusCode != 200) {
-        Log.error('Failed to download RSS feed: code ${response.statusCode}');
+        final message =
+            'Failed to download RSS feed: code ${response.statusCode}';
+        if (response.statusCode >= 500 ||
+            response.statusCode == 408 ||
+            response.statusCode == 429) {
+          Log.warn(message);
+        } else {
+          Log.error(message);
+        }
         return;
       }
 
@@ -158,8 +172,16 @@ class NewsService {
       Log.info(
         'Successfully fetched ${entries.length} news entries. Unread count: ${unreadCountNotifier.value}',
       );
-    } catch (e) {
-      Log.error('Failed to fetch news feed: $e');
+    } catch (error, stackTrace) {
+      if (isTransientNetworkFailure(error)) {
+        Log.warn('Failed to fetch news feed', error, stackTrace);
+      } else {
+        Log.error(
+          'Failed to fetch news feed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
     }
   }
 

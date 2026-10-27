@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 
@@ -31,9 +34,16 @@ class _MutualGroupsExpansionTileCompState
   @override
   void initState() {
     super.initState();
-    _streamGroups = twonlyDB.groupsDao
-        .watchNonDirectGroupsForMember(widget.contact.userId)
-        .listen((groupsList) {
+    _streamGroups =
+        watchRustDatabase(
+          (control) => rust_groups.watchGroups(
+            input: db_groups.GroupQuery(
+              filter: db_groups.GroupFilter.nonDirectForContact,
+              contactId: widget.contact.userId,
+            ),
+            control: control,
+          ),
+        ).listen((groupsList) {
           if (!mounted) return;
           setState(() {
             _groups = groupsList;

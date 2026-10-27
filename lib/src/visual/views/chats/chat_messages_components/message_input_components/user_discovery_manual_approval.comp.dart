@@ -1,9 +1,16 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 
@@ -19,10 +26,33 @@ class UserDiscoveryManualApprovalComp extends StatefulWidget {
 
 class _UserDiscoveryManualApprovalCompState
     extends State<UserDiscoveryManualApprovalComp> {
+  // The composer rebuilds on every keystroke. A stream created in build would
+  // start a new database watch each time, so keep one per conversation.
+  late Stream<List<(Contact, GroupMember)>> _members = _watchMembers();
+
+  Stream<List<(Contact, GroupMember)>> _watchMembers() => watchRustDatabase(
+    (control) => rust_groups
+        .watchGroupContacts(
+          input: db_groups.GroupMembersQuery(
+            groupId: widget.group.groupId,
+          ),
+          control: control,
+        )
+        .map(joinedGroupContacts),
+  );
+
+  @override
+  void didUpdateWidget(UserDiscoveryManualApprovalComp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.group.groupId != widget.group.groupId) {
+      _members = _watchMembers();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<(Contact, GroupMember)>>(
-      stream: twonlyDB.groupsDao.watchGroupMembers(widget.group.groupId),
+      stream: _members,
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
@@ -75,11 +105,12 @@ class _UserDiscoveryManualApprovalCompState
                     children: [
                       TextButton(
                         onPressed: () async {
-                          await twonlyDB.contactsDao.updateContact(
-                            contact.userId,
-                            const ContactsCompanion(
-                              userDiscoveryExcluded: Value(true),
+                          await rust_contacts.updateContact(
+                            id: contact.userId,
+                            patch: const ContactPatch(
+                              userDiscoveryExcluded: true,
                             ),
+                            transaction: currentDatabaseSession(),
                           );
                         },
                         child: Text(
@@ -88,11 +119,14 @@ class _UserDiscoveryManualApprovalCompState
                       ),
                       FilledButton(
                         onPressed: () async {
-                          await twonlyDB.contactsDao.updateContact(
-                            contact.userId,
-                            const ContactsCompanion(
-                              userDiscoveryManualApproved: Value(true),
+                          await rust_contacts.updateContact(
+                            id: contact.userId,
+                            patch: ContactPatch(
+                              userDiscoveryManualApproved: NullableInt(
+                                value: databaseNullableFlag(true),
+                              ),
                             ),
+                            transaction: currentDatabaseSession(),
                           );
                         },
                         child: Text(

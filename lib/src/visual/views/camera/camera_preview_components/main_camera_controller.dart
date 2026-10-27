@@ -3,18 +3,20 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart'
     show PasswordlessRecoveryService;
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
@@ -33,6 +35,29 @@ ResolutionPreset cameraPreviewResolution(CameraLensDirection direction) =>
     direction == CameraLensDirection.front
     ? ResolutionPreset.high
     : ResolutionPreset.veryHigh;
+
+/// Failed initialization can leave CameraX with no preview surface to release.
+/// Allow the caller's fallback initialization to run instead of replacing the
+/// original setup error with this expected cleanup failure.
+Future<void> disposeCameraController(CameraController controller) async {
+  final initialized = controller.value.isInitialized;
+  try {
+    await controller.dispose();
+  } on PlatformException catch (error, stackTrace) {
+    if (initialized ||
+        error.code != 'IllegalStateException' ||
+        !(error.message ?? '').contains(
+          'releaseFlutterSurfaceTexture() cannot be called if the flutterSurfaceProducer',
+        )) {
+      rethrow;
+    }
+    Log.warn(
+      'Camera setup ended before its preview surface existed',
+      error,
+      stackTrace,
+    );
+  }
+}
 
 class PreviewLink {
   const PreviewLink({
@@ -133,7 +158,7 @@ class MainCameraController {
       } catch (e) {
         Log.warn('Could not stop image stream while closing camera: $e');
       } finally {
-        await cameraControllerTemp.dispose();
+        await disposeCameraController(cameraControllerTemp);
       }
     });
     initCameraStarted = false;
@@ -162,7 +187,6 @@ class MainCameraController {
   }
 
   Future<void> _selectCamera(int sCameraId, bool init, int sessionId) async {
-
     // Start checking microphone permission concurrently
     final micPermissionFuture = Permission.microphone.isGranted;
 
@@ -215,7 +239,7 @@ class MainCameraController {
       cameraController = null;
       setState?.call();
       if (controllerToDispose != null) {
-        await controllerToDispose.dispose();
+        await disposeCameraController(controllerToDispose);
         if (sessionId != _cameraSessionId) return;
       }
 
@@ -240,7 +264,7 @@ class MainCameraController {
           Log.warn(
             'Initial camera format initialization failed ($e), trying fallback format...',
           );
-          await controller.dispose();
+          await disposeCameraController(controller);
           controller = CameraController(
             AppEnvironment.cameras[cameraId],
             resolution,
@@ -250,7 +274,7 @@ class MainCameraController {
         }
 
         if (sessionId != _cameraSessionId) {
-          await controller.dispose();
+          await disposeCameraController(controller);
           return;
         }
 
@@ -265,13 +289,13 @@ class MainCameraController {
           await controller.startImageStream(_processCameraImage);
         }
         if (sessionId != _cameraSessionId) {
-          await controller.dispose();
+          await disposeCameraController(controller);
           return;
         }
 
         await controller.setZoomLevel(selectedCameraDetails.scaleFactor);
         if (sessionId != _cameraSessionId) {
-          await controller.dispose();
+          await disposeCameraController(controller);
           return;
         }
 
@@ -292,7 +316,7 @@ class MainCameraController {
                 : VideoStabilizationMode.level1,
           );
           if (sessionId != _cameraSessionId) {
-            await controller.dispose();
+            await disposeCameraController(controller);
             return;
           }
         }
@@ -306,12 +330,12 @@ class MainCameraController {
           Log.error('Error initializing camera: $e');
         }
         if (!assignedToGlobal) {
-          await controller.dispose();
+          await disposeCameraController(controller);
         } else {
           if (cameraController == controller) {
             cameraController = null;
           }
-          await controller.dispose();
+          await disposeCameraController(controller);
         }
         setState?.call();
         return;
@@ -396,7 +420,7 @@ class MainCameraController {
       if (cameraController == controller) {
         cameraController = null;
       }
-      await controller.dispose();
+      await disposeCameraController(controller);
       return;
     }
   }
@@ -567,10 +591,24 @@ class MainCameraController {
             final profile = result.profile;
             final contact = result.contact;
 
+            if (result.status == QrCodeLinkStatus.contactRequested) {
+              final context = cameraPreviewKey.currentContext;
+              if (context != null && context.mounted) {
+                unawaited(HapticFeedback.heavyImpact());
+                showSnackbar(
+                  context,
+                  context.lang.requestedUserToastText(profile!.username),
+                  level: SnackbarLevel.success,
+                );
+              }
+              continue;
+            }
+
             if (contact?.blocked ?? false) {
-              await twonlyDB.contactsDao.updateContact(
-                contact!.userId,
-                const ContactsCompanion(blocked: Value(false)),
+              await rust_contacts.updateContact(
+                id: contact!.userId,
+                patch: const ContactPatch(blocked: false),
+                transaction: currentDatabaseSession(),
               );
             }
 

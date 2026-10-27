@@ -7,6 +7,7 @@ use crate::error::{Result, TwonlyError};
 use flutter_rust_bridge::frb;
 
 #[derive(Clone, Copy, Debug)]
+
 pub enum LogLevel {
     Finest,
     Fine,
@@ -20,11 +21,9 @@ pub enum LogLevel {
 /// This only performs a short, serialized append and is synchronous so Dart
 /// records cannot be reordered by a collection of unawaited futures.
 #[frb(sync)]
+
 pub fn write_log(
-    level: LogLevel,
-    source: String,
-    message: String,
-    in_background: bool,
+    level: LogLevel, source: String, message: String, in_background: bool,
 ) -> Result<()> {
     crate::log::write_dart_log(level, &source, &message, in_background)
 }

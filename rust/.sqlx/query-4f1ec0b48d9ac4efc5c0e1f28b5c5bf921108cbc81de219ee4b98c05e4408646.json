@@ -1,0 +1,170 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT media_id, type AS media_type, upload_state, requires_authentication,\n                      is_draft_media, is_widget_media, display_limit_in_milliseconds, reupload_requested_by, reupload_targets,\n                      remove_audio, trim_start_ms, trim_end_ms, created_at\n               FROM media_files\n               WHERE upload_state IN\n                     ('initialized', 'preprocessing', 'uploading', 'uploadLimitReached')",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "media_type",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "upload_state",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "upload_state"
+          }
+        }
+      },
+      {
+        "name": "requires_authentication",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "requires_authentication"
+          }
+        }
+      },
+      {
+        "name": "is_draft_media",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "is_draft_media"
+          }
+        }
+      },
+      {
+        "name": "is_widget_media",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "is_widget_media"
+          }
+        }
+      },
+      {
+        "name": "display_limit_in_milliseconds",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "display_limit_in_milliseconds"
+          }
+        }
+      },
+      {
+        "name": "reupload_requested_by",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "reupload_requested_by"
+          }
+        }
+      },
+      {
+        "name": "reupload_targets",
+        "ordinal": 8,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "reupload_targets"
+          }
+        }
+      },
+      {
+        "name": "remove_audio",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "remove_audio"
+          }
+        }
+      },
+      {
+        "name": "trim_start_ms",
+        "ordinal": 10,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "trim_start_ms"
+          }
+        }
+      },
+      {
+        "name": "trim_end_ms",
+        "ordinal": 11,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "trim_end_ms"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 12,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "4f1ec0b48d9ac4efc5c0e1f28b5c5bf921108cbc81de219ee4b98c05e4408646"
+}

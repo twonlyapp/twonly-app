@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:twonly/src/database/daos/stories.dao.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expiry_timer.dart';
 
 class _RecordedTimer implements Timer {

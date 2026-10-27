@@ -1,32 +1,39 @@
 import 'dart:io';
 
 import 'package:clock/clock.dart';
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/stories.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/components/story_preview.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/story_bubble_strip.comp.dart';
 
+import '../../helpers/native_database.dart';
+
 void main() {
-  late TwonlyDB database;
+  late TestDatabase database;
   late Directory support;
   late MediaFile media;
 
   setUp(() async {
     support = Directory.systemTemp.createTempSync('story_bubbles_test');
     AppEnvironment.initTesting(customSupportDir: support.path);
-    database = TwonlyDB(NativeDatabase.memory());
+    database = await TestDatabase.create();
     await database.customStatement(
       "INSERT INTO media_files(media_id, type) VALUES ('story', 'image')",
     );
-    media = (await database.mediaFilesDao.getMediaFileById('story'))!;
+    media = (await rust_mediafiles.getMediaFile(
+      id: 'story',
+      transaction: currentDatabaseSession(),
+    ))!;
   });
 
   tearDown(() async {
-    await database.close();
     support.deleteSync(recursive: true);
   });
 
@@ -36,7 +43,7 @@ void main() {
     required DateTime postedAt,
     bool seen = false,
   }) => StoryItem(
-    message: Message(
+    message: StoredMessage(
       groupId: 'group-$senderId',
       messageId: messageId,
       senderId: senderId,
@@ -47,8 +54,10 @@ void main() {
       isDeletedFromSender: false,
       isWidgetMedia: false,
       isStory: true,
-      openedAt: seen ? postedAt.add(const Duration(minutes: 1)) : null,
-      createdAt: postedAt,
+      openedAtSeconds: databaseNullableSeconds(
+        seen ? postedAt.add(const Duration(minutes: 1)) : null,
+      ),
+      createdAtSeconds: databaseSeconds(postedAt),
     ),
     mediaFile: media,
   );

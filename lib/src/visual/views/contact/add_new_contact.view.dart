@@ -1,20 +1,33 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/key_verifications.dart'
+    as rust_key_verifications;
+import 'package:twonly/core/bridge/database/user_discovery.dart'
+    as rust_user_discovery;
 import 'package:twonly/core/bridge/wrapper/signal.dart';
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/user_discovery.dao.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/contact_enums.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
@@ -58,28 +71,57 @@ class _SearchUsernameView extends State<AddNewUserView> {
     // Contact requests belong to no conversation, so this list is the only
     // place they can be acknowledged and taken off the app badge.
     unawaited(NativeNotificationService.clearContactRequests());
-    _contactsStream = twonlyDB.contactsDao.watchNotAcceptedContacts().listen(
-      (update) {
-        if (mounted) {
-          setState(() {
-            _openRequestsContacts = update;
-          });
-        }
-      },
-    );
+    _contactsStream =
+        watchRustDatabase(
+          (control) => rust_contacts.watchContacts(
+            input: db_contacts.ContactQuery(
+              filter: db_contacts.ContactFilter.notAccepted,
+              ids: Int64List(0),
+            ),
+            control: control,
+          ),
+        ).listen(
+          (update) {
+            if (mounted) {
+              setState(() {
+                _openRequestsContacts = update;
+              });
+            }
+          },
+        );
 
-    _newAnnouncedUsersStream = twonlyDB.userDiscoveryDao
-        .watchNewAnnouncedUsersWithRelations()
-        .listen((update) {
+    _newAnnouncedUsersStream =
+        restartDatabaseWatch(
+          () => watchRustDatabase(
+            (control) => rust_user_discovery
+                .watchDiscoverySuggestions(
+                  onlyNew: true,
+                  threshold: userService.currentUser.userDiscoveryThreshold,
+                  control: control,
+                )
+                .map(announcedUsersWithRelations),
+          ),
+          userService.onUserUpdated,
+        ).listen((update) {
           if (mounted) {
             setState(() {
               _newAnnouncedUsers = update;
             });
           }
         });
-    _allAnnouncedUsersStream = twonlyDB.userDiscoveryDao
-        .watchAllAnnouncedUsersWithRelations()
-        .listen((update) {
+    _allAnnouncedUsersStream =
+        restartDatabaseWatch(
+          () => watchRustDatabase(
+            (control) => rust_user_discovery
+                .watchDiscoverySuggestions(
+                  onlyNew: false,
+                  threshold: userService.currentUser.userDiscoveryThreshold,
+                  control: control,
+                )
+                .map(announcedUsersWithRelations),
+          ),
+          userService.onUserUpdated,
+        ).listen((update) {
           if (mounted) {
             setState(() {
               _allAnnouncedUsers = update;
@@ -93,7 +135,9 @@ class _SearchUsernameView extends State<AddNewUserView> {
         _requestNewUserByUsername(widget.username!);
       });
     }
-    twonlyDB.userDiscoveryDao.markAllValidAnnouncedUsersAsShown();
+    rust_user_discovery.markDiscoveryAnnouncementsShown(
+      transaction: currentDatabaseSession(),
+    );
   }
 
   Future<void> _shareProfile() async {
@@ -151,22 +195,25 @@ class _SearchUsernameView extends State<AddNewUserView> {
 
     if (!addUser || !mounted) return;
 
-    final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
-      ContactsCompanion(
-        username: Value(username),
-        userId: Value(userdata.userId),
-        requested: const Value(false),
-        blocked: const Value(false),
-        deletedByUser: const Value(false),
+    final added = await rust_contacts.upsertContact(
+      patch: ContactPatch(
+        username: username,
+        userId: userdata.userId,
+        requested: false,
+        blocked: false,
+        deletedByUser: false,
         joinedAt: userdata.joinedAt == null
-            ? const Value.absent()
-            : Value(
-                DateTime.fromMillisecondsSinceEpoch(
-                  userdata.joinedAt! * Duration.millisecondsPerSecond,
-                  isUtc: true,
+            ? null
+            : NullableInt(
+                value: databaseNullableSeconds(
+                  DateTime.fromMillisecondsSinceEpoch(
+                    userdata.joinedAt! * Duration.millisecondsPerSecond,
+                    isUtc: true,
+                  ),
                 ),
               ),
       ),
+      transaction: currentDatabaseSession(),
     );
 
     if (widget.publicKey != null &&
@@ -179,9 +226,13 @@ class _SearchUsernameView extends State<AddNewUserView> {
         customOk: context.lang.gotLinkFromFriend,
       );
       if (markAsVerified) {
-        await twonlyDB.keyVerificationDao.addKeyVerification(
-          userdata.userId,
-          VerificationType.link,
+        await rust_key_verifications.changeKeyVerification(
+          contact: userdata.userId,
+          kind: VerificationType.link.name,
+          updateDiscovery: userService.currentUser.isUserDiscoveryEnabled,
+          verifiedAt: clock.now().millisecondsSinceEpoch,
+          callbackId: isolateCallbackId,
+          transaction: currentDatabaseSession(),
         );
       }
     }

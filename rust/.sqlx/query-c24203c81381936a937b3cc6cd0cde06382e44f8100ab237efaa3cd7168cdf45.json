@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT m.additional_message_data AS \"additional_message_data!\",\n                      m.is_deleted_from_sender AS \"is_deleted_from_sender: bool\"\n               FROM live_location_targets lt JOIN messages m ON m.message_id = lt.message_id\n               WHERE lt.session_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "additional_message_data!",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "additional_message_data"
+          }
+        }
+      },
+      {
+        "name": "is_deleted_from_sender: bool",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "is_deleted_from_sender"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "c24203c81381936a937b3cc6cd0cde06382e44f8100ab237efaa3cd7168cdf45"
+}

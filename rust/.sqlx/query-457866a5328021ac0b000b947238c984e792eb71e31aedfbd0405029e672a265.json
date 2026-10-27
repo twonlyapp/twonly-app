@@ -1,0 +1,98 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT instance.instance_id, instance.app_id, instance.version,\n                      instance.summary, instance.document, instance.created_at,\n                      instance.last_update_at\n               FROM webxdc_instances AS instance\n               JOIN webxdc_apps AS app\n                 ON app.app_id = instance.app_id AND app.version = instance.version\n               WHERE instance.group_id = ? AND app.one_time = 1\n               ORDER BY instance.created_at, instance.instance_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "instance_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "instance_id"
+          }
+        }
+      },
+      {
+        "name": "app_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "app_id"
+          }
+        }
+      },
+      {
+        "name": "version",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "name": "summary",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "summary"
+          }
+        }
+      },
+      {
+        "name": "document",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "document"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "last_update_at",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "webxdc_instances",
+            "name": "last_update_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "457866a5328021ac0b000b947238c984e792eb71e31aedfbd0405029e672a265"
+}

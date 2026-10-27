@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO messages\n                       (group_id, message_id, sender_id, type,\n                        additional_message_data, created_at, ack_by_server)\n                   VALUES (?, ?, ?, 'webxdcApp', ?, ?, strftime('%s','now'))\n                   ON CONFLICT(message_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "cdb9bb53c1efcdbf2a49e52686c684e76d5e30aae144f4fb500db5956c038408"
+}

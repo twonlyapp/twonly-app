@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM home_widget_groups WHERE widget_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "0277c1843ce7b4a9a01ed57057c16775439b7e62145548a6a4c6e7c5c2ced8cb"
+}

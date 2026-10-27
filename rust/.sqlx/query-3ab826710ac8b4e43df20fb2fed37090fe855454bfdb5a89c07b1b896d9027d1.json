@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO group_histories (\n                group_history_id,\n                group_id,\n                contact_id,\n                affected_contact_id,\n                old_group_name,\n                new_group_name,\n                new_delete_messages_after_milliseconds,\n                type,\n                action_at\n            ) VALUES (\n                ?,\n                ?,\n                ?,\n                ?,\n                ?,\n                ?,\n                ?,\n                ?,\n                COALESCE(?, CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER))\n            )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "3ab826710ac8b4e43df20fb2fed37090fe855454bfdb5a89c07b1b896d9027d1"
+}

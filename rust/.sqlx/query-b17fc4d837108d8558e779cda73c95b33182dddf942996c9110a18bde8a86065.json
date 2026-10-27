@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contacts SET signal_version = 'v2', account_deleted = 0, joined_at = COALESCE(?, joined_at) WHERE user_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "b17fc4d837108d8558e779cda73c95b33182dddf942996c9110a18bde8a86065"
+}

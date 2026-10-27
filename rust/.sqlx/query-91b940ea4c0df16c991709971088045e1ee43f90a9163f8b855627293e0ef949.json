@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "PRAGMA shrink_memory",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "91b940ea4c0df16c991709971088045e1ee43f90a9163f8b855627293e0ef949"
+}

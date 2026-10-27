@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/select_show_time.dart';
 
 const _displayTimeOptionsInMs = <int?>[

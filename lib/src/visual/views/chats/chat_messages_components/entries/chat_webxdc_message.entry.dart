@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart'
     show AdditionalMessageData, WebxdcOrigin;
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc_host.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_text_entry.dart';
@@ -33,7 +34,7 @@ class ChatWebxdcMessageEntry extends StatefulWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final BorderRadius borderRadius;
   final BubbleInfo info;
 
@@ -45,8 +46,8 @@ class _ChatWebxdcMessageEntryState extends State<ChatWebxdcMessageEntry> {
   /// Resolved once and held, so a rebuild -- which any new message in the chat
   /// causes -- does not blank the header out and decode the icon again.
   WebxdcOrigin? _origin;
-  WebxdcApp? _app;
-  WebxdcInstance? _instance;
+  WebxdcCardApp? _app;
+  WebxdcCardInstance? _instance;
   bool _resolved = false;
 
   @override
@@ -200,7 +201,9 @@ class _ChatWebxdcMessageEntryState extends State<ChatWebxdcMessageEntry> {
                     textColor: widget.info.textColor,
                   ),
                 ),
-                FriendlyMessageTime(message: widget.message),
+                if (widget.info.displayTime ||
+                    widget.message.modifiedAt != null)
+                  FriendlyMessageTime(message: widget.message),
               ],
             ),
           ],

@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT publication_counter, visible_source_revision, shows_photo FROM custom_avatar_publications WHERE contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "publication_counter",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "custom_avatar_publications",
+            "name": "publication_counter"
+          }
+        }
+      },
+      {
+        "name": "visible_source_revision",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "custom_avatar_publications",
+            "name": "visible_source_revision"
+          }
+        }
+      },
+      {
+        "name": "shows_photo",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "custom_avatar_publications",
+            "name": "shows_photo"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "3d7f45ec8df92a5a384056c4eb86649d0c6548a86e360a557533fe1d90009fd7"
+}

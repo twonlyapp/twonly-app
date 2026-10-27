@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO message_actions(message_id, contact_id, type)\n                       VALUES (?, ?, 'sendFailed')\n                       ON CONFLICT(message_id, contact_id, type) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "aba65f2f9c2f71d2998a92913344bf154939c187419a7df249acfb450fcaea79"
+}

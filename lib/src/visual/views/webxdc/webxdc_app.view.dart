@@ -23,6 +23,7 @@ class WebxdcAppView extends StatefulWidget {
 
 class _WebxdcAppViewState extends State<WebxdcAppView>
     with WidgetsBindingObserver {
+  late final WebxdcSession _session;
   Animation<double>? _routeAnimation;
   bool _closing = false;
   bool _routeIsCurrent = true;
@@ -32,7 +33,7 @@ class _WebxdcAppViewState extends State<WebxdcAppView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // From here until dispose, this is the one instance a page may act on.
-    WebxdcHost.attach(
+    _session = WebxdcHost.attach(
       widget.launch.instanceId,
       close: () {
         if (mounted) Navigator.of(context).pop();
@@ -58,7 +59,7 @@ class _WebxdcAppViewState extends State<WebxdcAppView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _routeAnimation?.removeStatusListener(_handleRouteAnimation);
-    WebxdcHost.detach(widget.launch.instanceId);
+    WebxdcHost.detach(_session);
     super.dispose();
   }
 
@@ -70,7 +71,7 @@ class _WebxdcAppViewState extends State<WebxdcAppView>
   void _updateVisibility() {
     final lifecycle = WidgetsBinding.instance.lifecycleState;
     WebxdcHost.setVisible(
-      widget.launch.instanceId,
+      _session,
       visible:
           !_closing &&
           (lifecycle == null || lifecycle == AppLifecycleState.resumed) &&
@@ -89,12 +90,12 @@ class _WebxdcAppViewState extends State<WebxdcAppView>
     if (status == AnimationStatus.reverse) {
       _closing = true;
       _updateVisibility();
-      unawaited(WebxdcHost.setPaused(paused: true));
+      unawaited(WebxdcHost.setPaused(_session, paused: true));
     } else if (status == AnimationStatus.forward) {
       _closing = false;
       _updateVisibility();
       // Opening, or a pop that was called off part way through.
-      unawaited(WebxdcHost.setPaused(paused: false));
+      unawaited(WebxdcHost.setPaused(_session, paused: false));
     }
   }
 
@@ -148,14 +149,9 @@ class _WebxdcSurface extends StatelessWidget {
         hitTestBehavior: PlatformViewHitTestBehavior.opaque,
       ),
       onCreatePlatformView: (params) {
-        // Hybrid Composition++ wherever the device runs it: the webview is
-        // handed to the system compositor, so an animation over it no longer
-        // drags the platform thread along. Everywhere else the texture path,
-        // which composites the webview like any other layer and drops to plain
-        // hybrid composition on its own when a page needs a real surface.
-        // Plain hybrid composition is not asked for here: it merges the raster
-        // and platform threads for as long as the app is on screen, and every
-        // frame of the closing animation then pays for it.
+        // HCPP keeps the game's rendering separate from Flutter's raster
+        // thread. Devices without HCPP use texture composition, with legacy
+        // hybrid composition as its fallback when a page needs a real surface.
         final controller = WebxdcHost.hybridComposition
             ? PlatformViewsService.initHybridAndroidView(
                 id: params.id,

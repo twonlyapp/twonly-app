@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO receipts(receipt_id, contact_id, message) VALUES ('unsent', 7, x'00')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "b451b2aef514d1ab59db9ce3907c49926475ff317451390eedeef647abde1092"
+}

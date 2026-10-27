@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO stickers (\n                    content_hash, webp, width, height,\n                    usage_count, created_at, last_used_at\n                )\n                VALUES (?, ?, ?, ?, ?, ?, ?)\n                ON CONFLICT(content_hash) DO UPDATE\n                SET usage_count = stickers.usage_count + excluded.usage_count,\n                    last_used_at = MAX(stickers.last_used_at, excluded.last_used_at)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "c4de0bcc4fb81aba8f01f5766c83e9f798f75f3f1a25f3a6ce9c9539d631faf3"
+}

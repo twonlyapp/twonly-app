@@ -2,25 +2,28 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cryptography_plus/cryptography_plus.dart';
-import 'package:drift/drift.dart' hide Column, isNotNull;
-import 'package:drift/native.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/core/user_config.dart' hide ThemeMode;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/help_a_friend.passwordless_recovery.view.dart';
 
+import '../helpers/native_database.dart';
 import '../mocks/user_config.dart';
 
 UserConfig _user() => testUserConfig(
@@ -32,7 +35,7 @@ UserConfig _user() => testUserConfig(
   appVersion: 100,
 );
 
-class _RecoveryApi implements RustLibApi {
+class _RecoveryApi extends NativeTestApi {
   UserConfig config = _user();
   List<Contact> contactsWhenEnabled = [];
   int heartbeats = 0;
@@ -53,7 +56,13 @@ class _RecoveryApi implements RustLibApi {
     required UserConfig config,
   }) async {
     if (config.passwordLessRecovery != null) {
-      contactsWhenEnabled = await twonlyDB.contactsDao.getAllContacts();
+      contactsWhenEnabled = await rust_contacts.listContacts(
+        input: db_contacts.ContactQuery(
+          filter: db_contacts.ContactFilter.all,
+          ids: Int64List(0),
+        ),
+        transaction: currentDatabaseSession(),
+      );
     }
     return this.config = config;
   }
@@ -103,20 +112,12 @@ void main() {
   String link(String id) =>
       '${PasswordlessRecoveryService.linkPrefix}$id/${base64Url.encode(key)}';
 
-  setUpAll(() => RustLib.initMock(api: api));
+  setUpAll(() => initializeNativeDatabase(api: api));
   tearDownAll(RustLib.dispose);
   setUp(() async {
     await locator.reset();
-    locator
-      ..registerSingleton<TwonlyDB>(
-        TwonlyDB.forTesting(
-          DatabaseConnection(
-            NativeDatabase.memory(),
-            closeStreamsSynchronously: true,
-          ),
-        ),
-      )
-      ..registerSingleton<UserService>(UserService());
+    await TestDatabase.create();
+    locator.registerSingleton<UserService>(UserService());
     api
       ..config = _user()
       ..contactsWhenEnabled = []
@@ -132,18 +133,15 @@ void main() {
     );
   });
   tearDown(() async {
-    await twonlyDB.close();
     await locator.reset();
     directory.deleteSync(recursive: true);
   });
 
   test('every trusted friend has a share before recovery is enabled', () async {
     for (final id in [2, 3, 4]) {
-      await twonlyDB
-          .into(twonlyDB.contacts)
-          .insert(
-            ContactsCompanion.insert(userId: Value(id), username: 'friend_$id'),
-          );
+      await testDatabase.insert(
+        ContactPatch(userId: id, username: 'friend_$id'),
+      );
     }
     final success =
         await PasswordlessRecoveryService.enablePasswordlessRecovery(

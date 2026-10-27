@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
 
@@ -24,7 +26,14 @@ class _ArchivedChatsViewState extends State<ArchivedChatsView> {
   }
 
   Future<void> initAsync() async {
-    final stream = twonlyDB.groupsDao.watchGroupsForChatList();
+    final stream = watchRustDatabase(
+      (control) => rust_groups.watchGroups(
+        input: const db_groups.GroupQuery(
+          filter: db_groups.GroupFilter.chatList,
+        ),
+        control: control,
+      ),
+    );
     _contactsSub = stream.listen((groups) {
       setState(() {
         _groupsArchived = groups.where((x) => x.archived).toList();

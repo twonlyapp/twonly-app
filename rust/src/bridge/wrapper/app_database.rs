@@ -5,6 +5,7 @@
 
 use std::path::PathBuf;
 
+use crate::bridge::database::DatabaseWatch;
 use crate::bridge::get_twonly_flutter;
 pub use crate::database::app::{SqlExecutionResult, SqlRow, SqlRows, SqlValue};
 use crate::error::Result;
@@ -24,17 +25,43 @@ pub struct LegacyTableMigrationCount {
 }
 
 impl RustAppDatabase {
-    /// Imports the non-Signal tables from a Drift v25 database. The import is
-    /// transactional and idempotent. Drift must be closed while this runs.
+    /// Raw SQL is retained for the historical oracle and bridge assertions.
+    /// Production commands use the typed database modules.
+    pub async fn select_in_session(
+        statement: String, arguments: Vec<SqlValue>,
+        session: &crate::bridge::database::DatabaseSession,
+    ) -> Result<SqlRows> {
+        match session.transaction.as_ref() {
+            Some(transaction) => transaction.select(statement, arguments).await,
+            None => Self::select(statement, arguments).await,
+        }
+    }
+
+    pub async fn execute_in_session(
+        statement: String, arguments: Vec<SqlValue>,
+        session: &crate::bridge::database::DatabaseSession,
+    ) -> Result<SqlExecutionResult> {
+        match session.transaction.as_ref() {
+            Some(transaction) => transaction.execute(statement, arguments).await,
+            None => Self::execute(statement, arguments).await,
+        }
+    }
+
+    /// Upgrades the historical database with frozen Rust-owned SQL, closes it,
+    /// then transactionally imports its application tables. Safe to retry.
     pub async fn migrate_legacy_database() -> Result<LegacyMigrationReport> {
         let context = get_twonly_flutter()?;
+
         let legacy_path = PathBuf::from(&context.config.database_dir).join("twonly.sqlite");
+
         let app_db = context.app_db.read().await.clone();
+
         let report = if legacy_path.exists() {
             app_db.import_legacy(&legacy_path).await?
         } else {
             app_db.complete_empty_legacy_import().await?
         };
+
         Ok(LegacyMigrationReport {
             legacy_version: report.legacy_version,
             tables: report
@@ -67,8 +94,7 @@ impl RustAppDatabase {
     }
 
     pub async fn execute(
-        statement: String,
-        arguments: Vec<SqlValue>,
+        statement: String, arguments: Vec<SqlValue>,
     ) -> Result<SqlExecutionResult> {
         get_twonly_flutter()?
             .app_db
@@ -88,11 +114,17 @@ impl RustAppDatabase {
     /// An empty list means "assume every table changed". It is sent right
     /// after (re)subscribing, and whenever the broadcast channel drops
     /// notifications, so Dart never silently keeps stale rows on screen.
-    pub async fn changes(sink: StreamSink<Vec<String>>) -> Result<()> {
+    pub async fn changes(control: &DatabaseWatch, sink: StreamSink<Vec<String>>) -> Result<()> {
         let context = get_twonly_flutter()?;
+
+        let cancellation = control.cancellation.clone();
 
         tokio::spawn(async move {
             loop {
+                if cancellation.is_cancelled() {
+                    return;
+                }
+
                 let mut receiver = context.app_db.read().await.subscribe();
 
                 // Anything committed between this subscription and the
@@ -102,7 +134,12 @@ impl RustAppDatabase {
                 }
 
                 loop {
-                    match receiver.recv().await {
+                    let change = tokio::select! {
+                        _ = cancellation.cancelled() => return,
+                        change = receiver.recv() => change,
+                    };
+
+                    match change {
                         Ok(change) => {
                             if sink.add(change.tables.into_iter().collect()).is_err() {
                                 return;
@@ -110,6 +147,7 @@ impl RustAppDatabase {
                         }
                         Err(RecvError::Lagged(skipped)) => {
                             tracing::warn!(skipped, "Drift change stream lagged");
+
                             if sink.add(Vec::new()).is_err() {
                                 return;
                             }

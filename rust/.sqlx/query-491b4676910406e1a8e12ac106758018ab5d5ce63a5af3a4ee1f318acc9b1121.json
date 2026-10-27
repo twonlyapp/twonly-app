@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE contact_groups\n            SET name = ?,\n                emoji = ?,\n                text_color = ?,\n                background_color = ?,\n                show_as_shortcut = ?,\n                show_as_label = ?,\n                share_stories = ?\n            WHERE id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "491b4676910406e1a8e12ac106758018ab5d5ce63a5af3a4ee1f318acc9b1121"
+}

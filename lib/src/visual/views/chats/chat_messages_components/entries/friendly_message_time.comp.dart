@@ -2,9 +2,13 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart' show DateFormat;
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/message_enums.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 
@@ -15,7 +19,7 @@ class FriendlyMessageTime extends StatelessWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final Color? color;
 
   @override
@@ -80,7 +84,9 @@ class FriendlyMessageTime extends StatelessWidget {
         ),
       );
     }
-    if (message.type != MessageType.text.name || message.senderId != null) {
+    if ((message.type != MessageType.text.name &&
+            message.type != MessageType.webxdcApp.name) ||
+        message.senderId != null) {
       return null;
     }
 
@@ -111,7 +117,11 @@ class FriendlyMessageTime extends StatelessWidget {
     }
 
     return StreamBuilder<List<(MessageAction, Contact)>>(
-      stream: twonlyDB.messagesDao.watchMessageActions(message.messageId),
+      stream: watchRustDatabase(
+        (control) => rust_messages
+            .watchMessageActions(id: message.messageId, control: control)
+            .map(messageActionsWithContacts),
+      ),
       builder: (context, snapshot) {
         final actions = snapshot.data ?? [];
         final hasAckByUser = actions.any(

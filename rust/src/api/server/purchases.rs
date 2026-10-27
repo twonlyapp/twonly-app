@@ -28,6 +28,7 @@ impl Server {
         ctx: &Arc<Context>,
     ) -> Result<ServerResult<server_to_client::response::PlanBallance>> {
         let bytes = Self::get_plan_balance(ctx).await?;
+
         decode_ok_value(bytes, |value| match value {
             server_to_client::response::ok::Ok::Planballance(balance) => Some(balance),
             _ => None,
@@ -39,10 +40,7 @@ impl Server {
     }
 
     pub async fn ipa_purchase(
-        ctx: &Arc<Context>,
-        product_id: String,
-        source: String,
-        verification_data: String,
+        ctx: &Arc<Context>, product_id: String, source: String, verification_data: String,
     ) -> Result<Vec<u8>> {
         Self::application(
             ctx,
@@ -58,13 +56,14 @@ impl Server {
     }
 
     pub async fn add_additional_user(ctx: &Arc<Context>, user_id: i64) -> Result<ServerResult<()>> {
+        // Not sent for the contact: the server checks the plan here too, and
+        // its `UserIdNotFound` must not mark the user deleted.
         server_ok!(
-            Self::application_for_contact(
+            Self::application(
                 ctx,
                 client_to_server::application_data::ApplicationData::AddAdditionalUser(
                     client_to_server::application_data::AddAdditionalUser { user_id },
                 ),
-                user_id,
             )
             .await?
         )

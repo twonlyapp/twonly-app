@@ -1,11 +1,14 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
@@ -51,58 +54,64 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
                 await widget.mediaService.updateFromDB();
                 final capture = widget.mediaService.mediaFile;
 
-                final newMediaFile = await twonlyDB.mediaFilesDao
-                    .insertOrUpdateMedia(
-                      MediaFilesCompanion(
-                        type: Value(widget.mediaService.mediaFile.type),
-                        createdAt: Value(capture.createdAt),
-                        locationLatitude: Value(capture.locationLatitude),
-                        locationLongitude: Value(capture.locationLongitude),
-                        locationAccuracy: Value(capture.locationAccuracy),
-                        locationStatus: Value(capture.locationStatus),
-                        locationDeadlineAt: Value(capture.locationDeadlineAt),
-                        removeAudio: Value(
-                          widget.mediaService.mediaFile.removeAudio,
-                        ),
-                        trimStartMs: Value(
-                          widget.mediaService.mediaFile.trimStartMs,
-                        ),
-                        trimEndMs: Value(
-                          widget.mediaService.mediaFile.trimEndMs,
-                        ),
-                        // Rust publishes the Memory as stored only after the
-                        // plaintext and its thumbnail have been written.
-                        stored: const Value(false),
+                final newMediaFile = await rust_mediafiles.upsertMediaFile(
+                  patch: MediaFilePatch(
+                    type: widget.mediaService.mediaFile.type.name,
+                    createdAt: databaseSeconds(capture.createdAt),
+                    locationLatitude: NullableReal(
+                      value: capture.locationLatitude,
+                    ),
+                    locationLongitude: NullableReal(
+                      value: capture.locationLongitude,
+                    ),
+                    locationAccuracy: NullableReal(
+                      value: capture.locationAccuracy,
+                    ),
+                    locationStatus: NullableText(value: capture.locationStatus),
+                    locationDeadlineAt: NullableInt(
+                      value: capture.locationDeadlineAt,
+                    ),
+                    removeAudio: NullableInt(
+                      value: databaseNullableFlag(
+                        widget.mediaService.mediaFile.removeAudio,
                       ),
-                    );
+                    ),
+                    trimStartMs: NullableInt(
+                      value: widget.mediaService.mediaFile.trimStartMs,
+                    ),
+                    trimEndMs: NullableInt(
+                      value: widget.mediaService.mediaFile.trimEndMs,
+                    ),
+                    stored: false,
+                  ),
+                  transaction: currentDatabaseSession(),
+                );
 
-                if (newMediaFile != null) {
-                  final newService = MediaFileService(newMediaFile);
+                final newService = MediaFileService(newMediaFile);
 
-                  await RustApi.initializeMemoryLocation(
-                    mediaId: newMediaFile.mediaId,
+                await RustApi.initializeMemoryLocation(
+                  mediaId: newMediaFile.mediaId,
+                );
+
+                if (widget.mediaService.originalPath.existsSync()) {
+                  await widget.mediaService.originalPath.copy(
+                    newService.originalPath.path,
                   );
-
-                  if (widget.mediaService.originalPath.existsSync()) {
-                    await widget.mediaService.originalPath.copy(
-                      newService.originalPath.path,
-                    );
-                  } else if (widget.mediaService.tempPath.existsSync()) {
-                    await widget.mediaService.tempPath.copy(
-                      newService.tempPath.path,
-                    );
-                  }
-                  if (widget.mediaService.overlayImagePath.existsSync()) {
-                    await widget.mediaService.overlayImagePath.copy(
-                      newService.overlayImagePath.path,
-                    );
-                  }
-                  await newService.storeMediaFile();
-                  if (mounted) {
-                    setState(() {
-                      _imageSaved = newService.mediaFile.stored;
-                    });
-                  }
+                } else if (widget.mediaService.tempPath.existsSync()) {
+                  await widget.mediaService.tempPath.copy(
+                    newService.tempPath.path,
+                  );
+                }
+                if (widget.mediaService.overlayImagePath.existsSync()) {
+                  await widget.mediaService.overlayImagePath.copy(
+                    newService.overlayImagePath.path,
+                  );
+                }
+                await newService.storeMediaFile();
+                if (mounted) {
+                  setState(() {
+                    _imageSaved = newService.mediaFile.stored;
+                  });
                 }
               } finally {
                 if (mounted) {

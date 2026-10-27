@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT applied_counter FROM received_custom_avatars WHERE contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "applied_counter",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "received_custom_avatars",
+            "name": "applied_counter"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5612320f9e6797f0046c44bab8947dcfea30bc7b82aa619dcdceb977e3cc71a3"
+}

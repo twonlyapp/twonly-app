@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO contact_groups(name, emoji, text_color, background_color, show_as_shortcut,\n                    show_as_label, share_stories\n            )\n            VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id AS \"value!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "512e8a61d698a2bcc46cf08ab5b5198c6abf360f3940722367a7e6869f491ab0"
+}

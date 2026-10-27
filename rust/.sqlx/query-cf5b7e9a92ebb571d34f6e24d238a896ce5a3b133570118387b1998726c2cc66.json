@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT blocked = 0 AND (accepted != 0 OR requested_by_user != 0) AS \"auto_accept!: bool\"\n           FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "auto_accept!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "cf5b7e9a92ebb571d34f6e24d238a896ce5a3b133570118387b1998726c2cc66"
+}

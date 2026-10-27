@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                SELECT EXISTS(SELECT 1 FROM messages WHERE media_id = ?) AS \"value!: bool\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3a990c2a6acab12ffdee41d765ae78192e8cbfd4e112cf23dbb1942bd788cd54"
+}

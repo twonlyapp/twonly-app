@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT contact_group_id AS \"value!\"\n            FROM contact_group_members\n            WHERE user_id = ?\n                OR group_id = ?\n            ORDER BY contact_group_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "contact_group_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e2e3601c372307bde9991e192b380e4ff4478fa61f13687473792ad6a4040a42"
+}

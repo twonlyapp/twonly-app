@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE user_discovery_announced_users\n            SET announced_user_id = CASE WHEN ? THEN ? ELSE announced_user_id END,\n                announced_public_key = CASE WHEN ? THEN ? ELSE announced_public_key END,\n                public_id = CASE WHEN ? THEN ? ELSE public_id END,\n                username = CASE WHEN ? THEN ? ELSE username END,\n                was_shown_to_the_user = CASE WHEN ? THEN ? ELSE was_shown_to_the_user END,\n                is_hidden = CASE WHEN ? THEN ? ELSE is_hidden END,\n                was_asked_friends = CASE WHEN ? THEN ? ELSE was_asked_friends END\n            WHERE announced_user_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 15
+    },
+    "nullable": []
+  },
+  "hash": "0577479f8cab20bb394d10e6c7e65b49bd5bf61000dadd4641331a9a35e2dd05"
+}

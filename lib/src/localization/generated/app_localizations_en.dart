@@ -270,6 +270,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveLocationMenu => 'Location';
 
   @override
+  String get memoriesMenu => 'Memories';
+
+  @override
+  String get memoriesLoadFailed => 'The memory could not be loaded.';
+
+  @override
   String get liveLocationTitle => 'Live location';
 
   @override
@@ -1321,6 +1327,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String notificationMention(Object inGroup) {
+    return 'mentioned you in a message$inGroup.';
+  }
+
+  @override
+  String get chatMentionUnknownUser => 'Unknown user';
+
+  @override
   String notificationText(Object inGroup) {
     return 'sent a message$inGroup.';
   }
@@ -1571,14 +1585,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finishSetupCardAction => 'Resume Setup';
 
   @override
-  String get missingBackupCardTitle => 'Setup backup';
+  String get backupReminderTitle => 'Activate your backup';
 
   @override
-  String get missingBackupCardDesc =>
-      'We have improved the backup mechanism, which requires you to set it up again.';
+  String get backupReminderDesc =>
+      'Without a backup, there is no way to recover your account if you lose your phone or delete the app. Set up at least one of the options below.';
 
   @override
-  String get missingBackupCardAction => 'Set up now';
+  String get passwordlessRecoveryReminderTitle => 'Forgot your password?';
+
+  @override
+  String get passwordlessRecoveryReminderDesc =>
+      'If you ever forget your password, this is how you get your account back: your trusted friends can help you recover it without the password.';
+
+  @override
+  String get passwordlessRecoveryReminderHide => 'Don\'t show again';
+
+  @override
+  String get passwordlessRecoveryReminderHideTitle => 'Hide this reminder?';
+
+  @override
+  String get passwordlessRecoveryReminderHideDesc =>
+      'If you lose your password, there is no other way to recover your account.';
+
+  @override
+  String get passwordlessRecoveryReminderEnable => 'Enable';
 
   @override
   String get onboardingFinishLater => 'Finish later';
@@ -2655,16 +2686,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recoverPasswordlessRecoverNowBtn => 'Recover now';
 
   @override
-  String get missingRecoveryContactsCardTitle => 'Account Recovery';
-
-  @override
-  String get missingRecoveryContactsCardDesc =>
-      'Select Recovery Contacts to help you recover your account without requiring a password.';
-
-  @override
-  String get missingRecoveryContactsCardAction => 'Select Contacts';
-
-  @override
   String get memoriesBackupLimitReached =>
       'Cloud backup limit reached! Please upgrade your plan or free up space.';
 
@@ -3279,4 +3300,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaSendFailed => 'Send failed';
+
+  @override
+  String get mailboxSyncTitle => 'Synchronizing twonly';
+
+  @override
+  String get mailboxSyncBody =>
+      'twonly is synchronizing this device and downloading your messages. Please keep the app open until it is done.';
+
+  @override
+  String mailboxSyncRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages left',
+      one: '1 message left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationGameTurn(String gameName) {
+    return 'has played $gameName. It is your turn.';
+  }
+
+  @override
+  String notificationGameWon(String gameName) {
+    return 'has played $gameName. You have won.';
+  }
+
+  @override
+  String notificationGameLost(String gameName) {
+    return 'has played $gameName. You have lost.';
+  }
+
+  @override
+  String get notificationGameFallbackName => 'a game';
+
+  @override
+  String get chatGameTurn => 'It is your turn.';
+
+  @override
+  String get chatGameWon => 'You have won.';
+
+  @override
+  String get chatGameLost => 'You have lost.';
 }

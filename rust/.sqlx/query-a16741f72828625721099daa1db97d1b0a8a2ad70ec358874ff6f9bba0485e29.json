@@ -1,0 +1,160 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT n.event_id, n.notification_id, n.conversation_id, n.sender_id,\n               COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username) AS \"sender_name!: String\",\n               g.group_name AS conversation_name,\n               COALESCE(g.is_direct_chat, 0) AS \"is_direct_chat!: i64\",\n               n.message_id, n.kind, n.content, n.created_at,\n               target_message.type AS target_message_type,\n               target_media.type AS target_media_type\n        FROM notification_outbox n\n        JOIN contacts c ON c.user_id = n.sender_id\n        LEFT JOIN groups g ON g.group_id = n.conversation_id\n        LEFT JOIN messages target_message ON target_message.message_id = n.message_id\n        LEFT JOIN media_files target_media ON target_media.media_id = target_message.media_id\n        WHERE n.delivered_at IS NULL AND n.cleared_at IS NULL\n          AND (n.kind NOT IN ('image', 'video', 'audio', 'twonly', 'story')\n               OR target_media.download_state IS NOT 'reuploadRequested')\n        ORDER BY n.created_at, n.event_id\n        LIMIT ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "event_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "event_id"
+          }
+        }
+      },
+      {
+        "name": "notification_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "notification_id"
+          }
+        }
+      },
+      {
+        "name": "conversation_id",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "conversation_id"
+          }
+        }
+      },
+      {
+        "name": "sender_id",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "sender_id"
+          }
+        }
+      },
+      {
+        "name": "sender_name!: String",
+        "ordinal": 4,
+        "type_info": "Null",
+        "origin": "Expression"
+      },
+      {
+        "name": "conversation_name",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "group_name"
+          }
+        }
+      },
+      {
+        "name": "is_direct_chat!: i64",
+        "ordinal": 6,
+        "type_info": "Null",
+        "origin": "Expression"
+      },
+      {
+        "name": "message_id",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "kind",
+        "ordinal": 8,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "name": "content",
+        "ordinal": 9,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "content"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 10,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "target_message_type",
+        "ordinal": 11,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "target_media_type",
+        "ordinal": 12,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      null,
+      false,
+      null,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a16741f72828625721099daa1db97d1b0a8a2ad70ec358874ff6f9bba0485e29"
+}

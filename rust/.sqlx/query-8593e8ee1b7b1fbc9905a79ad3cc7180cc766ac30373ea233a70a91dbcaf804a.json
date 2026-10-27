@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE messages SET ack_by_server = COALESCE(ack_by_server, CAST(strftime('%s', 'now') AS INTEGER)) WHERE message_id = ? AND sender_id IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "8593e8ee1b7b1fbc9905a79ad3cc7180cc766ac30373ea233a70a91dbcaf804a"
+}

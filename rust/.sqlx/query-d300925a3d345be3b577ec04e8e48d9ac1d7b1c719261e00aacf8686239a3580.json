@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT content_hash AS \"content_hash!\",\n                width AS \"width!\",\n                height AS \"height!\",\n                usage_count AS \"usage_count!\",\n                created_at AS \"created_at!\",\n                last_used_at AS \"last_used_at!\"\n            FROM stickers\n            ORDER BY usage_count DESC,\n                last_used_at DESC,\n                created_at DESC,\n                content_hash ASC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "content_hash!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "stickers",
+            "name": "content_hash"
+          }
+        }
+      },
+      {
+        "name": "width!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "stickers",
+            "name": "width"
+          }
+        }
+      },
+      {
+        "name": "height!",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "stickers",
+            "name": "height"
+          }
+        }
+      },
+      {
+        "name": "usage_count!",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "stickers",
+            "name": "usage_count"
+          }
+        }
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "stickers",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "last_used_at!",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "stickers",
+            "name": "last_used_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d300925a3d345be3b577ec04e8e48d9ac1d7b1c719261e00aacf8686239a3580"
+}

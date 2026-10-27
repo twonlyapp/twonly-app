@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR IGNORE INTO home_widget_contacts(widget_id, contact_id)\n                   SELECT ?, user_id FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "be72224a5ecb13f8ae60c413513e98fcb475e3ce01630861e9c4a602fed323d2"
+}

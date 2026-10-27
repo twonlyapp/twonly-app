@@ -4,10 +4,11 @@
  */
 
 use super::Server;
+use crate::api::proto;
+use crate::api::proto::client_to_server;
 use crate::api::proto::server_to_client::response::ok::Ok as ResponseOk;
 use crate::api::runtime::helpers::decode_ok_value;
 use crate::api::server::server_ok;
-use crate::api::{proto, proto::client_to_server};
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
 use crate::error::Result;
@@ -28,10 +29,10 @@ impl Server {
     }
 
     pub async fn get_user_by_id(
-        ctx: &Arc<Context>,
-        user_id: i64,
+        ctx: &Arc<Context>, user_id: i64,
     ) -> Result<ServerResult<proto::server_to_client::response::UserData>> {
         let bytes = Self::get_user_by_id_response(ctx, user_id).await?;
+
         decode_ok_value(bytes, |value| match value {
             proto::server_to_client::response::ok::Ok::Userdata(user) => Some(user),
             _ => None,
@@ -42,10 +43,15 @@ impl Server {
     /// already have it. Server-deleted contacts are deliberately excluded.
     pub async fn refresh_contact_joined_dates(ctx: &Arc<Context>) -> Result<()> {
         let database = ctx.app_db.read().await.clone();
-        let contact_ids = sqlx::query_scalar::<_, i64>(
-            "SELECT user_id FROM contacts WHERE account_deleted = 0 AND joined_at IS NULL",
+
+        let contact_ids = sqlx::query_scalar!(
+            r#"
+                SELECT user_id
+                FROM contacts
+                WHERE account_deleted = 0 AND joined_at IS NULL
+            "#,
         )
-        .fetch_all(&database.pool)
+        .fetch_all(&database.read_pool)
         .await?;
 
         for contact_id in contact_ids {
@@ -56,16 +62,20 @@ impl Server {
                 // remaining contacts from being refreshed.
                 ServerResult::ErrorCode(_) => continue,
             };
+
             let Some(joined_at) = user.joined_at else {
                 // Backwards compatibility while an older server is still
                 // running: leave the value NULL so a later startup retries it.
                 continue;
             };
-            sqlx::query("UPDATE contacts SET joined_at = ? WHERE user_id = ?")
-                .bind(joined_at)
-                .bind(contact_id)
-                .execute(&database.pool)
-                .await?;
+
+            sqlx::query!(
+                "UPDATE contacts SET joined_at = ? WHERE user_id = ?",
+                joined_at,
+                contact_id,
+            )
+            .execute(&database.pool)
+            .await?;
         }
 
         Ok(())
@@ -73,18 +83,35 @@ impl Server {
 
     pub async fn check_for_deleted_usernames(ctx: &Arc<Context>) -> Result<()> {
         let database = ctx.app_db.read().await.clone();
+
         let contacts = sqlx::query_scalar!(
-            "SELECT user_id FROM contacts WHERE username IN ('[deleted]', '[Unknown]')"
+            "SELECT user_id FROM contacts WHERE username IN ('[deleted]', '[Unknown]') AND \
+             account_deleted = 0"
         )
         .fetch_all(&database.pool)
         .await?;
-        for user_id in contacts {
+
+        Self::refresh_usernames(ctx, contacts).await
+    }
+
+    /// Looks up the usernames of contacts that were stored without one. An
+    /// account the server no longer knows is marked deleted by the API error
+    /// handler and skipped.
+    ///
+    /// Never call this inside a transaction: that error handler writes through
+    /// the pool, and the app database has a single write connection.
+    pub(crate) async fn refresh_usernames(ctx: &Arc<Context>, user_ids: Vec<i64>) -> Result<()> {
+        let database = ctx.app_db.read().await.clone();
+
+        for user_id in user_ids {
             let user = match Self::get_user_by_id(ctx, user_id).await? {
                 ServerResult::Ok(u) => u,
                 ServerResult::ErrorCode(_) => continue,
             };
+
             if let Some(username) = user.username {
                 let username = String::from_utf8(username)?;
+
                 sqlx::query!(
                     "UPDATE contacts SET username = ? WHERE user_id = ?",
                     username,
@@ -94,12 +121,12 @@ impl Server {
                 .await?;
             }
         }
+
         Ok(())
     }
 
     pub async fn get_user_id_from_username(
-        ctx: &Arc<Context>,
-        username: String,
+        ctx: &Arc<Context>, username: String,
     ) -> Result<ServerResult<i64>> {
         let bytes = Self::handshake(
             ctx,
@@ -108,6 +135,7 @@ impl Server {
             ),
         )
         .await?;
+
         decode_ok_value(bytes, |value| match value {
             ResponseOk::Userid(id) => Some(id),
             _ => None,
@@ -115,8 +143,7 @@ impl Server {
     }
 
     pub async fn get_user_by_username(
-        ctx: &Arc<Context>,
-        username: String,
+        ctx: &Arc<Context>, username: String,
     ) -> Result<ServerResult<proto::server_to_client::response::UserData>> {
         let bytes = Self::application(
             ctx,
@@ -133,25 +160,23 @@ impl Server {
     }
 
     pub async fn remove_additional_user(
-        ctx: &Arc<Context>,
-        user_id: i64,
+        ctx: &Arc<Context>, user_id: i64,
     ) -> Result<ServerResult<()>> {
+        // Not sent for the contact: the server checks the plan here too, and
+        // its `UserIdNotFound` must not mark the user deleted.
         server_ok!(
-            Self::application_for_contact(
+            Self::application(
                 ctx,
                 client_to_server::application_data::ApplicationData::RemoveAdditionalUser(
                     client_to_server::application_data::RemoveAdditionalUser { user_id },
                 ),
-                user_id,
             )
             .await?
         )
     }
 
     pub async fn report_user(
-        ctx: &Arc<Context>,
-        reported_user_id: i64,
-        reason: String,
+        ctx: &Arc<Context>, reported_user_id: i64, reason: String,
     ) -> Result<ServerResult<()>> {
         server_ok!(
             Self::application(
@@ -168,10 +193,7 @@ impl Server {
     }
 
     pub async fn send_text_message(
-        ctx: &Arc<Context>,
-        user_id: i64,
-        body: Vec<u8>,
-        wake_receiver: bool,
+        ctx: &Arc<Context>, user_id: i64, body: Vec<u8>, wake_receiver: bool,
     ) -> Result<ServerResult<()>> {
         server_ok!(
             Self::application_for_contact(

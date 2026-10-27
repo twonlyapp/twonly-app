@@ -1,27 +1,39 @@
 // ignore_for_file: inference_failure_on_function_invocation
 
 import 'package:clock/clock.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     as pb;
 import 'package:twonly/src/services/live_location.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
+import 'package:twonly/src/utils/mentions.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
+import 'package:twonly/src/visual/components/mention_decoration.dart';
+import 'package:twonly/src/visual/components/mention_editing_controller.dart';
+import 'package:twonly/src/visual/components/mention_suggestions.dart';
+import 'package:twonly/src/visual/components/mention_text.dart';
 import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
-import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/visual/views/chats/message_info.view.dart';
@@ -39,55 +51,10 @@ class MessageContextMenu extends StatelessWidget {
   });
   final Group group;
   final Widget child;
-  final Message message;
+  final StoredMessage message;
   final List<MemoryItem> galleryItems;
   final MediaFileService? mediaFileService;
   final VoidCallback onResponseTriggered;
-
-  Future<void> createStickerFromMedia(BuildContext context) async {
-    final media = mediaFileService;
-    if (media == null) return;
-    final candidates = [media.storedPath, media.tempPath, media.originalPath];
-    final source = candidates.where((file) => file.existsSync()).firstOrNull;
-    if (source == null) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.lang.stickerCreateFailed)),
-      );
-      return;
-    }
-    final navigator = Navigator.of(context);
-    final loadingRoute = DialogRoute<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const PopScope(
-        canPop: false,
-        child: Dialog(
-          child: Padding(
-            padding: EdgeInsets.all(32),
-            child: ThreeRotatingDots(size: 32),
-          ),
-        ),
-      ),
-    );
-    navigator.push(loadingRoute);
-    String result;
-    try {
-      await StickerService.createFromPath(source.path);
-      if (!context.mounted) return;
-      result = context.lang.stickerAdded;
-    } on Object {
-      if (!context.mounted) return;
-      result = context.lang.stickerCreateFailed;
-    } finally {
-      if (loadingRoute.isActive) navigator.removeRoute(loadingRoute);
-    }
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result)),
-      );
-    }
-  }
 
   Future<void> reopenMediaFile(BuildContext context) async {
     if (message.senderId == null) {
@@ -114,9 +81,13 @@ class MessageContextMenu extends StatelessWidget {
         onlyReturnEncryptedData: false,
         blocking: true,
       );
-      await twonlyDB.messagesDao.updateMessageId(
-        message.messageId,
-        const MessagesCompanion(openedAt: Value(null)),
+      await rust_messages.updateMessages(
+        id: message.messageId,
+        byMedia: false,
+        patch: MessagePatch(
+          openedAt: NullableInt(value: databaseNullableSeconds(null)),
+        ),
+        transaction: currentDatabaseSession(),
       );
       return;
     }
@@ -177,10 +148,11 @@ class MessageContextMenu extends StatelessWidget {
                       as EmojiLayerData?;
               if (layer == null) return;
 
-              await twonlyDB.reactionsDao.updateMyReaction(
-                message.messageId,
-                layer.text,
-                false,
+              await rust_reactions.updateOwnReaction(
+                message: message.messageId,
+                emoji: layer.text,
+                remove: false,
+                transaction: currentDatabaseSession(),
               );
 
               await RustApi.sendEncryptedContentToGroup(
@@ -197,20 +169,12 @@ class MessageContextMenu extends StatelessWidget {
             },
             icon: FontAwesomeIcons.faceLaugh,
           ),
-        if ((!message.isWidgetMedia || message.senderId == null) &&
+        if (!message.isWidgetMedia &&
             (mediaFileService?.canBeOpenedAgain ?? false))
           ContextMenuItem(
             title: context.lang.contextMenuViewAgain,
             onTap: () => reopenMediaFile(navigator.context),
             icon: FontAwesomeIcons.clockRotateLeft,
-          ),
-        if (!message.isDeletedFromSender &&
-            mediaFileService?.mediaFile.type == MediaType.image &&
-            (mediaFileService?.mediaFile.stored ?? false))
-          ContextMenuItem(
-            title: context.lang.createSticker,
-            onTap: () => createStickerFromMedia(navigator.context),
-            icon: FontAwesomeIcons.wandMagicSparkles,
           ),
         if (!message.isDeletedFromSender)
           ContextMenuItem(
@@ -228,7 +192,7 @@ class MessageContextMenu extends StatelessWidget {
           ContextMenuItem(
             title: context.lang.edit,
             onTap: () async {
-              await editTextMessage(navigator.context, message);
+              await editTextMessage(navigator.context, message, group);
             },
             icon: FontAwesomeIcons.pencil,
           ),
@@ -236,7 +200,32 @@ class MessageContextMenu extends StatelessWidget {
           ContextMenuItem(
             title: context.lang.copy,
             onTap: () async {
-              await Clipboard.setData(ClipboardData(text: message.content!));
+              final menuContext = navigator.context;
+              final text = message.content!;
+              final ids = parseMentions(
+                text,
+              ).map((part) => part.userId).nonNulls.toSet();
+              final contacts = ids.isEmpty
+                  ? <Contact>[]
+                  : await rust_contacts.listContacts(
+                      input: ContactQuery(
+                        filter: ContactFilter.ids,
+                        ids: Int64List.fromList(ids.toList()),
+                      ),
+                      transaction: currentDatabaseSession(),
+                    );
+              if (!menuContext.mounted) return;
+              final byId = {
+                for (final contact in contacts) contact.userId: contact,
+              };
+              await Clipboard.setData(
+                ClipboardData(
+                  text: resolveMentions(
+                    text,
+                    (id) => mentionDisplayName(menuContext, id, byId),
+                  ),
+                ),
+              );
               await HapticFeedback.heavyImpact();
             },
             icon: FontAwesomeIcons.solidCopy,
@@ -259,10 +248,9 @@ class MessageContextMenu extends StatelessWidget {
               await WebxdcService.deleteInstance(message.messageId);
             }
             if (action == 'delete_for_all') {
-              await twonlyDB.messagesDao.handleMessageDeletion(
-                null,
-                message.messageId,
-                clock.now(),
+              await rust_messages.deleteMessageFromSender(
+                id: message.messageId,
+                transaction: currentDatabaseSession(),
               );
               await RustApi.sendEncryptedContentToGroup(
                 groupId: message.groupId,
@@ -275,8 +263,9 @@ class MessageContextMenu extends StatelessWidget {
                 onlySendIfNoReceiptsAreOpen: false,
               );
             } else if (action == 'delete_for_me') {
-              await twonlyDB.messagesDao.deleteMessagesById(
-                message.messageId,
+              await rust_messages.deleteMessage(
+                id: message.messageId,
+                transaction: currentDatabaseSession(),
               );
             }
           },
@@ -308,7 +297,7 @@ class MessageContextMenu extends StatelessWidget {
 
 Future<String?> showDeleteMessageOptions(
   BuildContext context,
-  Message message,
+  StoredMessage message,
   Group group,
   List<MemoryItem> galleryItems,
 ) async {
@@ -316,7 +305,12 @@ Future<String?> showDeleteMessageOptions(
     context: context,
     backgroundColor: Colors.transparent,
     builder: (context) {
-      final isForAll = message.senderId == null && !message.isDeletedFromSender;
+      // A game changes sides with the last player, but its original author
+      // still decides who can delete the shared card for everyone.
+      final author = message.type == MessageType.webxdcApp.name
+          ? message.originalSenderId
+          : message.senderId;
+      final isForAll = author == null && !message.isDeletedFromSender;
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.only(
@@ -418,117 +412,123 @@ Future<String?> showDeleteMessageOptions(
   );
 }
 
-Future<void> editTextMessage(BuildContext context, Message message) async {
-  var newText = message.content;
-  final controller = TextEditingController(text: message.content);
+Future<void> editTextMessage(
+  BuildContext context,
+  StoredMessage message,
+  Group group,
+) async {
+  final controller = MentionEditingController(text: message.content ?? '');
+  final focusNode = FocusNode();
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: 40,
+          ),
+          decoration: BoxDecoration(
+            color: context.color.surfaceContainer,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
             ),
-            child: Container(
-              padding: const EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: 40,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MentionSuggestions(
+                group: group,
+                controller: controller,
+                focusNode: focusNode,
               ),
-              decoration: BoxDecoration(
-                color: context.color.surfaceContainer,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+              MentionInputBackground(
+                controller: controller,
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.sentences,
+                  keyboardType: TextInputType.multiline,
+                  maxLines: 4,
+                  minLines: 1,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: 24),
+              Row(
                 children: [
-                  TextField(
-                    controller: controller,
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.sentences,
-                    keyboardType: TextInputType.multiline,
-                    maxLines: 4,
-                    minLines: 1,
-                    onChanged: (value) => setState(() {
-                      newText = value;
-                    }),
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
+                  Expanded(
+                    child: MyButton(
+                      variant: MyButtonVariant.secondaryMiddle,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(
+                        context.lang.cancel,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: MyButton(
-                          variant: MyButtonVariant.secondaryMiddle,
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text(
-                            context.lang.cancel,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: MyButton(
-                          variant: MyButtonVariant.primaryMiddle,
-                          onPressed: () async {
-                            if (newText != null &&
-                                newText != message.content &&
-                                newText != '') {
-                              final timestamp = clock.now();
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: MyButton(
+                      variant: MyButtonVariant.primaryMiddle,
+                      onPressed: () async {
+                        final newText = controller.messageText;
+                        if (newText != message.content && newText.isNotEmpty) {
+                          final timestamp = clock.now();
 
-                              await twonlyDB.messagesDao.handleTextEdit(
-                                null,
-                                message.messageId,
-                                newText!,
-                                timestamp,
-                              );
-                              await RustApi.sendEncryptedContentToGroup(
-                                groupId: message.groupId,
-                                content: pb.EncryptedContent(
-                                  messageUpdate:
-                                      pb.EncryptedContent_MessageUpdate(
-                                        type: pb
-                                            .EncryptedContent_MessageUpdate_Type
-                                            .EDIT_TEXT,
-                                        senderMessageId: message.messageId,
-                                        text: newText,
-                                        timestamp: Int64(
-                                          timestamp.millisecondsSinceEpoch,
-                                        ),
-                                      ),
-                                ).writeToBuffer(),
-                                onlySendIfNoReceiptsAreOpen: false,
-                              );
-                            }
-                            if (!context.mounted) return;
-                            Navigator.of(context).pop();
-                          },
-                          child: Text(
-                            context.lang.ok,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+                          await rust_messages.editMessage(
+                            id: message.messageId,
+                            text: newText,
+                            timestamp: timestamp.millisecondsSinceEpoch ~/ 1000,
+                            transaction: currentDatabaseSession(),
+                          );
+                          await RustApi.sendEncryptedContentToGroup(
+                            groupId: message.groupId,
+                            content: pb.EncryptedContent(
+                              messageUpdate: pb.EncryptedContent_MessageUpdate(
+                                type: pb
+                                    .EncryptedContent_MessageUpdate_Type
+                                    .EDIT_TEXT,
+                                senderMessageId: message.messageId,
+                                text: newText,
+                                timestamp: Int64(
+                                  timestamp.millisecondsSinceEpoch,
+                                ),
+                              ),
+                            ).writeToBuffer(),
+                            onlySendIfNoReceiptsAreOpen: false,
+                          );
+                        }
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(
+                        context.lang.ok,
+                        textAlign: TextAlign.center,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          );
-        },
+            ],
+          ),
+        ),
       );
     },
   );
+  controller.dispose();
+  focusNode.dispose();
 }

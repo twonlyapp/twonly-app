@@ -6,24 +6,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart' show SharedFile;
 import 'package:provider/provider.dart';
-import 'package:twonly/core/bridge/api.dart' as rust_api;
-import 'package:twonly/core/bridge/stories.dart' as stories;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/intent/links.intent.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/visual/components/app_outdated.comp.dart';
+import 'package:twonly/src/visual/components/mailbox_sync.comp.dart';
 import 'package:twonly/src/visual/themes/dark.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/critical_error.view.dart';
@@ -52,8 +57,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    AppState.isAppInBackground = false;
+    AppState.isAppInBackground =
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
     WidgetsBinding.instance.addObserver(this);
+    unawaited(NativeNotificationService.clearBadge());
     // This stays subscribed on routes that do not contain a home view, such
     // as settings. The home view consumes the sender after navigation/unlock.
     _widgetLinkSub = AppLinks().uriLinkStream.listen((uri) {
@@ -68,42 +75,28 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       AppState.isAppInBackground = false;
-      twonlyDB.markUpdated();
-      // Serialize pause/resume updates and refresh reachability after a real
-      // background transition before Rust replaces its suspended socket.
-      unawaited(
-        apiService.setBackground(false),
-      );
-      // The notification service extension wrote to the outbox while the app
-      // was suspended, and its Rust change broadcast never reached this
-      // process, so the badge has to be re-read on the way back in.
-      unawaited(NativeNotificationService.refreshBadgeCount());
-      // Home-screen configuration may have changed while the app was away.
-      if (userService.isUserCreated) {
-        unawaited(HomeWidgetService.syncPermissions());
-      }
-      // A story may have expired while the app was away.
-      unawaitedRustCall(stories.purgeExpiredStories(), 'purgeExpiredStories');
+      unawaited(_resumeDatabaseServices());
     } else if (state == AppLifecycleState.paused) {
       AppState.isAppInBackground = true;
       unawaited(
         apiService.setBackground(true),
       );
-      // Anything this session downloaded rewrote the widget manifest, but
-      // WidgetKit still shows the timeline it built earlier. Leaving the app is
-      // the moment the home screen becomes visible again.
-      // Republish names and selectable people changed during this session.
-      if (userService.isUserCreated) {
-        unawaited(HomeWidgetService.refreshManifest());
-      }
     } else if (state == AppLifecycleState.detached) {
-      // Last chance before the engine goes away: hand anything still unsent to
-      // the OS, which delivers it once there is a network again whether or not
-      // this process is ever started back up. A no-op when `paused` already
-      // did it.
-      unawaited(
-        rust_api.RustApi.handOutboxToOs(),
-      );
+      AppState.isAppInBackground = true;
+      unawaited(apiService.setBackground(true));
+    }
+  }
+
+  Future<void> _resumeDatabaseServices() async {
+    // Native resume reopens both pools and rebinds Signal before any
+    // snapshot, widget or expiry query is allowed to run.
+    await apiService.setBackground(false);
+    if (AppState.isAppInBackground) return;
+    unawaited(BackupService.resumePendingBackup());
+    refreshDatabaseSubscriptions();
+    unawaited(NativeNotificationService.clearBadge());
+    if (userService.isUserCreated) {
+      unawaited(HomeWidgetService.syncPermissions());
     }
   }
 
@@ -166,6 +159,13 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           theme: getLightTheme(settings.primaryColor),
           darkTheme: getDarkTheme(settings.primaryColor),
           themeMode: settings.themeMode,
+          // Above the navigator, so a catch-up covers whichever screen is open.
+          builder: (context, child) => Stack(
+            children: [
+              ?child,
+              const MailboxSyncOverlay(),
+            ],
+          ),
         );
       },
     );
@@ -185,8 +185,9 @@ class AppMainWidget extends StatefulWidget {
 class _AppMainWidgetState extends State<AppMainWidget> {
   bool _showOnboarding = true;
   bool _isLoaded = false;
+  bool _initializationFailed = false;
   bool _isTwonlyLocked = true;
-  bool _wasLogged = true;
+  int _initializationAttempt = 0;
   late int _initialPage;
 
   StreamSubscription<Uri>? _deepLinkSub;
@@ -237,23 +238,59 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   }
 
   Future<void> initAsync() async {
+    final attempt = ++_initializationAttempt;
+    setState(() {
+      _isLoaded = false;
+      _initializationFailed = false;
+    });
     Log.info('AppWidgetState: initAsync started');
+    try {
+      await _initializeRoute();
+      if (!mounted || attempt != _initializationAttempt) return;
+      setState(() => _isLoaded = true);
+      Log.info('AppWidgetState: initAsync finished');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && attempt == _initializationAttempt) {
+          Log.info('AppWidgetState: first loaded frame rendered');
+        }
+      });
+    } catch (error, stackTrace) {
+      Log.error(
+        'Could not initialize the app screen',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted || attempt != _initializationAttempt) return;
+      setState(() => _initializationFailed = true);
+    }
+  }
+
+  Future<void> _initializeRoute() async {
     final onboardingState = await KeyValueStore.getModel<OnboardingState>(
       KeyValueKeys.onboardingState,
-    );
+    ).timeout(const Duration(seconds: 10));
+    if (!mounted) return;
     _showOnboarding = !onboardingState.hasOnboardingFinished;
     if (userService.isUserCreated) {
       if (_initialPage != 0) {
-        final count = await twonlyDB.contactsDao.getContactsCount();
+        final count = await rust_contacts
+            .countContacts(
+              metric: db_contacts.ContactCount.all,
+              transaction: currentDatabaseSession(),
+            )
+            .timeout(const Duration(seconds: 10));
+        if (!mounted) return;
         if (count == 0) {
           _initialPage = 0;
         }
       }
-      try {
-        unawaited(FirebaseMessaging.instance.requestPermission());
-      } catch (e) {
-        Log.error(e);
-      }
+      unawaited(() async {
+        try {
+          await FirebaseMessaging.instance.requestPermission();
+        } catch (error) {
+          Log.error(error);
+        }
+      }());
       if (_isTwonlyLocked) {
         // do not change in case twonly was already unlocked at some point
         _isTwonlyLocked = userService.currentUser.screenLockEnabled;
@@ -261,7 +298,10 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     } else {
       // This means the user is in the onboarding screen, so start with the Proof of Work.
 
-      final proofResult = await rustApiResult(RustApi.getProofOfWork());
+      final proofResult = await rustApiResult(
+        RustApi.getProofOfWork(),
+      ).timeout(const Duration(seconds: 10));
+      if (!mounted) return;
       final proof = proofResult.value;
       final disabled = proofResult.error == ErrorCode.RegistrationDisabled;
       if (proof != null) {
@@ -277,26 +317,45 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       if (onboardingState.hasStartedPasswordlessRecovery ||
           onboardingState.emailRecoveryRequested) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
           routerProvider.push(Routes.recoverPasswordless);
         });
       }
     }
-
-    setState(() {
-      _isLoaded = true;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_wasLogged) {
-      Log.info('AppWidgetState: build started (_isLoaded: $_isLoaded)');
-      if (_isLoaded) {
-        _wasLogged = true;
-      }
+    if (_initializationFailed) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  context.lang.recoverErrorUnknown,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: initAsync,
+                  child: Text(context.lang.unlockTwonlyTryAgain),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
     if (!_isLoaded) {
-      return Center(child: Container());
+      // Continues the splash from `main.dart`, so the launch screen hands
+      // straight over to the first real screen.
+      return const ColoredBox(
+        color: defaultPrimaryColor,
+        child: SizedBox.expand(),
+      );
     }
 
     late Widget child;

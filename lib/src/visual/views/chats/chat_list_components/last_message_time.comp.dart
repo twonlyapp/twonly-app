@@ -2,13 +2,14 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class LastMessageTimeComp extends StatefulWidget {
   const LastMessageTimeComp({this.message, this.dateTime, super.key});
 
-  final Message? message;
+  final StoredMessage? message;
   final DateTime? dateTime;
 
   @override

@@ -3,12 +3,13 @@ import 'dart:async';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/audio_playback.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
@@ -24,7 +25,7 @@ class ChatAudioEntry extends StatefulWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final MediaFileService mediaService;
   final BorderRadius borderRadius;
   final BubbleInfo info;
@@ -37,7 +38,7 @@ class _ChatAudioEntryState extends State<ChatAudioEntry> {
   bool? _hasAudioFile;
   bool _hasTempFile = false;
 
-  Message get message => widget.message;
+  StoredMessage get message => widget.message;
   MediaFileService get mediaService => widget.mediaService;
   BorderRadius get borderRadius => widget.borderRadius;
   BubbleInfo get info => widget.info;
@@ -150,7 +151,7 @@ class InChatAudioPlayer extends StatefulWidget {
   });
 
   final String path;
-  final Message message;
+  final StoredMessage message;
   final Color foregroundColor;
 
   /// Shown below the waveform, next to the remaining playback time.

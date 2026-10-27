@@ -5,13 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/purchasable_product.model.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
@@ -47,9 +49,10 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     }
     if (ballance != null && ballance!.additionalAccountOwnerId != null) {
       final ownerId = ballance!.additionalAccountOwnerId!;
-      final contact = await twonlyDB.contactsDao
-          .getContactByUserId(ownerId)
-          .getSingleOrNull();
+      final contact = await rust_contacts.getContact(
+        id: ownerId,
+        transaction: currentDatabaseSession(),
+      );
       additionalOwner = contact;
       additionalOwnerName = contact == null
           ? ownerId.toString()
@@ -57,7 +60,6 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     }
     if (!mounted) return;
     setState(() {});
-    await RustApi.forceIpaCheck();
   }
 
   @override

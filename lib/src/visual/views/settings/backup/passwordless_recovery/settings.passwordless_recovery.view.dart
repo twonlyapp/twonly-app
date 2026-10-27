@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/database/recovery.dart' as rust_recovery;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/recovery/table.dart' as db_recovery;
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/contact_chip.element.dart';
@@ -32,9 +36,9 @@ class PasswordLessRecoverySettings extends StatelessWidget {
               children: [
                 Text(
                   context.lang.passwordlessRecoveryTestPinTitle,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -184,11 +188,12 @@ class PasswordLessRecoverySettings extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               StreamBuilder<List<Contact>>(
-                stream:
-                    (twonlyDB.select(
-                          twonlyDB.contacts,
-                        )..where((t) => t.recoveryIsTrustedFriend.equals(true)))
-                        .watch(),
+                stream: watchRustDatabase(
+                  (control) => rust_recovery.watchRecoveryContacts(
+                    selection: db_recovery.RecoveryContacts.trusted,
+                    control: control,
+                  ),
+                ),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(
@@ -223,17 +228,13 @@ class PasswordLessRecoverySettings extends StatelessWidget {
                         Text(
                           context.lang.passwordlessRecoveryActiveFriends,
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           context.lang.passwordlessRecoveryActiveFriendsDesc,
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: context.color.onSurfaceVariant,
-                              ),
+                              ?.copyWith(color: context.color.onSurfaceVariant),
                         ),
                         const SizedBox(height: 16),
                         _buildFriendsGridCard(
@@ -247,17 +248,13 @@ class PasswordLessRecoverySettings extends StatelessWidget {
                         Text(
                           context.lang.passwordlessRecoveryInactiveFriends,
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           context.lang.passwordlessRecoveryInactiveFriendsDesc,
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: context.color.onSurfaceVariant,
-                              ),
+                              ?.copyWith(color: context.color.onSurfaceVariant),
                         ),
                         const SizedBox(height: 16),
                         _buildFriendsGridCard(

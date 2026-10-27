@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE\n            FROM messages\n            WHERE group_id = ?\n                AND (is_story = 0\n                    OR media_stored = 1\n            )\n                AND NOT EXISTS (\n                SELECT 1\n                FROM webxdc_instances instance\n                LEFT JOIN webxdc_apps app\n                ON app.app_id = instance.app_id\n                    AND app.version = instance.version\n                WHERE instance.instance_id = messages.message_id\n                    AND (app.one_time = 1\n                        OR app.app_id IS NULL\n                )\n            )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "b7b03b9138e3bfc0b576dd677e1d5898efe7d3c8c7fff8fd07ba5d2da92021d1"
+}

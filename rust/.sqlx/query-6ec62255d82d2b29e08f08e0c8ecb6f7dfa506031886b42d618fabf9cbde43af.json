@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE custom_avatar_publications SET publication_counter = ?, visible_source_revision = ?, shows_photo = ? WHERE contact_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "6ec62255d82d2b29e08f08e0c8ecb6f7dfa506031886b42d618fabf9cbde43af"
+}

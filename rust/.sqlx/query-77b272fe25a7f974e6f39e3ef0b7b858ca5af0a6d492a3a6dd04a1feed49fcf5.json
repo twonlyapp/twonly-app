@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET stored = 1, has_thumbnail = ? WHERE media_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "77b272fe25a7f974e6f39e3ef0b7b858ca5af0a6d492a3a6dd04a1feed49fcf5"
+}

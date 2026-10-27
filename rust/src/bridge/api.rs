@@ -3,19 +3,17 @@
  *
  */
 
-use crate::api::ApiRuntime;
 pub use crate::api::PqcPreKeyInput;
-use crate::api::Server;
+use crate::api::{ApiRuntime, Server};
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
 use crate::frb_generated::StreamSink;
-use crate::services::avatars;
 use crate::services::contacts::ContactService;
 use crate::services::media_upload::{MediaSizeReport, MediaUploadService};
 use crate::services::messages::MessageService;
 use crate::services::outbox_dispatch::OutboxDispatchService;
-use crate::services::stickers;
 use crate::services::stories::StoryAudience;
+use crate::services::{avatars, stickers};
 use crate::user_config::UserConfig;
 use flutter_rust_bridge::frb;
 use std::collections::HashMap;
@@ -24,6 +22,7 @@ use std::path::Path;
 pub use crate::services::stickers::StickerOutput;
 
 #[frb(ignore)]
+
 pub enum ServerResult<T> {
     Ok(T),
     ErrorCode(i32),
@@ -41,6 +40,7 @@ fn empty_api_response(bytes: Vec<u8>) -> Result<()> {
 }
 
 #[derive(Clone, Debug)]
+
 pub struct ApiConfig {
     /// Full WebSocket URL, for example `wss://api.twonly.eu/api/client`.
     pub websocket_url: String,
@@ -56,6 +56,7 @@ pub struct ApiConfig {
 impl ApiConfig {
     pub(crate) async fn from_rust_state(context: &Context) -> Result<Self> {
         let user = UserConfig::load_from(context)?;
+
         Ok(Self {
             websocket_url: format!("{}client", RustApi::api_base_url("wss".to_owned())),
             legacy_user_app_version: user.as_ref().map_or(0, |value| value.app_version),
@@ -68,6 +69,7 @@ impl ApiConfig {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+
 pub enum ApiConnectionState {
     Stopped,
     Connecting,
@@ -80,13 +82,29 @@ pub enum ApiConnectionState {
 }
 
 #[derive(Clone, Debug)]
+
 pub struct ApiEvent {
     pub kind: ApiEventKind,
     pub state: Option<ApiConnectionState>,
     pub message: Option<String>,
 }
 
+/// Progress of a large mailbox catch-up. While none runs, `active` is false
+/// and both counts are zero.
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+
+pub struct MailboxSyncProgress {
+    pub active: bool,
+    /// Messages waiting when the catch-up started, raised if more arrive
+    /// while it runs.
+    pub total: i64,
+    /// Messages the server still holds for this device.
+    pub remaining: i64,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+
 pub enum ApiEventKind {
     ConnectionStateChanged,
     TransportError,
@@ -102,12 +120,14 @@ pub enum ApiEventKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+
 pub struct FrbPasswordlessNotificationMessage {
     pub id: i64,
     pub encrypted_message: Vec<u8>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+
 pub struct FrbUserData {
     pub user_id: i64,
     pub username: Vec<u8>,
@@ -116,12 +136,14 @@ pub struct FrbUserData {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+
 pub struct FrbProofOfWork {
     pub prefix: String,
     pub difficulty: i64,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+
 pub struct FrbMemoriesUsage {
     pub current_bytes: i64,
     pub count: i64,
@@ -129,12 +151,14 @@ pub struct FrbMemoriesUsage {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+
 pub struct FrbAdditionalAccount {
     pub user_id: i64,
     pub plan_id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+
 pub struct FrbPlanBalance {
     pub used_daily_media_upload_limit: i64,
     pub used_upload_media_size_limit: i64,
@@ -146,12 +170,14 @@ pub struct FrbPlanBalance {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+
 pub struct FrbPresignedPost {
     pub url: String,
     pub fields: Vec<(String, String)>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+
 pub struct FrbMemoriesUploadUrls {
     pub media_id: String,
     pub thumbnail_upload: Option<FrbPresignedPost>,
@@ -171,7 +197,7 @@ impl RustApi {
     /// inference and image encoding are CPU-heavy, so neither runs on Tokio's
     /// async worker threads.
     pub async fn create_sticker(image_path: String) -> Result<StickerOutput> {
-        tokio::task::spawn_blocking(move || stickers::create(Path::new(&image_path)))
+        crate::database::lifecycle::spawn_blocking(move || stickers::create(Path::new(&image_path)))
             .await
             .map_err(|error| {
                 TwonlyError::Generic(format!("sticker creation task failed: {error}"))
@@ -179,7 +205,7 @@ impl RustApi {
     }
 
     pub async fn rotate_sticker(webp: Vec<u8>) -> Result<StickerOutput> {
-        tokio::task::spawn_blocking(move || stickers::rotate(&webp))
+        crate::database::lifecycle::spawn_blocking(move || stickers::rotate(&webp))
             .await
             .map_err(|error| {
                 TwonlyError::Generic(format!("sticker rotation task failed: {error}"))
@@ -187,13 +213,16 @@ impl RustApi {
     }
 
     #[frb(sync)]
+
     pub fn decode_avatar_svg(avatar_svg_compressed: Vec<u8>) -> String {
         avatars::decode_avatar_svg(avatar_svg_compressed)
     }
 
     #[frb(sync)]
+
     pub fn avatar_png_path(contact_id: i64, profile_counter: i64) -> Result<String> {
         let ctx = Context::get_static()?;
+
         Ok(
             avatars::contact_avatar_path(ctx, contact_id, profile_counter)
                 .display()
@@ -205,20 +234,30 @@ impl RustApi {
     /// missing. Returns `None` when the contact has no avatar at all.
     pub async fn ensure_avatar_png(contact_id: i64) -> Result<Option<String>> {
         let ctx = Context::get_static()?;
-        let path = avatars::ensure_contact_avatar_png(ctx, contact_id).await?;
+
+        let path = ctx
+            .foreground_database_call(|| avatars::ensure_contact_avatar_png(ctx, contact_id))
+            .await?;
+
         Ok(path.map(|path| path.display().to_string()))
     }
 
     pub async fn current_user_avatar_path() -> Result<Option<String>> {
         let ctx = Context::get_static()?.clone();
-        if let Some(path) = avatars::current_custom_avatar_path(&ctx).await? {
+
+        if let Some(path) = ctx
+            .foreground_database_call(|| avatars::current_custom_avatar_path(&ctx))
+            .await?
+        {
             return Ok(Some(path.display().to_string()));
         }
-        let path = tokio::task::spawn_blocking(move || avatars::current_user_avatar_path(&ctx))
-            .await
-            .map_err(|error| {
-                TwonlyError::Generic(format!("avatar render task failed: {error}"))
-            })??;
+
+        let path = crate::database::lifecycle::spawn_blocking(move || {
+            avatars::current_user_avatar_path(&ctx)
+        })
+        .await
+        .map_err(|error| TwonlyError::Generic(format!("avatar render task failed: {error}")))??;
+
         Ok(path.map(|path| path.display().to_string()))
     }
 
@@ -227,14 +266,28 @@ impl RustApi {
     }
 
     pub async fn create_custom_avatar(
-        image_path: String,
-        accepted_contacts_only: bool,
+        image_path: String, accepted_contacts_only: bool,
     ) -> Result<avatars::CustomAvatarInfo> {
-        let avatar = tokio::task::spawn_blocking(move || {
+        let avatar = crate::database::lifecycle::spawn_blocking(move || {
             avatars::create_custom_avatar(Path::new(&image_path))
         })
         .await
         .map_err(|error| TwonlyError::Generic(format!("avatar creation task failed: {error}")))??;
+
+        avatars::store_own_custom_avatar(Context::get_static()?, avatar, accepted_contacts_only)
+            .await
+    }
+
+    /// Uses an existing cutout without running foreground extraction again.
+    pub async fn create_custom_avatar_from_sticker(
+        webp: Vec<u8>, accepted_contacts_only: bool,
+    ) -> Result<avatars::CustomAvatarInfo> {
+        let avatar = crate::database::lifecycle::spawn_blocking(move || {
+            avatars::create_custom_avatar_from_sticker(&webp)
+        })
+        .await
+        .map_err(|error| TwonlyError::Generic(format!("avatar creation task failed: {error}")))??;
+
         avatars::store_own_custom_avatar(Context::get_static()?, avatar, accepted_contacts_only)
             .await
     }
@@ -253,17 +306,17 @@ impl RustApi {
     /// flight and resumes any upload a terminated process left behind.
     pub async fn finish_started_media_uploads() -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx).finish_started_uploads().await
     }
 
     /// Creates the media row and its content-encryption material and returns
     /// the media id the UI addresses every later step by.
     pub async fn initialize_media_upload(
-        media_type: String,
-        display_limit_in_milliseconds: Option<i64>,
-        is_draft_media: bool,
+        media_type: String, display_limit_in_milliseconds: Option<i64>, is_draft_media: bool,
     ) -> Result<String> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx)
             .initialize(media_type, display_limit_in_milliseconds, is_draft_media)
             .await
@@ -273,18 +326,22 @@ impl RustApi {
     /// local save button rather than the outgoing-media initializer.
     pub async fn initialize_memory_location(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::location_metadata::initialize_for_media(ctx, &media_id).await
     }
 
-    /// Warms the shared location cache if Memories or city stickers are enabled.
+    /// Warms the shared location cache if Memories or city stickers are
+    /// enabled.
     pub async fn prewarm_memory_location() -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::location_metadata::prewarm(ctx)
     }
 
     /// Coordinates for native city lookup, available only with sticker opt-in.
     pub async fn current_location_for_sticker() -> Result<Option<StickerLocation>> {
         let ctx = Context::get_static()?;
+
         Ok(crate::services::location_metadata::current_for_sticker(ctx)
             .await?
             .map(|location| StickerLocation {
@@ -296,13 +353,11 @@ impl RustApi {
     /// Creates one outgoing message per selected group, plus the story rows
     /// for `story_audience`, and starts the upload they all share.
     pub async fn send_media_to_groups(
-        media_id: String,
-        group_ids: Vec<String>,
-        additional_message_data: Option<Vec<u8>>,
-        widget_only: bool,
-        story_audience: Option<StoryAudience>,
+        media_id: String, group_ids: Vec<String>, additional_message_data: Option<Vec<u8>>,
+        widget_only: bool, story_audience: Option<StoryAudience>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx)
             .insert_into_messages(
                 media_id,
@@ -316,20 +371,21 @@ impl RustApi {
 
     pub async fn register_home_widget(widget_id: String, platform: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::home_widget::register_widget(ctx, &widget_id, &platform).await
     }
 
     pub async fn unregister_home_widget(widget_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::home_widget::unregister_widget(ctx, &widget_id).await
     }
 
     pub async fn set_home_widget_groups(
-        widget_id: String,
-        platform: String,
-        contact_group_ids: Vec<i64>,
+        widget_id: String, platform: String, contact_group_ids: Vec<i64>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::home_widget::set_widget_groups(
             ctx,
             &widget_id,
@@ -341,11 +397,13 @@ impl RustApi {
 
     pub async fn sync_widget_permissions() -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::home_widget::sync_permissions(ctx).await
     }
 
     pub async fn purge_widget_media() -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::home_widget::purge_widget_media(ctx).await
     }
 
@@ -358,23 +416,27 @@ impl RustApi {
     /// are placed.
     pub async fn refresh_widget_manifest() -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::home_widget::refresh_manifest(ctx).await
     }
 
     /// Drops a single image a widget is showing, at the user's request.
     pub async fn delete_widget_media(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::home_widget::delete_media(ctx, &media_id).await
     }
 
     /// Retries the media sends whose receipts are still marked for retry.
     pub async fn reupload_pending_media() -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx).reupload_pending().await
     }
 
     pub async fn store_media(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx).store(&media_id).await
     }
 
@@ -382,6 +444,7 @@ impl RustApi {
     /// derived state (thumbnail present, crop analyzed, new size and hash).
     pub async fn media_step_finished(media_id: String, kind: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx)
             .media_step_finished(&media_id, &kind)
             .await
@@ -390,6 +453,7 @@ impl RustApi {
     /// Exports a stored media file to the user's photo library.
     pub async fn save_media_to_gallery(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx)
             .save_to_gallery(&media_id)
             .await
@@ -399,6 +463,7 @@ impl RustApi {
     /// refreshes the preview and content hash derived from it.
     pub async fn crop_media_transparent_borders(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx)
             .crop_transparent_borders(&media_id)
             .await
@@ -407,6 +472,7 @@ impl RustApi {
     /// Deletes every file of a media item while keeping its row.
     pub async fn remove_media_files(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx).remove_files(&media_id).await
     }
 
@@ -414,6 +480,7 @@ impl RustApi {
     /// its messages as deleted by the sender instead of retrying forever.
     pub async fn abandon_media(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx).abandon(&media_id).await
     }
 
@@ -421,6 +488,7 @@ impl RustApi {
     /// it reached and the largest single object the plan accepts.
     pub async fn media_size_limit_report(media_id: String) -> Result<MediaSizeReport> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx)
             .size_limit_report(&media_id)
             .await
@@ -429,24 +497,25 @@ impl RustApi {
     /// Deletes temporary media whose messages are finished with it.
     pub async fn purge_media_temp_folder() -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx).purge_temp_folder().await
     }
 
     pub async fn set_media_display_limit(
-        media_id: String,
-        display_limit_in_milliseconds: Option<i64>,
+        media_id: String, display_limit_in_milliseconds: Option<i64>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx)
             .set_display_limit(&media_id, display_limit_in_milliseconds)
             .await
     }
 
     pub async fn set_media_requires_authentication(
-        media_id: String,
-        requires_authentication: bool,
+        media_id: String, requires_authentication: bool,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx)
             .set_requires_authentication(&media_id, requires_authentication)
             .await
@@ -455,11 +524,10 @@ impl RustApi {
     /// Stores the cut the editor's video trimmer asked for. Both bounds are
     /// milliseconds into the recording, `None` keeps that end of the clip.
     pub async fn set_media_trim(
-        media_id: String,
-        trim_start_ms: Option<i64>,
-        trim_end_ms: Option<i64>,
+        media_id: String, trim_start_ms: Option<i64>, trim_end_ms: Option<i64>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx)
             .set_trim(&media_id, trim_start_ms, trim_end_ms)
             .await
@@ -467,6 +535,7 @@ impl RustApi {
 
     pub async fn toggle_media_remove_audio(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx)
             .toggle_remove_audio(&media_id)
             .await
@@ -474,6 +543,7 @@ impl RustApi {
 
     pub async fn request_contact_by_username(username: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         ContactService::new(ctx)
             .request_by_username(username, false)
             .await
@@ -488,40 +558,49 @@ impl RustApi {
             }
             Err(error) => Err(error),
         };
+
         if let Err(error) = result {
             tracing::error!(contact_id, %error, "failed to establish session and send contact request");
+
             return false;
         }
+
         true
     }
 
     pub async fn authentication_headers() -> Result<HashMap<String, String>> {
-        use base64::Engine as _;
-
-        let ctx = Context::get_static()?;
-        let user = UserConfig::load_required_from(ctx)?;
-        let mut headers = HashMap::new();
-        if user.can_use_login_token_for_auth {
-            let login_token = ctx.key_manager.lock().await.main_key.get_login_token();
-            headers.insert("x-twonly-user-id".into(), format!("{:016X}", user.user_id));
-            headers.insert("x-twonly-login-token".into(), hex::encode(login_token));
-        } else {
-            let encoded = ctx
-                .secure_storage
-                .read("api_auth_token")?
-                .ok_or_else(|| TwonlyError::Generic("API auth token is not defined".into()))?;
-            let auth_token = base64::engine::general_purpose::STANDARD
-                .decode(encoded)
-                .map_err(|error| {
-                    TwonlyError::Generic(format!("invalid stored API auth token: {error}"))
-                })?;
-            headers.insert("x-twonly-auth-token".into(), hex::encode(auth_token));
-        }
-        Ok(headers)
+        crate::api::http::authentication_headers(Context::get_static()?).await
     }
 
     #[frb(sync)]
+
     pub fn api_base_url(protocol: String) -> String {
+        // Integration tests may target the local Docker API. This override is
+        // excluded from release builds and never changes store-build routing.
+        #[cfg(debug_assertions)]
+        if let Ok(origin) = std::env::var("TWONLY_TEST_API_ORIGIN") {
+            let mut url = reqwest::Url::parse(&origin).expect("invalid TWONLY_TEST_API_ORIGIN");
+            assert!(
+                matches!(url.host_str(), Some("127.0.0.1" | "localhost" | "[::1]")),
+                "test API origin must be loopback"
+            );
+            let scheme = if protocol == "wss" || protocol == "ws" {
+                if url.scheme() == "https" {
+                    "wss"
+                } else {
+                    "ws"
+                }
+            } else if url.scheme() == "https" {
+                "https"
+            } else {
+                "http"
+            };
+            url.set_scheme(scheme).expect("invalid test API scheme");
+            url.set_path("/api/");
+            url.set_query(None);
+            url.set_fragment(None);
+            return url.to_string();
+        }
         // Every non-production build talks to the development server. A Flutter
         // profile build compiles Rust with `--release`, so `debug_assertions`
         // is off and cannot tell it apart from a store build; cargokit enables
@@ -536,6 +615,7 @@ impl RustApi {
 
     pub async fn connect() -> Result<()> {
         let ctx = Context::get_static()?;
+
         ApiRuntime::connect(ctx).await
     }
 
@@ -543,37 +623,47 @@ impl RustApi {
     /// No configuration values are accepted from the caller.
     pub async fn reload_configuration() -> Result<()> {
         let ctx = Context::get_static()?;
+
         ApiRuntime::reload_configuration(ctx).await
     }
 
     pub async fn close() -> Result<()> {
         let ctx = Context::get_static()?;
+
         ApiRuntime::close(ctx).await
     }
 
     pub async fn connection_state() -> Result<ApiConnectionState> {
         let ctx = Context::get_static()?;
+
         ApiRuntime::connection_state(ctx).await
     }
 
     pub async fn set_background(in_background: bool) -> Result<()> {
         let ctx = Context::get_static()?;
-        if in_background {
-            // The socket is about to stop being an option, so anything still
-            // waiting on it is handed to the OS, which delivers it whether or
-            // not this process survives.
-            let ctx = ctx.clone();
-            tokio::spawn(async move {
-                if let Err(error) = OutboxDispatchService::new(&ctx).hand_pending_to_os().await {
-                    tracing::warn!(%error, "could not hand queued envelopes to the OS");
-                }
-            });
-        } else {
+
+        crate::database::lifecycle::foreground::flutter_visibility(!in_background);
+
+        if !crate::database::lifecycle::foreground::active() {
+            ctx.foreground.drained().await?;
+
+            return Ok(());
+        }
+
+        crate::database::lifecycle::foreground::activate(crate::bridge::InitConfig {
+            database_dir: ctx.config.database_dir.clone(),
+            data_dir: ctx.config.data_dir.clone(),
+        })
+        .await?;
+
+        if !in_background {
             // Coming back to the foreground is the first chance to notice that
             // the OS finished a media transfer while this process was idle.
             crate::services::direct_media_upload::watch_pending_uploads(ctx);
+
             let ctx = ctx.clone();
-            tokio::spawn(async move {
+
+            crate::database::lifecycle::spawn(async move {
                 // Envelopes the OS has been carrying are cleaned up here; the
                 // socket takes over for anything still unacknowledged.
                 if let Err(error) = OutboxDispatchService::new(&ctx).purge_expired().await {
@@ -581,13 +671,15 @@ impl RustApi {
                 }
             });
         }
-        ApiRuntime::set_background(ctx, in_background).await
+
+        ApiRuntime::set_background(ctx, false).await
     }
 
     /// Transcodes a captured video while the user is still editing it, so the
     /// send itself only has to encrypt and hand over.
     pub async fn prerender_media(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MediaUploadService::new(ctx).prerender(&media_id).await
     }
 
@@ -595,17 +687,21 @@ impl RustApi {
     /// is being torn down while messages are still unsent.
     pub async fn hand_outbox_to_os() -> Result<()> {
         let ctx = Context::get_static()?;
+
         OutboxDispatchService::new(ctx).hand_pending_to_os().await?;
+
         Ok(())
     }
 
     pub async fn set_network_available(available: bool) -> Result<()> {
         let ctx = Context::get_static()?;
+
         ApiRuntime::set_network_available(ctx, available).await
     }
 
     pub async fn send_binary(bytes: Vec<u8>) -> Result<()> {
         let ctx = Context::get_static()?;
+
         ApiRuntime::send_binary(ctx, bytes).await
     }
 
@@ -613,26 +709,42 @@ impl RustApi {
     /// and resolves this future with the matching ServerToClient response.
     pub async fn request_binary(bytes: Vec<u8>) -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
+
         ApiRuntime::request_binary(ctx, bytes).await
     }
 
     pub async fn allocate_sequence() -> Result<u64> {
         let ctx = Context::get_static()?;
+
         ApiRuntime::allocate_sequence(ctx).await
+    }
+
+    /// Streams the progress of a large mailbox catch-up, starting with the
+    /// current state.
+    pub async fn mailbox_sync_progress(sink: StreamSink<MailboxSyncProgress>) -> Result<()> {
+        crate::api::messages::mailbox_sync::stream(sink).await
+    }
+
+    /// Developer option: shows the catch-up screen with made-up numbers.
+    pub async fn preview_mailbox_sync() -> Result<()> {
+        // This UI preview owns no database work and must not be cancelled
+        // with a foreground session, leaving its progress channel claimed.
+        crate::api::messages::mailbox_sync::preview().await;
+
+        Ok(())
     }
 
     pub async fn events(sink: StreamSink<ApiEvent>) -> Result<()> {
         let ctx = Context::get_static()?;
+
         ApiRuntime::events(ctx, sink).await
     }
 
     pub async fn register(
-        username: String,
-        proof_of_work: i64,
-        lang_code: String,
-        is_ios: bool,
+        username: String, proof_of_work: i64, lang_code: String, is_ios: bool,
     ) -> Result<i64> {
         let ctx = Context::get_static()?;
+
         Server::register(ctx, username, proof_of_work, lang_code, is_ios)
             .await
             .and_then(api_result)
@@ -640,9 +752,11 @@ impl RustApi {
 
     pub async fn get_user_by_id(user_id: i64) -> Result<FrbUserData> {
         let ctx = Context::get_static()?;
+
         let res = Server::get_user_by_id(ctx, user_id)
             .await
             .and_then(api_result)?;
+
         Ok(FrbUserData {
             user_id: res.user_id,
             username: res.username.unwrap_or_default(),
@@ -650,25 +764,34 @@ impl RustApi {
             joined_at: res.joined_at,
         })
     }
+
     pub async fn refresh_contact_joined_dates() -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::refresh_contact_joined_dates(ctx).await
     }
+
     pub async fn check_for_deleted_usernames() -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::check_for_deleted_usernames(ctx).await
     }
+
     pub async fn get_user_id_from_username(username: String) -> Result<i64> {
         let ctx = Context::get_static()?;
+
         Server::get_user_id_from_username(ctx, username)
             .await
             .and_then(api_result)
     }
+
     pub async fn get_user_data(username: String) -> Result<FrbUserData> {
         let ctx = Context::get_static()?;
+
         let res = Server::get_user_by_username(ctx, username)
             .await
             .and_then(api_result)?;
+
         Ok(FrbUserData {
             user_id: res.user_id,
             username: res.username.unwrap_or_default(),
@@ -676,21 +799,27 @@ impl RustApi {
             joined_at: res.joined_at,
         })
     }
+
     pub async fn get_proof_of_work() -> Result<FrbProofOfWork> {
         let ctx = Context::get_static()?;
+
         let res = Server::get_proof_of_work(ctx).await.and_then(api_result)?;
+
         Ok(FrbProofOfWork {
             prefix: res.prefix,
             difficulty: res.difficulty,
         })
     }
+
     pub async fn download_done(token: Vec<u8>) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::download_done(ctx, token).await.and_then(api_result)
     }
 
     pub async fn download_media(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::mediafiles::MediaFileService::new(ctx)
             .download_when_available(&media_id)
             .await
@@ -698,6 +827,7 @@ impl RustApi {
 
     pub async fn download_pending_media() -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::mediafiles::MediaFileService::new(ctx)
             .download_pending()
             .await
@@ -705,6 +835,7 @@ impl RustApi {
 
     pub async fn request_media_reupload(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::mediafiles::MediaFileService::new(ctx)
             .request_reupload(&media_id)
             .await
@@ -712,26 +843,29 @@ impl RustApi {
 
     pub async fn retry_pending_media_reuploads() -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::mediafiles::MediaFileService::new(ctx)
             .retry_pending_reuploads()
             .await
     }
+
     pub async fn set_login_token(token: Vec<u8>) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::set_login_token(ctx, token)
             .await
             .and_then(api_result)
     }
 
     pub async fn request_memories_upload(
-        size: i64,
-        original_date: i64,
-        media_id: String,
+        size: i64, original_date: i64, media_id: String,
     ) -> Result<FrbMemoriesUploadUrls> {
         let ctx = Context::get_static()?;
+
         let res = Server::request_memories_upload(ctx, size, original_date, media_id)
             .await
             .and_then(api_result)?;
+
         Ok(FrbMemoriesUploadUrls {
             media_id: res.media_id,
             thumbnail_upload: res.thumbnail_upload.map(|p| FrbPresignedPost {
@@ -744,45 +878,60 @@ impl RustApi {
             }),
         })
     }
+
     pub async fn get_memories_usage() -> Result<FrbMemoriesUsage> {
         let ctx = Context::get_static()?;
+
         let res = Server::get_memories_usage(ctx).await.and_then(api_result)?;
+
         Ok(FrbMemoriesUsage {
             current_bytes: res.current_bytes,
             count: res.count,
             max_bytes: res.max_bytes,
         })
     }
+
     pub async fn get_memories_url(media_id: String, thumbnail: bool) -> Result<String> {
         let ctx = Context::get_static()?;
+
         let res = Server::get_memories_url(ctx, media_id, thumbnail)
             .await
             .and_then(api_result)?;
+
         Ok(res.full_download_url)
     }
+
     pub async fn confirm_memories_upload(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::confirm_memories_upload(ctx, media_id)
             .await
             .and_then(api_result)
     }
+
     pub async fn delete_memory(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::delete_memory(ctx, media_id)
             .await
             .and_then(api_result)
     }
+
     pub async fn disable_memories_backup() -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::disable_memories_backup(ctx)
             .await
             .and_then(api_result)
     }
+
     pub async fn get_plan_balance() -> Result<FrbPlanBalance> {
         let ctx = Context::get_static()?;
+
         let res = Server::get_plan_balance_model(ctx)
             .await
             .and_then(api_result)?;
+
         Ok(FrbPlanBalance {
             used_daily_media_upload_limit: res.used_daily_media_upload_limit,
             used_upload_media_size_limit: res.used_upload_media_size_limit,
@@ -800,42 +949,49 @@ impl RustApi {
             additional_account_owner_id: res.additional_account_owner_id,
         })
     }
+
     pub async fn load_plan_balance() -> Result<FrbPlanBalance> {
         Self::get_plan_balance().await
     }
+
     pub async fn remove_additional_user(user_id: i64) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::remove_additional_user(ctx, user_id)
             .await
             .and_then(api_result)
     }
+
     pub async fn add_additional_user(user_id: i64) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::add_additional_user(ctx, user_id)
             .await
             .and_then(api_result)
     }
+
     pub async fn register_passwordless_recovery(
-        encrypted_server_key: Vec<u8>,
-        pin_unlock_token: Option<Vec<u8>>,
+        encrypted_server_key: Vec<u8>, pin_unlock_token: Option<Vec<u8>>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::register_passwordless_recovery(ctx, encrypted_server_key, pin_unlock_token)
             .await
             .and_then(api_result)
     }
+
     pub async fn perform_passwordless_recovery_heartbeat() -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::api::messages::incoming::recovery::perform_heartbeat(ctx).await
     }
+
     pub async fn get_server_key_for_passwordless_recovery(
-        user_id: i64,
-        server_key_protection: Vec<u8>,
-        pin_unlock_token: Option<Vec<u8>>,
-        pin_protection_key: Option<Vec<u8>>,
-        email: Option<String>,
+        user_id: i64, server_key_protection: Vec<u8>, pin_unlock_token: Option<Vec<u8>>,
+        pin_protection_key: Option<Vec<u8>>, email: Option<String>,
     ) -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
+
         Server::get_server_key_for_passwordless_recovery(
             ctx,
             user_id,
@@ -847,22 +1003,23 @@ impl RustApi {
         .await
         .and_then(api_result)
     }
+
     pub async fn submit_recovery_share(
-        notification_id: String,
-        encrypted_message: Vec<u8>,
+        notification_id: String, encrypted_message: Vec<u8>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::submit_recovery_share(ctx, notification_id, encrypted_message)
             .await
             .and_then(api_result)
     }
+
     pub async fn register_passwordless_notification(
-        notification_id: String,
-        download_auth_token: Vec<u8>,
-        lang_code: String,
+        notification_id: String, download_auth_token: Vec<u8>, lang_code: String,
         google_fcm: Option<String>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::register_passwordless_notification(
             ctx,
             notification_id,
@@ -875,11 +1032,11 @@ impl RustApi {
     }
 
     pub async fn check_for_passwordless_notification(
-        notification_id: String,
-        download_auth_token: Vec<u8>,
+        notification_id: String, download_auth_token: Vec<u8>,
         already_received_message_ids: Vec<i64>,
     ) -> Result<Vec<FrbPasswordlessNotificationMessage>> {
         let ctx = Context::get_static()?;
+
         let res = Server::check_for_passwordless_notification(
             ctx,
             notification_id,
@@ -888,6 +1045,7 @@ impl RustApi {
         )
         .await
         .and_then(api_result)?;
+
         Ok(res
             .messages
             .into_iter()
@@ -900,55 +1058,64 @@ impl RustApi {
 
     pub async fn report_user(user_id: i64, reason: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::report_user(ctx, user_id, reason)
             .await
             .and_then(api_result)
     }
+
     pub async fn delete_account() -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::delete_account(ctx).await.and_then(api_result)
     }
+
     pub async fn update_fcm_token(token: String) -> Result<()> {
         let ctx = Context::get_static()?;
-        Server::update_fcm_token(ctx, token)
+
+        Server::update_fcm_token(ctx, token.clone())
             .await
-            .and_then(api_result)
+            .and_then(api_result)?;
+        crate::services::notifications::acknowledge_fcm_token(ctx, &token)
     }
+
     pub async fn ipa_purchase(
-        product_id: String,
-        source: String,
-        verification_data: String,
+        product_id: String, source: String, verification_data: String,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         empty_api_response(Server::ipa_purchase(ctx, product_id, source, verification_data).await?)
     }
+
     pub async fn change_username(username: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::change_username(ctx, username)
             .await
             .and_then(api_result)
     }
+
     pub async fn force_ipa_check() -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::force_ipa_check(ctx).await.and_then(api_result)
     }
+
     pub async fn update_signed_pre_key(id: i64, key: Vec<u8>, signature: Vec<u8>) -> Result<()> {
         let ctx = Context::get_static()?;
+
         empty_api_response(Server::update_signed_pre_key(ctx, id, key, signature).await?)
     }
+
     #[allow(clippy::too_many_arguments)]
     pub async fn upload_pqc_pre_keys(
-        public_identity_key: Vec<u8>,
-        registration_id: i64,
-        ecc_signed_prekey_id: i64,
-        ecc_signed_prekey: Vec<u8>,
-        ecc_signed_prekey_signature: Vec<u8>,
-        kyber_signed_prekey_id: i64,
-        kyber_signed_prekey: Vec<u8>,
-        kyber_signed_prekey_signature: Vec<u8>,
-        prekeys: Vec<PqcPreKeyInput>,
+        public_identity_key: Vec<u8>, registration_id: i64, ecc_signed_prekey_id: i64,
+        ecc_signed_prekey: Vec<u8>, ecc_signed_prekey_signature: Vec<u8>,
+        kyber_signed_prekey_id: i64, kyber_signed_prekey: Vec<u8>,
+        kyber_signed_prekey_signature: Vec<u8>, prekeys: Vec<PqcPreKeyInput>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::upload_pqc_pre_keys(
             ctx,
             public_identity_key,
@@ -964,22 +1131,22 @@ impl RustApi {
         .await
         .and_then(empty_api_response)
     }
+
     pub async fn send_text_message(user_id: i64, body: Vec<u8>) -> Result<()> {
         let ctx = Context::get_static()?;
+
         Server::send_text_message(ctx, user_id, body, false)
             .await
             .and_then(api_result)
     }
 
     pub async fn send_encrypted_content(
-        contact_id: i64,
-        content: Vec<u8>,
-        message_id: Option<String>,
-        only_send_if_no_receipts_are_open: Option<bool>,
-        only_return_encrypted_data: Option<bool>,
+        contact_id: i64, content: Vec<u8>, message_id: Option<String>,
+        only_send_if_no_receipts_are_open: Option<bool>, only_return_encrypted_data: Option<bool>,
         blocking: Option<bool>,
     ) -> Result<Option<Vec<u8>>> {
         let ctx = Context::get_static()?;
+
         crate::api::messages::outgoing::send_c2c_message_to_contact()
             .ctx(ctx)
             .contact_id(contact_id)
@@ -990,16 +1157,14 @@ impl RustApi {
             .blocking(blocking.unwrap_or(false))
             .call()
             .await
-            .map_err(Into::into)
     }
 
     pub async fn send_encrypted_content_to_group(
-        group_id: String,
-        content: Vec<u8>,
-        message_id: Option<String>,
+        group_id: String, content: Vec<u8>, message_id: Option<String>,
         only_send_if_no_receipts_are_open: Option<bool>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::messages::MessageService::new(ctx)
             .send_to_group(
                 group_id,
@@ -1011,14 +1176,12 @@ impl RustApi {
     }
 
     pub async fn insert_and_send_text(
-        group_id: String,
-        text: String,
-        quote_message_id: Option<String>,
-        additional_message_data: Option<Vec<u8>>,
-        message_id: Option<String>,
+        group_id: String, text: String, quote_message_id: Option<String>,
+        additional_message_data: Option<Vec<u8>>, message_id: Option<String>,
         timestamp_ms: Option<i64>,
     ) -> Result<String> {
         let ctx = Context::get_static()?;
+
         crate::services::messages::MessageService::new(ctx)
             .insert_and_send_text(
                 group_id,
@@ -1032,32 +1195,30 @@ impl RustApi {
     }
 
     pub async fn insert_and_send_additional_data(
-        group_id: String,
-        message_type: String,
-        additional_data: Vec<u8>,
-        hidden: bool,
+        group_id: String, message_type: String, additional_data: Vec<u8>, hidden: bool,
     ) -> Result<String> {
         let ctx = Context::get_static()?;
+
         crate::services::messages::MessageService::new(ctx)
             .insert_and_send_additional_data(group_id, message_type, additional_data, hidden)
             .await
     }
 
     pub async fn insert_and_send_contact_share(
-        group_id: String,
-        contact_ids: Vec<i64>,
+        group_id: String, contact_ids: Vec<i64>,
     ) -> Result<String> {
         let ctx = Context::get_static()?;
+
         crate::services::messages::MessageService::new(ctx)
             .insert_and_send_contact_share(group_id, contact_ids)
             .await
     }
 
     pub async fn insert_and_send_ask_about_user(
-        contact_id: i64,
-        ask_about_user_id: i64,
+        contact_id: i64, ask_about_user_id: i64,
     ) -> Result<String> {
         let ctx = Context::get_static()?;
+
         crate::services::messages::MessageService::new(ctx)
             .insert_and_send_ask_about_user(contact_id, ask_about_user_id)
             .await
@@ -1065,13 +1226,23 @@ impl RustApi {
 
     pub async fn send_typing(group_id: String, is_typing: bool) -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::messages::MessageService::new(ctx)
             .send_typing(group_id, is_typing)
             .await
     }
 
+    pub async fn send_chat_closed(group_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+
+        crate::services::messages::MessageService::new(ctx)
+            .send_chat_closed(group_id)
+            .await
+    }
+
     pub async fn retransmit_all_messages() -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::messages::MessageService::new(ctx)
             .retransmit_all()
             .await
@@ -1079,6 +1250,7 @@ impl RustApi {
 
     pub async fn send_queued_message(receipt_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
+
         crate::services::messages::MessageService::new(ctx)
             .send_receipt(receipt_id)
             .await
@@ -1086,6 +1258,7 @@ impl RustApi {
 
     pub async fn notify_messages_opened(contact_id: i64, message_ids: Vec<String>) -> Result<()> {
         let ctx = Context::get_static()?;
+
         MessageService::new(ctx)
             .notify_opened(contact_id, message_ids)
             .await
@@ -1095,32 +1268,43 @@ impl RustApi {
     /// icon badge from the delivered alerts, so the running app pushes this
     /// into `UNUserNotificationCenter` whenever the outbox changes.
     pub async fn notification_badge_count() -> Result<i64> {
-        crate::services::notifications::badge_count(Context::get_static()?).await
+        let ctx = Context::get_static()?;
+
+        ctx.foreground_database_call(|| crate::services::notifications::badge_count(ctx))
+            .await
     }
 
     /// Acknowledges every pending notification of a conversation the user just
     /// opened and returns the native notification IDs to withdraw.
     pub async fn clear_conversation_notifications(conversation_id: String) -> Result<Vec<String>> {
-        crate::services::notifications::clear_conversation(Context::get_static()?, &conversation_id)
-            .await
+        let ctx = Context::get_static()?;
+
+        ctx.foreground_database_call(|| {
+            crate::services::notifications::clear_conversation(ctx, &conversation_id)
+        })
+        .await
     }
 
     /// Acknowledges the pending contact-request notifications and returns the
     /// native notification IDs to withdraw.
     pub async fn clear_contact_request_notifications() -> Result<Vec<String>> {
-        crate::services::notifications::clear_contact_requests(Context::get_static()?).await
+        let ctx = Context::get_static()?;
+
+        ctx.foreground_database_call(|| crate::services::notifications::clear_contact_requests(ctx))
+            .await
     }
 
     pub async fn send_contact_profile(contact_id: i64) -> Result<()> {
         let ctx = Context::get_static()?;
+
         ContactService::new(ctx).send_profile(contact_id).await
     }
 
     pub async fn establish_signal_session(
-        contact_id: i64,
-        expected_public_key: Option<Vec<u8>>,
+        contact_id: i64, expected_public_key: Option<Vec<u8>>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
+
         ContactService::new(ctx)
             .establish_signal_session(contact_id, expected_public_key)
             .await

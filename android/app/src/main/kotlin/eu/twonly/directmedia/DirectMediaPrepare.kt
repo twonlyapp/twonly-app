@@ -1,5 +1,6 @@
 package eu.twonly.directmedia
 
+import android.content.Context
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.Data
@@ -26,6 +27,25 @@ import java.util.concurrent.TimeUnit
  * [schedule] is called directly from Rust over JNI.
  */
 object DirectMediaPrepare {
+    /** Publish a rotated token even when no Flutter activity is running. */
+    fun registerFcmToken(context: Context, refreshFromSdk: Boolean): Boolean = try {
+        val request = OneTimeWorkRequest.Builder(MediaPrepareWorker::class.java)
+            .setInputData(Data.Builder().putBoolean(MediaPrepareWorker.REFRESH_FCM_TOKEN, refreshFromSdk).build())
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS)
+            .addTag(TAG)
+            .build()
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "twonly-fcm-registration",
+            ExistingWorkPolicy.REPLACE,
+            request,
+        )
+        true
+    } catch (_: Throwable) {
+        false
+    }
+
     /** Prepares one media file. Unique per media id, so a send that is already
      * being prepared is never started twice. */
     @JvmStatic

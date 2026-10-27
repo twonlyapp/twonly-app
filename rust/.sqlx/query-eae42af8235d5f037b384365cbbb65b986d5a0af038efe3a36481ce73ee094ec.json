@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    SAVEPOINT rust_domain_command\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "eae42af8235d5f037b384365cbbb65b986d5a0af038efe3a36481ce73ee094ec"
+}

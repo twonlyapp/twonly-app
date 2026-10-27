@@ -1,0 +1,33 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                SELECT COALESCE(NULLIF(nick_name, ''), display_name, username) AS \"name!: String\",\n                    account_deleted AS \"deleted!: bool\"\n                FROM contacts\n                WHERE user_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "name!: String",
+        "ordinal": 0,
+        "type_info": "Null",
+        "origin": "Expression"
+      },
+      {
+        "name": "deleted!: bool",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "account_deleted"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      null,
+      false
+    ]
+  },
+  "hash": "99c7f54b97845fb2ad79b8ed91527990ddcc8501ebf948c5b24d127a8f71b3f2"
+}

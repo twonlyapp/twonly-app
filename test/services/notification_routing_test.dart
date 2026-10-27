@@ -4,6 +4,7 @@ import 'package:twonly/src/services/notifications/native.notifications.dart';
 void main() {
   test('text notifications open their conversation', () {
     expect(NativeNotificationService.opensConversation('text'), isTrue);
+    expect(NativeNotificationService.opensConversation('mention'), isTrue);
     expect(NativeNotificationService.opensConversation('response'), isTrue);
     expect(NativeNotificationService.opensConversation('sticker'), isTrue);
   });

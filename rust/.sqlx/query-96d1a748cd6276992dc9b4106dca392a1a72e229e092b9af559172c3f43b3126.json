@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT shows_photo FROM custom_avatar_publications WHERE contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "shows_photo",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "custom_avatar_publications",
+            "name": "shows_photo"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "96d1a748cd6276992dc9b4106dca392a1a72e229e092b9af559172c3f43b3126"
+}

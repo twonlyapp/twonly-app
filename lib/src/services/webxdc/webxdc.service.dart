@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:drift/drift.dart' show Expression, TableUpdateQuery;
+import 'package:twonly/core/bridge/database/webxdc.dart' as rust_webxdc;
 import 'package:twonly/core/bridge/webxdc.dart' as rust_webxdc;
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/webxdc/table.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/log.dart';
+
+export 'package:twonly/core/database/app/webxdc/table.dart'
+    show WebxdcCardApp, WebxdcCardInstance;
 
 /// The Flutter side of the webxdc runtime.
 ///
@@ -24,8 +28,8 @@ class WebxdcService {
   /// icon. Reading the last known values synchronously means it comes back
   /// looking the way it left, while the queries behind it still run and
   /// correct anything that changed.
-  static final Map<String, WebxdcInstance> _instanceCache = {};
-  static final Map<String, WebxdcApp> _appCache = {};
+  static final Map<String, WebxdcCardInstance> _instanceCache = {};
+  static final Map<String, WebxdcCardApp> _appCache = {};
 
   static String _appKey(String appId, int version) => '$appId:$version';
 
@@ -178,18 +182,15 @@ class WebxdcService {
 
   /// The store entry an instance runs, for the chat card. Null while the
   /// catalog has not been fetched on this device yet.
-  static Future<WebxdcApp?> appFor(WebxdcInstance instance) =>
+  static Future<WebxdcCardApp?> appFor(WebxdcCardInstance instance) =>
       appNamed(instance.appId, instance.version);
 
-  static Future<WebxdcApp?> appNamed(String appId, int version) async {
-    final app =
-        await (twonlyDB.select(twonlyDB.webxdcApps)..where(
-              (app) => Expression.and([
-                app.appId.equals(appId),
-                app.version.equals(version),
-              ]),
-            ))
-            .getSingleOrNull();
+  static Future<WebxdcCardApp?> appNamed(String appId, int version) async {
+    final app = await rust_webxdc.webxdcCardApp(
+      id: appId,
+      version: version,
+      transaction: currentDatabaseSession(),
+    );
     if (app != null) _appCache[_appKey(appId, version)] = app;
     return app;
   }
@@ -202,7 +203,7 @@ class WebxdcService {
   /// (`de-at` for a reader of `de`), then English, then whatever the app is
   /// translated into at all. `name` is what an app translated into none of the
   /// reader's languages is called.
-  static String localizedName(WebxdcApp app, List<String> languages) {
+  static String localizedName(WebxdcCardApp app, List<String> languages) {
     Map<String, dynamic> byLanguage;
     try {
       final decoded = jsonDecode(app.nameTranslations);
@@ -235,41 +236,39 @@ class WebxdcService {
   /// The store entry as it was last read, without touching the database, for
   /// the first frame of a card whose state was just recreated. Null until some
   /// card has looked the version up; the caller still runs [appNamed].
-  static WebxdcApp? cachedApp(String appId, int version) =>
+  static WebxdcCardApp? cachedApp(String appId, int version) =>
       _appCache[_appKey(appId, version)];
 
   /// The instance as it was last read, for the same reason as [cachedApp].
-  static WebxdcInstance? cachedInstance(String instanceId) =>
+  static WebxdcCardInstance? cachedInstance(String instanceId) =>
       _instanceCache[instanceId];
 
   /// The instance row, if this device has the app card the message points at.
   /// A `sendToChat` message can land in a chat that has no instance of its own.
-  static Future<WebxdcInstance?> instanceRow(String instanceId) async {
-    final row = await (twonlyDB.select(
-      twonlyDB.webxdcInstances,
-    )..where((row) => row.instanceId.equals(instanceId))).getSingleOrNull();
+  static Future<WebxdcCardInstance?> instanceRow(String instanceId) async {
+    final row = await rust_webxdc.webxdcCardInstance(
+      id: instanceId,
+      transaction: currentDatabaseSession(),
+    );
     if (row != null) _instanceCache[instanceId] = row;
     return row;
   }
 
-  static Stream<WebxdcInstance?> watchInstance(String instanceId) {
-    return (twonlyDB.select(twonlyDB.webxdcInstances)
-          ..where((row) => row.instanceId.equals(instanceId)))
-        .watchSingleOrNull()
-        .map((row) {
-          if (row != null) _instanceCache[instanceId] = row;
-          return row;
-        });
+  static Stream<WebxdcCardInstance?> watchInstance(String instanceId) {
+    return watchRustDatabase(
+      (control) =>
+          rust_webxdc.watchWebxdcCard(id: instanceId, control: control),
+    ).map((row) {
+      if (row != null) _instanceCache[instanceId] = row;
+      return row;
+    });
   }
 
-  /// Fires whenever any update lands. The caller filters by serial, so a tick
-  /// for another instance costs one query and nothing else; only one app is
-  /// ever open at a time.
-  static Stream<void> watchUpdates() {
-    return twonlyDB
-        .tableUpdates(TableUpdateQuery.onTable(twonlyDB.webxdcUpdates))
-        .map((_) {});
-  }
+  /// Only changes to the open instance's serial cross the bridge.
+  static Stream<void> watchUpdates(String instanceId) => watchRustDatabase(
+    (control) =>
+        rust_webxdc.watchWebxdcSerial(id: instanceId, control: control),
+  ).map((_) {});
 }
 
 /// Clearing a webview origin is the platform's job; the channel is declared

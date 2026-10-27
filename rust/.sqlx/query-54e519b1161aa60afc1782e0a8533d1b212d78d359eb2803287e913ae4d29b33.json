@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM live_location_targets WHERE session_id = ? AND message_id IN (SELECT message_id FROM messages WHERE is_deleted_from_sender = 1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "54e519b1161aa60afc1782e0a8533d1b212d78d359eb2803287e913ae4d29b33"
+}

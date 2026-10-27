@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/contact_groups/table.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 
 void main() {
@@ -16,7 +17,7 @@ void main() {
         showAsLabel: true,
         shareStories: false,
         usageCounter: 0,
-        createdAt: DateTime(2026),
+        createdAtSeconds: databaseSeconds(DateTime(2026)),
       );
 
       await tester.pumpWidget(

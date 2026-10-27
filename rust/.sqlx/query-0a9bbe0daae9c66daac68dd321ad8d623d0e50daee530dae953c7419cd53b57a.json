@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT accepted, blocked, deleted_by_user FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "accepted",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "accepted"
+          }
+        }
+      },
+      {
+        "name": "blocked",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "blocked"
+          }
+        }
+      },
+      {
+        "name": "deleted_by_user",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "deleted_by_user"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0a9bbe0daae9c66daac68dd321ad8d623d0e50daee530dae953c7419cd53b57a"
+}

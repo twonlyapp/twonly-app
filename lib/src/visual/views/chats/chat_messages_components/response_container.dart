@@ -3,16 +3,24 @@ import 'dart:typed_data';
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/daos/stories.dao.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
+import 'package:twonly/src/utils/mentions.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/mention_text.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 
 class ResponseContainer extends StatelessWidget {
@@ -30,13 +38,13 @@ class ResponseContainer extends StatelessWidget {
     super.key,
   });
 
-  final Message msg;
+  final StoredMessage msg;
   final Widget? child;
   final Group group;
   final MediaFileService? mediaService;
   final BorderRadius borderRadius;
   final void Function(String)? scrollToMessage;
-  final Message? quotedMessage;
+  final StoredMessage? quotedMessage;
   final MediaFile? quotedMediaFile;
   final Map<int, Contact>? contactsById;
   final bool useSharedData;
@@ -83,6 +91,7 @@ class ResponseContainer extends StatelessWidget {
                     messageId: msg.quotesMessageId,
                     message: quotedMessage,
                     mediaFile: quotedMediaFile,
+                    contactsById: contactsById,
                     contact: quotedMessage?.senderId == null
                         ? null
                         : contactsById?[quotedMessage!.senderId],
@@ -113,11 +122,12 @@ class ResponsePreview extends StatefulWidget {
     this.colorUsername = false,
     this.mediaFile,
     this.contact,
+    this.contactsById,
     this.useSharedData = false,
     super.key,
   });
 
-  final Message? message;
+  final StoredMessage? message;
   final String? messageId;
   final Group group;
   final bool showBorder;
@@ -125,6 +135,7 @@ class ResponsePreview extends StatefulWidget {
   final bool colorUsername;
   final MediaFile? mediaFile;
   final Contact? contact;
+  final Map<int, Contact>? contactsById;
   final bool useSharedData;
 
   @override
@@ -132,7 +143,7 @@ class ResponsePreview extends StatefulWidget {
 }
 
 class _ResponsePreviewState extends State<ResponsePreview> {
-  Message? _message;
+  StoredMessage? _message;
   MediaFileService? _mediaService;
   String _username = '';
   Uint8List? _stickerSource;
@@ -170,17 +181,19 @@ class _ResponsePreviewState extends State<ResponsePreview> {
 
   Future<void> initAsync() async {
     if (_message == null && widget.messageId != null) {
-      _message = await twonlyDB.messagesDao
-          .getMessageById(widget.messageId!)
-          .getSingleOrNull();
+      _message = await rust_messages.getMessage(
+        id: widget.messageId!,
+        transaction: currentDatabaseSession(),
+      );
     }
     if (_message?.mediaId != null && _mediaService == null) {
       _mediaService = await MediaFileService.fromMediaId(_message!.mediaId!);
     }
     if (_message?.senderId != null && _username.isEmpty) {
-      final contact = await twonlyDB.contactsDao
-          .getContactByUserId(_message!.senderId!)
-          .getSingleOrNull();
+      final contact = await rust_contacts.getContact(
+        id: _message!.senderId!,
+        transaction: currentDatabaseSession(),
+      );
       if (contact != null) {
         _username = getContactDisplayName(contact);
       }
@@ -213,7 +226,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
         if (quotedStickerBytes != null) {
           subtitle = context.lang.sticker;
         } else if (_message!.content != null) {
-          subtitle = truncateString(_message!.content!);
+          subtitle = _message!.content!;
         }
       }
       if (_message!.type == MessageType.media.name && _mediaService != null) {
@@ -339,10 +352,16 @@ class _ResponsePreviewState extends State<ResponsePreview> {
                   ),
                 ),
                 if (subtitle != null)
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  MentionNames(
+                    text: subtitle,
+                    contactsById: widget.useSharedData
+                        ? widget.contactsById
+                        : null,
+                    builder: (context, name) => Text(
+                      truncateString(resolveMentions(subtitle!, name)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
             ),

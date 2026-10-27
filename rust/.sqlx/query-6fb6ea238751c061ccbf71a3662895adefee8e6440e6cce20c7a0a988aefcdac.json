@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT EXISTS(SELECT 1 FROM groups WHERE group_id = ? AND is_direct_chat = 0) AS \"value!: bool\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6fb6ea238751c061ccbf71a3662895adefee8e6440e6cce20c7a0a988aefcdac"
+}

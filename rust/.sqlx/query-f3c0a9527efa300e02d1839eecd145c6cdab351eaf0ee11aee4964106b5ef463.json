@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT share_id AS \"share_id!\",\n                share AS \"share!\",\n                contact_id AS \"contact_id?\"\n            FROM user_discovery_shares ORDER BY share_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "share_id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_shares",
+            "name": "share_id"
+          }
+        }
+      },
+      {
+        "name": "share!",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_shares",
+            "name": "share"
+          }
+        }
+      },
+      {
+        "name": "contact_id?",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_shares",
+            "name": "contact_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "f3c0a9527efa300e02d1839eecd145c6cdab351eaf0ee11aee4964106b5ef463"
+}

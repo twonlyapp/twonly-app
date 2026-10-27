@@ -43,8 +43,10 @@ enum NativeVideoCodec {
     removeAudio: Bool,
     trimStartMs: Int64,
     trimEndMs: Int64,
-    onProgress: @escaping (Int) -> Void
+    onProgress: @escaping (Int) -> Void,
+    isCancelled: @escaping () -> Bool = { false }
   ) -> Bool {
+    guard !isCancelled() else { return false }
     let asset = AVURLAsset(url: URL(fileURLWithPath: inputPath))
     guard let videoTrack = asset.tracks(withMediaType: .video).first else { return false }
 
@@ -164,7 +166,8 @@ enum NativeVideoCodec {
       let startSeconds = CMTimeGetSeconds(trim.start)
       let duration = CMTimeGetSeconds(trim.duration)
       let group = DispatchGroup()
-      pump(
+      var cancelPumps: [() -> Void] = []
+      cancelPumps.append(pump(
         input: videoInput,
         output: videoOutput,
         label: "video",
@@ -172,9 +175,9 @@ enum NativeVideoCodec {
         startSeconds: startSeconds,
         duration: duration,
         onProgress: onProgress
-      )
+      ))
       if let audioInput, let audioOutput {
-        pump(
+        cancelPumps.append(pump(
           input: audioInput,
           output: audioOutput,
           label: "audio",
@@ -182,9 +185,22 @@ enum NativeVideoCodec {
           startSeconds: 0,
           duration: nil,
           onProgress: nil
-        )
+        ))
       }
-      group.wait()
+      var stopping = false
+      while group.wait(timeout: .now() + .milliseconds(50)) == .timedOut {
+        if !stopping && (isCancelled() || reader.status == .failed || writer.status == .failed) {
+          stopping = true
+          reader.cancelReading()
+          // Drain each pump's serial queue even if the writer never becomes
+          // ready again. Completion cannot depend on another readiness callback.
+          cancelPumps.forEach { $0() }
+        }
+      }
+      if stopping || isCancelled() {
+        writer.cancelWriting()
+        return false
+      }
 
       guard reader.status != .failed else {
         writer.cancelWriting()
@@ -192,7 +208,9 @@ enum NativeVideoCodec {
       }
       let finished = DispatchSemaphore(value: 0)
       writer.finishWriting { finished.signal() }
-      finished.wait()
+      while finished.wait(timeout: .now() + .milliseconds(50)) == .timedOut {
+        if isCancelled() { writer.cancelWriting() }
+      }
 
       guard writer.status == .completed else { return false }
       let size = try FileManager.default.attributesOfItem(atPath: outputPath)[.size] as? Int
@@ -311,14 +329,21 @@ enum NativeVideoCodec {
     startSeconds: Double,
     duration: Double?,
     onProgress: ((Int) -> Void)?
-  ) {
+  ) -> () -> Void {
     group.enter()
     let queue = DispatchQueue(label: "eu.twonly.video.\(label)")
+    var ended = false
+    let finish: (Bool) -> Void = { completed in
+      guard !ended else { return }
+      ended = true
+      if completed { input.markAsFinished() }
+      group.leave()
+    }
     input.requestMediaDataWhenReady(on: queue) {
+      guard !ended else { return }
       while input.isReadyForMoreMediaData {
         guard let sample = output.copyNextSampleBuffer() else {
-          input.markAsFinished()
-          group.leave()
+          finish(true)
           return
         }
         if let duration, duration > 0, let onProgress {
@@ -328,9 +353,13 @@ enum NativeVideoCodec {
           let done = (seconds - startSeconds) / duration
           onProgress(Int((min(max(done, 0), 1) * 100).rounded()))
         }
-        input.append(sample)
+        guard input.append(sample) else {
+          finish(false)
+          return
+        }
       }
     }
+    return { queue.async { finish(false) } }
   }
 }
 
@@ -357,7 +386,8 @@ public func twonlyRenderVideo(
     trimEndMs: trimEndMs,
     onProgress: { percent in
       mediaIdString.withCString { progress($0, Int32(percent)) }
-    }
+    },
+    isCancelled: { mediaIdString.withCString { twonly_video_is_cancelled($0) } }
   )
 }
 

@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT version_id AS \"version_id!\",\n                contact_id AS \"contact_id!\",\n                promotion AS \"promotion!\"\n            FROM user_discovery_own_promotions\n            ORDER BY version_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "version_id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_own_promotions",
+            "name": "version_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_own_promotions",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "promotion!",
+        "ordinal": 2,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_own_promotions",
+            "name": "promotion"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c9caf9b2eacad5451567f547acbe68c7cab84f269bde7d0ec4bed305e22f4810"
+}

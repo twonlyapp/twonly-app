@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    UPDATE messages SET group_id = CASE WHEN ? THEN ? ELSE group_id END,\n                    message_id = CASE WHEN ? THEN ? ELSE message_id END,\n                    sender_id = CASE WHEN ? THEN ? ELSE sender_id END,\n                    type = CASE WHEN ? THEN ? ELSE type END,\n                    content = CASE WHEN ? THEN ? ELSE content END,\n                    media_id = CASE WHEN ? THEN ? ELSE media_id END,\n                    additional_message_data = CASE WHEN ? THEN ? ELSE additional_message_data END,\n                    media_stored = CASE WHEN ? THEN ? ELSE media_stored END,\n                    media_reopened = CASE WHEN ? THEN ? ELSE media_reopened END,\n                    download_token = CASE WHEN ? THEN ? ELSE download_token END,\n                    quotes_message_id = CASE WHEN ? THEN ? ELSE quotes_message_id END,\n                    is_widget_media = CASE WHEN ? THEN ? ELSE is_widget_media END,\n                    is_story = CASE WHEN ? THEN ? ELSE is_story END,\n                    opened_at = CASE WHEN ? THEN ? ELSE opened_at END,\n                    opened_by_all = CASE WHEN ? THEN ? ELSE opened_by_all END,\n                    created_at = CASE WHEN ? THEN ? ELSE created_at END,\n                    modified_at = CASE WHEN ? THEN ? ELSE modified_at END,\n                    ack_by_user = CASE WHEN ? THEN ? ELSE ack_by_user END,\n                    ack_by_server = CASE WHEN ? THEN ? ELSE ack_by_server END\n                , is_deleted_from_sender = ? WHERE media_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 40
+    },
+    "nullable": []
+  },
+  "hash": "89f1c88c9dbe1917721499ffd12398e992abdc662a2113821a5101c9ad281a6d"
+}

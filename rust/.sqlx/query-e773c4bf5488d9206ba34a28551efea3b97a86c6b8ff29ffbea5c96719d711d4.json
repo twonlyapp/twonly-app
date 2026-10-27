@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(\n                           SELECT 1 FROM media_files\n                           WHERE media_id = ? AND stored = 1 AND cloud_state = 'none'\n                             AND created_at < ?\n                       )",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(\n                           SELECT 1 FROM media_files\n                           WHERE media_id = ? AND stored = 1 AND cloud_state = 'none'\n                             AND created_at < ?\n                       )",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e773c4bf5488d9206ba34a28551efea3b97a86c6b8ff29ffbea5c96719d711d4"
+}

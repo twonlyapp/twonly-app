@@ -4,11 +4,14 @@
  */
 
 #![allow(unexpected_cfgs)]
+
 pub mod api;
 pub mod callbacks;
+pub mod database;
 pub mod groups;
-pub mod logging;
 pub mod live_location;
+pub mod logging;
+pub mod performance;
 pub mod stories;
 pub mod user_config;
 pub mod webxdc;
@@ -18,9 +21,8 @@ use crate::context::Context;
 use crate::error::Result;
 use flutter_rust_bridge::frb;
 
-pub use crate::database::app::tables::FlameState;
-pub use crate::user_discovery::AnnouncedUser;
-pub use crate::user_discovery::OtherPromotion;
+pub use crate::database::app::groups::native::FlameState;
+pub use crate::user_discovery::{AnnouncedUser, OtherPromotion};
 
 pub struct InitConfig {
     pub database_dir: String,
@@ -28,6 +30,7 @@ pub struct InitConfig {
 }
 
 #[frb(mirror(OtherPromotion))]
+
 pub struct _OtherPromotion {
     pub promotion_id: u32,
     pub public_id: i64,
@@ -38,6 +41,7 @@ pub struct _OtherPromotion {
 }
 
 #[frb(mirror(AnnouncedUser))]
+
 pub struct _AnnouncedUser {
     pub user_id: i64,
     pub public_key: Vec<u8>,
@@ -45,6 +49,7 @@ pub struct _AnnouncedUser {
 }
 
 #[frb(mirror(FlameState))]
+
 pub struct _FlameState {
     pub counter: i64,
     pub is_expiring: bool,
@@ -53,11 +58,13 @@ pub struct _FlameState {
 
 pub(super) fn get_twonly_flutter() -> Result<&'static Context> {
     let ctx = Context::get_static()?;
+
     Ok(&**ctx)
 }
 
 pub async fn initialize_twonly_flutter(config: InitConfig) -> Result<()> {
     Context::init_flutter(config).await?;
+
     Ok(())
 }
 
@@ -70,6 +77,7 @@ pub async fn initialize_twonly_standalone(config: InitConfig) -> Result<()> {
 /// Initializes a short-lived background runtime which authenticates without
 /// replacing an active foreground session.
 #[frb(ignore)]
+
 pub async fn initialize_twonly_notification(config: InitConfig) -> Result<()> {
     Context::init_notification(config).await
 }

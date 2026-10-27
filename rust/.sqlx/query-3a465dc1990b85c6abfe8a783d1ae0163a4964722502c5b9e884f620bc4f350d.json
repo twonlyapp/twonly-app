@@ -1,0 +1,110 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    SELECT group_id AS \"group_id!\",\n                    contact_id AS \"contact_id!\",\n                    member_state AS \"member_state?\",\n                    group_public_key AS \"group_public_key?\",\n                    last_chat_opened AS \"last_chat_opened?\",\n                    last_type_indicator AS \"last_type_indicator?\",\n                    last_message AS \"last_message?\",\n                    created_at AS \"created_at!\" FROM group_members WHERE\n                1\n                    AND (? = 0 OR member_state IS NULL OR member_state != 'leftGroup') AND (? = 0\n                    OR last_type_indicator IS NOT NULL) ORDER BY group_id, last_message DESC, contact_id\n                ",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "member_state?",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "member_state"
+          }
+        }
+      },
+      {
+        "name": "group_public_key?",
+        "ordinal": 3,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "group_public_key"
+          }
+        }
+      },
+      {
+        "name": "last_chat_opened?",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "last_chat_opened"
+          }
+        }
+      },
+      {
+        "name": "last_type_indicator?",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "last_type_indicator"
+          }
+        }
+      },
+      {
+        "name": "last_message?",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "last_message"
+          }
+        }
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "3a465dc1990b85c6abfe8a783d1ae0163a4964722502c5b9e884f620bc4f350d"
+}

@@ -20,8 +20,7 @@ use stream_tungstenite::error::SendError;
 use tokio::sync::oneshot;
 
 fn call_handle_server_message(
-    ctx: Arc<Context>,
-    kind: server_to_client::v0::Kind,
+    ctx: Arc<Context>, kind: server_to_client::v0::Kind,
 ) -> Pin<Box<dyn Future<Output = StdResult<client_to_server::Response, String>> + Send>> {
     Box::pin(async move {
         handle_server_message(&ctx, kind)
@@ -34,6 +33,7 @@ fn call_handle_server_message(
 /// the event the UI shows for them. Everything else is a per-request error.
 pub(crate) fn permanent_rejection_kind(code: i32) -> Option<ApiEventKind> {
     use crate::api::proto::error::ErrorCode;
+
     if code == ErrorCode::AppVersionOutdated as i32 {
         Some(ApiEventKind::AppOutdated)
     } else if code == ErrorCode::NewDeviceRegistered as i32 {
@@ -55,9 +55,7 @@ fn is_dead_transport(error: &SendError) -> bool {
 
 impl ApiClient {
     pub(crate) async fn handle_incoming(
-        self: &Arc<Self>,
-        connection: &Arc<stream_tungstenite::WebSocketClient>,
-        bytes: &[u8],
+        self: &Arc<Self>, connection: &Arc<stream_tungstenite::WebSocketClient>, bytes: &[u8],
     ) {
         let Ok(message) = server_to_client::ServerToClient::decode(bytes) else {
             return;
@@ -67,22 +65,27 @@ impl ApiClient {
             if let Some(kind) = v0.kind {
                 if matches!(kind, server_to_client::v0::Kind::Response(_)) {
                     let mut pending = self.pending.lock().await;
+
                     if let Some(sender) = pending.remove(&v0.seq) {
                         let _ = sender.send(bytes.to_vec());
                     }
                 } else {
                     let client = self.clone();
+
                     // A response belongs to the WebSocket which delivered the
                     // request. Sequence IDs are scoped to a server session and
                     // restart when a replacement connection is authenticated,
                     // so forwarding this response through `client.send()`
                     // could satisfy an unrelated request on the new session.
                     let response_connection = connection.clone();
+
                     let Some(ctx) = self.context.upgrade() else {
                         tracing::warn!("context was dropped before handling a server message");
+
                         return;
                     };
-                    tokio::spawn(async move {
+
+                    crate::database::lifecycle::spawn(async move {
                         match call_handle_server_message(ctx, kind).await {
                             Ok(response) => {
                                 let acknowledgement = client_to_server::ClientToServer {
@@ -95,17 +98,20 @@ impl ApiClient {
                                         },
                                     )),
                                 };
+
                                 if !client.is_current_connection(&response_connection).await {
                                     tracing::debug!(
                                         sequence = v0.seq,
                                         "discarding response for a replaced WebSocket session"
                                     );
+
                                     return;
                                 }
 
                                 let message = stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(
                                     acknowledgement.encode_to_vec().into(),
                                 );
+
                                 if let Err(error) = response_connection.send_async(message).await {
                                     if is_dead_transport(&error) {
                                         client.schedule_reconnect(
@@ -113,6 +119,7 @@ impl ApiClient {
                                             "server acknowledgement send failed",
                                         );
                                     }
+
                                     tracing::warn!(
                                         sequence = v0.seq,
                                         "failed to acknowledge server message: {error}"
@@ -131,10 +138,13 @@ impl ApiClient {
 
     pub(crate) async fn send(self: &Arc<Self>, bytes: Vec<u8>) -> Result<()> {
         let ws_client = self.ws_client.lock().await.clone();
+
         if let Some(client) = ws_client {
             let msg =
                 stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(bytes.into());
+
             let start = tokio::time::Instant::now();
+
             loop {
                 match client.send_async(msg.clone()).await {
                     Ok(_) => return Ok(()),
@@ -145,6 +155,7 @@ impl ApiClient {
                         if is_dead_transport(&e) {
                             self.schedule_reconnect(&client, "send failed");
                         }
+
                         return Err(TwonlyError::Generic(format!("send error: {:?}", e)));
                     }
                 }
@@ -159,12 +170,12 @@ impl ApiClient {
     }
 
     pub(crate) async fn request_durable(
-        self: &Arc<Self>,
-        bytes: Vec<u8>,
-        operation_kind: &str,
+        self: &Arc<Self>, bytes: Vec<u8>, operation_kind: &str,
     ) -> Result<Vec<u8>> {
         let sequence = self.next_sequence().await;
+
         let context = self.context.upgrade().ok_or(TwonlyError::Initialization)?;
+
         let database = context.app_db.read().await.clone();
 
         sqlx::query!(
@@ -186,35 +197,42 @@ impl ApiClient {
             .execute(&database.pool)
             .await?;
         }
+
         response
     }
 
     pub(crate) async fn request_internal(
-        self: &Arc<Self>,
-        bytes: Vec<u8>,
-        timeout: Duration,
+        self: &Arc<Self>, bytes: Vec<u8>, timeout: Duration,
     ) -> Result<Vec<u8>> {
         let mut request = client_to_server::ClientToServer::decode(bytes.as_slice())
             .map_err(|error| TwonlyError::Generic(format!("invalid request payload: {error}")))?;
+
         let sequence = self.next_sequence().await;
+
         if let Some(client_to_server::client_to_server::V::V0(v0)) = &mut request.v {
             v0.seq = sequence;
         }
 
         let (sender, receiver) = oneshot::channel();
+
         self.pending.lock().await.insert(sequence, sender);
 
         let ws_client = self.ws_client.lock().await.clone();
+
         if let Some(client) = ws_client {
             let msg = stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(
                 request.encode_to_vec().into(),
             );
+
             let start = tokio::time::Instant::now();
+
             let mut sent = false;
+
             while start.elapsed() < Duration::from_secs(10) {
                 match client.send_async(msg.clone()).await {
                     Ok(_) => {
                         sent = true;
+
                         break;
                     }
                     Err(SendError::NotConnected) => {
@@ -222,21 +240,26 @@ impl ApiClient {
                     }
                     Err(e) => {
                         self.pending.lock().await.remove(&sequence);
+
                         if is_dead_transport(&e) {
                             self.schedule_reconnect(&client, "request send failed");
                         }
+
                         return Err(TwonlyError::Generic(format!("send error: {:?}", e)));
                     }
                 }
             }
+
             if !sent {
                 self.pending.lock().await.remove(&sequence);
+
                 return Err(TwonlyError::Generic(
                     "send error: NotConnected (timeout)".into(),
                 ));
             }
         } else {
             self.pending.lock().await.remove(&sequence);
+
             return Err(TwonlyError::Generic("Not connected".into()));
         }
 
@@ -245,6 +268,7 @@ impl ApiClient {
             Ok(Err(_)) => Err(TwonlyError::Generic("response channel closed".into())),
             Err(_) => {
                 self.pending.lock().await.remove(&sequence);
+
                 Err(TwonlyError::Generic("API request timed out".into()))
             }
         }
@@ -252,27 +276,35 @@ impl ApiClient {
 
     pub(crate) async fn next_sequence(&self) -> u64 {
         let mut guard = self.next_sequence.lock().await;
+
         let value = *guard;
+
         *guard += 1;
+
         value
     }
 
     pub(crate) async fn handle_success_metadata(&self, bytes: &[u8]) -> Result<()> {
         let response = server_to_client::ServerToClient::decode(bytes)
             .map_err(|error| TwonlyError::Generic(format!("invalid API response: {error}")))?;
+
         let Some(server_to_client::server_to_client::V::V0(v0)) = response.v else {
             return Ok(());
         };
+
         let Some(server_to_client::v0::Kind::Response(response)) = v0.kind else {
             return Ok(());
         };
+
         let Some(server_to_client::response::Response::Ok(ok)) = response.response else {
             return Ok(());
         };
+
         if let Some(server_to_client::response::ok::Ok::Authenticated(authenticated)) = ok.ok {
             // Note: publish_plan needs to be reachable, we'll keep it in auth or request.
             self.publish_plan(authenticated.plan).await?;
         }
+
         Ok(())
     }
 
@@ -282,13 +314,17 @@ impl ApiClient {
     pub(crate) async fn reject_permanently(&self, kind: ApiEventKind) {
         self.set_state(ApiConnectionState::PermanentlyRejected)
             .await;
+
         API_PERMANENTLY_REJECTED.store(true, Ordering::Release);
+
         self.deliberately_closed.store(true, Ordering::Release);
+
         let _ = self.events.send(ApiEvent {
             kind,
             state: Some(ApiConnectionState::PermanentlyRejected),
             message: None,
         });
+
         if let Some(client) = self.ws_client.lock().await.take() {
             if let Err(error) = client.shutdown_graceful(Duration::from_secs(5)).await {
                 tracing::warn!(%error, "permanently rejected WebSocket did not shut down cleanly");
@@ -298,29 +334,27 @@ impl ApiClient {
 
     pub(crate) async fn handle_api_error(&self, code: i32, contact_id: Option<i64>) -> Result<()> {
         use crate::api::proto::error::ErrorCode;
+
         if let Some(kind) = permanent_rejection_kind(code) {
             self.reject_permanently(kind).await;
         }
+
         if code == ErrorCode::UserIdNotFound as i32 {
             if let Some(contact_id) = contact_id {
                 let context = self.context.upgrade().ok_or(TwonlyError::Initialization)?;
+
                 let database = context.app_db.read().await.clone();
-                // Only the mark, never the queue. `account_deleted` is a latch
-                // any contact-scoped request can set, and this one may have
-                // been about something else entirely -- or the peer may since
-                // have re-registered. `send_queued_receipt` asks the server
-                // again before it believes the latch, and drops only what the
-                // server positively denies, so emptying the outbox here threw
-                // away the very messages that path exists to save: unsent,
-                // unacknowledged and unlogged.
-                sqlx::query!(
-                    "UPDATE contacts SET account_deleted = 1 WHERE user_id = ?",
-                    contact_id
-                )
-                .execute(&database.pool)
-                .await?;
+
+                // Only the requests that look this user up are sent for a
+                // contact, `GetUserById` and `TextMessage`, so this answer is
+                // about the user and nothing else: the server has no account
+                // with that ID, and IDs are never handed out again. Requests
+                // that can fail with the same code for another reason, such as
+                // the additional-user ones, are sent without a contact.
+                crate::services::contacts::mark_account_deleted(&database, contact_id).await?;
             }
         }
+
         Ok(())
     }
 }

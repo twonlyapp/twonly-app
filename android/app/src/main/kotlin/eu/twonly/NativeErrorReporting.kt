@@ -37,6 +37,7 @@ object NativeErrorReporting {
         if (Sentry.isEnabled()) return
         SentryAndroid.init(app) { options ->
             options.dsn = DSN
+            options.environment = BuildConfig.BUILD_TYPE
             @Suppress("DEPRECATION")
             val info = app.packageManager.getPackageInfo(app.packageName, 0)
             options.release = "${app.packageName}@${info.versionName}+${androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(info)}"
@@ -77,6 +78,36 @@ object NativeErrorReporting {
             scope.setTag("native_operation", operation)
             if (error != null) Sentry.captureException(error)
             else Sentry.captureMessage("Native background operation failed: $operation", SentryLevel.ERROR)
+        }
+    }
+
+    /** Rust responses may contain SQL, paths or user data. Report only a fixed
+     * category, and keep lifecycle cancellation as an ordinary retry. */
+    fun rustFailure(context: Context, operation: String, error: String?) {
+        if (!isAllowed(context)) return
+        val reason = when (error) {
+            "Database operation cancelled; retry when active",
+            "Native database admission cancelled",
+            "Notification run cancelled",
+            "Notification run is closing" -> "cancelled"
+            "attempted to acquire a connection on a closed pool" -> "database_pool_closed"
+            "pool timed out while waiting for an open connection" -> "database_pool_timeout"
+            "main_key could not be loaded from the key_chain",
+            "Storage error: database exists but master key could not be loaded from secure storage" -> "secure_storage"
+            "background maintenance panicked",
+            "notification worker panicked",
+            "notification finalization panicked" -> "panic"
+            else -> "unknown"
+        }
+        if (reason == "cancelled") {
+            breadcrumb(context, "${operation}_cancelled")
+            return
+        }
+        Sentry.withScope { scope ->
+            scope.setTag("native_operation", operation)
+            scope.setTag("native_failure_reason", reason)
+            scope.setFingerprint(listOf("native-background", operation, reason))
+            Sentry.captureMessage("Native background operation failed: $operation ($reason)", SentryLevel.ERROR)
         }
     }
 }

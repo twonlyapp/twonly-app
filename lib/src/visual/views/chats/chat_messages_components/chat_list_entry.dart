@@ -2,17 +2,25 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
+import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/bridge/database/reactions.dart' as rust_reactions;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/reactions/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart'
-    hide MessageActions;
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/services/live_location.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
-import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_reaction_row.dart';
@@ -50,15 +58,15 @@ class ChatListEntry extends StatefulWidget {
     this.useSharedData = false,
     super.key,
   });
-  final Message? prevMessage;
-  final Message? nextMessage;
-  final Message message;
+  final StoredMessage? prevMessage;
+  final StoredMessage? nextMessage;
+  final StoredMessage message;
   final Group group;
   final Map<int, Contact>? userIdToContact;
   final bool hideReactions;
   final MediaFile? mediaFile;
-  final List<Reaction>? reactions;
-  final Map<String, Message>? messagesById;
+  final List<StoredReaction>? reactions;
+  final Map<String, StoredMessage>? messagesById;
   final Map<String, MediaFile>? mediaFilesById;
   final bool useSharedData;
   final List<MemoryItem> galleryItems;
@@ -72,8 +80,8 @@ class ChatListEntry extends StatefulWidget {
 class _ChatListEntryState extends State<ChatListEntry> {
   MediaFileService? mediaService;
 
-  List<Reaction> reactions = [];
-  StreamSubscription<List<Reaction>>? reactionsSub;
+  List<StoredReaction> reactions = [];
+  StreamSubscription<List<StoredReaction>>? reactionsSub;
 
   StreamSubscription<MediaFile?>? mediaFileSub;
 
@@ -87,7 +95,18 @@ class _ChatListEntryState extends State<ChatListEntry> {
   @override
   void didUpdateWidget(ChatListEntry oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.useSharedData) _applySharedData();
+    if (oldWidget.useSharedData != widget.useSharedData ||
+        oldWidget.message.messageId != widget.message.messageId ||
+        oldWidget.message.mediaId != widget.message.mediaId) {
+      mediaFileSub?.cancel();
+      reactionsSub?.cancel();
+      mediaService = null;
+      reactions = [];
+      _applySharedData();
+      initAsync();
+    } else if (widget.useSharedData) {
+      _applySharedData();
+    }
   }
 
   void _applySharedData() {
@@ -116,27 +135,48 @@ class _ChatListEntryState extends State<ChatListEntry> {
 
   Future<void> initAsync() async {
     if (widget.useSharedData) return;
-    if (widget.message.mediaId != null) {
-      final mediaFileStream = twonlyDB.mediaFilesDao.watchMedia(
-        widget.message.mediaId!,
-      );
+    final mediaId = widget.message.mediaId;
+    final messageId = widget.message.messageId;
+    if (mediaId != null) {
+      final mediaFileStream = watchRustDatabase(
+        (control) => rust_mediafiles
+            .watchMediaFiles(
+              input: db_mediafiles.MediaQuery(
+                filter: db_mediafiles.MediaFilter.ids,
+                ids: [mediaId],
+              ),
+              control: control,
+            )
+            .map(orderedMediaFiles),
+      ).map((rows) => rows.isEmpty ? null : rows.single);
       mediaFileSub = mediaFileStream.listen((mediaFiles) {
-        if (mediaFiles != null) {
-          mediaService = MediaFileService(mediaFiles);
-          if (mounted) setState(() {});
-        } else {
-          Log.error(
-            'Media file not found for ${widget.message.messageId} => ${widget.message.mediaId}',
-          );
+        if (!mounted ||
+            widget.useSharedData ||
+            widget.message.mediaId != mediaId) {
+          return;
         }
+        // Deletion emits an empty result before the parent message rebuilds.
+        // Drop the old service so the tile cannot keep opening deleted media.
+        setState(() {
+          mediaService = mediaFiles == null
+              ? null
+              : MediaFileService(mediaFiles);
+        });
       });
     }
-    final stream = twonlyDB.reactionsDao.watchReactions(
-      widget.message.messageId,
+    final stream = watchRustDatabase(
+      (control) => rust_reactions.watchReactions(
+        messages: [messageId],
+        control: control,
+      ),
     );
 
     reactionsSub = stream.listen((update) {
-      if (!mounted) return;
+      if (!mounted ||
+          widget.useSharedData ||
+          widget.message.messageId != messageId) {
+        return;
+      }
       setState(() {
         reactions = update;
       });
@@ -175,6 +215,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
         );
       }
       return ChatTextEntry(
+        contactsById: widget.useSharedData ? widget.userIdToContact : null,
         message: widget.message,
         borderRadius: borderRadius,
         info: info,
@@ -239,6 +280,15 @@ class _ChatListEntryState extends State<ChatListEntry> {
     return const ChatUnknownEntry();
   }
 
+  List<Contact>? _senderAvatarContacts() {
+    final sender = widget.userIdToContact?[widget.message.senderId];
+    if (sender != null) return [sender];
+    // The chat watches every sender's contact row. Until it arrives, an empty
+    // list keeps each avatar from starting a watch of its own that it would
+    // drop again a moment later.
+    return widget.useSharedData ? const [] : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final right = widget.message.senderId == null;
@@ -273,6 +323,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
       children: [
         if (widget.message.isDeletedFromSender)
           ChatTextEntry(
+            contactsById: widget.useSharedData ? widget.userIdToContact : null,
             message: widget.message,
             borderRadius: borderRadius,
             info: info,
@@ -366,10 +417,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
                   ),
                   child: AvatarIcon(
                     contactId: widget.message.senderId,
-                    contacts:
-                        widget.userIdToContact?[widget.message.senderId] == null
-                        ? null
-                        : [widget.userIdToContact![widget.message.senderId]!],
+                    contacts: _senderAvatarContacts(),
                     fontSize: 12,
                   ),
                 ),
@@ -382,13 +430,13 @@ class _ChatListEntryState extends State<ChatListEntry> {
 }
 
 extension on ChatListEntry {
-  Message? msgQuote({Map<String, Message>? messagesById}) {
+  StoredMessage? msgQuote({Map<String, StoredMessage>? messagesById}) {
     final quotedId = message.quotesMessageId;
     return quotedId == null ? null : messagesById?[quotedId];
   }
 
   MediaFile? msgQuoteMedia({
-    Map<String, Message>? messagesById,
+    Map<String, StoredMessage>? messagesById,
     Map<String, MediaFile>? mediaFilesById,
   }) {
     final quoted = msgQuote(messagesById: messagesById);
@@ -397,9 +445,9 @@ extension on ChatListEntry {
 }
 
 (EdgeInsetsGeometry, BorderRadius, bool) getMessageLayout(
-  Message message,
-  Message? prevMessage,
-  Message? nextMessage,
+  StoredMessage message,
+  StoredMessage? prevMessage,
+  StoredMessage? nextMessage,
   bool hasReactions,
 ) {
   var bottom = 10.0;

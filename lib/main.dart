@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:camera/camera.dart';
-import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,14 +11,12 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
-import 'package:twonly/core/bridge/stories.dart' as stories;
 import 'package:twonly/core/bridge/wrapper/app_database.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
@@ -27,7 +25,6 @@ import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/live_location.service.dart';
 import 'package:twonly/src/services/location_metadata.service.dart';
-import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/services/migrations.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
@@ -61,16 +58,6 @@ Future<bool> twonlyMinimumInitialization() async {
       );
       Log.enableRustSink();
       if (!await RustAppDatabase.legacyImportComplete()) {
-        final legacyFile = File(
-          '${AppEnvironment.supportDir}/twonly.sqlite',
-        );
-        if (legacyFile.existsSync()) {
-          final legacyDatabase = TwonlyDB(NativeDatabase(legacyFile));
-          // Opening the database applies every existing Drift migration up
-          // to v25 before Rust copies the application tables.
-          await legacyDatabase.customSelect('PRAGMA user_version').getSingle();
-          await legacyDatabase.close();
-        }
         await RustAppDatabase.migrateLegacyDatabase();
       }
     } catch (e) {
@@ -165,11 +152,15 @@ Future<StartupResult> _startup(SettingsChangeProvider settings) async {
     // initialization rather than queueing behind it. Both are awaited before
     // this returns, because the home view subscribes to them as it mounts.
     // Failing to set up notifications must not stop the rest of the app.
+    final firebaseInitialization = FcmNotificationService.initStartup();
     final notificationSetup =
         Future.wait<void>([
-          FcmNotificationService.initStartup(),
+          firebaseInitialization,
           setupPushNotification(),
-        ]).then((_) {}).catchError((Object error, StackTrace stackTrace) {
+        ]).timeout(const Duration(seconds: 5)).then((_) {}).catchError((
+          Object error,
+          StackTrace stackTrace,
+        ) {
           Log.error(
             'Notification setup failed',
             error: error,
@@ -217,7 +208,19 @@ Future<StartupResult> _startup(SettingsChangeProvider settings) async {
     settings.loadSettings();
 
     if (userExists) {
-      unawaited(FcmNotificationService.initAfterUserLoaded());
+      // If platform setup exceeds the splash budget, finish token setup when
+      // Firebase becomes ready rather than trying once before it exists.
+      unawaited(
+        firebaseInitialization
+            .then((_) => FcmNotificationService.initAfterUserLoaded())
+            .catchError((Object error, StackTrace stackTrace) {
+              Log.error(
+                'Could not initialize notification tokens',
+                error: error,
+                stackTrace: stackTrace,
+              );
+            }),
+      );
 
       // Data migrations have to finish before any screen reads the database.
       await runMigrations();
@@ -291,35 +294,9 @@ Future<void> postStartupTasks() async {
   Log.info('Post startup started.');
   unawaited(MemoriesService.prewarmCache());
 
-  // 1. Immediate background cleanup (Non-blocking for UI)
-  unawaitedRustCall(stories.purgeExpiredStories(), 'purgeExpiredStories');
-  await twonlyDB.messagesDao.purgeMessageTable();
-  unawaited(twonlyDB.receiptsDao.purgeReceivedReceipts());
-  unawaited(MediaFileService.purgeTempFolder());
   unawaited(HomeWidgetService.pruneSupersededMedia());
   unawaited(HomeWidgetService.syncPermissions());
 
-  // 2. Service initializations
-  unawaitedRustCall(
-    RustApi.finishStartedMediaUploads(),
-    'finishStartedMediaUploads',
-  );
-  unawaitedRustCall(
-    RustApi.refreshContactJoinedDates(),
-    'refreshContactJoinedDates',
-  );
-  unawaited(
-    newsService.init().then((_) {
-      final lastDownload = newsService.lastDownloadedAt;
-      if (lastDownload == null ||
-          DateTime.now().difference(lastDownload) >= const Duration(days: 7)) {
-        newsService.fetchFeed();
-      }
-    }),
-  );
-
-  // 3. Delayed tasks (Wait for app to settle)
-  await Future.delayed(const Duration(minutes: 2));
-  unawaited(BackupService.makeBackup());
-  unawaited(cleanLogFile());
+  unawaited(newsService.init());
+  unawaited(BackupService.checkStartupBackupFallback());
 }

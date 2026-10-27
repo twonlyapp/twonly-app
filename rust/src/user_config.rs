@@ -15,6 +15,7 @@ use std::sync::{OnceLock, RwLock};
 pub(crate) const MIN_USER_DISCOVERY_THRESHOLD: u8 = 3;
 
 mod defaults {
+
     pub fn true_value() -> bool {
         true
     }
@@ -41,6 +42,7 @@ mod defaults {
 }
 
 mod optional_datetime {
+
     use chrono::{DateTime, NaiveDateTime, Utc};
     use serde::{Deserialize, Deserializer, Serializer};
 
@@ -61,9 +63,11 @@ mod optional_datetime {
         let Some(value) = Option::<String>::deserialize(deserializer)? else {
             return Ok(None);
         };
+
         if let Ok(date) = DateTime::parse_from_rfc3339(&value) {
             return Ok(Some(date.with_timezone(&Utc)));
         }
+
         NaiveDateTime::parse_from_str(&value, "%Y-%m-%dT%H:%M:%S%.f")
             .map(|date| Some(date.and_utc()))
             .map_err(serde::de::Error::custom)
@@ -72,6 +76,7 @@ mod optional_datetime {
 
 fn config_lock() -> &'static RwLock<()> {
     static LOCK: OnceLock<RwLock<()>> = OnceLock::new();
+
     LOCK.get_or_init(|| RwLock::new(()))
 }
 
@@ -84,6 +89,7 @@ fn merge_changed_fields(
         if base.get(key) == updated.get(key) {
             continue;
         }
+
         match updated.get(key) {
             Some(value) => {
                 current.insert(key.clone(), value.clone());
@@ -98,6 +104,7 @@ fn merge_changed_fields(
 #[derive(Clone, Debug, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[flutter_rust_bridge::frb(non_final)]
+
 pub struct TwonlySafeBackup {
     #[serde(default)]
     #[frb(non_final)]
@@ -129,6 +136,7 @@ pub enum LastBackupUploadState {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[flutter_rust_bridge::frb(non_final)]
+
 pub struct PasswordlessRecoveryConfig {
     #[frb(non_final)]
     pub email: Option<String>,
@@ -181,6 +189,7 @@ impl<'de> Deserialize<'de> for TwonlyScoreVisibility {
         D: serde::Deserializer<'de>,
     {
         let value = serde_json::Value::deserialize(deserializer)?;
+
         match value {
             serde_json::Value::String(value) => match value.as_str() {
                 "nobody" => Ok(Self::Nobody),
@@ -204,6 +213,7 @@ impl<'de> Deserialize<'de> for TwonlyScoreVisibility {
 #[derive(Clone, Debug, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[flutter_rust_bridge::frb(non_final)]
+
 pub struct UserConfig {
     #[frb(non_final)]
     pub user_id: i64,
@@ -328,7 +338,8 @@ pub struct UserConfig {
     #[frb(non_final)]
     pub is_cloud_backup_enabled: bool,
 
-    /// Controls which recipients receive the current twonly Score in sender metadata.
+    /// Controls which recipients receive the current twonly Score in sender
+    /// metadata.
     #[serde(default, alias = "shareTwonlyScore")]
     #[frb(non_final)]
     pub twonly_score_visibility: TwonlyScoreVisibility,
@@ -373,6 +384,10 @@ pub struct UserConfig {
     #[serde(default)]
     #[frb(non_final)]
     pub hide_memories_backup_promo: bool,
+    /// Set once the user declined the trusted-friends recovery reminder.
+    #[serde(default)]
+    #[frb(non_final)]
+    pub hide_passwordless_recovery_reminder: bool,
     #[serde(default)]
     #[frb(non_final)]
     pub hide_widget_share_explainer: bool,
@@ -416,6 +431,9 @@ pub struct UserConfig {
 
 impl UserConfig {
     fn normalize(&mut self) {
+        if self.subscription_plan.trim().eq_ignore_ascii_case("tester") {
+            self.allow_error_tracking_via_sentry = true;
+        }
         self.user_discovery_threshold = self
             .user_discovery_threshold
             .max(MIN_USER_DISCOVERY_THRESHOLD);
@@ -432,34 +450,49 @@ impl UserConfig {
     }
 
     pub(crate) fn load_from(context: &Context) -> Result<Option<Self>> {
+        let _store = crate::database::maintenance::settings_access(std::path::Path::new(
+            &context.config.database_dir,
+        ))?;
+
         let _guard = config_lock()
             .read()
             .map_err(|_| twonly_error!("user configuration lock was poisoned"))?;
+
         Self::load_from_unlocked(context)
     }
 
     fn load_from_unlocked(context: &Context) -> Result<Option<Self>> {
         let path = Self::path(context);
+
         if !path.exists() {
             return Ok(None);
         }
+
         let file = File::open(&path)?;
+
         let mut config: Self = serde_json::from_reader(file).map_err(|error| {
             TwonlyError::Generic(format!(
                 "invalid user configuration {}: {error}",
                 path.display()
             ))
         })?;
+
         config.normalize();
+
         Ok(Some(config))
     }
 
     /// Validates and atomically persists the complete user configuration.
     /// Rust is the only writer of `user.json`.
     pub(crate) fn save_json(context: &Context, json: &str) -> Result<String> {
+        let _store = crate::database::maintenance::settings_access(std::path::Path::new(
+            &context.config.database_dir,
+        ))?;
+
         let _guard = config_lock()
             .write()
             .map_err(|_| twonly_error!("user configuration lock was poisoned"))?;
+
         Self::save_json_unlocked(context, json)
     }
 
@@ -467,14 +500,23 @@ impl UserConfig {
     /// mutation. Unlike `update_json`, this does not need a caller snapshot:
     /// loading, mutation, and saving all happen while holding the write lock.
     pub(crate) fn update(context: &Context, mutate: impl FnOnce(&mut Self)) -> Result<Self> {
+        let _store = crate::database::maintenance::settings_access(std::path::Path::new(
+            &context.config.database_dir,
+        ))?;
+
         let _guard = config_lock()
             .write()
             .map_err(|_| twonly_error!("user configuration lock was poisoned"))?;
+
         let mut config = Self::load_from_unlocked(context)?
             .ok_or_else(|| twonly_error!("user configuration is unavailable"))?;
+
         mutate(&mut config);
+
         config.normalize();
+
         Self::save_unlocked(context, &config)?;
+
         Ok(config)
     }
 
@@ -482,22 +524,29 @@ impl UserConfig {
     /// Concurrent updates from Flutter isolates or Rust therefore do not
     /// overwrite unrelated fields with stale values.
     pub(crate) fn update_json(
-        context: &Context,
-        base_json: &str,
-        updated_json: &str,
+        context: &Context, base_json: &str, updated_json: &str,
     ) -> Result<String> {
         let base: serde_json::Map<String, serde_json::Value> = serde_json::from_str(base_json)?;
+
+        let _store = crate::database::maintenance::settings_access(std::path::Path::new(
+            &context.config.database_dir,
+        ))?;
+
         let updated: serde_json::Map<String, serde_json::Value> =
             serde_json::from_str(updated_json)?;
+
         let _guard = config_lock()
             .write()
             .map_err(|_| twonly_error!("user configuration lock was poisoned"))?;
+
         let current = Self::load_from_unlocked(context)?
             .ok_or_else(|| twonly_error!("user configuration is unavailable"))?;
+
         let mut current: serde_json::Map<String, serde_json::Value> =
             serde_json::from_value(serde_json::to_value(current)?)?;
 
         merge_changed_fields(&mut current, &base, &updated);
+
         Self::save_json_unlocked(context, &serde_json::to_string(&current)?)
     }
 
@@ -505,35 +554,54 @@ impl UserConfig {
         let mut config: Self = serde_json::from_str(json).map_err(|error| {
             TwonlyError::Generic(format!("invalid user configuration update: {error}"))
         })?;
+
         config.normalize();
+
         Self::save_unlocked(context, &config)
     }
 
     fn save_unlocked(context: &Context, config: &Self) -> Result<String> {
         let mut config = config.clone();
+
         config.normalize();
+
         let normalized = serde_json::to_string(&config)?;
+
         let path = Self::path(context);
+
         let parent = path
             .parent()
             .ok_or_else(|| twonly_error!("user configuration path has no parent"))?;
+
         std::fs::create_dir_all(parent)?;
+
         let temporary = parent.join("user.json.tmp");
+
         let mut file = File::create(&temporary)?;
+
         file.write_all(normalized.as_bytes())?;
+
         file.sync_all()?;
+
         std::fs::rename(&temporary, &path)?;
+        crate::performance::configuration_saved(
+            &context.config.data_dir,
+            config.allow_error_tracking_via_sentry,
+        );
+
         Ok(normalized)
     }
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::{
         merge_changed_fields, TwonlyScoreVisibility, UserConfig, MIN_USER_DISCOVERY_THRESHOLD,
     };
 
     #[test]
+
     fn parses_only_rust_fields_and_applies_defaults() {
         let config: UserConfig = serde_json::from_str(
             r#"{
@@ -546,26 +614,36 @@ mod tests {
         .unwrap();
 
         assert_eq!(config.user_id, 42);
+
         assert_eq!(config.username, "alice");
+
         assert_eq!(config.required_send_images, 4);
+
         assert_eq!(
             config.user_discovery_threshold,
             MIN_USER_DISCOVERY_THRESHOLD
         );
 
         assert!(config.can_use_login_token_for_auth);
+
         assert_eq!(
             config.twonly_score_visibility,
             TwonlyScoreVisibility::Everyone
         );
+
         assert!(!config.is_user_discovery_enabled);
+
         assert!(!config.enable_location_sticker);
+
         assert!(!config.store_location_in_memories);
+
         assert_eq!(config.last_server_message_at, None);
+
         assert_eq!(config.last_release_notes_version, None);
     }
 
     #[test]
+
     fn migrates_legacy_twonly_score_boolean() {
         let hidden: UserConfig = serde_json::from_str(
             r#"{
@@ -576,6 +654,7 @@ mod tests {
             }"#,
         )
         .unwrap();
+
         assert_eq!(
             hidden.twonly_score_visibility,
             TwonlyScoreVisibility::Nobody
@@ -590,6 +669,7 @@ mod tests {
             }"#,
         )
         .unwrap();
+
         assert_eq!(
             shared.twonly_score_visibility,
             TwonlyScoreVisibility::Everyone
@@ -597,6 +677,7 @@ mod tests {
     }
 
     #[test]
+
     fn normalizes_legacy_user_discovery_threshold() {
         let mut config: UserConfig = serde_json::from_str(
             r#"{
@@ -617,14 +698,44 @@ mod tests {
     }
 
     #[test]
+    fn enables_error_tracking_only_for_testers() {
+        for plan in [
+            "Tester", " tester ", "Free", "Family", "Pro", "Plus", "Unknown",
+        ] {
+            for enabled in [false, true] {
+                let mut config: UserConfig = serde_json::from_value(serde_json::json!({
+                    "userId": 42,
+                    "username": "alice",
+                    "displayName": "Alice",
+                    "subscriptionPlan": plan,
+                    "allowErrorTrackingViaSentry": enabled,
+                }))
+                .unwrap();
+
+                config.normalize();
+
+                assert_eq!(
+                    config.allow_error_tracking_via_sentry,
+                    enabled || plan.trim().eq_ignore_ascii_case("tester"),
+                    "plan: {plan}, saved preference: {enabled}",
+                );
+            }
+        }
+    }
+
+    #[test]
+
     fn merges_only_fields_changed_by_a_stale_snapshot() {
         let mut current = serde_json::from_str(r#"{"theme":"dark","counter":2}"#).unwrap();
+
         let base = serde_json::from_str(r#"{"theme":"light","counter":1}"#).unwrap();
+
         let updated = serde_json::from_str(r#"{"theme":"system","counter":1}"#).unwrap();
 
         merge_changed_fields(&mut current, &base, &updated);
 
         assert_eq!(current["theme"], "system");
+
         assert_eq!(current["counter"], 2);
     }
 }

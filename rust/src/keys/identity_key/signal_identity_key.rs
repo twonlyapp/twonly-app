@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+
 pub(crate) struct SignalIdentityKey {
     pub(crate) identity_key_pair_structure: Vec<u8>,
     pub(crate) registration_id: i64,
@@ -18,8 +19,11 @@ pub(crate) struct SignalIdentityKey {
 impl SignalIdentityKey {
     pub(crate) fn generate() -> Result<Self> {
         let mut csprng = rand::rngs::StdRng::from_os_rng();
+
         let identity_key_pair = IdentityKeyPair::generate(&mut csprng);
+
         let registration_id = rand::Rng::random::<u32>(&mut csprng) & 0x7fff_ffff;
+
         Ok(Self {
             identity_key_pair_structure: identity_key_pair.serialize().to_vec(),
             registration_id: i64::from(registration_id),
@@ -30,6 +34,7 @@ impl SignalIdentityKey {
 impl Zeroize for SignalIdentityKey {
     fn zeroize(&mut self) {
         self.identity_key_pair_structure.zeroize();
+
         self.registration_id.zeroize();
     }
 }

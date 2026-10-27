@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/media_enums.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_media_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 
-Message buildStoredMessage() => Message(
+StoredMessage buildStoredMessage() => StoredMessage(
   groupId: 'group-1',
   messageId: 'message-1',
   type: MessageType.media.name,
@@ -19,14 +22,14 @@ Message buildStoredMessage() => Message(
   isDeletedFromSender: false,
   isWidgetMedia: false,
   isStory: false,
-  openedAt: DateTime(2026),
-  createdAt: DateTime(2026),
+  openedAtSeconds: databaseNullableSeconds(DateTime(2026)),
+  createdAtSeconds: databaseSeconds(DateTime(2026)),
 );
 
 MediaFile buildStoredVideoWithoutThumbnail() => MediaFile(
   mediaId: 'media-1',
-  type: MediaType.video,
-  cloudState: CloudState.none,
+  typeName: MediaType.video.name,
+  cloudStateName: CloudState.none.name,
   requiresAuthentication: false,
   stored: true,
   isDraftMedia: false,
@@ -35,7 +38,7 @@ MediaFile buildStoredVideoWithoutThumbnail() => MediaFile(
   hasCropAnalyzed: false,
   hasThumbnail: false,
   galleryExportPending: false,
-  createdAt: DateTime(2026),
+  createdAtSeconds: databaseSeconds(DateTime(2026)),
 );
 
 Group buildGroup() => Group(
@@ -52,10 +55,10 @@ Group buildGroup() => Group(
   totalMediaCounter: 1,
   alsoBestFriend: false,
   deleteMessagesAfterMilliseconds: 0,
-  createdAt: DateTime(2026),
+  createdAtSeconds: databaseSeconds(DateTime(2026)),
   flameCounter: 0,
   maxFlameCounter: 0,
-  lastMessageExchange: DateTime(2026),
+  lastMessageExchangeSeconds: databaseSeconds(DateTime(2026)),
 );
 
 BubbleInfo buildInfo() => BubbleInfo()

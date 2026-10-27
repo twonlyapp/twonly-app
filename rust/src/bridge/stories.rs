@@ -14,6 +14,7 @@ pub use crate::services::stories::StoryAudience;
 use flutter_rust_bridge::frb;
 
 #[frb(mirror(StoryAudience))]
+
 pub struct _StoryAudience {
     pub all: bool,
     pub contact_group_ids: Vec<i64>,
@@ -24,11 +25,13 @@ pub struct _StoryAudience {
 /// send reaches.
 pub async fn story_audience_chats(audience: StoryAudience) -> Result<Vec<String>> {
     let ctx = Context::get_static()?;
+
     stories::audience_chats(ctx, &audience).await
 }
 
 /// The most recipients one media send, story rows included, may reach.
 #[frb(sync)]
+
 pub fn max_media_recipients() -> u32 {
     MAX_ATTACHMENT_DISPATCHES as u32
 }
@@ -36,11 +39,13 @@ pub fn max_media_recipients() -> u32 {
 /// Takes one of the user's own story items down for every recipient.
 pub async fn delete_story_item(media_id: String) -> Result<()> {
     let ctx = Context::get_static()?;
+
     stories::delete_item(ctx, &media_id).await
 }
 
 /// Lets go of every story item older than 24 hours.
 pub async fn purge_expired_stories() -> Result<()> {
     let ctx = Context::get_static()?;
+
     stories::purge_expired(ctx).await
 }

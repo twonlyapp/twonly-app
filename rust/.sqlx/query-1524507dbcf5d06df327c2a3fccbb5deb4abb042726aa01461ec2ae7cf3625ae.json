@@ -1,0 +1,45 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT c.user_id AS \"user_id!\",\n                      COALESCE(NULLIF(c.nick_name, ''), c.display_name, c.username) AS \"name!: String\",\n                      c.account_deleted AS \"account_deleted: bool\"\n               FROM group_members m JOIN contacts c ON c.user_id = m.contact_id\n               WHERE m.group_id = ? AND (m.member_state IS NULL OR m.member_state != 'leftGroup')\n               ORDER BY c.user_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "name": "name!: String",
+        "ordinal": 1,
+        "type_info": "Null",
+        "origin": "Expression"
+      },
+      {
+        "name": "account_deleted: bool",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "account_deleted"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "1524507dbcf5d06df327c2a3fccbb5deb4abb042726aa01461ec2ae7cf3625ae"
+}

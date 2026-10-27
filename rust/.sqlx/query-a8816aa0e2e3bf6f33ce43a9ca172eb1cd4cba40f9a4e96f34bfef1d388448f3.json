@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM direct_media_upload_jobs WHERE attachment_id = ? AND state IN ('prepared', 'scheduled', 'waiting_for_server')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "a8816aa0e2e3bf6f33ce43a9ca172eb1cd4cba40f9a4e96f34bfef1d388448f3"
+}

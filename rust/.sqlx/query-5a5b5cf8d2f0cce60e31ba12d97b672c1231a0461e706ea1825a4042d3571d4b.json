@@ -1,0 +1,243 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    SELECT m.group_id AS \"group_id!\",\n                    m.message_id AS \"message_id!\",\n                    m.activity_message_id AS \"activity_message_id?: String\",\n                    m.original_sender_id AS \"original_sender_id?: i64\",\n                    m.sender_id AS \"sender_id?: i64\",\n                    m.type AS \"type!\",\n                    m.content AS \"content?\",\n                    m.media_id AS \"media_id?\",\n                    m.additional_message_data AS \"additional_message_data?\",\n                    m.media_stored AS \"media_stored!: bool\",\n                    m.media_reopened AS \"media_reopened!: bool\",\n                    m.download_token AS \"download_token?\",\n                    m.quotes_message_id AS \"quotes_message_id?\",\n                    m.is_deleted_from_sender AS \"is_deleted_from_sender!: bool\",\n                    m.is_widget_media AS \"is_widget_media!: bool\",\n                    m.is_story AS \"is_story!: bool\",\n                    m.opened_at AS \"opened_at?: i64\",\n                    m.opened_by_all AS \"opened_by_all?: i64\",\n                    m.created_at AS \"created_at!\",\n                    m.modified_at AS \"modified_at?\",\n                    m.ack_by_user AS \"ack_by_user?: i64\",\n                    m.ack_by_server AS \"ack_by_server?: i64\" FROM chat_messages m\n                \n\n         WHERE m.group_id = ? \n                AND m.message_id IN (SELECT value FROM json_each(?))\n            \n                ORDER BY m.rowid\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "message_id!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "activity_message_id?: String",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "original_sender_id?: i64",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "sender_id"
+          }
+        }
+      },
+      {
+        "name": "sender_id?: i64",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "type!",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "content?",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "name": "media_id?",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "additional_message_data?",
+        "ordinal": 8,
+        "type_info": "Blob",
+        "origin": "Expression"
+      },
+      {
+        "name": "media_stored!: bool",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "media_stored"
+          }
+        }
+      },
+      {
+        "name": "media_reopened!: bool",
+        "ordinal": 10,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "media_reopened"
+          }
+        }
+      },
+      {
+        "name": "download_token?",
+        "ordinal": 11,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "download_token"
+          }
+        }
+      },
+      {
+        "name": "quotes_message_id?",
+        "ordinal": 12,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "quotes_message_id"
+          }
+        }
+      },
+      {
+        "name": "is_deleted_from_sender!: bool",
+        "ordinal": 13,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "is_deleted_from_sender"
+          }
+        }
+      },
+      {
+        "name": "is_widget_media!: bool",
+        "ordinal": 14,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "is_widget_media"
+          }
+        }
+      },
+      {
+        "name": "is_story!: bool",
+        "ordinal": 15,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "is_story"
+          }
+        }
+      },
+      {
+        "name": "opened_at?: i64",
+        "ordinal": 16,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "opened_by_all?: i64",
+        "ordinal": 17,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 18,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "modified_at?",
+        "ordinal": 19,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "modified_at"
+          }
+        }
+      },
+      {
+        "name": "ack_by_user?: i64",
+        "ordinal": 20,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "ack_by_server?: i64",
+        "ordinal": 21,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "5a5b5cf8d2f0cce60e31ba12d97b672c1231a0461e706ea1825a4042d3571d4b"
+}

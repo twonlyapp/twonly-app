@@ -3,19 +3,32 @@ import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:clock/clock.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/patch.dart';
+import 'package:twonly/core/database/app/stickers/table.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
+import 'package:twonly/src/visual/components/mention_decoration.dart';
+import 'package:twonly/src/visual/components/mention_editing_controller.dart';
+import 'package:twonly/src/visual/components/mention_suggestions.dart';
 import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
@@ -49,7 +62,7 @@ class MessageInput extends StatefulWidget {
 
   final Group group;
   final FocusNode textFieldFocus;
-  final Message? quotesMessage;
+  final StoredMessage? quotesMessage;
   final SendChatMessage onMessageSend;
   final ValueChanged<ChatInputPanel> onPanelChanged;
   final ChatInputPanel panel;
@@ -79,7 +92,7 @@ enum RecordingState { none, recording, finished }
 
 class _MessageInputState extends State<MessageInput>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late final TextEditingController _textFieldController;
+  late final MentionEditingController _textFieldController;
   late final RecorderController recorderController;
   final bool isApple = Platform.isIOS;
   bool _stickerShowing = false;
@@ -104,7 +117,7 @@ class _MessageInputState extends State<MessageInput>
   late final AnimationController _recordingBlink;
 
   void _sendMessage() {
-    final text = _textFieldController.text;
+    final text = _textFieldController.messageText;
     if (text == '') return;
     final quoteMessageId = widget.quotesMessage?.messageId;
 
@@ -127,11 +140,10 @@ class _MessageInputState extends State<MessageInput>
     super.initState();
 
     WidgetsBinding.instance.addObserver(this);
-    _textFieldController = TextEditingController();
+    _textFieldController = MentionEditingController(
+      text: widget.group.draftMessage ?? '',
+    );
     _textFieldController.addListener(_handleTextChange);
-    if (widget.group.draftMessage != null) {
-      _textFieldController.text = widget.group.draftMessage!;
-    }
     widget.textFieldFocus.addListener(_handleTextFocusChange);
     if (userService.currentUser.typingIndicators) {
       _nextTypingIndicator = Timer.periodic(typingIndicatorInterval, (_) {
@@ -175,13 +187,16 @@ class _MessageInputState extends State<MessageInput>
     widget.composing.value = false;
 
     // Persist draft message on close
-    final draftText = _textFieldController.text;
+    final draftText = _textFieldController.messageText;
     unawaited(
-      twonlyDB.groupsDao.updateGroup(
-        widget.group.groupId,
-        GroupsCompanion(
-          draftMessage: Value(draftText.isEmpty ? null : draftText),
+      rust_groups.updateGroup(
+        id: widget.group.groupId,
+        patch: GroupPatch(
+          draftMessage: NullableText(
+            value: draftText.isEmpty ? null : draftText,
+          ),
         ),
+        transaction: currentDatabaseSession(),
       ),
     );
     _textFieldController.dispose();
@@ -227,7 +242,25 @@ class _MessageInputState extends State<MessageInput>
     }
   }
 
+  /// Withdraws the typing announcement as soon as the composer is put away,
+  /// so the other side does not keep showing it until it expires.
+  void _stopTyping() {
+    if (!widget.composing.value) return;
+    widget.composing.value = false;
+    // Without this the next periodic tick would announce typing again.
+    _lastTextChangeTime = null;
+    // While the chat is being closed its close message covers this.
+    if (!(ModalRoute.of(context)?.isActive ?? false)) return;
+    unawaitedRustCall(
+      RustApi.sendTyping(groupId: widget.group.groupId, isTyping: false),
+      'sendTyping',
+    );
+  }
+
   void _handleTextFocusChange() {
+    if (!widget.textFieldFocus.hasFocus) {
+      _stopTyping();
+    }
     if (widget.textFieldFocus.hasFocus &&
         widget.panel != ChatInputPanel.none &&
         !_switchingToSystemKeyboard) {
@@ -237,7 +270,13 @@ class _MessageInputState extends State<MessageInput>
 
   @override
   void didChangeMetrics() {
-    if (!mounted || !_switchingToSystemKeyboard) return;
+    if (!mounted) return;
+    // Dismissing the keyboard (for example with the Android back button) can
+    // leave the text field focused, so the focus listener alone misses it.
+    if (!_switchingToSystemKeyboard && _currentKeyboardHeight() == 0) {
+      _stopTyping();
+    }
+    if (!_switchingToSystemKeyboard) return;
     final keyboardHeight = _currentKeyboardHeight();
     if (keyboardHeight < _emojiPickerHeight * 0.8) return;
 
@@ -408,15 +447,26 @@ class _MessageInputState extends State<MessageInput>
       _showSparks = false;
     });
     if (widget.group.isDirectChat) {
-      final members = await twonlyDB.groupsDao.getGroupContact(
-        widget.group.groupId,
-      );
-      if (members.isNotEmpty) {
-        await twonlyDB.contactsDao.updateContact(
-          members.first.userId,
-          const ContactsCompanion(
-            askForFriendPromotions: Value(false),
+      final members = joinedGroupContacts(
+        await watchRustDatabase(
+          (control) => rust_groups.watchGroupContacts(
+            input: db_groups.GroupMembersQuery(
+              groupId: widget.group.groupId,
+              orderForChats: true,
+            ),
+            control: control,
           ),
+        ).first,
+      ).map((row) => row.$1).toList(growable: false);
+      if (members.isNotEmpty) {
+        await rust_contacts.updateContact(
+          id: members.first.userId,
+          patch: ContactPatch(
+            askForFriendPromotions: NullableInt(
+              value: databaseNullableFlag(false),
+            ),
+          ),
+          transaction: currentDatabaseSession(),
         );
       }
     }
@@ -424,9 +474,17 @@ class _MessageInputState extends State<MessageInput>
 
   Future<void> _loadContactId() async {
     if (widget.group.isDirectChat) {
-      final members = await twonlyDB.groupsDao.getGroupContact(
-        widget.group.groupId,
-      );
+      final members = joinedGroupContacts(
+        await watchRustDatabase(
+          (control) => rust_groups.watchGroupContacts(
+            input: db_groups.GroupMembersQuery(
+              groupId: widget.group.groupId,
+              orderForChats: true,
+            ),
+            control: control,
+          ),
+        ).first,
+      ).map((row) => row.$1).toList(growable: false);
       if (members.isNotEmpty && mounted) {
         setState(() {
           _contactId = members.first.userId;
@@ -461,6 +519,12 @@ class _MessageInputState extends State<MessageInput>
               contactId: _contactId!,
               flameOnRightSide: true,
             ),
+          ),
+        if (_recordingState != RecordingState.recording)
+          MentionSuggestions(
+            group: widget.group,
+            controller: _textFieldController,
+            focusNode: widget.textFieldFocus,
           ),
         Padding(
           padding: const EdgeInsets.only(left: 10, bottom: 10),
@@ -500,26 +564,30 @@ class _MessageInputState extends State<MessageInput>
                       Expanded(
                         child: Stack(
                           children: [
-                            TextField(
+                            MentionInputBackground(
                               controller: _textFieldController,
-                              focusNode: widget.textFieldFocus,
-                              textCapitalization: TextCapitalization.sentences,
-                              keyboardType: TextInputType.multiline,
-                              showCursor:
-                                  _recordingState != RecordingState.recording,
-                              maxLines: 4,
-                              minLines: 1,
-                              onChanged: (value) {
-                                setState(() {});
-                              },
-                              onSubmitted: (_) {
-                                _sendMessage();
-                              },
-                              style: const TextStyle(fontSize: 17),
-                              decoration: InputDecoration(
-                                hintText: context.lang.chatListDetailInput,
-                                contentPadding: EdgeInsets.zero,
-                                border: InputBorder.none,
+                              child: TextField(
+                                controller: _textFieldController,
+                                focusNode: widget.textFieldFocus,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                keyboardType: TextInputType.multiline,
+                                showCursor:
+                                    _recordingState != RecordingState.recording,
+                                maxLines: 4,
+                                minLines: 1,
+                                onChanged: (value) {
+                                  setState(() {});
+                                },
+                                onSubmitted: (_) {
+                                  _sendMessage();
+                                },
+                                style: const TextStyle(fontSize: 17),
+                                decoration: InputDecoration(
+                                  hintText: context.lang.chatListDetailInput,
+                                  contentPadding: EdgeInsets.zero,
+                                  border: InputBorder.none,
+                                ),
                               ),
                             ),
                             if (_recordingState == RecordingState.recording)
@@ -796,7 +864,15 @@ class _MessageInputState extends State<MessageInput>
               setState(() {});
             },
             config: Config(
-              height: _emojiPickerHeight,
+              height: _emojiPickerHeight.clamp(
+                0,
+                MediaQuery.sizeOf(context).height * 0.6,
+              ),
+              resizeConfig: ResizeConfig(
+                expandOnScroll: true,
+                // Leaves the app bar, the input and a few messages visible.
+                maxHeight: MediaQuery.sizeOf(context).height * 0.6,
+              ),
               locale: Localizations.localeOf(context),
               emojiTextStyle: TextStyle(
                 fontSize: 24 * (Platform.isIOS ? 1.2 : 1),

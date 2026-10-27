@@ -1,10 +1,13 @@
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'dart:convert';
+
+import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 
 /// Only automatic info rows use this ID suffix. Text a person shares from an
 /// app also has an origin, but remains an ordinary message in the conversation.
-String? gameAnnouncementInstance(Message message) {
+String? gameAnnouncementInstance(StoredMessage message) {
   final data = message.additionalMessageData;
   if (message.type != MessageType.text.name ||
       !message.messageId.endsWith('-info') ||
@@ -19,34 +22,47 @@ String? gameAnnouncementInstance(Message message) {
   }
 }
 
-/// Put the refreshed card immediately before its latest announcement, even
-/// when other messages share their timestamp. Older loaded pages may still
-/// contain a replaced info row until the next database read; hide those too.
-List<Message> arrangeGameMessages(List<Message> chronological) {
-  final latest = <String, Message>{};
-  final cards = <String, Message>{};
-  for (final message in chronological) {
-    final instance = gameAnnouncementInstance(message);
-    if (instance != null) latest[instance] = message;
-    if (message.type == MessageType.webxdcApp.name) {
-      cards[message.messageId] = message;
-    }
+/// Rust projects the latest player's activity onto the original card. Also
+/// discard automatic text retained in an older page's in-memory snapshot.
+List<StoredMessage> arrangeGameMessages(List<StoredMessage> chronological) => [
+  for (final message in chronological)
+    if (gameAnnouncementInstance(message) == null) message,
+];
+
+/// A new turn is new activity even when the card ID and timestamp are unchanged.
+String messageActivityId(StoredMessage message) =>
+    message.activityMessageId ?? message.messageId;
+
+/// Show the recipient's game status without the push's played-game prefix. Keep
+/// the shared announcement as fallback for the sender, spectators and old rows.
+String gameMessageText(
+  StoredMessage message,
+  AppLocalizations lang,
+) {
+  final data = message.additionalMessageData;
+  if (data == null) return message.content ?? '';
+  String content;
+  try {
+    final origin = AdditionalMessageData.fromBuffer(data).webxdcOrigin;
+    if (!origin.hasNotificationContent()) return message.content ?? '';
+    content = origin.notificationContent;
+  } catch (_) {
+    return message.content ?? '';
   }
-  final result = <Message>[];
-  for (final message in chronological) {
-    if (message.type == MessageType.webxdcApp.name &&
-        latest.containsKey(message.messageId)) {
-      continue;
+  try {
+    final decoded = jsonDecode(content);
+    if (decoded is Map<String, dynamic> &&
+        decoded.length == 2 &&
+        decoded['instance_id'] == message.messageId) {
+      return switch (decoded['webxdc_game']) {
+        'turn' => lang.chatGameTurn,
+        'won' => lang.chatGameWon,
+        'lost' => lang.chatGameLost,
+        _ => content,
+      };
     }
-    final instance = gameAnnouncementInstance(message);
-    if (instance != null) {
-      if (latest[instance]!.messageId != message.messageId) continue;
-      final card = cards[instance];
-      if (card != null) {
-        result.add(card.copyWith(createdAt: message.createdAt));
-      }
-    }
-    result.add(message);
+  } catch (_) {
+    // Legacy apps provide plain notification text.
   }
-  return result;
+  return content;
 }

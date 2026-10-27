@@ -3,21 +3,27 @@ import 'dart:convert';
 
 import 'package:clock/clock.dart';
 import 'package:collection/collection.dart' show ListExtensions;
-import 'package:drift/drift.dart' show Value;
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/key_verifications.dart'
+    as rust_key_verifications;
 import 'package:twonly/core/bridge/wrapper/signal.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/contact_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 
 enum QrCodeLinkStatus {
   invalid,
   ownProfile,
   newContact,
+  contactRequested,
   verified,
   keyMismatch,
   missingSession,
@@ -38,6 +44,15 @@ class QrCodeLinkResult {
 
 class QrCodeUtils {
   static String linkPrefix = 'https://me.twonly.eu/qr/#';
+
+  static bool hasFreshVerificationToken(PublicProfile profile) {
+    if (!profile.hasTimestamp() ||
+        profile.secretVerificationToken.length != 16) {
+      return false;
+    }
+    final age = clock.now().millisecondsSinceEpoch - profile.timestamp.toInt();
+    return age >= 0 && age <= const Duration(minutes: 5).inMilliseconds;
+  }
 
   static Future<String> publicProfileLink() async {
     final publicIdentityKey = await RustSignal.getUserPublicKey();
@@ -85,8 +100,9 @@ class QrCodeUtils {
     }
 
     try {
-      final contact = await twonlyDB.contactsDao.getContactById(
-        profile.userId.toInt(),
+      final contact = await rust_contacts.getContact(
+        id: profile.userId.toInt(),
+        transaction: currentDatabaseSession(),
       );
 
       if (profile.userId.toInt() == userService.currentUser.userId) {
@@ -96,6 +112,31 @@ class QrCodeUtils {
         );
       }
 
+      if ((contact == null || (!contact.accepted && !contact.blocked)) &&
+          hasFreshVerificationToken(profile)) {
+        if (contact != null) {
+          final storedPublicKey = await RustSignal.getContactPublicKey(
+            contactId: contact.userId,
+          );
+          if (storedPublicKey != null &&
+              !profile.publicIdentityKey.equals(storedPublicKey.toList())) {
+            return QrCodeLinkResult(
+              status: QrCodeLinkStatus.keyMismatch,
+              profile: profile,
+              contact: contact,
+            );
+          }
+        }
+        // The token owner validates the proof and sends an acceptance. The
+        // normal incoming acceptance creates our chat only after validation.
+        final success = await addNewContactFromPublicProfile(profile);
+        return QrCodeLinkResult(
+          status: success
+              ? QrCodeLinkStatus.contactRequested
+              : QrCodeLinkStatus.error,
+          profile: profile,
+        );
+      }
       if (contact == null) {
         return QrCodeLinkResult(
           status: QrCodeLinkStatus.newContact,
@@ -142,9 +183,13 @@ class QrCodeUtils {
           ),
         );
       }
-      await twonlyDB.keyVerificationDao.addKeyVerification(
-        contact.userId,
-        VerificationType.qrScanned,
+      await rust_key_verifications.changeKeyVerification(
+        contact: contact.userId,
+        kind: VerificationType.qrScanned.name,
+        updateDiscovery: userService.currentUser.isUserDiscoveryEnabled,
+        verifiedAt: clock.now().millisecondsSinceEpoch,
+        callbackId: isolateCallbackId,
+        transaction: currentDatabaseSession(),
       );
       return QrCodeLinkResult(
         status: QrCodeLinkStatus.verified,
@@ -168,14 +213,15 @@ Future<bool> addNewContactFromPublicProfile(PublicProfile profile) async {
     // contact request is queued against this row. Adding the contact
     // afterwards would leave it on the `v1` default, which makes every
     // message to it refetch a prekey bundle first.
-    final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
-      ContactsCompanion(
-        username: Value(profile.username),
-        userId: Value(profile.userId.toInt()),
-        requested: const Value(false),
-        blocked: const Value(false),
-        deletedByUser: const Value(false),
+    final added = await rust_contacts.upsertContact(
+      patch: ContactPatch(
+        username: profile.username,
+        userId: profile.userId.toInt(),
+        requested: false,
+        blocked: false,
+        deletedByUser: false,
       ),
+      transaction: currentDatabaseSession(),
     );
 
     if (!await RustApi.tryRequestContactById(
@@ -187,9 +233,13 @@ Future<bool> addNewContactFromPublicProfile(PublicProfile profile) async {
 
     if (added > 0) {
       // The user was added via the profile scanned from the QR code so the scanned public key was used.
-      await twonlyDB.keyVerificationDao.addKeyVerification(
-        profile.userId.toInt(),
-        VerificationType.qrScanned,
+      await rust_key_verifications.changeKeyVerification(
+        contact: profile.userId.toInt(),
+        kind: VerificationType.qrScanned.name,
+        updateDiscovery: userService.currentUser.isUserDiscoveryEnabled,
+        verifiedAt: clock.now().millisecondsSinceEpoch,
+        callbackId: isolateCallbackId,
+        transaction: currentDatabaseSession(),
       );
 
       if (profile.hasSecretVerificationToken()) {

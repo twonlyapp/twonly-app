@@ -272,6 +272,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get liveLocationMenu => 'Standort';
 
   @override
+  String get memoriesMenu => 'Memories';
+
+  @override
+  String get memoriesLoadFailed =>
+      'Das Bild aus Memories konnte nicht geladen werden.';
+
+  @override
   String get liveLocationTitle => 'Live-Standort';
 
   @override
@@ -1327,6 +1334,14 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String notificationMention(Object inGroup) {
+    return 'hat dich in einer Nachricht$inGroup erwähnt.';
+  }
+
+  @override
+  String get chatMentionUnknownUser => 'Unbekannter Nutzer';
+
+  @override
   String notificationText(Object inGroup) {
     return 'hat eine Nachricht$inGroup gesendet.';
   }
@@ -1579,14 +1594,31 @@ class AppLocalizationsDe extends AppLocalizations {
   String get finishSetupCardAction => 'Setup fortsetzen';
 
   @override
-  String get missingBackupCardTitle => 'Backup einrichten';
+  String get backupReminderTitle => 'Aktiviere dein Backup';
 
   @override
-  String get missingBackupCardDesc =>
-      'Wir haben den Backup-Mechanismus verbessert, weshalb du ihn erneut einrichten musst.';
+  String get backupReminderDesc =>
+      'Ohne Backup gibt es keine Möglichkeit, dein Konto wiederherzustellen, wenn du dein Handy verlierst oder die App löschst. Richte mindestens eine der folgenden Optionen ein.';
 
   @override
-  String get missingBackupCardAction => 'Jetzt einrichten';
+  String get passwordlessRecoveryReminderTitle => 'Passwort vergessen?';
+
+  @override
+  String get passwordlessRecoveryReminderDesc =>
+      'Falls du dein Passwort einmal vergisst, kommst du so wieder an dein Konto: Deine vertrauten Freunde können dir helfen, es ohne Passwort wiederherzustellen.';
+
+  @override
+  String get passwordlessRecoveryReminderHide => 'Nicht mehr anzeigen';
+
+  @override
+  String get passwordlessRecoveryReminderHideTitle => 'Erinnerung ausblenden?';
+
+  @override
+  String get passwordlessRecoveryReminderHideDesc =>
+      'Wenn du dein Passwort verlierst, gibt es keine andere Möglichkeit, dein Konto wiederherzustellen.';
+
+  @override
+  String get passwordlessRecoveryReminderEnable => 'Aktivieren';
 
   @override
   String get onboardingFinishLater => 'Später abschließen';
@@ -2677,16 +2709,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get recoverPasswordlessRecoverNowBtn => 'Jetzt wiederherstellen';
 
   @override
-  String get missingRecoveryContactsCardTitle => 'Kontowiederherstellung';
-
-  @override
-  String get missingRecoveryContactsCardDesc =>
-      'Wähle Kontakte für die Kontowiederherstellung aus, die dir helfen, dein Konto ohne Passwort wiederherzustellen.';
-
-  @override
-  String get missingRecoveryContactsCardAction => 'Kontakte auswählen';
-
-  @override
   String get memoriesBackupLimitReached =>
       'Cloud-Backup-Limit erreicht! Bitte aktualisiere dein Abonnement oder gib Speicherplatz frei.';
 
@@ -3310,4 +3332,49 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get mediaSendFailed => 'Senden fehlgeschlagen';
+
+  @override
+  String get mailboxSyncTitle => 'twonly wird synchronisiert';
+
+  @override
+  String get mailboxSyncBody =>
+      'twonly synchronisiert dieses Gerät und lädt deine Nachrichten herunter. Bitte lass die App geöffnet, bis der Vorgang abgeschlossen ist.';
+
+  @override
+  String mailboxSyncRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Noch $count Nachrichten',
+      one: 'Noch 1 Nachricht',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationGameTurn(String gameName) {
+    return 'hat $gameName gespielt. Du bist am Zug.';
+  }
+
+  @override
+  String notificationGameWon(String gameName) {
+    return 'hat $gameName gespielt. Du hast gewonnen.';
+  }
+
+  @override
+  String notificationGameLost(String gameName) {
+    return 'hat $gameName gespielt. Du hast verloren.';
+  }
+
+  @override
+  String get notificationGameFallbackName => 'ein Spiel';
+
+  @override
+  String get chatGameTurn => 'Du bist am Zug.';
+
+  @override
+  String get chatGameWon => 'Du hast gewonnen.';
+
+  @override
+  String get chatGameLost => 'Du hast verloren.';
 }

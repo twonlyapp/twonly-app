@@ -14,33 +14,41 @@ class ConnectionStatusComp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!userService.currentUser.isDeveloper) return child;
+    return StreamBuilder<bool>(
+      stream: userService.onUserUpdated
+          .map((_) => userService.currentUser.isDeveloper)
+          .distinct(),
+      initialData: userService.currentUser.isDeveloper,
+      builder: (context, snapshot) {
+        if (snapshot.data != true) return child;
 
-    final isConnected = context.watch<CustomChangeProvider>().isConnected;
-    return Stack(
-      children: [
-        if (!isConnected)
-          Positioned.fill(
-            child: SpinKitRipple(
-              color: context.color.error,
+        final isConnected = context.watch<CustomChangeProvider>().isConnected;
+        return Stack(
+          children: [
+            if (!isConnected)
+              Positioned.fill(
+                child: SpinKitRipple(
+                  color: context.color.error,
+                ),
+              ),
+            Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isConnected
+                      ? context.color.primary.withAlpha(100)
+                      : context.color.error,
+                ),
+              ),
+              padding: const EdgeInsets.all(0.5),
+              child: Center(
+                child: child,
+              ),
             ),
-          ),
-        Container(
-          clipBehavior: Clip.hardEdge,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isConnected
-                  ? context.color.primary.withAlpha(100)
-                  : context.color.error,
-            ),
-          ),
-          padding: const EdgeInsets.all(0.5),
-          child: Center(
-            child: child,
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT CAST(strftime('%s', 'now') AS INTEGER) AS \"now!: i64\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "now!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "f4938632ea8a7b9d9eb6b36af3df221557f7abf4d08d421a7c73b4aaf792528c"
+}

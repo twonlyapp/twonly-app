@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/story_preview.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/last_message_time.comp.dart';

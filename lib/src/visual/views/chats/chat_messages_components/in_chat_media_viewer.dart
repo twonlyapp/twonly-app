@@ -1,10 +1,15 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
@@ -26,7 +31,7 @@ class InChatMediaViewer extends StatefulWidget {
     super.key,
   });
 
-  final Message message;
+  final StoredMessage message;
   final Group group;
   final MediaFileService mediaService;
   final List<MemoryItem> galleryItems;
@@ -43,7 +48,7 @@ class InChatMediaViewer extends StatefulWidget {
 class _InChatMediaViewerState extends State<InChatMediaViewer> {
   bool mirrorVideo = false;
   int? galleryItemIndex;
-  StreamSubscription<Message?>? messageStream;
+  StreamSubscription<StoredMessage?>? messageStream;
   late final ValueNotifier<String?> _activeMediaIdNotifier = ValueNotifier(
     widget.message.mediaId,
   );
@@ -95,9 +100,16 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     /// image is already show
     if (widget.message.mediaStored) return;
 
-    final stream = twonlyDB.messagesDao
-        .getMessageById(widget.message.messageId)
-        .watchSingleOrNull();
+    final stream = watchRustDatabase(
+      (control) => rust_messages.watchMessages(
+        input: db_messages.MessageQuery(
+          filter: db_messages.MessageFilter.ids,
+          ids: {widget.message.messageId}.toList(),
+          nowMs: clock.now().millisecondsSinceEpoch,
+        ),
+        control: control,
+      ),
+    ).map((rows) => rows.isEmpty ? null : rows.single);
     messageStream = stream.listen((updated) async {
       if (updated != null) {
         if (updated.mediaStored) {

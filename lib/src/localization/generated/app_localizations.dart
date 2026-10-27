@@ -598,6 +598,18 @@ abstract class AppLocalizations {
   /// **'Location'**
   String get liveLocationMenu;
 
+  /// No description provided for @memoriesMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories'**
+  String get memoriesMenu;
+
+  /// No description provided for @memoriesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The memory could not be loaded.'**
+  String get memoriesLoadFailed;
+
   /// No description provided for @liveLocationTitle.
   ///
   /// In en, this message translates to:
@@ -2344,6 +2356,18 @@ abstract class AppLocalizations {
   /// **'shared their live location{inGroup}.'**
   String notificationLiveLocation(Object inGroup);
 
+  /// No description provided for @notificationMention.
+  ///
+  /// In en, this message translates to:
+  /// **'mentioned you in a message{inGroup}.'**
+  String notificationMention(Object inGroup);
+
+  /// No description provided for @chatMentionUnknownUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown user'**
+  String get chatMentionUnknownUser;
+
   /// No description provided for @notificationText.
   ///
   /// In en, this message translates to:
@@ -2764,23 +2788,53 @@ abstract class AppLocalizations {
   /// **'Resume Setup'**
   String get finishSetupCardAction;
 
-  /// No description provided for @missingBackupCardTitle.
+  /// No description provided for @backupReminderTitle.
   ///
   /// In en, this message translates to:
-  /// **'Setup backup'**
-  String get missingBackupCardTitle;
+  /// **'Activate your backup'**
+  String get backupReminderTitle;
 
-  /// No description provided for @missingBackupCardDesc.
+  /// No description provided for @backupReminderDesc.
   ///
   /// In en, this message translates to:
-  /// **'We have improved the backup mechanism, which requires you to set it up again.'**
-  String get missingBackupCardDesc;
+  /// **'Without a backup, there is no way to recover your account if you lose your phone or delete the app. Set up at least one of the options below.'**
+  String get backupReminderDesc;
 
-  /// No description provided for @missingBackupCardAction.
+  /// No description provided for @passwordlessRecoveryReminderTitle.
   ///
   /// In en, this message translates to:
-  /// **'Set up now'**
-  String get missingBackupCardAction;
+  /// **'Forgot your password?'**
+  String get passwordlessRecoveryReminderTitle;
+
+  /// No description provided for @passwordlessRecoveryReminderDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you ever forget your password, this is how you get your account back: your trusted friends can help you recover it without the password.'**
+  String get passwordlessRecoveryReminderDesc;
+
+  /// No description provided for @passwordlessRecoveryReminderHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show again'**
+  String get passwordlessRecoveryReminderHide;
+
+  /// No description provided for @passwordlessRecoveryReminderHideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide this reminder?'**
+  String get passwordlessRecoveryReminderHideTitle;
+
+  /// No description provided for @passwordlessRecoveryReminderHideDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you lose your password, there is no other way to recover your account.'**
+  String get passwordlessRecoveryReminderHideDesc;
+
+  /// No description provided for @passwordlessRecoveryReminderEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get passwordlessRecoveryReminderEnable;
 
   /// No description provided for @onboardingFinishLater.
   ///
@@ -4552,24 +4606,6 @@ abstract class AppLocalizations {
   /// **'Recover now'**
   String get recoverPasswordlessRecoverNowBtn;
 
-  /// No description provided for @missingRecoveryContactsCardTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Account Recovery'**
-  String get missingRecoveryContactsCardTitle;
-
-  /// No description provided for @missingRecoveryContactsCardDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Recovery Contacts to help you recover your account without requiring a password.'**
-  String get missingRecoveryContactsCardDesc;
-
-  /// No description provided for @missingRecoveryContactsCardAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Contacts'**
-  String get missingRecoveryContactsCardAction;
-
   /// No description provided for @memoriesBackupLimitReached.
   ///
   /// In en, this message translates to:
@@ -5565,6 +5601,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send failed'**
   String get mediaSendFailed;
+
+  /// No description provided for @mailboxSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronizing twonly'**
+  String get mailboxSyncTitle;
+
+  /// No description provided for @mailboxSyncBody.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly is synchronizing this device and downloading your messages. Please keep the app open until it is done.'**
+  String get mailboxSyncBody;
+
+  /// No description provided for @mailboxSyncRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 message left} other{{count} messages left}}'**
+  String mailboxSyncRemaining(int count);
+
+  /// No description provided for @notificationGameTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'has played {gameName}. It is your turn.'**
+  String notificationGameTurn(String gameName);
+
+  /// No description provided for @notificationGameWon.
+  ///
+  /// In en, this message translates to:
+  /// **'has played {gameName}. You have won.'**
+  String notificationGameWon(String gameName);
+
+  /// No description provided for @notificationGameLost.
+  ///
+  /// In en, this message translates to:
+  /// **'has played {gameName}. You have lost.'**
+  String notificationGameLost(String gameName);
+
+  /// No description provided for @notificationGameFallbackName.
+  ///
+  /// In en, this message translates to:
+  /// **'a game'**
+  String get notificationGameFallbackName;
+
+  /// No description provided for @chatGameTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'It is your turn.'**
+  String get chatGameTurn;
+
+  /// No description provided for @chatGameWon.
+  ///
+  /// In en, this message translates to:
+  /// **'You have won.'**
+  String get chatGameWon;
+
+  /// No description provided for @chatGameLost.
+  ///
+  /// In en, this message translates to:
+  /// **'You have lost.'**
+  String get chatGameLost;
 }
 
 class _AppLocalizationsDelegate

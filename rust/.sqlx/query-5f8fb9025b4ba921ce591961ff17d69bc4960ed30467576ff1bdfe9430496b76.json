@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE user_discovery_announced_users\n            SET was_shown_to_the_user = 1\n            WHERE username IS NOT NULL\n                AND was_shown_to_the_user = 0\n                AND is_hidden = 0\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "5f8fb9025b4ba921ce591961ff17d69bc4960ed30467576ff1bdfe9430496b76"
+}

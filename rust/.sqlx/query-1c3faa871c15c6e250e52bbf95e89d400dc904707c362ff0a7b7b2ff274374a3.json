@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO app_metadata(key, value) VALUES ('notification-persist', 'committed')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "1c3faa871c15c6e250e52bbf95e89d400dc904707c362ff0a7b7b2ff274374a3"
+}

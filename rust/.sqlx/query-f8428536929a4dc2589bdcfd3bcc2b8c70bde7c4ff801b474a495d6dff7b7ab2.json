@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT one_time FROM webxdc_apps WHERE app_id = ? AND version = ? AND published = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "one_time",
+        "ordinal": 0,
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "webxdc_apps",
+            "name": "one_time"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f8428536929a4dc2589bdcfd3bcc2b8c70bde7c4ff801b474a495d6dff7b7ab2"
+}

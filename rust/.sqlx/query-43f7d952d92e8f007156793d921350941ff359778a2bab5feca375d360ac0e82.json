@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE direct_media_upload_jobs SET updated_at = ?\n               WHERE attachment_id = ? AND state IN ('scheduled', 'waiting_for_server')\n                 AND updated_at <= ?\n               RETURNING native_descriptor_json, created_at",
+  "describe": {
+    "columns": [
+      {
+        "name": "native_descriptor_json",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "native_descriptor_json"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "direct_media_upload_jobs",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "43f7d952d92e8f007156793d921350941ff359778a2bab5feca375d360ac0e82"
+}

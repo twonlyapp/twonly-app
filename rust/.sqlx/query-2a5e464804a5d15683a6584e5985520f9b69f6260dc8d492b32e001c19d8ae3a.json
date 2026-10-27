@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO contact_group_members(contact_group_id, user_id) VALUES (?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "2a5e464804a5d15683a6584e5985520f9b69f6260dc8d492b32e001c19d8ae3a"
+}

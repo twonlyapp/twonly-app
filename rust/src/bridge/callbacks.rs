@@ -4,6 +4,7 @@
  */
 
 mod macros;
+
 use flutter_rust_bridge::DartFnFuture;
 
 use crate::callback_generator;
@@ -19,7 +20,8 @@ tokio::task_local! {
 pub(crate) static FLUTTER_CALLBACKS: std::sync::RwLock<Option<HashMap<u32, FlutterCallbacks>>> =
     std::sync::RwLock::new(None);
 
-// This will also generate the function init_flutter_callbacks which MUST be called from Flutter to initialize the callbacks
+// This will also generate the function init_flutter_callbacks which MUST be
+// called from Flutter to initialize the callbacks
 callback_generator! {
     FlutterCallbacks {
         Api api {
@@ -33,22 +35,24 @@ pub(crate) fn get_callbacks() -> Result<FlutterCallbacks> {
     let caller_opt = CURRENT_CALLBACK_ID.try_with(|&c| c).ok();
 
     let lock = FLUTTER_CALLBACKS.read().unwrap();
+
     let map = lock
         .as_ref()
         .ok_or(TwonlyError::MissingCallbackInitialization)?;
 
     if let Some(id) = caller_opt {
-        if let Some(cb) = map.get(&id) {
-            return Ok(cb.clone());
-        }
+        return map
+            .get(&id)
+            .cloned()
+            .ok_or(TwonlyError::MissingCallbackInitialization);
     }
 
     // Incoming API events are not always associated with the Flutter call
     // that started their work. Preserve the existing fallback for those API
-    // callbacks; logging no longer depends on this path.
-    if let Some((_, callbacks)) = map.iter().next() {
-        tracing::warn!("FlutterCallbacks fallback used: No CURRENT_CALLBACK_ID scope was found, or the ID was missing from the map. Using an arbitrary callback. This may lead to race conditions if multiple isolates are active.");
-        return Ok(callbacks.clone());
+    // callbacks. Initialization retains only the current isolate; never choose
+    // arbitrarily if another registration path leaves an ambiguous map.
+    if map.len() == 1 {
+        return Ok(map.values().next().unwrap().clone());
     }
 
     Err(TwonlyError::MissingCallbackInitialization)

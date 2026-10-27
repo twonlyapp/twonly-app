@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:flutter/services.dart';
+import 'package:twonly/src/utils/audio_player_controller.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// Keeps the [PlayerController] of a chat audio message alive across widget
@@ -15,6 +18,8 @@ class AudioPlaybackService {
   AudioPlaybackService._();
 
   static final AudioPlaybackService instance = AudioPlaybackService._();
+
+  static const _audioSession = MethodChannel('eu.twonly/audio_session');
 
   final Map<String, AudioPlayback> _playbacks = {};
 
@@ -48,7 +53,7 @@ class AudioPlaybackService {
       if (playback.waveformData.isNotEmpty) {
         _waveformCache[playback.path] = playback.waveformData;
       }
-      playback.controller.dispose();
+      unawaited(playback._dispose());
     });
   }
 
@@ -60,7 +65,18 @@ class AudioPlaybackService {
         await other.controller.pausePlayer();
       }
     }
+    await _activatePlaybackSession();
     await playback.controller.startPlayer();
+  }
+
+  /// Lets the message play while the iPhone is in silent mode.
+  Future<void> _activatePlaybackSession() async {
+    if (!Platform.isIOS) return;
+    try {
+      await _audioSession.invokeMethod<void>('activatePlayback');
+    } catch (e) {
+      Log.error('Could not activate the audio session: $e');
+    }
   }
 }
 
@@ -69,7 +85,7 @@ class AudioPlayback {
     : waveformData = List<double>.of(cachedWaveform);
 
   final String path;
-  final PlayerController controller = PlayerController();
+  final PlayerController controller = AudioPlayerController();
 
   /// Extracted waveform, empty until the extraction finished.
   List<double> waveformData;
@@ -79,6 +95,13 @@ class AudioPlayback {
 
   int _refCount = 0;
   Future<void>? _preparing;
+
+  Future<void> _dispose() async {
+    // Preparation may still be using the player/decoder when its widget leaves
+    // the list. Finish that work before releasing the native resources.
+    await _preparing;
+    controller.dispose();
+  }
 
   bool get isPlaying => controller.playerState == PlayerState.playing;
 

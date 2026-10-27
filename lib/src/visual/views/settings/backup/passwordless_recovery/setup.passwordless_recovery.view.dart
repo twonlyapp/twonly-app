@@ -1,11 +1,14 @@
-import 'dart:math';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/database/recovery.dart' as rust_recovery;
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/recovery/table.dart' as db_recovery;
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
+import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
@@ -38,24 +41,19 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
     initAsync();
   }
 
-  Future<List<int>> _loadVerifiedContacts() async {
-    final kvs = await twonlyDB.select(twonlyDB.keyVerifications).get();
-    final urs = await (twonlyDB.select(
-      twonlyDB.userDiscoveryUserRelations,
-    )..where((u) => u.publicKeyVerifiedTimestamp.isNotNull())).get();
-
-    return [
-      ...kvs.map((row) => row.contactId),
-      ...urs.map((row) => row.announcedUserId),
-    ];
-  }
-
   Future<void> initAsync() async {
-    final contacts = await twonlyDB.contactsDao.getAllContacts();
-    if (!mounted) return;
-
-    final verified = await _loadVerifiedContacts();
     final config = userService.currentUser.passwordLessRecovery;
+    final contacts = config != null
+        ? await rust_recovery.recoveryContacts(
+            selection: db_recovery.RecoveryContacts.trusted,
+            transaction: currentDatabaseSession(),
+          )
+        : await rust_recovery.recoveryContacts(
+            selection: db_recovery.RecoveryContacts.eligible,
+            limit: 8,
+            transaction: currentDatabaseSession(),
+          );
+    if (!mounted) return;
 
     if (config != null) {
       final selectedContacts = contacts
@@ -78,22 +76,8 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
         }
       });
     } else {
-      contacts.sort((a, b) => b.mediaSendCounter.compareTo(a.mediaSendCounter));
-      final verifiedContacts = contacts
-          .where(
-            (c) =>
-                verified.contains(c.userId) &
-                c.accepted &
-                !c.blocked &
-                !c.accountDeleted &
-                !c.deletedByUser,
-          )
-          .toList();
       setState(() {
-        _selectedContacts = verifiedContacts.sublist(
-          0,
-          min(8, verifiedContacts.length),
-        );
+        _selectedContacts = contacts;
       });
     }
   }
@@ -155,7 +139,10 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
 
     final contacts = <Contact>[];
     for (final id in selectedIds) {
-      final contact = await twonlyDB.contactsDao.getContactById(id);
+      final contact = await rust_contacts.getContact(
+        id: id,
+        transaction: currentDatabaseSession(),
+      );
       if (contact != null) contacts.add(contact);
     }
     setState(() {

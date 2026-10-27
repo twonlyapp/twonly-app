@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE FROM receipts\n            WHERE will_be_retried_by_media_upload = 1 AND created_at < ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "226af6b9c5a7152a456b168eb7061c9ce41351a04f52f9bec9940dfdb4ee90e5"
+}

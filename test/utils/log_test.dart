@@ -1,13 +1,56 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/log.dart';
 
 void main() {
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
   late Completer<SentryEvent> captured;
   late bool previousErrorTracking;
+
+  test('log markers follow Flutter visibility', () async {
+    final lines = <String>[];
+    try {
+      await runZoned(
+        () async {
+          Log.init();
+          binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+          Log.warn('visible log');
+          binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+          Log.warn('inactive app log');
+          binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+          Log.warn('background log');
+          binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+          Log.warn('resumed log');
+          await Future<void>.delayed(Duration.zero);
+        },
+        zoneSpecification: ZoneSpecification(
+          print: (self, parent, zone, line) => lines.add(line),
+        ),
+      );
+      expect(
+        lines.singleWhere((line) => line.contains('visible log')),
+        contains('[f]'),
+      );
+      expect(
+        lines.singleWhere((line) => line.contains('inactive app log')),
+        contains('[f]'),
+      );
+      expect(
+        lines.singleWhere((line) => line.contains('background log')),
+        contains('[b]'),
+      );
+      expect(
+        lines.singleWhere((line) => line.contains('resumed log')),
+        contains('[f]'),
+      );
+    } finally {
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    }
+  });
 
   setUp(() async {
     previousErrorTracking = AppState.allowErrorTrackingViaSentry;

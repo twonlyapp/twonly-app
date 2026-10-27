@@ -4,11 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/groups.dart' as rust_groups;
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/groups.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
+import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/group_enums.dart';
+import 'package:twonly/src/utils/contact_name.dart';
+import 'package:twonly/src/utils/database/database_watch.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -66,7 +71,15 @@ class _GroupViewState extends State<GroupView> {
       ),
     );
 
-    final groupStream = twonlyDB.groupsDao.watchGroup(widget.groupId);
+    final groupStream = watchRustDatabase(
+      (control) => rust_groups.watchGroups(
+        input: db_groups.GroupQuery(
+          filter: db_groups.GroupFilter.id,
+          groupId: widget.groupId,
+        ),
+        control: control,
+      ),
+    ).map((rows) => rows.isEmpty ? null : rows.single);
     groupSub = groupStream.listen((update) {
       if (update != null) {
         setState(() {
@@ -74,7 +87,16 @@ class _GroupViewState extends State<GroupView> {
         });
       }
     });
-    final membersStream = twonlyDB.groupsDao.watchGroupMembers(widget.groupId);
+    final membersStream = watchRustDatabase(
+      (control) => rust_groups
+          .watchGroupContacts(
+            input: db_groups.GroupMembersQuery(
+              groupId: widget.groupId,
+            ),
+            control: control,
+          )
+          .map(joinedGroupContacts),
+    );
     membersSub = membersStream.listen((update) {
       setState(() {
         members = update;

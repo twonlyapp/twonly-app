@@ -51,14 +51,18 @@ pub(crate) fn new_uuid_v7() -> String {
 }
 
 #[derive(Default, Clone)]
+
 pub(crate) struct Shared<T>(Arc<RwLock<T>>);
+
 impl<T> Shared<T> {
     pub(crate) fn new(value: T) -> Self {
         Self(Arc::new(RwLock::new(value)))
     }
+
     pub(crate) async fn get(&self) -> RwLockReadGuard<'_, T> {
         self.0.read().await
     }
+
     // pub(crate) async fn set(&self, value: T) {
     //     *self.0.write().await = value;
     // }
@@ -66,18 +70,24 @@ impl<T> Shared<T> {
 
 #[cfg(test)]
 mod tests {
+
     use super::{current_time, is_today, milliseconds_to_seconds};
 
     #[test]
+
     fn converts_milliseconds_to_seconds() {
         assert_eq!(milliseconds_to_seconds(1_999), 1);
+
         assert_eq!(milliseconds_to_seconds(1_000), 1);
+
         assert_eq!(milliseconds_to_seconds(999), 0);
     }
 
     #[test]
+
     fn recognizes_current_day() {
         assert!(is_today(current_time().timestamp()));
+
         assert!(!is_today(i64::MAX));
     }
 }

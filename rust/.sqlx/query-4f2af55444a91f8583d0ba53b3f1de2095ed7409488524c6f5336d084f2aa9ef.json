@@ -1,0 +1,170 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT cg.id AS \"id!\",\n            cg.name AS \"name!\",\n            cg.emoji AS \"emoji?\",\n            cg.text_color AS \"text_color!\",\n            cg.background_color AS \"background_color!\",\n            cg.show_as_shortcut AS \"show_as_shortcut!: bool\",\n            cg.show_as_label AS \"show_as_label!: bool\",\n            cg.share_stories AS \"share_stories!: bool\",\n            cg.usage_counter AS \"usage_counter!\",\n            cg.created_at AS \"created_at!\", m.id AS \"member_id!\", m.user_id, m.group_id FROM contact_groups cg\n                JOIN contact_group_members m ON m.contact_group_id = cg.id WHERE cg.show_as_label = 1 AND ((? = 1\n                AND m.user_id IS NOT NULL) OR (? = 0 AND m.group_id IS NOT NULL)) ORDER BY cg.id, m.id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "name!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "emoji?",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "emoji"
+          }
+        }
+      },
+      {
+        "name": "text_color!",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "text_color"
+          }
+        }
+      },
+      {
+        "name": "background_color!",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "background_color"
+          }
+        }
+      },
+      {
+        "name": "show_as_shortcut!: bool",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "show_as_shortcut"
+          }
+        }
+      },
+      {
+        "name": "show_as_label!: bool",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "show_as_label"
+          }
+        }
+      },
+      {
+        "name": "share_stories!: bool",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "share_stories"
+          }
+        }
+      },
+      {
+        "name": "usage_counter!",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "usage_counter"
+          }
+        }
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_groups",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "member_id!",
+        "ordinal": 10,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "user_id",
+        "ordinal": 11,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "name": "group_id",
+        "ordinal": 12,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "group_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "4f2af55444a91f8583d0ba53b3f1de2095ed7409488524c6f5336d084f2aa9ef"
+}
