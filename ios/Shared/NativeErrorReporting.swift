@@ -93,7 +93,15 @@ enum NativeErrorReporting {
 
   /// Operation names only: Rust errors may contain message content, paths or
   /// credentials. Never attach the push payload or the worker's raw response.
-  static func failure(_ operation: String) {
+  static func failure(_ operation: String, error: String? = nil) {
+    // Flushes and notifications deliberately preempt optional backups. The
+    // worker still returns ok=false so the scheduler retries, but this is not
+    // a failed backup. Compare only known errors and never report raw text.
+    if error == "Database operation cancelled; retry when active"
+      || error == "Native database admission cancelled" {
+      warning("\(operation)_cancelled")
+      return
+    }
     // iOS may end any background grant. The worker cancels safely and the next
     // grant retries it; expiration is not an application failure.
     if operation.hasSuffix("_expired") {
