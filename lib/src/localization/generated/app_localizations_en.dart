@@ -3345,4 +3345,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatGameLost => 'You have lost.';
+
+  @override
+  String get chatGamePlayed => 'You have played.';
+
+  @override
+  String get chatGameOtherPlayed => 'Played.';
+
+  @override
+  String get chatGameDraw => 'It is a draw.';
 }

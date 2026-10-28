@@ -92,6 +92,7 @@ Future<void> sendUpdate({
   String? summary,
   String? document,
   String? notify,
+  String? gameStatus,
 }) => RustLib.instance.api.crateBridgeWebxdcSendUpdate(
   instanceId: instanceId,
   payload: payload,
@@ -100,6 +101,7 @@ Future<void> sendUpdate({
   summary: summary,
   document: document,
   notify: notify,
+  gameStatus: gameStatus,
 );
 
 /// The address the running app sees for a participant. Stable inside one

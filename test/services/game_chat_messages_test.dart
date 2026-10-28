@@ -15,16 +15,23 @@ StoredMessage message(
   int seconds, {
   String? instance,
   bool card = false,
+  String? activity,
+  int? sender,
 }) {
   return StoredMessage(
     groupId: 'chat',
     messageId: id,
+    activityMessageId: activity,
+    senderId: sender,
     type: card ? MessageType.webxdcApp.name : MessageType.text.name,
     content: 'Played a move',
     additionalMessageData: instance == null
         ? null
         : AdditionalMessageData(
-            webxdcOrigin: WebxdcOrigin(instanceId: instance, appId: 'chess'),
+            webxdcOrigin: WebxdcOrigin(
+              instanceId: instance,
+              appId: 'arbitrary-app',
+            ),
           ).writeToBuffer(),
     createdAtSeconds: databaseSeconds(
       DateTime.fromMillisecondsSinceEpoch(seconds * 1000),
@@ -38,31 +45,101 @@ StoredMessage message(
 }
 
 void main() {
-  test('game activities show only the status in the reader language', () {
-    for (final outcome in ['turn', 'won', 'lost']) {
-      final card = message('card', 100, card: true).copyWith(
-        additionalMessageData: NullableBytes(
-          value: AdditionalMessageData(
-            webxdcOrigin: WebxdcOrigin(
-              instanceId: 'card',
-              notificationContent:
-                  '{"webxdc_game":"$outcome","instance_id":"card"}',
-            ),
-          ).writeToBuffer(),
+  test('own latest game activity shows a short localized played status', () {
+    final card = message('card', 100, card: true, activity: 'move-info')
+        .copyWith(
+          content: const NullableText(
+            value: "You played Connect Four. Alex's turn.",
+          ),
+          additionalMessageData: NullableBytes(
+            value: AdditionalMessageData(
+              webxdcOrigin: WebxdcOrigin(
+                instanceId: 'card',
+                appId: 'unlisted-game',
+                notificationContent:
+                    '{"webxdc_game":"played","instance_id":"card"}',
+              ),
+            ).writeToBuffer(),
+          ),
+        );
+    expect(
+      gameMessageText(card, AppLocalizationsEn()),
+      'You have played.',
+    );
+    expect(
+      gameMessageText(card, AppLocalizationsDe()),
+      'Du hast gespielt.',
+    );
+    expect(
+      gameMessageText(
+        message(
+          'card',
+          100,
+          card: true,
+          activity: 'move-info',
+          sender: 7,
+        ).copyWith(
+          content: NullableText(value: card.content),
+          additionalMessageData: NullableBytes(
+            value: card.additionalMessageData,
+          ),
         ),
-      );
-      final en = AppLocalizationsEn();
-      final de = AppLocalizationsDe();
-      expect(gameMessageText(card, en), switch (outcome) {
-        'turn' => 'It is your turn.',
-        'won' => 'You have won.',
-        _ => 'You have lost.',
-      });
-      expect(gameMessageText(card, de), switch (outcome) {
-        'turn' => 'Du bist am Zug.',
-        'won' => 'Du hast gewonnen.',
-        _ => 'Du hast verloren.',
-      });
+        AppLocalizationsEn(),
+      ),
+      'Played.',
+    );
+    expect(
+      gameMessageText(
+        message('new-card', 100, card: true),
+        AppLocalizationsEn(),
+      ),
+      'Played a move',
+    );
+    expect(
+      gameMessageText(
+        message('shared-text', 100),
+        AppLocalizationsEn(),
+      ),
+      'Played a move',
+    );
+  });
+
+  test('game activities show only the status in the reader language', () {
+    for (final sender in [null, 7]) {
+      for (final outcome in ['turn', 'won', 'lost', 'draw']) {
+        final card =
+            message(
+              'card',
+              100,
+              card: true,
+              activity: 'move-info',
+              sender: sender,
+            ).copyWith(
+              additionalMessageData: NullableBytes(
+                value: AdditionalMessageData(
+                  webxdcOrigin: WebxdcOrigin(
+                    instanceId: 'card',
+                    notificationContent:
+                        '{"webxdc_game":"$outcome","instance_id":"card"}',
+                  ),
+                ).writeToBuffer(),
+              ),
+            );
+        final en = AppLocalizationsEn();
+        final de = AppLocalizationsDe();
+        expect(gameMessageText(card, en), switch (outcome) {
+          'turn' => 'It is your turn.',
+          'won' => 'You have won.',
+          'lost' => 'You have lost.',
+          _ => 'It is a draw.',
+        });
+        expect(gameMessageText(card, de), switch (outcome) {
+          'turn' => 'Du bist am Zug.',
+          'won' => 'Du hast gewonnen.',
+          'lost' => 'Du hast verloren.',
+          _ => 'Unentschieden.',
+        });
+      }
     }
   });
 
@@ -84,6 +161,40 @@ void main() {
       additionalMessageData: NullableBytes(value: Uint8List.fromList([255])),
     );
     expect(gameMessageText(malformed, lang), 'Played a move');
+  });
+
+  test('unknown structured game status never exposes long announcements', () {
+    final lang = AppLocalizationsEn();
+    for (final sender in [null, 7]) {
+      for (final metadata in [
+        '{"webxdc_game":"unknown","instance_id":"card"}',
+        '{"webxdc_game":"won","instance_id":"other-game"}',
+      ]) {
+        final card =
+            message(
+              'card',
+              100,
+              card: true,
+              activity: 'move-info',
+              sender: sender,
+            ).copyWith(
+              content: const NullableText(
+                value: 'has played Chess. It is your turn.',
+              ),
+              additionalMessageData: NullableBytes(
+                value: AdditionalMessageData(
+                  webxdcOrigin: WebxdcOrigin(
+                    notificationContent: metadata,
+                  ),
+                ).writeToBuffer(),
+              ),
+            );
+        expect(
+          gameMessageText(card, lang),
+          sender == null ? 'You have played.' : 'Played.',
+        );
+      }
+    }
   });
 
   test('only the original game card remains despite cached move text', () {

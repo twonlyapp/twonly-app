@@ -3431,4 +3431,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatGameLost => 'لقد خسرت.';
+
+  @override
+  String get chatGamePlayed => 'لقد لعبت.';
+
+  @override
+  String get chatGameOtherPlayed => 'لعب.';
+
+  @override
+  String get chatGameDraw => 'تعادل.';
 }

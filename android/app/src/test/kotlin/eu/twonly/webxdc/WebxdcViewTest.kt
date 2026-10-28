@@ -5,7 +5,9 @@ import android.app.Application
 import android.os.Looper
 import android.webkit.WebView
 import android.widget.FrameLayout
+import java.time.Duration
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,6 +51,21 @@ class WebxdcViewTest {
         WebxdcView.setPaused("game", false)
         shadowOf(Looper.getMainLooper()).idle()
         assertTrue(shadowOf(webView).wasOnResumeCalled())
+        view.dispose()
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun appIsNeverLoadedWhileWebRtcIsNotShownToBeBlocked() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val view = WebxdcView(activity, "game", "origin")
+        val webView = view.getView() as WebView
+
+        // Robolectric runs no JavaScript, so the hold never confirms. Past its
+        // timeout, nothing of the app may have been requested.
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(20))
+
+        assertNull(shadowOf(webView).lastLoadedUrl)
         view.dispose()
         shadowOf(Looper.getMainLooper()).idle()
     }

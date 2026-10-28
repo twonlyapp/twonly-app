@@ -159,6 +159,7 @@ class WebxdcService {
     String? summary,
     String? document,
     String? notify,
+    String? gameStatus,
   }) => rust_webxdc.sendUpdate(
     instanceId: instanceId,
     payload: payload,
@@ -167,6 +168,7 @@ class WebxdcService {
     summary: summary,
     document: document,
     notify: notify,
+    gameStatus: gameStatus,
   );
 
   /// Removes an instance, its whole update log, and the web storage its origin

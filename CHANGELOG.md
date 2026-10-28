@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.5
+
+- Improve: Better game messages in chats
+- Fix: Camera would not start on iPad
+- Fix: Many small issues
+
 ## 0.6.4
 
 - New: @mentions in chats and sharing memories from the + menu

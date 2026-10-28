@@ -567,6 +567,25 @@ impl GroupService {
 
         let _guard = lock.lock().await;
 
+        let is_direct_chat = {
+            let database = self.ctx.app_db.read().await.clone();
+
+            sqlx::query_scalar!(
+                "SELECT is_direct_chat FROM groups WHERE group_id = ?",
+                group_id
+            )
+            .fetch_optional(&database.pool)
+            .await?
+            .unwrap_or(0)
+                != 0
+        };
+
+        if is_direct_chat {
+            tracing::warn!(group_id, "not fetching a group state for a direct chat");
+
+            return Ok(false);
+        }
+
         let server = GroupApi::fetch_group_state(&group_id).await?;
 
         let database = self.ctx.app_db.read().await.clone();
@@ -655,6 +674,8 @@ impl GroupService {
                 unknown_members: Vec::new(),
             });
         };
+
+        group.ensure_not_older(server.version_id)?;
 
         let state_key = group.state_key()?;
 
@@ -1252,6 +1273,29 @@ impl GroupService {
         Self::spawn_state_refresh(ctx, Some(group_id));
     }
 
+    /// Settles a group public key from someone the group, as this device knows
+    /// it, does not include.
+    ///
+    /// Only the group server can say whether they joined since the last refresh
+    /// or are naming a group they are not in. A refresh that finds them adds
+    /// them without a key and asks for it again; one that does not changes
+    /// nothing. The sender decides how often this runs, so it shares the
+    /// interval of [`Self::spawn_stale_membership_refresh`].
+    pub fn spawn_unknown_member_refresh(ctx: &Arc<Context>, group_id: String, contact_id: i64) {
+        if !claim_stale_membership_refresh(&group_id) {
+            return;
+        }
+
+        tracing::info!(
+            group_id,
+            contact_id,
+            "a group public key arrived from someone who is not a member; refreshing the group \
+             state"
+        );
+
+        Self::spawn_state_refresh(ctx, Some(group_id));
+    }
+
     pub fn spawn_state_refresh(ctx: &Arc<Context>, group_id: Option<String>) {
         let ctx = ctx.clone();
 
@@ -1837,6 +1881,180 @@ mod state_apply_tests {
         .await?;
 
         assert_eq!(members, vec![(7, "normal".into()), (9, "admin".into())]);
+
+        Ok(())
+    }
+
+    /// A refresh can be started by any peer naming a group ID. For a direct
+    /// chat there is no server state to apply: going ahead would read the
+    /// missing state as having left the chat, or take a member list from
+    /// whoever answered.
+    #[tokio::test]
+
+    async fn a_direct_chat_is_never_refreshed_from_the_group_server() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+
+        crate::api::ApiRuntime::close(&ctx).await?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'alice');
+             INSERT INTO groups(group_id, group_name, is_direct_chat, joined_group)
+             VALUES ('direct', 'alice', 1, 1);
+             INSERT INTO group_members(group_id, contact_id) VALUES ('direct', 7);",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        // No server is reachable here; a fetch that went ahead would fail or
+        // stall instead of returning.
+        let updated = tokio::time::timeout(
+            Duration::from_secs(5),
+            GroupService::new(&ctx).fetch_group_state("direct".into()),
+        )
+        .await??;
+
+        assert!(!updated);
+
+        let group: (i64, i64) =
+            sqlx::query_as("SELECT joined_group, left_group FROM groups WHERE group_id = 'direct'")
+                .fetch_one(&database.pool)
+                .await?;
+
+        assert_eq!(group, (1, 0));
+
+        let members: Vec<i64> =
+            sqlx::query_scalar("SELECT contact_id FROM group_members WHERE group_id = 'direct'")
+                .fetch_all(&database.pool)
+                .await?;
+
+        assert_eq!(members, vec![7]);
+
+        Ok(())
+    }
+
+    /// The group server can hand back any state it ever held. One older than
+    /// what this device already applied is refused, so a member removed since
+    /// cannot be replayed back in.
+    #[tokio::test]
+
+    async fn an_older_group_state_is_never_applied() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let data_dir = directory.path().join("data");
+
+        std::fs::create_dir_all(data_dir.join("keyvalue"))?;
+
+        std::fs::write(
+            data_dir.join("keyvalue/user.json"),
+            serde_json::to_vec(&crate::user_config::UserConfig {
+                user_id: 1,
+                username: "me".into(),
+                display_name: "Me".into(),
+                is_user_discovery_enabled: false,
+                ..Default::default()
+            })?,
+        )?;
+
+        let ctx = Context::init_for_testing(directory.path().join("database"), data_dir).await?;
+
+        crate::api::ApiRuntime::close(&ctx).await?;
+
+        ctx.inject_test_user_id(1).await?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        let key = vec![1_u8; 32];
+
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice'), (9, 'removed')")
+            .execute(&database.pool)
+            .await?;
+
+        let group_key =
+            libsignal_protocol::IdentityKeyPair::generate(&mut rand::rngs::StdRng::from_os_rng())
+                .serialize()
+                .to_vec();
+
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, state_encryption_key, my_group_private_key, \
+             state_version_id, joined_group) VALUES ('g', 'Group', ?, ?, 5, 1)",
+        )
+        .bind(&key)
+        .bind(&group_key)
+        .execute(&database.pool)
+        .await?;
+
+        sqlx::query(
+            "INSERT INTO group_members(group_id, contact_id, member_state) VALUES ('g', 7, \
+             'normal')",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        let state = |version_id: u64| -> anyhow::Result<_> {
+            Ok(crate::api::proto::http_requests::GroupState {
+                version_id,
+                encrypted_group_state: crypto::encrypt(
+                    &key,
+                    &EncryptedGroupState {
+                        group_name: "Group".into(),
+                        member_ids: vec![1, 7, 9],
+                        ..Default::default()
+                    }
+                    .encode_to_vec(),
+                )?,
+                appended_group_states: vec![],
+            })
+        };
+
+        let applied = || async {
+            let version: i64 =
+                sqlx::query_scalar("SELECT state_version_id FROM groups WHERE group_id = 'g'")
+                    .fetch_one(&database.pool)
+                    .await?;
+
+            let members: Vec<i64> = sqlx::query_scalar(
+                "SELECT contact_id FROM group_members WHERE group_id = 'g' AND member_state != \
+                 'leftGroup' ORDER BY contact_id",
+            )
+            .fetch_all(&database.pool)
+            .await?;
+
+            anyhow::Ok((version, members))
+        };
+
+        let service = GroupService::new(&ctx);
+
+        let mut t = database.pool.begin().await?;
+
+        assert!(service
+            .apply_fetched_group_state(&mut t, "g", Some(state(3)?))
+            .await
+            .is_err());
+
+        t.rollback().await?;
+
+        assert_eq!(applied().await?, (5, vec![7]));
+
+        // The version it already has, or a newer one, still applies.
+        for version_id in [5, 6] {
+            let mut t = database.pool.begin().await?;
+
+            service
+                .apply_fetched_group_state(&mut t, "g", Some(state(version_id)?))
+                .await?;
+
+            t.commit().await?;
+
+            assert_eq!(applied().await?, (version_id as i64, vec![7, 9]));
+        }
 
         Ok(())
     }

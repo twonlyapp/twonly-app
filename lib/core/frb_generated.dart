@@ -1212,6 +1212,7 @@ abstract class RustLibApi extends BaseApi {
     String? summary,
     String? document,
     String? notify,
+    String? gameStatus,
   });
 
   Future<WebxdcResponse> crateBridgeWebxdcServe({
@@ -10756,6 +10757,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     String? summary,
     String? document,
     String? notify,
+    String? gameStatus,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -10768,6 +10770,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_opt_String(summary, serializer);
           sse_encode_opt_String(document, serializer);
           sse_encode_opt_String(notify, serializer);
+          sse_encode_opt_String(gameStatus, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -10780,7 +10783,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeWebxdcSendUpdateConstMeta,
-        argValues: [instanceId, payload, info, href, summary, document, notify],
+        argValues: [
+          instanceId,
+          payload,
+          info,
+          href,
+          summary,
+          document,
+          notify,
+          gameStatus,
+        ],
         apiImpl: this,
       ),
     );
@@ -10797,6 +10809,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "summary",
           "document",
           "notify",
+          "gameStatus",
         ],
       );
 

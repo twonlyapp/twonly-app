@@ -1170,6 +1170,7 @@ class WebxdcUpdate extends $pb.GeneratedMessage {
     $core.String? summary,
     $core.String? document,
     $core.String? notify,
+    $core.String? gameStatus,
   }) {
     final result = create();
     if (instanceId != null) result.instanceId = instanceId;
@@ -1179,6 +1180,7 @@ class WebxdcUpdate extends $pb.GeneratedMessage {
     if (summary != null) result.summary = summary;
     if (document != null) result.document = document;
     if (notify != null) result.notify = notify;
+    if (gameStatus != null) result.gameStatus = gameStatus;
     return result;
   }
 
@@ -1201,6 +1203,7 @@ class WebxdcUpdate extends $pb.GeneratedMessage {
     ..aOS(5, _omitFieldNames ? '' : 'summary')
     ..aOS(6, _omitFieldNames ? '' : 'document')
     ..aOS(7, _omitFieldNames ? '' : 'notify')
+    ..aOS(8, _omitFieldNames ? '' : 'gameStatus')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1289,6 +1292,18 @@ class WebxdcUpdate extends $pb.GeneratedMessage {
   $core.bool hasNotify() => $_has(6);
   @$pb.TagNumber(7)
   void clearNotify() => $_clearField(7);
+
+  /// Optional per-player chat status, independent of push recipients.
+  /// JSON map of member addresses to "played", "turn", "won", "lost", "draw".
+  /// An absent player gets the generic played status. Older hosts ignore it.
+  @$pb.TagNumber(8)
+  $core.String get gameStatus => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set gameStatus($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasGameStatus() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearGameStatus() => $_clearField(8);
 }
 
 const $core.bool _omitFieldNames =

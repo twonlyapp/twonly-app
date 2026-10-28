@@ -5661,6 +5661,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have lost.'**
   String get chatGameLost;
+
+  /// No description provided for @chatGamePlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'You have played.'**
+  String get chatGamePlayed;
+
+  /// No description provided for @chatGameOtherPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Played.'**
+  String get chatGameOtherPlayed;
+
+  /// No description provided for @chatGameDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'It is a draw.'**
+  String get chatGameDraw;
 }
 
 class _AppLocalizationsDelegate

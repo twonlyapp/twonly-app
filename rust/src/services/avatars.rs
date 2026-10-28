@@ -477,11 +477,25 @@ fn validate_custom_webp(webp: &[u8], digest: &[u8], width: u32, height: u32) -> 
     Ok(())
 }
 
+/// Largest SVG a compressed avatar may inflate to. The avatar builder produces
+/// a few tens of kilobytes; anything near this is a gzip bomb, which any peer
+/// can send, and inflating it unbounded took the app down while handling the
+/// message -- so it was redelivered and took it down again.
+const MAX_AVATAR_SVG_BYTES: u64 = 1024 * 1024;
+
 fn decode_svg_bytes(bytes: &[u8]) -> Result<Vec<u8>> {
     if bytes.starts_with(&[0x1f, 0x8b]) {
         let mut decoded = Vec::new();
 
-        GzDecoder::new(bytes).read_to_end(&mut decoded)?;
+        GzDecoder::new(bytes)
+            .take(MAX_AVATAR_SVG_BYTES + 1)
+            .read_to_end(&mut decoded)?;
+
+        if decoded.len() as u64 > MAX_AVATAR_SVG_BYTES {
+            return Err(TwonlyError::Generic(
+                "avatar SVG inflates beyond the size limit".into(),
+            ));
+        }
 
         Ok(decoded)
     } else {
@@ -944,6 +958,27 @@ mod tests {
         encoder.write_all(SVG.as_bytes()).unwrap();
 
         assert_eq!(decode_avatar_svg(encoder.finish().unwrap()), SVG);
+    }
+
+    #[test]
+
+    fn a_gzip_bomb_is_refused_without_being_inflated() {
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
+
+        // Compresses to a few kilobytes; inflated it is far past the limit.
+        encoder
+            .write_all(&vec![b' '; 64 * MAX_AVATAR_SVG_BYTES as usize])
+            .unwrap();
+
+        let bomb = encoder.finish().unwrap();
+
+        assert!(bomb.len() < 128 * 1024);
+
+        assert!(decode_svg_bytes(&bomb).is_err());
+
+        assert!(render_with_max_dimension(&bomb, 256.0).is_err());
+
+        assert_eq!(decode_avatar_svg(bomb), DEFAULT_AVATAR_SVG);
     }
 
     #[test]

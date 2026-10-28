@@ -104,6 +104,63 @@ pub(crate) fn webxdc_notification_content(
     }
 }
 
+/// Per-player chat presentation comes from the app, independently of who gets
+/// a push. Legacy game notifications still identify a game activity; nobody's
+/// result is inferred from another player's result.
+pub(crate) fn webxdc_chat_content(update: &proto::WebxdcUpdate, user_id: i64) -> Option<String> {
+    use crate::services::webxdc::{AppNotification, GameChatStatus, SEND_UPDATE_MAX_SIZE};
+    #[derive(Serialize)]
+    struct ChatContent<'a> {
+        webxdc_game: GameChatStatus,
+        instance_id: &'a str,
+    }
+    let encode = |status| {
+        serde_json::to_string(&ChatContent {
+            webxdc_game: status,
+            instance_id: &update.instance_id,
+        })
+        .ok()
+    };
+    if let Some(raw) = &update.game_status {
+        if raw.len() > SEND_UPDATE_MAX_SIZE {
+            return encode(GameChatStatus::Played);
+        }
+        let Ok(statuses) =
+            serde_json::from_str::<std::collections::BTreeMap<String, GameChatStatus>>(raw)
+        else {
+            return encode(GameChatStatus::Played);
+        };
+        let address =
+            crate::services::webxdc::WebxdcService::address_for(&update.instance_id, user_id);
+        return encode(
+            statuses
+                .get(&address)
+                .copied()
+                .unwrap_or(GameChatStatus::Played),
+        );
+    }
+    let content = webxdc_notification_content(update, user_id);
+    if content
+        .as_deref()
+        .is_some_and(|value| serde_json::from_str::<GameNotificationContent>(value).is_ok())
+    {
+        return content;
+    }
+    if let Some(raw) = &update.notify {
+        if raw.len() > SEND_UPDATE_MAX_SIZE {
+            return None;
+        }
+        if serde_json::from_str::<std::collections::BTreeMap<String, AppNotification>>(raw)
+            .ok()?
+            .values()
+            .any(|value| matches!(value, AppNotification::Game { .. }))
+        {
+            return encode(GameChatStatus::Played);
+        }
+    }
+    content
+}
+
 /// Who wrote the message with this id, as this device has it.
 ///
 /// The two layers say different things and both matter here: the outer `None`
@@ -2900,6 +2957,37 @@ mod tests {
         assert!(announcement_of(&webxdc_update(None)).is_none());
 
         assert!(announcement_of(&webxdc_update(Some("  \u{200e} "))).is_none());
+    }
+
+    #[test]
+    fn chat_status_is_explicit_per_player_and_independent_of_push_targets() {
+        use crate::services::webxdc::WebxdcService;
+        let update = proto::WebxdcUpdate {
+            instance_id: "arbitrary-instance".into(),
+            info: Some("App supplied announcement".into()),
+            notify: Some(serde_json::json!({WebxdcService::address_for("arbitrary-instance", 7): {"game":"lost"}}).to_string()),
+            game_status: Some(serde_json::json!({
+                WebxdcService::address_for("arbitrary-instance", 42): "won",
+                WebxdcService::address_for("arbitrary-instance", 7): "lost",
+            }).to_string()),
+            ..Default::default()
+        };
+        for (user, expected) in [(42, "won"), (7, "lost"), (8, "played")] {
+            let content = webxdc_chat_content(&update, user).unwrap();
+            let content: serde_json::Value = serde_json::from_str(&content).unwrap();
+            assert_eq!(content["webxdc_game"], expected);
+        }
+        assert!(webxdc_notification_content(&update, 42).is_none());
+        let legacy = proto::WebxdcUpdate {
+            game_status: None,
+            ..update
+        };
+        let sender: serde_json::Value =
+            serde_json::from_str(&webxdc_chat_content(&legacy, 42).unwrap()).unwrap();
+        assert_eq!(
+            sender["webxdc_game"], "played",
+            "an opponent's loss does not declare this user's win"
+        );
     }
 
     fn targeted_update(notify: &str) -> proto::EncryptedContent {

@@ -1104,12 +1104,37 @@ async fn handle_encrypted_inner(
         return Ok(());
     };
 
+    // A direct chat has no group state or keys: its two people are fixed by
+    // its ID. The ID's shape counts as much as the stored flag, so nobody can
+    // create a group under the ID of a direct chat that does not exist yet and
+    // have the real chat inherit it.
+    let manages_group = content.group_create.is_some()
+        || content.group_join.is_some()
+        || content.resend_group_public_key.is_some();
+
+    if manages_group
+        && (Group::is_direct_chat(t, &group_id).await?
+            || Group::is_direct_chat_id(&group_id, ctx.user_id().await?))
+    {
+        tracing::warn!(
+            group_id,
+            kind = type_kind,
+            "ignored group management content for a direct chat"
+        );
+
+        return Ok(());
+    }
+
     if let Some(create) = content.group_create {
         return groups::handle_group_create(ctx, t, from_user_id, &group_id, create).await;
     }
 
     if let Some(join) = content.group_join {
-        return groups::handle_group_join(t, from_user_id, &group_id, join).await;
+        if groups::handle_group_join(t, from_user_id, &group_id, join).await? {
+            GroupService::spawn_unknown_member_refresh(ctx, group_id, from_user_id);
+        }
+
+        return Ok(());
     }
 
     let is_member = sqlx::query_scalar!(
@@ -1977,5 +2002,284 @@ mod tests {
         assert!(!claim_legacy_upgrade_request(&mut t, 7).await.unwrap());
 
         t.commit().await.unwrap();
+    }
+
+    /// A direct chat's ID is built from the two user IDs, so anyone who knew
+    /// them could name it. A group public key for it used to add its sender as
+    /// a member, and every later message in the chat was sent to them too.
+    #[tokio::test]
+
+    async fn a_stranger_naming_a_direct_chat_does_not_receive_its_messages() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+
+        crate::api::ApiRuntime::close(&ctx).await?;
+
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        let chat = Group::direct_chat_id(42, 7);
+
+        // 99 is a stranger, stored the way `ensure_contact_exists` leaves one.
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, accepted, deleted_by_user)
+             VALUES (7, 'friend', 1, 0), (99, 'stranger', 0, 1)",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, is_direct_chat, joined_group)
+             VALUES (?, 'friend', 1, 1)",
+        )
+        .bind(&chat)
+        .execute(&database.pool)
+        .await?;
+
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES (?, 7)")
+            .bind(&chat)
+            .execute(&database.pool)
+            .await?;
+
+        let content = proto::EncryptedContent {
+            group_id: Some(chat.clone()),
+            group_join: Some(proto::encrypted_content::GroupJoin {
+                group_public_key: vec![5; 33],
+            }),
+            ..Default::default()
+        };
+
+        let mut t = database.pool.begin().await?;
+
+        Receipt::claim_received(&mut t, "join").await?;
+
+        Receipt::store_pending_plaintext(&mut t, "join", &content.encode_to_vec()).await?;
+
+        t.commit().await?;
+
+        handle_decoded_server_message(
+            &ctx,
+            99,
+            proto::Message {
+                receipt_id: "join".into(),
+                r#type: Type::CiphertextV2 as i32,
+                ..Default::default()
+            },
+        )
+        .await?;
+
+        let members: Vec<i64> =
+            sqlx::query_scalar("SELECT contact_id FROM group_members WHERE group_id = ?")
+                .bind(&chat)
+                .fetch_all(&database.pool)
+                .await?;
+
+        assert_eq!(members, vec![7]);
+
+        crate::services::messages::MessageService::new(&ctx)
+            .insert_and_send_text(chat.clone(), "for 7 only".into(), None, None, None, None)
+            .await?;
+
+        let recipients: Vec<i64> =
+            sqlx::query_scalar("SELECT contact_id FROM receipts WHERE message_id IS NOT NULL")
+                .fetch_all(&database.pool)
+                .await?;
+
+        assert_eq!(recipients, vec![7]);
+
+        Ok(())
+    }
+
+    async fn deliver_plaintext(
+        ctx: &Arc<Context>, from_user_id: i64, receipt_id: &str, content: proto::EncryptedContent,
+    ) -> Result<()> {
+        let database = ctx.app_db.read().await.clone();
+
+        let mut t = database.pool.begin().await?;
+
+        Receipt::claim_received(&mut t, receipt_id).await?;
+
+        Receipt::store_pending_plaintext(&mut t, receipt_id, &content.encode_to_vec()).await?;
+
+        t.commit().await?;
+
+        handle_decoded_server_message(
+            ctx,
+            from_user_id,
+            proto::Message {
+                receipt_id: receipt_id.into(),
+                r#type: Type::CiphertextV2 as i32,
+                ..Default::default()
+            },
+        )
+        .await
+    }
+
+    /// An invitation naming a direct chat would give it a state key chosen by
+    /// its sender. One naming a direct chat that does not exist yet would leave
+    /// a group under its ID for the real chat to inherit later.
+    #[tokio::test]
+
+    async fn an_invitation_never_touches_a_direct_chat_even_one_not_created_yet() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+
+        crate::api::ApiRuntime::close(&ctx).await?;
+
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+
+        ctx.inject_test_user_id(42).await?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        let existing = Group::direct_chat_id(42, 7);
+
+        let future = Group::direct_chat_id(42, 8);
+
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, accepted, deleted_by_user)
+             VALUES (7, 'friend', 1, 0), (99, 'stranger', 0, 1)",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, is_direct_chat, joined_group)
+             VALUES (?, 'friend', 1, 1)",
+        )
+        .bind(&existing)
+        .execute(&database.pool)
+        .await?;
+
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES (?, 7)")
+            .bind(&existing)
+            .execute(&database.pool)
+            .await?;
+
+        for (receipt_id, group_id) in [("existing", &existing), ("future", &future)] {
+            deliver_plaintext(
+                &ctx,
+                99,
+                receipt_id,
+                proto::EncryptedContent {
+                    group_id: Some(group_id.clone()),
+                    group_create: Some(proto::encrypted_content::GroupCreate {
+                        state_key: vec![0xEE; 32],
+                        group_public_key: vec![5; 33],
+                        group_name: Some("Group".into()),
+                    }),
+                    ..Default::default()
+                },
+            )
+            .await?;
+        }
+
+        let groups: Vec<(String, Option<Vec<u8>>)> =
+            sqlx::query_as("SELECT group_id, state_encryption_key FROM groups")
+                .fetch_all(&database.pool)
+                .await?;
+
+        assert_eq!(groups, vec![(existing.clone(), None)]);
+
+        let members: Vec<i64> = sqlx::query_scalar("SELECT contact_id FROM group_members")
+            .fetch_all(&database.pool)
+            .await?;
+
+        assert_eq!(members, vec![7]);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+
+    async fn a_direct_chat_message_goes_only_to_the_person_the_chat_is_with() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+
+        crate::api::ApiRuntime::close(&ctx).await?;
+
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        let chat = Group::direct_chat_id(42, 7);
+
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'friend', 1), \
+             (99, 'stranger', 0)",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, is_direct_chat, joined_group)
+             VALUES (?, 'friend', 1, 1)",
+        )
+        .bind(&chat)
+        .execute(&database.pool)
+        .await?;
+
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES (?, 7), (?, 99)")
+            .bind(&chat)
+            .bind(&chat)
+            .execute(&database.pool)
+            .await?;
+
+        let service = crate::services::messages::MessageService::new(&ctx);
+
+        service
+            .insert_and_send_text(chat.clone(), "for 7 only".into(), None, None, None, None)
+            .await?;
+
+        // The pool-based fan-out, which reactions and app updates go through.
+        service
+            .send_to_group(
+                chat.clone(),
+                proto::EncryptedContent {
+                    reaction: Some(proto::encrypted_content::Reaction {
+                        target_message_id: "any".into(),
+                        emoji: "👍".into(),
+                        remove: false,
+                    }),
+                    ..Default::default()
+                }
+                .encode_to_vec(),
+                None,
+                false,
+            )
+            .await?;
+
+        let recipients: Vec<i64> = sqlx::query_scalar("SELECT DISTINCT contact_id FROM receipts")
+            .fetch_all(&database.pool)
+            .await?;
+
+        assert_eq!(recipients, vec![7]);
+
+        Ok(())
     }
 }

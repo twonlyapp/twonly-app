@@ -926,5 +926,8 @@
   "notificationGameFallbackName": "لعبة",
   "chatGameTurn": "حان دورك.",
   "chatGameWon": "لقد فزت.",
-  "chatGameLost": "لقد خسرت."
+  "chatGameLost": "لقد خسرت.",
+  "chatGamePlayed": "لقد لعبت.",
+  "chatGameOtherPlayed": "لعب.",
+  "chatGameDraw": "تعادل."
 }

@@ -364,7 +364,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
           _showSelfieFlash = true;
         });
       } else {
-        await mc.cameraController?.setFlashMode(FlashMode.torch);
+        await mc.setFlashMode(FlashMode.torch);
       }
       await Future.delayed(const Duration(milliseconds: 1000));
     }
@@ -377,7 +377,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
     }
 
     if (mc.cameraController?.value.flashMode != FlashMode.off) {
-      await mc.cameraController?.setFlashMode(FlashMode.off);
+      await mc.setFlashMode(FlashMode.off);
     }
 
     if (!mounted) {
@@ -620,7 +620,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
     });
 
     if (mc.selectedCameraDetails.isFlashOn) {
-      await mc.cameraController?.setFlashMode(FlashMode.torch);
+      await mc.setFlashMode(FlashMode.torch);
     }
 
     try {
@@ -655,7 +655,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
         mc.isVideoRecording = false;
       });
       _showCameraException(e);
-      await mc.cameraController?.setFlashMode(FlashMode.off);
+      await mc.setFlashMode(FlashMode.off);
       return;
     }
   }
@@ -678,7 +678,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
         : clock.now().difference(startedAt);
     final recordingSize = mc.cameraController?.value.previewSize;
 
-    await mc.cameraController?.setFlashMode(FlashMode.off);
+    await mc.setFlashMode(FlashMode.off);
 
     setState(() {
       _videoRecordingStarted = null;
@@ -838,10 +838,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
                     },
                     onToggleFlash: () async {
                       if (mc.selectedCameraDetails.isFlashOn) {
-                        await mc.cameraController?.setFlashMode(FlashMode.off);
+                        await mc.setFlashMode(FlashMode.off);
                         mc.selectedCameraDetails.isFlashOn = false;
                       } else {
-                        await mc.cameraController?.setFlashMode(
+                        await mc.setFlashMode(
                           FlashMode.always,
                         );
                         mc.selectedCameraDetails.isFlashOn = true;

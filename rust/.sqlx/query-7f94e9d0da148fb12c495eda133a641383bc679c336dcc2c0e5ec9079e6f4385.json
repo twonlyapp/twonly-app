@@ -1,11 +1,22 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT my_group_private_key, left_group FROM groups WHERE group_id = ?",
+  "query": "SELECT state_encryption_key, my_group_private_key, left_group FROM groups WHERE group_id = ?",
   "describe": {
     "columns": [
       {
-        "name": "my_group_private_key",
+        "name": "state_encryption_key",
         "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "state_encryption_key"
+          }
+        }
+      },
+      {
+        "name": "my_group_private_key",
+        "ordinal": 1,
         "type_info": "Blob",
         "origin": {
           "Table": {
@@ -16,7 +27,7 @@
       },
       {
         "name": "left_group",
-        "ordinal": 1,
+        "ordinal": 2,
         "type_info": "Integer",
         "origin": {
           "Table": {
@@ -31,8 +42,9 @@
     },
     "nullable": [
       true,
+      true,
       false
     ]
   },
-  "hash": "fd60fbfba549254c80d7d6645918d042f1608108170c71a8ae664b3cfe967988"
+  "hash": "7f94e9d0da148fb12c495eda133a641383bc679c336dcc2c0e5ec9079e6f4385"
 }

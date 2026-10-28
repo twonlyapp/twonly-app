@@ -1275,5 +1275,8 @@
   "notificationGameFallbackName": "ein Spiel",
   "chatGameTurn": "Du bist am Zug.",
   "chatGameWon": "Du hast gewonnen.",
-  "chatGameLost": "Du hast verloren."
+  "chatGameLost": "Du hast verloren.",
+  "chatGamePlayed": "Du hast gespielt.",
+  "chatGameOtherPlayed": "Hat gespielt.",
+  "chatGameDraw": "Unentschieden."
 }

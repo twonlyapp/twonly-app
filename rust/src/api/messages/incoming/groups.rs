@@ -34,45 +34,97 @@ pub(crate) async fn handle_group_create(
     ctx: &std::sync::Arc<crate::context::Context>, t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64, group_id: &str, create: encrypted_content::GroupCreate,
 ) -> Result<()> {
-    let announce = store_group_invitation(t, from_user_id, group_id, create).await?;
+    match store_group_invitation(t, from_user_id, group_id, create).await? {
+        Invitation::Accepted => {
+            GroupService::spawn_state_refresh_and_announce(ctx, group_id.to_owned());
 
-    if announce {
-        GroupService::spawn_state_refresh_and_announce(ctx, group_id.to_owned());
+            crate::services::webxdc::WebxdcService::spawn_sync_request(
+                ctx,
+                group_id.to_owned(),
+                from_user_id,
+            );
+        }
+        Invitation::Repeated => {
+            // Our existing key is already announced through the reliable outbox.
+            // A repair must not fan out another GroupJoin to every member, or
+            // restart app sync. A peer missing our key can request it directly.
+            tracing::info!(
+                group_id,
+                from_user_id,
+                "received a repeated group invitation"
+            );
 
-        crate::services::webxdc::WebxdcService::spawn_sync_request(
-            ctx,
-            group_id.to_owned(),
-            from_user_id,
-        );
-    } else {
-        // Our existing key is already announced through the reliable outbox.
-        // A repair must not fan out another GroupJoin to every member, or
-        // restart app sync. A peer missing our key can request it directly.
-        tracing::info!(
-            group_id,
-            from_user_id,
-            "received a repeated group invitation"
-        );
-
-        GroupService::spawn_state_refresh(ctx, Some(group_id.to_owned()));
+            GroupService::spawn_state_refresh(ctx, Some(group_id.to_owned()));
+        }
+        Invitation::Ignored => {}
     }
 
     Ok(())
 }
 
-/// Returns whether this invitation needs an initial key announcement and sync.
+/// What an invitation changed.
+#[derive(Debug, PartialEq)]
+enum Invitation {
+    /// Dropped: it came from a blocked contact, or carried a state key other
+    /// than the one this group already has.
+    Ignored,
+    /// For a group already held with our key: nothing to announce.
+    Repeated,
+    /// A new membership, or our first key for this group: it needs an initial
+    /// key announcement and sync.
+    Accepted,
+}
+
 async fn store_group_invitation(
     t: &mut Transaction<'_, Sqlite>, from_user_id: i64, group_id: &str,
     create: encrypted_content::GroupCreate,
-) -> Result<bool> {
+) -> Result<Invitation> {
     Contact::ensure_exists(t, from_user_id).await?;
 
+    let blocked = sqlx::query_scalar!(
+        "SELECT blocked FROM contacts WHERE user_id = ?",
+        from_user_id
+    )
+    .fetch_one(&mut **t)
+    .await?
+        != 0;
+
+    if blocked {
+        tracing::warn!(
+            group_id,
+            from_user_id,
+            "ignored a group invitation from a blocked contact"
+        );
+
+        return Ok(Invitation::Ignored);
+    }
+
     let existing = sqlx::query!(
-        "SELECT my_group_private_key, left_group FROM groups WHERE group_id = ?",
+        "SELECT state_encryption_key, my_group_private_key, left_group FROM groups WHERE \
+         group_id = ?",
         group_id,
     )
     .fetch_optional(&mut **t)
     .await?;
+
+    // The state key is what makes the group server's member list authoritative:
+    // whoever chose it can write any membership they like. A group keeps the key
+    // it was created with, so an invitation carrying another one is not from
+    // this group, and taking it would hand the group to its sender.
+    let other_key = existing
+        .as_ref()
+        .and_then(|group| group.state_encryption_key.as_deref())
+        .is_some_and(|key| key != create.state_key.as_slice());
+
+    if other_key {
+        tracing::warn!(
+            group_id,
+            from_user_id,
+            "ignored a group invitation carrying a different state key"
+        );
+
+        return Ok(Invitation::Ignored);
+    }
 
     // Membership repair sends GroupCreate too, potentially from several peers.
     // It must neither invent another join nor replace the key peers already
@@ -105,7 +157,7 @@ async fn store_group_invitation(
             joined_group
         ) VALUES (?, ?, ?, ?, 0)
         ON CONFLICT(group_id) DO UPDATE SET
-            state_encryption_key = excluded.state_encryption_key,
+            state_encryption_key = COALESCE(state_encryption_key, excluded.state_encryption_key),
             my_group_private_key = excluded.my_group_private_key,
             deleted_content = CASE WHEN left_group = 1 THEN 0 ELSE deleted_content END,
             left_group = 0
@@ -118,16 +170,15 @@ async fn store_group_invitation(
     .execute(&mut **t)
     .await?;
 
+    // Membership comes only from the group server's state, which the refresh
+    // after this applies. A member it already lists may update the key it signs
+    // with; anyone else is added by that refresh if the state names them, and
+    // asked for their key then.
     sqlx::query!(
-        r#"
-        INSERT INTO group_members(group_id, contact_id, group_public_key)
-        VALUES (?, ?, ?)
-        ON CONFLICT(group_id, contact_id)
-        DO UPDATE SET group_public_key = excluded.group_public_key
-        "#,
+        "UPDATE group_members SET group_public_key = ? WHERE group_id = ? AND contact_id = ?",
+        create.group_public_key,
         group_id,
         from_user_id,
-        create.group_public_key,
     )
     .execute(&mut **t)
     .await?;
@@ -144,32 +195,47 @@ async fn store_group_invitation(
         .await?;
     }
 
-    Ok(is_new_membership || needs_key)
+    Ok(if is_new_membership || needs_key {
+        Invitation::Accepted
+    } else {
+        Invitation::Repeated
+    })
 }
 
+/// Stores the group public key a member announces.
+///
+/// A join never adds anyone. Members come only from the group server's state,
+/// so this updates the key of a member row that already exists.
 pub(crate) async fn handle_group_join(
     t: &mut Transaction<'_, Sqlite>, from_user_id: i64, group_id: &str,
     join: encrypted_content::GroupJoin,
-) -> Result<()> {
-    Contact::ensure_exists(t, from_user_id).await?;
-
+) -> Result<bool> {
     Group::ensure_exists(t, group_id).await?;
 
-    sqlx::query!(
-        r#"
-        INSERT INTO group_members(group_id, contact_id, group_public_key)
-        VALUES (?, ?, ?)
-        ON CONFLICT(group_id, contact_id)
-        DO UPDATE SET group_public_key = excluded.group_public_key
-        "#,
+    // A direct chat has no group keys, so a key naming one is never applied.
+    let updated = sqlx::query!(
+        r#"UPDATE group_members SET group_public_key = ?
+           WHERE group_id = ? AND contact_id = ?
+             AND group_id IN (SELECT group_id FROM groups WHERE is_direct_chat = 0)"#,
+        join.group_public_key,
         group_id,
         from_user_id,
-        join.group_public_key,
     )
     .execute(&mut **t)
-    .await?;
+    .await?
+    .rows_affected();
 
-    Ok(())
+    if updated == 0 {
+        tracing::warn!(
+            group_id,
+            from_user_id,
+            "ignored a group public key from someone who is not a member, or for a direct chat"
+        );
+
+        return Ok(true);
+    }
+
+    Ok(false)
 }
 
 pub(crate) async fn handle_resend_group_public_key(
@@ -380,15 +446,21 @@ mod invitation_tests {
         Ok((directory, db))
     }
 
-    async fn invite(db: &AppDatabase, sender: i64, public_key: Vec<u8>) -> Result<bool> {
+    async fn invite(db: &AppDatabase, sender: i64, public_key: Vec<u8>) -> Result<Invitation> {
+        invite_with_state_key(db, sender, public_key, vec![1; 32]).await
+    }
+
+    async fn invite_with_state_key(
+        db: &AppDatabase, sender: i64, public_key: Vec<u8>, state_key: Vec<u8>,
+    ) -> Result<Invitation> {
         let mut t = db.pool.begin().await?;
 
-        let announce = store_group_invitation(
+        let invitation = store_group_invitation(
             &mut t,
             sender,
             "chat",
             encrypted_content::GroupCreate {
-                state_key: vec![1; 32],
+                state_key,
                 group_public_key: public_key,
                 group_name: Some("Chat".into()),
             },
@@ -397,7 +469,20 @@ mod invitation_tests {
 
         t.commit().await?;
 
-        Ok(announce)
+        Ok(invitation)
+    }
+
+    /// What the refresh after an invitation does once the group server lists
+    /// these members.
+    async fn refreshed_with(db: &AppDatabase, members: &[i64]) -> Result<()> {
+        for member in members {
+            sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES ('chat', ?)")
+                .bind(member)
+                .execute(&db.pool)
+                .await?;
+        }
+
+        Ok(())
     }
 
     async fn private_key(db: &AppDatabase) -> Result<Vec<u8>> {
@@ -414,7 +499,9 @@ mod invitation_tests {
     ) -> Result<()> {
         let (_directory, db) = database().await?;
 
-        assert!(invite(&db, 7, vec![7]).await?);
+        assert_eq!(invite(&db, 7, vec![7]).await?, Invitation::Accepted);
+
+        refreshed_with(&db, &[7, 8]).await?;
 
         let identity = private_key(&db).await?;
 
@@ -428,10 +515,10 @@ mod invitation_tests {
         .await?;
 
         for _ in 0..69 {
-            assert!(!invite(&db, 7, vec![9]).await?);
+            assert_eq!(invite(&db, 7, vec![9]).await?, Invitation::Repeated);
         }
 
-        assert!(!invite(&db, 8, vec![9]).await?);
+        assert_eq!(invite(&db, 8, vec![9]).await?, Invitation::Repeated);
 
         assert_eq!(private_key(&db).await?, identity);
 
@@ -465,7 +552,7 @@ mod invitation_tests {
             .execute(&db.pool)
             .await?;
 
-        assert!(!invite(&db, 8, vec![8]).await?);
+        assert_eq!(invite(&db, 8, vec![8]).await?, Invitation::Repeated);
 
         let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM group_histories")
             .fetch_one(&db.pool)
@@ -481,7 +568,7 @@ mod invitation_tests {
     async fn rejoining_records_one_new_action_and_restores_the_chat() -> Result<()> {
         let (_directory, db) = database().await?;
 
-        assert!(invite(&db, 7, vec![7]).await?);
+        assert_eq!(invite(&db, 7, vec![7]).await?, Invitation::Accepted);
 
         sqlx::query(
             "UPDATE groups SET left_group = 1, deleted_content = 1 WHERE group_id = 'chat'",
@@ -489,9 +576,9 @@ mod invitation_tests {
         .execute(&db.pool)
         .await?;
 
-        assert!(invite(&db, 8, vec![8]).await?);
+        assert_eq!(invite(&db, 8, vec![8]).await?, Invitation::Accepted);
 
-        assert!(!invite(&db, 8, vec![8]).await?);
+        assert_eq!(invite(&db, 8, vec![8]).await?, Invitation::Repeated);
 
         let senders: Vec<i64> = sqlx::query_scalar("SELECT contact_id FROM group_histories")
             .fetch_all(&db.pool)
@@ -519,7 +606,7 @@ mod invitation_tests {
             .execute(&db.pool)
             .await?;
 
-        assert!(invite(&db, 7, vec![7]).await?);
+        assert_eq!(invite(&db, 7, vec![7]).await?, Invitation::Accepted);
 
         let identity = private_key(&db).await?;
 
@@ -539,7 +626,9 @@ mod invitation_tests {
     async fn incoming_key_announcements_do_not_generate_more_announcements() -> Result<()> {
         let (_directory, db) = database().await?;
 
-        assert!(invite(&db, 7, vec![7]).await?);
+        assert_eq!(invite(&db, 7, vec![7]).await?, Invitation::Accepted);
+
+        refreshed_with(&db, &[7]).await?;
 
         let identity = private_key(&db).await?;
 
@@ -596,6 +685,130 @@ mod invitation_tests {
         t.commit().await?;
 
         assert_eq!(private_key(&db).await?, identity);
+
+        Ok(())
+    }
+
+    async fn join(db: &AppDatabase, sender: i64, group_id: &str, key: Vec<u8>) -> Result<bool> {
+        let mut t = db.pool.begin().await?;
+
+        let unknown = handle_group_join(
+            &mut t,
+            sender,
+            group_id,
+            encrypted_content::GroupJoin {
+                group_public_key: key,
+            },
+        )
+        .await?;
+
+        t.commit().await?;
+
+        Ok(unknown)
+    }
+
+    async fn members(db: &AppDatabase, group_id: &str) -> Result<Vec<(i64, Option<Vec<u8>>)>> {
+        Ok(sqlx::query_as(
+            "SELECT contact_id, group_public_key FROM group_members WHERE group_id = ? ORDER BY \
+             contact_id",
+        )
+        .bind(group_id)
+        .fetch_all(&db.pool)
+        .await?)
+    }
+
+    #[tokio::test]
+
+    async fn a_group_key_updates_a_member_but_never_adds_one() -> Result<()> {
+        let (_directory, db) = database().await?;
+
+        assert_eq!(invite(&db, 7, vec![7]).await?, Invitation::Accepted);
+
+        refreshed_with(&db, &[7]).await?;
+
+        // 8 is not in the group: nothing is stored, and the caller is told to
+        // let the group server settle it.
+        assert!(join(&db, 8, "chat", vec![8]).await?);
+
+        assert_eq!(members(&db, "chat").await?, vec![(7, None)]);
+
+        assert!(!join(&db, 7, "chat", vec![9]).await?);
+
+        assert_eq!(members(&db, "chat").await?, vec![(7, Some(vec![9]))]);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+
+    async fn an_invitation_adds_no_member_and_never_replaces_the_state_key() -> Result<()> {
+        let (_directory, db) = database().await?;
+
+        assert_eq!(invite(&db, 7, vec![7]).await?, Invitation::Accepted);
+
+        // Only the refresh, from the group server's state, adds members.
+        assert_eq!(members(&db, "chat").await?, vec![]);
+
+        // Someone holding another key is not from this group, whoever they are.
+        assert_eq!(
+            invite_with_state_key(&db, 8, vec![8], vec![2; 32]).await?,
+            Invitation::Ignored
+        );
+
+        let state_key: Vec<u8> =
+            sqlx::query_scalar("SELECT state_encryption_key FROM groups WHERE group_id = 'chat'")
+                .fetch_one(&db.pool)
+                .await?;
+
+        assert_eq!(state_key, vec![1; 32]);
+
+        assert_eq!(members(&db, "chat").await?, vec![]);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+
+    async fn an_invitation_from_a_blocked_contact_is_ignored() -> Result<()> {
+        let (_directory, db) = database().await?;
+
+        sqlx::query("UPDATE contacts SET blocked = 1 WHERE user_id = 8")
+            .execute(&db.pool)
+            .await?;
+
+        assert_eq!(invite(&db, 8, vec![8]).await?, Invitation::Ignored);
+
+        let groups: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM groups")
+            .fetch_one(&db.pool)
+            .await?;
+
+        assert_eq!(groups, 0);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+
+    async fn a_group_key_does_not_add_anyone_to_a_direct_chat() -> Result<()> {
+        let (_directory, db) = database().await?;
+
+        sqlx::query(
+            "INSERT INTO groups(group_id, group_name, is_direct_chat, joined_group)
+             VALUES ('direct', 'alice', 1, 1)",
+        )
+        .execute(&db.pool)
+        .await?;
+
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES ('direct', 7)")
+            .execute(&db.pool)
+            .await?;
+
+        assert!(join(&db, 8, "direct", vec![8]).await?);
+
+        // Not even the person the chat is with: a direct chat has no group keys.
+        assert!(join(&db, 7, "direct", vec![7]).await?);
+
+        assert_eq!(members(&db, "direct").await?, vec![(7, None)]);
 
         Ok(())
     }

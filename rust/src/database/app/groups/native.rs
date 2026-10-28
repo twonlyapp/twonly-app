@@ -393,6 +393,21 @@ impl Group {
         )
     }
 
+    /// Whether `group_id` is the ID [`Self::direct_chat_id`] gives a direct
+    /// chat of `local_user_id`'s, whether or not that chat exists here yet.
+    pub fn is_direct_chat_id(group_id: &str, local_user_id: i64) -> bool {
+        let hex: String = group_id.chars().filter(|c| *c != '-').collect();
+
+        let own = format!("{:016x}", local_user_id as u64);
+
+        let Some(peer) = hex.strip_prefix(&own).or_else(|| hex.strip_suffix(&own)) else {
+            return false;
+        };
+
+        u64::from_str_radix(peer, 16)
+            .is_ok_and(|peer| Self::direct_chat_id(local_user_id, peer as i64) == group_id)
+    }
+
     pub async fn is_direct_chat(tr: &mut Transaction<'_, Sqlite>, group_id: &str) -> Result<bool> {
         let is_direct = sqlx::query_scalar!(
             "SELECT is_direct_chat FROM groups WHERE group_id = ?",
@@ -970,6 +985,20 @@ mod tests {
     use chrono::{Local, TimeZone};
 
     const DAY: i64 = 24 * 60 * 60;
+
+    #[test]
+    fn a_direct_chat_id_is_recognised_from_either_side_only_for_its_own_people() {
+        // Both orders: the larger ID comes first in a direct chat ID.
+        assert!(Group::is_direct_chat_id(&Group::direct_chat_id(42, 7), 42));
+        assert!(Group::is_direct_chat_id(&Group::direct_chat_id(7, 42), 7));
+
+        assert!(!Group::is_direct_chat_id(&Group::direct_chat_id(7, 9), 42));
+        assert!(!Group::is_direct_chat_id(
+            &uuid::Uuid::new_v4().to_string(),
+            42
+        ));
+        assert!(!Group::is_direct_chat_id("", 42));
+    }
 
     /// Local midnight of the given date, which is what the derivation compares
     /// against. Mirrors the `DateTime(2026, 2, 2)` literals the Dart tests

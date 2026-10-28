@@ -3377,4 +3377,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatGameLost => 'Du hast verloren.';
+
+  @override
+  String get chatGamePlayed => 'Du hast gespielt.';
+
+  @override
+  String get chatGameOtherPlayed => 'Hat gespielt.';
+
+  @override
+  String get chatGameDraw => 'Unentschieden.';
 }

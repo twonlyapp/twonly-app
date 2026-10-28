@@ -10698,6 +10698,7 @@ fn wire__crate__bridge__webxdc__send_update_impl(
             let api_summary = <Option<String>>::sse_decode(&mut deserializer);
             let api_document = <Option<String>>::sse_decode(&mut deserializer);
             let api_notify = <Option<String>>::sse_decode(&mut deserializer);
+            let api_game_status = <Option<String>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
@@ -10710,6 +10711,7 @@ fn wire__crate__bridge__webxdc__send_update_impl(
                             api_summary,
                             api_document,
                             api_notify,
+                            api_game_status,
                         )
                         .await?;
                         std::result::Result::Ok(output_ok)

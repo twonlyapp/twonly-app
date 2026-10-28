@@ -140,6 +140,19 @@ class MainCameraController {
   int _cameraSessionId = 0;
   DateTime? _lastBarcodeFrame;
 
+  Future<void> setFlashMode(FlashMode mode) async {
+    try {
+      await cameraController?.setFlashMode(mode);
+    } on CameraException catch (error) {
+      if (mode != FlashMode.off || error.code != 'setFlashModeFailed') {
+        rethrow;
+      }
+      // AVFoundation rejects even "off" on cameras without flash hardware.
+      // An unsupported flash setting must not prevent using the camera.
+      Log.info('Camera does not support disabling flash: $error');
+    }
+  }
+
   Future<void> closeCamera() async {
     _cameraSessionId++;
     contactsVerified = {};
@@ -388,7 +401,7 @@ class MainCameraController {
       );
       if (sessionId != _cameraSessionId) return;
 
-      await controller.setFlashMode(
+      await setFlashMode(
         selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off,
       );
       if (sessionId != _cameraSessionId) return;

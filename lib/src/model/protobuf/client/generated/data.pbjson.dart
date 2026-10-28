@@ -487,6 +487,15 @@ const WebxdcUpdate$json = {
       '17': true
     },
     {'1': 'notify', '3': 7, '4': 1, '5': 9, '9': 4, '10': 'notify', '17': true},
+    {
+      '1': 'game_status',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '9': 5,
+      '10': 'gameStatus',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_info'},
@@ -494,6 +503,7 @@ const WebxdcUpdate$json = {
     {'1': '_summary'},
     {'1': '_document'},
     {'1': '_notify'},
+    {'1': '_game_status'},
   ],
 };
 
@@ -502,5 +512,6 @@ final $typed_data.Uint8List webxdcUpdateDescriptor = $convert.base64Decode(
     'CgxXZWJ4ZGNVcGRhdGUSHwoLaW5zdGFuY2VfaWQYASABKAlSCmluc3RhbmNlSWQSGAoHcGF5bG'
     '9hZBgCIAEoCVIHcGF5bG9hZBIXCgRpbmZvGAMgASgJSABSBGluZm+IAQESFwoEaHJlZhgEIAEo'
     'CUgBUgRocmVmiAEBEh0KB3N1bW1hcnkYBSABKAlIAlIHc3VtbWFyeYgBARIfCghkb2N1bWVudB'
-    'gGIAEoCUgDUghkb2N1bWVudIgBARIbCgZub3RpZnkYByABKAlIBFIGbm90aWZ5iAEBQgcKBV9p'
-    'bmZvQgcKBV9ocmVmQgoKCF9zdW1tYXJ5QgsKCV9kb2N1bWVudEIJCgdfbm90aWZ5');
+    'gGIAEoCUgDUghkb2N1bWVudIgBARIbCgZub3RpZnkYByABKAlIBFIGbm90aWZ5iAEBEiQKC2dh'
+    'bWVfc3RhdHVzGAggASgJSAVSCmdhbWVTdGF0dXOIAQFCBwoFX2luZm9CBwoFX2hyZWZCCgoIX3'
+    'N1bW1hcnlCCwoJX2RvY3VtZW50QgkKB19ub3RpZnlCDgoMX2dhbWVfc3RhdHVz');

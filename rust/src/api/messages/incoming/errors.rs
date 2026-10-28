@@ -6,6 +6,7 @@
 use crate::api::proto::client::encrypted_content;
 use crate::context::Context;
 use crate::database::app::contacts::table::UpdateContact;
+use crate::database::app::groups::native::Group;
 use crate::error::Result;
 use crate::services::groups::GroupService;
 use encrypted_content::error_messages::Type;
@@ -22,18 +23,24 @@ pub(crate) async fn handle_error_message(
 
     match error_type {
         Type::ErrorProcessingMessageCreatedAccountRequestInstead => {
+            // Only our own direct chat with the sender is evidence of a
+            // friendship. A row in anyone else's says nothing about them.
+            let direct_chat_id = Group::direct_chat_id(ctx.user_id().await?, from_user_id);
+
             // A peer's missing contact state is not a local unfriend action.
             // Ignore stale errors after the related outbox entry was delivered.
             let Some(established) = sqlx::query_scalar!(
                 r#"SELECT c.accepted != 0 OR EXISTS (
                        SELECT 1 FROM group_members m JOIN groups g ON g.group_id = m.group_id
                        WHERE m.contact_id = c.user_id AND g.is_direct_chat = 1
+                         AND g.group_id = ?
                    ) AS "established!: bool"
                    FROM contacts c
                    WHERE c.user_id = ? AND c.blocked = 0 AND c.deleted_by_user = 0
                      AND c.account_deleted = 0 AND EXISTS (
                          SELECT 1 FROM receipts r WHERE r.receipt_id = ? AND r.contact_id = c.user_id
                      )"#,
+                direct_chat_id,
                 from_user_id,
                 &error.related_receipt_id
             )
@@ -130,20 +137,40 @@ mod tests {
         let ctx =
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+        ctx.inject_test_user_id(42).await?;
         let database = ctx.app_db.read().await.clone();
-        for statement in [
+        sqlx::query(
             "INSERT INTO contacts(user_id, username, accepted, requested_by_user, blocked, \
              deleted_by_user) VALUES
              (7, 'friend', 1, 0, 0, 0), (8, 'pending', 0, 1, 0, 0),
-             (9, 'blocked', 0, 0, 1, 1), (10, 'stale', 1, 0, 0, 0), (11, 'direct', 0, 0, 0, 0)",
-            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('direct', 'Direct', \
-             1)",
-            "INSERT INTO group_members(group_id, contact_id) VALUES ('direct', 11)",
-        ] {
-            sqlx::query(statement).execute(&database.pool).await?;
+             (9, 'blocked', 0, 0, 1, 1), (10, 'stale', 1, 0, 0, 0), (11, 'direct', 0, 0, 0, 0),
+             (12, 'intruder', 0, 0, 0, 0)",
+        )
+        .execute(&database.pool)
+        .await?;
+        // 12 has a row in the direct chat with 7, which is not theirs and so
+        // proves no friendship with them.
+        for (contact, chat) in [(11, 11), (7, 7), (12, 7)] {
+            let group_id = Group::direct_chat_id(42, chat);
+            sqlx::query(
+                "INSERT OR IGNORE INTO groups(group_id, group_name, is_direct_chat) VALUES (?, \
+                 'Direct', 1)",
+            )
+            .bind(&group_id)
+            .execute(&database.pool)
+            .await?;
+            sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES (?, ?)")
+                .bind(&group_id)
+                .bind(contact)
+                .execute(&database.pool)
+                .await?;
         }
         let mut t = database.pool.begin().await?;
-        for id in [7, 8, 9, 10, 11] {
+        for id in [7, 8, 9, 10, 11, 12] {
             let receipt =
                 queue_encrypted_content(&mut t, id, EncryptedContent::default(), true).await?;
             handle_error_message(
@@ -174,6 +201,7 @@ mod tests {
                     7 | 10 | 11 => (true, false, false, false),
                     8 => (false, false, true, false),
                     9 => (false, false, false, true),
+                    12 => (false, false, false, false),
                     _ => unreachable!(),
                 }
             );
@@ -184,7 +212,7 @@ mod tests {
             .bind(&receipt)
             .fetch_one(&mut *t)
             .await?;
-            assert_eq!(parked, id == 8);
+            assert_eq!(parked, id == 8 || id == 12);
         }
         Ok(())
     }

@@ -263,6 +263,9 @@ class WebxdcHost {
             notify: params['notify'] == null
                 ? null
                 : jsonEncode(params['notify']),
+            gameStatus: params['gameStatus'] == null
+                ? null
+                : jsonEncode(params['gameStatus']),
           );
           return jsonEncode({'id': id, 'result': null});
 
