@@ -397,7 +397,7 @@ async fn reset_upload_namespace(
     Ok((stored, stale_files.len()))
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 
 enum Outcome {
     Uploaded,
@@ -879,7 +879,7 @@ impl DirectMediaUploadService {
             // capability has expired, because the native task stops then too.
             _ if job.expires_at <= now => self.settle(job, Outcome::Retry).await?,
             AttachmentState::Reserved | AttachmentState::Uploading => {
-                if let Err(error) = self.recover_native_transfer(job).await {
+                if let Err(error) = self.recover_native_transfer(job, state).await {
                     tracing::warn!(attachment_id = job.attachment_id, %error,
                             "could not recover native media transfer");
                 }
@@ -893,14 +893,18 @@ impl DirectMediaUploadService {
     /// Reuse the same immutable requests and attachment. The native scheduler
     /// keeps live work, repairs missing/failed work, and retries completion for
     /// an object already uploaded. No replacement recipient envelopes are made.
-    async fn recover_native_transfer(&self, job: &PendingJob) -> Result<()> {
-        if !cfg!(any(target_os = "android", test)) {
-            return Ok(());
-        }
-
+    ///
+    /// A manifest the server refuses is not retried by the native uploaders,
+    /// but nothing tells this library about it either: the attachment just
+    /// stays reserved, and Android repeats the same request on every recovery
+    /// until the slot expires. So a recovery of a reserved attachment first
+    /// sends the manifest itself, and a refusal ends the send.
+    async fn recover_native_transfer(
+        &self, job: &PendingJob, state: AttachmentState,
+    ) -> Result<()> {
         let lock = media_lock(&job.media_id);
 
-        let _guard = lock.lock().await;
+        let guard = lock.lock().await;
 
         let database = self.ctx.app_db.read().await.clone();
 
@@ -921,7 +925,30 @@ impl DirectMediaUploadService {
         .fetch_optional(&database.pool)
         .await?;
 
-        if let Some((descriptor, created_at)) = descriptor {
+        drop(database);
+
+        let Some((descriptor, created_at)) = descriptor else {
+            return Ok(());
+        };
+
+        if state == AttachmentState::Reserved {
+            match self.probe_manifest(job).await {
+                Ok(Some(status)) => {
+                    // Settling takes the media lock itself.
+                    drop(guard);
+
+                    return self.refuse_manifest(job, status).await;
+                }
+                Ok(None) => {}
+                Err(error) => tracing::warn!(
+                    attachment_id = job.attachment_id,
+                    %error,
+                    "could not probe the manifest of a reserved attachment"
+                ),
+            }
+        }
+
+        if cfg!(any(target_os = "android", test)) {
             crate::database::lifecycle::spawn_blocking(move || {
                 transfer::recover(&descriptor, created_at)
             })
@@ -930,6 +957,120 @@ impl DirectMediaUploadService {
         }
 
         Ok(())
+    }
+
+    /// Sends the job's manifest the way the native uploader does. The server
+    /// answers a manifest identical to one it already holds with its status, so
+    /// this is safe while a native transfer of the same request is in flight.
+    /// Returns the HTTP status when the server refuses the manifest outright.
+    async fn probe_manifest(&self, job: &PendingJob) -> Result<Option<u16>> {
+        let body = std::fs::read(&job.manifest_path)?;
+
+        let response = self
+            .client
+            .post(Self::api_url(&format!(
+                "v2/attachments/{}/manifest",
+                job.attachment_id
+            )))
+            .header("x-twonly-upload-capability", hex::encode(&job.capability))
+            .header("content-type", "application/x-protobuf")
+            .timeout(std::time::Duration::from_secs(30))
+            .body(body)
+            .send()
+            .await
+            .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+
+        let status = response.status().as_u16();
+
+        tracing::info!(
+            attachment_id = job.attachment_id,
+            media_id = job.media_id,
+            status,
+            "probed the manifest of a reserved attachment"
+        );
+
+        // 400 is a manifest the server's validation rejects, 413 one larger
+        // than it accepts. Sending it again changes neither.
+        Ok(matches!(status, 400 | 413).then_some(status))
+    }
+
+    /// Ends a send whose manifest the server refuses.
+    ///
+    /// Servers before 2026-10-29 refused the whole manifest when a single
+    /// recipient had deleted their account, which this client only learns by
+    /// asking the server about that contact. Asking about each recipient marks
+    /// such an account deleted, and the next preparation leaves it out. When no
+    /// recipient turns out deleted, preparing again would be refused again, so
+    /// this upload's recipients are failed instead of resent until the slot
+    /// expires.
+    async fn refuse_manifest(&self, job: &PendingJob, status: u16) -> Result<()> {
+        let manifest = AttachmentManifest::decode(std::fs::read(&job.manifest_path)?.as_slice())?;
+
+        let recipients: std::collections::BTreeSet<i64> = manifest
+            .dispatches
+            .iter()
+            .map(|dispatch| dispatch.recipient_user_id)
+            .collect();
+
+        let mut deleted = 0_usize;
+
+        for recipient in &recipients {
+            // The runtime marks the contact deleted before this returns.
+            if let crate::bridge::api::ServerResult::ErrorCode(code) =
+                crate::api::Server::get_user_by_id(&self.ctx, *recipient).await?
+            {
+                if code == crate::api::proto::error::ErrorCode::UserIdNotFound as i32 {
+                    deleted += 1;
+                }
+            }
+        }
+
+        if deleted == 0 {
+            let receipt_ids: Vec<String> = manifest
+                .dispatches
+                .iter()
+                .filter_map(|dispatch| {
+                    crate::api::proto::client::Message::decode(dispatch.encrypted_body.as_slice())
+                        .ok()
+                })
+                .map(|envelope| envelope.receipt_id)
+                .collect();
+
+            let database = self.ctx.app_db.read().await.clone();
+
+            let mut transaction = database.pool.begin().await?;
+
+            for receipt_id in &receipt_ids {
+                sqlx::query!(
+                    r#"INSERT INTO message_actions(message_id, contact_id, type)
+                       SELECT message_id, contact_id, 'sendFailed' FROM receipts
+                       WHERE receipt_id = ? AND message_id IS NOT NULL
+                       ON CONFLICT(message_id, contact_id, type) DO NOTHING"#,
+                    receipt_id
+                )
+                .execute(&mut *transaction)
+                .await?;
+
+                sqlx::query!("DELETE FROM receipts WHERE receipt_id = ?", receipt_id)
+                    .execute(&mut *transaction)
+                    .await?;
+            }
+
+            transaction.commit().await?;
+        }
+
+        tracing::warn!(
+            attachment_id = job.attachment_id,
+            media_id = job.media_id,
+            status,
+            recipients = recipients.len(),
+            deleted,
+            "server refused the manifest; preparing again without deleted accounts, or failing \
+             the send when there were none"
+        );
+
+        // A preparation that finds no recipient left stops by itself.
+        self.settle(job, Outcome::Retry).await
     }
 
     /// The server gave this account's reserved slots up while this client was
@@ -1273,6 +1414,13 @@ impl DirectMediaUploadService {
         }
 
         transaction.commit().await?;
+
+        tracing::info!(
+            attachment_id = job.attachment_id,
+            media_id = job.media_id,
+            ?outcome,
+            "settled direct-media upload"
+        );
 
         for path in [
             &job.multipart_path,
@@ -3123,7 +3271,9 @@ mod tests {
 
         let service = DirectMediaUploadService::new(&ctx);
 
-        service.recover_native_transfer(&job).await?;
+        service
+            .recover_native_transfer(&job, AttachmentState::Uploading)
+            .await?;
 
         let first: (String, String, i64) = sqlx::query_as(
             "SELECT attachment_id, native_descriptor_json, updated_at FROM \
@@ -3146,7 +3296,9 @@ mod tests {
         .execute(&database.pool)
         .await?;
 
-        service.recover_native_transfer(&job).await?;
+        service
+            .recover_native_transfer(&job, AttachmentState::Uploading)
+            .await?;
 
         let second: i64 = sqlx::query_scalar(
             "SELECT updated_at FROM direct_media_upload_jobs WHERE attachment_id = 'recover-slot'",
@@ -3161,7 +3313,9 @@ mod tests {
             .await?;
 
         // A stale reconciliation snapshot cannot resurrect a settled job.
-        service.recover_native_transfer(&job).await?;
+        service
+            .recover_native_transfer(&job, AttachmentState::Uploading)
+            .await?;
 
         assert_eq!(service.pending_job_count().await?, 0);
 

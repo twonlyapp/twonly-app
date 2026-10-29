@@ -39,7 +39,6 @@ import 'package:twonly/src/services/performance_tracking.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/connection_status.comp.dart';
@@ -47,6 +46,7 @@ import 'package:twonly/src/visual/components/flame_counter.comp.dart'
     show emptyFlameState;
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
 import 'package:twonly/src/visual/components/story_preview.comp.dart';
+import 'package:twonly/src/visual/helpers/precache_file_image.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/news_btn.comp.dart';
@@ -282,20 +282,19 @@ class _ChatListViewState extends State<ChatListView>
         ) {
           if (!mounted || !_watching) return;
           for (final media in mediaFiles) {
-            if (!_precachedMediaIds.contains(media.mediaId)) {
-              _precachedMediaIds.add(media.mediaId);
-              final fileService = MediaFileService(media);
-              if (fileService.tempPath.existsSync()) {
-                precacheImage(
-                  FileImage(fileService.tempPath),
-                  context,
-                ).catchError((Object e, StackTrace st) {
-                  Log.error(
-                    'Failed to precache image in ChatListView: $e\n$st',
-                  );
-                });
-              }
-            }
+            if (_precachedMediaIds.contains(media.mediaId)) continue;
+            final fileService = MediaFileService(media);
+            if (!fileService.tempPath.existsSync()) continue;
+            _precachedMediaIds.add(media.mediaId);
+            unawaited(
+              precacheFileImage(
+                fileService.tempPath,
+                context,
+                source: 'chat list',
+              ).then((succeeded) {
+                if (!succeeded) _precachedMediaIds.remove(media.mediaId);
+              }),
+            );
           }
         });
 

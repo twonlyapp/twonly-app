@@ -93,6 +93,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareImagedEditorSavedImage => 'Saved';
 
   @override
+  String get imageLoadFailed => 'Could not load this image.';
+
+  @override
+  String get retry => 'Try again';
+
+  @override
   String get shareImageSearchAllContacts => 'Search all contacts';
 
   @override

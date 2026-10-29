@@ -93,6 +93,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shareImagedEditorSavedImage => 'تَمَّ الحَفْظُ';
 
   @override
+  String get imageLoadFailed => 'تعذّر تحميل هذه الصورة.';
+
+  @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
   String get shareImageSearchAllContacts =>
       'البَحْثُ فِي جَمِيعِ جِهَاتِ الاِتِّصَالِ';
 

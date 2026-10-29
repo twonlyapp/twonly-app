@@ -147,14 +147,23 @@ async fn upload(
     let now = Utc::now();
     let mut successful = true;
 
-    if force
+    let identity_due = force
         || due(
             status.identity_state,
             status.identity_last_success_full,
             7,
             now,
-        )
-    {
+        );
+
+    let archive_due = force
+        || due(
+            status.archive_state,
+            status.archive_last_success_full,
+            1,
+            now,
+        );
+
+    if identity_due {
         let identity = {
             let keys = ctx.key_manager.lock().await;
             keys.backup_password
@@ -172,6 +181,7 @@ async fn upload(
                 status.identity_state = UploadState::Pending;
                 status.identity_size = Some(bytes.len() as u64);
                 save_status(ctx, &status)?;
+                let started = std::time::Instant::now();
                 let result = client
                     .put(format!("{base_url}backup/identity/{id}"))
                     .header("Content-Type", "application/octet-stream")
@@ -179,6 +189,11 @@ async fn upload(
                     .send()
                     .await;
                 if accepted(result, "identity") {
+                    tracing::info!(
+                        bytes = status.identity_size,
+                        upload_ms = started.elapsed().as_millis() as u64,
+                        "identity backup uploaded"
+                    );
                     status.identity_state = UploadState::Success;
                     status.identity_last_success_full = Some(Utc::now());
                 } else {
@@ -200,19 +215,15 @@ async fn upload(
         save_status(ctx, &status)?;
     }
 
-    if force
-        || due(
-            status.archive_state,
-            status.archive_last_success_full,
-            1,
-            now,
-        )
-    {
+    if archive_due {
         operation.check()?;
+        let started = std::time::Instant::now();
+        let mut create_ms = 0_u64;
         let result = async {
             let headers = crate::api::http::authentication_headers(ctx).await?;
             let (token, archive) =
                 BackupArchive::create_backup_with_operation(ctx, operation.clone()).await?;
+            create_ms = started.elapsed().as_millis() as u64;
             let bytes = std::fs::read(archive)?;
             status.archive_state = UploadState::Pending;
             status.archive_size = Some(bytes.len() as u64);
@@ -241,6 +252,12 @@ async fn upload(
         .await;
         match result {
             Ok(true) => {
+                tracing::info!(
+                    bytes = status.archive_size,
+                    create_ms,
+                    upload_ms = (started.elapsed().as_millis() as u64).saturating_sub(create_ms),
+                    "archive backup uploaded"
+                );
                 status.archive_state = UploadState::Success;
                 status.archive_last_success_full = Some(Utc::now());
             }
@@ -256,6 +273,9 @@ async fn upload(
         }
         save_status(ctx, &status)?;
     }
+    // One line per run, so a log shows that a backup ran even when nothing was
+    // due, which a log of failures alone cannot tell apart from no run at all.
+    tracing::info!(identity_due, archive_due, successful, "backup run finished");
     Ok(successful)
 }
 

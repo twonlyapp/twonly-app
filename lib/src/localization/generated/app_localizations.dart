@@ -256,6 +256,18 @@ abstract class AppLocalizations {
   /// **'Saved'**
   String get shareImagedEditorSavedImage;
 
+  /// No description provided for @imageLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this image.'**
+  String get imageLoadFailed;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get retry;
+
   /// No description provided for @shareImageSearchAllContacts.
   ///
   /// In en, this message translates to:

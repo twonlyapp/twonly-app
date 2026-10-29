@@ -7,10 +7,12 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/bridge/database/contact_groups.dart'
     as rust_contact_groups;
+import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/database/app/contact_groups/table.dart'
     as db_contact_groups;
 import 'package:twonly/core/database/app/contact_groups/table.dart';
+import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
@@ -114,20 +116,6 @@ void main() {
 
   Future<void> settle(WidgetTester tester) => pumpNative(tester);
 
-  Future<void> pumpEditor(WidgetTester tester) async {
-    await tester.binding.setSurfaceSize(const Size(800, 2200));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: lightTheme,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: ContactGroupSettingsView(contactGroup: contactGroup),
-      ),
-    );
-    await settle(tester);
-  }
-
   Finder memberTile(String name) => find.ancestor(
     of: find.text(name),
     matching: find.byType(ListTile),
@@ -146,36 +134,140 @@ void main() {
       .map((image) => (image.image as FileImage).file.path)
       .toList();
 
-  Future<void> toggleArchived(WidgetTester tester) async {
-    await tester.tap(find.text('Show archived users'));
-    await settle(tester);
+  Future<void> pumpEditor(WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 2200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: lightTheme,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ContactGroupSettingsView(contactGroup: contactGroup),
+      ),
+    );
+    await pumpNative(
+      tester,
+      until: () =>
+          avatarPaths(tester, 'Bob').isNotEmpty &&
+          avatarPaths(tester, 'Carol').isNotEmpty &&
+          memberTile('Old team').evaluate().isNotEmpty &&
+          selected(tester, 'Alice') &&
+          selected(tester, 'Old team'),
+    );
   }
 
-  testWidgets('archived members are hidden until the switch is enabled', (
+  testWidgets('archived contacts and groups are shown immediately', (
     tester,
   ) async {
     await pumpEditor(tester);
-    expect(find.text('Alice'), findsNothing);
-    expect(find.text('Old team'), findsNothing);
+    expect(find.text('Show archived users'), findsNothing);
+    expect(memberTile('Alice'), findsOneWidget);
+    expect(memberTile('Old team'), findsOneWidget);
     expect(memberTile('Bob'), findsOneWidget);
     // Accepted contacts without a direct chat remain available.
     expect(memberTile('Carol'), findsOneWidget);
     expect(memberTile('Team'), findsOneWidget);
     expect(find.text('Pending'), findsNothing);
 
-    await toggleArchived(tester);
-    expect(memberTile('Alice'), findsOneWidget);
-    expect(memberTile('Old team'), findsOneWidget);
     expect(selected(tester, 'Alice'), isTrue);
     expect(selected(tester, 'Old team'), isTrue);
     expect(avatarPaths(tester, 'Bob'), [api.paths[8]]);
     expect(avatarPaths(tester, 'Carol'), [api.paths[9]]);
+  });
 
-    await toggleArchived(tester);
-    expect(find.text('Alice'), findsNothing);
-    await toggleArchived(tester);
-    expect(selected(tester, 'Alice'), isTrue);
-    expect(selected(tester, 'Old team'), isTrue);
+  testWidgets(
+    'direct chat contacts remain available with stale accepted flags',
+    (
+      tester,
+    ) async {
+      await runNative(tester, () async {
+        await database.customStatement(
+          'UPDATE contacts SET accepted = 0 WHERE user_id IN (7, 8)',
+        );
+        await database.customStatement(
+          "INSERT INTO group_members(group_id, contact_id) VALUES ('team', 10)",
+        );
+      });
+      await pumpEditor(tester);
+      expect(memberTile('Alice'), findsOneWidget);
+      expect(memberTile('Bob'), findsOneWidget);
+      expect(memberTile('Carol'), findsOneWidget);
+      // A shared group alone does not make a pending contact eligible.
+      expect(memberTile('Pending'), findsNothing);
+      expect(selected(tester, 'Alice'), isTrue);
+
+      await tester.tap(memberTile('Bob'));
+      await tester.tap(find.byType(MyButton));
+      await settle(tester);
+      final members = await runNative(
+        tester,
+        () => rust_contact_groups.getContactGroupMembers(
+          id: contactGroup.id,
+          transaction: currentDatabaseSession(),
+        ),
+      );
+      expect(
+        members.where((member) => member.userId != null).map((m) => m.userId),
+        unorderedEquals([7, 8]),
+      );
+    },
+  );
+
+  testWidgets('direct chats do not revive blocked or deleted contacts', (
+    tester,
+  ) async {
+    await runNative(tester, () async {
+      for (final statement in [
+        '''
+      INSERT INTO contacts(user_id, username, blocked, deleted_by_user,
+                           account_deleted) VALUES
+      (11, 'Blocked', 1, 0, 0), (12, 'Removed', 0, 1, 0),
+      (13, 'Deleted account', 0, 0, 1), (14, 'Deleted chat', 0, 0, 0)''',
+        '''
+      INSERT INTO groups(group_id, group_name, is_direct_chat, deleted_content)
+      VALUES ('blocked', 'Blocked', 1, 0), ('removed', 'Removed', 1, 0),
+      ('deleted-account', 'Deleted account', 1, 0),
+      ('deleted-chat', 'Deleted chat', 1, 1)''',
+        '''
+      INSERT INTO group_members(group_id, contact_id) VALUES
+      ('blocked', 11), ('removed', 12), ('deleted-account', 13),
+      ('deleted-chat', 14)''',
+      ]) {
+        await database.customStatement(statement);
+      }
+    });
+    await pumpEditor(tester);
+    for (final id in [11, 12, 13, 14]) {
+      expect(find.byKey(ValueKey('contact:$id')), findsNothing);
+    }
+    expect(memberTile('Bob'), findsOneWidget);
+  });
+
+  testWidgets('contact state updates keep direct chat members visible', (
+    tester,
+  ) async {
+    await pumpEditor(tester);
+    await runNative(
+      tester,
+      () => rust_contacts.updateContact(
+        id: 8,
+        patch: const ContactPatch(accepted: false),
+        transaction: currentDatabaseSession(),
+      ),
+    );
+    await settle(tester);
+    expect(memberTile('Bob'), findsOneWidget);
+
+    await runNative(
+      tester,
+      () => rust_contacts.updateContact(
+        id: 8,
+        patch: const ContactPatch(blocked: true),
+        transaction: currentDatabaseSession(),
+      ),
+    );
+    await settle(tester);
+    expect(memberTile('Bob'), findsNothing);
   });
 
   testWidgets('avatars follow names after filtering and reordering', (
@@ -203,8 +295,11 @@ void main() {
     expect(avatarPaths(tester, 'Carol'), [api.paths[9]]);
   });
 
-  testWidgets('archive changes update the open member list', (tester) async {
+  testWidgets('archive changes keep members visible and selected', (
+    tester,
+  ) async {
     await pumpEditor(tester);
+    await tester.tap(memberTile('Bob'));
     await runNative(
       tester,
       () => rust_groups.updateGroup(
@@ -214,7 +309,8 @@ void main() {
       ),
     );
     await settle(tester);
-    expect(memberTile('Bob'), findsNothing);
+    expect(memberTile('Bob'), findsOneWidget);
+    expect(selected(tester, 'Bob'), isTrue);
 
     await runNative(
       tester,
@@ -229,9 +325,10 @@ void main() {
       until: () => avatarPaths(tester, 'Bob').isNotEmpty,
     );
     expect(avatarPaths(tester, 'Bob'), [api.paths[8]]);
+    expect(selected(tester, 'Bob'), isTrue);
   });
 
-  testWidgets('saving preserves selected members hidden by archive status', (
+  testWidgets('saving preserves selected archived members', (
     tester,
   ) async {
     await pumpEditor(tester);

@@ -1,5 +1,6 @@
 use super::{init_tracing, Tester};
 use anyhow::Context as _;
+use prost::Message as _;
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::database::app::groups::native::Group;
 use rust_lib_twonly::services::contacts::ContactService;
@@ -319,6 +320,400 @@ async fn test_outgoing_images_are_encoded_to_webp_by_rust() -> anyhow::Result<()
     );
 
     Ok(())
+}
+
+/// A contact who deleted their account must not hold a send back from everyone
+/// else. The client only learns about a deletion when it asks the server about
+/// that contact, so it still names them in the manifest. The server used to
+/// refuse the whole manifest with 400, and the client resent it until the slot
+/// expired: nobody received the media and the chat showed a spinner for days.
+#[tokio::test]
+
+async fn test_media_reaches_recipients_when_one_deleted_their_account() -> anyhow::Result<()> {
+    init_tracing();
+
+    let sender = create_authenticated_tester().await?;
+
+    let active = create_authenticated_tester().await?;
+
+    let deleted = create_authenticated_tester().await?;
+
+    for recipient in [&active, &deleted] {
+        ContactService::new(&sender.context)
+            .request_by_username(recipient.username.clone(), true)
+            .await?;
+        recipient
+            .wait_for_contact_state(sender.user_id, false, true)
+            .await?;
+        ContactService::new(&recipient.context)
+            .accept_request(sender.user_id, true)
+            .await?;
+        sender
+            .wait_for_contact_state(recipient.user_id, true, false)
+            .await?;
+    }
+
+    let rust_lib_twonly::bridge::api::ServerResult::Ok(()) =
+        rust_lib_twonly::api::Server::delete_account(&deleted.context).await?
+    else {
+        anyhow::bail!("the server refused to delete the account");
+    };
+
+    let service = MediaUploadService::new(&sender.context);
+
+    let media_id = service.initialize("image".into(), None, false).await?;
+
+    let original = std::path::PathBuf::from(&sender.context.config.data_dir)
+        .join("mediafiles/tmp")
+        .join(format!("{media_id}.original.webp"));
+
+    std::fs::create_dir_all(original.parent().expect("tmp directory"))?;
+
+    image::DynamicImage::ImageRgb8(image::RgbImage::from_pixel(
+        64,
+        48,
+        image::Rgb([12, 34, 56]),
+    ))
+    .save_with_format(&original, image::ImageFormat::Png)?;
+
+    let active_chat = Group::direct_chat_id(sender.user_id, active.user_id);
+
+    service
+        .insert_into_messages(
+            media_id.clone(),
+            vec![
+                active_chat.clone(),
+                Group::direct_chat_id(sender.user_id, deleted.user_id),
+            ],
+            None,
+            false,
+            None,
+        )
+        .await?;
+
+    // Preparation names both recipients, because the sender still believes
+    // the deleted one exists. Scheduling needs a mobile uploader, so on this
+    // host the prepared job waits for the transfer below.
+    service.start_upload(&media_id).await?;
+
+    sender.wait_for_prepared_upload_job(&media_id).await?;
+
+    let (attachment_id, descriptor) = {
+        let database = sender.context.app_db.read().await.clone();
+
+        sqlx::query_as::<_, (String, String)>(
+            "SELECT attachment_id, native_descriptor_json FROM direct_media_upload_jobs WHERE \
+             media_id = ?",
+        )
+        .bind(&media_id)
+        .fetch_one(&database.pool)
+        .await?
+    };
+
+    let descriptor: serde_json::Value = serde_json::from_str(&descriptor)?;
+
+    let manifest = rust_lib_twonly::api::proto::http_requests::AttachmentManifest::decode(
+        std::fs::read(descriptor["manifest"]["body_path"].as_str().unwrap())?.as_slice(),
+    )?;
+
+    let mut named: Vec<i64> = manifest
+        .dispatches
+        .iter()
+        .map(|dispatch| dispatch.recipient_user_id)
+        .collect();
+
+    named.sort_unstable();
+
+    let mut expected = vec![active.user_id, deleted.user_id];
+
+    expected.sort_unstable();
+
+    assert_eq!(
+        named, expected,
+        "the manifest must still name the deleted recipient"
+    );
+
+    // Do what the Android worker does with the prepared requests.
+    for role in ["media", "manifest", "complete"] {
+        let status = native_transfer(&descriptor[role]).await?;
+
+        assert!(
+            (200..300).contains(&status),
+            "{role} request for {attachment_id} returned HTTP {status}"
+        );
+    }
+
+    DirectMediaUploadService::new(&sender.context)
+        .reconcile()
+        .await?;
+
+    sender
+        .wait_for_media_upload_state(&media_id, "uploaded")
+        .await?;
+
+    let sender_message_id = {
+        let database = sender.context.app_db.read().await.clone();
+
+        sqlx::query_scalar::<_, String>(
+            "SELECT message_id FROM messages WHERE media_id = ? AND group_id = ?",
+        )
+        .bind(&media_id)
+        .bind(&active_chat)
+        .fetch_one(&database.pool)
+        .await?
+    };
+
+    for _ in 0..100 {
+        let database = active.context.app_db.read().await.clone();
+
+        let received = sqlx::query_scalar::<_, Option<Vec<u8>>>(
+            "SELECT f.download_token FROM messages m JOIN media_files f ON f.media_id = \
+             m.media_id WHERE m.message_id = ?",
+        )
+        .bind(&sender_message_id)
+        .fetch_optional(&database.pool)
+        .await?
+        .flatten();
+
+        if received.is_some() {
+            return Ok(());
+        }
+
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
+
+    anyhow::bail!("the active recipient never received the media")
+}
+
+/// A manifest the server refuses used to be resent by the native uploader until
+/// the slot expired, while the chat showed the send as in progress. Recovery now
+/// asks the server itself: a refusal first looks for recipients who deleted
+/// their account (older servers refuse the whole manifest for one) and prepares
+/// again without them, and fails the send when there is nobody to leave out.
+#[tokio::test]
+
+async fn test_refused_manifest_ends_the_send_instead_of_looping() -> anyhow::Result<()> {
+    init_tracing();
+
+    let sender = create_authenticated_tester().await?;
+
+    let active = create_authenticated_tester().await?;
+
+    let deleted = create_authenticated_tester().await?;
+
+    for recipient in [&active, &deleted] {
+        ContactService::new(&sender.context)
+            .request_by_username(recipient.username.clone(), true)
+            .await?;
+        recipient
+            .wait_for_contact_state(sender.user_id, false, true)
+            .await?;
+        ContactService::new(&recipient.context)
+            .accept_request(sender.user_id, true)
+            .await?;
+        sender
+            .wait_for_contact_state(recipient.user_id, true, false)
+            .await?;
+    }
+
+    let rust_lib_twonly::bridge::api::ServerResult::Ok(()) =
+        rust_lib_twonly::api::Server::delete_account(&deleted.context).await?
+    else {
+        anyhow::bail!("the server refused to delete the account");
+    };
+
+    let service = MediaUploadService::new(&sender.context);
+
+    let media_id = service.initialize("image".into(), None, false).await?;
+
+    let original = std::path::PathBuf::from(&sender.context.config.data_dir)
+        .join("mediafiles/tmp")
+        .join(format!("{media_id}.original.webp"));
+
+    std::fs::create_dir_all(original.parent().expect("tmp directory"))?;
+
+    image::DynamicImage::ImageRgb8(image::RgbImage::from_pixel(
+        64,
+        48,
+        image::Rgb([12, 34, 56]),
+    ))
+    .save_with_format(&original, image::ImageFormat::Png)?;
+
+    let active_chat = Group::direct_chat_id(sender.user_id, active.user_id);
+
+    service
+        .insert_into_messages(
+            media_id.clone(),
+            vec![
+                active_chat.clone(),
+                Group::direct_chat_id(sender.user_id, deleted.user_id),
+            ],
+            None,
+            false,
+            None,
+        )
+        .await?;
+
+    // 1. The deleted recipient is still named, and the server refuses the
+    //    manifest. Recovery has to find that account and prepare again.
+    service.start_upload(&media_id).await?;
+
+    sender.wait_for_prepared_upload_job(&media_id).await?;
+
+    let first = refuse_prepared_manifest(&sender, &media_id).await?;
+
+    assert_eq!(first.len(), 2, "both recipients are named at first");
+
+    wait_until_settled(&sender, &media_id).await?;
+
+    {
+        let database = sender.context.app_db.read().await.clone();
+
+        let marked =
+            sqlx::query_scalar::<_, i64>("SELECT account_deleted FROM contacts WHERE user_id = ?")
+                .bind(deleted.user_id)
+                .fetch_one(&database.pool)
+                .await?;
+
+        assert_eq!(marked, 1, "the refusal must reveal the deleted account");
+    }
+
+    // 2. Prepared again, only the active recipient is left, and the server
+    //    still refuses. Nothing is left to leave out, so the send fails.
+    sender
+        .wait_for_media_upload_state(&media_id, "preprocessing")
+        .await?;
+
+    service.start_upload(&media_id).await?;
+
+    sender.wait_for_prepared_upload_job(&media_id).await?;
+
+    let second = refuse_prepared_manifest(&sender, &media_id).await?;
+
+    assert_eq!(
+        second,
+        vec![active.user_id],
+        "the deleted recipient must be left out of the new preparation"
+    );
+
+    wait_until_settled(&sender, &media_id).await?;
+
+    let database = sender.context.app_db.read().await.clone();
+
+    let failed = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM message_actions a JOIN messages m ON m.message_id = a.message_id \
+         WHERE m.media_id = ? AND m.group_id = ? AND a.contact_id = ? AND a.type = 'sendFailed'",
+    )
+    .bind(&media_id)
+    .bind(&active_chat)
+    .bind(active.user_id)
+    .fetch_one(&database.pool)
+    .await?;
+
+    assert_eq!(failed, 1, "the remaining recipient must see a failed send");
+
+    Ok(())
+}
+
+/// Makes the server refuse the prepared manifest, with a size no slot allows,
+/// and hands the job to recovery as a scheduled native transfer would be.
+/// Returns the recipients the manifest names.
+async fn refuse_prepared_manifest(sender: &Tester, media_id: &str) -> anyhow::Result<Vec<i64>> {
+    use rust_lib_twonly::api::proto::http_requests::AttachmentManifest;
+
+    let database = sender.context.app_db.read().await.clone();
+
+    let (attachment_id, manifest_path) = sqlx::query_as::<_, (String, String)>(
+        "SELECT attachment_id, manifest_path FROM direct_media_upload_jobs WHERE media_id = ?",
+    )
+    .bind(media_id)
+    .fetch_one(&database.pool)
+    .await?;
+
+    let mut manifest = AttachmentManifest::decode(std::fs::read(&manifest_path)?.as_slice())?;
+
+    manifest.encrypted_object_size = i64::MAX;
+
+    std::fs::write(&manifest_path, manifest.encode_to_vec())?;
+
+    sqlx::query(
+        "UPDATE direct_media_upload_jobs SET state = 'scheduled', updated_at = 0 WHERE \
+         attachment_id = ?",
+    )
+    .bind(&attachment_id)
+    .execute(&database.pool)
+    .await?;
+
+    let mut recipients: Vec<i64> = manifest
+        .dispatches
+        .iter()
+        .map(|dispatch| dispatch.recipient_user_id)
+        .collect();
+
+    recipients.sort_unstable();
+
+    Ok(recipients)
+}
+
+/// Runs reconciliation until the media has no upload job left. A watcher may
+/// claim the recovery first, so this waits for the outcome rather than
+/// expecting this call to be the one that settles it.
+async fn wait_until_settled(sender: &Tester, media_id: &str) -> anyhow::Result<()> {
+    for _ in 0..50 {
+        DirectMediaUploadService::new(&sender.context)
+            .reconcile()
+            .await?;
+
+        let database = sender.context.app_db.read().await.clone();
+
+        let jobs = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM direct_media_upload_jobs WHERE media_id = ? AND state IN \
+             ('scheduled', 'waiting_for_server')",
+        )
+        .bind(media_id)
+        .fetch_one(&database.pool)
+        .await?;
+
+        if jobs == 0 {
+            return Ok(());
+        }
+
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    }
+
+    anyhow::bail!("the refused upload of {media_id} was never settled")
+}
+
+/// One prepared request, sent the way `DirectMediaHttpTransfer.kt` sends it.
+async fn native_transfer(request: &serde_json::Value) -> anyhow::Result<u16> {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
+    let body = std::fs::read(
+        request["body_path"]
+            .as_str()
+            .context("prepared request has no body")?,
+    )?;
+
+    let method =
+        reqwest::Method::from_bytes(request["method"].as_str().unwrap_or("POST").as_bytes())?;
+
+    let mut builder = reqwest::Client::new()
+        .request(
+            method,
+            request["url"]
+                .as_str()
+                .context("prepared request has no URL")?,
+        )
+        .body(body);
+
+    for (name, value) in request["headers"]
+        .as_object()
+        .context("prepared request has no headers")?
+    {
+        builder = builder.header(name, value.as_str().unwrap_or_default());
+    }
+
+    Ok(builder.send().await?.status().as_u16())
 }
 
 async fn abandon_attachment(attachment_id: &str, capability: &[u8]) -> anyhow::Result<()> {

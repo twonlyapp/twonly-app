@@ -91,6 +91,9 @@ where
         .execute(&mut *app_writer)
         .await?;
 
+    // Every write to either store waits from here until the rollbacks below.
+    let frozen_at = std::time::Instant::now();
+
     let mut signal_writer = signal.begin().await?;
 
     sqlx::query!("UPDATE signal_sessions SET record_bytes = record_bytes WHERE 0")
@@ -133,6 +136,11 @@ where
     signal_writer.rollback().await?;
 
     app_writer.rollback().await?;
+
+    tracing::info!(
+        writes_held_ms = frozen_at.elapsed().as_millis() as u64,
+        "captured the backup snapshot"
+    );
 
     Ok(())
 }

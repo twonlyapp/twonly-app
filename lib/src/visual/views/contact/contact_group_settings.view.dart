@@ -20,6 +20,7 @@ import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
@@ -89,12 +90,11 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   late bool _shareStories;
   String? _emoji;
   bool _saving = false;
-  bool _showArchived = false;
   String _memberFilter = '';
   List<Contact> _contacts = [];
   List<Group> _groups = [];
-  Set<String> _archivedDirectChatIds = {};
-  Map<String, Set<int>> _groupMemberUserIds = {};
+  Set<String> _directChatIds = {};
+  Map<String, List<Contact>> _groupContacts = {};
   Map<String, List<String>> _groupMemberNames = {};
   final Set<int> _selectedUserIds = {};
   final Set<String> _selectedGroupIds = {};
@@ -151,8 +151,8 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
             .toList();
         setState(() {
           _groups = actualGroups;
-          _archivedDirectChatIds = groups
-              .where((group) => group.isDirectChat && group.archived)
+          _directChatIds = groups
+              .where((group) => group.isDirectChat)
               .map((group) => group.groupId)
               .toSet();
         });
@@ -171,9 +171,9 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
       ).listen((members) {
         if (!mounted) return;
         final names = <String, List<String>>{};
-        final userIds = <String, Set<int>>{};
+        final contacts = <String, List<Contact>>{};
         for (final (contact, member) in members) {
-          userIds.putIfAbsent(member.groupId, () => {}).add(contact.userId);
+          contacts.putIfAbsent(member.groupId, () => []).add(contact);
           names
               .putIfAbsent(member.groupId, () => [])
               .add(getContactDisplayName(contact));
@@ -185,7 +185,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
         }
         setState(() {
           _groupMemberNames = names;
-          _groupMemberUserIds = userIds;
+          _groupContacts = contacts;
         });
       }),
     );
@@ -223,21 +223,26 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   }
 
   List<_MemberEntry> get _members {
-    final archivedUserIds = {
-      for (final groupId in _archivedDirectChatIds)
-        ...?_groupMemberUserIds[groupId],
+    // A direct chat can outlive a stale accepted flag. Include its contact as
+    // well as accepted friends, without reviving blocked or removed contacts.
+    final contacts = <int, Contact>{
+      for (final groupId in _directChatIds)
+        for (final contact in _groupContacts[groupId] ?? const <Contact>[])
+          if (!contact.blocked &&
+              !contact.deletedByUser &&
+              !contact.accountDeleted)
+            contact.userId: contact,
+      for (final contact in _contacts) contact.userId: contact,
     };
     final entries =
         <_MemberEntry>[
-          for (final contact in _contacts)
-            if (_showArchived || !archivedUserIds.contains(contact.userId))
-              _MemberEntry(
-                name: getContactDisplayName(contact),
-                contact: contact,
-              ),
+          for (final contact in contacts.values)
+            _MemberEntry(
+              name: getContactDisplayName(contact),
+              contact: contact,
+            ),
           for (final group in _groups)
-            if (_showArchived || !group.archived)
-              _MemberEntry(name: group.groupName, group: group),
+            _MemberEntry(name: group.groupName, group: group),
         ]..sort(
           (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
         );
@@ -727,12 +732,6 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
             Text(
               context.lang.contactGroupMembers,
               style: Theme.of(context).textTheme.titleMedium,
-            ),
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              title: Text(context.lang.shareImageShowArchived),
-              value: _showArchived,
-              onChanged: (value) => setState(() => _showArchived = value),
             ),
             const SizedBox(height: 12),
             MyInput(

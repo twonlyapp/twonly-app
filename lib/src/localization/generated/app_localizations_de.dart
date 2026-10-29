@@ -94,6 +94,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareImagedEditorSavedImage => 'Gespeichert';
 
   @override
+  String get imageLoadFailed => 'Dieses Bild konnte nicht geladen werden.';
+
+  @override
+  String get retry => 'Erneut versuchen';
+
+  @override
   String get shareImageSearchAllContacts => 'Alle Kontakte durchsuchen';
 
   @override

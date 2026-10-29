@@ -26,6 +26,8 @@
   "shareImagedEditorShareWith": "Share with",
   "shareImagedEditorSaveImage": "Save",
   "shareImagedEditorSavedImage": "Saved",
+  "imageLoadFailed": "Could not load this image.",
+  "retry": "Try again",
   "shareImageSearchAllContacts": "Search all contacts",
   "startNewChatSearchHint": "Name, username or groupname",
   "shareImagedSelectAll": "Select all",

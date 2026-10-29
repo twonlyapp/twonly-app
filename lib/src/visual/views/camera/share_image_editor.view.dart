@@ -79,6 +79,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   double tabDownPosition = 0;
   bool sendingOrLoadingImage = true;
   bool loadingImage = true;
+  bool _imageLoadFailed = false;
   bool isDisposed = false;
   HashSet<String> selectedGroupIds = HashSet();
   final StoryTarget storyTarget = StoryTarget();
@@ -99,6 +100,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
   Timer? _imageLoadingTimer;
+  Timer? _closeCameraTimer;
   late final StreamSubscription<List<Group>> _widgetGroupsSubscription;
   final GlobalKey _editorStackKey = GlobalKey();
   final GlobalKey _widgetActionKey = GlobalKey();
@@ -181,6 +183,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       transaction: currentDatabaseSession(),
     );
     _imageLoadingTimer?.cancel();
+    _closeCameraTimer?.cancel();
     unawaited(_widgetGroupsSubscription.cancel());
     super.dispose();
   }
@@ -253,14 +256,31 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   // ---------------------------------------------------------------------------
 
   void _loadInitialImage() {
-    if (widget.screenshotImage != null) {
-      loadImage(widget.screenshotImage!);
+    final retrying = _imageLoadFailed;
+    _imageLoadingTimer?.cancel();
+    setState(() {
+      _imageLoadFailed = false;
+      loadingImage = true;
+      sendingOrLoadingImage = true;
+    });
+    final source = widget.screenshotImage;
+    if (source != null) {
+      // Re-read file-backed images on retry instead of retaining damaged bytes.
+      unawaited(
+        loadImage(
+          retrying && source.file != null && source.image == null
+              ? ScreenshotImageHelper(file: source.file)
+              : source,
+        ),
+      );
       return;
     }
     if (mediaService.tempPath.existsSync()) {
-      loadImage(ScreenshotImageHelper(file: mediaService.tempPath));
-    } else if (mediaService.originalPath.existsSync()) {
-      loadImage(ScreenshotImageHelper(file: mediaService.originalPath));
+      unawaited(loadImage(ScreenshotImageHelper(file: mediaService.tempPath)));
+    } else {
+      unawaited(
+        loadImage(ScreenshotImageHelper(file: mediaService.originalPath)),
+      );
     }
   }
 
@@ -319,44 +339,52 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   }
 
   Future<void> loadImage(ScreenshotImageHelper screenshotImage) async {
-    if (screenshotImage.image == null &&
-        screenshotImage.imageBytes == null &&
-        screenshotImage.imageBytesFuture != null) {
-      // this ensures that the imageBytes are defined
+    try {
+      if (screenshotImage.image == null) {
+        final imageBytes = await screenshotImage.getBytes();
+        if (!mounted) return;
+        if (imageBytes == null || imageBytes.isEmpty) {
+          throw const FormatException('Image data is missing or empty');
+        }
+        Log.info(
+          'Decoding editor ${media.type.name}: ${imageBytes.length} bytes',
+        );
+        final image = await decodeImageFromList(imageBytes);
+        if (!mounted) {
+          image.dispose();
+          return;
+        }
+        screenshotImage.image = image;
+      }
+      if (!mounted) return;
+      // Validate before persisting a draft, and observe storage failures too.
       await mediaWriter.storeAsDraft(screenshotImage);
-    } else {
-      // store this image so it can be used as a draft in case the app is restarted
-      unawaited(mediaWriter.storeAsDraft(screenshotImage));
-    }
+      if (!mounted) return;
+      currentImage.load(screenshotImage);
 
-    if (screenshotImage.image == null) {
-      final imageBytes = await screenshotImage.getBytes();
-      if (imageBytes != null) {
-        screenshotImage.image = await decodeImageFromList(imageBytes);
+      _closeCameraTimer = Timer(const Duration(milliseconds: 500), () async {
+        if (mounted) {
+          await widget.mainCameraController?.closeCamera();
+        }
+      });
+
+      setState(() {
+        layerStack.insertBackgroundLayer(currentImage);
+      });
+      _waitUntilBackgroundIsPainted();
+    } on Object catch (error, stackTrace) {
+      Log.error(
+        'Could not load editor image',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        setState(() {
+          _imageLoadFailed = true;
+          loadingImage = false;
+        });
       }
     }
-    if (screenshotImage.image == null) {
-      Log.error('Could not load screenshotImage.image');
-      return;
-    }
-
-    currentImage.load(screenshotImage);
-
-    if (isDisposed) return;
-
-    if (!context.mounted) return;
-
-    Future.delayed(const Duration(milliseconds: 500), () async {
-      if (context.mounted) {
-        await widget.mainCameraController?.closeCamera();
-      }
-    });
-
-    setState(() {
-      layerStack.insertBackgroundLayer(currentImage);
-    });
-
-    _waitUntilBackgroundIsPainted();
   }
 
   /// The user may only send the image once it is fully painted, otherwise the
@@ -368,7 +396,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       if (!layerStack.isBackgroundLoaded) return;
       timer.cancel();
       Future.delayed(const Duration(milliseconds: 50), () {
-        if (context.mounted) {
+        if (mounted) {
           setState(() {
             sendingOrLoadingImage = false;
             loadingImage = false;
@@ -576,6 +604,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   }
 
   Future<void> pushShareImageView() async {
+    if (sendingOrLoadingImage || _imageLoadFailed) return;
     final mediaStoreFuture = storeImageAsOriginal();
 
     await videoController?.pause();
@@ -648,6 +677,30 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_imageLoadFailed) {
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.broken_image_outlined, size: 48),
+                const SizedBox(height: 16),
+                Text(context.lang.imageLoadFailed),
+                TextButton(
+                  onPressed: _loadInitialImage,
+                  child: Text(context.lang.retry),
+                ),
+                TextButton(
+                  onPressed: _onClosePressed,
+                  child: Text(context.lang.close),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
     if (_showWidgetExplainer) _scheduleWidgetActionMeasurement();
 

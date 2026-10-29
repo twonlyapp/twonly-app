@@ -720,12 +720,54 @@ pub(crate) fn write_dart_log(
     Ok(())
 }
 
+/// Builds without the field redaction above wrote slow `PRAGMA key` statements
+/// into the file verbatim, SQLCipher key included. A line is retained for three
+/// days, so after an update those lines are redacted wherever the file is
+/// cleaned or read rather than waiting for them to age out.
+fn redact_key_statement_lines(contents: &str) -> Cow<'_, str> {
+    fn sensitive(line: &str) -> bool {
+        let line = line.to_ascii_lowercase();
+
+        line.contains("pragma key") || line.contains("pragma rekey")
+    }
+
+    if !contents.lines().any(sensitive) {
+        return Cow::Borrowed(contents);
+    }
+
+    let mut redacted = String::with_capacity(contents.len());
+
+    for line in contents.split_inclusive('\n') {
+        if !sensitive(line) {
+            redacted.push_str(line);
+
+            continue;
+        }
+
+        // Keep the timestamp, level and source so the entry still shows when
+        // a slow key statement happened.
+        if let Some(index) = line.find(" > ") {
+            redacted.push_str(&line[..index + 3]);
+        }
+
+        redacted.push_str("SQLCipher key statement [SQL redacted]");
+
+        if line.ends_with('\n') {
+            redacted.push('\n');
+        }
+    }
+
+    Cow::Owned(redacted)
+}
+
 pub(crate) fn load_log_file() -> Result<String> {
-    Ok(app_log()?.read()?)
+    Ok(redact_key_statement_lines(&app_log()?.read()?).into_owned())
 }
 
 pub(crate) fn read_last_log_lines(line_count: usize) -> Result<String> {
     let contents = app_log()?.read()?;
+
+    let contents = redact_key_statement_lines(&contents);
 
     let lines: Vec<_> = contents.lines().collect();
 
@@ -768,6 +810,15 @@ pub(crate) fn clean_log_file() -> Result<()> {
             replacement.as_ref(),
             LOG_SIZE_CLEANUP_TARGET_BYTES,
         ));
+    }
+
+    let redacted = match redact_key_statement_lines(replacement.as_ref()) {
+        Cow::Owned(redacted) => Some(redacted),
+        Cow::Borrowed(_) => None,
+    };
+
+    if let Some(redacted) = redacted {
+        replacement = Cow::Owned(redacted);
     }
 
     if let Cow::Owned(replacement) = replacement {
@@ -921,6 +972,34 @@ mod tests {
             assert!(log.contains("SELECT COUNT(*) FROM messages"));
             assert!(log.contains("elapsed_ms=501"));
         }
+    }
+
+    #[test]
+    fn key_statements_written_by_older_builds_are_redacted_from_the_file() {
+        let contents = "2026-10-26 11:56:05.152701 WARNING [f] [twonly] src/logger.rs:121 > slow \
+                        statement: execution time exceeded alert threshold summary=\"PRAGMA key = \
+                        'old-key-secret'; …\"\n2026-10-26 15:08:42.622436 WARNING [b] [twonly] \
+                        src/logger.rs:121 > slow statement summary=\"PRAGMA key = \
+                        \\\"x'old-raw-secret'\\\"; …\"\n2026-10-26 15:08:43.000000 INFO [f] \
+                        [twonly] src/lib.rs:1 > unrelated line\n";
+
+        let redacted = super::redact_key_statement_lines(contents);
+
+        assert!(!redacted.contains("old-key-secret"));
+        assert!(!redacted.contains("old-raw-secret"));
+        assert!(redacted.contains(
+            "2026-10-26 11:56:05.152701 WARNING [f] [twonly] src/logger.rs:121 > SQLCipher key \
+             statement [SQL redacted]\n"
+        ));
+        assert!(redacted.ends_with("src/lib.rs:1 > unrelated line\n"));
+        assert_eq!(redacted.lines().count(), 3);
+
+        let clean = "2026-10-26 15:08:43.000000 INFO [f] [twonly] src/lib.rs:1 > nothing\n";
+
+        assert!(matches!(
+            super::redact_key_statement_lines(clean),
+            std::borrow::Cow::Borrowed(_)
+        ));
     }
 
     #[test]

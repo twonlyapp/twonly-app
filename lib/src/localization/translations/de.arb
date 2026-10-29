@@ -1,6 +1,8 @@
 {
   "subscriptionAllApps": "Zugriff auf alle Apps",
   "@@locale": "de",
+  "imageLoadFailed": "Dieses Bild konnte nicht geladen werden.",
+  "retry": "Erneut versuchen",
   "registerSlogan": "Privat in Kontakt bleiben.",
   "onboardingWelcomeTitle": "Willkommen bei twonly!",
   "onboardingWelcomeBody": "Erlebe eine private und sichere Möglichkeit mit Freunden in Kontakt zu bleiben, indem du spontane Bilder teilst.",

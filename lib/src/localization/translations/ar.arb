@@ -1,5 +1,7 @@
 {
   "@@locale": "ar",
+  "imageLoadFailed": "تعذّر تحميل هذه الصورة.",
+  "retry": "إعادة المحاولة",
   "subscriptionAllApps": "الوُصُولُ إِلَى جَمِيعِ التَّطْبِيقَات",
   "registerSlogan": "ابْقَ عَلَى تَوَاصُلٍ بِخُصُوصِيَّةٍ.",
   "onboardingWelcomeTitle": "مَرْحَباً بِكَ فِي twonly!",

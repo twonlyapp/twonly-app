@@ -20,6 +20,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/helpers/precache_file_image.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_details.bottom_sheet.dart';
@@ -503,8 +504,10 @@ class _SynchronizedImageViewerScreenState
 
         if (filePath.existsSync() && filePath.lengthSync() > 0) {
           _precachedMediaIds.add(mediaId);
-          precacheImage(FileImage(filePath), context).onError((e, s) {
-            _precachedMediaIds.remove(mediaId);
+          precacheFileImage(filePath, context, source: 'memories viewer').then((
+            succeeded,
+          ) {
+            if (!succeeded) _precachedMediaIds.remove(mediaId);
           });
         }
       }
