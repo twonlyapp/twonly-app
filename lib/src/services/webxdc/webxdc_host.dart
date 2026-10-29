@@ -89,6 +89,24 @@ class WebxdcHost {
     }
   }
 
+  /// Starts what an app waits for before it may load, so opening one does not.
+  ///
+  /// Android only: no page loads until a hidden webview holds every WebRTC
+  /// connection the renderer allows (see `WebRtcHolder.kt`). Started cold, that
+  /// costs the renderer's startup plus 500 connections, seconds on a slow phone,
+  /// and the app's screen stays blank until it is done. Repeated calls are
+  /// free; the hold, once made, lasts for the process.
+  static Future<void> warmUp() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      await _channel.invokeMethod<void>('warmUp');
+    } on PlatformException catch (error) {
+      Log.warn('warming up the webxdc runtime failed: ${error.message}');
+    } on MissingPluginException {
+      // No native side, as in widget tests: the app's own open starts it.
+    }
+  }
+
   /// Gets an app ready to run: makes sure the bundle is on disk and verified,
   /// and returns what the view needs to show it.
   ///
@@ -101,6 +119,8 @@ class WebxdcHost {
     String instanceId,
     List<String> languages,
   ) async {
+    // Runs alongside the bundle check below rather than after the screen opens.
+    unawaited(warmUp());
     final instance = await WebxdcService.instance(instanceId);
     if (instance == null) {
       return const WebxdcLaunch.failed('unavailable');

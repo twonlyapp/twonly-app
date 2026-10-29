@@ -47,7 +47,13 @@ object WebRtcHolder {
     /** RTCPeerConnection exists only in secure contexts. Never fetched. */
     private const val HOLDER_URL = "https://webrtc-holder.localhost/"
 
-    private const val WAIT_TIMEOUT_MS = 15_000L
+    /**
+     * How long one fill may run before it is given up. A cold start spends
+     * seconds on the renderer alone on a slow phone, so this is far above what
+     * a fill takes; it only catches a page that never answers. Giving up leaves
+     * the holder idle, not failed, so the next app opened tries again.
+     */
+    private const val FILL_TIMEOUT_MS = 60_000L
 
     private enum class State { IDLE, FILLING, HOLDING, FAILED }
 
@@ -57,9 +63,13 @@ object WebRtcHolder {
     private val waiters = mutableListOf<(Boolean) -> Unit>()
 
     /**
-     * Calls [done] with `true` once every slot is held, or with `false` if that
-     * could not be achieved in time. Starts the fill on first use; after that
-     * the hold lasts as long as the process.
+     * Calls [done] with `true` once every slot is held, or with `false` once
+     * the fill has failed. Starts the fill on first use; after that the hold
+     * lasts as long as the process.
+     *
+     * A waiter is never given up on while the fill is still running: the app
+     * only loads after this answers, so an answer of `false` leaves its screen
+     * blank until it is opened again.
      */
     fun awaitHolding(context: Context, done: (Boolean) -> Unit) {
         when (state) {
@@ -68,20 +78,23 @@ object WebRtcHolder {
             State.IDLE -> start(context.applicationContext)
             State.FILLING -> {}
         }
+        waiters.add(done)
+    }
 
-        var called = false
-        val once: (Boolean) -> Unit = { holding ->
-            if (!called) {
-                called = true
-                done(holding)
-            }
-        }
-        waiters.add(once)
-        main.postDelayed({
-            if (!called) Log.w(TAG, "timed out waiting for the WebRTC hold")
-            waiters.remove(once)
-            once(false)
-        }, WAIT_TIMEOUT_MS)
+    /**
+     * Starts the fill ahead of the first app, which otherwise waits for the
+     * renderer to start and 500 connections to be made before it may load.
+     */
+    fun warmUp(context: Context) {
+        if (state == State.IDLE) start(context.applicationContext)
+    }
+
+    /** Forgets any fill. Tests only: Robolectric keeps this object between them. */
+    internal fun resetForTest() {
+        webView?.destroy()
+        webView = null
+        waiters.clear()
+        state = State.IDLE
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -96,14 +109,24 @@ object WebRtcHolder {
             setGeolocationEnabled(false)
         }
         // Only this hidden page gets the callback; no webxdc page can see it.
-        view.addJavascriptInterface(Callback(), "__twonlyRtcHolder")
+        view.addJavascriptInterface(Callback(view), "__twonlyRtcHolder")
         view.webViewClient = Client()
         webView = view
         view.loadUrl(HOLDER_URL)
+        main.postDelayed({
+            if (webView !== view || state != State.FILLING) return@postDelayed
+            finish(view, false, "the holder page never answered")
+            state = State.IDLE
+        }, FILL_TIMEOUT_MS)
     }
 
-    private fun finish(holding: Boolean, reason: String) {
-        if (state != State.FILLING) return
+    /**
+     * Ends the fill [view] is running. An answer from a page that was already
+     * given up on is ignored: its slots went with it, and the fill running now
+     * is not done.
+     */
+    private fun finish(view: WebView, holding: Boolean, reason: String) {
+        if (state != State.FILLING || webView !== view) return
         if (holding) {
             state = State.HOLDING
             Log.i(TAG, "holding all $CONNECTION_LIMIT RTCPeerConnection slots")
@@ -118,10 +141,10 @@ object WebRtcHolder {
         pending.forEach { it(holding) }
     }
 
-    private class Callback {
+    private class Callback(private val view: WebView) {
         @JavascriptInterface
         fun done(holding: Boolean, reason: String) {
-            main.post { finish(holding, reason) }
+            main.post { finish(view, holding, reason) }
         }
     }
 
@@ -153,14 +176,15 @@ object WebRtcHolder {
         @TargetApi(Build.VERSION_CODES.O)
         override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
             Log.w(TAG, "renderer gone (crashed: ${detail.didCrash()})")
-            if (webView === view) {
+            if (webView !== view) return true
+            if (state == State.FILLING) {
+                // Destroys the view and answers everyone waiting.
+                finish(view, false, "renderer gone while filling")
+            } else {
                 webView = null
                 view.destroy()
-                if (state == State.FILLING) {
-                    finish(false, "renderer gone while filling")
-                }
-                state = State.IDLE
             }
+            state = State.IDLE
             return true
         }
     }

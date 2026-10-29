@@ -6,6 +6,7 @@ import android.os.Looper
 import android.webkit.WebView
 import android.widget.FrameLayout
 import java.time.Duration
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -61,13 +62,35 @@ class WebxdcViewTest {
         val view = WebxdcView(activity, "game", "origin")
         val webView = view.getView() as WebView
 
-        // Robolectric runs no JavaScript, so the hold never confirms. Past its
-        // timeout, nothing of the app may have been requested.
-        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(20))
+        // Robolectric runs no JavaScript, so the hold never confirms. Past the
+        // fill's timeout, nothing of the app may have been requested.
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(70))
 
         assertNull(shadowOf(webView).lastLoadedUrl)
         view.dispose()
         shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun aSlowFillIsWaitedForAndATimedOutOneIsRetried() {
+        WebRtcHolder.resetForTest()
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val answers = mutableListOf<Boolean>()
+
+        // A cold renderer on a slow phone: an app opened now must still load
+        // once the fill is done, not be refused while it runs.
+        WebRtcHolder.awaitHolding(activity) { answers.add(it) }
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(30))
+        assertTrue(answers.isEmpty())
+
+        // A page that never answers is given up on, but not for good.
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(31))
+        assertEquals(listOf(false), answers)
+        WebRtcHolder.awaitHolding(activity) { answers.add(it) }
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1))
+        assertEquals(listOf(false), answers)
+
+        WebRtcHolder.resetForTest()
     }
 
     @Test
