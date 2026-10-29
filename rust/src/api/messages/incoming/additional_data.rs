@@ -110,6 +110,57 @@ pub(crate) async fn handle_additional_data_message(
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::database::app::key_verifications::{queries, writes};
+
+    #[tokio::test]
+
+    async fn shared_contacts_require_a_personally_verified_sender_and_matching_keys() -> Result<()>
+    {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let database = ctx.app_db.read().await.clone();
+        let signal = ctx.rust_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO signal_identities(name,identity_key,timestamp)
+             VALUES ('7',X'01',0),('8',X'02',0),('9',X'03',0);",
+        )
+        .execute(&signal.pool)
+        .await?;
+        let mut tx = database.pool.begin().await?;
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id,username) VALUES (7,'sender'),(8,'target'),(9,'other');",
+        )
+        .execute(&mut *tx)
+        .await?;
+        let contact = |user_id, key| proto::SharedContact {
+            user_id,
+            public_identity_key: vec![key],
+            display_name: "shared".into(),
+        };
+        let data = proto::AdditionalMessageData {
+            r#type: proto::additional_message_data::Type::Contacts as i32,
+            contacts: vec![contact(7, 1), contact(8, 2), contact(8, 2), contact(9, 99)],
+            ..Default::default()
+        };
+        verify_shared_contacts(&ctx, &mut tx, 7, &data).await?;
+        assert!(!queries::is_verified(&mut tx, 8).await?);
+        writes::insert(&mut tx, 7, "manual", None).await?;
+        verify_shared_contacts(&ctx, &mut tx, 7, &data).await?;
+        verify_shared_contacts(&ctx, &mut tx, 7, &data).await?;
+        assert_eq!(queries::contact(&mut tx, 8).await?.verifications.len(), 1);
+        assert_eq!(queries::contact(&mut tx, 7).await?.verifications.len(), 1);
+        assert!(!queries::is_verified(&mut tx, 9).await?);
+        assert!(!queries::can_attest(&mut tx, 8).await?);
+        Ok(())
+    }
+}
+
 async fn verify_shared_contacts(
     ctx: &Context, tr: &mut Transaction<'_, Sqlite>, from_user_id: i64,
     data: &proto::AdditionalMessageData,
@@ -118,9 +169,17 @@ async fn verify_shared_contacts(
         return Ok(());
     }
 
+    if !crate::database::app::key_verifications::queries::can_attest(tr, from_user_id).await? {
+        return Ok(());
+    }
+
     let signal_database = ctx.rust_db.read().await.clone();
 
     for contact in &data.contacts {
+        if contact.user_id == from_user_id {
+            continue;
+        }
+
         if contact.public_identity_key.is_empty() {
             tracing::info!("shared contact carries no public key, skipping verification");
 
@@ -154,15 +213,9 @@ async fn verify_shared_contacts(
         .insert(tr)
         .await?;
 
-        let verified_at = chrono::Utc::now().timestamp_millis();
-
-        ctx.user_discovery
-            .get()
-            .await
-            .update_verification_state_for_user(contact.user_id, Some(verified_at), tr)
-            .await?;
-
-        tracing::info!("verified a contact from shared additional data");
+        // Inherited evidence is local to this recipient. Advertising it as a
+        // personal verification would launder a second-hand claim into trust.
+        tracing::info!("recorded inherited verification from shared additional data");
     }
 
     Ok(())

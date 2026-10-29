@@ -97,6 +97,10 @@ class KeyVerificationService {
     required List<int> sharedPublicIdentityKey,
     required int senderId,
   }) async {
+    if (contactId == senderId || contactId == userService.currentUser.userId) {
+      return;
+    }
+
     if (sharedPublicIdentityKey.isEmpty) {
       Log.info('Shared contact $contactId carries no public key');
       return;
@@ -110,7 +114,7 @@ class KeyVerificationService {
     }
 
     if (publicIdentityKey.equals(sharedPublicIdentityKey)) {
-      Log.info('Verified a user which was shared by a contact');
+      Log.info('Checking verification for a contact shared by $senderId');
       await rust_key_verifications.changeKeyVerification(
         contact: contactId,
         kind: VerificationType.contactSharedByVerified.name,

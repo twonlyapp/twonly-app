@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT MAX(created_at) * 1000 AS \"value?: i64\"\n           FROM direct_key_verifications WHERE contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "value?: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "c24f33968e2bba58f6b65fab4c626f0bd587b9309eae012929ccaba2dba6c4cd"
+}

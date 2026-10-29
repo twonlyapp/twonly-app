@@ -240,6 +240,8 @@ pub(crate) async fn handle_contact_request(
                     Group::create_direct_chat(ctx, tr, contact).await?;
                 }
 
+                super::errors::release_after_contact_acceptance(tr, from_user_id).await?;
+
                 queue_encrypted_content(
                     tr,
                     from_user_id,
@@ -288,6 +290,8 @@ pub(crate) async fn handle_contact_request(
                 .await?;
 
             Group::create_direct_chat(ctx, tr, contact).await?;
+
+            super::errors::release_after_contact_acceptance(tr, from_user_id).await?;
         }
         Type::Reject => {
             UpdateContact::builder()

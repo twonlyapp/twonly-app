@@ -5,7 +5,7 @@
 
 mod additional_data;
 pub(crate) mod contact;
-mod errors;
+pub(crate) mod errors;
 mod groups;
 mod media;
 pub mod messages;
@@ -931,6 +931,10 @@ pub(crate) async fn handle_encrypted(
     }
 
     let notification_content = content.clone();
+    // Error replies are removed by their sender on server acceptance and do
+    // not expect an end-to-end receipt. Replying anyway can trigger another
+    // mailbox drain of the message that is still waiting for acceptance.
+    let terminal_error = content.error_messages.is_some();
 
     // A peer that sends a message again -- after a session reset it resends
     // its queue under new receipt IDs -- finds the chat row already there, and
@@ -956,7 +960,11 @@ pub(crate) async fn handle_encrypted(
         .await?;
     }
 
-    Ok(Delivery::Ack)
+    Ok(if terminal_error {
+        Delivery::Withhold
+    } else {
+        Delivery::Ack
+    })
 }
 
 /// Whether the text, media or reaction in `content` is already stored here,
@@ -1170,19 +1178,7 @@ async fn handle_encrypted_inner(
                 .execute(&mut **t)
                 .await?;
 
-                messages::queue_encrypted_content(
-                    t,
-                    from_user_id,
-                    proto::EncryptedContent {
-                        error_messages: Some(proto::encrypted_content::ErrorMessages {
-                            r#type: proto::encrypted_content::error_messages::Type::ErrorProcessingMessageCreatedAccountRequestInstead as i32,
-                            related_receipt_id: receipt_id.to_owned(),
-                        }),
-                        ..Default::default()
-                    },
-                    false,
-                )
-                .await?;
+                errors::queue_contact_acceptance_error(t, from_user_id, receipt_id).await?;
 
                 return Err(TwonlyError::ContactAcceptancePending);
             }
@@ -1347,7 +1343,27 @@ mod tests {
             }
             .encode_to_vec(),
         };
-        for _ in 0..2 {
+        // Repeated image deliveries interleaved with new contact requests
+        // must neither accept the friendship nor let each mailbox drain
+        // create another error reply.
+        for attempt in 0..50 {
+            if attempt > 0 {
+                let mut t = database.pool.begin().await?;
+                contact::handle_contact_request(
+                    &ctx,
+                    &mut t,
+                    7,
+                    proto::encrypted_content::ContactRequest {
+                        r#type: proto::encrypted_content::contact_request::Type::Request as i32,
+                    },
+                )
+                .await?;
+                let contact = Contact::get_contact_by_id(&mut t, 7).await?.unwrap();
+                assert_eq!(contact.accepted, 0);
+                assert_eq!(contact.requested, 1);
+                t.commit().await?;
+            }
+
             let response = acknowledge_pending_messages(
                 &ctx,
                 server_to_client::PendingMessagesV2 {
@@ -1381,7 +1397,23 @@ mod tests {
                 .fetch_one(&mut *t)
                 .await?;
             assert_eq!(count, 0);
+            let notices: i64 = sqlx::query_scalar(
+                "SELECT COUNT(*) FROM receipts WHERE contact_id = 7 AND contact_will_sends_receipt = 0",
+            )
+            .fetch_one(&mut *t)
+            .await?;
+            assert_eq!(
+                notices,
+                if attempt == 0 { 1 } else { 0 },
+                "redelivery must not generate another contact error after the first was sent"
+            );
             t.rollback().await?;
+            // Simulate the terminal error being removed after server acceptance.
+            sqlx::query(
+                "DELETE FROM receipts WHERE contact_id = 7 AND contact_will_sends_receipt = 0",
+            )
+            .execute(&database.pool)
+            .await?;
         }
         let mut t = database.pool.begin().await?;
         sqlx::query("UPDATE contacts SET accepted = 1, requested = 0 WHERE user_id = 7")

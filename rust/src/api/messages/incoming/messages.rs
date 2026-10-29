@@ -194,6 +194,19 @@ pub(crate) async fn queue_encrypted_content(
         .insert(t)
         .await?;
 
+    if super::errors::requires_contact_acceptance(&content, target_user_id) {
+        sqlx::query!(
+            r#"UPDATE receipts SET mark_for_retry_after_accepted = (
+                   SELECT awaiting_acceptance_since FROM contact_handshake_repairs
+                   WHERE contact_id = ?
+               ) WHERE receipt_id = ?"#,
+            target_user_id,
+            &receipt_id,
+        )
+        .execute(&mut **t)
+        .await?;
+    }
+
     if content.group_create.is_some()
         || content.group_join.is_some()
         || content.resend_group_public_key.is_some()
@@ -505,7 +518,7 @@ async fn load_queued_receipt_row(
                r.ack_by_server_at, r.last_retry
         FROM receipts r
         JOIN contacts c ON c.user_id = r.contact_id
-        WHERE r.receipt_id = ?
+        WHERE r.receipt_id = ? AND r.mark_for_retry_after_accepted IS NULL
         "#,
         receipt_id,
     )
@@ -951,10 +964,7 @@ async fn due_receipt_ids(pool: &sqlx::SqlitePool, now: i64) -> Result<Vec<String
           AND deferred_until_session IS NULL
           AND (ack_by_server_at IS NULL OR mark_for_retry IS NOT NULL)
           AND (ack_by_server_at IS NULL OR COALESCE(last_retry, ack_by_server_at) <= ?)
-          AND (mark_for_retry_after_accepted IS NULL OR EXISTS(
-              SELECT 1 FROM contacts
-              WHERE contacts.user_id = receipts.contact_id AND contacts.accepted = 1
-          ))
+          AND mark_for_retry_after_accepted IS NULL
         ORDER BY created_at
         "#,
         retry_before,
@@ -975,10 +985,7 @@ pub(crate) async fn has_pending_receipts(ctx: &Arc<Context>) -> Result<bool> {
            WHERE will_be_retried_by_media_upload = 0
              AND deferred_until_session IS NULL
              AND (ack_by_server_at IS NULL OR mark_for_retry IS NOT NULL)
-             AND (mark_for_retry_after_accepted IS NULL OR EXISTS(
-                 SELECT 1 FROM contacts WHERE contacts.user_id = receipts.contact_id
-                   AND contacts.accepted = 1
-             )))"#,
+             AND mark_for_retry_after_accepted IS NULL)"#,
     )
     .fetch_one(&database.pool)
     .await?
@@ -1630,6 +1637,8 @@ mod tests {
              will_be_retried_by_media_upload) VALUES ('media', 7, x'00', 1)",
             "INSERT INTO receipts(receipt_id, contact_id, message, mark_for_retry_after_accepted) \
              VALUES ('unaccepted', 8, x'00', 1)",
+            "INSERT INTO receipts(receipt_id, contact_id, message, mark_for_retry_after_accepted) \
+             VALUES ('peer-requires-acceptance', 7, x'00', 1)",
             "INSERT INTO receipts(receipt_id, contact_id, message, ack_by_server_at) VALUES \
              ('not-marked', 7, x'00', 1)",
         ] {
@@ -1660,6 +1669,10 @@ mod tests {
         // Direct calls use persisted timestamps too, before decoding or
         // networking. x'00' would fail to decode if this cooldown were missed.
         send_queued_receipt(&ctx, "recent-0").await?;
+        send_queued_receipt(&ctx, "peer-requires-acceptance").await?;
+        assert!(prepare_queued_receipt(&ctx, "peer-requires-acceptance")
+            .await?
+            .is_none());
 
         assert!(!receipt_is_due(Some(now - 1), Some(now - 1), now));
 

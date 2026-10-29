@@ -100,10 +100,7 @@ impl OutboxDispatchService {
                  AND ack_by_server_at IS NULL
                  AND receipt_id NOT IN (SELECT receipt_id FROM outbox_dispatch_jobs)
                  AND receipt_id NOT IN (SELECT receipt_id FROM live_location_outbox)
-                 AND (mark_for_retry_after_accepted IS NULL OR EXISTS(
-                     SELECT 1 FROM contacts
-                     WHERE contacts.user_id = receipts.contact_id AND contacts.accepted = 1
-                 ))
+                 AND mark_for_retry_after_accepted IS NULL
                ORDER BY created_at
                LIMIT ?"#,
             MAXIMUM_HANDOVERS as i64

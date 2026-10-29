@@ -44,9 +44,7 @@ class VerificationBadgeComp extends StatefulWidget {
 }
 
 class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
-  late bool _isVerified =
-      widget.contact?.verified ??
-      !(widget.isVerifiedByTransferredTrust ?? false);
+  bool _isVerified = false;
   bool _isSharedVerified = false;
   int _verifiedByTransferredTrustCount = 0;
   int _sharedByVerifiedCount = 0;
@@ -102,15 +100,17 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
         (pair) => pair.$1.type != VerificationType.contactSharedByVerified,
       );
       _isSharedVerified = sharedVerifications.isNotEmpty;
-      _sharedByVerifiedCount = sharedVerifications.length;
-
       final sharedByVerifierIds = sharedVerifications
           .where((pair) => pair.$1.verifiedBy != null)
           .map((pair) => pair.$1.verifiedBy!)
           .toSet();
 
+      _sharedByVerifiedCount = sharedByVerifierIds.length;
+
       _transferredTrustBaseCount = _transferredTrust
           .where((tt) => !sharedByVerifierIds.contains(tt.$1.userId))
+          .map((tt) => tt.$1.userId)
+          .toSet()
           .length;
       _verifiedByTransferredTrustCount =
           _sharedByVerifiedCount + _transferredTrustBaseCount;

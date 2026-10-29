@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO verification_token_uses(token_id, contact_id) VALUES (?, ?)\n           ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "ac91aa208416442d554a1edf456215621903ad5539ae24e7a32b37604e740114"
+}

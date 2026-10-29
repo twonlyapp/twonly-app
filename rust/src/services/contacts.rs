@@ -250,6 +250,12 @@ impl ContactService {
 
         Group::create_direct_chat(&self.ctx, &mut transaction, contact).await?;
 
+        crate::api::messages::incoming::errors::release_after_contact_acceptance(
+            &mut transaction,
+            contact_id,
+        )
+        .await?;
+
         transaction.commit().await?;
 
         self.send_contact_request(

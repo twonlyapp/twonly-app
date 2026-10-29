@@ -197,7 +197,7 @@ impl UserDiscovery {
                     != 0;
 
             if has_shares {
-                return Ok(());
+                return self.refresh_verification_policy(ctx).await;
             }
         }
 
@@ -233,6 +233,41 @@ impl UserDiscovery {
             &mut transaction,
         )
         .await?;
+
+        transaction.commit().await?;
+
+        self.refresh_verification_policy(ctx).await
+    }
+
+    /// Publish corrections for personal claims emitted by older versions.
+    /// This also advances the discovery version so peers request revocations.
+    async fn refresh_verification_policy(&self, ctx: &Context) -> Result<()> {
+        let database = ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+
+        let pending = sqlx::query_scalar!(
+            "SELECT EXISTS(SELECT 1 FROM app_metadata WHERE key = 'verification_policy_refresh')",
+        )
+        .fetch_one(&mut *transaction)
+        .await?
+            != 0;
+
+        if pending {
+            let contacts = sqlx::query_scalar!(
+                "SELECT DISTINCT contact_id FROM user_discovery_own_promotions WHERE promotion != X''",
+            )
+            .fetch_all(&mut *transaction)
+            .await?;
+
+            for contact in contacts {
+                self.update_verification_state_for_user(contact, None, &mut transaction)
+                    .await?;
+            }
+
+            sqlx::query!("DELETE FROM app_metadata WHERE key = 'verification_policy_refresh'")
+                .execute(&mut *transaction)
+                .await?;
+        }
 
         transaction.commit().await?;
 
@@ -485,8 +520,8 @@ impl UserDiscovery {
         }
 
         if received_version.promotion < config.promotion_version {
-            let promoting_messages = sqlx::query_scalar!(
-                "SELECT promotion FROM user_discovery_own_promotions WHERE version_id > ?",
+            let promoting_messages = sqlx::query!(
+                "SELECT contact_id, promotion FROM user_discovery_own_promotions WHERE version_id > ?",
                 received_version.promotion,
             )
             .fetch_all(&mut **t)
@@ -495,10 +530,29 @@ impl UserDiscovery {
 
             let size = promoting_messages.len();
 
-            let mut filtered: Vec<Vec<u8>> = promoting_messages
-                .into_iter()
-                .filter(|message| !message.is_empty())
-                .collect();
+            let mut filtered = Vec::new();
+
+            for row in promoting_messages {
+                if row.promotion.is_empty() {
+                    continue;
+                }
+
+                let mut message = UserDiscoveryMessage::decode(row.promotion.as_slice())?;
+
+                if let Some(promotion) = message.user_discovery_promotion.as_mut() {
+                    // Older builds also advertised inherited claims. Derive
+                    // the assertion from current personal evidence every time
+                    // it leaves this device, including after a restoration.
+                    promotion.public_key_verified_timestamp =
+                        crate::database::app::key_verifications::queries::direct_verified_at(
+                            t,
+                            row.contact_id,
+                        )
+                        .await?;
+                }
+
+                filtered.push(message.encode_to_vec());
+            }
 
             if filtered.len() != size {
                 filtered.push(
@@ -575,6 +629,13 @@ impl UserDiscovery {
         &self, contact_id: UserID, public_key_verified_timestamp: Option<i64>,
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<()> {
+        // Callers cannot promote inherited evidence into a personal claim.
+        let _ = public_key_verified_timestamp;
+
+        let public_key_verified_timestamp =
+            crate::database::app::key_verifications::queries::direct_verified_at(t, contact_id)
+                .await?;
+
         let current_promotion = sqlx::query_scalar!(
             r#"SELECT promotion FROM user_discovery_own_promotions
                WHERE contact_id = ? ORDER BY version_id DESC LIMIT 1"#,
@@ -1247,7 +1308,7 @@ impl Default for UserDiscoveryConfig {
 #[cfg(test)]
 mod tests {
 
-    use super::{is_supported_threshold, MIN_USER_DISCOVERY_THRESHOLD};
+    use super::*;
 
     #[test]
 
@@ -1263,5 +1324,92 @@ mod tests {
         assert!(is_supported_threshold(u32::from(u8::MAX)));
 
         assert!(!is_supported_threshold(u32::from(u8::MAX) + 1));
+    }
+
+    #[tokio::test]
+
+    async fn inherited_claims_are_never_advertised_as_personal_verification() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let discovery = ctx.user_discovery.get().await;
+        discovery.write_config(&UserDiscoveryConfig {
+            user_id: 42,
+            announcement_version: 1,
+            promotion_version: 2,
+            ..Default::default()
+        })?;
+        let database = ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id,username) VALUES (1,'root'),(2,'inherited');
+             INSERT INTO key_verifications(contact_id,type,verified_by)
+             VALUES (1,'manual',NULL),(2,'contactSharedByVerified',1);",
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        for id in [1, 2] {
+            let message = UserDiscoveryMessage {
+                version: Some(UserDiscoveryVersion {
+                    announcement: 1,
+                    promotion: id as u32,
+                }),
+                user_discovery_promotion: Some(UserDiscoveryPromotion {
+                    public_id: id,
+                    public_key_verified_timestamp: Some(123),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }
+            .encode_to_vec();
+            sqlx::query(
+                "INSERT INTO user_discovery_own_promotions(contact_id,promotion) VALUES (?,?)",
+            )
+            .bind(id)
+            .bind(message)
+            .execute(&mut *tx)
+            .await?;
+        }
+        let version = UserDiscoveryVersion {
+            announcement: 1,
+            promotion: 0,
+        }
+        .encode_to_vec();
+        let messages = discovery.get_new_messages(1, &version, &mut tx).await?;
+        assert_eq!(messages.len(), 2);
+        for bytes in messages {
+            let message = UserDiscoveryMessage::decode(bytes.as_slice())?;
+            let promotion = message.user_discovery_promotion.unwrap();
+            assert_eq!(
+                promotion.public_key_verified_timestamp.is_some(),
+                promotion.public_id == 1
+            );
+        }
+        discovery
+            .update_verification_state_for_user(2, Some(999), &mut tx)
+            .await?;
+        let promotion: Vec<u8> = sqlx::query_scalar(
+            "SELECT promotion FROM user_discovery_own_promotions WHERE contact_id = 2 ORDER BY version_id DESC LIMIT 1",
+        ).fetch_one(&mut *tx).await?;
+        assert!(UserDiscoveryMessage::decode(promotion.as_slice())?
+            .user_discovery_promotion
+            .unwrap()
+            .public_key_verified_timestamp
+            .is_none());
+        tx.commit().await?;
+
+        let old_version = discovery.get_config_snapshot().await?.promotion_version;
+        discovery.refresh_verification_policy(&ctx).await?;
+        assert!(discovery.get_config_snapshot().await?.promotion_version > old_version);
+        let old_version = discovery.get_config_snapshot().await?.promotion_version;
+        discovery.refresh_verification_policy(&ctx).await?;
+        assert_eq!(
+            discovery.get_config_snapshot().await?.promotion_version,
+            old_version
+        );
+        Ok(())
     }
 }

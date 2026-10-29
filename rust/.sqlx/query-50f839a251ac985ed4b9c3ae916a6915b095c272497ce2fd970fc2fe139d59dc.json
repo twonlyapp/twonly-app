@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT EXISTS(\n                SELECT 1\n                FROM valid_key_verifications kv\n                WHERE kv.contact_id = ?\n            ) AS \"value!: bool\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "50f839a251ac985ed4b9c3ae916a6915b095c272497ce2fd970fc2fe139d59dc"
+}

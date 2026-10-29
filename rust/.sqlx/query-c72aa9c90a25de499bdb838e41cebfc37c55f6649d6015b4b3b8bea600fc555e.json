@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT contact_id AS \"contact_id!\",\n                type AS \"type!\"\n            FROM (\n                SELECT contact_id, type, ROW_NUMBER() OVER (\n                    PARTITION BY contact_id\n                    ORDER BY created_at, verification_id\n                ) AS rank\n                FROM valid_key_verifications\n            )\n            WHERE rank = 1\n            ORDER BY contact_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "key_verifications",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "type!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "key_verifications",
+            "name": "type"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "c72aa9c90a25de499bdb838e41cebfc37c55f6649d6015b4b3b8bea600fc555e"
+}

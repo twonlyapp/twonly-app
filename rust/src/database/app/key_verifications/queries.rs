@@ -14,7 +14,7 @@ pub async fn first_types(connection: &mut SqliteConnection) -> Result<Vec<FirstV
                     PARTITION BY contact_id
                     ORDER BY created_at, verification_id
                 ) AS rank
-                FROM key_verifications
+                FROM valid_key_verifications
             )
             WHERE rank = 1
             ORDER BY contact_id
@@ -29,17 +29,38 @@ pub async fn is_verified(connection: &mut SqliteConnection, id: i64) -> Result<b
         r#"
             SELECT EXISTS(
                 SELECT 1
-                FROM key_verifications kv
+                FROM valid_key_verifications kv
                 WHERE kv.contact_id = ?
-                    AND (kv.type != 'contactSharedByVerified'
-                        OR EXISTS(
-                        SELECT 1
-                        FROM key_verifications verifier
-                        WHERE verifier.contact_id = kv.verified_by
-                    )
-                )
             ) AS "value!: bool"
         "#,
+        id,
+    )
+    .fetch_one(connection)
+    .await?)
+}
+
+/// Only personal evidence authorizes an attestation. Inherited evidence must
+/// never bootstrap another authority, including through a cycle.
+pub async fn can_attest(connection: &mut SqliteConnection, id: i64) -> Result<bool> {
+    Ok(sqlx::query_scalar!(
+        r#"
+            SELECT EXISTS(
+                SELECT 1 FROM direct_key_verifications kv
+                JOIN contacts c ON c.user_id = kv.contact_id
+                WHERE kv.contact_id = ? AND c.blocked = 0
+                    AND c.deleted_by_user = 0 AND c.account_deleted = 0
+            ) AS "value!: bool"
+        "#,
+        id,
+    )
+    .fetch_one(connection)
+    .await?)
+}
+
+pub async fn direct_verified_at(connection: &mut SqliteConnection, id: i64) -> Result<Option<i64>> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT MAX(created_at) * 1000 AS "value?: i64"
+           FROM direct_key_verifications WHERE contact_id = ?"#,
         id,
     )
     .fetch_one(connection)
@@ -55,7 +76,7 @@ pub async fn list(connection: &mut SqliteConnection, id: i64) -> Result<Vec<KeyV
                 type AS "type!",
                 verified_by AS "verified_by?",
                 created_at AS "created_at!"
-            FROM key_verifications
+            FROM valid_key_verifications
             WHERE contact_id = ?
             ORDER BY verification_id
         "#,
@@ -74,15 +95,8 @@ pub async fn contact(connection: &mut SqliteConnection, id: i64) -> Result<Conta
                 type AS "type!",
                 verified_by AS "verified_by?",
                 created_at AS "created_at!"
-            FROM key_verifications kv
+            FROM valid_key_verifications kv
             WHERE contact_id = ?
-                AND (type != 'contactSharedByVerified'
-                    OR EXISTS(
-                    SELECT 1
-                    FROM key_verifications verifier
-                    WHERE verifier.contact_id = kv.verified_by
-                )
-            )
             ORDER BY verification_id
         "#,
         id,
@@ -122,18 +136,10 @@ pub async fn transferred(
         r#"
             SELECT ur.from_contact_id AS "contact_id!",
                 ur.public_key_verified_timestamp AS "verified_at!"
-            FROM user_discovery_user_relations ur
+            FROM valid_discovery_verifications ur
             WHERE ur.announced_user_id = ?
-                AND ur.from_contact_id != ?
-                AND ur.public_key_verified_timestamp IS NOT NULL
-                AND EXISTS (
-                SELECT 1
-                FROM key_verifications kv
-                WHERE kv.contact_id = ur.from_contact_id
-            )
             ORDER BY ur.from_contact_id
         "#,
-        id,
         id,
     )
     .fetch_all(&mut *connection)
@@ -178,20 +184,17 @@ pub async fn groups(
                 SELECT gm.group_id, CASE
                 WHEN EXISTS(
                     SELECT 1
-                    FROM key_verifications kv
+                    FROM direct_key_verifications kv
                     WHERE kv.contact_id = gm.contact_id
                 ) THEN 2
                 WHEN EXISTS(
+                    SELECT 1 FROM valid_key_verifications kv
+                    WHERE kv.contact_id = gm.contact_id
+                ) THEN 1
+                WHEN EXISTS(
                     SELECT 1
-                    FROM user_discovery_user_relations ur
+                    FROM valid_discovery_verifications ur
                     WHERE ur.announced_user_id = gm.contact_id
-                        AND ur.public_key_verified_timestamp IS NOT NULL
-                        AND ur.from_contact_id != gm.contact_id
-                        AND EXISTS(
-                        SELECT 1
-                        FROM key_verifications kv
-                        WHERE kv.contact_id = ur.from_contact_id
-                    )
                 ) THEN 1
                 ELSE 0
                 END AS trust

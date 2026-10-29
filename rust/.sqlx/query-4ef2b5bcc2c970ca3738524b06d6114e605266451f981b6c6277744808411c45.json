@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT EXISTS(\n                SELECT 1 FROM direct_key_verifications kv\n                JOIN contacts c ON c.user_id = kv.contact_id\n                WHERE kv.contact_id = ? AND c.blocked = 0\n                    AND c.deleted_by_user = 0 AND c.account_deleted = 0\n            ) AS \"value!: bool\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4ef2b5bcc2c970ca3738524b06d6114e605266451f981b6c6277744808411c45"
+}

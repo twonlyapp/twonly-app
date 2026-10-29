@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                DELETE FROM key_verifications WHERE verification_id IN (\n                    SELECT duplicate.verification_id FROM key_verifications duplicate\n                    JOIN key_verifications selected\n                      ON duplicate.contact_id = selected.contact_id\n                     AND duplicate.type = selected.type\n                     AND duplicate.verified_by IS selected.verified_by\n                    WHERE selected.verification_id = ? AND selected.contact_id = ?\n                )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "2dd597a6d8eb26e9c9362d3a4be802060b3501ea6c46dced28355dfa446dcba3"
+}

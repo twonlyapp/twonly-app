@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT verification_id AS \"verification_id!\",\n                contact_id AS \"contact_id!\",\n                type AS \"type!\",\n                verified_by AS \"verified_by?\",\n                created_at AS \"created_at!\"\n            FROM valid_key_verifications\n            WHERE contact_id = ?\n            ORDER BY verification_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "verification_id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "key_verifications",
+            "name": "verification_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "key_verifications",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "type!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "key_verifications",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "verified_by?",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "key_verifications",
+            "name": "verified_by"
+          }
+        }
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "key_verifications",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "9edb0ce3ea57b10ea8e7cbc5e205b3516b45f4ac98f3dfe3b07e0a29a322a676"
+}

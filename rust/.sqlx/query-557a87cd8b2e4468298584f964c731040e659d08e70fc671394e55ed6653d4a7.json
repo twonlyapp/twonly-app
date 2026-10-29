@@ -1,0 +1,40 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT group_id AS \"group_id!\",\n                MIN(trust) AS \"status!: i64\",\n                SUM(CASE\n                WHEN trust = 0 THEN 1\n                ELSE 0\n                END\n            ) AS \"unverified_count!: i64\"\n            FROM (\n                SELECT gm.group_id, CASE\n                WHEN EXISTS(\n                    SELECT 1\n                    FROM direct_key_verifications kv\n                    WHERE kv.contact_id = gm.contact_id\n                ) THEN 2\n                WHEN EXISTS(\n                    SELECT 1 FROM valid_key_verifications kv\n                    WHERE kv.contact_id = gm.contact_id\n                ) THEN 1\n                WHEN EXISTS(\n                    SELECT 1\n                    FROM valid_discovery_verifications ur\n                    WHERE ur.announced_user_id = gm.contact_id\n                ) THEN 1\n                ELSE 0\n                END AS trust\n                FROM group_members gm\n                WHERE ? IS NULL\n                    OR gm.group_id = ?\n            )\n            GROUP BY group_id\n            ORDER BY group_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "status!: i64",
+        "ordinal": 1,
+        "type_info": "Null",
+        "origin": "Expression"
+      },
+      {
+        "name": "unverified_count!: i64",
+        "ordinal": 2,
+        "type_info": "Null",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "557a87cd8b2e4468298584f964c731040e659d08e70fc671394e55ed6653d4a7"
+}

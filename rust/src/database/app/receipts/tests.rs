@@ -132,6 +132,19 @@ async fn retry_cutoff_is_strict_and_purge_uses_deleted_contact_membership() {
         vec!["a"]
     );
 
+    sqlx::query("UPDATE contacts SET accepted = 1 WHERE user_id = 1")
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    sqlx::query("UPDATE receipts SET mark_for_retry_after_accepted = 1 WHERE receipt_id = 'a'")
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    assert!(queries::media_retransmissions(&mut tx, 20)
+        .await
+        .unwrap()
+        .is_empty());
+
     sqlx::query(
         "INSERT INTO received_receipts(receipt_id,created_at) VALUES ('old',9),('boundary',10)",
     )

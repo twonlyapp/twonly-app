@@ -3,18 +3,17 @@ use crate::database::app::contacts::table::Contact;
 use crate::error::Result;
 use sqlx::SqliteConnection;
 
-// Keep the legacy definition: any direct evidence, or a verified discovery
-// relation. Multiple evidence rows must never duplicate a contact.
+// Use the same validated evidence as badges and groups. Raw claims from an
+// untrusted sender must not make somebody eligible to hold recovery shares.
 
 pub async fn verified_ids(connection: &mut SqliteConnection) -> Result<Vec<i64>> {
     Ok(sqlx::query_scalar!(
         r#"
             SELECT contact_id AS "value!"
-            FROM key_verifications
+            FROM valid_key_verifications
             UNION
             SELECT announced_user_id AS user_id
-            FROM user_discovery_user_relations
-            WHERE public_key_verified_timestamp IS NOT NULL
+            FROM valid_discovery_verifications
             ORDER BY user_id
         "#,
     )
@@ -54,14 +53,13 @@ pub async fn count(connection: &mut SqliteConnection, selection: RecoveryContact
                     AND (
                         EXISTS (
                             SELECT 1
-                            FROM key_verifications v
+                            FROM valid_key_verifications v
                             WHERE v.contact_id = contacts.user_id
                         )
                         OR EXISTS (
                             SELECT 1
-                            FROM user_discovery_user_relations r
+                            FROM valid_discovery_verifications r
                             WHERE r.announced_user_id = contacts.user_id
-                                AND r.public_key_verified_timestamp IS NOT NULL
                         )
                     )
                 "#,
@@ -153,14 +151,13 @@ pub async fn contacts(
                AND (
                    EXISTS (
                        SELECT 1
-                       FROM key_verifications v
+                       FROM valid_key_verifications v
                        WHERE v.contact_id = contacts.user_id
                    )
                    OR EXISTS (
                        SELECT 1
-                       FROM user_discovery_user_relations r
+                       FROM valid_discovery_verifications r
                        WHERE r.announced_user_id = contacts.user_id
-                           AND r.public_key_verified_timestamp IS NOT NULL
                    )
                )
             ORDER BY media_send_counter DESC, user_id LIMIT ?

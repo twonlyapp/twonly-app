@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT token_id, token, created_at FROM verification_tokens WHERE created_at >= ? AND created_at <= ? AND length(token) = 16 AND proof_version = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "token_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "verification_tokens",
+            "name": "token_id"
+          }
+        }
+      },
+      {
+        "name": "token",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "verification_tokens",
+            "name": "token"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "verification_tokens",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c20daa32eb69a8f171c83c40e3256cfd9bc62bc2f890d7bba9b04220fc9551d4"
+}

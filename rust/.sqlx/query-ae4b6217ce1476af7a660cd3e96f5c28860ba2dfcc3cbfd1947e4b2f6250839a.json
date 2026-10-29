@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO contact_handshake_repairs(contact_id, awaiting_acceptance_since)\n                   VALUES (?, CAST(strftime('%s', 'now') AS INTEGER))\n                   ON CONFLICT(contact_id) DO UPDATE SET\n                       awaiting_acceptance_since = excluded.awaiting_acceptance_since\n                   WHERE contact_handshake_repairs.awaiting_acceptance_since IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "ae4b6217ce1476af7a660cd3e96f5c28860ba2dfcc3cbfd1947e4b2f6250839a"
+}

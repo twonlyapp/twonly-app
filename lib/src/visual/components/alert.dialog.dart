@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -10,21 +8,17 @@ Future<bool> showAlertDialog(
   String? customOk,
   String? customCancel,
 }) async {
-  final completer = Completer<bool>();
-
   final Widget okButton = TextButton(
     child: Text(customOk ?? context.lang.ok),
     onPressed: () {
-      completer.complete(true);
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     },
   );
 
   final Widget cancelButton = TextButton(
     child: Text(customCancel ?? context.lang.cancel),
     onPressed: () {
-      completer.complete(false);
-      Navigator.pop(context);
+      Navigator.pop(context, false);
     },
   );
 
@@ -39,12 +33,11 @@ Future<bool> showAlertDialog(
   );
 
   // show the dialog
-  // ignore: inference_failure_on_function_invocation
-  await showDialog(
-    context: context,
-    builder: (context) {
-      return alert;
-    },
-  );
-  return completer.future;
+  return await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return alert;
+        },
+      ) ??
+      false;
 }

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM app_metadata WHERE key = 'verification_policy_refresh'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "6d49070a485fd920d07c15d18c4bc01a98afc1a69ce2e6126737208a5dcf2b90"
+}

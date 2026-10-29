@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO key_verifications(contact_id, type, verified_by)\n            SELECT ?, ?, ?\n            WHERE NOT EXISTS (\n                SELECT 1 FROM key_verifications\n                WHERE contact_id = ? AND type = ? AND verified_by IS ?\n            )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "fb08ea162ff58551b4b4678aa08c4629261e6ca8a7ae83e0fa8d6cb5be5a3cdc"
+}

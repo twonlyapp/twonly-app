@@ -1,0 +1,398 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT user_id AS \"user_id!\",\n                       username AS \"username!\",\n                       display_name AS \"display_name?\",\n                       nick_name AS \"nick_name?\",\n                       avatar_svg_compressed AS \"avatar_svg_compressed?\",\n                       prefer_photo_avatar AS \"prefer_photo_avatar?\",\n                       sender_profile_counter AS \"sender_profile_counter!\",\n                       accepted AS \"accepted!\",\n                       deleted_by_user AS \"deleted_by_user!\",\n                       requested AS \"requested!\",\n                       requested_by_user AS \"requested_by_user!\",\n                       blocked AS \"blocked!\",\n                       verified AS \"verified!\",\n                       account_deleted AS \"account_deleted!\",\n                       created_at AS \"created_at!\",\n                       signal_version AS \"signal_version!\",\n                       user_discovery_version AS \"user_discovery_version?\",\n                       user_discovery_excluded AS \"user_discovery_excluded!\",\n                       user_discovery_manual_approved AS \"user_discovery_manual_approved?\",\n                       recovery_is_trusted_friend AS \"recovery_is_trusted_friend!\",\n                       recovery_last_heartbeat AS \"recovery_last_heartbeat?\",\n                       recovery_secret_share AS \"recovery_secret_share?\",\n                       recovery_contacts_secret_share AS \"recovery_contacts_secret_share?\",\n                       recovery_contacts_last_heartbeat AS \"recovery_contacts_last_heartbeat?\",\n                       recovery_contacts_threshold AS \"recovery_contacts_threshold?\",\n                       ask_for_friend_promotions AS \"ask_for_friend_promotions?\",\n                       media_send_counter AS \"media_send_counter!\",\n                       media_received_counter AS \"media_received_counter!\",\n                       widget_sharing_allowed AS \"widget_sharing_allowed!\",\n                       widget_sharing_granted AS \"widget_sharing_granted!\",\n                       twonly_score AS \"twonly_score?\",\n                       joined_at AS \"joined_at?\" FROM contacts WHERE\n               accepted = 1 AND blocked = 0 AND account_deleted = 0 AND deleted_by_user = 0\n               AND (\n                   EXISTS (\n                       SELECT 1\n                       FROM valid_key_verifications v\n                       WHERE v.contact_id = contacts.user_id\n                   )\n                   OR EXISTS (\n                       SELECT 1\n                       FROM valid_discovery_verifications r\n                       WHERE r.announced_user_id = contacts.user_id\n                   )\n               )\n            ORDER BY media_send_counter DESC, user_id LIMIT ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "name": "username!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "username"
+          }
+        }
+      },
+      {
+        "name": "display_name?",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "name": "nick_name?",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "nick_name"
+          }
+        }
+      },
+      {
+        "name": "avatar_svg_compressed?",
+        "ordinal": 4,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "avatar_svg_compressed"
+          }
+        }
+      },
+      {
+        "name": "prefer_photo_avatar?",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "prefer_photo_avatar"
+          }
+        }
+      },
+      {
+        "name": "sender_profile_counter!",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "sender_profile_counter"
+          }
+        }
+      },
+      {
+        "name": "accepted!",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "accepted"
+          }
+        }
+      },
+      {
+        "name": "deleted_by_user!",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "deleted_by_user"
+          }
+        }
+      },
+      {
+        "name": "requested!",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "requested"
+          }
+        }
+      },
+      {
+        "name": "requested_by_user!",
+        "ordinal": 10,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "requested_by_user"
+          }
+        }
+      },
+      {
+        "name": "blocked!",
+        "ordinal": 11,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "blocked"
+          }
+        }
+      },
+      {
+        "name": "verified!",
+        "ordinal": 12,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "verified"
+          }
+        }
+      },
+      {
+        "name": "account_deleted!",
+        "ordinal": 13,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "account_deleted"
+          }
+        }
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 14,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "signal_version!",
+        "ordinal": 15,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "signal_version"
+          }
+        }
+      },
+      {
+        "name": "user_discovery_version?",
+        "ordinal": 16,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "user_discovery_version"
+          }
+        }
+      },
+      {
+        "name": "user_discovery_excluded!",
+        "ordinal": 17,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "user_discovery_excluded"
+          }
+        }
+      },
+      {
+        "name": "user_discovery_manual_approved?",
+        "ordinal": 18,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "user_discovery_manual_approved"
+          }
+        }
+      },
+      {
+        "name": "recovery_is_trusted_friend!",
+        "ordinal": 19,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "recovery_is_trusted_friend"
+          }
+        }
+      },
+      {
+        "name": "recovery_last_heartbeat?",
+        "ordinal": 20,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "recovery_last_heartbeat"
+          }
+        }
+      },
+      {
+        "name": "recovery_secret_share?",
+        "ordinal": 21,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "recovery_secret_share"
+          }
+        }
+      },
+      {
+        "name": "recovery_contacts_secret_share?",
+        "ordinal": 22,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "recovery_contacts_secret_share"
+          }
+        }
+      },
+      {
+        "name": "recovery_contacts_last_heartbeat?",
+        "ordinal": 23,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "recovery_contacts_last_heartbeat"
+          }
+        }
+      },
+      {
+        "name": "recovery_contacts_threshold?",
+        "ordinal": 24,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "recovery_contacts_threshold"
+          }
+        }
+      },
+      {
+        "name": "ask_for_friend_promotions?",
+        "ordinal": 25,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "ask_for_friend_promotions"
+          }
+        }
+      },
+      {
+        "name": "media_send_counter!",
+        "ordinal": 26,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "media_send_counter"
+          }
+        }
+      },
+      {
+        "name": "media_received_counter!",
+        "ordinal": 27,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "media_received_counter"
+          }
+        }
+      },
+      {
+        "name": "widget_sharing_allowed!",
+        "ordinal": 28,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "widget_sharing_allowed"
+          }
+        }
+      },
+      {
+        "name": "widget_sharing_granted!",
+        "ordinal": 29,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "widget_sharing_granted"
+          }
+        }
+      },
+      {
+        "name": "twonly_score?",
+        "ordinal": 30,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "twonly_score"
+          }
+        }
+      },
+      {
+        "name": "joined_at?",
+        "ordinal": 31,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "joined_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "b31f1232cb52c199fd89c9948fe27c6ba18f7de4af314fbb4c32d85c0611caf3"
+}

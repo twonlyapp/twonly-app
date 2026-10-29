@@ -821,7 +821,7 @@ impl MediaUploadService {
         }
 
         sqlx::query!(
-            r#"UPDATE receipts SET mark_for_retry = NULL, mark_for_retry_after_accepted = NULL
+            r#"UPDATE receipts SET mark_for_retry = NULL
                WHERE contact_id = ? AND message_id = ?"#,
             contact_id,
             message_id
@@ -882,9 +882,9 @@ impl MediaUploadService {
                       mark_for_retry_after_accepted, ack_by_server_at, retry_count, last_retry
                FROM receipts
                WHERE will_be_retried_by_media_upload = 1
-                 AND (mark_for_retry < ? OR mark_for_retry_after_accepted < ?)"#,
+                 AND mark_for_retry_after_accepted IS NULL
+                 AND mark_for_retry < ?"#,
             now - RETRY_MARK_GRACE_SECONDS,
-            now - RETRY_MARK_GRACE_SECONDS
         )
         .fetch_all(&database.pool)
         .await?;
@@ -978,18 +978,9 @@ impl MediaUploadService {
             return Ok(());
         }
 
-        // Nothing can be delivered to a contact who has not accepted yet.
+        // The peer's refusal is stronger than our local friendship flag.
         if receipt.mark_for_retry_after_accepted.is_some() {
-            let accepted = sqlx::query_scalar!(
-                "SELECT accepted FROM contacts WHERE user_id = ?",
-                receipt.contact_id
-            )
-            .fetch_optional(&database.pool)
-            .await?;
-
-            if accepted.unwrap_or(0) == 0 {
-                return Ok(());
-            }
+            return Ok(());
         }
 
         if receipt.ack_by_server_at.is_some() {
@@ -1013,12 +1004,9 @@ impl MediaUploadService {
 
         let Some(media_id) = media_id else {
             // Neither the message nor its media exist any more.
-            sqlx::query!(
-                "DELETE FROM messages WHERE message_id = ?",
-                &message_id
-            )
-            .execute(&database.pool)
-            .await?;
+            sqlx::query!("DELETE FROM messages WHERE message_id = ?", &message_id)
+                .execute(&database.pool)
+                .await?;
 
             sqlx::query!(
                 "DELETE FROM receipts WHERE receipt_id = ?",
@@ -1307,12 +1295,9 @@ impl MediaUploadService {
 
         let database = self.ctx.app_db.read().await.clone();
 
-        sqlx::query!(
-            "DELETE FROM media_files WHERE media_id = ?",
-            media_id
-        )
-        .execute(&database.pool)
-        .await?;
+        sqlx::query!("DELETE FROM media_files WHERE media_id = ?", media_id)
+            .execute(&database.pool)
+            .await?;
 
         Ok(())
     }
@@ -1710,12 +1695,9 @@ impl MediaUploadService {
 
         MediaFileService::new(&self.ctx).remove_files(media_id, &media.media_type)?;
 
-        sqlx::query!(
-            "DELETE FROM media_files WHERE media_id = ?",
-            media_id
-        )
-        .execute(&database.pool)
-        .await?;
+        sqlx::query!("DELETE FROM media_files WHERE media_id = ?", media_id)
+            .execute(&database.pool)
+            .await?;
 
         Ok(())
     }
@@ -1753,12 +1735,9 @@ impl MediaUploadService {
         let database = self.ctx.app_db.read().await.clone();
 
         Ok(
-            sqlx::query_scalar!(
-                "SELECT COUNT(*) FROM messages WHERE media_id = ?",
-                media_id
-            )
-            .fetch_one(&database.pool)
-            .await?,
+            sqlx::query_scalar!("SELECT COUNT(*) FROM messages WHERE media_id = ?", media_id)
+                .fetch_one(&database.pool)
+                .await?,
         )
     }
 
