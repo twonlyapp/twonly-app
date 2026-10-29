@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:twonly/core/bridge/database/webxdc.dart' as rust_webxdc;
 import 'package:twonly/core/bridge/webxdc.dart' as rust_webxdc;
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/database/app/webxdc/table.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
@@ -33,15 +34,43 @@ class WebxdcService {
 
   static String _appKey(String appId, int version) => '$appId:$version';
 
+  /// Whether the cached catalog offered anything when it was last read, keyed
+  /// by `isDirectChat`. Which apps a chat is offered depends only on whether
+  /// it is a direct chat, so one answer covers every chat of that kind.
+  static final Map<bool, bool> _offersApps = {};
+
+  /// How long a fetched catalog is trusted before [refreshCatalogIfStale]
+  /// asks the server again.
+  static const _catalogMaxAge = Duration(hours: 1);
+  static DateTime? _catalogRefreshedAt;
+  static Future<bool>? _catalogRefresh;
+
   /// Refreshes the store listing from the API. Metadata only, no bundles.
-  static Future<bool> refreshCatalog() async {
+  ///
+  /// Callers that overlap share one request.
+  static Future<bool> refreshCatalog() => _catalogRefresh ??= _refreshCatalog()
+      .whenComplete(() => _catalogRefresh = null);
+
+  static Future<bool> _refreshCatalog() async {
     try {
       await rust_webxdc.refreshCatalog();
+      _catalogRefreshedAt = DateTime.now();
       return true;
     } catch (error) {
       Log.warn('refreshing the webxdc catalog failed: $error');
       return false;
     }
+  }
+
+  /// [refreshCatalog], unless the last successful one is recent. Returns
+  /// whether the catalog was fetched.
+  static Future<bool> refreshCatalogIfStale() async {
+    final refreshedAt = _catalogRefreshedAt;
+    if (refreshedAt != null &&
+        DateTime.now().difference(refreshedAt) < _catalogMaxAge) {
+      return false;
+    }
+    return refreshCatalog();
   }
 
   /// What the store currently offers: newest published version of each app.
@@ -50,16 +79,31 @@ class WebxdcService {
   /// cached with all its translations, so choosing one costs nothing and is
   /// never sent anywhere.
   static Future<List<rust_webxdc.WebxdcStoreApp>> catalog(
-    String groupId,
+    Group group,
     List<String> languages,
   ) async {
     try {
-      return await rust_webxdc.catalog(groupId: groupId, languages: languages);
+      final apps = await rust_webxdc.catalog(
+        groupId: group.groupId,
+        languages: languages,
+      );
+      _offersApps[group.isDirectChat] = apps.isNotEmpty;
+      return apps;
     } catch (error) {
       Log.warn('reading the webxdc catalog failed: $error');
       return [];
     }
   }
+
+  /// Whether the cached catalog offers this chat any app. Local only; see
+  /// [refreshCatalogIfStale] for bringing the cache up to date.
+  static Future<bool> offersApps(Group group) async =>
+      (await catalog(group, const [])).isNotEmpty;
+
+  /// [offersApps] as it was last read, without touching the database, so the
+  /// chat's + panel opens with the right entries. Null until a chat of this
+  /// kind has read the catalog in this process.
+  static bool? cachedOffersApps(Group group) => _offersApps[group.isDirectChat];
 
   static Future<List<rust_webxdc.WebxdcOneTimeInstance>> oneTimeInstances(
     String groupId,
