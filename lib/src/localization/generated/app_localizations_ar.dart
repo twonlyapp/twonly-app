@@ -1786,6 +1786,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'عرض معاينة الصورة عند اختيار المستلمين';
 
   @override
+  String get alwaysShowStories => 'إظهار القصص دائمًا';
+
+  @override
+  String get alwaysShowStoriesSubtitle =>
+      'تبقى القصص أعلى محادثاتك حتى بعد مشاهدتها.';
+
+  @override
   String verifiedPublicKey(Object username) {
     return 'تم التحقق من هوية $username بنجاح.';
   }
@@ -3200,6 +3207,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get storyDeleteFailed => 'تعذّر الحذف. حاول مرة أخرى بعد قليل.';
+
+  @override
+  String get storyShowAgain => 'عرض مجددًا';
 
   @override
   String get shareImageStory => 'قصة';

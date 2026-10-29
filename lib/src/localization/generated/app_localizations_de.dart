@@ -1747,6 +1747,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bildvorschau bei der Auswahl von Empfängern anzeigen';
 
   @override
+  String get alwaysShowStories => 'Stories immer anzeigen';
+
+  @override
+  String get alwaysShowStoriesSubtitle =>
+      'Stories bleiben über deinen Chats, auch nachdem du sie angesehen hast.';
+
+  @override
   String verifiedPublicKey(Object username) {
     return 'Die Identität von $username wurde erfolgreich überprüft.';
   }
@@ -3151,6 +3158,9 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get storyDeleteFailed =>
       'Konnte nicht gelöscht werden. Versuche es gleich noch einmal.';
+
+  @override
+  String get storyShowAgain => 'Erneut ansehen';
 
   @override
   String get shareImageStory => 'Story';

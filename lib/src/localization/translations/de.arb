@@ -581,6 +581,8 @@
   "verificationOwnProfile": "Du hast deinen eigenen Verifizierungscode gescannt.",
   "startWithCameraOpen": "Mit geöffneter Kamera starten",
   "showImagePreviewWhenSending": "Bildvorschau bei der Auswahl von Empfängern anzeigen",
+  "alwaysShowStories": "Stories immer anzeigen",
+  "alwaysShowStoriesSubtitle": "Stories bleiben über deinen Chats, auch nachdem du sie angesehen hast.",
   "verifiedPublicKey": "Die Identität von {username} wurde erfolgreich überprüft.",
   "memoriesAYearAgo": "Vor einem Jahr",
   "memoriesXYearsAgo": "Vor {years} Jahren",
@@ -1199,6 +1201,7 @@
   "storyDeleteBody": "Dadurch wird sie aus deiner Story entfernt.",
   "storyDelete": "Löschen",
   "storyDeleteFailed": "Konnte nicht gelöscht werden. Versuche es gleich noch einmal.",
+  "storyShowAgain": "Erneut ansehen",
   "shareImageStory": "Story",
   "shareImageStoryAudience": "{count, plural, =1{Erreicht 1 Kontakt} other{Erreicht {count} Kontakte}}",
   "@shareImageStoryAudience": {

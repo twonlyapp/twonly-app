@@ -314,6 +314,11 @@ pub struct UserConfig {
     #[serde(default = "defaults::true_value")]
     #[frb(non_final)]
     pub story_notifications: bool,
+    /// Keeps a contact's story above the chats after all of it was seen.
+    /// Off by default, so only stories with something new are shown there.
+    #[serde(default)]
+    #[frb(non_final)]
+    pub always_show_stories: bool,
     #[serde(default = "defaults::true_value")]
     #[frb(non_final)]
     pub show_restore_flame: bool,

@@ -6,40 +6,53 @@ import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/story_preview.comp.dart';
 
-/// A contact and the first unseen item in their active story.
+/// A contact and the item their bubble opens: the first unseen one in their
+/// active story, or its first item once all of it was seen.
 class StoryBubbleItem {
   const StoryBubbleItem({required this.story, required this.label});
 
   final StoryItem story;
   final String label;
+
+  /// Whether the contact's whole story was seen.
+  bool get seen => story.seen;
 }
 
-/// Groups active, unseen story items into one bubble per contact. The bubble
-/// opens the oldest unseen item, while contacts with newer activity come first.
+/// Groups active story items into one bubble per contact, leaving out the
+/// contacts whose story was seen completely unless [includeSeen]. A bubble
+/// opens the oldest unseen item. Contacts with something unseen come first,
+/// and within that those with newer activity.
 List<StoryBubbleItem> buildStoryBubbleItems({
   required Iterable<StoryItem> stories,
   required String Function(StoryItem story) labelFor,
+  bool includeSeen = false,
   DateTime? now,
 }) {
   final currentTime = now ?? clock.now();
-  final unseenBySender = <int, List<StoryItem>>{};
+  final bySender = <int, List<StoryItem>>{};
   for (final story in stories) {
-    if (!story.seen && story.isActiveAt(currentTime)) {
-      unseenBySender.putIfAbsent(story.senderId, () => []).add(story);
+    if ((includeSeen || !story.seen) && story.isActiveAt(currentTime)) {
+      bySender.putIfAbsent(story.senderId, () => []).add(story);
     }
   }
-  for (final stories in unseenBySender.values) {
+  for (final stories in bySender.values) {
     stories.sort((a, b) => a.postedAt.compareTo(b.postedAt));
   }
-  final groupedStories = unseenBySender.values.toList()
-    ..sort((a, b) => b.last.postedAt.compareTo(a.last.postedAt));
+  StoryItem opens(List<StoryItem> stories) =>
+      stories.firstWhere((story) => !story.seen, orElse: () => stories.first);
+  final groupedStories = bySender.values.toList()
+    ..sort((a, b) {
+      final aSeen = opens(a).seen;
+      if (aSeen != opens(b).seen) return aSeen ? 1 : -1;
+      return b.last.postedAt.compareTo(a.last.postedAt);
+    });
   return [
-    for (final stories in groupedStories)
-      StoryBubbleItem(story: stories.first, label: labelFor(stories.first)),
+    for (final story in groupedStories.map(opens))
+      StoryBubbleItem(story: story, label: labelFor(story)),
   ];
 }
 
-/// The horizontally scrolling row of unseen stories at the top of the chats.
+/// The horizontally scrolling row of stories at the top of the chats.
 class StoryBubbleStrip extends StatelessWidget {
   const StoryBubbleStrip({
     required this.items,
@@ -95,7 +108,8 @@ class StoryBubbleStrip extends StatelessWidget {
   }
 }
 
-/// A circular story preview whose ring drains over the story's lifetime.
+/// A circular story preview whose ring drains over the story's lifetime,
+/// drawn softer once all of it was seen.
 class _StoryBubble extends StatefulWidget {
   const _StoryBubble({required this.story});
 
@@ -137,13 +151,16 @@ class _StoryBubbleState extends State<_StoryBubble> {
             width: 58,
             height: 58,
             circle: true,
+            faded: widget.story.seen,
           ),
           Positioned.fill(
             child: CircularProgressIndicator(
               value: progress,
               strokeWidth: 1.5,
               strokeCap: StrokeCap.round,
-              color: context.color.primary,
+              color: widget.story.seen
+                  ? context.color.outline
+                  : context.color.primary,
               backgroundColor: context.color.surfaceContainerHighest,
             ),
           ),

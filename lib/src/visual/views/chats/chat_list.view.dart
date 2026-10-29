@@ -88,6 +88,7 @@ class _ChatListViewState extends State<ChatListView>
   StreamSubscription<List<(String, ContactGroup)>>? _chatContactGroupsSub;
   StreamSubscription<List<StoryItem>>? _storiesSub;
   StreamSubscription<List<OwnStoryItem>>? _ownStoriesSub;
+  StreamSubscription<void>? _alwaysShowStoriesSub;
   final StoryExpiryTimer _ownStoryExpiry = StoryExpiryTimer();
   final StoryExpiryTimer _receivedStoryExpiry = StoryExpiryTimer();
   Timer? _typingUpdateTimer;
@@ -107,6 +108,9 @@ class _ChatListViewState extends State<ChatListView>
   Map<String, List<ContactGroup>> _contactGroupsByGroup = {};
   Map<String, List<StoryItem>> _storiesByGroup = {};
   List<OwnStoryItem> _ownStories = [];
+
+  /// Keeps stories that were seen completely in the strip, see Appearance.
+  bool _alwaysShowStories = false;
 
   final ValueNotifier<bool> _hasContacts = ValueNotifier(false);
   bool _loading = true;
@@ -488,6 +492,12 @@ class _ChatListViewState extends State<ChatListView>
           setState(() => _storiesByGroup = byGroup);
           _scheduleReceivedStoryExpiry();
         });
+    _alwaysShowStories = userService.currentUser.alwaysShowStories;
+    _alwaysShowStoriesSub = userService.onUserUpdated.listen((_) {
+      final next = userService.currentUser.alwaysShowStories;
+      if (!mounted || !_watching || next == _alwaysShowStories) return;
+      setState(() => _alwaysShowStories = next);
+    });
     _ownStoriesSub =
         (() {
           final cutoff =
@@ -525,6 +535,7 @@ class _ChatListViewState extends State<ChatListView>
     };
     return buildStoryBubbleItems(
       stories: _storiesByGroup.values.expand((items) => items),
+      includeSeen: _alwaysShowStories,
       labelFor: (story) => switch (contactsById[story.senderId]) {
         final ChatListContact contact => getChatListContactDisplayName(contact),
         null =>
@@ -552,14 +563,15 @@ class _ChatListViewState extends State<ChatListView>
     );
   }
 
-  /// Removes an unseen story bubble at its exact 24-hour boundary even if
-  /// the database stream is otherwise quiet.
+  /// Removes a story bubble at its exact 24-hour boundary even if the
+  /// database stream is otherwise quiet. Seen items count too, for when
+  /// [_alwaysShowStories] keeps them in the strip.
   void _scheduleReceivedStoryExpiry() {
     final now = clock.now();
     final active =
         _storiesByGroup.values
             .expand((items) => items)
-            .where((item) => !item.seen && item.isActiveAt(now))
+            .where((item) => item.isActiveAt(now))
             .toList()
           ..sort((a, b) => a.postedAt.compareTo(b.postedAt));
     final oldest = active.firstOrNull;
@@ -628,6 +640,7 @@ class _ChatListViewState extends State<ChatListView>
     _chatContactGroupsSub?.cancel();
     _storiesSub?.cancel();
     _ownStoriesSub?.cancel();
+    _alwaysShowStoriesSub?.cancel();
     _ownStoryExpiry.cancel();
     _receivedStoryExpiry.cancel();
   }
