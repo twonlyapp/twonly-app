@@ -7,10 +7,16 @@ import 'package:twonly/src/services/home_widget.service.dart';
 
 class _WidgetApi implements RustLibApi {
   Future<void> Function()? sync;
+  Future<void> Function()? purge;
 
   @override
   Future<void> crateBridgeApiRustApiSyncWidgetPermissions() async {
     await sync?.call();
+  }
+
+  @override
+  Future<void> crateBridgeApiRustApiPurgeWidgetMedia() async {
+    await purge?.call();
   }
 
   @override
@@ -27,7 +33,9 @@ void main() {
   tearDownAll(RustLib.dispose);
 
   setUp(() {
-    api.sync = null;
+    api
+      ..sync = null
+      ..purge = null;
     calls.clear();
     HomeWidgetService.invalidate();
     binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
@@ -46,6 +54,31 @@ void main() {
     'attempted to acquire a connection on a closed pool',
     'retry when active',
   ]) {
+    test(
+      'in-flight cleanup tolerates $message and retries on resume',
+      () async {
+        final started = Completer<void>();
+        final pending = Completer<void>();
+        api.purge = () {
+          started.complete();
+          return pending.future;
+        };
+
+        unawaited(HomeWidgetService.pruneSupersededMedia());
+        await started.future;
+        pending.completeError(Exception(message));
+        await Future<void>.delayed(Duration.zero);
+        expect(calls, isNot(contains('reloadWidgets')));
+
+        api.purge = null;
+        await HomeWidgetService.pruneSupersededMedia();
+        expect(
+          calls.where((method) => method == 'reloadWidgets'),
+          hasLength(1),
+        );
+      },
+    );
+
     test('in-flight sync tolerates $message and succeeds on resume', () async {
       final started = Completer<void>();
       final pending = Completer<void>();
@@ -67,6 +100,17 @@ void main() {
       expect(calls.where((method) => method == 'reloadWidgets'), hasLength(1));
     });
   }
+
+  test('unexpected cleanup errors remain visible to the caller', () async {
+    final error = StateError('widget database query failed');
+    api.purge = () async => throw error;
+
+    await expectLater(
+      HomeWidgetService.pruneSupersededMedia(),
+      throwsA(same(error)),
+    );
+    expect(calls, isNot(contains('reloadWidgets')));
+  });
 
   test('unexpected sync errors remain visible to the caller', () async {
     final error = StateError('widget database query failed');

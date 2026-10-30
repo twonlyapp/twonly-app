@@ -21,6 +21,7 @@ import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/intent/links.intent.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
@@ -96,6 +97,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     refreshDatabaseSubscriptions();
     unawaited(NativeNotificationService.clearBadge());
     if (userService.isUserCreated) {
+      unawaited(UserService.retryPendingUpdates());
+      unawaited(HomeWidgetService.pruneSupersededMedia());
       unawaited(HomeWidgetService.syncPermissions());
     }
   }
