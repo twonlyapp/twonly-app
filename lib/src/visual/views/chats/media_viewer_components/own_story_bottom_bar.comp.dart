@@ -4,7 +4,6 @@ import 'package:twonly/core/bridge/database/stories.dart' as rust_stories;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
-import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_icon_button.element.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_viewers.bottom_sheet.dart';
 
@@ -21,14 +20,6 @@ class OwnStoryBottomBar extends StatelessWidget {
 
   /// Called once the item is gone, so the viewer can move on.
   final Future<void> Function() onDeleted;
-
-  Future<void> _showViewers(BuildContext context, MediaFile media) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: context.appColor(AppColor.mediaBackground),
-      builder: (context) => StoryViewersBottomSheet(mediaFile: media),
-    );
-  }
 
   Future<void> _delete(BuildContext context, MediaFile media) async {
     if (await confirmAndDeleteStoryItem(context, media)) await onDeleted();
@@ -53,7 +44,9 @@ class OwnStoryBottomBar extends StatelessWidget {
                 .length;
             return MyIconButton(
               variant: MyIconButtonVariant.secondary,
-              onPressed: () => _showViewers(context, media),
+              // The item stays on screen behind the list, so showing it
+              // again only needs the list to close, which it does itself.
+              onPressed: () => showStoryViewers(context, media),
               icon: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

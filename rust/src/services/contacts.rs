@@ -250,7 +250,16 @@ impl ContactService {
 
         Group::create_direct_chat(&self.ctx, &mut transaction, contact).await?;
 
+        crate::api::messages::incoming::errors::release_after_contact_acceptance(
+            &mut transaction,
+            contact_id,
+        )
+        .await?;
+
         transaction.commit().await?;
+
+        // What they sent while waiting for this is parked on this device.
+        crate::api::messages::incoming::spawn_parked_message_retry(&self.ctx);
 
         self.send_contact_request(
             contact_id,

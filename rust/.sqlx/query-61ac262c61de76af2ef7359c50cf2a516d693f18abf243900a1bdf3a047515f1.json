@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT DISTINCT contact_id FROM user_discovery_own_promotions WHERE promotion != X''",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_own_promotions",
+            "name": "contact_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "61ac262c61de76af2ef7359c50cf2a516d693f18abf243900a1bdf3a047515f1"
+}

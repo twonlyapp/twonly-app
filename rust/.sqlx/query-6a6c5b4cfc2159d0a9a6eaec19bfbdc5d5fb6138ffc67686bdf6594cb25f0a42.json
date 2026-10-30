@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(\n                SELECT 1 FROM messages m\n                JOIN group_members gm ON gm.group_id = m.group_id\n                WHERE m.message_id = ? AND gm.contact_id = ?\n                  AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')\n            ) AS \"member!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "member!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6a6c5b4cfc2159d0a9a6eaec19bfbdc5d5fb6138ffc67686bdf6594cb25f0a42"
+}

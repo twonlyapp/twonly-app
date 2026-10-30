@@ -50,6 +50,10 @@ pub(crate) async fn handle_key_verification_proof(
 
     let own_user_id = ctx.user_id().await?;
 
+    if from_user_id == own_user_id {
+        return Ok(());
+    }
+
     let mut signed_data = Vec::with_capacity(16 + own_public_key.len() + contact_public_key.len());
 
     signed_data.extend_from_slice(&own_user_id.to_le_bytes());
@@ -63,27 +67,27 @@ pub(crate) async fn handle_key_verification_proof(
     let now = chrono::Utc::now().timestamp();
 
     let tokens = sqlx::query!(
-        "SELECT token, created_at FROM verification_tokens WHERE created_at >= ? AND created_at \
-         <= ?",
+        "SELECT token_id, token, created_at FROM verification_tokens WHERE created_at >= ? AND created_at \
+         <= ? AND length(token) = 16 AND proof_version = 1",
         now - 60 * 60,
         now
     )
-    .map(|row| (row.token, row.created_at))
+    .map(|row| (row.token_id, row.token, row.created_at))
     .fetch_all(&mut **transaction)
     .await?;
 
     let verified_at = tokens
         .into_iter()
-        .filter(|(token, _)| {
+        .filter(|(_, token, _)| {
             Hmac::<Sha256>::new_from_slice(token).is_ok_and(|mut mac| {
                 mac.update(&signed_data);
                 mac.verify_slice(&proof.calculated_mac).is_ok()
             })
         })
-        .map(|(_, created_at)| created_at)
+        .map(|(token_id, _, created_at)| (created_at, token_id))
         .max();
 
-    let Some(token_created_at) = verified_at else {
+    let Some((token_created_at, token_id)) = verified_at else {
         tracing::warn!(
             from_user_id,
             "verification proof did not match a recent token"
@@ -91,6 +95,20 @@ pub(crate) async fn handle_key_verification_proof(
 
         return Ok(());
     };
+
+    let consumed = sqlx::query!(
+        r#"INSERT INTO verification_token_uses(token_id, contact_id) VALUES (?, ?)
+           ON CONFLICT DO NOTHING"#,
+        token_id,
+        from_user_id,
+    )
+    .execute(&mut **transaction)
+    .await?
+    .rows_affected();
+
+    if consumed == 0 {
+        return Ok(());
+    }
 
     accept_recent_qr_contact(ctx, transaction, from_user_id, token_created_at, now).await?;
 
@@ -149,6 +167,8 @@ async fn accept_recent_qr_contact(
         .await?;
 
     Group::create_direct_chat(ctx, transaction, contact).await?;
+
+    super::errors::release_after_contact_acceptance(transaction, from_user_id).await?;
 
     queue_encrypted_content(
         transaction,
@@ -212,14 +232,15 @@ mod tests {
 
         let db = ctx.app_db.read().await.clone();
         // A valid older proof still verifies identity, but cannot accept a request.
-        for (age, blocked, valid, accepts, verifies) in [
-            (0, false, true, true, true),
-            (299, false, true, true, true),
-            (301, false, true, false, true),
-            (3601, false, true, false, false),
-            (-60, false, true, false, false),
-            (0, true, true, false, true),
-            (0, false, false, false, false),
+        for (age, blocked, valid, proof_version, accepts, verifies) in [
+            (0, false, true, 1, true, true),
+            (299, false, true, 1, true, true),
+            (301, false, true, 1, false, true),
+            (3601, false, true, 1, false, false),
+            (-60, false, true, 1, false, false),
+            (0, true, true, 1, false, true),
+            (0, false, false, 1, false, false),
+            (0, false, true, 0, false, false),
         ] {
             let mut t = db.pool.begin().await?;
             sqlx::query(
@@ -229,9 +250,10 @@ mod tests {
             .bind(blocked)
             .execute(&mut *t)
             .await?;
-            sqlx::query("INSERT INTO verification_tokens(token, created_at) VALUES (?, ?)")
+            sqlx::query("INSERT INTO verification_tokens(token, created_at, proof_version) VALUES (?, ?, ?)")
                 .bind(&token)
                 .bind(chrono::Utc::now().timestamp() - age)
+                .bind(proof_version)
                 .execute(&mut *t)
                 .await?;
 
@@ -262,7 +284,21 @@ mod tests {
 
             if accepts {
                 // Replaying the proof must not queue another acceptance.
+                handle_key_verification_proof(&ctx, &mut t, 7, incoming_proof.clone()).await?;
+                let count: i64 = sqlx::query_scalar(
+                    "SELECT COUNT(*) FROM key_verifications WHERE contact_id = 7",
+                )
+                .fetch_one(&mut *t)
+                .await?;
+                assert_eq!(count, 1, "replaying must not duplicate evidence");
+
+                crate::database::app::key_verifications::writes::delete(&mut t, 7, None).await?;
                 handle_key_verification_proof(&ctx, &mut t, 7, incoming_proof).await?;
+                assert!(
+                    !crate::database::app::key_verifications::queries::is_verified(&mut t, 7)
+                        .await?,
+                    "replaying must not undo revocation"
+                );
             }
             let receipts: Vec<Vec<u8>> =
                 sqlx::query_scalar("SELECT message FROM receipts WHERE contact_id = 7")

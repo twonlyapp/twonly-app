@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE receipts SET mark_for_retry_after_accepted = CAST(strftime('%s', 'now') AS INTEGER) WHERE receipt_id = ? AND contact_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "24a20dd28cfeb56b51791834c75ad1ef95a4cea8f8526cd8353e5e9661a6fd6c"
+}

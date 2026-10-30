@@ -105,7 +105,7 @@
     // What this host understands beyond the spec. Apps ship through the store
     // to every twonly version at once, and an older one refuses a whole update
     // over a `notify` value it cannot read, so an app checks here first.
-    twonly: Object.freeze({ gameNotifications: true }),
+    twonly: Object.freeze({ gameNotifications: true, gameChatStatuses: true }),
 
     getMembers: function () {
       return call('getMembers');
@@ -119,6 +119,7 @@
         summary: update.summary,
         document: update.document,
         notify: update.notify,
+        gameStatus: update.gameStatus,
         descr: descr,
       });
     },

@@ -12,7 +12,6 @@ import 'package:twonly/core/database/app/key_verifications/table.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
-import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
@@ -38,7 +37,7 @@ class _InChatGroupOverviewState extends State<InChatGroupOverview>
   StreamSubscription<dynamic>? _verificationSub;
   StreamSubscription<List<(Contact, DateTime)>>? _transferredTrustSub;
   StreamSubscription<int>? _unverifiedCountSub;
-  bool _isVerified = true;
+  bool _isVerified = false;
   int _unverifiedCount = 0;
   List<(KeyVerification, Contact?)> _verifications = [];
   List<(Contact, DateTime)> _transferredTrust = [];
@@ -52,10 +51,7 @@ class _InChatGroupOverviewState extends State<InChatGroupOverview>
   void _updateVerificationState() {
     if (mounted) {
       setState(() {
-        _isVerified =
-            _directContact?.verified == true ||
-            _verifications.isNotEmpty ||
-            _transferredTrust.isNotEmpty;
+        _isVerified = _verifications.isNotEmpty || _transferredTrust.isNotEmpty;
       });
     }
   }

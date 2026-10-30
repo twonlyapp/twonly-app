@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(\n                SELECT 1 FROM messages m\n                JOIN group_members gm ON gm.group_id = m.group_id\n                WHERE m.message_id = ? AND m.sender_id IS NULL AND gm.contact_id = ?\n            ) AS \"sent!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "sent!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "aee7d892985f54c96a1f4afdbb78835c4fa26dbf4274583eb8a5251e847c716a"
+}

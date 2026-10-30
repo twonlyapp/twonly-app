@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE receipts SET mark_for_retry_after_accepted = (\n                   SELECT awaiting_acceptance_since FROM contact_handshake_repairs\n                   WHERE contact_id = ?\n               ) WHERE receipt_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "6f795c38a842cec2416e0aa2162ebe0096bd07bbe04e455cda0aa1f7889b5e74"
+}

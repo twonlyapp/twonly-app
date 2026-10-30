@@ -104,6 +104,58 @@ void main() {
     expect(items.map((item) => item.label), ['Contact 2', 'Contact 1']);
   });
 
+  test('seen stories stay, after the unseen ones, when asked to', () {
+    final now = DateTime(2026, 10, 6, 12);
+    final items = buildStoryBubbleItems(
+      stories: [
+        story(
+          senderId: 1,
+          messageId: 'unseen',
+          postedAt: now.subtract(const Duration(hours: 2)),
+        ),
+        story(
+          senderId: 2,
+          messageId: 'partly-seen',
+          postedAt: now.subtract(const Duration(hours: 3)),
+          seen: true,
+        ),
+        story(
+          senderId: 2,
+          messageId: 'partly-unseen',
+          postedAt: now.subtract(const Duration(hours: 1)),
+        ),
+        story(
+          senderId: 3,
+          messageId: 'seen-old',
+          postedAt: now.subtract(const Duration(hours: 4)),
+          seen: true,
+        ),
+        story(
+          senderId: 3,
+          messageId: 'seen-new',
+          postedAt: now.subtract(const Duration(minutes: 5)),
+          seen: true,
+        ),
+        story(
+          senderId: 4,
+          messageId: 'seen-expired',
+          postedAt: now.subtract(const Duration(hours: 25)),
+          seen: true,
+        ),
+      ],
+      labelFor: (story) => 'Contact ${story.senderId}',
+      includeSeen: true,
+      now: now,
+    );
+
+    expect(items.map((item) => item.story.message.messageId), [
+      'partly-unseen',
+      'unseen',
+      'seen-old',
+    ]);
+    expect(items.map((item) => item.seen), [false, false, true]);
+  });
+
   testWidgets('shows a circular preview with remaining-time progress', (
     tester,
   ) async {

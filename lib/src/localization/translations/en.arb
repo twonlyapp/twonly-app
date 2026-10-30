@@ -26,6 +26,8 @@
   "shareImagedEditorShareWith": "Share with",
   "shareImagedEditorSaveImage": "Save",
   "shareImagedEditorSavedImage": "Saved",
+  "imageLoadFailed": "Could not load this image.",
+  "retry": "Try again",
   "shareImageSearchAllContacts": "Search all contacts",
   "startNewChatSearchHint": "Name, username or groupname",
   "shareImagedSelectAll": "Select all",
@@ -591,6 +593,8 @@
   "verificationOwnProfile": "You scanned your own verification code.",
   "startWithCameraOpen": "Start with camera open",
   "showImagePreviewWhenSending": "Display image preview when selecting recipients",
+  "alwaysShowStories": "Always show stories",
+  "alwaysShowStoriesSubtitle": "Keep stories above your chats after you've watched them.",
   "verifiedPublicKey": "The identity of {username} has been successfully verified.",
   "memoriesAYearAgo": "One year ago",
   "memoriesXYearsAgo": "{years} years ago",
@@ -1216,6 +1220,7 @@
   "storyDeleteBody": "This removes it from your story.",
   "storyDelete": "Delete",
   "storyDeleteFailed": "Could not delete it. Try again in a moment.",
+  "storyShowAgain": "Show again",
   "shareImageStory": "Story",
   "shareImageStoryAudience": "{count, plural, =1{Reaches 1 contact} other{Reaches {count} contacts}}",
   "@shareImageStoryAudience": {
@@ -1309,5 +1314,8 @@
   "notificationGameFallbackName": "a game",
   "chatGameTurn": "It is your turn.",
   "chatGameWon": "You have won.",
-  "chatGameLost": "You have lost."
+  "chatGameLost": "You have lost.",
+  "chatGamePlayed": "You have played.",
+  "chatGameOtherPlayed": "Played.",
+  "chatGameDraw": "It is a draw."
 }

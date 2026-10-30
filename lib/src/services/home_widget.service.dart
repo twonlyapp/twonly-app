@@ -143,8 +143,13 @@ class HomeWidgetService {
   /// is deleted by the next one for its contact groups, during the refresh that
   /// publishes that successor.
   static Future<void> pruneSupersededMedia() async {
-    await RustApi.purgeWidgetMedia();
-    await refresh();
+    try {
+      await RustApi.purgeWidgetMedia();
+      await refresh();
+    } catch (error) {
+      if (!isBackgroundCancellation(error)) rethrow;
+      Log.info('Widget media cleanup deferred until the app resumes');
+    }
   }
 
   /// Republishes the manifest so the widgets see the current contact groups.

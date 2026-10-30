@@ -1,0 +1,33 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT c.accepted != 0 OR EXISTS (\n                       SELECT 1 FROM group_members m JOIN groups g ON g.group_id = m.group_id\n                       WHERE m.contact_id = c.user_id AND g.is_direct_chat = 1\n                         AND g.group_id = ?\n                   ) AS \"established!: bool\", r.message\n                   FROM contacts c JOIN receipts r ON r.contact_id = c.user_id\n                   WHERE c.user_id = ? AND c.blocked = 0 AND c.deleted_by_user = 0\n                     AND c.account_deleted = 0 AND r.receipt_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "established!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "message",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "message"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "636623905bac3855b9364c3b21f321e637359c14cf934d868fceed6d3fae2f9a"
+}

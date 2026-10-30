@@ -1,0 +1,110 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT receipt_id, contact_id, message_id, message,\n                      mark_for_retry_after_accepted, ack_by_server_at, retry_count, last_retry\n               FROM receipts\n               WHERE will_be_retried_by_media_upload = 1\n                 AND mark_for_retry_after_accepted IS NULL\n                 AND mark_for_retry < ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "receipt_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "receipt_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "message_id",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "message",
+        "ordinal": 3,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "message"
+          }
+        }
+      },
+      {
+        "name": "mark_for_retry_after_accepted",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "mark_for_retry_after_accepted"
+          }
+        }
+      },
+      {
+        "name": "ack_by_server_at",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "ack_by_server_at"
+          }
+        }
+      },
+      {
+        "name": "retry_count",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "retry_count"
+          }
+        }
+      },
+      {
+        "name": "last_retry",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "last_retry"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "ecdf0248b3628894c40193ea7a60290351a4be6c7b5897b571a871b44b2e48de"
+}

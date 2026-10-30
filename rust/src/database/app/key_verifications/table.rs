@@ -46,7 +46,7 @@ impl NewKeyVerification {
         self
     }
 
-    pub async fn insert(self, tr: &mut Transaction<'_, Sqlite>) -> Result<()> {
+    pub async fn insert(self, tr: &mut Transaction<'_, Sqlite>) -> Result<bool> {
         KeyVerification::insert(tr, self).await
     }
 }
@@ -67,22 +67,14 @@ pub struct KeyVerification {
 impl KeyVerification {
     pub async fn insert(
         tr: &mut Transaction<'_, Sqlite>, verification: NewKeyVerification,
-    ) -> Result<()> {
-        let verification_type = verification.verification_type.as_str();
-
-        sqlx::query!(
-            r#"
-            INSERT INTO key_verifications(contact_id, type, verified_by)
-            VALUES (?, ?, ?)
-            "#,
+    ) -> Result<bool> {
+        super::writes::insert(
+            tr,
             verification.contact_id,
-            verification_type,
+            verification.verification_type.as_str(),
             verification.verified_by,
         )
-        .execute(&mut **tr)
-        .await?;
-
-        Ok(())
+        .await
     }
 }
 

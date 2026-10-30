@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT receipt_id FROM receipts\n               WHERE will_be_retried_by_media_upload = 0\n                 AND deferred_until_session IS NULL\n                 AND ack_by_server_at IS NULL\n                 AND receipt_id NOT IN (SELECT receipt_id FROM outbox_dispatch_jobs)\n                 AND receipt_id NOT IN (SELECT receipt_id FROM live_location_outbox)\n                 AND mark_for_retry_after_accepted IS NULL\n               ORDER BY created_at\n               LIMIT ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "receipt_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "receipt_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "fc6bfd032816abfdf5bcd9d26b5f2a84b20f33644ee4e1549d43684ad1ebd82e"
+}

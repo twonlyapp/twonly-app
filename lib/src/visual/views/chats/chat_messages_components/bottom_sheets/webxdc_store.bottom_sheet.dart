@@ -50,12 +50,12 @@ class _WebxdcStoreViewState extends State<WebxdcStoreView> {
     // The cached listing is shown first so the sheet is never empty while the
     // refresh is in flight.
     final languages = [language];
-    final cached = await WebxdcService.catalog(widget.group.groupId, languages);
+    final cached = await WebxdcService.catalog(widget.group, languages);
     if (mounted) setState(() => _apps = cached);
 
     final refreshed = await WebxdcService.refreshCatalog();
     final apps = refreshed
-        ? await WebxdcService.catalog(widget.group.groupId, languages)
+        ? await WebxdcService.catalog(widget.group, languages)
         : cached;
     if (!mounted) return;
     setState(() {

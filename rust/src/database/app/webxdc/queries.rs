@@ -2,6 +2,22 @@ use super::table::*;
 use crate::error::Result;
 use sqlx::SqliteConnection;
 
+/// Game cards move to their latest announced activity's timestamp, so this
+/// includes a recent move in a game that was originally added earlier.
+pub async fn has_recent_messages(connection: &mut SqliteConnection, since: i64) -> Result<bool> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT EXISTS (
+            SELECT 1 FROM webxdc_instances i
+            JOIN messages m ON m.message_id = i.instance_id
+            WHERE m.type = 'webxdcApp' AND m.is_deleted_from_sender = 0
+                AND m.created_at >= ?
+        ) AS "value!: bool""#,
+        since,
+    )
+    .fetch_one(connection)
+    .await?)
+}
+
 /// Upgrade existing cards using the notification payload already on this
 /// device. New activities persist it with their origin, independently of push
 /// delivery or whether the game is open.

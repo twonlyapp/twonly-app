@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/core/bridge/database/stories.dart' as rust_stories;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -12,7 +14,8 @@ import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expi
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_viewers.bottom_sheet.dart';
 
 /// The user's story on their profile: every live item with how long ago it
-/// was posted and how many have viewed it. Tapping one lists those viewers.
+/// was posted and how many have viewed it. Tapping one lists those viewers,
+/// from where the item itself can be opened.
 /// Nothing is shown while the user has no story.
 class OwnStoryStrip extends StatefulWidget {
   const OwnStoryStrip({super.key});
@@ -76,11 +79,10 @@ class _OwnStoryStripState extends State<OwnStoryStrip> {
   }
 
   Future<void> _showViewers(MediaFile mediaFile) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => StoryViewersBottomSheet(mediaFile: mediaFile),
-    );
+    final showAgain = await showStoryViewers(context, mediaFile);
+    if (showAgain && mounted) {
+      await context.push(Routes.chatsOwnStory, extra: mediaFile.mediaId);
+    }
   }
 
   @override

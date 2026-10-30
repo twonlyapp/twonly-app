@@ -90,6 +90,7 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
           widget.emoji,
           asQuotedText: widget.asQuotedText,
         );
+        if (!mounted) return;
         widget.emojiKey.currentState?.spawn(
           getGlobalOffset(_targetKey),
           widget.emoji,

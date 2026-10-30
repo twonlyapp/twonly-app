@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO contact_handshake_repairs(contact_id, notified_at) VALUES (?, ?)\n           ON CONFLICT(contact_id) DO UPDATE SET notified_at = excluded.notified_at\n           WHERE contact_handshake_repairs.notified_at IS NULL\n              OR contact_handshake_repairs.notified_at <= ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "fa6a4a348aa0146b0246fa60c69f4a599213203173a3470fbdde738579e8ff4d"
+}

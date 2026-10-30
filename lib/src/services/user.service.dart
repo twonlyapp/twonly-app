@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:mutex/mutex.dart';
 import 'package:twonly/core/bridge/user_config.dart';
@@ -11,6 +12,7 @@ class UserService {
   late UserConfig currentUser;
   bool isUserCreated = false;
   static final Mutex _updateProtection = Mutex();
+  final _pendingUpdates = Queue<_UserUpdate>();
 
   final _userDataUpdateController = StreamController<void>.broadcast();
   Stream<void> get onUserUpdated => _userDataUpdateController.stream;
@@ -26,36 +28,60 @@ class UserService {
     void Function(UserConfig userData) updateUser,
   ) async {
     await _updateProtection.protect(() async {
+      userService._pendingUpdates.add(_UserUpdate(updateUser));
+      await userService._flushPendingUpdates();
+    });
+  }
+
+  /// Replay changes after native resume has reopened the foreground session.
+  static Future<void> retryPendingUpdates() => _updateProtection.protect(
+    () => userService._flushPendingUpdates(),
+  );
+
+  Future<void> _flushPendingUpdates() async {
+    while (_pendingUpdates.isNotEmpty) {
+      final pending = _pendingUpdates.first;
       try {
-        final config = await UserConfigApi.load();
+        if (pending.prepared == null) {
+          final config = await UserConfigApi.load();
 
-        if (config == null) {
-          throw Exception('User Config is missing');
+          if (config == null) {
+            throw Exception('User Config is missing');
+          }
+
+          final user = UserConfigApi.clone(config: config);
+          if (user.defaultShowTime == 999999) {
+            // This was the old version for infinity -> change it to null
+            user.defaultShowTime = null;
+          }
+          pending.mutate(user);
+          // Retain the patch, rather than calling a toggle/increment twice if
+          // Rust persisted it just before the foreground call was cancelled.
+          pending.prepared = (base: config, updated: user);
         }
 
-        final user = UserConfigApi.clone(config: config);
-        if (user.defaultShowTime == 999999) {
-          // This was the old version for infinity -> change it to null
-          user.defaultShowTime = null;
-        }
-        updateUser(user);
+        final (base: config, updated: user) = pending.prepared!;
 
         if (config == user) {
           // Another runtime may already have saved the requested value. Keep
           // this isolate and its listeners in sync even when no write is needed.
-          await userService._applyRustUserConfig(config);
+          await _applyRustUserConfig(config);
+        } else {
+          final normalized = await UserConfigApi.update(
+            base: config,
+            config: user,
+          );
+          await _applyRustUserConfig(normalized);
+        }
+      } catch (e) {
+        if (isBackgroundCancellation(e)) {
+          Log.info('User update deferred until the app resumes');
           return;
         }
-
-        final normalized = await UserConfigApi.update(
-          base: config,
-          config: user,
-        );
-        await userService._applyRustUserConfig(normalized);
-      } catch (e) {
         Log.error('Could not update the user: $e');
       }
-    });
+      _pendingUpdates.removeFirst();
+    }
   }
 
   static Future<void> save(UserConfig user) async {
@@ -94,4 +120,11 @@ class UserService {
   void triggerUserUpdate() {
     _userDataUpdateController.add(null);
   }
+}
+
+class _UserUpdate {
+  _UserUpdate(this.mutate);
+
+  final void Function(UserConfig) mutate;
+  ({UserConfig base, UserConfig updated})? prepared;
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
@@ -40,6 +42,32 @@ class ShareAdditionalView extends StatefulWidget {
 }
 
 class _ShareAdditionalViewState extends State<ShareAdditionalView> {
+  /// Whether the store has anything for this chat. Taken from the last
+  /// catalog read so the panel opens without waiting; [_checkAppStore] then
+  /// corrects it from the cached catalog and, now and then, the server.
+  late bool _showAppStore =
+      WebxdcService.cachedOffersApps(widget.group) ?? false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_checkAppStore());
+  }
+
+  Future<void> _checkAppStore() async {
+    await _updateAppStore();
+    if (await WebxdcService.refreshCatalogIfStale()) {
+      await _updateAppStore();
+    }
+  }
+
+  Future<void> _updateAppStore() async {
+    final offersApps = await WebxdcService.offersApps(widget.group);
+    if (mounted && offersApps != _showAppStore) {
+      setState(() => _showAppStore = offersApps);
+    }
+  }
+
   Future<void> openShareContactView() async {
     final group = widget.group;
     final lang = context.lang;
@@ -176,13 +204,14 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
                   onTap: openMemories,
                 ),
               ),
-              Expanded(
-                child: _entry(
-                  icon: const Icon(Icons.apps_rounded),
-                  label: context.lang.webxdcStoreMenu,
-                  onTap: openAppStore,
+              if (_showAppStore)
+                Expanded(
+                  child: _entry(
+                    icon: const Icon(Icons.apps_rounded),
+                    label: context.lang.webxdcStoreMenu,
+                    onTap: openAppStore,
+                  ),
                 ),
-              ),
               Expanded(
                 child: _entry(
                   icon: const Icon(Icons.location_on_outlined),

@@ -12,7 +12,6 @@ use crate::error::{Result, TwonlyError};
 pub(crate) struct GroupRecord {
     pub group_id: String,
     pub group_name: String,
-    #[allow(dead_code)]
     pub state_version_id: i64,
     pub state_encryption_key: Option<Vec<u8>>,
     pub my_group_private_key: Option<Vec<u8>>,
@@ -45,6 +44,21 @@ impl GroupRecord {
         .fetch_optional(&mut **transaction)
         .await?
         .ok_or_else(|| TwonlyError::Generic(format!("group {group_id} does not exist")))
+    }
+
+    /// Refuses a state from the group server that is older than one this device
+    /// already applied. Versions only ever grow, so an older one is the server
+    /// replaying a member list the group has moved past -- one that still holds
+    /// a member who was removed, say.
+    pub fn ensure_not_older(&self, version_id: u64) -> Result<()> {
+        if i64::try_from(version_id).is_ok_and(|version_id| version_id >= self.state_version_id) {
+            return Ok(());
+        }
+
+        Err(TwonlyError::Generic(format!(
+            "group server returned state version {version_id} for {}, older than the applied {}",
+            self.group_id, self.state_version_id
+        )))
     }
 
     pub fn state_key(&self) -> Result<&[u8]> {

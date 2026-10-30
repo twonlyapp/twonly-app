@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT message FROM receipts WHERE contact_id = ? AND contact_will_sends_receipt != 0",
+  "describe": {
+    "columns": [
+      {
+        "name": "message",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "message"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c80510743cbc4a5dd290ecf014e077246cfbcc2fcd0b7b9163edf1272e7efbea"
+}

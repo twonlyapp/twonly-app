@@ -11,6 +11,7 @@ import 'package:twonly/core/bridge/database/groups.dart' as groups;
 import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
@@ -231,42 +232,103 @@ void main() {
     expect(retried.status, QrCodeLinkStatus.contactRequested);
   });
 
-  testWidgets('a fresh QR deep link stays on the current screen', (
-    tester,
-  ) async {
-    late BuildContext context;
-    var openedChat = false;
-    final router = GoRouter(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (builderContext, state) {
-            context = builderContext;
-            return const Scaffold(body: Text('Home'));
-          },
+  testWidgets(
+    'a fresh QR deep link requires consent and stays on the current screen',
+    (
+      tester,
+    ) async {
+      late BuildContext context;
+      var openedChat = false;
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (builderContext, state) {
+              context = builderContext;
+              return const Scaffold(body: Text('Home'));
+            },
+          ),
+          GoRoute(
+            path: '/chats/messages/:groupId',
+            builder: (context, state) {
+              openedChat = true;
+              return const Scaffold(body: Text('Chat opened'));
+            },
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
         ),
-        GoRoute(
-          path: '/chats/messages/:groupId',
-          builder: (context, state) {
-            openedChat = true;
-            return const Scaffold(body: Text('Chat opened'));
-          },
-        ),
-      ],
+      );
+      late Future<bool> handling;
+      await tester.runAsync(() async {
+        handling = withClock(
+          Clock.fixed(now),
+          () => handleIntentUrl(context, Uri.parse(profileLink(profile()))),
+        );
+      });
+      await tester.pumpAndSettle();
+      expect(api.requests, 0);
+      expect(api.proofs, isEmpty);
+      await tester.tap(
+        find.text(AppLocalizations.of(context)!.gotLinkFromFriend),
+      );
+      final handled = await tester.runAsync(() => handling);
+      await tester.pumpAndSettle();
+      expect(handled, isTrue);
+      expect(api.requests, 1);
+      expect(find.text('Home'), findsOneWidget);
+      expect(openedChat, isFalse);
+      expect(router.routeInformationProvider.value.uri.path, '/');
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  for (final dismiss in [false, true]) {
+    testWidgets(
+      'a ${dismiss ? 'dismissed' : 'declined'} QR link cannot verify a contact',
+      (tester) async {
+        late BuildContext context;
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (builderContext) {
+                context = builderContext;
+                return const Scaffold(body: Text('Home'));
+              },
+            ),
+          ),
+        );
+        final handling = handleIntentUrl(
+          context,
+          Uri.parse(profileLink(profile())),
+        );
+        await tester.pumpAndSettle();
+        expect(api.requests, 0);
+        if (dismiss) {
+          await tester.tapAt(const Offset(5, 5));
+        } else {
+          await tester.tap(find.text(AppLocalizations.of(context)!.cancel));
+        }
+        expect(await handling, isTrue);
+        await tester.pumpAndSettle();
+        expect(api.requests, 0);
+        expect(api.proofs, isEmpty);
+        final evidence = await tester.runAsync(
+          () => testDatabase
+              .customSelect('SELECT COUNT(*) AS n FROM key_verifications')
+              .getSingle(),
+        );
+        expect(evidence!.read<int>('n'), 0);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
     );
-    addTearDown(router.dispose);
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-    final handled = await tester.runAsync(
-      () => withClock(
-        Clock.fixed(now),
-        () => handleIntentUrl(context, Uri.parse(profileLink(profile()))),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(handled, isTrue);
-    expect(find.text('Home'), findsOneWidget);
-    expect(openedChat, isFalse);
-    expect(router.routeInformationProvider.value.uri.path, '/');
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
+  }
 }

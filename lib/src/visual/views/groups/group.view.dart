@@ -11,6 +11,7 @@ import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/group_enums.dart';
+import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database_values.dart';
@@ -42,6 +43,11 @@ class GroupView extends StatefulWidget {
 class _GroupViewState extends State<GroupView> {
   Group? _group;
 
+  /// Whether one-time apps were placed into this group. The tile leading to
+  /// them is left out otherwise, and the view waits for the answer so the
+  /// list does not shift when it arrives.
+  bool? _hasChatApps;
+
   List<(Contact, GroupMember)> members = [];
 
   late StreamSubscription<Group?> groupSub;
@@ -69,6 +75,12 @@ class _GroupViewState extends State<GroupView> {
         groupId: widget.groupId,
         force: true,
       ),
+    );
+
+    unawaited(
+      WebxdcService.oneTimeInstances(widget.groupId, const []).then((apps) {
+        if (mounted) setState(() => _hasChatApps = apps.isNotEmpty);
+      }),
     );
 
     final groupStream = watchRustDatabase(
@@ -190,7 +202,7 @@ class _GroupViewState extends State<GroupView> {
 
   @override
   Widget build(BuildContext context) {
-    if (_group == null) {
+    if (_group == null || _hasChatApps == null) {
       return Container();
     }
     return Scaffold(
@@ -236,13 +248,14 @@ class _GroupViewState extends State<GroupView> {
             groupId: widget.groupId,
             disabled: !_group!.isGroupAdmin,
           ),
-          BetterListTile(
-            icon: FontAwesomeIcons.layerGroup,
-            text: context.lang.webxdcChatApps,
-            onTap: () => context.navPush(
-              WebxdcChatAppsView(groupId: widget.groupId),
+          if (_hasChatApps!)
+            BetterListTile(
+              icon: FontAwesomeIcons.layerGroup,
+              text: context.lang.webxdcChatApps,
+              onTap: () => context.navPush(
+                WebxdcChatAppsView(groupId: widget.groupId),
+              ),
             ),
-          ),
           ContactGroupsSubtitleBuilder(
             groupId: widget.groupId,
             builder: (context, subtitleWidget) {

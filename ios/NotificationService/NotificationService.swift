@@ -458,7 +458,7 @@ final class NotificationService: UNNotificationServiceExtension {
       )
     else { return }
     if let error = response.error {
-      NativeErrorReporting.failure("notification_finalize")
+      NativeErrorReporting.failure("notification_finalize", error: error)
       NSLog("Deferred Twonly notification maintenance failed: \(error)")
     }
     if response.widgetRefresh {

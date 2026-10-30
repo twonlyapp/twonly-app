@@ -51,6 +51,16 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
   }
 
   if (uri.toString().startsWith(QrCodeUtils.linkPrefix)) {
+    // A URL can arrive from a chat, browser or another app. Its QR payload
+    // does not prove that the user scanned a person's code in their presence.
+    final trustLink = await showAlertDialog(
+      context,
+      context.lang.verificationBadgeTitle,
+      context.lang.linkFromUsernameLong,
+      customOk: context.lang.gotLinkFromFriend,
+    );
+    if (!trustLink || !context.mounted) return true;
+
     final result = await QrCodeUtils.handleQrCodeLink(uri.toString());
 
     if (!context.mounted) return false;

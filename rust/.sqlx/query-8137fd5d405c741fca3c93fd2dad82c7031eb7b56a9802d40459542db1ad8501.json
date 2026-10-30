@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE received_receipts\n            SET pending_plaintext = NULL,\n                pending_since = NULL,\n                pending_attempts = 0,\n                pending_retry_at = NULL,\n                pending_waits_for_acceptance = 0\n            WHERE receipt_id = ? AND pending_plaintext IS NOT NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "8137fd5d405c741fca3c93fd2dad82c7031eb7b56a9802d40459542db1ad8501"
+}

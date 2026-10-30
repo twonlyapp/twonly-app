@@ -610,8 +610,8 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
             .wait_for_contact_state(tester_c.user_id, true, false)
             .await?;
 
-        // A shares C with B. Receiving the message stores both the opaque
-        // additional data and a verification edge from C to A.
+        // A shares C with B. An unverified sender's card is still delivered,
+        // but must not establish a verification edge.
         let message_id = MessageService::new(&tester_a.context)
             .insert_and_send_contact_share(group_id.clone(), vec![tester_c.user_id])
             .await?;
@@ -635,6 +635,12 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
                 "contacts",
                 &additional_data,
             )
+            .await?;
+
+        assert!(!tester_b.is_contact_verified(tester_c.user_id).await?);
+        tester_b.set_contact_verified(tester_a.user_id, true).await?;
+        MessageService::new(&tester_a.context)
+            .insert_and_send_contact_share(group_id.clone(), vec![tester_c.user_id])
             .await?;
 
         tester_b

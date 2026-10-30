@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT contact_id, promotion FROM user_discovery_own_promotions WHERE version_id > ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_own_promotions",
+            "name": "contact_id"
+          }
+        }
+      },
+      {
+        "name": "promotion",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_own_promotions",
+            "name": "promotion"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "6de82ae6df86dab116d81ea40a9fc8d6a8d31e6b6efe96962e19fbbac746a926"
+}

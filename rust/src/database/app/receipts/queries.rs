@@ -76,13 +76,11 @@ pub async fn media_retransmissions(
                 created_at AS "created_at!",
                 wake_receiver AS "wake_receiver!"
             FROM receipts
-            WHERE (mark_for_retry < ?
-                    OR mark_for_retry_after_accepted < ?
-            )
+            WHERE mark_for_retry < ?
+                AND mark_for_retry_after_accepted IS NULL
                 AND will_be_retried_by_media_upload = 1
             ORDER BY rowid
         "#,
-        cutoff,
         cutoff,
     )
     .fetch_all(connection)

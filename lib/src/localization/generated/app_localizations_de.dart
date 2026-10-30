@@ -94,6 +94,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareImagedEditorSavedImage => 'Gespeichert';
 
   @override
+  String get imageLoadFailed => 'Dieses Bild konnte nicht geladen werden.';
+
+  @override
+  String get retry => 'Erneut versuchen';
+
+  @override
   String get shareImageSearchAllContacts => 'Alle Kontakte durchsuchen';
 
   @override
@@ -1747,6 +1753,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bildvorschau bei der Auswahl von Empfängern anzeigen';
 
   @override
+  String get alwaysShowStories => 'Stories immer anzeigen';
+
+  @override
+  String get alwaysShowStoriesSubtitle =>
+      'Stories bleiben über deinen Chats, auch nachdem du sie angesehen hast.';
+
+  @override
   String verifiedPublicKey(Object username) {
     return 'Die Identität von $username wurde erfolgreich überprüft.';
   }
@@ -3153,6 +3166,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Konnte nicht gelöscht werden. Versuche es gleich noch einmal.';
 
   @override
+  String get storyShowAgain => 'Erneut ansehen';
+
+  @override
   String get shareImageStory => 'Story';
 
   @override
@@ -3377,4 +3393,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatGameLost => 'Du hast verloren.';
+
+  @override
+  String get chatGamePlayed => 'Du hast gespielt.';
+
+  @override
+  String get chatGameOtherPlayed => 'Hat gespielt.';
+
+  @override
+  String get chatGameDraw => 'Unentschieden.';
 }

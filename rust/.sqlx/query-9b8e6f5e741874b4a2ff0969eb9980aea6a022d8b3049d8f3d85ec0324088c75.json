@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM receipts\n           WHERE will_be_retried_by_media_upload = 0\n             AND deferred_until_session IS NULL\n             AND (ack_by_server_at IS NULL OR mark_for_retry IS NOT NULL)\n             AND mark_for_retry_after_accepted IS NULL)",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM receipts\n           WHERE will_be_retried_by_media_upload = 0\n             AND deferred_until_session IS NULL\n             AND (ack_by_server_at IS NULL OR mark_for_retry IS NOT NULL)\n             AND mark_for_retry_after_accepted IS NULL)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9b8e6f5e741874b4a2ff0969eb9980aea6a022d8b3049d8f3d85ec0324088c75"
+}

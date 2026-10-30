@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE received_receipts\n            SET pending_attempts = pending_attempts + 1,\n                pending_retry_at = ? + MIN(? << MIN(pending_attempts, 30), ?),\n                pending_waits_for_acceptance = 0,\n                pending_from_user_id = COALESCE(pending_from_user_id, ?),\n                pending_since = COALESCE(pending_since, ?)\n            WHERE receipt_id = ? AND pending_plaintext IS NOT NULL\n            RETURNING pending_attempts\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "pending_attempts",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "received_receipts",
+            "name": "pending_attempts"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e09e2c6c413611c6493ad80f5baa6649ebbb7447119217f9ce33197c2d111d48"
+}

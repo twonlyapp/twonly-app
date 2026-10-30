@@ -10,6 +10,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/visual/elements/my_icon_button.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
@@ -18,6 +19,7 @@ import 'package:twonly/src/visual/views/chats/media_viewer_components/own_story_
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_viewers.bottom_sheet.dart';
 
 import '../../helpers/native_database.dart';
+import '../../mocks/user_config.dart';
 
 class _StoryApi extends NativeTestApi {
   final deleted = <String>[];
@@ -49,6 +51,17 @@ void main() {
 
   setUp(() async {
     await locator.reset();
+    locator.registerSingleton<UserService>(
+      UserService()
+        ..currentUser = testUserConfig(
+          userId: 1,
+          username: 'me',
+          displayName: 'Me',
+          subscriptionPlan: 'Free',
+          currentSetupPage: null,
+          appVersion: 0,
+        ),
+    );
     api.deleted.clear();
     directory = await Directory.systemTemp.createTemp('story-info-');
     AppEnvironment.initTesting(customSupportDir: directory.path);
@@ -110,9 +123,20 @@ void main() {
     await settle(tester);
   }
 
+  testWidgets('story info lists only who opened it', (tester) async {
+    await pump(tester, StoryViewersBottomSheet(mediaFile: media));
+    expect(find.text('1 view'), findsOneWidget);
+    expect(find.text('Opened friend'), findsOneWidget);
+    expect(find.text('Received friend'), findsNothing);
+    expect(find.text('Pending friend'), findsNothing);
+    expect(find.textContaining('Today at'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets(
-    'story info shows received, opened and pending recipients on a narrow screen',
+    'developers see received and pending recipients on a narrow screen',
     (tester) async {
+      userService.currentUser.isDeveloper = true;
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -121,10 +145,14 @@ void main() {
       expect(find.text('Opened friend'), findsOneWidget);
       expect(find.text('Received friend'), findsOneWidget);
       expect(find.text('Pending friend'), findsOneWidget);
-      expect(find.text('Received (2)'), findsOneWidget);
-      expect(find.text('Opened (1)'), findsOneWidget);
-      expect(find.text('Received: —'), findsOneWidget);
-      expect(find.text('Opened: —'), findsNWidgets(2));
+      // Opened, then received, then pending.
+      final names = ['Opened friend', 'Received friend', 'Pending friend'];
+      final tops = [
+        for (final name in names) tester.getTopLeft(find.text(name)).dy,
+      ];
+      expect(tops, [...tops]..sort());
+      // Received: everybody but the pending friend. Opened: only one.
+      expect(find.text('-'), findsNWidgets(3));
       expect(tester.takeException(), isNull);
 
       // Receipt updates are shown while the sheet stays open.
@@ -134,10 +162,42 @@ void main() {
         ),
       );
       await settle(tester);
-      expect(find.text('Received (3)'), findsOneWidget);
+      expect(find.text('-'), findsNWidgets(2));
       await tester.pumpWidget(const SizedBox());
     },
   );
+
+  testWidgets('story info can be pulled up and asks to show the item', (
+    tester,
+  ) async {
+    bool? showAgain;
+    await pump(
+      tester,
+      Builder(
+        builder: (context) => TextButton(
+          onPressed: () async =>
+              showAgain = await showStoryViewers(context, media),
+          child: const Text('open'),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await settle(tester);
+    await tester.pumpAndSettle();
+
+    // Pulled by its header, the sheet grows instead of only shrinking.
+    final title = find.text('1 view');
+    final before = tester.getTopLeft(title).dy;
+    await tester.drag(title, const Offset(0, -200));
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(title).dy, lessThan(before - 150));
+
+    await tester.tap(find.byTooltip('Show again'));
+    await tester.pumpAndSettle();
+    expect(showAgain, isTrue);
+    expect(find.byType(StoryViewersBottomSheet), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets('an unfinished story can be deleted from its info', (
     tester,

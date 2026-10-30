@@ -6,6 +6,37 @@ import XCTest
 
 class RunnerTests: XCTestCase {
 
+  func testNotificationFinalizationAfterCancellationIsDeferred() {
+    for error in [
+      "Database operation cancelled; retry when active",
+      "Native database admission cancelled",
+      "Database operation deferred until foreground",
+      "Notification run cancelled",
+      "Notification run is closing",
+      "Notification run is closed or unknown",
+    ] {
+      XCTAssertTrue(NativeErrorReporting.isDeferredFailure("notification_finalize", error: error))
+    }
+    XCTAssertTrue(NativeErrorReporting.isDeferredFailure("backup_expired", error: nil))
+    XCTAssertFalse(NativeErrorReporting.isDeferredFailure("notification_processing",
+      error: "Notification run is closed or unknown"))
+    XCTAssertFalse(NativeErrorReporting.isDeferredFailure("notification_finalize",
+      error: "notification finalization panicked"))
+    XCTAssertFalse(NativeErrorReporting.isDeferredFailure("backup", error: nil))
+  }
+
+  func testNativeFailureReasonsDoNotExposeWorkerErrorText() {
+    XCTAssertEqual(NativeErrorReporting.failureReason("attempted to acquire a connection on a closed pool"),
+      "database_pool_closed")
+    XCTAssertEqual(NativeErrorReporting.failureReason("pool timed out while waiting for an open connection"),
+      "database_pool_timeout")
+    XCTAssertEqual(NativeErrorReporting.failureReason("main_key could not be loaded from the key_chain"),
+      "secure_storage")
+    XCTAssertEqual(NativeErrorReporting.failureReason("Notification cleanup panicked"), "panic")
+    XCTAssertEqual(NativeErrorReporting.failureReason("private /path/to/file user-content credential"), "unknown")
+    XCTAssertEqual(NativeErrorReporting.failureReason(nil), "unknown")
+  }
+
   func testNativeErrorReportingRequiresExplicitConsent() throws {
     let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: url) }

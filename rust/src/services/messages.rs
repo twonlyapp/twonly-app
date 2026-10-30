@@ -22,6 +22,26 @@ use std::sync::Arc;
 // have been delivered by builds that did not persist server acknowledgements.
 const TEXT_RECOVERY_MAX_AGE_SECONDS: i64 = 60 * 24 * 60 * 60;
 
+/// Whether a message to `group_id` may go to this member.
+///
+/// A direct chat's ID names its two people, so who it goes to is never a
+/// question for `group_members`: a row there for anyone else was not put there
+/// by this device, and a copy sent to them is the conversation leaking to a
+/// third party. The local user never has a row, so naming the member suffices.
+fn is_recipient(group_id: &str, is_direct_chat: bool, contact_id: i64) -> bool {
+    if !is_direct_chat || Group::is_direct_chat_id(group_id, contact_id) {
+        return true;
+    }
+
+    tracing::error!(
+        group_id,
+        contact_id,
+        "not sending a direct-chat message to someone the chat is not with"
+    );
+
+    false
+}
+
 pub struct MessageService {
     ctx: Arc<Context>,
 }
@@ -125,13 +145,25 @@ impl MessageService {
             .await?;
         }
 
-        let members = sqlx::query_scalar!(
+        let is_direct_chat = sqlx::query_scalar!(
+            "SELECT is_direct_chat FROM groups WHERE group_id = ?",
+            group_id
+        )
+        .fetch_optional(&database.pool)
+        .await?
+        .unwrap_or(0)
+            != 0;
+
+        let members: Vec<i64> = sqlx::query_scalar!(
             r#"SELECT contact_id FROM group_members
                WHERE group_id = ? AND (member_state IS NULL OR member_state != 'leftGroup')"#,
             group_id,
         )
         .fetch_all(&database.pool)
-        .await?;
+        .await?
+        .into_iter()
+        .filter(|&contact_id| is_recipient(&group_id, is_direct_chat, contact_id))
+        .collect();
 
         let bytes = content.encode_to_vec();
 
@@ -194,6 +226,8 @@ impl MessageService {
         .fetch_all(&mut **t)
         .await?;
 
+        let is_direct_chat = Group::is_direct_chat(t, &group_id).await?;
+
         let mut members = Vec::with_capacity(rows.len());
 
         for row in rows {
@@ -204,6 +238,10 @@ impl MessageService {
                     "not sending to a group member recorded as having left"
                 );
 
+                continue;
+            }
+
+            if !is_recipient(&group_id, is_direct_chat, row.contact_id) {
                 continue;
             }
 

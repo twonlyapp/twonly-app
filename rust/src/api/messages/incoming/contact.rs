@@ -209,6 +209,77 @@ pub(crate) async fn prepare_contact_request(
     Ok(())
 }
 
+/// Checks the username a contact update claims with the server, before the
+/// inbound transaction opens.
+///
+/// The username is the handle the server resolves to an account, and what
+/// identifies a person here; their display name is theirs to choose, but it
+/// is not. Taken from the update, any sender could name themselves after
+/// someone else, and their request would show that person's handle. An
+/// update repeating the stored username needs no lookup. Otherwise the
+/// server's answer replaces the claim, and when the server has none the
+/// claim is dropped while the rest of the update still applies. A lookup that
+/// fails is an error, so the message is retried.
+///
+/// Before the transaction for the same reason as [`prepare_contact_request`]:
+/// the lookup is a network round trip, and the transaction holds the app
+/// database's only connection.
+pub(crate) async fn verify_claimed_username(
+    ctx: &Arc<Context>, from_user_id: i64, content: &mut EncryptedContent,
+) -> Result<()> {
+    let Some(claimed) = content
+        .contact_update
+        .as_ref()
+        .filter(|update| update.r#type == encrypted_content::contact_update::Type::Update as i32)
+        .and_then(|update| update.username.clone())
+    else {
+        return Ok(());
+    };
+
+    let database = ctx.app_db.read().await.clone();
+
+    let stored = sqlx::query_scalar!(
+        "SELECT username FROM contacts WHERE user_id = ?",
+        from_user_id
+    )
+    .fetch_optional(&database.pool)
+    .await?;
+
+    drop(database);
+
+    if stored.as_deref() == Some(claimed.as_str()) {
+        return Ok(());
+    }
+
+    let confirmed = match Server::get_user_by_id(ctx, from_user_id).await? {
+        ServerResult::Ok(user) => user
+            .username
+            .and_then(|username| String::from_utf8(username).ok()),
+        ServerResult::ErrorCode(code) => {
+            tracing::warn!(
+                from_user_id,
+                code,
+                "could not look up the username a contact update claims"
+            );
+
+            None
+        }
+    };
+
+    if confirmed.as_deref() != Some(claimed.as_str()) {
+        tracing::warn!(
+            from_user_id,
+            "a contact update claimed a username the server does not confirm"
+        );
+    }
+
+    if let Some(update) = content.contact_update.as_mut() {
+        update.username = confirmed;
+    }
+
+    Ok(())
+}
+
 pub(crate) async fn handle_contact_request(
     ctx: &Arc<Context>, tr: &mut Transaction<'_, Sqlite>, from_user_id: i64,
     request: encrypted_content::ContactRequest,
@@ -239,6 +310,8 @@ pub(crate) async fn handle_contact_request(
                 if let Some(contact) = contact {
                     Group::create_direct_chat(ctx, tr, contact).await?;
                 }
+
+                super::errors::release_after_contact_acceptance(tr, from_user_id).await?;
 
                 queue_encrypted_content(
                     tr,
@@ -288,6 +361,8 @@ pub(crate) async fn handle_contact_request(
                 .await?;
 
             Group::create_direct_chat(ctx, tr, contact).await?;
+
+            super::errors::release_after_contact_acceptance(tr, from_user_id).await?;
         }
         Type::Reject => {
             UpdateContact::builder()
@@ -451,6 +526,229 @@ pub(crate) async fn handle_contact_update(
 mod tests {
 
     use super::*;
+    use crate::api::proto::client::message::Type as MessageType;
+    use crate::api::proto::client::Message;
+    use crate::api::proto::{client_to_server, server_to_client};
+    use crate::api::runtime::client::ApiClient;
+    use crate::bridge::api::{ApiConfig, ApiConnectionState};
+    use crate::database::app::receipts::table::Receipt;
+    use futures_util::{SinkExt, StreamExt};
+    use prost::Message as _;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use stream_tungstenite::tokio_tungstenite::{accept_async, tungstenite};
+
+    /// A group server stand-in that answers every user lookup with `username`
+    /// and counts the lookups. Anything else is acknowledged.
+    async fn user_server(
+        username: Arc<Mutex<String>>, lookups: Arc<AtomicUsize>,
+    ) -> anyhow::Result<String> {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+
+        let address = listener.local_addr()?;
+
+        tokio::spawn(async move {
+            let (socket, _) = listener.accept().await.unwrap();
+
+            let mut socket = accept_async(socket).await.unwrap();
+
+            while let Some(Ok(message)) = socket.next().await {
+                if !message.is_binary() {
+                    continue;
+                }
+
+                let request =
+                    client_to_server::ClientToServer::decode(message.into_data()).unwrap();
+
+                let Some(client_to_server::client_to_server::V::V0(request)) = request.v else {
+                    continue;
+                };
+
+                let lookup = match request.kind {
+                    Some(client_to_server::v0::Kind::Applicationdata(application)) => {
+                        match application.application_data {
+                            Some(
+                                client_to_server::application_data::ApplicationData::GetUserById(
+                                    requested,
+                                ),
+                            ) => Some(requested.user_id),
+                            _ => None,
+                        }
+                    }
+                    _ => None,
+                };
+
+                let ok = match lookup {
+                    Some(user_id) => {
+                        lookups.fetch_add(1, Ordering::SeqCst);
+
+                        server_to_client::response::ok::Ok::Userdata(
+                            server_to_client::response::UserData {
+                                user_id,
+                                username: Some(username.lock().unwrap().clone().into_bytes()),
+                                ..Default::default()
+                            },
+                        )
+                    }
+                    None => server_to_client::response::ok::Ok::None(true),
+                };
+
+                let response = server_to_client::ServerToClient {
+                    v: Some(server_to_client::server_to_client::V::V0(
+                        server_to_client::V0 {
+                            seq: request.seq,
+                            kind: Some(server_to_client::v0::Kind::Response(
+                                server_to_client::Response {
+                                    response: Some(server_to_client::response::Response::Ok(
+                                        server_to_client::response::Ok { ok: Some(ok) },
+                                    )),
+                                },
+                            )),
+                        },
+                    )),
+                };
+
+                if socket
+                    .send(tungstenite::Message::Binary(
+                        response.encode_to_vec().into(),
+                    ))
+                    .await
+                    .is_err()
+                {
+                    break;
+                }
+            }
+        });
+
+        Ok(format!("ws://{address}"))
+    }
+
+    /// The username in a contact update is checked with the server: a stranger
+    /// cannot name themselves after someone else, a real rename goes through,
+    /// and one that only repeats the stored name costs no lookup.
+    #[tokio::test]
+    async fn a_contact_update_cannot_claim_someone_elses_username() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+
+        let server_username = Arc::new(Mutex::new("mallory".to_owned()));
+
+        let lookups = Arc::new(AtomicUsize::new(0));
+
+        let url = user_server(server_username.clone(), lookups.clone()).await?;
+
+        let client = ApiClient::new(
+            &ctx,
+            ApiConfig {
+                websocket_url: url,
+                legacy_user_app_version: 0,
+                in_background: true,
+                can_use_login_token_for_auth: true,
+            },
+        );
+
+        *ctx.api_client.get().unwrap().write().await = client.clone();
+
+        // Connected before there is a user, so no authentication starts.
+        client.connect().await?;
+
+        tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            while *client.state.read().await != ApiConnectionState::Connected {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await?;
+
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+
+        ctx.inject_test_user_id(42).await?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, deleted_by_user) VALUES (8, 'mallory', 1)",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        let deliver = |receipt_id: &'static str, username: &'static str, counter: i64| {
+            let ctx = ctx.clone();
+
+            let database = database.clone();
+
+            async move {
+                let content = EncryptedContent {
+                    contact_update: Some(encrypted_content::ContactUpdate {
+                        r#type: encrypted_content::contact_update::Type::Update as i32,
+                        username: Some(username.into()),
+                        display_name: Some("Alice".into()),
+                        ..Default::default()
+                    }),
+                    sender_profile_counter: Some(counter),
+                    ..Default::default()
+                };
+
+                let mut t = database.pool.begin().await?;
+
+                Receipt::claim_received(&mut t, receipt_id).await?;
+
+                Receipt::store_pending_plaintext(&mut t, receipt_id, 8, &content.encode_to_vec())
+                    .await?;
+
+                t.commit().await?;
+
+                super::super::handle_decoded_server_message(
+                    &ctx,
+                    8,
+                    Message {
+                        receipt_id: receipt_id.into(),
+                        r#type: MessageType::CiphertextV2 as i32,
+                        ..Default::default()
+                    },
+                )
+                .await
+            }
+        };
+
+        let profile = || async {
+            sqlx::query_as::<_, (String, Option<String>)>(
+                "SELECT username, display_name FROM contacts WHERE user_id = 8",
+            )
+            .fetch_one(&database.pool)
+            .await
+        };
+
+        // The server says this account is still mallory.
+        deliver("spoof", "alice", 1).await?;
+
+        assert_eq!(
+            profile().await?,
+            ("mallory".to_owned(), Some("Alice".to_owned())),
+            "the display name is theirs to choose, the username is not"
+        );
+
+        assert_eq!(lookups.load(Ordering::SeqCst), 1);
+
+        // Repeating the stored username needs no lookup.
+        deliver("same", "mallory", 2).await?;
+
+        assert_eq!(lookups.load(Ordering::SeqCst), 1);
+
+        // A rename the server confirms is taken.
+        *server_username.lock().unwrap() = "mallory2".into();
+
+        deliver("renamed", "mallory2", 3).await?;
+
+        assert_eq!(profile().await?.0, "mallory2");
+
+        assert_eq!(lookups.load(Ordering::SeqCst), 2);
+
+        Ok(())
+    }
 
     #[tokio::test]
 

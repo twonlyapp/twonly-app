@@ -1,6 +1,7 @@
 package eu.twonly.webxdc
 
 import android.app.Activity
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.webkit.WebStorage
@@ -23,12 +24,14 @@ object WebxdcChannel {
     private const val CHANNEL = "eu.twonly/webxdc"
 
     private var channel: MethodChannel? = null
+    private var context: Context? = null
     private val main = Handler(Looper.getMainLooper())
 
     fun configure(flutterEngine: FlutterEngine, activity: Activity) {
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
         channel.setMethodCallHandler { call, result -> handle(call, result) }
         this.channel = channel
+        context = activity.applicationContext
 
         flutterEngine.platformViewsController.registry.registerViewFactory(
             WebxdcViewFactory.VIEW_TYPE,
@@ -61,6 +64,13 @@ object WebxdcChannel {
                 if (instanceId != null && paused != null) {
                     WebxdcView.setPaused(instanceId, paused)
                 }
+                result.success(null)
+            }
+
+            "warmUp" -> {
+                // An app is about to be opened, or likely to be: the WebRTC
+                // hold it waits for is started now rather than when it opens.
+                context?.let { WebRtcHolder.warmUp(it) }
                 result.success(null)
             }
 

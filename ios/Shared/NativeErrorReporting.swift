@@ -91,19 +91,54 @@ enum NativeErrorReporting {
     SentrySDK.addBreadcrumb(breadcrumb)
   }
 
-  /// Operation names only: Rust errors may contain message content, paths or
-  /// credentials. Never attach the push payload or the worker's raw response.
-  static func failure(_ operation: String) {
-    // iOS may end any background grant. The worker cancels safely and the next
-    // grant retries it; expiration is not an application failure.
-    if operation.hasSuffix("_expired") {
-      warning(operation)
+  /// Only fixed categories leave the device. Worker errors may contain SQL,
+  /// paths, credentials or message content.
+  static func failureReason(_ error: String?) -> String {
+    switch error {
+    case "Database operation cancelled; retry when active",
+         "Native database admission cancelled",
+         "Database operation deferred until foreground",
+         "Notification run cancelled",
+         "Notification run is closing":
+      return "cancelled"
+    case "Notification run is closed or unknown":
+      return "notification_run_closed"
+    case "attempted to acquire a connection on a closed pool":
+      return "database_pool_closed"
+    case "pool timed out while waiting for an open connection":
+      return "database_pool_timeout"
+    case "main_key could not be loaded from the key_chain",
+         "Storage error: database exists but master key could not be loaded from secure storage":
+      return "secure_storage"
+    case "background maintenance panicked", "notification worker panicked",
+         "Notification worker panicked", "notification finalization panicked",
+         "Notification cleanup panicked":
+      return "panic"
+    default:
+      return "unknown"
+    }
+  }
+
+  static func isDeferredFailure(_ operation: String, error: String?) -> Bool {
+    let reason = failureReason(error)
+    // The supervisor closes a notification run on its deadline, even if the
+    // extension has not called finalize yet. Its durable work retries later.
+    return reason == "cancelled" || operation.hasSuffix("_expired")
+      || (operation == "notification_finalize" && reason == "notification_run_closed")
+  }
+
+  static func failure(_ operation: String, error: String? = nil) {
+    if isDeferredFailure(operation, error: error) {
+      warning("\(operation)_cancelled")
       return
     }
     guard isAllowed else { return }
+    let reason = failureReason(error)
     SentrySDK.capture(message: "Native background operation failed: \(operation)") { scope in
       scope.setLevel(.error)
       scope.setTag(value: operation, key: "native_operation")
+      scope.setTag(value: reason, key: "native_failure_reason")
+      scope.setFingerprint(["native-background", operation, reason])
     }
     // Extensions can be reclaimed as soon as the alert handler returns.
     // Give the asynchronous transport a short chance to persist/send the

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.6
+
+- Improve: UI layout for stories 
+- Fix: Recuring message loop
+- Fix: Multiple smaller issues
+- Security Fix: A malicious user could craft a self-attestation to get a verification badge (thx @PatrickBidinger)
+
+## 0.6.5
+
+- Improve: Better game messages in chats
+- Fix: Camera would not start on iPad
+- Fix: Many small issues
+
 ## 0.6.4
 
 - New: @mentions in chats and sharing memories from the + menu

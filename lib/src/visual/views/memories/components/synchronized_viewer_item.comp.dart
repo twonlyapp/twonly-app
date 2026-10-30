@@ -8,6 +8,7 @@ import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/helpers/precache_file_image.dart';
 import 'package:twonly/src/visual/helpers/video_player_file.helper.dart';
 
 class SynchronizedViewerItemComp extends StatefulWidget {
@@ -65,11 +66,11 @@ class _SynchronizedViewerItemCompState
             if (media.mediaFile.type == MediaType.image ||
                 media.mediaFile.type == MediaType.gif) {
               if (fullPath.existsSync()) {
-                try {
-                  await precacheImage(FileImage(fullPath), context);
-                } catch (e) {
-                  // Ignore precache errors
-                }
+                await precacheFileImage(
+                  fullPath,
+                  context,
+                  source: 'downloaded memory',
+                );
               }
             }
           }

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE group_members SET group_public_key = ?\n           WHERE group_id = ? AND contact_id = ?\n             AND group_id IN (SELECT group_id FROM groups WHERE is_direct_chat = 0)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "ae6a657935f7042ff102404f66ba8fcd1e07fd6a18234ba8f9a2b01ea85dd0a7"
+}

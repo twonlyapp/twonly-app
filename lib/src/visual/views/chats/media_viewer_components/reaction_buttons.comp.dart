@@ -161,13 +161,14 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                                   },
                                 )
                                 as EmojiLayerData?;
-                        if (layer == null) return;
+                        if (layer == null || !mounted) return;
                         await sendReaction(
                           widget.groupId,
                           widget.messageId,
                           layer.text,
                           asQuotedText: widget.asQuotedText,
                         );
+                        if (!mounted) return;
                         widget.emojiKey.currentState?.spawn(
                           getGlobalOffset(_keyEmojiPicker),
                           layer.text,

@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT receipt_id, message FROM receipts WHERE contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "receipt_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "receipt_id"
+          }
+        }
+      },
+      {
+        "name": "message",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "receipts",
+            "name": "message"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "302630b5f3043f91d85f298f45a964eee5302dc6c084cbaf1e1032c2731b156f"
+}

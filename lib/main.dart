@@ -199,8 +199,7 @@ Future<StartupResult> _startup(SettingsChangeProvider settings) async {
 
     await notificationSetup;
     NativeNotificationService.init();
-    // Claims the channel the native webview talks to. Nothing runs in it until
-    // a user starts an app from a chat.
+    // Claims the channel before a game opens or the startup warm-up runs.
     WebxdcHost.initialize();
 
     // The theme was read before the user was known, so re-read it now that it
@@ -292,6 +291,7 @@ class _SplashView extends StatelessWidget {
 
 Future<void> postStartupTasks() async {
   Log.info('Post startup started.');
+  unawaited(WebxdcHost.warmUpForRecentGames());
   unawaited(MemoriesService.prewarmCache());
 
   unawaited(HomeWidgetService.pruneSupersededMedia());

@@ -133,4 +133,8 @@ message WebxdcUpdate {
     // {"game":"turn"|"won"|"lost"}, localized by the receiving twonly host.
     // Absent preserves legacy broadcast; an empty map notifies nobody.
     optional string notify      = 7;
+    // Optional per-player chat status, independent of push recipients.
+    // JSON map of member addresses to "played", "turn", "won", "lost", "draw".
+    // An absent player gets the generic played status. Older hosts ignore it.
+    optional string game_status = 8;
 }

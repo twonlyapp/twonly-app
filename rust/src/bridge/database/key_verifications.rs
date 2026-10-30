@@ -59,24 +59,26 @@ pub async fn change_key_verification(
             let mut tx = CommandTransaction::begin(transaction).await?;
 
             let result = async {
-                let refresh = if let Some(kind) = kind.as_deref() {
+                let before = queries::direct_verified_at(tx.transaction(), contact).await?;
+
+                if let Some(kind) = kind.as_deref() {
                     writes::insert(tx.transaction(), contact, kind, verified_by).await?;
-
-                    true
                 } else {
-                    writes::delete(tx.transaction(), contact, verification_id).await?
-                };
+                    writes::delete(tx.transaction(), contact, verification_id).await?;
+                }
 
-                if update_discovery && refresh {
+                let after = queries::direct_verified_at(tx.transaction(), contact).await?;
+
+                // Keep the bridge argument for compatibility; an untrusted
+                // caller's timestamp cannot establish personal verification.
+                let _ = verified_at;
+
+                if update_discovery && before != after {
                     get_twonly_flutter()?
                         .user_discovery
                         .get()
                         .await
-                        .update_verification_state_for_user(
-                            contact,
-                            if kind.is_some() { verified_at } else { None },
-                            tx.transaction(),
-                        )
+                        .update_verification_state_for_user(contact, after, tx.transaction())
                         .await?;
                 }
 

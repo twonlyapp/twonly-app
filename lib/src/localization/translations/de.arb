@@ -1,6 +1,8 @@
 {
   "subscriptionAllApps": "Zugriff auf alle Apps",
   "@@locale": "de",
+  "imageLoadFailed": "Dieses Bild konnte nicht geladen werden.",
+  "retry": "Erneut versuchen",
   "registerSlogan": "Privat in Kontakt bleiben.",
   "onboardingWelcomeTitle": "Willkommen bei twonly!",
   "onboardingWelcomeBody": "Erlebe eine private und sichere Möglichkeit mit Freunden in Kontakt zu bleiben, indem du spontane Bilder teilst.",
@@ -581,6 +583,8 @@
   "verificationOwnProfile": "Du hast deinen eigenen Verifizierungscode gescannt.",
   "startWithCameraOpen": "Mit geöffneter Kamera starten",
   "showImagePreviewWhenSending": "Bildvorschau bei der Auswahl von Empfängern anzeigen",
+  "alwaysShowStories": "Stories immer anzeigen",
+  "alwaysShowStoriesSubtitle": "Stories bleiben über deinen Chats, auch nachdem du sie angesehen hast.",
   "verifiedPublicKey": "Die Identität von {username} wurde erfolgreich überprüft.",
   "memoriesAYearAgo": "Vor einem Jahr",
   "memoriesXYearsAgo": "Vor {years} Jahren",
@@ -1199,6 +1203,7 @@
   "storyDeleteBody": "Dadurch wird sie aus deiner Story entfernt.",
   "storyDelete": "Löschen",
   "storyDeleteFailed": "Konnte nicht gelöscht werden. Versuche es gleich noch einmal.",
+  "storyShowAgain": "Erneut ansehen",
   "shareImageStory": "Story",
   "shareImageStoryAudience": "{count, plural, =1{Erreicht 1 Kontakt} other{Erreicht {count} Kontakte}}",
   "@shareImageStoryAudience": {
@@ -1275,5 +1280,8 @@
   "notificationGameFallbackName": "ein Spiel",
   "chatGameTurn": "Du bist am Zug.",
   "chatGameWon": "Du hast gewonnen.",
-  "chatGameLost": "Du hast verloren."
+  "chatGameLost": "Du hast verloren.",
+  "chatGamePlayed": "Du hast gespielt.",
+  "chatGameOtherPlayed": "Hat gespielt.",
+  "chatGameDraw": "Unentschieden."
 }

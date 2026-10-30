@@ -72,6 +72,14 @@ class WebxdcView(
         /** Refuses to read more than this in one import, however many files. */
         private const val MAX_IMPORT_BYTES = 32 * 1024 * 1024
 
+        /** An empty page of twonly's own on the app's origin, served only once. */
+        private const val WEBRTC_PROBE_PATH = "/__twonly_webrtc_probe"
+
+        /** A missing constructor counts as blocked as much as one that throws. */
+        private const val WEBRTC_PROBE =
+            "(function () { try { new RTCPeerConnection(); return 'open'; } " +
+                "catch (error) { return 'blocked'; } })()"
+
         private var current: WebxdcView? = null
         private val main = Handler(Looper.getMainLooper())
 
@@ -109,6 +117,9 @@ class WebxdcView(
     }
 
     private val webView: WebView
+    private var disposed = false
+    /** Set from the moment the WebRTC probe page is requested until it ran. */
+    private var probing = false
     /** The `importFiles` call waiting on the picker, if one is open. */
     private var importCallId: Int? = null
     private var importExtensions: List<String> = emptyList()
@@ -156,12 +167,29 @@ class WebxdcView(
         // values already in it, and `__twonlyWebxdcBridge` exists before any
         // page script runs, so there is no window in which app code could
         // observe or race the setup.
-        webView.loadUrl("${originUrl(origin)}/index.html")
+        //
+        // Nothing of the app loads before WebRTC is shown to be unusable in
+        // this very view: the hold has to be in place, and a page on the app's
+        // own origin has to fail to create a connection. See [WebRtcHolder].
+        WebRtcHolder.awaitHolding(activity) { holding ->
+            if (disposed) return@awaitHolding
+            if (!holding) {
+                refuseToStart("WebRTC could not be blocked")
+                return@awaitHolding
+            }
+            probing = true
+            webView.loadUrl("${originUrl(origin)}$WEBRTC_PROBE_PATH")
+        }
+    }
+
+    private fun refuseToStart(reason: String) {
+        android.util.Log.e("WebxdcView", "not starting webxdc app: $reason")
     }
 
     override fun getView(): View = webView
 
     override fun dispose() {
+        disposed = true
         if (current === this) {
             current = null
         }
@@ -352,6 +380,10 @@ class WebxdcView(
                 return refused()
             }
 
+            if (url.encodedPath == WEBRTC_PROBE_PATH) {
+                return if (probing) probePage() else refused()
+            }
+
             val served = WebxdcChannel.serve(instanceId, url.encodedPath ?: "/")
                 ?: return refused()
 
@@ -384,6 +416,28 @@ class WebxdcView(
             }
             return true
         }
+
+        override fun onPageFinished(view: WebView, url: String) {
+            if (!probing || Uri.parse(url).encodedPath != WEBRTC_PROBE_PATH) return
+            probing = false
+            view.evaluateJavascript(WEBRTC_PROBE) { result ->
+                if (disposed) return@evaluateJavascript
+                if (result == "\"blocked\"") {
+                    view.loadUrl("${originUrl(origin)}/index.html")
+                } else {
+                    refuseToStart("a page here can still create an RTCPeerConnection")
+                }
+            }
+        }
+
+        private fun probePage(): WebResourceResponse = WebResourceResponse(
+            "text/html",
+            "utf-8",
+            200,
+            "OK",
+            mapOf("Content-Security-Policy" to "default-src 'none'"),
+            ByteArrayInputStream("<!doctype html>".toByteArray()),
+        )
 
         private fun refused(): WebResourceResponse = WebResourceResponse(
             "text/plain",

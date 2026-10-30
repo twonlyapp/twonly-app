@@ -83,6 +83,9 @@ impl GroupApi {
             .await?
             .ok_or_else(|| TwonlyError::Generic("group state does not exist".into()))?;
 
+        // An update built on a replayed state would write the rollback itself.
+        group.ensure_not_older(server.version_id)?;
+
         let raw = crypto::decrypt(group.state_key()?, &server.encrypted_group_state)?;
 
         Ok((

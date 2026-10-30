@@ -39,7 +39,6 @@ import 'package:twonly/src/services/performance_tracking.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/connection_status.comp.dart';
@@ -47,6 +46,7 @@ import 'package:twonly/src/visual/components/flame_counter.comp.dart'
     show emptyFlameState;
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
 import 'package:twonly/src/visual/components/story_preview.comp.dart';
+import 'package:twonly/src/visual/helpers/precache_file_image.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/news_btn.comp.dart';
@@ -88,6 +88,7 @@ class _ChatListViewState extends State<ChatListView>
   StreamSubscription<List<(String, ContactGroup)>>? _chatContactGroupsSub;
   StreamSubscription<List<StoryItem>>? _storiesSub;
   StreamSubscription<List<OwnStoryItem>>? _ownStoriesSub;
+  StreamSubscription<void>? _alwaysShowStoriesSub;
   final StoryExpiryTimer _ownStoryExpiry = StoryExpiryTimer();
   final StoryExpiryTimer _receivedStoryExpiry = StoryExpiryTimer();
   Timer? _typingUpdateTimer;
@@ -107,6 +108,9 @@ class _ChatListViewState extends State<ChatListView>
   Map<String, List<ContactGroup>> _contactGroupsByGroup = {};
   Map<String, List<StoryItem>> _storiesByGroup = {};
   List<OwnStoryItem> _ownStories = [];
+
+  /// Keeps stories that were seen completely in the strip, see Appearance.
+  bool _alwaysShowStories = false;
 
   final ValueNotifier<bool> _hasContacts = ValueNotifier(false);
   bool _loading = true;
@@ -278,20 +282,19 @@ class _ChatListViewState extends State<ChatListView>
         ) {
           if (!mounted || !_watching) return;
           for (final media in mediaFiles) {
-            if (!_precachedMediaIds.contains(media.mediaId)) {
-              _precachedMediaIds.add(media.mediaId);
-              final fileService = MediaFileService(media);
-              if (fileService.tempPath.existsSync()) {
-                precacheImage(
-                  FileImage(fileService.tempPath),
-                  context,
-                ).catchError((Object e, StackTrace st) {
-                  Log.error(
-                    'Failed to precache image in ChatListView: $e\n$st',
-                  );
-                });
-              }
-            }
+            if (_precachedMediaIds.contains(media.mediaId)) continue;
+            final fileService = MediaFileService(media);
+            if (!fileService.tempPath.existsSync()) continue;
+            _precachedMediaIds.add(media.mediaId);
+            unawaited(
+              precacheFileImage(
+                fileService.tempPath,
+                context,
+                source: 'chat list',
+              ).then((succeeded) {
+                if (!succeeded) _precachedMediaIds.remove(media.mediaId);
+              }),
+            );
           }
         });
 
@@ -488,6 +491,12 @@ class _ChatListViewState extends State<ChatListView>
           setState(() => _storiesByGroup = byGroup);
           _scheduleReceivedStoryExpiry();
         });
+    _alwaysShowStories = userService.currentUser.alwaysShowStories;
+    _alwaysShowStoriesSub = userService.onUserUpdated.listen((_) {
+      final next = userService.currentUser.alwaysShowStories;
+      if (!mounted || !_watching || next == _alwaysShowStories) return;
+      setState(() => _alwaysShowStories = next);
+    });
     _ownStoriesSub =
         (() {
           final cutoff =
@@ -525,6 +534,7 @@ class _ChatListViewState extends State<ChatListView>
     };
     return buildStoryBubbleItems(
       stories: _storiesByGroup.values.expand((items) => items),
+      includeSeen: _alwaysShowStories,
       labelFor: (story) => switch (contactsById[story.senderId]) {
         final ChatListContact contact => getChatListContactDisplayName(contact),
         null =>
@@ -552,14 +562,15 @@ class _ChatListViewState extends State<ChatListView>
     );
   }
 
-  /// Removes an unseen story bubble at its exact 24-hour boundary even if
-  /// the database stream is otherwise quiet.
+  /// Removes a story bubble at its exact 24-hour boundary even if the
+  /// database stream is otherwise quiet. Seen items count too, for when
+  /// [_alwaysShowStories] keeps them in the strip.
   void _scheduleReceivedStoryExpiry() {
     final now = clock.now();
     final active =
         _storiesByGroup.values
             .expand((items) => items)
-            .where((item) => !item.seen && item.isActiveAt(now))
+            .where((item) => item.isActiveAt(now))
             .toList()
           ..sort((a, b) => a.postedAt.compareTo(b.postedAt));
     final oldest = active.firstOrNull;
@@ -628,6 +639,7 @@ class _ChatListViewState extends State<ChatListView>
     _chatContactGroupsSub?.cancel();
     _storiesSub?.cancel();
     _ownStoriesSub?.cancel();
+    _alwaysShowStoriesSub?.cancel();
     _ownStoryExpiry.cancel();
     _receivedStoryExpiry.cancel();
   }

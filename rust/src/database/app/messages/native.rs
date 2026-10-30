@@ -43,6 +43,59 @@ impl<'a> NewMessage<'a> {
 }
 
 impl Message {
+    /// Whether `message_id` is a message this device sent into a chat that
+    /// `contact_id` belongs to, so that they could have received it. A member
+    /// who left since still counts: what they received before stays theirs.
+    pub async fn was_sent_to(
+        t: &mut Transaction<'_, Sqlite>, message_id: &str, contact_id: i64,
+    ) -> Result<bool> {
+        Ok(sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                SELECT 1 FROM messages m
+                JOIN group_members gm ON gm.group_id = m.group_id
+                WHERE m.message_id = ? AND m.sender_id IS NULL AND gm.contact_id = ?
+            ) AS "sent!: bool""#,
+            message_id,
+            contact_id,
+        )
+        .fetch_one(&mut **t)
+        .await?)
+    }
+
+    /// Whether `contact_id` is a current member of the chat `message_id` was
+    /// posted in, whoever posted it.
+    pub async fn is_in_chat_of_member(
+        t: &mut Transaction<'_, Sqlite>, message_id: &str, contact_id: i64,
+    ) -> Result<bool> {
+        Ok(sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                SELECT 1 FROM messages m
+                JOIN group_members gm ON gm.group_id = m.group_id
+                WHERE m.message_id = ? AND gm.contact_id = ?
+                  AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup')
+            ) AS "member!: bool""#,
+            message_id,
+            contact_id,
+        )
+        .fetch_one(&mut **t)
+        .await?)
+    }
+
+    /// Whether `sender_id` sent `message_id`.
+    pub async fn is_from(
+        t: &mut Transaction<'_, Sqlite>, message_id: Option<&str>, sender_id: i64,
+    ) -> Result<bool> {
+        Ok(sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                SELECT 1 FROM messages WHERE message_id = ? AND sender_id = ?
+            ) AS "sent!: bool""#,
+            message_id,
+            sender_id,
+        )
+        .fetch_one(&mut **t)
+        .await?)
+    }
+
     pub async fn record_opened(
         t: &mut Transaction<'_, Sqlite>, message_id: &str, contact_id: i64, timestamp: i64,
     ) -> Result<()> {

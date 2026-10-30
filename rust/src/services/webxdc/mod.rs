@@ -101,6 +101,17 @@ pub(crate) enum GameNotification {
     Lost,
 }
 
+/// Chat status is separate from push notification targeting.
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum GameChatStatus {
+    Played,
+    Turn,
+    Won,
+    Lost,
+    Draw,
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(untagged, deny_unknown_fields)]
 pub(crate) enum AppNotification {
@@ -686,7 +697,7 @@ impl WebxdcService {
         }
 
         let notification_content =
-            crate::services::notifications::webxdc_notification_content(update, self_user_id);
+            crate::services::notifications::webxdc_chat_content(update, self_user_id);
 
         let instance = sqlx::query!(
             r#"SELECT group_id AS "group_id!: String", app_id AS "app_id!: String",
@@ -1084,6 +1095,7 @@ impl WebxdcService {
     pub async fn send_update(
         &self, instance_id: String, payload: String, info: Option<String>, href: Option<String>,
         summary: Option<String>, document: Option<String>, notify: Option<String>,
+        game_status: Option<String>,
     ) -> Result<()> {
         if payload.len() > SEND_UPDATE_MAX_SIZE {
             return Err(TwonlyError::Generic(format!(
@@ -1143,7 +1155,7 @@ impl WebxdcService {
                     .as_array()
                     .unwrap()
                     .iter()
-                    .any(|m| m["id"] == address)
+                    .any(|m| m["id"] == address.as_str())
                 {
                     return Err(TwonlyError::Generic(
                         "unknown notification recipient".into(),
@@ -1167,6 +1179,29 @@ impl WebxdcService {
             None
         };
 
+        let game_status = if let Some(raw) = game_status {
+            if raw.len() > SEND_UPDATE_MAX_SIZE {
+                return Err(TwonlyError::Generic("game status list is too large".into()));
+            }
+            let statuses: std::collections::BTreeMap<String, GameChatStatus> =
+                serde_json::from_str(&raw)
+                    .map_err(|_| TwonlyError::Generic("invalid game status map".into()))?;
+            let members: serde_json::Value =
+                serde_json::from_str(&self.members(&instance_id).await?)?;
+            if statuses.keys().any(|address| {
+                !members["members"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|m| m["id"] == address.as_str())
+            }) {
+                return Err(TwonlyError::Generic("unknown game status recipient".into()));
+            }
+            Some(serde_json::to_string(&statuses)?)
+        } else {
+            None
+        };
+
         let info = sanitize(info.as_deref(), MAX_INFO_CHARS);
 
         let href = href.as_deref().and_then(sanitize_href);
@@ -1185,6 +1220,7 @@ impl WebxdcService {
                 summary: summary.clone(),
                 document: document.clone(),
                 notify,
+                game_status,
             }),
             ..Default::default()
         };
@@ -1217,6 +1253,11 @@ impl WebxdcService {
         // The same row every other member of the chat builds when the update
         // reaches them, so what was announced reads the same everywhere.
         if let Some(info) = info.as_deref() {
+            let user = crate::user_config::UserConfig::load_required_from(&self.ctx)?;
+            let notification_content = crate::services::notifications::webxdc_chat_content(
+                data.webxdc_update.as_ref().unwrap(),
+                user.user_id,
+            );
             Self::insert_info_message(
                 &mut transaction,
                 &instance_id,
@@ -1227,7 +1268,7 @@ impl WebxdcService {
                 None,
                 info,
                 now,
-                None,
+                notification_content.as_deref(),
             )
             .await?;
         }
@@ -1691,7 +1732,7 @@ mod tests {
         for statement in [
             "INSERT INTO contacts(user_id,username,signal_version) VALUES \
              (7,'alice','v2'),(8,'bob','v2')",
-            "INSERT INTO groups(group_id,group_name,is_direct_chat) VALUES ('g','Games',1)",
+            "INSERT INTO groups(group_id,group_name,is_direct_chat) VALUES ('g','Games',0)",
             "INSERT INTO group_members(group_id,contact_id) VALUES ('g',7),('g',8)",
             "INSERT INTO messages(message_id,group_id,sender_id,type,created_at) VALUES \
              ('card','g',7,'webxdcApp',100)",
@@ -1755,6 +1796,7 @@ mod tests {
                 Some("Bob's turn".into()),
                 None,
                 Some("{}".into()),
+                None,
             )
             .await?;
         let mut tx = database.pool.begin().await?;
@@ -2330,7 +2372,7 @@ mod tests {
             "INSERT INTO messages(message_id, group_id, type, created_at) VALUES ('card', 'g', \
              'webxdcApp', 100)",
             "INSERT INTO webxdc_instances(instance_id, group_id, app_id, version, origin_token) \
-             VALUES ('card', 'g', 'connect4', 3, 'origin')",
+             VALUES ('card', 'g', 'arbitrary-game', 3, 'origin')",
         ] {
             sqlx::query(statement).execute(&database.pool).await?;
         }
@@ -2361,6 +2403,7 @@ mod tests {
                     None,
                     None,
                     Some(notify.clone()),
+                    None,
                 ),
             )
             .await
@@ -2463,6 +2506,62 @@ mod tests {
             tx.commit().await?;
         }
 
+        for invalid in [
+            serde_json::json!({WebxdcService::address_for("card",42): "unknown"}).to_string(),
+            serde_json::json!({"not-a-member": "won"}).to_string(),
+        ] {
+            assert!(service
+                .send_update(
+                    "card".into(),
+                    "{}".into(),
+                    Some("invalid".into()),
+                    None,
+                    None,
+                    None,
+                    Some("{}".into()),
+                    Some(invalid),
+                )
+                .await
+                .is_err());
+        }
+
+        // The author also sees their result, though only the opponent is
+        // notified. Persist it on the same activity as the delivery state.
+        for (opponent, own) in [("lost", "won"), ("won", "lost")] {
+            let notify =
+                serde_json::json!({WebxdcService::address_for("card", 7): {"game":opponent}})
+                    .to_string();
+            service
+                .send_update(
+                    "card".into(),
+                    "{}".into(),
+                    Some("Anna played Connect Four.".into()),
+                    None,
+                    None,
+                    None,
+                    Some(notify),
+                    Some(
+                        serde_json::json!({WebxdcService::address_for("card",42): own}).to_string(),
+                    ),
+                )
+                .await?;
+            let card = crate::database::app::messages::queries::get(
+                &mut *database.read_pool.acquire().await?,
+                "card",
+            )
+            .await?
+            .unwrap();
+            assert_eq!(card.sender_id, None);
+            let origin = <proto::AdditionalMessageData as prost::Message>::decode(
+                card.additional_message_data.as_deref().unwrap(),
+            )?
+            .webxdc_origin
+            .unwrap();
+            let content: serde_json::Value =
+                serde_json::from_str(&origin.notification_content.unwrap())?;
+            assert_eq!(content["webxdc_game"], own);
+        }
+
         Ok(())
     }
 
@@ -2542,6 +2641,7 @@ mod tests {
                 href: None,
                 summary: Some("Trip updated".into()),
                 document: Some("2 expenses".into()),
+                game_status: None,
                 notify: Some(serde_json::json!({WebxdcService::address_for("card", 42): "Your expense was added"}).to_string()),
             },
             250,
@@ -2798,7 +2898,8 @@ mod tests {
                 None,
                 None,
                 None,
-                Some(r#"{"unrelated-member":"Dinner"}"#.into())
+                Some(r#"{"unrelated-member":"Dinner"}"#.into()),
+                None,
             )
             .await
             .is_err());

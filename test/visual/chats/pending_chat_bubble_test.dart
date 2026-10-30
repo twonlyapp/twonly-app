@@ -20,6 +20,7 @@ import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
@@ -227,14 +228,14 @@ void main() {
         "INSERT INTO group_members(group_id,contact_id) VALUES ('chat',7)",
       );
       await testDatabase.customStatement(
-        "INSERT INTO webxdc_apps(app_id,version,name,bundle_sha256,bundle_bytes,cached_at) VALUES ('timeline-game',1,'Connect Four','hash',1,0)",
+        "INSERT INTO webxdc_apps(app_id,version,name,bundle_sha256,bundle_bytes,cached_at) VALUES ('arbitrary-game',1,'Connect Four','hash',1,0)",
       );
       await testDatabase.customStatement(
         "INSERT INTO messages(message_id,group_id,sender_id,type,created_at) VALUES ('timeline-card','chat',7,'webxdcApp',?)",
         [start],
       );
       await testDatabase.customStatement(
-        "INSERT INTO webxdc_instances(instance_id,group_id,app_id,version,origin_token) VALUES ('timeline-card','chat','timeline-game',1,'timeline-origin')",
+        "INSERT INTO webxdc_instances(instance_id,group_id,app_id,version,origin_token) VALUES ('timeline-card','chat','arbitrary-game',1,'timeline-origin')",
       );
       await testDatabase.customStatement(
         "INSERT INTO messages(message_id,group_id,type,content,created_at) VALUES ('between','chat','text','Between game turns',?)",
@@ -256,8 +257,21 @@ void main() {
         "DELETE FROM messages WHERE message_id IN (SELECT message_id || '-info' FROM webxdc_updates WHERE instance_id = 'timeline-card')",
       );
       await testDatabase.customStatement(
-        "INSERT INTO messages(message_id,group_id,sender_id,type,content,created_at) VALUES (?,'chat',?,'text',?,?)",
-        ['$id-info', sender, 'Move: $summary', start + offset],
+        "INSERT INTO messages(message_id,group_id,sender_id,type,content,created_at,additional_message_data) VALUES (?,'chat',?,'text',?,?,?)",
+        [
+          '$id-info',
+          sender,
+          'Move: $summary',
+          start + offset,
+          AdditionalMessageData(
+            webxdcOrigin: WebxdcOrigin(
+              instanceId: 'timeline-card',
+              appId: 'arbitrary-game',
+              notificationContent:
+                  '{"webxdc_game":"played","instance_id":"timeline-card"}',
+            ),
+          ).writeToBuffer(),
+        ],
       );
       await testDatabase.customStatement(
         "UPDATE messages SET created_at = ? WHERE message_id = 'timeline-card'",
@@ -274,7 +288,7 @@ void main() {
     await pumpNative(
       tester,
       until: () =>
-          find.text('Move: Your turn').evaluate().isNotEmpty &&
+          find.text('Played.').evaluate().isNotEmpty &&
           find.text('Between game turns').evaluate().isNotEmpty,
     );
     expect(card, findsOneWidget);
@@ -303,11 +317,12 @@ void main() {
     await pumpNative(
       tester,
       until: () =>
-          find.text("Move: Player's turn").evaluate().isNotEmpty &&
+          find.text('You have played.').evaluate().isNotEmpty &&
           tester.getCenter(card).dx > 400,
     );
     expect(card, findsOneWidget);
     expect(find.text('Automatic move text'), findsNothing);
+    expect(find.text("Move: Player's turn"), findsNothing);
     expect(
       tester.getTopLeft(card).dy,
       greaterThan(tester.getTopLeft(find.text('Between game turns')).dy),
@@ -399,7 +414,7 @@ void main() {
     await pumpNative(
       tester,
       until: () =>
-          find.text('Move: Your next turn').evaluate().isNotEmpty &&
+          find.text('Played.').evaluate().isNotEmpty &&
           tester.getCenter(card).dx < 400,
     );
     await pumpNative(
@@ -437,7 +452,7 @@ void main() {
       ),
     );
     await pumpNative(tester, until: () => gameTime.evaluate().isEmpty);
-    expect(find.text('Move: Your next turn'), findsOneWidget);
+    expect(find.text('Played.'), findsOneWidget);
     expect(gameTime, findsNothing);
     await runNative(
       tester,

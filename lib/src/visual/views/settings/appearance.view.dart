@@ -264,6 +264,12 @@ class _AppearanceViewState extends State<AppearanceView> {
     });
   }
 
+  Future<void> updateAlwaysShowStories(bool alwaysShowStories) async {
+    await UserService.update((u) {
+      u.alwaysShowStories = alwaysShowStories;
+    });
+  }
+
   String _themeModeLabel(BuildContext context, ThemeMode mode) {
     switch (mode) {
       case ThemeMode.system:
@@ -296,6 +302,7 @@ class _AppearanceViewState extends State<AppearanceView> {
               userService.currentUser.startWithCameraOpen;
           final showImagePreviewWhenSending =
               userService.currentUser.showShowImagePreviewWhenSending;
+          final alwaysShowStories = userService.currentUser.alwaysShowStories;
 
           return ListView(
             children: [
@@ -369,6 +376,20 @@ class _AppearanceViewState extends State<AppearanceView> {
                 trailing: Switch.adaptive(
                   value: showImagePreviewWhenSending,
                   onChanged: updateShowImagePreviewWhenSending,
+                ),
+              ),
+              ListTile(
+                title: Text(context.lang.alwaysShowStories),
+                subtitle: Text(
+                  context.lang.alwaysShowStoriesSubtitle,
+                  style: TextStyle(color: context.color.onSurfaceVariant),
+                ),
+                onTap: () async {
+                  await updateAlwaysShowStories(!alwaysShowStories);
+                },
+                trailing: Switch.adaptive(
+                  value: alwaysShowStories,
+                  onChanged: updateAlwaysShowStories,
                 ),
               ),
             ],

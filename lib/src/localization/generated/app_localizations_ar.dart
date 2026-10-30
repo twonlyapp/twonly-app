@@ -93,6 +93,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shareImagedEditorSavedImage => 'تَمَّ الحَفْظُ';
 
   @override
+  String get imageLoadFailed => 'تعذّر تحميل هذه الصورة.';
+
+  @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
   String get shareImageSearchAllContacts =>
       'البَحْثُ فِي جَمِيعِ جِهَاتِ الاِتِّصَالِ';
 
@@ -1786,6 +1792,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'عرض معاينة الصورة عند اختيار المستلمين';
 
   @override
+  String get alwaysShowStories => 'إظهار القصص دائمًا';
+
+  @override
+  String get alwaysShowStoriesSubtitle =>
+      'تبقى القصص أعلى محادثاتك حتى بعد مشاهدتها.';
+
+  @override
   String verifiedPublicKey(Object username) {
     return 'تم التحقق من هوية $username بنجاح.';
   }
@@ -3202,6 +3215,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get storyDeleteFailed => 'تعذّر الحذف. حاول مرة أخرى بعد قليل.';
 
   @override
+  String get storyShowAgain => 'عرض مجددًا';
+
+  @override
   String get shareImageStory => 'قصة';
 
   @override
@@ -3431,4 +3447,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatGameLost => 'لقد خسرت.';
+
+  @override
+  String get chatGamePlayed => 'لقد لعبت.';
+
+  @override
+  String get chatGameOtherPlayed => 'لعب.';
+
+  @override
+  String get chatGameDraw => 'تعادل.';
 }

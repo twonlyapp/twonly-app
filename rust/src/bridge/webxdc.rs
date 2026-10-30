@@ -300,11 +300,21 @@ pub async fn updates_after(instance_id: String, serial: i64) -> Result<Vec<Webxd
 pub async fn send_update(
     instance_id: String, payload: String, info: Option<String>, href: Option<String>,
     summary: Option<String>, document: Option<String>, notify: Option<String>,
+    game_status: Option<String>,
 ) -> Result<()> {
     let ctx = crate::context::Context::get_static()?;
 
     WebxdcService::new(ctx)
-        .send_update(instance_id, payload, info, href, summary, document, notify)
+        .send_update(
+            instance_id,
+            payload,
+            info,
+            href,
+            summary,
+            document,
+            notify,
+            game_status,
+        )
         .await
 }
 

@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO verification_tokens(token, proof_version) VALUES (?, 1) RETURNING token_id AS \"value!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "verification_tokens",
+            "name": "token_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "31daf8dc5d5f0a9da37b9bb36252f3c8a70d772ab7f7cce444594faaa1684882"
+}

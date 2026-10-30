@@ -59,14 +59,14 @@ impl Tester {
 
         if verified {
             sqlx::query!(
-                "INSERT INTO key_verifications(contact_id, type) VALUES (?, 'manualTest')",
+                "INSERT INTO key_verifications(contact_id, type) VALUES (?, 'manual')",
                 user_id,
             )
             .execute(&database.pool)
             .await?;
         } else {
             sqlx::query!(
-                "DELETE FROM key_verifications WHERE contact_id = ? AND type = 'manualTest'",
+                "DELETE FROM key_verifications WHERE contact_id = ? AND type = 'manual'",
                 user_id,
             )
             .execute(&database.pool)
@@ -136,27 +136,11 @@ impl Tester {
     pub async fn is_contact_verified(&self, contact_id: i64) -> anyhow::Result<bool> {
         let database = self.context.app_db.read().await.clone();
 
-        let verified = sqlx::query_scalar!(
-            r#"
-            SELECT EXISTS(
-                SELECT 1
-                FROM key_verifications AS verification
-                WHERE verification.contact_id = ?
-                  AND (
-                    verification.type != 'contactSharedByVerified'
-                    OR EXISTS(
-                        SELECT 1 FROM key_verifications AS verifier_verification
-                        WHERE verifier_verification.contact_id = verification.verified_by
-                    )
-                  )
-            )
-            "#,
+        Ok(rust_lib_twonly::database::app::key_verifications::queries::is_verified(
+            &mut *database.pool.acquire().await?,
             contact_id,
         )
-        .fetch_one(&database.pool)
-        .await?;
-
-        Ok(verified != 0)
+        .await?)
     }
 
     pub async fn wait_for_contact_state(

@@ -16,30 +16,26 @@ import 'package:twonly/src/visual/elements/my_chip.element.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/first_seen_order.dart';
 import 'package:twonly/src/visual/views/contact/contact_group_settings.view.dart';
 
-/// Where a send also posts the media as a story: to contacts with an exchange
-/// in the last month, or to contact groups that share stories. Kept by the
+/// The explicitly selected contact groups that receive a story. Kept by the
 /// editor, so the choice survives a trip back to it.
 class StoryTarget {
-  bool all = false;
   final Set<int> contactGroupIds = {};
 
-  bool get isEmpty => !all && contactGroupIds.isEmpty;
+  bool get isEmpty => contactGroupIds.isEmpty;
 
   void clear() {
-    all = false;
     contactGroupIds.clear();
   }
 
   stories.StoryAudience? toAudience() => isEmpty
       ? null
       : stories.StoryAudience(
-          all: all,
+          all: false,
           contactGroupIds: Int64List.fromList(contactGroupIds.toList()),
         );
 }
 
-/// The story choice at the top of the send screen. "All" and single contact
-/// groups exclude each other.
+/// The story groups at the top of the send screen.
 class StoryTargetSelector extends StatefulWidget {
   const StoryTargetSelector({
     required this.target,
@@ -125,16 +121,8 @@ class _StoryTargetSelectorState extends State<StoryTargetSelector> {
     setState(() => _audienceChats = chats);
   }
 
-  void _toggleAll() {
-    final selected = !widget.target.all;
-    widget.target
-      ..clear()
-      ..all = selected;
-    _changed();
-  }
-
   void _toggleGroup(ContactGroup contactGroup) {
-    final ids = (widget.target..all = false).contactGroupIds;
+    final ids = widget.target.contactGroupIds;
     if (!ids.remove(contactGroup.id)) ids.add(contactGroup.id);
     _changed();
   }
@@ -144,9 +132,7 @@ class _StoryTargetSelectorState extends State<StoryTargetSelector> {
       const ContactGroupSettingsView(initialShareStories: true),
     );
     if (id is int && mounted) {
-      widget.target
-        ..all = false
-        ..contactGroupIds.add(id);
+      widget.target.contactGroupIds.add(id);
       _changed();
     }
   }
@@ -192,13 +178,7 @@ class _StoryTargetSelectorState extends State<StoryTargetSelector> {
               scrollDirection: Axis.horizontal,
               padding: inset,
               children: [
-                MyChip(
-                  label: Text(context.lang.shareImageStoryAll),
-                  selected: target.all,
-                  onTap: _toggleAll,
-                ),
                 for (final contactGroup in _contactGroups) ...[
-                  const SizedBox(width: 8),
                   MyChip(
                     label: Text(
                       [
@@ -214,8 +194,8 @@ class _StoryTargetSelectorState extends State<StoryTargetSelector> {
                       ContactGroupSettingsView(contactGroup: contactGroup),
                     ),
                   ),
+                  const SizedBox(width: 8),
                 ],
-                const SizedBox(width: 8),
                 MyChip(
                   tooltip: context.lang.shareImageStoryNewGroup,
                   onTap: _createGroup,

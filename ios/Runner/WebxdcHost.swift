@@ -149,6 +149,19 @@ class WebxdcPlatformView: NSObject, FlutterPlatformView {
   /// not require one.
   static let scheme = "twonly-webxdc"
 
+  /// Runs before any page script in every frame. Non-configurable and
+  /// read-only, so the page can neither assign the constructors back nor
+  /// redefine them.
+  static let blockWebRtc = """
+    for (const name of ["RTCPeerConnection", "webkitRTCPeerConnection"]) {
+      try {
+        Object.defineProperty(window, name, {
+          value: undefined, writable: false, configurable: false, enumerable: false,
+        });
+      } catch (error) {}
+    }
+    """
+
   /// Refuses to read more than this in one import, however many files.
   private static let maxImportBytes = 32 * 1024 * 1024
 
@@ -171,6 +184,14 @@ class WebxdcPlatformView: NSObject, FlutterPlatformView {
     configuration.setURLSchemeHandler(
       SchemeHandler(view: self), forURLScheme: WebxdcPlatformView.scheme)
     configuration.userContentController.add(BridgeHandler(view: self), name: "twonlyWebxdc")
+    // WebRTC is the one way out of the page that neither the scheme handler nor
+    // CSP covers: ICE reaches any host a page names. WKWebView has no switch
+    // for it, so the constructors are taken away in every frame before any page
+    // script runs, and pinned there so a page cannot put them back.
+    configuration.userContentController.addUserScript(
+      WKUserScript(
+        source: WebxdcPlatformView.blockWebRtc, injectionTime: .atDocumentStart,
+        forMainFrameOnly: false))
     // Nothing plays without the user asking for it, and no page may take over
     // the screen on its own.
     configuration.mediaTypesRequiringUserActionForPlayback = .all

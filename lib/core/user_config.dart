@@ -154,6 +154,10 @@ class UserConfig {
   /// Announce a contact's first story in 24 hours. Checked only on this
   /// device, where the notification is created; senders always wake.
   bool storyNotifications;
+
+  /// Keeps a contact's story above the chats after all of it was seen.
+  /// Enabled by default.
+  bool alwaysShowStories;
   bool showRestoreFlame;
 
   /// Unused: the best friend is derived from `total_media_counter` whenever
@@ -243,6 +247,7 @@ class UserConfig {
     required this.autoStoreAllSendUnlimitedMediaFiles,
     required this.typingIndicators,
     required this.storyNotifications,
+    required this.alwaysShowStories,
     required this.showRestoreFlame,
     this.myBestFriendGroupId,
     this.signalLastSignedPreKeyUpdated,
@@ -315,6 +320,7 @@ class UserConfig {
       autoStoreAllSendUnlimitedMediaFiles.hashCode ^
       typingIndicators.hashCode ^
       storyNotifications.hashCode ^
+      alwaysShowStories.hashCode ^
       showRestoreFlame.hashCode ^
       myBestFriendGroupId.hashCode ^
       signalLastSignedPreKeyUpdated.hashCode ^
@@ -392,6 +398,7 @@ class UserConfig {
               other.autoStoreAllSendUnlimitedMediaFiles &&
           typingIndicators == other.typingIndicators &&
           storyNotifications == other.storyNotifications &&
+          alwaysShowStories == other.alwaysShowStories &&
           showRestoreFlame == other.showRestoreFlame &&
           myBestFriendGroupId == other.myBestFriendGroupId &&
           signalLastSignedPreKeyUpdated ==

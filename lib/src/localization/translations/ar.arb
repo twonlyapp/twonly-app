@@ -1,5 +1,7 @@
 {
   "@@locale": "ar",
+  "imageLoadFailed": "تعذّر تحميل هذه الصورة.",
+  "retry": "إعادة المحاولة",
   "subscriptionAllApps": "الوُصُولُ إِلَى جَمِيعِ التَّطْبِيقَات",
   "registerSlogan": "ابْقَ عَلَى تَوَاصُلٍ بِخُصُوصِيَّةٍ.",
   "onboardingWelcomeTitle": "مَرْحَباً بِكَ فِي twonly!",
@@ -490,6 +492,8 @@
   "verificationOwnProfile": "لقد مسحت رمز التحقق الخاص بك.",
   "startWithCameraOpen": "البدء والكاميرا مفتوحة",
   "showImagePreviewWhenSending": "عرض معاينة الصورة عند اختيار المستلمين",
+  "alwaysShowStories": "إظهار القصص دائمًا",
+  "alwaysShowStoriesSubtitle": "تبقى القصص أعلى محادثاتك حتى بعد مشاهدتها.",
   "verifiedPublicKey": "تم التحقق من هوية {username} بنجاح.",
   "memoriesAYearAgo": "قبل عام",
   "memoriesXYearsAgo": "قبل {years} سنوات",
@@ -871,6 +875,7 @@
   "storyDeleteBody": "سيؤدي هذا إلى إزالتها من قصتك.",
   "storyDelete": "حذف",
   "storyDeleteFailed": "تعذّر الحذف. حاول مرة أخرى بعد قليل.",
+  "storyShowAgain": "عرض مجددًا",
   "shareImageStory": "قصة",
   "shareImageStoryAudience": "{count, plural, =1{تصل إلى جهة اتصال واحدة} other{تصل إلى {count} من جهات الاتصال}}",
   "shareImageStoryUnavailable": "لا يمكن نشر الوسائط المحمية بـ twonly كقصة.",
@@ -926,5 +931,8 @@
   "notificationGameFallbackName": "لعبة",
   "chatGameTurn": "حان دورك.",
   "chatGameWon": "لقد فزت.",
-  "chatGameLost": "لقد خسرت."
+  "chatGameLost": "لقد خسرت.",
+  "chatGamePlayed": "لقد لعبت.",
+  "chatGameOtherPlayed": "لعب.",
+  "chatGameDraw": "تعادل."
 }

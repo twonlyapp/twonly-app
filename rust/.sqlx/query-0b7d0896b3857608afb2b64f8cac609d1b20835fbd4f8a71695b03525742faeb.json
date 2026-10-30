@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM app_metadata WHERE key = 'verification_policy_refresh')",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM app_metadata WHERE key = 'verification_policy_refresh')",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0b7d0896b3857608afb2b64f8cac609d1b20835fbd4f8a71695b03525742faeb"
+}

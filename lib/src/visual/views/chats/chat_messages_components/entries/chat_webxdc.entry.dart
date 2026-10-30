@@ -50,6 +50,8 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
     super.initState();
     _seed();
     _subscribe();
+    // A chat showing a game is where one gets opened, usually seconds later.
+    unawaited(WebxdcHost.warmUp());
   }
 
   @override

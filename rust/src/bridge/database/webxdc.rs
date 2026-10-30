@@ -6,6 +6,12 @@ use crate::database::app::webxdc::{queries, watches};
 use crate::error::Result;
 use crate::frb_generated::StreamSink;
 
+pub async fn has_recent_webxdc_messages(since: i64, transaction: &DatabaseSession) -> Result<bool> {
+    let mut tx = CommandTransaction::read(transaction).await?;
+    let result = queries::has_recent_messages(tx.transaction(), since).await;
+    tx.finish(result).await
+}
+
 pub async fn webxdc_card_app(
     id: String, version: i64, transaction: &DatabaseSession,
 ) -> Result<Option<WebxdcCardApp>> {

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contact_handshake_repairs SET awaiting_acceptance_since = NULL WHERE contact_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "89b4c26bc4f02dd52c92c858c590237b55de79111725186d6cc34e0ae72be7c2"
+}

@@ -61,6 +61,7 @@ pub async fn groups(
     watch::snapshots(
         databases,
         &[
+            "contacts",
             "group_members",
             "key_verifications",
             "user_discovery_user_relations",

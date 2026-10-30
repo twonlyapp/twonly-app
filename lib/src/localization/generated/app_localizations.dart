@@ -256,6 +256,18 @@ abstract class AppLocalizations {
   /// **'Saved'**
   String get shareImagedEditorSavedImage;
 
+  /// No description provided for @imageLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this image.'**
+  String get imageLoadFailed;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get retry;
+
   /// No description provided for @shareImageSearchAllContacts.
   ///
   /// In en, this message translates to:
@@ -3040,6 +3052,18 @@ abstract class AppLocalizations {
   /// **'Display image preview when selecting recipients'**
   String get showImagePreviewWhenSending;
 
+  /// No description provided for @alwaysShowStories.
+  ///
+  /// In en, this message translates to:
+  /// **'Always show stories'**
+  String get alwaysShowStories;
+
+  /// No description provided for @alwaysShowStoriesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep stories above your chats after you\'ve watched them.'**
+  String get alwaysShowStoriesSubtitle;
+
   /// No description provided for @verifiedPublicKey.
   ///
   /// In en, this message translates to:
@@ -5326,6 +5350,12 @@ abstract class AppLocalizations {
   /// **'Could not delete it. Try again in a moment.'**
   String get storyDeleteFailed;
 
+  /// No description provided for @storyShowAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Show again'**
+  String get storyShowAgain;
+
   /// No description provided for @shareImageStory.
   ///
   /// In en, this message translates to:
@@ -5661,6 +5691,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have lost.'**
   String get chatGameLost;
+
+  /// No description provided for @chatGamePlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'You have played.'**
+  String get chatGamePlayed;
+
+  /// No description provided for @chatGameOtherPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Played.'**
+  String get chatGameOtherPlayed;
+
+  /// No description provided for @chatGameDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'It is a draw.'**
+  String get chatGameDraw;
 }
 
 class _AppLocalizationsDelegate
