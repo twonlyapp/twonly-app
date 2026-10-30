@@ -33,6 +33,29 @@ pub(crate) async fn handle_passwordless_recovery(
         .execute(&mut **t)
         .await?;
     } else if let Some(share) = recovery.recovery_secret_share {
+        // Holding a share makes us one of the sender's recovery contacts, who
+        // are picked among their friends, so it is only taken from one. A
+        // friend we have not accepted yet loses nothing: without a heartbeat
+        // from us, their device sends the share again every day.
+        let is_friend = sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                SELECT 1 FROM contacts
+                WHERE user_id = ? AND accepted != 0 AND blocked = 0 AND deleted_by_user = 0
+            ) AS "friend!: bool""#,
+            from_user_id,
+        )
+        .fetch_one(&mut **t)
+        .await?;
+
+        if !is_friend {
+            tracing::warn!(
+                from_user_id,
+                "ignoring a recovery share from someone who is not a contact"
+            );
+
+            return Ok(());
+        }
+
         sqlx::query!(
             r#"
             UPDATE contacts
@@ -357,6 +380,48 @@ mod tests {
         assert_eq!(deleted.recovery_contacts_secret_share, None);
 
         assert_eq!(deleted.recovery_contacts_threshold, None);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+
+    async fn recovery_shares_are_only_held_for_friends() -> anyhow::Result<()> {
+        let (_temp, ctx) = context().await?;
+
+        let database = ctx.app_db.read().await.clone();
+
+        sqlx::query!(
+            "INSERT INTO contacts(user_id, username, accepted, blocked, deleted_by_user) VALUES \
+             (7, 'stranger', 0, 0, 1), (8, 'blocked', 1, 1, 0), (9, 'friend', 1, 0, 0)"
+        )
+        .execute(&database.pool)
+        .await?;
+
+        for user_id in [7, 8, 9] {
+            let mut transaction = database.pool.begin().await?;
+
+            handle_passwordless_recovery(
+                &mut transaction,
+                user_id,
+                encrypted_content::PasswordLessRecovery {
+                    recovery_secret_share: Some(vec![1, 2, 3]),
+                    threshold: 2,
+                    delete: false,
+                },
+            )
+            .await?;
+
+            transaction.commit().await?;
+        }
+
+        let holders = sqlx::query_scalar!(
+            "SELECT user_id FROM contacts WHERE recovery_contacts_secret_share IS NOT NULL"
+        )
+        .fetch_all(&database.pool)
+        .await?;
+
+        assert_eq!(holders, vec![9]);
 
         Ok(())
     }

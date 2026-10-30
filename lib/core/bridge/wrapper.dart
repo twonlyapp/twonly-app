@@ -6,6 +6,33 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `binomial`, `for_each_combination`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `clone`, `eq`, `fmt`
+
+/// A secret that some `threshold` of the given shares reconstruct.
+class RecoveredSecretCandidate {
+  final Uint8List secret;
+
+  /// Positions in the input of every share that reconstructs this secret.
+  final Uint32List shareIndexes;
+
+  const RecoveredSecretCandidate({
+    required this.secret,
+    required this.shareIndexes,
+  });
+
+  @override
+  int get hashCode => secret.hashCode ^ shareIndexes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RecoveredSecretCandidate &&
+          runtimeType == other.runtimeType &&
+          secret == other.secret &&
+          shareIndexes == other.shareIndexes;
+}
+
 class RustUtils {
   const RustUtils();
 
@@ -23,6 +50,23 @@ class RustUtils {
     required List<Uint8List> shares,
     required int threshold,
   }) => RustLib.instance.api.crateBridgeWrapperRustUtilsRecoverSecret(
+    shares: shares,
+    threshold: threshold,
+  );
+
+  /// Recovers every secret that some `threshold` of `shares` reconstruct,
+  /// the one most shares agree on first.
+  ///
+  /// Shamir shares carry no integrity: interpolating over a duplicate, a
+  /// stale share from an earlier setup or a forged one silently yields
+  /// garbage. Each combination is therefore tried on its own, so the honest
+  /// shares still agree on their secret and a share missing from the chosen
+  /// candidate is the one that does not fit. Identical shares count once,
+  /// and two different shares with the same x are never combined.
+  static Future<List<RecoveredSecretCandidate>> recoverSecretCandidates({
+    required List<Uint8List> shares,
+    required int threshold,
+  }) => RustLib.instance.api.crateBridgeWrapperRustUtilsRecoverSecretCandidates(
     shares: shares,
     threshold: threshold,
   );

@@ -3,6 +3,7 @@ import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -98,6 +99,7 @@ Future<bool> promptAndDisableMemoriesBackup(BuildContext context) async {
         );
       })();
       await UserService.update((u) => u.isCloudBackupEnabled = false);
+      memoriesCloudService.limitReached.value = false;
       return true;
     } catch (e) {
       if (context.mounted) {

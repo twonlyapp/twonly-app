@@ -1372,18 +1372,18 @@ async fn handle_encrypted_inner(
     .await?
         != 0;
 
-    if !is_member {
-        let local_user_id = ctx.user_id().await?;
+    if Group::direct_chat_id(ctx.user_id().await?, from_user_id) == group_id {
+        let contact = Contact::get_contact_by_id(t, from_user_id).await?;
 
-        if Group::direct_chat_id(local_user_id, from_user_id) == group_id {
-            let contact = Contact::get_contact_by_id(t, from_user_id).await?;
+        // A deliberate block is terminal, rather than a friendship waiting
+        // for acceptance. Do not create a request or retain its mailbox row.
+        // It holds for a chat that already exists too, and the sender is
+        // still a member of it: the block promises they can no longer write.
+        if contact.as_ref().is_some_and(|value| value.blocked != 0) {
+            return Ok(());
+        }
 
-            // A deliberate block is terminal, rather than a friendship waiting
-            // for acceptance. Do not create a request or retain its mailbox row.
-            if contact.as_ref().is_some_and(|value| value.blocked != 0) {
-                return Ok(());
-            }
-
+        if !is_member {
             if let Some(contact) =
                 contact.filter(|value| value.accepted != 0 && value.deleted_by_user == 0)
             {
@@ -2220,6 +2220,153 @@ mod tests {
         Ok(())
     }
 
+    /// Blocking someone we already chat with keeps them out of that chat,
+    /// although they are still its member. Groups are not touched.
+    #[tokio::test]
+    async fn a_blocked_contact_no_longer_writes_into_their_direct_chat() -> Result<()> {
+        let (_directory, ctx) = chats().await?;
+        let database = ctx.app_db.read().await.clone();
+        let direct = Group::direct_chat_id(42, 7);
+        sqlx::query(
+            "INSERT INTO messages(message_id, group_id, sender_id, type, content) VALUES \
+             ('alice-text', ?, 7, 'text', 'before')",
+        )
+        .bind(&direct)
+        .execute(&database.pool)
+        .await?;
+        sqlx::query("UPDATE contacts SET blocked = 1 WHERE user_id = 7")
+            .execute(&database.pool)
+            .await?;
+
+        let text = |group_id: &str, message_id: &str| proto::EncryptedContent {
+            group_id: Some(group_id.into()),
+            text_message: Some(proto::encrypted_content::TextMessage {
+                sender_message_id: message_id.into(),
+                text: "after".into(),
+                timestamp: chrono::Utc::now().timestamp_millis(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        from(&ctx, 7, text(&direct, "direct-after-block")).await?;
+        from(&ctx, 7, text("g", "group-after-block")).await?;
+        from(
+            &ctx,
+            7,
+            proto::EncryptedContent {
+                message_update: Some(proto::encrypted_content::MessageUpdate {
+                    r#type: proto::encrypted_content::message_update::Type::EditText as i32,
+                    sender_message_id: Some("alice-text".into()),
+                    text: Some("rewritten".into()),
+                    timestamp: chrono::Utc::now().timestamp_millis(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+        )
+        .await?;
+
+        let messages: Vec<(String, String)> = sqlx::query_as(
+            "SELECT message_id, content FROM messages WHERE sender_id = 7 AND type = 'text' \
+             ORDER BY message_id",
+        )
+        .fetch_all(&database.pool)
+        .await?;
+        assert_eq!(
+            messages,
+            vec![
+                ("alice-text".to_owned(), "before".to_owned()),
+                ("group-after-block".to_owned(), "after".to_owned()),
+            ]
+        );
+
+        Ok(())
+    }
+
+    /// History rows are shown as written, under their sender's name, so only
+    /// actions the sender could have taken are recorded.
+    #[tokio::test]
+    async fn group_history_only_takes_actions_their_sender_could_have_made() -> Result<()> {
+        let (_directory, ctx) = chats().await?;
+        let database = ctx.app_db.read().await.clone();
+        let direct = Group::direct_chat_id(42, 7);
+        sqlx::query(
+            "UPDATE group_members SET member_state = 'admin' WHERE group_id = 'g' AND contact_id \
+             = 9",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        let update = |group_id: &str, action: &str, affected: Option<i64>, name: Option<&str>| {
+            proto::EncryptedContent {
+                group_id: Some(group_id.into()),
+                group_update: Some(proto::encrypted_content::GroupUpdate {
+                    group_action_type: action.into(),
+                    affected_contact_id: affected,
+                    new_group_name: name.map(str::to_owned),
+                    new_delete_messages_after_milliseconds: Some(60_000),
+                }),
+                ..Default::default()
+            }
+        };
+
+        // Nothing a member could not have done: an unknown action, one only
+        // ever recorded locally, or a state change without being an admin.
+        from(&ctx, 7, update("g", "notAnAction", None, None)).await?;
+        from(
+            &ctx,
+            7,
+            update("g", "updatedContactUsername", Some(9), Some("x")),
+        )
+        .await?;
+        from(&ctx, 7, update("g", "promoteToAdmin", Some(7), None)).await?;
+        from(
+            &ctx,
+            7,
+            update("g", "updatedGroupName", None, Some("Taken")),
+        )
+        .await?;
+        // In a direct chat, only its timer changes.
+        from(&ctx, 7, update(&direct, "removedMember", Some(42), None)).await?;
+        from(
+            &ctx,
+            7,
+            update(&direct, "updatedGroupName", None, Some("Taken")),
+        )
+        .await?;
+
+        from(&ctx, 7, update(&direct, "changeDisplayMaxTime", None, None)).await?;
+        from(&ctx, 9, update("g", "updatedGroupName", None, Some("New"))).await?;
+        from(&ctx, 7, update("g", "leftGroup", None, None)).await?;
+
+        let history: Vec<(String, i64, String)> =
+            sqlx::query_as("SELECT group_id, contact_id, type FROM group_histories ORDER BY rowid")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(
+            history,
+            vec![
+                (direct.clone(), 7, "changeDisplayMaxTime".to_owned()),
+                ("g".to_owned(), 9, "updatedGroupName".to_owned()),
+                ("g".to_owned(), 7, "leftGroup".to_owned()),
+            ]
+        );
+
+        let names: Vec<(String, String)> =
+            sqlx::query_as("SELECT group_id, group_name FROM groups ORDER BY group_id")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(
+            names,
+            vec![
+                (direct, "Alice".to_owned()),
+                ("g".to_owned(), "New".to_owned())
+            ]
+        );
+
+        Ok(())
+    }
+
     async fn signal_engine(
         pool: sqlx::SqlitePool, name: &str,
     ) -> Result<crate::signal::engine::RustSignalEngine> {
@@ -2546,6 +2693,8 @@ mod tests {
             &ctx,
             r#"{"userId":42,"username":"me","displayName":"Me"}"#,
         )?;
+
+        ctx.inject_test_user_id(42).await?;
 
         let database = ctx.app_db.read().await.clone();
 

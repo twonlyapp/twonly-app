@@ -4,6 +4,7 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../../backup/backup_archive.dart';
+import '../../backup/progress.dart';
 import '../../frb_generated.dart';
 import '../../keys/backup_password_keys.dart';
 import '../../lib.dart';
@@ -17,6 +18,9 @@ class RustBackupArchive {
 
   static Future<String?> getBackupDownloadToken() => RustLib.instance.api
       .crateBridgeWrapperBackupRustBackupArchiveGetBackupDownloadToken();
+
+  static Stream<BackupProgress> progress() =>
+      RustLib.instance.api.crateBridgeWrapperBackupRustBackupArchiveProgress();
 
   static Future<void> restoreBackupArchive({required String filePath}) =>
       RustLib.instance.api

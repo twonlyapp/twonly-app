@@ -7,6 +7,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
+import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -503,8 +504,13 @@ class MemoriesViewState extends State<MemoriesView>
 
               return Column(
                 children: [
-                  if (_isUsageLimitReached)
-                    Container(
+                  ValueListenableBuilder(
+                    valueListenable: memoriesCloudService.limitReached,
+                    builder: (context, uploadRefused, banner) =>
+                        _isUsageLimitReached || uploadRefused
+                        ? banner!
+                        : const SizedBox.shrink(),
+                    child: Container(
                       color: context.color.error,
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
@@ -520,6 +526,7 @@ class MemoriesViewState extends State<MemoriesView>
                         textAlign: TextAlign.center,
                       ),
                     ),
+                  ),
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {

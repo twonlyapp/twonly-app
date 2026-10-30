@@ -13,6 +13,7 @@ import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/core/user_config.dart' hide ThemeMode;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
@@ -21,6 +22,7 @@ import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
+import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/help_a_friend.passwordless_recovery.view.dart';
 
 import '../helpers/native_database.dart';
@@ -41,6 +43,7 @@ class _RecoveryApi extends NativeTestApi {
   int heartbeats = 0;
   List<FrbPasswordlessNotificationMessage> messages = [];
   List<int> excludedMessageIds = [];
+  Error? checkError;
 
   @override
   Future<UserConfig?> crateBridgeUserConfigUserConfigApiLoad() async => config;
@@ -93,6 +96,7 @@ class _RecoveryApi extends NativeTestApi {
     required List<int> downloadAuthToken,
     required Int64List alreadyReceivedMessageIds,
   }) async {
+    if (checkError case final error?) throw error;
     excludedMessageIds = alreadyReceivedMessageIds
         .map((id) => id.toInt())
         .toList();
@@ -100,6 +104,14 @@ class _RecoveryApi extends NativeTestApi {
         .where((message) => !excludedMessageIds.contains(message.id))
         .toList();
   }
+
+  Future<bool> Function() verifyRecoveredIdentity = () async => true;
+
+  @override
+  Future<bool> crateBridgeApiRustApiVerifyRecoveredIdentity({
+    required PlatformInt64 userId,
+    required List<int> serializedKeyManager,
+  }) => verifyRecoveredIdentity();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -122,7 +134,9 @@ void main() {
       ..config = _user()
       ..contactsWhenEnabled = []
       ..heartbeats = 0
-      ..messages = [];
+      ..messages = []
+      ..checkError = null
+      ..verifyRecoveredIdentity = () async => true;
     userService.currentUser = api.config;
     directory = Directory.systemTemp.createTempSync(
       'twonly-recovery-delivery-',
@@ -270,7 +284,7 @@ void main() {
         await PasswordlessRecoveryService.checkAndStorePasswordlessMessages(
           state,
         ),
-        isTrue,
+        RecoveryPollResult.updated,
       );
       expect(
         state.receivedShares.map((share) => share.trustedFriendDisplayName),
@@ -280,10 +294,203 @@ void main() {
         await PasswordlessRecoveryService.checkAndStorePasswordlessMessages(
           state,
         ),
-        isFalse,
+        RecoveryPollResult.unchanged,
       );
       expect(api.excludedMessageIds, [2, 3]);
       expect(state.receivedShares, hasLength(2));
     },
   );
+
+  test('polling remembers messages that are no usable share', () async {
+    final state = OnboardingState(
+      notificationId: 'unusable',
+      downloadAuthToken: key,
+      encryptionKey: key,
+      serverRegistered: true,
+    );
+    final box = await Xchacha20.poly1305Aead().encrypt(
+      TrustedFriendShare(
+        trustedFriend: TrustedFriendShare_User(userId: Int64(2)),
+        shareUser: TrustedFriendShare_User(userId: Int64(1)),
+        threshold: 1,
+        sharedSecretData: [1, 42],
+      ).writeToBuffer(),
+      secretKey: SecretKey(key),
+    );
+    api.messages = [
+      FrbPasswordlessNotificationMessage(
+        id: 7,
+        encryptedMessage: EncryptedEnvelope(
+          encryptedData: box.cipherText,
+          iv: box.nonce,
+          mac: box.mac.bytes,
+        ).writeToBuffer(),
+      ),
+      FrbPasswordlessNotificationMessage(
+        id: 8,
+        encryptedMessage: Uint8List.fromList([1, 2, 3]),
+      ),
+    ];
+
+    expect(
+      await PasswordlessRecoveryService.checkAndStorePasswordlessMessages(
+        state,
+      ),
+      RecoveryPollResult.updated,
+    );
+    expect(state.receivedShares, isEmpty);
+    expect(state.ignoredMessageIds, [7, 8]);
+
+    expect(
+      await PasswordlessRecoveryService.checkAndStorePasswordlessMessages(
+        state,
+      ),
+      RecoveryPollResult.unchanged,
+    );
+    expect(api.excludedMessageIds, [7, 8]);
+  });
+
+  test('polling reports a link the server purged as expired', () async {
+    final state = OnboardingState(
+      notificationId: 'purged',
+      downloadAuthToken: key,
+      encryptionKey: key,
+      serverRegistered: true,
+    );
+
+    api.checkError = StateError('API error code 1037');
+    expect(
+      await PasswordlessRecoveryService.checkAndStorePasswordlessMessages(
+        state,
+      ),
+      RecoveryPollResult.expired,
+    );
+
+    // Being offline is no reason to throw the session away.
+    api.checkError = StateError('connection closed');
+    expect(
+      await PasswordlessRecoveryService.checkAndStorePasswordlessMessages(
+        state,
+      ),
+      RecoveryPollResult.unchanged,
+    );
+  });
+
+  test('a recovery link expires with the server after seven days', () {
+    final startedAt = DateTime(2026, 10, 1, 12);
+    final state = OnboardingState()..recoveryStartedAt = startedAt;
+
+    expect(
+      PasswordlessRecoveryService.isRecoverySessionExpired(
+        state,
+        now: startedAt.add(const Duration(days: 6, hours: 23)),
+      ),
+      isFalse,
+    );
+    expect(
+      PasswordlessRecoveryService.isRecoverySessionExpired(
+        state,
+        now: startedAt.add(const Duration(days: 7)),
+      ),
+      isTrue,
+    );
+    expect(
+      PasswordlessRecoveryService.isRecoverySessionExpired(OnboardingState()),
+      isFalse,
+    );
+  });
+
+  _recoveredKeyTests(api);
+
+  test('starting over forgets the link and everything received', () async {
+    final share = ReceivedRecoveryShare(
+      messageId: 1,
+      trustedFriendDisplayName: 'Friend',
+      myDisplayName: 'Me',
+      myUserId: 1,
+      myAvatarSvg: null,
+      threshold: 2,
+      sharedSecretDataBytes: [1, 42],
+    );
+    final state =
+        OnboardingState(
+            hasStartedPasswordlessRecovery: true,
+            notificationId: 'old',
+            downloadAuthToken: key,
+            encryptionKey: key,
+            serverRegistered: true,
+            emailRecoveryRequested: true,
+          )
+          ..receivedShares = [share]
+          ..ignoredMessageIds = [2]
+          ..recoveryStartedAt = DateTime(2026, 10, 3);
+    await KeyValueStore.put(KeyValueKeys.onboardingState, state.toJson());
+
+    await PasswordlessRecoveryService.resetRecoverySession(state);
+
+    final stored = await KeyValueStore.getModel<OnboardingState>(
+      KeyValueKeys.onboardingState,
+    );
+    for (final s in [state, stored]) {
+      expect(s.hasStartedPasswordlessRecovery, isTrue);
+      expect(s.notificationId, isNull);
+      expect(s.downloadAuthToken, isNull);
+      expect(s.encryptionKey, isNull);
+      expect(s.serverRegistered, isFalse);
+      expect(s.emailRecoveryRequested, isFalse);
+      expect(s.receivedShares, isEmpty);
+      expect(s.ignoredMessageIds, isEmpty);
+      expect(s.recoveryStartedAt, isNull);
+    }
+  });
+}
+
+void _recoveredKeyTests(_RecoveryApi api) {
+  final keys = Uint8List.fromList([1, 2, 3]);
+
+  test('recovered keys are accepted when the server confirms them', () async {
+    api.verifyRecoveredIdentity = () async => true;
+    expect(
+      await PasswordlessRecoveryService.recoveredKeysBelongTo(1, keys),
+      isTrue,
+    );
+  });
+
+  test('recovered keys are rejected when the server refuses them', () async {
+    api.verifyRecoveredIdentity = () async => false;
+    expect(
+      await PasswordlessRecoveryService.recoveredKeysBelongTo(1, keys),
+      isFalse,
+    );
+  });
+
+  test(
+    'recovery can proceed with a server predating VerifyLoginToken',
+    () async {
+      api.verifyRecoveredIdentity = () async =>
+          throw StateError('API error code ${ErrorCode.BadRequest.value}');
+      expect(
+        await PasswordlessRecoveryService.recoveredKeysBelongTo(1, keys),
+        isTrue,
+      );
+    },
+  );
+
+  test('recovered keys are not accepted on a connection error', () async {
+    api.verifyRecoveredIdentity = () async =>
+        throw StateError('connection closed');
+    await expectLater(
+      PasswordlessRecoveryService.recoveredKeysBelongTo(1, keys),
+      throwsStateError,
+    );
+  });
+
+  test('other server errors during key verification propagate', () async {
+    api.verifyRecoveredIdentity = () async =>
+        throw StateError('API error code ${ErrorCode.InternalError.value}');
+    await expectLater(
+      PasswordlessRecoveryService.recoveredKeysBelongTo(1, keys),
+      throwsStateError,
+    );
+  });
 }

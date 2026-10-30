@@ -1033,6 +1033,29 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupEnableBackup => 'Passwort-Backup aktivieren';
 
   @override
+  String get backupProgressPreparing => 'Backup wird vorbereitet…';
+
+  @override
+  String get backupProgressSnapshotting => 'Datenbanken werden kopiert…';
+
+  @override
+  String get backupProgressExporting => 'Backup-Daten werden vorbereitet…';
+
+  @override
+  String get backupProgressCompressing => 'Backup wird komprimiert…';
+
+  @override
+  String get backupProgressEncrypting => 'Backup wird verschlüsselt…';
+
+  @override
+  String get backupProgressUploadingIdentity =>
+      'Kontowiederherstellung wird hochgeladen…';
+
+  @override
+  String get backupProgressUploadingArchive =>
+      'Verschlüsseltes Backup wird hochgeladen…';
+
+  @override
   String get backupTwonlySaveNow => 'Jetzt speichern';
 
   @override
@@ -2720,6 +2743,41 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recoverPasswordlessRecoverNowBtn => 'Jetzt wiederherstellen';
+
+  @override
+  String recoverPasswordlessSharesIgnored(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Teile wurden ignoriert, weil sie doppelt waren oder nicht passten.',
+      one: '1 Teil wurde ignoriert, weil er doppelt war oder nicht passte.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recoverPasswordlessSharesDoNotFit =>
+      'Die bisher erhaltenen Teile passen nicht zusammen. Warte, bis weitere Freunde helfen.';
+
+  @override
+  String get recoverPasswordlessTooManyShares =>
+      'Es sind zu viele widersprüchliche Teile eingegangen. Starte neu und teile den neuen Link nur mit Freunden, denen du vertraust.';
+
+  @override
+  String get passwordlessRecoveryWrongAccount =>
+      'Diese Teile passen nicht zum Konto auf dem Server. Warte, bis weitere Freunde helfen.';
+
+  @override
+  String get passwordlessRecoveryStartOver => 'Neu starten';
+
+  @override
+  String get passwordlessRecoveryStartOverBody =>
+      'Dadurch entsteht ein neuer Wiederherstellungslink. Bisher erhaltene Teile werden verworfen, deine Freunde müssen ihre erneut senden.';
+
+  @override
+  String get passwordlessRecoveryLinkExpired =>
+      'Dein Wiederherstellungslink ist nach 7 Tagen abgelaufen. Teile den neuen Link mit deinen Freunden.';
 
   @override
   String get memoriesBackupLimitReached =>

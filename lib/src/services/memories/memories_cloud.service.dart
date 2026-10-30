@@ -72,6 +72,8 @@ class ProgressMultipartRequest extends http.MultipartRequest {
 /// 10 KB in a background isolate instead, with no upper bound: past the
 /// default one a video would fall back to the calling isolate and freeze the
 /// UI instead of the platform thread.
+enum _BackupResult { uploaded, failed, overLimit }
+
 Chacha20 _mediaCipher() => BackgroundChacha.poly1305Aead(
   channelPolicy: const CryptographyChannelPolicy(
     minLength: 10 * 1000,
@@ -125,6 +127,11 @@ class MemoriesCloudService {
   MemoriesBackupProgress? _currentProgress;
   MemoriesBackupProgress? get currentProgress => _currentProgress;
 
+  /// Whether the last run had an upload refused for the plan's storage limit.
+  /// Usage alone misses this: a file that does not fit is refused while the
+  /// account is still below its limit.
+  final limitReached = ValueNotifier<bool>(false);
+
   void init() {
     _timer = Timer.periodic(const Duration(minutes: 5), (_) {
       checkUploads();
@@ -136,6 +143,7 @@ class MemoriesCloudService {
   void dispose() {
     _timer?.cancel();
     _progressController.close();
+    limitReached.dispose();
   }
 
   void _updateProgress({
@@ -171,11 +179,13 @@ class MemoriesCloudService {
         transaction: currentDatabaseSession(),
       );
       if (memories.isEmpty) {
+        limitReached.value = false;
         return;
       }
 
       final total = memories.length;
       var uploaded = 0;
+      var overLimit = false;
 
       _updateProgress(
         totalPending: total,
@@ -191,7 +201,7 @@ class MemoriesCloudService {
           currentMediaId: mediaFile.mediaId,
         );
 
-        final success = await _backupMemory(mediaFile, (progress) {
+        final result = await _backupMemory(mediaFile, (progress) {
           _updateProgress(
             totalPending: total,
             currentUploaded: uploaded,
@@ -200,8 +210,11 @@ class MemoriesCloudService {
           );
         });
 
-        if (success) {
+        if (result == _BackupResult.uploaded) {
           uploaded++;
+        } else if (result == _BackupResult.overLimit) {
+          overLimit = true;
+          limitReached.value = true;
         }
 
         _updateProgress(
@@ -210,6 +223,7 @@ class MemoriesCloudService {
           currentUploadProgress: 0,
         );
       }
+      limitReached.value = overLimit;
     } catch (e) {
       Log.error('Error in MemoriesCloudService.checkUploads: $e');
     } finally {
@@ -261,14 +275,14 @@ class MemoriesCloudService {
     });
   }
 
-  Future<bool> _backupMemory(
+  Future<_BackupResult> _backupMemory(
     MediaFile mediaFile,
     void Function(double progress) onProgress,
   ) async {
     try {
       final ms = MediaFileService(mediaFile);
 
-      if (!ms.storedPath.existsSync()) return false;
+      if (!ms.storedPath.existsSync()) return _BackupResult.failed;
 
       final thumbnail = ms.thumbnailPath;
       if (!mediaFile.hasThumbnail ||
@@ -301,7 +315,7 @@ class MemoriesCloudService {
         } else {
           Log.error(message, error: error, stackTrace: stackTrace);
         }
-        return false;
+        return _failure(error);
       }
 
       await rust_mediafiles.updateMediaFiles(
@@ -350,7 +364,7 @@ class MemoriesCloudService {
       Log.info(
         'Cloud backup complete and confirmed for ${mediaFile.mediaId}',
       );
-      return true;
+      return _BackupResult.uploaded;
     } catch (error, stackTrace) {
       const message = 'Error backing up memory';
       if (_expectedUploadFailure(error)) {
@@ -363,8 +377,21 @@ class MemoriesCloudService {
         patch: MediaFilePatch(cloudState: CloudState.none.name),
         transaction: currentDatabaseSession(),
       );
-      return false;
+      return _failure(error);
     }
+  }
+
+  static _BackupResult _failure(Object error) =>
+      _apiErrorCode(error) == ErrorCode.PlanLimitReached
+      ? _BackupResult.overLimit
+      : _BackupResult.failed;
+
+  /// The server's error code carried by a Rust API error, if it is one.
+  static ErrorCode? _apiErrorCode(Object error) {
+    if (error is! AnyhowException) return null;
+    final match = RegExp(r'^API error code (\d+)$').firstMatch(error.message);
+    if (match == null) return null;
+    return ErrorCode.fromValue(int.parse(match.group(1)!));
   }
 
   static bool _expectedUploadFailure(Object error) {
@@ -384,9 +411,7 @@ class MemoriesCloudService {
         message.startsWith('send error:')) {
       return true;
     }
-    final match = RegExp(r'^API error code (\d+)$').firstMatch(message);
-    if (match == null) return false;
-    final code = ErrorCode.fromValue(int.parse(match.group(1)!));
+    final code = _apiErrorCode(error);
     return code == ErrorCode.PlanNotAllowed ||
         code == ErrorCode.PlanLimitReached ||
         code == ErrorCode.SessionNotAuthenticated ||

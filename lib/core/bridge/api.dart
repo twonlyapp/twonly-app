@@ -999,6 +999,16 @@ class RustApi {
     prekeys: prekeys,
   );
 
+  /// Whether a recovered key manager holds the login token the server has
+  /// for `user_id`.
+  static Future<bool> verifyRecoveredIdentity({
+    required PlatformInt64 userId,
+    required List<int> serializedKeyManager,
+  }) => RustLib.instance.api.crateBridgeApiRustApiVerifyRecoveredIdentity(
+    userId: userId,
+    serializedKeyManager: serializedKeyManager,
+  );
+
   @override
   int get hashCode => 0;
 

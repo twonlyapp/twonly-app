@@ -1,13 +1,14 @@
-twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing.
+With twonly, you share photos and videos only with your friends. Photos, videos, and messages are end-to-end encrypted, so only you and your friends can read or view them. There are no ads. We don't track you or sell your data.
 
-=> Carefree sharing <=
-With end-to-end encryption, enjoy the peace of mind that only you and your friends can see the moments you share.
+- Edit photos and videos with text, drawings, and stickers
+- Set a timer to control how long sent photos stay visible
+- Send photos directly to your friends' home screens
+- Send text and voice messages in one-on-one and group chats
+- Share stories for 24 hours
+- Create your own stickers from photos
+- Play mini-games together right in the chat
+- Save photos and videos in Memories and back them up in the cloud with end-to-end encryption
 
-=> Focus on sharing moments <=
-Say goodbye to addictive features! twonly was created for sharing moments, free from useless distractions or ads.
+You don't need a phone number or email address to sign up.
 
-=> Based in Europe <=
-twonly is developed and hosted exclusively in Europe. Created by a student, not a big tech company selling your personal data for profit.
-
-=> You are not the product! <=
-twonly is clearly and transparently funded by a monthly fee and not by selling your data.
+twonly is open source and hosted in Europe. The app is funded through an optional subscription.

@@ -75,7 +75,9 @@ extension GroupMemberValues on GroupMember {
 }
 
 extension GroupHistoryValues on GroupHistory {
-  GroupActionType get type => GroupActionType.values.byName(typeName);
+  /// Null for a type this client does not know. Rows can come from peers, and
+  /// one of them must not break the chat it is shown in.
+  GroupActionType? get type => GroupActionType.values.asNameMap()[typeName];
   DateTime get actionAt => databaseDate(actionAtSeconds)!;
 }
 

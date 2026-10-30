@@ -144,6 +144,29 @@ pub(crate) async fn handle_message_update(
             .await?;
         }
         Type::EditText => {
+            // A block keeps them out of their direct chat with us, and
+            // rewriting one of their old messages there would get around it.
+            let direct_chat_id = Group::direct_chat_id(ctx.user_id().await?, from_user_id);
+
+            let blocked_in_direct_chat = sqlx::query_scalar!(
+                r#"SELECT EXISTS(
+                    SELECT 1 FROM messages m JOIN contacts c ON c.user_id = m.sender_id
+                    WHERE m.message_id = ? AND m.sender_id = ? AND m.group_id = ?
+                      AND c.blocked != 0
+                ) AS "blocked!: bool""#,
+                update.sender_message_id,
+                from_user_id,
+                direct_chat_id,
+            )
+            .fetch_one(&mut **t)
+            .await?;
+
+            if blocked_in_direct_chat {
+                tracing::warn!(from_user_id, "ignoring an edit from a blocked contact");
+
+                return Ok(());
+            }
+
             Message::edit_text(
                 t,
                 update.sender_message_id.as_deref(),

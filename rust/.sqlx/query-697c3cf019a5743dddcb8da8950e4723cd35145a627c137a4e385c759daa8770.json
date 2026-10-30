@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(\n                    SELECT 1 FROM messages m JOIN contacts c ON c.user_id = m.sender_id\n                    WHERE m.message_id = ? AND m.sender_id = ? AND m.group_id = ?\n                      AND c.blocked != 0\n                ) AS \"blocked!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "blocked!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "697c3cf019a5743dddcb8da8950e4723cd35145a627c137a4e385c759daa8770"
+}

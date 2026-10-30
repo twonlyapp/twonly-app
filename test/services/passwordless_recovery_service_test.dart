@@ -1,14 +1,18 @@
 import 'dart:io';
 
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
 import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
+import 'package:twonly/core/bridge/wrapper.dart' show RustUtils;
 import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
+import 'package:twonly/src/model/json/onboarding_state.model.dart';
+import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -212,6 +216,162 @@ void main() {
         transaction: currentDatabaseSession(),
       );
       expect(oldFriend?.recoveryIsTrustedFriend, isFalse);
+    });
+  });
+
+  group('PasswordlessRecoveryService - analyzeShares', () {
+    var nextMessageId = 1;
+
+    /// Splits recovery data for [userId] the way the owner's app does.
+    Future<List<ReceivedRecoveryShare>> sharesOf(
+      int keyByte, {
+      int userId = 1,
+      int threshold = 2,
+      int total = 4,
+    }) async {
+      final secret = SharedSecretData(
+        recoveryData: RecoveryData(
+          userId: Int64(userId),
+          keyManager: List.filled(48, keyByte),
+        ).writeToBuffer(),
+      ).writeToBuffer();
+      final shares = await RustUtils.generateShares(
+        secret: secret,
+        total: total,
+        threshold: threshold,
+      );
+      return [
+        for (final bytes in shares)
+          ReceivedRecoveryShare(
+            messageId: nextMessageId++,
+            trustedFriendDisplayName: 'Friend $nextMessageId',
+            myDisplayName: 'Me',
+            myUserId: userId,
+            myAvatarSvg: null,
+            threshold: threshold,
+            sharedSecretDataBytes: bytes,
+          ),
+      ];
+    }
+
+    ReceivedRecoveryShare copyOf(
+      ReceivedRecoveryShare share, {
+      int? threshold,
+      List<int>? bytes,
+    }) => ReceivedRecoveryShare(
+      messageId: nextMessageId++,
+      trustedFriendDisplayName: share.trustedFriendDisplayName,
+      myDisplayName: share.myDisplayName,
+      myUserId: share.myUserId,
+      myAvatarSvg: null,
+      threshold: threshold ?? share.threshold,
+      sharedSecretDataBytes: bytes ?? share.sharedSecretDataBytes,
+    );
+
+    List<int> keyManagerOf(RecoveryShareAnalysis analysis) =>
+        RecoveryData.fromBuffer(analysis.secret!.recoveryData).keyManager;
+
+    test('a share submitted twice is counted once', () async {
+      final shares = await sharesOf(7);
+
+      final analysis = await PasswordlessRecoveryService.analyzeShares([
+        shares[0],
+        shares[1],
+        copyOf(shares[1]),
+      ]);
+
+      expect(keyManagerOf(analysis), List.filled(48, 7));
+      expect(analysis.shares, [shares[0], shares[1]]);
+      expect(analysis.ignoredShares, 1);
+    });
+
+    test('a stale share from an earlier setup is left out', () async {
+      final honest = await sharesOf(7);
+      final stale = await sharesOf(9);
+
+      final analysis = await PasswordlessRecoveryService.analyzeShares([
+        honest[0],
+        stale[1],
+        honest[2],
+      ]);
+
+      expect(keyManagerOf(analysis), List.filled(48, 7));
+      expect(analysis.shares, [honest[0], honest[2]]);
+      expect(analysis.ignoredShares, 1);
+    });
+
+    test('a share claiming a threshold of one decides nothing', () async {
+      final honest = await sharesOf(7);
+      final forged = copyOf(
+        honest[0],
+        threshold: 1,
+        bytes: [
+          1,
+          ...SharedSecretData(
+            recoveryData: RecoveryData(
+              userId: Int64(1),
+              keyManager: [6, 6, 6],
+            ).writeToBuffer(),
+          ).writeToBuffer(),
+        ],
+      );
+
+      final alone = await PasswordlessRecoveryService.analyzeShares([forged]);
+      expect(alone.secret, isNull);
+      expect(alone.account, isNull);
+      expect(alone.ignoredShares, 1);
+
+      final first = await PasswordlessRecoveryService.analyzeShares([
+        forged,
+        honest[1],
+        honest[3],
+      ]);
+      expect(keyManagerOf(first), List.filled(48, 7));
+      expect(first.ignoredShares, 1);
+    });
+
+    test('shares naming another account are kept apart', () async {
+      final mine = await sharesOf(7);
+      final other = await sharesOf(9, userId: 2);
+
+      final analysis = await PasswordlessRecoveryService.analyzeShares([
+        other[0],
+        mine[0],
+        other[1],
+        mine[1],
+        mine[2],
+      ]);
+
+      expect(analysis.account!.myUserId, 1);
+      expect(keyManagerOf(analysis), List.filled(48, 7));
+      expect(analysis.ignoredShares, 2);
+    });
+
+    test('too few matching shares wait for more', () async {
+      final honest = await sharesOf(7, threshold: 3);
+      final stale = await sharesOf(9, threshold: 3);
+
+      final analysis = await PasswordlessRecoveryService.analyzeShares([
+        honest[0],
+        stale[1],
+        honest[2],
+      ]);
+
+      expect(analysis.secret, isNull);
+      expect(analysis.thresholdReached, isTrue);
+    });
+
+    test('data refused later is skipped', () async {
+      final honest = await sharesOf(7);
+      final first = await PasswordlessRecoveryService.analyzeShares(honest);
+
+      final again = await PasswordlessRecoveryService.analyzeShares(
+        honest,
+        rejectedSecrets: {first.secretId!},
+      );
+
+      expect(again.secret, isNull);
+      expect(again.shares, hasLength(4));
     });
   });
 }

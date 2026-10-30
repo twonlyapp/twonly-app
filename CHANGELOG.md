@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.7
+
+- Improve: Reduce backup size
+- Fix: Issues with passwordless recovery
+- Fix: Handle storage limits correctly when backing up memories
+
 ## 0.6.6
 
 - Improve: UI layout for stories 

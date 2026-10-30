@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/core/backup/progress.dart';
+import 'package:twonly/core/bridge/wrapper/backup.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
@@ -18,6 +20,8 @@ import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/pro_badge.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/settings/backup/backup_utils.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/backup_archive_subtitle.comp.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/backup_progress.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_schedule.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/recovery_options.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/memories_backup_detail.view.dart';
@@ -34,6 +38,9 @@ class _BackupViewState extends State<BackupView> {
   CurrentBackupStatus? _backupStatus;
   FrbMemoriesUsage? _memoriesUsage;
   StreamSubscription<void>? _backupUpdateSub;
+  StreamSubscription<BackupProgress>? _progressSub;
+  BackupProgress? _progress;
+  bool _isBackingUp = false;
 
   @override
   void initState() {
@@ -42,11 +49,21 @@ class _BackupViewState extends State<BackupView> {
     _backupUpdateSub = BackupService.onBackupUpdated.listen((_) {
       _loadBackupStatus();
     });
+    _progressSub = RustBackupArchive.progress().listen((progress) {
+      if (!mounted) return;
+      final wasActive =
+          _progress?.stage != null && _progress!.stage != BackupStage.idle;
+      setState(() => _progress = progress);
+      if (wasActive && progress.stage == BackupStage.idle) {
+        unawaited(_loadBackupStatus());
+      }
+    });
   }
 
   @override
   void dispose() {
     _backupUpdateSub?.cancel();
+    _progressSub?.cancel();
     super.dispose();
   }
 
@@ -67,15 +84,6 @@ class _BackupViewState extends State<BackupView> {
     });
   }
 
-  String _buildTileSubtitle(DateTime? date, int? size) {
-    if (date == null) return '-';
-    final dateStr = formatRelativeDateTime(context, date);
-    if (size != null && size > 0) {
-      return '$dateStr • ${formatBytes(size)}';
-    }
-    return dateStr;
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentPlan = context.watch<PurchasesProvider>().plan;
@@ -83,6 +91,9 @@ class _BackupViewState extends State<BackupView> {
     final hasPasswordless =
         userService.currentUser.passwordLessRecovery != null;
     final hasPassword = userService.currentUser.isBackupEnabled;
+    final backupActive =
+        _isBackingUp ||
+        (_progress != null && _progress!.stage != BackupStage.idle);
 
     return StreamBuilder<void>(
       stream: userService.onUserUpdated,
@@ -156,17 +167,39 @@ class _BackupViewState extends State<BackupView> {
                 BetterListTile(
                   icon: FontAwesomeIcons.comments,
                   text: context.lang.backupCloudContactsMessages,
-                  subtitle: Text(
-                    _buildTileSubtitle(
-                      _backupStatus?.archiveLastSuccessFull,
-                      _backupStatus?.archiveSize,
-                    ),
+                  subtitle: BackupArchiveSubtitle(
+                    date: _backupStatus?.archiveLastSuccessFull,
+                    size: _backupStatus?.archiveSize,
                   ),
-                  trailing: const Icon(
-                    Icons.check_circle,
-                    color: defaultPrimaryColor,
-                  ),
+                  trailing: backupActive
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          _backupStatus?.archiveState ==
+                                  LastBackupUploadState.success
+                              ? Icons.check_circle
+                              : Icons.cloud_outlined,
+                          color:
+                              _backupStatus?.archiveState ==
+                                  LastBackupUploadState.success
+                              ? defaultPrimaryColor
+                              : context.color.onSurfaceVariant,
+                        ),
                 ),
+
+                if (backupActive)
+                  BackupProgressComp(
+                    progress:
+                        _progress ??
+                        const BackupProgress(
+                          stage: BackupStage.preparing,
+                          completedBytes: 0,
+                          totalBytes: 0,
+                        ),
+                  ),
 
                 // Bilder & Medien
                 BetterListTile(
@@ -235,14 +268,18 @@ class _BackupViewState extends State<BackupView> {
                 Center(
                   child: MyButton(
                     variant: MyButtonVariant.secondaryDense,
-                    onPressed: _isLoading
+                    onPressed: _isLoading || backupActive
                         ? null
                         : () async {
                             setState(() {
-                              _isLoading = true;
+                              _isBackingUp = true;
                             });
-                            await BackupService.makeBackup(force: true);
-                            await _loadBackupStatus();
+                            try {
+                              await BackupService.makeBackup(force: true);
+                              await _loadBackupStatus();
+                            } finally {
+                              if (mounted) setState(() => _isBackingUp = false);
+                            }
                           },
                     child: Text(context.lang.backupTwonlySaveNow),
                   ),

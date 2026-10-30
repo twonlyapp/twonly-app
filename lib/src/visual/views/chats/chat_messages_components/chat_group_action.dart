@@ -85,6 +85,8 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
         ? context.lang.groupActionYour
         : affected;
     final maker = (contact == null) ? '' : getContactDisplayName(contact!);
+    final oldName = widget.action.oldGroupName;
+    final newName = widget.action.newGroupName;
 
     switch (widget.action.type) {
       case GroupActionType.changeDisplayMaxTime:
@@ -98,11 +100,8 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
         icon = FontAwesomeIcons.stopwatch20;
       case GroupActionType.updatedGroupName:
         text = (contact == null)
-            ? context.lang.youChangedGroupName(widget.action.newGroupName!)
-            : context.lang.makerChangedGroupName(
-                maker,
-                widget.action.newGroupName!,
-              );
+            ? context.lang.youChangedGroupName(newName ?? '')
+            : context.lang.makerChangedGroupName(maker, newName ?? '');
         icon = FontAwesomeIcons.pencil;
       case GroupActionType.createdGroup:
         icon = FontAwesomeIcons.penToSquare;
@@ -135,24 +134,20 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
             ? context.lang.youLeftGroup
             : context.lang.makerLeftGroup(maker);
       case GroupActionType.updatedContactUsername:
-        if (contact != null) {
+        if (contact != null && oldName != null && newName != null) {
           icon = FontAwesomeIcons.userPen;
-          text = context.lang.makerChangedUsername(
-            maker,
-            widget.action.oldGroupName!,
-            widget.action.newGroupName!,
-          );
+          text = context.lang.makerChangedUsername(maker, oldName, newName);
         }
       case GroupActionType.updatedContactDisplayName:
-        if (contact != null) {
+        if (contact != null && oldName != null && newName != null) {
           icon = FontAwesomeIcons.userPen;
-          text = context.lang.makerChangedDisplayName(
-            maker,
-            widget.action.oldGroupName!,
-            widget.action.newGroupName!,
-          );
+          text = context.lang.makerChangedDisplayName(maker, oldName, newName);
         }
+      case null:
+        break;
     }
+
+    if (text.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.all(8),

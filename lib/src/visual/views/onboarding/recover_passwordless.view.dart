@@ -10,7 +10,6 @@ import 'package:flutter/services.dart';
 import 'package:hashlib/random.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:twonly/core/bridge/wrapper.dart' show RustUtils;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
@@ -20,6 +19,7 @@ import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/contact_chip.element.dart';
@@ -45,9 +45,12 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
   OnboardingState? _onboardingState;
   Timer? _pollTimer;
 
-  SharedSecretData? _reconstructedSecret;
-  bool _isReconstructing = false;
-  String? _reconstructionError;
+  RecoveryShareAnalysis _analysis = const RecoveryShareAnalysis();
+  bool _isAnalyzing = false;
+  bool _analyzeAgain = false;
+
+  /// Rebuilt data the server refused for its account; skipped from now on.
+  final Set<String> _rejectedSecrets = {};
 
   bool _isRecovering = false;
   final TextEditingController _secondFactorController = TextEditingController();
@@ -89,6 +92,14 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
         KeyValueKeys.onboardingState,
       );
 
+      // The server has forgotten a link this old, so nothing can arrive
+      // through it anymore.
+      if (PasswordlessRecoveryService.isRecoverySessionExpired(state)) {
+        await PasswordlessRecoveryService.resetRecoverySession(state);
+        initialToken = null;
+        _secondFactorController.clear();
+      }
+
       if (initialToken != null && !state.emailRecoveryRequested) {
         state.emailRecoveryRequested = true;
         await KeyValueStore.update<OnboardingState>(
@@ -102,15 +113,25 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
         state
           ..notificationId = uuid.v4()
           ..downloadAuthToken = getRandomUint8List(32)
-          ..encryptionKey = getRandomUint8List(32);
+          ..encryptionKey = getRandomUint8List(32)
+          ..recoveryStartedAt = DateTime.now();
         await KeyValueStore.update<OnboardingState>(
           key: KeyValueKeys.onboardingState,
           update: (s) {
             s
               ..notificationId = state.notificationId
               ..downloadAuthToken = state.downloadAuthToken
-              ..encryptionKey = state.encryptionKey;
+              ..encryptionKey = state.encryptionKey
+              ..recoveryStartedAt = state.recoveryStartedAt;
           },
+        );
+      } else if (state.recoveryStartedAt == null) {
+        // Started before the app tracked the age. If the server already
+        // purged it, the poll reports that and the session starts over.
+        state.recoveryStartedAt = DateTime.now();
+        await KeyValueStore.update<OnboardingState>(
+          key: KeyValueKeys.onboardingState,
+          update: (s) => s.recoveryStartedAt = state.recoveryStartedAt,
         );
       }
 
@@ -137,7 +158,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
       // 6. If already registered, do an immediate check and start the poll timer
       if (state.serverRegistered) _startPollTimer();
 
-      _checkAndReconstruct();
+      unawaited(_analyzeShares());
     } catch (e) {
       Log.warn('Error during passwordless recovery initialization: $e');
     } finally {
@@ -154,86 +175,99 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
   }
 
   Future<void> _pollForMessages() async {
-    if (_onboardingState == null) return;
-    final didUpdate =
-        await PasswordlessRecoveryService.checkAndStorePasswordlessMessages(
-          _onboardingState!,
-        );
-    // _onboardingState was changed in checkAndStorePasswordlessMessages
-    if (didUpdate && mounted) {
-      setState(() => ());
-      _checkAndReconstruct();
-    }
-  }
-
-  void _checkAndReconstruct() {
-    final state = _onboardingState;
-    if (state != null) {
-      final shares = state.receivedShares;
-      if (shares.isNotEmpty) {
-        final threshold = shares.first.threshold;
-        if (shares.length >= threshold &&
-            _reconstructedSecret == null &&
-            !_isReconstructing) {
-          unawaited(_reconstructSecret());
-        }
-      }
-    }
-  }
-
-  Future<void> _reconstructSecret() async {
     final state = _onboardingState;
     if (state == null) return;
-    final shares = state.receivedShares;
-    if (shares.isEmpty) return;
-    final threshold = shares.first.threshold;
-    if (shares.length < threshold) return;
-
-    setState(() {
-      _isReconstructing = true;
-      _reconstructionError = null;
-    });
-
-    try {
-      final shareBytesList = shares
-          .map((s) => Uint8List.fromList(s.sharedSecretDataBytes))
-          .toList();
-      final secretBytes = await RustUtils.recoverSecret(
-        shares: shareBytesList,
-        threshold: threshold,
-      );
-      final sharedSecretData = SharedSecretData.fromBuffer(secretBytes);
-      if (mounted) {
-        setState(() {
-          _reconstructedSecret = sharedSecretData;
-        });
-      }
-    } catch (e) {
-      Log.error('Failed to reconstruct secret: $e');
-      if (mounted) {
-        setState(() {
-          _reconstructionError = e.toString();
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isReconstructing = false;
-        });
-      }
+    final result = PasswordlessRecoveryService.isRecoverySessionExpired(state)
+        ? RecoveryPollResult.expired
+        : await PasswordlessRecoveryService.checkAndStorePasswordlessMessages(
+            state,
+          );
+    if (!mounted) return;
+    switch (result) {
+      case RecoveryPollResult.expired:
+        if (!_isRecovering) await _startOver(expired: true);
+      case RecoveryPollResult.updated:
+        // _onboardingState was changed in checkAndStorePasswordlessMessages
+        setState(() => ());
+        unawaited(_analyzeShares());
+      case RecoveryPollResult.unchanged:
+        break;
     }
   }
 
-  Future<void> _recoverNow(List<ReceivedRecoveryShare> shares) async {
-    final reconstructed = _reconstructedSecret;
-    if (reconstructed == null) return;
+  /// Works out again what the received shares add up to. A call while one is
+  /// running makes it run once more afterwards, so no new share is missed.
+  Future<void> _analyzeShares() async {
+    if (_isAnalyzing) {
+      _analyzeAgain = true;
+      return;
+    }
+    _isAnalyzing = true;
+    try {
+      do {
+        _analyzeAgain = false;
+        final state = _onboardingState;
+        if (state == null) return;
+        final analysis = await PasswordlessRecoveryService.analyzeShares(
+          List.of(state.receivedShares),
+          rejectedSecrets: _rejectedSecrets,
+        );
+        // Starting over replaced the session meanwhile.
+        if (!identical(_onboardingState, state)) {
+          _analyzeAgain = true;
+          continue;
+        }
+        if (mounted) setState(() => _analysis = analysis);
+      } while (_analyzeAgain && mounted);
+    } finally {
+      _isAnalyzing = false;
+    }
+  }
+
+  Future<void> _confirmStartOver() async {
+    final confirmed = await showAlertDialog(
+      context,
+      context.lang.passwordlessRecoveryStartOver,
+      context.lang.passwordlessRecoveryStartOverBody,
+      customOk: context.lang.passwordlessRecoveryStartOver,
+    );
+    if (confirmed) await _startOver();
+  }
+
+  /// Replaces the recovery link with a new one and forgets every share
+  /// received through the old one.
+  Future<void> _startOver({bool expired = false}) async {
+    final state = _onboardingState;
+    if (state == null) return;
+    _pollTimer?.cancel();
+    _pollTimer = null;
+    await PasswordlessRecoveryService.resetRecoverySession(state);
+    _rejectedSecrets.clear();
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _onboardingState = null;
+      _analysis = const RecoveryShareAnalysis();
+      _secondFactorController.clear();
+    });
+    if (expired) {
+      showSnackbar(context, context.lang.passwordlessRecoveryLinkExpired);
+    }
+    await _initAsync(null);
+  }
+
+  Future<void> _recoverNow() async {
+    final analysis = _analysis;
+    final reconstructed = analysis.secret;
+    final account = analysis.account;
+    if (reconstructed == null || account == null) return;
 
     setState(() {
       _isRecovering = true;
     });
 
     try {
-      final userId = shares.first.myUserId;
+      final userId = account.myUserId;
       Uint8List? serverKey;
 
       if (!reconstructed.hasEmailHint() &&
@@ -397,6 +431,24 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
       }
 
       final recoveryData = RecoveryData.fromBuffer(recoveryDataBytes);
+      final keyManager = Uint8List.fromList(recoveryData.keyManager);
+
+      // Account and keys come from the helpers' shares. Before anything is
+      // staged, the server confirms that the keys belong to that account.
+      if (recoveryData.userId.toInt() != userId ||
+          !await PasswordlessRecoveryService.recoveredKeysBelongTo(
+            userId,
+            keyManager,
+          )) {
+        Log.warn('Recovered keys do not belong to account $userId');
+        _rejectedSecrets.add(analysis.secretId!);
+        _secondFactorController.clear();
+        unawaited(_analyzeShares());
+        if (mounted) {
+          showSnackbar(context, context.lang.passwordlessRecoveryWrongAccount);
+        }
+        return;
+      }
 
       if (!mounted) return;
 
@@ -405,7 +457,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => RecoveryProgressView(
-            username: shares.first.myDisplayName,
+            username: account.myDisplayName,
             steps: const [
               RecoveryProgress.restoringIdentity,
               RecoveryProgress.downloadingArchive,
@@ -413,9 +465,9 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
             ],
             runRecovery: (onProgress) =>
                 BackupService.startPasswordlessBackupRecovery(
-                  recoveryData.userId.toInt(),
-                  shares.first.myDisplayName,
-                  Uint8List.fromList(recoveryData.keyManager),
+                  userId,
+                  account.myDisplayName,
+                  keyManager,
                   onProgress: onProgress,
                 ),
           ),
@@ -475,13 +527,13 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
     }
   }
 
-  Widget _buildProgressSection(
-    BuildContext context,
-    List<ReceivedRecoveryShare> shares,
-  ) {
-    final first = shares.first;
-    final threshold = first.threshold;
-    final thresholdReached = shares.length >= threshold;
+  Widget _buildProgressSection(BuildContext context) {
+    final analysis = _analysis;
+    final first = analysis.account!;
+    final shares = analysis.shares;
+    final threshold = analysis.threshold;
+    final thresholdReached = analysis.thresholdReached;
+    final secret = analysis.secret;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -529,7 +581,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: LinearProgressIndicator(
-            value: shares.length / threshold,
+            value: (shares.length / threshold).clamp(0.0, 1.0),
             minHeight: 12,
             backgroundColor: context.color.surfaceContainerHighest,
             valueColor: AlwaysStoppedAnimation<Color>(
@@ -552,96 +604,102 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           }).toList(),
         ),
 
+        if (analysis.ignoredShares > 0) ...[
+          const SizedBox(height: 12),
+          Text(
+            context.lang.recoverPasswordlessSharesIgnored(
+              analysis.ignoredShares,
+            ),
+            style: TextStyle(
+              fontSize: 13,
+              color: context.color.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+
         const SizedBox(height: 24),
 
-        if (thresholdReached) ...[
-          if (_isReconstructing)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: CircularProgressIndicator(),
-              ),
-            )
-          else if (_reconstructionError != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text(
-                'Reconstruction failed: $_reconstructionError',
-                style: TextStyle(color: context.color.error),
-                textAlign: TextAlign.center,
-              ),
-            )
-          else if (_reconstructedSecret != null) ...[
-            if (_reconstructedSecret!.hasServerKeyProtection() &&
-                !_reconstructedSecret!.hasEmailHint()) ...[
-              MyInput(
-                controller: _secondFactorController,
-                hintText: context.lang.passwordlessRecoveryMethodPinHint,
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-            ] else if (_reconstructedSecret!.hasEmailHint()) ...[
-              if (_onboardingState != null &&
-                  !_onboardingState!.emailRecoveryRequested) ...[
-                MyInput(
-                  controller: _secondFactorController,
-                  hintText: _reconstructedSecret!.emailHint,
-                  prefixIcon: const Icon(Icons.email_rounded),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 16),
-              ] else ...[
-                MyInput(
-                  controller: _secondFactorController,
-                  hintText: 'Enter recovery token',
-                  prefixIcon: const Icon(Icons.key_rounded),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ],
-            MyButton(
-              onPressed: _isRecovering ? null : () => _recoverNow(shares),
-              child: _isRecovering
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: context.color.onPrimary,
-                      ),
-                    )
-                  : Text(
-                      _reconstructedSecret!.hasEmailHint() &&
-                              _onboardingState != null &&
-                              !_onboardingState!.emailRecoveryRequested
-                          ? 'Send recovery email'
-                          : context.lang.recoverPasswordlessRecoverNowBtn,
-                    ),
+        if (secret == null && (thresholdReached || analysis.tooManyShares))
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text(
+              analysis.tooManyShares
+                  ? context.lang.recoverPasswordlessTooManyShares
+                  : context.lang.recoverPasswordlessSharesDoNotFit,
+              style: TextStyle(color: context.color.error),
+              textAlign: TextAlign.center,
+            ),
+          )
+        else if (secret != null) ...[
+          if (secret.hasServerKeyProtection() && !secret.hasEmailHint()) ...[
+            MyInput(
+              controller: _secondFactorController,
+              hintText: context.lang.passwordlessRecoveryMethodPinHint,
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
-            if (_reconstructedSecret!.hasEmailHint() &&
-                _onboardingState != null &&
-                _onboardingState!.emailRecoveryRequested) ...[
-              MyButton(
-                onPressed: _isRecovering
-                    ? null
-                    : () async {
-                        final state = _onboardingState;
-                        if (state == null) return;
-                        setState(() {
-                          state.emailRecoveryRequested = false;
-                          _secondFactorController.clear();
-                        });
-                        await KeyValueStore.update<OnboardingState>(
-                          key: KeyValueKeys.onboardingState,
-                          update: (s) => s.emailRecoveryRequested = false,
-                        );
-                      },
-                variant: MyButtonVariant.secondary,
-                child: Text(context.lang.passwordlessRecoveryResendEmail),
+          ] else if (secret.hasEmailHint()) ...[
+            if (_onboardingState != null &&
+                !_onboardingState!.emailRecoveryRequested) ...[
+              MyInput(
+                controller: _secondFactorController,
+                hintText: secret.emailHint,
+                prefixIcon: const Icon(Icons.email_rounded),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+            ] else ...[
+              MyInput(
+                controller: _secondFactorController,
+                hintText: 'Enter recovery token',
+                prefixIcon: const Icon(Icons.key_rounded),
               ),
               const SizedBox(height: 16),
             ],
+          ],
+          MyButton(
+            onPressed: _isRecovering ? null : _recoverNow,
+            child: _isRecovering
+                ? SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: context.color.onPrimary,
+                    ),
+                  )
+                : Text(
+                    secret.hasEmailHint() &&
+                            _onboardingState != null &&
+                            !_onboardingState!.emailRecoveryRequested
+                        ? 'Send recovery email'
+                        : context.lang.recoverPasswordlessRecoverNowBtn,
+                  ),
+          ),
+          const SizedBox(height: 16),
+          if (secret.hasEmailHint() &&
+              _onboardingState != null &&
+              _onboardingState!.emailRecoveryRequested) ...[
+            MyButton(
+              onPressed: _isRecovering
+                  ? null
+                  : () async {
+                      final state = _onboardingState;
+                      if (state == null) return;
+                      setState(() {
+                        state.emailRecoveryRequested = false;
+                        _secondFactorController.clear();
+                      });
+                      await KeyValueStore.update<OnboardingState>(
+                        key: KeyValueKeys.onboardingState,
+                        update: (s) => s.emailRecoveryRequested = false,
+                      );
+                    },
+              variant: MyButtonVariant.secondary,
+              child: Text(context.lang.passwordlessRecoveryResendEmail),
+            ),
+            const SizedBox(height: 16),
           ],
         ],
       ],
@@ -650,10 +708,9 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
 
   @override
   Widget build(BuildContext context) {
-    final shares = _onboardingState?.receivedShares ?? [];
-    final hasShares = shares.isNotEmpty;
-    final threshold = hasShares ? shares.first.threshold : 0;
-    final thresholdReached = hasShares && shares.length >= threshold;
+    final hasShares = _analysis.account != null;
+    // Friends still need the link until the shares rebuild the data.
+    final needsMoreShares = _analysis.secret == null;
 
     if (_isLoading) {
       return Scaffold(
@@ -681,6 +738,14 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           iconSize: 20,
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          if (_onboardingState?.notificationId != null)
+            IconButton(
+              icon: const Icon(Icons.restart_alt_rounded),
+              tooltip: context.lang.passwordlessRecoveryStartOver,
+              onPressed: _isRecovering ? null : _confirmStartOver,
+            ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -697,7 +762,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
                 const SizedBox(height: 24),
               ],
 
-              if (hasShares) _buildProgressSection(context, shares),
+              if (hasShares) _buildProgressSection(context),
 
               if (!_notificationsEnabled && !hasShares) ...[
                 Container(
@@ -753,7 +818,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
                 const SizedBox(height: 32),
               ],
 
-              if (!thresholdReached) ...[
+              if (needsMoreShares) ...[
                 if (!hasShares)
                   Container(
                     decoration: BoxDecoration(

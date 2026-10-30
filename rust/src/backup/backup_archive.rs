@@ -86,7 +86,7 @@ pub(crate) struct BackupArchive {}
 
 const BACKUP_MANIFEST_FILE: &str = "backup-manifest.json";
 
-const BACKUP_FORMAT_VERSION: u32 = 2;
+const BACKUP_FORMAT_VERSION: u32 = 3;
 
 #[derive(Debug, Serialize, Deserialize)]
 
@@ -241,15 +241,25 @@ impl BackupArchive {
 
     #[cfg(test)]
     pub(crate) async fn create_backup(ctx: &Arc<Context>) -> Result<PathBuf> {
-        Self::create_backup_with_token(ctx)
-            .await
-            .map(|(_, path)| path)
+        // Keep generating v2 fixtures for the unchanged historical regression
+        // tests. Production entry points always use v3; its writer has separate
+        // round-trip, compression and lifecycle coverage in format_tests.
+        let ctx = ctx.clone();
+        crate::database::lifecycle::run(move |operation| async move {
+            let _exclusive = BACKUP_OPERATIONS.lock().await;
+            let _progress = super::progress::UploadGuard::new();
+            Self::create_backup_owned(&ctx, operation, 2)
+                .await
+                .map(|(_, path)| path)
+        })
+        .await
     }
 
     pub(crate) async fn create_backup_with_token(ctx: &Arc<Context>) -> Result<(String, PathBuf)> {
         let ctx = ctx.clone();
 
         crate::database::lifecycle::run(move |operation| async move {
+            let _progress = super::progress::UploadGuard::new();
             Self::create_backup_with_operation(&ctx, operation).await
         })
         .await
@@ -265,11 +275,11 @@ impl BackupArchive {
             _ = operation.until_cancelled() => return operation.check().map(|_| unreachable!()),
             guard = BACKUP_OPERATIONS.lock() => guard,
         };
-        Self::create_backup_owned(ctx, operation).await
+        Self::create_backup_owned(ctx, operation, BACKUP_FORMAT_VERSION).await
     }
 
     async fn create_backup_owned(
-        ctx: &Context, operation: crate::database::lifecycle::Operation,
+        ctx: &Context, operation: crate::database::lifecycle::Operation, format_version: u32,
     ) -> Result<(String, PathBuf)> {
         operation.check()?;
 
@@ -309,7 +319,11 @@ impl BackupArchive {
             }
         }
 
+        super::progress::stage(super::progress::BackupStage::Snapshotting);
         super::capture::capture(ctx, backup_data_dir, &operation).await?;
+
+        let mut logical_files = BTreeMap::new();
+        super::progress::stage(super::progress::BackupStage::Exporting);
 
         for (file_name, source_dir, is_db, encryption_key) in files {
             operation.check()?;
@@ -372,8 +386,14 @@ impl BackupArchive {
                         tx.commit().await?;
 
                         // Rebuild to omit freed ratchet pages as well as rows.
-                        crate::database::snapshot::create(&database.pool, &destination, &operation)
+                        if format_version == 2 {
+                            crate::database::snapshot::create(
+                                &database.pool,
+                                &destination,
+                                &operation,
+                            )
                             .await?;
+                        }
                     } else {
                         crate::services::live_location::discard_sessions_on(&mut connection)
                             .await?;
@@ -389,6 +409,18 @@ impl BackupArchive {
                         return Err(crate::error::TwonlyError::Generic(
                             "Staged backup integrity check failed".into(),
                         ));
+                    }
+
+                    if format_version == BACKUP_FORMAT_VERSION {
+                        let dump_name = super::logical::DATABASES
+                            .iter()
+                            .find(|(name, _)| *name == file_name)
+                            .unwrap()
+                            .1;
+                        logical_files.insert(
+                            dump_name.to_owned(),
+                            super::logical::export(&database.pool, &operation).await?,
+                        );
                     }
 
                     Ok::<_, crate::error::TwonlyError>(())
@@ -422,12 +454,18 @@ impl BackupArchive {
         let archive_operation = operation.clone();
 
         let archive = crate::database::lifecycle::spawn_blocking(move || {
-            Self::write_manifest(&directory, Some(&archive_operation))?;
+            Self::write_manifest(
+                &directory,
+                Some(&archive_operation),
+                format_version,
+                &logical_files,
+            )?;
 
-            let mut zip_data = Vec::new();
+            super::progress::stage(super::progress::BackupStage::Compressing);
+            let mut zip_data = zeroize::Zeroizing::new(Vec::new());
 
             {
-                let mut zip = ZipWriter::new(Cursor::new(&mut zip_data));
+                let mut zip = ZipWriter::new(Cursor::new(&mut *zip_data));
 
                 let options =
                     SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
@@ -439,7 +477,14 @@ impl BackupArchive {
 
                     let path = entry.path();
 
-                    if path.is_file() && !crate::database::maintenance::is_lock_file(path) {
+                    let encrypted_snapshot = format_version == BACKUP_FORMAT_VERSION
+                        && super::logical::DATABASES
+                            .iter()
+                            .any(|(name, _)| path.file_name().is_some_and(|file| file == *name));
+                    if path.is_file()
+                        && !crate::database::maintenance::is_lock_file(path)
+                        && !encrypted_snapshot
+                    {
                         let name = path.strip_prefix(&directory).map_err(|error| {
                             crate::error::TwonlyError::Generic(error.to_string())
                         })?;
@@ -450,11 +495,21 @@ impl BackupArchive {
                     }
                 }
 
+                for (name, contents) in &logical_files {
+                    zip.start_file(name, options)?;
+                    copy_cancellable(
+                        &mut Cursor::new(contents.as_slice()),
+                        &mut zip,
+                        &archive_operation,
+                    )?;
+                }
+
                 zip.finish()?;
             }
 
             archive_operation.check()?;
 
+            super::progress::stage(super::progress::BackupStage::Encrypting);
             let encrypted = main_key.encrypt_backup(&zip_data);
 
             archive_operation.check()?;
@@ -522,7 +577,8 @@ impl BackupArchive {
             crate::error::TwonlyError::Generic("Restore requires an execution owner".into())
         })?;
 
-        let staging = crate::database::lifecycle::spawn_blocking(move || {
+        let restore_operation = operation.clone();
+        let (staging, logical_files) = crate::database::lifecycle::spawn_blocking(move || {
             let staging = BackupStaging::new(&data_dir)?;
 
             let mut encrypted_zip = Vec::new();
@@ -531,11 +587,12 @@ impl BackupArchive {
 
             operation.check()?;
 
-            let zip_content = decrypt_key.decrypt_backup(&encrypted_zip)?;
+            let zip_content = zeroize::Zeroizing::new(decrypt_key.decrypt_backup(&encrypted_zip)?);
 
             operation.check()?;
 
-            let mut archive = ZipArchive::new(Cursor::new(zip_content))?;
+            let mut archive = ZipArchive::new(Cursor::new(zip_content.as_slice()))?;
+            let mut logical_files = BTreeMap::new();
 
             for i in 0..archive.len() {
                 operation.check()?;
@@ -548,18 +605,34 @@ impl BackupArchive {
                         .as_ref()
                         .and_then(|path| path.file_name())
                     {
-                        copy_cancellable(
-                            &mut file,
-                            &mut File::create(staging.0.join(name))?,
-                            &operation,
-                        )?;
+                        if super::logical::DATABASES
+                            .iter()
+                            .any(|(_, dump)| name == *dump)
+                        {
+                            let mut bytes = zeroize::Zeroizing::new(Vec::new());
+                            copy_cancellable(&mut file, &mut *bytes, &operation)?;
+                            if logical_files
+                                .insert(name.to_string_lossy().into_owned(), bytes)
+                                .is_some()
+                            {
+                                return Err(crate::error::TwonlyError::Generic(
+                                    "Duplicate backup database".into(),
+                                ));
+                            }
+                        } else {
+                            copy_cancellable(
+                                &mut file,
+                                &mut File::create(staging.0.join(name))?,
+                                &operation,
+                            )?;
+                        }
                     }
                 }
             }
 
-            Self::validate_manifest(&staging.0)?;
+            Self::validate_manifest(&staging.0, &logical_files)?;
 
-            Ok::<_, crate::error::TwonlyError>(staging)
+            Ok::<_, crate::error::TwonlyError>((staging, logical_files))
         })
         .await
         .map_err(|error| {
@@ -567,6 +640,31 @@ impl BackupArchive {
         })??;
 
         let restore_temp_dir = &staging.0;
+
+        // Reconstruct new-format databases directly into encrypted staging
+        // files. Indexes are built from schema after loading all table rows.
+        for (database_name, dump_name) in super::logical::DATABASES {
+            if let Some(contents) = logical_files.get(dump_name) {
+                let key = zeroize::Zeroizing::new(main_key.get_database_key(
+                    if database_name == APP_DATABASE_FILE {
+                        DatabaseKey::AppDb
+                    } else {
+                        DatabaseKey::RustDb
+                    },
+                ));
+                let database = Database::new(
+                    &restore_temp_dir.join(database_name).display().to_string(),
+                    Some(&key),
+                    false,
+                )
+                .await?;
+                let result =
+                    super::logical::import(&database.pool, contents, &restore_operation).await;
+                database.pool.close().await;
+                result?;
+            }
+        }
+        drop(logical_files);
 
         let restored_app_database = restore_temp_dir.join(APP_DATABASE_FILE);
 
@@ -776,6 +874,7 @@ impl BackupArchive {
 
     fn write_manifest(
         directory: &Path, operation: Option<&crate::database::lifecycle::Operation>,
+        format_version: u32, logical_files: &BTreeMap<String, zeroize::Zeroizing<Vec<u8>>>,
     ) -> Result<()> {
         let mut files = BTreeMap::new();
 
@@ -785,6 +884,10 @@ impl BackupArchive {
             if !entry.path().is_file()
                 || entry.file_name() == BACKUP_MANIFEST_FILE
                 || crate::database::maintenance::is_lock_file(entry.path())
+                || (format_version == BACKUP_FORMAT_VERSION
+                    && super::logical::DATABASES
+                        .iter()
+                        .any(|(name, _)| entry.file_name() == *name))
             {
                 continue;
             }
@@ -795,8 +898,18 @@ impl BackupArchive {
             );
         }
 
+        for (name, contents) in logical_files {
+            files.insert(
+                name.clone(),
+                BackupManifestFile {
+                    size: contents.len() as u64,
+                    sha256: hex::encode(Sha256::digest(contents.as_slice())),
+                },
+            );
+        }
+
         let manifest = BackupManifest {
-            format_version: BACKUP_FORMAT_VERSION,
+            format_version,
             drift_schema_version: 25,
             app_schema_version: crate::database::app::APP_SCHEMA_VERSION,
             files,
@@ -846,13 +959,20 @@ impl BackupArchive {
         })
     }
 
-    fn validate_manifest(directory: &Path) -> Result<()> {
+    fn validate_manifest(
+        directory: &Path, logical_files: &BTreeMap<String, zeroize::Zeroizing<Vec<u8>>>,
+    ) -> Result<()> {
         let path = directory.join(BACKUP_MANIFEST_FILE);
 
         if !path.exists() {
             // Format v1 archives predate the manifest and are migrated from
             // twonly.sqlite below.
-            return Ok(());
+            if logical_files.is_empty() {
+                return Ok(());
+            }
+            return Err(crate::error::TwonlyError::Generic(
+                "Logical backup requires a manifest".into(),
+            ));
         }
 
         let manifest: BackupManifest =
@@ -860,23 +980,47 @@ impl BackupArchive {
                 crate::error::TwonlyError::Generic(format!("Invalid backup manifest: {error}"))
             })?;
 
-        if manifest.format_version != BACKUP_FORMAT_VERSION {
+        if !matches!(manifest.format_version, 2 | BACKUP_FORMAT_VERSION) {
             return Err(crate::error::TwonlyError::Generic(format!(
                 "Unsupported backup format {}",
                 manifest.format_version
             )));
         }
 
+        if manifest.format_version == BACKUP_FORMAT_VERSION {
+            for (database, dump) in super::logical::DATABASES {
+                if !manifest.files.contains_key(dump)
+                    || !logical_files.contains_key(dump)
+                    || directory.join(database).exists()
+                {
+                    return Err(crate::error::TwonlyError::Generic(
+                        "Invalid logical backup database entries".into(),
+                    ));
+                }
+            }
+        } else if !logical_files.is_empty() {
+            return Err(crate::error::TwonlyError::Generic(
+                "Unexpected logical database in legacy backup".into(),
+            ));
+        }
+
         for (name, expected) in manifest.files {
             let file = directory.join(&name);
 
-            if !file.exists() {
+            if !file.exists() && !logical_files.contains_key(&name) {
                 return Err(crate::error::TwonlyError::Generic(format!(
                     "Backup entry {name} is missing"
                 )));
             }
 
-            let actual = Self::measure_file(&file, None)?;
+            let actual = if let Some(contents) = logical_files.get(&name) {
+                BackupManifestFile {
+                    size: contents.len() as u64,
+                    sha256: hex::encode(Sha256::digest(contents.as_slice())),
+                }
+            } else {
+                Self::measure_file(&file, None)?
+            };
 
             if actual.size != expected.size || actual.sha256 != expected.sha256 {
                 return Err(crate::error::TwonlyError::Generic(format!(
@@ -888,6 +1032,10 @@ impl BackupArchive {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "format_tests.rs"]
+mod format_tests;
 
 #[cfg(test)]
 mod tests {

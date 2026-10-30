@@ -70,6 +70,7 @@ flate2 = "1.1.10"
 resvg = { version = "0.48.1", default-features = false, features = ["text"] }
 reqwest = { version = "0.13.5", default-features = false, features = [
     "rustls-no-provider",
+    "stream",
 ] }
 async-trait = "0.1.92"
 futures-util = "0.3.34"

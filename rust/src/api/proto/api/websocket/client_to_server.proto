@@ -111,6 +111,13 @@ message Handshake {
     repeated int64 already_received_message_ids = 3;
   }
 
+  // Checks a login token without logging in. A recovering device uses it to
+  // confirm that restored keys belong to the account before staging them.
+  message VerifyLoginToken {
+    int64 user_id = 1;
+    bytes secret_login_token = 2;
+  }
+
   oneof Handshake {
     Register register = 1;
     GetAuthChallenge getAuthChallenge = 2;
@@ -122,6 +129,7 @@ message Handshake {
     GetServerKeyForPasswordLessRecovery get_server_key_for_passwordless_recovery = 8;
     RegisterPasswordlessNotification register_passwordless_notification = 9;
     CheckForPasswordlessNotification check_for_passwordless_notification = 10;
+    VerifyLoginToken verify_login_token = 11;
   }
 }
 

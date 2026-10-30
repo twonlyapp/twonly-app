@@ -5,6 +5,7 @@
 
 import 'api/server/prekeys.dart';
 import 'backup/backup_archive.dart';
+import 'backup/progress.dart';
 import 'bridge.dart';
 import 'bridge/api.dart';
 import 'bridge/callbacks.dart';
@@ -172,6 +173,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustStreamSink<ApiEvent> dco_decode_StreamSink_api_event_Sse(dynamic raw);
+
+  @protected
+  RustStreamSink<BackupProgress> dco_decode_StreamSink_backup_progress_Sse(
+    dynamic raw,
+  );
 
   @protected
   RustStreamSink<bool> dco_decode_StreamSink_bool_Sse(dynamic raw);
@@ -355,6 +361,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BackupPasswordKeys dco_decode_backup_password_keys(dynamic raw);
+
+  @protected
+  BackupProgress dco_decode_backup_progress(dynamic raw);
+
+  @protected
+  BackupStage dco_decode_backup_stage(dynamic raw);
 
   @protected
   BackupStorageInfo dco_decode_backup_storage_info(dynamic raw);
@@ -754,6 +766,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Int64List dco_decode_list_prim_i_64_strict(dynamic raw);
 
   @protected
+  Uint32List dco_decode_list_prim_u_32_strict(dynamic raw);
+
+  @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
 
   @protected
@@ -774,6 +789,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<(String, String)> dco_decode_list_record_string_string(dynamic raw);
+
+  @protected
+  List<RecoveredSecretCandidate> dco_decode_list_recovered_secret_candidate(
+    dynamic raw,
+  );
 
   @protected
   List<RecoveryShare> dco_decode_list_recovery_share(dynamic raw);
@@ -1062,6 +1082,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   (String, String) dco_decode_record_string_string(dynamic raw);
 
   @protected
+  RecoveredSecretCandidate dco_decode_recovered_secret_candidate(dynamic raw);
+
+  @protected
   RecoveryContacts dco_decode_recovery_contacts(dynamic raw);
 
   @protected
@@ -1316,6 +1339,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<BackupProgress> sse_decode_StreamSink_backup_progress_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RustStreamSink<bool> sse_decode_StreamSink_bool_Sse(
     SseDeserializer deserializer,
   );
@@ -1537,6 +1565,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BackupPasswordKeys sse_decode_backup_password_keys(
     SseDeserializer deserializer,
   );
+
+  @protected
+  BackupProgress sse_decode_backup_progress(SseDeserializer deserializer);
+
+  @protected
+  BackupStage sse_decode_backup_stage(SseDeserializer deserializer);
 
   @protected
   BackupStorageInfo sse_decode_backup_storage_info(
@@ -2074,6 +2108,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer);
 
   @protected
+  Uint32List sse_decode_list_prim_u_32_strict(SseDeserializer deserializer);
+
+  @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
 
   @protected
@@ -2094,6 +2131,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<(String, String)> sse_decode_list_record_string_string(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<RecoveredSecretCandidate> sse_decode_list_recovered_secret_candidate(
     SseDeserializer deserializer,
   );
 
@@ -2448,6 +2490,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RecoveredSecretCandidate sse_decode_recovered_secret_candidate(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RecoveryContacts sse_decode_recovery_contacts(SseDeserializer deserializer);
 
   @protected
@@ -2754,6 +2801,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_backup_progress_Sse(
+    RustStreamSink<BackupProgress> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_StreamSink_bool_Sse(
     RustStreamSink<bool> self,
     SseSerializer serializer,
@@ -3019,6 +3072,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     BackupPasswordKeys self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_backup_progress(
+    BackupProgress self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_backup_stage(BackupStage self, SseSerializer serializer);
 
   @protected
   void sse_encode_backup_storage_info(
@@ -3693,6 +3755,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_prim_u_32_strict(
+    Uint32List self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
 
   @protected
@@ -3719,6 +3787,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_record_string_string(
     List<(String, String)> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_recovered_secret_candidate(
+    List<RecoveredSecretCandidate> self,
     SseSerializer serializer,
   );
 
@@ -4163,6 +4237,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_record_string_string(
     (String, String) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_recovered_secret_candidate(
+    RecoveredSecretCandidate self,
     SseSerializer serializer,
   );
 

@@ -603,6 +603,50 @@ void main() {
     );
   });
 
+  test('a limit refusal shows the banner until an upload succeeds', () async {
+    api.error = AnyhowException('API error code 1023');
+    await service.checkUploads();
+    expect(service.limitReached.value, isTrue);
+
+    api.error = null;
+    final client = MockClient((_) async => http.Response('', 204));
+    addTearDown(client.close);
+    await http.runWithClient(service.checkUploads, () => client);
+
+    expect(api.confirmations, 1);
+    expect(service.limitReached.value, isFalse);
+  });
+
+  test('a limit refusal on confirmation shows the banner', () async {
+    api.confirmationError = AnyhowException('API error code 1023');
+    final client = MockClient((_) async => http.Response('', 204));
+    addTearDown(client.close);
+    await http.runWithClient(service.checkUploads, () => client);
+
+    expect(service.limitReached.value, isTrue);
+  });
+
+  test('deleting the refused memory hides the banner', () async {
+    api.error = AnyhowException('API error code 1023');
+    await service.checkUploads();
+    expect(service.limitReached.value, isTrue);
+
+    await rust_mediafiles.deleteMediaFile(
+      id: mediaId,
+      transaction: currentDatabaseSession(),
+    );
+    await service.checkUploads();
+
+    expect(service.limitReached.value, isFalse);
+  });
+
+  test('other refusals leave the banner hidden', () async {
+    api.error = AnyhowException('API error code 1022');
+    await service.checkUploads();
+
+    expect(service.limitReached.value, isFalse);
+  });
+
   for (final message in [
     'Not connected',
     'API request timed out',

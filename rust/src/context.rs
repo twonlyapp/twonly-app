@@ -224,6 +224,12 @@ impl Context {
 
     #[doc(hidden)]
     #[cfg(any(test, debug_assertions))]
+    pub async fn serialize_test_key_manager(&self) -> Result<Vec<u8>> {
+        self.key_manager.lock().await.to_bytes()
+    }
+
+    #[doc(hidden)]
+    #[cfg(any(test, debug_assertions))]
     pub async fn inject_test_user_id(&self, user_id: i64) -> Result<()> {
         let mut key_manager = self.key_manager.lock().await;
 
