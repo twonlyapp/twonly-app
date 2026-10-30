@@ -369,6 +369,13 @@
   "passwordRepeatedNotEqual": "Passwörter stimmen nicht überein.",
   "backupPasswordRequirement": "Das Passwort muss mindestens 10 Zeichen lang sein.",
   "backupEnableBackup": "Passwort-Backup aktivieren",
+  "backupProgressPreparing": "Backup wird vorbereitet…",
+  "backupProgressSnapshotting": "Datenbanken werden kopiert…",
+  "backupProgressExporting": "Backup-Daten werden vorbereitet…",
+  "backupProgressCompressing": "Backup wird komprimiert…",
+  "backupProgressEncrypting": "Backup wird verschlüsselt…",
+  "backupProgressUploadingIdentity": "Kontowiederherstellung wird hochgeladen…",
+  "backupProgressUploadingArchive": "Verschlüsseltes Backup wird hochgeladen…",
   "backupTwonlySaveNow": "Jetzt speichern",
   "backupChangePassword": "Passwort ändern",
   "backupChangePasswordAuthReason": "Backup-Passwort ändern",
@@ -1026,6 +1033,20 @@
     }
   },
   "recoverPasswordlessRecoverNowBtn": "Jetzt wiederherstellen",
+  "recoverPasswordlessSharesIgnored": "{count, plural, =1{1 Teil wurde ignoriert, weil er doppelt war oder nicht passte.} other{{count} Teile wurden ignoriert, weil sie doppelt waren oder nicht passten.}}",
+  "@recoverPasswordlessSharesIgnored": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recoverPasswordlessSharesDoNotFit": "Die bisher erhaltenen Teile passen nicht zusammen. Warte, bis weitere Freunde helfen.",
+  "recoverPasswordlessTooManyShares": "Es sind zu viele widersprüchliche Teile eingegangen. Starte neu und teile den neuen Link nur mit Freunden, denen du vertraust.",
+  "passwordlessRecoveryWrongAccount": "Diese Teile passen nicht zum Konto auf dem Server. Warte, bis weitere Freunde helfen.",
+  "passwordlessRecoveryStartOver": "Neu starten",
+  "passwordlessRecoveryStartOverBody": "Dadurch entsteht ein neuer Wiederherstellungslink. Bisher erhaltene Teile werden verworfen, deine Freunde müssen ihre erneut senden.",
+  "passwordlessRecoveryLinkExpired": "Dein Wiederherstellungslink ist nach 7 Tagen abgelaufen. Teile den neuen Link mit deinen Freunden.",
   "memoriesBackupLimitReached": "Cloud-Backup-Limit erreicht! Bitte aktualisiere dein Abonnement oder gib Speicherplatz frei.",
   "settingsStorageLocal": "Lokaler Speicherplatz",
   "settingsStorageNoCloudBackupCard": "Sichere deine Erinnerungen in der Cloud, um lokalen Speicherplatz freizugeben und deine Bilder nicht zu verlieren. Alles Ende-zu-Ende verschlüsselt.",

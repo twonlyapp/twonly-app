@@ -56,7 +56,15 @@ OnboardingState _$OnboardingStateFromJson(Map<String, dynamic> json) =>
       )
       ..receivedShares = (json['receivedShares'] as List<dynamic>)
           .map((e) => ReceivedRecoveryShare.fromJson(e as Map<String, dynamic>))
-          .toList();
+          .toList()
+      ..ignoredMessageIds =
+          (json['ignoredMessageIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          []
+      ..recoveryStartedAt = json['recoveryStartedAt'] == null
+          ? null
+          : DateTime.parse(json['recoveryStartedAt'] as String);
 
 Map<String, dynamic> _$OnboardingStateToJson(OnboardingState instance) =>
     <String, dynamic>{
@@ -68,4 +76,6 @@ Map<String, dynamic> _$OnboardingStateToJson(OnboardingState instance) =>
       'encryptionKey': instance.encryptionKey,
       'emailRecoveryRequested': instance.emailRecoveryRequested,
       'receivedShares': instance.receivedShares,
+      'ignoredMessageIds': instance.ignoredMessageIds,
+      'recoveryStartedAt': instance.recoveryStartedAt?.toIso8601String(),
     };

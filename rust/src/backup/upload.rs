@@ -2,6 +2,7 @@
 
 use super::backup_archive::BackupArchive;
 use super::backup_identity::BackupIdentity;
+use super::progress::{self, BackupStage};
 use crate::bridge::api::RustApi;
 use crate::context::Context;
 use crate::database::lifecycle::Operation;
@@ -163,6 +164,8 @@ async fn upload(
             now,
         );
 
+    let _progress = (identity_due || archive_due).then(progress::UploadGuard::new);
+
     if identity_due {
         let identity = {
             let keys = ctx.key_manager.lock().await;
@@ -185,7 +188,8 @@ async fn upload(
                 let result = client
                     .put(format!("{base_url}backup/identity/{id}"))
                     .header("Content-Type", "application/octet-stream")
-                    .body(bytes)
+                    .header(reqwest::header::CONTENT_LENGTH, bytes.len())
+                    .body(upload_body(bytes, BackupStage::UploadingIdentity))
                     .send()
                     .await;
                 if accepted(result, "identity") {
@@ -247,7 +251,14 @@ async fn upload(
             for (name, value) in headers {
                 request = request.header(name, value);
             }
-            Ok::<_, TwonlyError>(accepted(request.body(body).send().await, "archive"))
+            Ok::<_, TwonlyError>(accepted(
+                request
+                    .header(reqwest::header::CONTENT_LENGTH, body.len())
+                    .body(upload_body(body, BackupStage::UploadingArchive))
+                    .send()
+                    .await,
+                "archive",
+            ))
         }
         .await;
         match result {
@@ -277,6 +288,23 @@ async fn upload(
     // due, which a log of failures alone cannot tell apart from no run at all.
     tracing::info!(identity_due, archive_due, successful, "backup run finished");
     Ok(successful)
+}
+
+fn upload_body(bytes: Vec<u8>, stage: BackupStage) -> reqwest::Body {
+    let total = bytes.len();
+    progress::bytes(stage, 0, total as u64);
+    reqwest::Body::wrap_stream(futures_util::stream::unfold(
+        (bytes, 0),
+        move |(bytes, offset)| async move {
+            if offset == bytes.len() {
+                return None;
+            }
+            let end = (offset + 64 * 1024).min(bytes.len());
+            let chunk = bytes[offset..end].to_vec();
+            progress::bytes(stage, end as u64, total as u64);
+            Some((Ok::<_, std::convert::Infallible>(chunk), (bytes, end)))
+        },
+    ))
 }
 
 fn accepted(result: std::result::Result<reqwest::Response, reqwest::Error>, kind: &str) -> bool {

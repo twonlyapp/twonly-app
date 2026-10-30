@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(\n                SELECT 1 FROM contacts\n                WHERE user_id = ? AND accepted != 0 AND blocked = 0 AND deleted_by_user = 0\n            ) AS \"friend!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "friend!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e39351a36fe53e78bfcc170d51dc0581d9349bbe30dd465f5b7a8e816788989f"
+}

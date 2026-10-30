@@ -1,13 +1,15 @@
 # twonly
 
+[twonly](https://twonly.eu) is an open-source app for sharing photos and videos with friends. I started it because I liked Snapchat's camera and simple photo editor, but wanted end-to-end encryption, European hosting, and no ads, tracking, or forced AI chat.
+
 <a href="https://twonly.eu" rel="some text"><img src="metadata/en-US/images/featureGraphic.png" alt="twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing." /></a>
 
-This repository contains the complete source code of the [twonly](https://twonly.eu) app. twonly is a replacement for Snapchat, but its purpose is not to replace instant messaging apps, as there are already [many fantastic alternatives](https://www.messenger-matrix.de/messenger-matrix-en.html) out there. It was started because I liked the basic features of Snapchat, such as opening with the camera, the easy-to-use image editor, and the focus on sending fun pictures to friends. But I was annoyed by Snapchat's forced AI chat, receiving random messages to follow strangers, and not knowing how my sent images/text messages were encrypted, if at all. I am also very critical of the direction in which the US is currently moving and therefore try to avoid US providers wherever possible.
-
 <p align="center">
-  <img src="metadata/en-US/images/phoneScreenshots/01_share_moments.png" width="30%" alt="Share moments" />
-  <img src="metadata/en-US/images/phoneScreenshots/02_chat_list.png" width="30%" alt="Chat list" />
-  <img src="metadata/en-US/images/phoneScreenshots/03_groups.png" width="30%" alt="Groups" />
+  <img src="metadata/en-US/images/phoneScreenshots/01_chat_list.png" width="19%" alt="Share moments" />
+  <img src="metadata/en-US/images/phoneScreenshots/02_share_image.png" width="19%" alt="Chat list" />
+  <img src="metadata/en-US/images/phoneScreenshots/03_group_stickers.png" width="19%" alt="Groups" />
+  <img src="metadata/en-US/images/phoneScreenshots/04_games.png" width="19%" alt="Groups" />
+  <img src="metadata/en-US/images/phoneScreenshots/05_memories.png" width="19%" alt="Groups" />
 </p>
 
 <div align="center" style="margin: 10px 20px 10px 20px">
@@ -19,33 +21,33 @@ This repository contains the complete source code of the [twonly](https://twonly
         <img alt="Get it on Google-Play button" src="https://twonly.eu/assets/buttons/get-it-in-google-play.webp"
             width="110px" />
     </a>
-    <a href="https://github.com/twonlyapp/twonly-app/releases">
-        <img alt="Get it on Github button" src="https://twonly.eu/assets/buttons/get-it-on-github.webp" width="110px" />
-    </a>
     <a href="https://releases.twonly.eu/fdroid/repo/">
         <img alt="Get it on F-Droid button" src="https://twonly.eu/assets/buttons/get-it-on-f-droid.webp" width="105px" />
     </a>
 </div>
 
-If you decide to give twonly a try, please keep in mind that it is still in its early stages and is currently being developed by a single student. So if you are not satisfied at the moment, please come back later, as it is constantly being improved, and I may one day be able to develop it full-time.
+twonly is still in its early stages. Features and reliability are being improved, and feedback is welcome.
 
 ## Features
 
-- Offer a Snapchat™ like experience
-- End-to-End encryption using the [Signal Protocol](https://signal.org/docs/specifications/pqxdh/)
-- Open Source and can be downloaded directly from GitHub
+- Photo and video sharing with editing tools and viewing timers
+- Text and voice messages in one-on-one and group chats
+- Live location sharing in chats
+- Stories that expire after 24 hours
+- Custom stickers and mini-games in chats
+- Send photos directly to friends' home screen widgets
+- Memories with a map and end-to-end encrypted cloud backups
+- End-to-end encryption using the [Signal Protocol](https://signal.org/docs/specifications/pqxdh/)
+- No ads, tracking, or data sales
 - No email or phone number required to register
-- The backend is hosted exclusively in Europe
-- [Passwordless Backup](https://twonly.eu/en/blog/2026-passwordless-backup.html) without a phone number
-- [User Discovery](https://twonly.eu/en/blog/2026-mutual-friends.html) without a phone number
-- E2EE cloud backup of memories
+- [Account recovery through trusted friends](https://twonly.eu/en/blog/2026-passwordless-backup.html)
+- [Privacy-friendly user discovery](https://twonly.eu/en/blog/2026-mutual-friends.html)
+- Open source and available directly from GitHub
+- Servers hosted exclusively in Europe
 
-## Next on the bucket list
+## Support the project
 
-- Importing memories from Snapchat
-- For Android: Support for [UnifiedPush] (https://unifiedpush.org/)
-- For Android: Reproducible builds
-- Decentralize the server so that anyone can run their own server
+Building and maintaining twonly takes time, and there are hosting costs and developer account fees to cover. You can help by spreading the word or subscribing in the app. You can also [donate to the main developer through GitHub Sponsors](https://github.com/sponsors/otsmr).
 
 ## Security Issues
 
@@ -56,21 +58,6 @@ guarantee a bounty currently :/
 ## Contribution
 
 Currently there are still some core features and rewrites open I want to do involving a huge rewrite in Rust. Because of this, contributions are currently not wanted. You can still view the code (if you find any security issues please contact me!). Also, issues are currently closed. If you find a bug, please use the in-app option as there you can upload your debug log which helps a lot. 
-
-## Native error reporting
-
-Native background crash reporting and verification are described in
-[Native error reporting](docs/native-error-reporting.md).
-
-## Custom dependencies
-
-Vendored packages are tracked in `dependencies.yaml`. Set `custom_changes: true`
-on a dependency or an individual subpackage when it contains local modifications.
-`dependencies.py` preserves these folders during normal and `--cache-only`
-updates, and keeps their local versions and paths in the managed `pubspec.yaml`
-sections. Update these packages manually and merge upstream changes with the
-local modifications. Missing custom packages must be restored from the
-`dependencies` repository.
 
 ## Signing Keys
 

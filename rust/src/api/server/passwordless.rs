@@ -4,13 +4,15 @@
  */
 
 use super::Server;
+use crate::api::proto::error::ErrorCode;
 use crate::api::proto::server_to_client::response::ok::Ok as ResponseOk;
 use crate::api::proto::{self, client_to_server};
-use crate::api::runtime::helpers::decode_ok_value;
+use crate::api::runtime::helpers::{decode_empty_ok, decode_ok_value};
 use crate::api::server::server_ok;
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
-use crate::error::Result;
+use crate::error::{Result, TwonlyError};
+use crate::keys::KeyManager;
 use std::sync::Arc;
 
 impl Server {
@@ -119,5 +121,43 @@ impl Server {
             }
             _ => None,
         })
+    }
+
+    /// Whether `serialized_key_manager` holds the login token the server has
+    /// for `user_id`. A recovery checks this before staging keys, so shares
+    /// that pair one account's id with other keys stop here.
+    ///
+    /// `VerifyLoginToken` checks the token like a login does but leaves the
+    /// session logged out.
+    pub async fn verify_recovered_identity(
+        ctx: &Arc<Context>, user_id: i64, serialized_key_manager: &[u8],
+    ) -> Result<bool> {
+        let key_manager = KeyManager::from_bytes(serialized_key_manager)?;
+
+        if key_manager.user_id.is_some_and(|id| id != user_id) {
+            return Ok(false);
+        }
+
+        let bytes = Self::handshake(
+            ctx,
+            client_to_server::handshake::Handshake::VerifyLoginToken(
+                client_to_server::handshake::VerifyLoginToken {
+                    user_id,
+                    secret_login_token: key_manager.main_key.get_login_token().to_vec(),
+                },
+            ),
+        )
+        .await?;
+
+        match decode_empty_ok(bytes)? {
+            ServerResult::Ok(()) => Ok(true),
+            ServerResult::ErrorCode(code)
+                if code == ErrorCode::AuthTokenNotValid as i32
+                    || code == ErrorCode::UserIdNotFound as i32 =>
+            {
+                Ok(false)
+            }
+            ServerResult::ErrorCode(code) => Err(TwonlyError::Api(code)),
+        }
     }
 }

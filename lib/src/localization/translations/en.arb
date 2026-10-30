@@ -380,6 +380,13 @@
   "passwordRepeatedNotEqual": "Passwords do not match.",
   "backupPasswordRequirement": "Password must be at least 10 characters long.",
   "backupEnableBackup": "Enable Password Backup",
+  "backupProgressPreparing": "Preparing backup…",
+  "backupProgressSnapshotting": "Copying databases…",
+  "backupProgressExporting": "Preparing backup data…",
+  "backupProgressCompressing": "Compressing backup…",
+  "backupProgressEncrypting": "Encrypting backup…",
+  "backupProgressUploadingIdentity": "Uploading account recovery…",
+  "backupProgressUploadingArchive": "Uploading encrypted backup…",
   "backupTwonlySaveNow": "Save now",
   "backupChangePassword": "Change password",
   "backupChangePasswordAuthReason": "Changing backup password",
@@ -1043,6 +1050,20 @@
     }
   },
   "recoverPasswordlessRecoverNowBtn": "Recover now",
+  "recoverPasswordlessSharesIgnored": "{count, plural, =1{1 share was ignored because it was a duplicate or did not match.} other{{count} shares were ignored because they were duplicates or did not match.}}",
+  "@recoverPasswordlessSharesIgnored": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recoverPasswordlessSharesDoNotFit": "The shares received so far do not fit together. Waiting for more friends to help.",
+  "recoverPasswordlessTooManyShares": "Too many conflicting shares arrived. Start over and share the new link only with friends you trust.",
+  "passwordlessRecoveryWrongAccount": "These shares do not match the account on the server. Waiting for more friends to help.",
+  "passwordlessRecoveryStartOver": "Start over",
+  "passwordlessRecoveryStartOverBody": "This creates a new recovery link. Shares received so far are discarded, so your friends have to send theirs again.",
+  "passwordlessRecoveryLinkExpired": "Your recovery link expired after 7 days. Share the new link with your friends.",
   "memoriesBackupLimitReached": "Cloud backup limit reached! Please upgrade your plan or free up space.",
   "settingsStorageLocal": "Local storage",
   "settingsStorageNoCloudBackupCard": "Back up your memories to the cloud to free up local space and ensure you never lose your pictures. All end-to-end encrypted.",

@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use crate::backup::backup_archive::BackupArchive;
 pub use crate::backup::backup_archive::{BackupFileSize, BackupStorageInfo, BackupTableSize};
 use crate::backup::backup_identity::BackupIdentity;
+pub use crate::backup::progress::{BackupProgress, BackupStage};
 use crate::bridge::get_twonly_flutter;
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
@@ -88,6 +89,10 @@ impl RustBackupIdentity {
 }
 
 impl RustBackupArchive {
+    pub async fn progress(sink: crate::frb_generated::StreamSink<BackupProgress>) -> Result<()> {
+        crate::backup::progress::stream(sink).await
+    }
+
     /// Manual backups share status, upload handling and serialization with
     /// scheduled native backups.
     pub async fn upload_backup(force: bool) -> Result<bool> {

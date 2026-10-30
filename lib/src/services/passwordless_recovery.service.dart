@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'dart:convert' show base64Url, utf8;
+import 'dart:convert' show base64, base64Url, utf8;
 import 'dart:typed_data';
 
+import 'package:collection/collection.dart' show mergeSort;
 import 'package:cryptography_plus/cryptography_plus.dart'
     show Hkdf, Hmac, Mac, SecretBox, SecretKey, Xchacha20;
 import 'package:fixnum/fixnum.dart';
@@ -31,7 +32,49 @@ import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/he
 
 enum SecondFactorType { email, pin, none }
 
+enum RecoveryPollResult { unchanged, updated, expired }
+
+/// What the received recovery shares currently add up to.
+class RecoveryShareAnalysis {
+  const RecoveryShareAnalysis({
+    this.shares = const [],
+    this.threshold = 0,
+    this.secret,
+    this.secretId,
+    this.ignoredShares = 0,
+    this.tooManyShares = false,
+  });
+
+  /// The shares of the account most helpers agree on, each one once. Once
+  /// [secret] is rebuilt, only the shares it was rebuilt from.
+  final List<ReceivedRecoveryShare> shares;
+
+  /// How many shares that account needs, or 0 before any usable share.
+  final int threshold;
+
+  /// The data rebuilt from [shares], once enough of them fit together.
+  final SharedSecretData? secret;
+
+  /// Identifies [secret] in `rejectedSecrets` of [PasswordlessRecoveryService.analyzeShares].
+  final String? secretId;
+
+  /// Shares left out: duplicates, shares for another account or threshold,
+  /// and shares that do not fit the rebuilt data.
+  final int ignoredShares;
+
+  /// Too many conflicting shares arrived to try every combination.
+  final bool tooManyShares;
+
+  ReceivedRecoveryShare? get account => shares.isEmpty ? null : shares.first;
+
+  bool get thresholdReached => threshold > 0 && shares.length >= threshold;
+}
+
 class PasswordlessRecoveryService {
+  /// The server forgets a recovery link after seven days, so the app starts
+  /// the session over then as well.
+  static const recoverySessionLifetime = Duration(days: 7);
+
   static final StreamController<String> onEmailTokenReceived =
       StreamController<String>.broadcast();
 
@@ -389,19 +432,20 @@ class PasswordlessRecoveryService {
     }
   }
 
-  static Future<bool> checkAndStorePasswordlessMessages(
+  static Future<RecoveryPollResult> checkAndStorePasswordlessMessages(
     OnboardingState state,
   ) async {
     if (!state.serverRegistered ||
         state.notificationId == null ||
         state.downloadAuthToken == null ||
         state.encryptionKey == null) {
-      return false;
+      return RecoveryPollResult.unchanged;
     }
 
-    final alreadyReceivedIds = Int64List.fromList(
-      state.receivedShares.map((share) => share.messageId).toList(),
-    );
+    final alreadyReceivedIds = Int64List.fromList([
+      ...state.receivedShares.map((share) => share.messageId),
+      ...state.ignoredMessageIds,
+    ]);
 
     late final List<FrbPasswordlessNotificationMessage> messages;
     try {
@@ -411,14 +455,19 @@ class PasswordlessRecoveryService {
         alreadyReceivedMessageIds: alreadyReceivedIds,
       );
     } catch (error) {
+      // The server purges a recovery link after seven days and from then on
+      // answers as for one it never knew.
+      if (apiErrorCodeOf(error) == ErrorCode.NoRecoveryData.value) {
+        return RecoveryPollResult.expired;
+      }
       // This runs on a 10s poll, so a socket that is still connecting or
       // briefly offline is expected. The next tick retries.
       Log.warn('Failed to load passwordless recovery messages', error);
-      return false;
+      return RecoveryPollResult.unchanged;
     }
 
     if (messages.isEmpty) {
-      return false;
+      return RecoveryPollResult.unchanged;
     }
 
     final xchacha20 = Xchacha20.poly1305Aead();
@@ -441,6 +490,15 @@ class PasswordlessRecoveryService {
         );
 
         final share = TrustedFriendShare.fromBuffer(plaintext);
+
+        // Setup never allows fewer than two helpers. A share claiming one
+        // would rebuild to whatever its sender put into it.
+        if (share.threshold < 2) {
+          Log.warn('Ignoring recovery share $msgId with threshold below 2');
+          state.ignoredMessageIds.add(msgId);
+          didUpdate = true;
+          continue;
+        }
 
         final receivedShare = ReceivedRecoveryShare(
           messageId: msgId,
@@ -468,17 +526,186 @@ class PasswordlessRecoveryService {
         Log.error(
           'Failed to decrypt/parse passwordless notification message $msgId: $e',
         );
+        state.ignoredMessageIds.add(msgId);
+        didUpdate = true;
       }
     }
 
     if (didUpdate) {
       await KeyValueStore.update<OnboardingState>(
         key: KeyValueKeys.onboardingState,
-        update: (s) => s.receivedShares = state.receivedShares,
+        update: (s) => s
+          ..receivedShares = state.receivedShares
+          ..ignoredMessageIds = state.ignoredMessageIds,
       );
     }
 
-    return didUpdate;
+    return didUpdate
+        ? RecoveryPollResult.updated
+        : RecoveryPollResult.unchanged;
+  }
+
+  /// Whether the server confirms that the recovered [keyManager] belongs to
+  /// [userId], checked through its login token before anything is staged.
+  ///
+  /// A server from before this check answers BadRequest. Recovery then goes
+  /// ahead unchecked, so an app released first does not lock users out.
+  static Future<bool> recoveredKeysBelongTo(
+    int userId,
+    Uint8List keyManager,
+  ) async {
+    try {
+      return await RustApi.verifyRecoveredIdentity(
+        userId: userId,
+        serializedKeyManager: keyManager,
+      );
+    } catch (error) {
+      if (apiErrorCodeOf(error) == ErrorCode.BadRequest.value) {
+        Log.warn('The server cannot check recovered keys yet');
+        return true;
+      }
+      rethrow;
+    }
+  }
+
+  static bool isRecoverySessionExpired(OnboardingState state, {DateTime? now}) {
+    final startedAt = state.recoveryStartedAt;
+    return startedAt != null &&
+        (now ?? DateTime.now()).difference(startedAt) >=
+            recoverySessionLifetime;
+  }
+
+  /// Drops the recovery link together with everything received through it.
+  static Future<void> resetRecoverySession(OnboardingState state) async {
+    void reset(OnboardingState s) => s
+      ..notificationId = null
+      ..downloadAuthToken = null
+      ..encryptionKey = null
+      ..serverRegistered = false
+      ..emailRecoveryRequested = false
+      ..receivedShares = []
+      ..ignoredMessageIds = []
+      ..recoveryStartedAt = null;
+
+    reset(state);
+    lastEmailToken = null;
+    await KeyValueStore.update<OnboardingState>(
+      key: KeyValueKeys.onboardingState,
+      update: reset,
+    );
+  }
+
+  /// Works out which received shares belong together and rebuilds the
+  /// recovery data from them.
+  ///
+  /// Nothing authenticates the account and threshold a share names, so
+  /// shares are grouped by both, the group most helpers agree on first.
+  /// Within a group every combination is tried, which keeps a duplicate, a
+  /// stale share from an earlier setup or a forged one from spoiling the
+  /// rest. [rejectedSecrets] holds the `secretId` of data a later check
+  /// refused, so the next candidate is used instead.
+  static Future<RecoveryShareAnalysis> analyzeShares(
+    List<ReceivedRecoveryShare> received, {
+    Set<String> rejectedSecrets = const {},
+  }) async {
+    final seen = <String>{};
+    final groups = <(int, int), List<ReceivedRecoveryShare>>{};
+    for (final share in received) {
+      if (share.threshold < 2 ||
+          !seen.add(base64.encode(share.sharedSecretDataBytes))) {
+        continue;
+      }
+      groups
+          .putIfAbsent((share.myUserId, share.threshold), () => [])
+          .add(share);
+    }
+    if (groups.isEmpty) {
+      return RecoveryShareAnalysis(ignoredShares: received.length);
+    }
+
+    // Larger groups first; the stable sort keeps arrival order among equals.
+    final ordered = groups.values.toList();
+    mergeSort(ordered, compare: (a, b) => b.length.compareTo(a.length));
+
+    var tooManyShares = false;
+    for (final group in ordered) {
+      final threshold = group.first.threshold;
+      if (group.length < threshold) continue;
+
+      final List<RecoveredSecretCandidate> candidates;
+      try {
+        candidates = await RustUtils.recoverSecretCandidates(
+          shares: [
+            for (final share in group)
+              Uint8List.fromList(share.sharedSecretDataBytes),
+          ],
+          threshold: threshold,
+        );
+      } catch (e) {
+        Log.warn('Could not combine the recovery shares: $e');
+        tooManyShares = true;
+        continue;
+      }
+
+      for (final candidate in candidates) {
+        final secretId = base64.encode(candidate.secret);
+        if (rejectedSecrets.contains(secretId)) continue;
+        final secret = _parseSharedSecret(
+          candidate.secret,
+          group.first.myUserId,
+        );
+        if (secret == null) continue;
+
+        final used = [for (final i in candidate.shareIndexes) group[i]];
+        return RecoveryShareAnalysis(
+          shares: used,
+          threshold: threshold,
+          secret: secret,
+          secretId: secretId,
+          ignoredShares: received.length - used.length,
+        );
+      }
+    }
+
+    final leading = ordered.first;
+    return RecoveryShareAnalysis(
+      shares: leading,
+      threshold: leading.first.threshold,
+      ignoredShares: received.length - leading.length,
+      tooManyShares: tooManyShares,
+    );
+  }
+
+  /// Accepts rebuilt data only in the shape the owner's app writes it. A
+  /// combination containing a share that does not belong yields random bytes,
+  /// which fail here.
+  static SharedSecretData? _parseSharedSecret(List<int> bytes, int userId) {
+    try {
+      final secret = SharedSecretData.fromBuffer(bytes);
+      if (secret.recoveryData.isEmpty) return null;
+
+      if (secret.hasServerKeyProtection()) {
+        // A second factor is either a PIN, with its unlock token, or an email.
+        if (secret.serverKeyProtection.length != 32 ||
+            secret.hasPinUnlockToken() == secret.hasEmailHint() ||
+            (secret.hasPinUnlockToken() &&
+                secret.pinUnlockToken.length != 32)) {
+          return null;
+        }
+        final envelope = EncryptedEnvelope.fromBuffer(secret.recoveryData);
+        if (envelope.iv.length != 24 || envelope.mac.length != 16) {
+          return null;
+        }
+      } else {
+        final recovery = RecoveryData.fromBuffer(secret.recoveryData);
+        if (recovery.userId.toInt() != userId || recovery.keyManager.isEmpty) {
+          return null;
+        }
+      }
+      return secret;
+    } on Object {
+      return null;
+    }
   }
 
   static Future<void> migratePasswordlessRecovery() async {

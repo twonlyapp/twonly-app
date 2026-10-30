@@ -1056,6 +1056,16 @@ impl RustApi {
             .collect())
     }
 
+    /// Whether a recovered key manager holds the login token the server has
+    /// for `user_id`.
+    pub async fn verify_recovered_identity(
+        user_id: i64, serialized_key_manager: Vec<u8>,
+    ) -> Result<bool> {
+        let ctx = Context::get_static()?;
+
+        Server::verify_recovered_identity(ctx, user_id, &serialized_key_manager).await
+    }
+
     pub async fn report_user(user_id: i64, reason: String) -> Result<()> {
         let ctx = Context::get_static()?;
 

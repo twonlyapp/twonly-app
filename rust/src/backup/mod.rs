@@ -6,4 +6,6 @@
 pub(crate) mod backup_archive;
 pub(crate) mod backup_identity;
 mod capture;
+mod logical;
+pub(crate) mod progress;
 pub(crate) mod upload;

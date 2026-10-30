@@ -2310,6 +2310,8 @@ mod tests {
 
         UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
 
+        ctx.inject_test_user_id(42).await?;
+
         let db = ctx.app_db.read().await.clone();
 
         let mut tx = db.pool.begin().await?;

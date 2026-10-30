@@ -1,10 +1,16 @@
 use super::{init_tracing, Tester};
+use libsignal_protocol::IdentityKeyPair;
 use prost::Message as _;
+use rand::SeedableRng as _;
 use rust_lib_twonly::api::messages::incoming::recovery::perform_heartbeat;
 use rust_lib_twonly::api::messages::outgoing::send_c2c_message_to_contact;
 use rust_lib_twonly::api::proto::client::{self as proto, encrypted_content};
+use rust_lib_twonly::api::proto::error::ErrorCode;
+use rust_lib_twonly::api::proto::{client_to_server, server_to_client};
+use rust_lib_twonly::api::{ApiRuntime, Server};
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::services::contacts::ContactService;
+use rust_lib_twonly::TwonlyError;
 
 async fn create_authenticated_tester() -> anyhow::Result<Tester> {
     let mut tester = Tester::new().await?;
@@ -111,6 +117,97 @@ async fn test_passwordless_recovery_share_heartbeat_and_delete() -> anyhow::Resu
     tester_b
         .wait_for_recovery_share_deleted(tester_a.user_id)
         .await?;
+
+    Ok(())
+}
+
+#[tokio::test]
+
+async fn test_recovered_identity_is_checked_against_the_server() -> anyhow::Result<()> {
+    init_tracing();
+
+    let owner = create_authenticated_tester().await?;
+
+    let owner_keys = owner.context.serialize_test_key_manager().await?;
+
+    // Recovery authenticates the main key's login token, independently of
+    // the deprecated Signal identity challenge.
+    let mut rng = rand::rngs::StdRng::from_os_rng();
+    let different_identity = IdentityKeyPair::generate(&mut rng);
+    owner
+        .context
+        .inject_test_signal_identity(different_identity.serialize().to_vec(), 1)
+        .await?;
+    let keys_with_different_signal_identity = owner.context.serialize_test_key_manager().await?;
+
+    // Another account's login token, labelled with the owner's id, as forged
+    // recovery data would carry it.
+    let other = create_authenticated_tester().await?;
+
+    other.context.inject_test_user_id(owner.user_id).await?;
+
+    let forged_keys = other.context.serialize_test_key_manager().await?;
+
+    // The check runs on a device that is not logged in, as during a recovery.
+    let device = Tester::new().await?;
+
+    device.wait_until(ApiConnectionState::Connected).await?;
+
+    match Server::verify_recovered_identity(&device.context, owner.user_id, &owner_keys).await {
+        Err(TwonlyError::Api(code)) if code == ErrorCode::BadRequest as i32 => {
+            eprintln!("skipped: the server does not know VerifyLoginToken yet");
+
+            return Ok(());
+        }
+        verified => assert!(verified?),
+    }
+
+    assert!(
+        Server::verify_recovered_identity(
+            &device.context,
+            owner.user_id,
+            &keys_with_different_signal_identity,
+        )
+        .await?
+    );
+
+    assert!(
+        !Server::verify_recovered_identity(&device.context, owner.user_id, &forged_keys).await?
+    );
+
+    // Keys that name another account are refused before asking the server.
+    assert!(!Server::verify_recovered_identity(&device.context, other.user_id, &owner_keys).await?);
+
+    // Ask the server directly: verification must not grant application access.
+    let request = client_to_server::ClientToServer {
+        v: Some(client_to_server::client_to_server::V::V0(client_to_server::V0 {
+            kind: Some(client_to_server::v0::Kind::Applicationdata(
+                client_to_server::ApplicationData {
+                    application_data: Some(
+                        client_to_server::application_data::ApplicationData::GetCurrentPlanInfos(
+                            client_to_server::application_data::GetCurrentPlanInfos {},
+                        ),
+                    ),
+                },
+            )),
+            ..Default::default()
+        })),
+    };
+    let response = ApiRuntime::request_binary(&device.context, request.encode_to_vec()).await?;
+    let response = server_to_client::ServerToClient::decode(response.as_slice())?;
+    let Some(server_to_client::server_to_client::V::V0(response)) = response.v else {
+        panic!("missing server response");
+    };
+    assert!(matches!(
+        response.kind,
+        Some(server_to_client::v0::Kind::Response(server_to_client::Response {
+            response: Some(server_to_client::response::Response::Error(code)),
+        })) if code == ErrorCode::SessionNotAuthenticated as i32
+    ));
+    assert_eq!(
+        ApiRuntime::connection_state(&owner.context).await?,
+        ApiConnectionState::Authenticated
+    );
 
     Ok(())
 }

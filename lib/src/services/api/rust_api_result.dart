@@ -17,13 +17,20 @@ class Result<T, E> {
   bool get isError => !_isSuccess;
 }
 
+/// The server error code a failed Rust API call carries, or null when it
+/// failed for another reason, such as the connection.
+int? apiErrorCodeOf(Object error) {
+  final match = RegExp(r'API error code (\d+)').firstMatch(error.toString());
+  return match == null ? null : int.parse(match.group(1)!);
+}
+
 Future<Result<T, ErrorCode>> rustApiResult<T>(Future<T> request) async {
   try {
     return Result.success(await request);
   } catch (error) {
-    final match = RegExp(r'API error code (\d+)').firstMatch(error.toString());
-    if (match != null) {
-      return Result.error(ErrorCode.valueOf(int.parse(match.group(1)!)));
+    final code = apiErrorCodeOf(error);
+    if (code != null) {
+      return Result.error(ErrorCode.valueOf(code));
     }
     Log.error('Rust API call failed', error: error);
     return Result.error(ErrorCode.InternalError);

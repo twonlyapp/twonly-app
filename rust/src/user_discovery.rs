@@ -7,6 +7,7 @@ use std::collections::HashSet;
 use crate::api::server::Server;
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
+use crate::database::app::contacts::table::Contact;
 use std::path::PathBuf;
 use std::sync::Arc;
 use blahaj::{Share, Sharks};
@@ -457,7 +458,7 @@ impl UserDiscovery {
     /// * `Err(TwonlyError)` - If there where errors in the store or if the
     ///   received version is invalid.
     pub async fn get_new_messages(
-        &self, contact_id: UserID, received_version: &[u8],
+        &self, ctx: &Context, contact_id: UserID, received_version: &[u8],
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<Vec<Vec<u8>>> {
         let mut messages = vec![];
@@ -533,7 +534,11 @@ impl UserDiscovery {
             let mut filtered = Vec::new();
 
             for row in promoting_messages {
-                if row.promotion.is_empty() {
+                // A promotion vouches for the contact it names. One blocked,
+                // removed or excluded since it was made is not passed on.
+                if row.promotion.is_empty()
+                    || !Contact::is_user_discovery_allowed(ctx, t, row.contact_id).await?
+                {
                     continue;
                 }
 
@@ -1334,6 +1339,10 @@ mod tests {
             Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
                 .await?;
         crate::api::ApiRuntime::close(&ctx).await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
         let discovery = ctx.user_discovery.get().await;
         discovery.write_config(&UserDiscoveryConfig {
             user_id: 42,
@@ -1344,7 +1353,8 @@ mod tests {
         let database = ctx.app_db.read().await.clone();
         let mut tx = database.pool.begin().await?;
         sqlx::raw_sql(
-            "INSERT INTO contacts(user_id,username) VALUES (1,'root'),(2,'inherited');
+            "INSERT INTO contacts(user_id,username,accepted,media_send_counter)
+             VALUES (1,'root',1,4),(2,'inherited',1,4);
              INSERT INTO key_verifications(contact_id,type,verified_by)
              VALUES (1,'manual',NULL),(2,'contactSharedByVerified',1);",
         )
@@ -1378,7 +1388,9 @@ mod tests {
             promotion: 0,
         }
         .encode_to_vec();
-        let messages = discovery.get_new_messages(1, &version, &mut tx).await?;
+        let messages = discovery
+            .get_new_messages(&ctx, 1, &version, &mut tx)
+            .await?;
         assert_eq!(messages.len(), 2);
         for bytes in messages {
             let message = UserDiscoveryMessage::decode(bytes.as_slice())?;
@@ -1410,6 +1422,77 @@ mod tests {
             discovery.get_config_snapshot().await?.promotion_version,
             old_version
         );
+        Ok(())
+    }
+
+    #[tokio::test]
+
+    async fn promotions_of_contacts_no_longer_allowed_are_not_passed_on() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+        let discovery = ctx.user_discovery.get().await;
+        discovery.write_config(&UserDiscoveryConfig {
+            user_id: 42,
+            announcement_version: 1,
+            promotion_version: 3,
+            ..Default::default()
+        })?;
+        let database = ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id,username,accepted,blocked,user_discovery_excluded,
+                                  media_send_counter)
+             VALUES (1,'friend',1,0,0,4),(2,'blocked',1,1,0,4),(3,'excluded',1,0,1,4);",
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        for id in [1, 2, 3] {
+            let message = UserDiscoveryMessage {
+                version: Some(UserDiscoveryVersion {
+                    announcement: 1,
+                    promotion: id as u32,
+                }),
+                user_discovery_promotion: Some(UserDiscoveryPromotion {
+                    public_id: id,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }
+            .encode_to_vec();
+            sqlx::query(
+                "INSERT INTO user_discovery_own_promotions(contact_id,promotion) VALUES (?,?)",
+            )
+            .bind(id)
+            .bind(message)
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        let version = UserDiscoveryVersion {
+            announcement: 1,
+            promotion: 0,
+        }
+        .encode_to_vec();
+        let promoted: Vec<Option<i64>> = discovery
+            .get_new_messages(&ctx, 1, &version, &mut tx)
+            .await?
+            .into_iter()
+            .map(|bytes| UserDiscoveryMessage::decode(bytes.as_slice()))
+            .collect::<std::result::Result<Vec<_>, _>>()?
+            .into_iter()
+            .map(|message| message.user_discovery_promotion.map(|p| p.public_id))
+            .collect();
+        // The friend's promotion, then the bare version that moves the
+        // receiver past the two left out.
+        assert_eq!(promoted, vec![Some(1), None]);
         Ok(())
     }
 }

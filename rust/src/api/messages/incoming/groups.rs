@@ -288,6 +288,17 @@ pub(crate) async fn handle_group_update(
         GroupService::spawn_state_refresh(ctx, Some(group_id.to_owned()));
     }
 
+    if !could_have_made(t, from_user_id, group_id, is_direct, &update).await? {
+        tracing::warn!(
+            group_id,
+            from_user_id,
+            action = update.group_action_type,
+            "ignored a group update its sender could not have made"
+        );
+
+        return Ok(());
+    }
+
     if update.group_action_type == "updatedGroupName" {
         sqlx::query!(
             r#"
@@ -340,6 +351,47 @@ pub(crate) async fn handle_group_update(
     .await?;
 
     Ok(())
+}
+
+/// Whether `update` is an action its sender could have taken, and so may be
+/// shown in the chat's history under their name.
+///
+/// The history shows a row as it was written, so it only takes the actions
+/// `GroupService` announces. A direct chat has no group state: its timer is
+/// all either side changes. In a group, changing its state takes an admin's
+/// key on the group server, while leaving is open to every member.
+async fn could_have_made(
+    t: &mut Transaction<'_, Sqlite>, from_user_id: i64, group_id: &str, is_direct: bool,
+    update: &encrypted_content::GroupUpdate,
+) -> Result<bool> {
+    let action = update.group_action_type.as_str();
+
+    if is_direct {
+        return Ok(action == "changeDisplayMaxTime");
+    }
+
+    match action {
+        // An admin leaves by removing themselves.
+        "leftGroup" => Ok(true),
+        "removedMember" if update.affected_contact_id == Some(from_user_id) => Ok(true),
+        "updatedGroupName" if update.new_group_name.is_none() => Ok(false),
+        "updatedGroupName"
+        | "changeDisplayMaxTime"
+        | "addMember"
+        | "removedMember"
+        | "promoteToAdmin"
+        | "demoteToMember" => Ok(sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                SELECT 1 FROM group_members
+                WHERE group_id = ? AND contact_id = ? AND member_state = 'admin'
+            ) AS "admin!: bool""#,
+            group_id,
+            from_user_id,
+        )
+        .fetch_one(&mut **t)
+        .await?),
+        _ => Ok(false),
+    }
 }
 
 pub(crate) async fn handle_flame_sync(

@@ -1079,6 +1079,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupEnableBackup => 'تفعيل النسخ الاحتياطي بكلمة مرور';
 
   @override
+  String get backupProgressPreparing => 'جارٍ تحضير النسخة الاحتياطية…';
+
+  @override
+  String get backupProgressSnapshotting => 'جارٍ نسخ قواعد البيانات…';
+
+  @override
+  String get backupProgressExporting => 'جارٍ تحضير بيانات النسخة الاحتياطية…';
+
+  @override
+  String get backupProgressCompressing => 'جارٍ ضغط النسخة الاحتياطية…';
+
+  @override
+  String get backupProgressEncrypting => 'جارٍ تشفير النسخة الاحتياطية…';
+
+  @override
+  String get backupProgressUploadingIdentity =>
+      'جارٍ رفع بيانات استعادة الحساب…';
+
+  @override
+  String get backupProgressUploadingArchive =>
+      'جارٍ رفع النسخة الاحتياطية المشفرة…';
+
+  @override
   String get backupTwonlySaveNow => 'احفظ الآن';
 
   @override
@@ -2757,6 +2780,41 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recoverPasswordlessRecoverNowBtn => 'استعد الآن';
+
+  @override
+  String recoverPasswordlessSharesIgnored(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count shares were ignored because they were duplicates or did not match.',
+      one: '1 share was ignored because it was a duplicate or did not match.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recoverPasswordlessSharesDoNotFit =>
+      'The shares received so far do not fit together. Waiting for more friends to help.';
+
+  @override
+  String get recoverPasswordlessTooManyShares =>
+      'Too many conflicting shares arrived. Start over and share the new link only with friends you trust.';
+
+  @override
+  String get passwordlessRecoveryWrongAccount =>
+      'These shares do not match the account on the server. Waiting for more friends to help.';
+
+  @override
+  String get passwordlessRecoveryStartOver => 'Start over';
+
+  @override
+  String get passwordlessRecoveryStartOverBody =>
+      'This creates a new recovery link. Shares received so far are discarded, so your friends have to send theirs again.';
+
+  @override
+  String get passwordlessRecoveryLinkExpired =>
+      'Your recovery link expired after 7 days. Share the new link with your friends.';
 
   @override
   String get memoriesBackupLimitReached =>

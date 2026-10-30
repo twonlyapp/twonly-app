@@ -1864,6 +1864,48 @@ abstract class AppLocalizations {
   /// **'Enable Password Backup'**
   String get backupEnableBackup;
 
+  /// No description provided for @backupProgressPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing backup…'**
+  String get backupProgressPreparing;
+
+  /// No description provided for @backupProgressSnapshotting.
+  ///
+  /// In en, this message translates to:
+  /// **'Copying databases…'**
+  String get backupProgressSnapshotting;
+
+  /// No description provided for @backupProgressExporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing backup data…'**
+  String get backupProgressExporting;
+
+  /// No description provided for @backupProgressCompressing.
+  ///
+  /// In en, this message translates to:
+  /// **'Compressing backup…'**
+  String get backupProgressCompressing;
+
+  /// No description provided for @backupProgressEncrypting.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypting backup…'**
+  String get backupProgressEncrypting;
+
+  /// No description provided for @backupProgressUploadingIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading account recovery…'**
+  String get backupProgressUploadingIdentity;
+
+  /// No description provided for @backupProgressUploadingArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading encrypted backup…'**
+  String get backupProgressUploadingArchive;
+
   /// No description provided for @backupTwonlySaveNow.
   ///
   /// In en, this message translates to:
@@ -4629,6 +4671,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recover now'**
   String get recoverPasswordlessRecoverNowBtn;
+
+  /// No description provided for @recoverPasswordlessSharesIgnored.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 share was ignored because it was a duplicate or did not match.} other{{count} shares were ignored because they were duplicates or did not match.}}'**
+  String recoverPasswordlessSharesIgnored(int count);
+
+  /// No description provided for @recoverPasswordlessSharesDoNotFit.
+  ///
+  /// In en, this message translates to:
+  /// **'The shares received so far do not fit together. Waiting for more friends to help.'**
+  String get recoverPasswordlessSharesDoNotFit;
+
+  /// No description provided for @recoverPasswordlessTooManyShares.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many conflicting shares arrived. Start over and share the new link only with friends you trust.'**
+  String get recoverPasswordlessTooManyShares;
+
+  /// No description provided for @passwordlessRecoveryWrongAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'These shares do not match the account on the server. Waiting for more friends to help.'**
+  String get passwordlessRecoveryWrongAccount;
+
+  /// No description provided for @passwordlessRecoveryStartOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Start over'**
+  String get passwordlessRecoveryStartOver;
+
+  /// No description provided for @passwordlessRecoveryStartOverBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This creates a new recovery link. Shares received so far are discarded, so your friends have to send theirs again.'**
+  String get passwordlessRecoveryStartOverBody;
+
+  /// No description provided for @passwordlessRecoveryLinkExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recovery link expired after 7 days. Share the new link with your friends.'**
+  String get passwordlessRecoveryLinkExpired;
 
   /// No description provided for @memoriesBackupLimitReached.
   ///

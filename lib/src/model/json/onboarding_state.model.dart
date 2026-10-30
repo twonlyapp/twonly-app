@@ -62,5 +62,14 @@ class OnboardingState {
 
   List<ReceivedRecoveryShare> receivedShares = [];
 
+  /// Messages that turned out not to be usable shares. Remembered so the poll
+  /// does not download them again every ten seconds.
+  @JsonKey(defaultValue: <int>[])
+  List<int> ignoredMessageIds = [];
+
+  /// When the current recovery link was created. The server forgets it after
+  /// seven days, so the session starts over then.
+  DateTime? recoveryStartedAt;
+
   Map<String, dynamic> toJson() => _$OnboardingStateToJson(this);
 }
