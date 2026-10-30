@@ -70,6 +70,9 @@ pub struct Context {
     /// context for the same reason: a flush scans one app database, so a claim
     /// held for one account must not silence another account's flush.
     pub(crate) queued_receipt_flush: crate::api::messages::incoming::messages::FlushClaim,
+    /// Coalesces overlapping retries of the messages parked on this account's
+    /// device, per context for the same reason as `queued_receipt_flush`.
+    pub(crate) parked_message_retry: crate::api::messages::incoming::messages::FlushClaim,
     /// Serializes this account's upload preparation, which reserves slots and
     /// writes request files that a second concurrent pass would duplicate.
     /// Held across a reconciliation round trip, so one account waiting on the
@@ -189,6 +192,7 @@ impl Context {
             pqc_bundle_verified: AtomicBool::new(false),
             prekey_publication: Mutex::new(None),
             queued_receipt_flush: Default::default(),
+            parked_message_retry: Default::default(),
             media_preprocessing: Mutex::new(()),
             media_retransmission: Mutex::new(()),
             webxdc_visibility: Default::default(),
@@ -450,6 +454,7 @@ impl Context {
                         pqc_bundle_verified: AtomicBool::new(false),
                         prekey_publication: Mutex::new(None),
                         queued_receipt_flush: Default::default(),
+                        parked_message_retry: Default::default(),
                         media_preprocessing: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
                         webxdc_visibility: Default::default(),
@@ -518,6 +523,7 @@ impl Context {
                         pqc_bundle_verified: AtomicBool::new(false),
                         prekey_publication: Mutex::new(None),
                         queued_receipt_flush: Default::default(),
+                        parked_message_retry: Default::default(),
                         media_preprocessing: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
                         webxdc_visibility: Default::default(),

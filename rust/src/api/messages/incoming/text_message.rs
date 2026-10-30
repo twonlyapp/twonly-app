@@ -87,10 +87,36 @@ pub(crate) async fn handle_message_update(
     match update_type {
         Type::Opened => {
             for message_id in update.multiple_target_message_ids {
+                // An opened mark is a receiver telling the sender. Taken for
+                // any message, it hid media sent to us by someone else, since
+                // a message marked opened can no longer be opened.
+                if !Message::was_sent_to(t, &message_id, from_user_id).await? {
+                    tracing::warn!(
+                        from_user_id,
+                        message_id,
+                        "ignoring an opened mark for a message we did not send them"
+                    );
+
+                    continue;
+                }
+
                 Message::record_opened(t, &message_id, from_user_id, timestamp).await?;
             }
         }
         Type::Delete => {
+            // Only its sender takes a message back. The cleanup below is keyed
+            // by the message ID alone, so on anyone else's word it dropped the
+            // edit history of any message, and our own queued copies of it.
+            if !Message::is_from(t, update.sender_message_id.as_deref(), from_user_id).await? {
+                tracing::warn!(
+                    from_user_id,
+                    message_id = update.sender_message_id,
+                    "ignoring a delete for a message its sender did not send"
+                );
+
+                return Ok(());
+            }
+
             let deleted_media = Message::delete_from_sender(
                 t,
                 update.sender_message_id.as_deref(),

@@ -258,6 +258,9 @@ impl ContactService {
 
         transaction.commit().await?;
 
+        // What they sent while waiting for this is parked on this device.
+        crate::api::messages::incoming::spawn_parked_message_retry(&self.ctx);
+
         self.send_contact_request(
             contact_id,
             encrypted_content::contact_request::Type::Accept,

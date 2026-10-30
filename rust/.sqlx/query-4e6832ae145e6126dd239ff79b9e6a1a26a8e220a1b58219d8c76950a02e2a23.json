@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT r.receipt_id, r.pending_from_user_id AS \"from_user_id!: i64\"\n            FROM received_receipts r\n            JOIN contacts c ON c.user_id = r.pending_from_user_id\n            WHERE r.pending_plaintext IS NOT NULL\n              AND CASE WHEN r.pending_waits_for_acceptance != 0\n                  THEN c.blocked != 0 OR (c.accepted != 0 AND c.deleted_by_user = 0)\n                  ELSE COALESCE(r.pending_retry_at, 0) <= ?\n              END\n            ORDER BY COALESCE(r.pending_since, r.created_at), r.receipt_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "receipt_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "received_receipts",
+            "name": "receipt_id"
+          }
+        }
+      },
+      {
+        "name": "from_user_id!: i64",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "received_receipts",
+            "name": "pending_from_user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "4e6832ae145e6126dd239ff79b9e6a1a26a8e220a1b58219d8c76950a02e2a23"
+}

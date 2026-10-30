@@ -63,7 +63,7 @@ struct FlushState {
 /// Held for as long as a flush owns the claim. Dropping it without releasing
 /// it — an error or a panic on the way out — frees the claim for the next
 /// caller instead of blocking every later flush.
-struct FlushGuard<'a> {
+pub(crate) struct FlushGuard<'a> {
     claim: &'a FlushClaim,
     released: bool,
 }
@@ -71,7 +71,7 @@ struct FlushGuard<'a> {
 impl<'a> FlushGuard<'a> {
     /// Registers a flush for this caller. Returns `None` when one is already
     /// running, in which case it is marked dirty and will query once more.
-    fn claim(state: &'a FlushClaim) -> Option<Self> {
+    pub(crate) fn claim(state: &'a FlushClaim) -> Option<Self> {
         let mut claim = state.state.lock().unwrap_or_else(PoisonError::into_inner);
 
         if claim.running {
@@ -96,7 +96,7 @@ impl<'a> FlushGuard<'a> {
     /// otherwise clears the dirty flag and keeps the claim for one more pass.
     /// Both happen under one lock so a request cannot be dropped between the
     /// last query and the release.
-    fn release_or_take_dirty(&mut self) -> bool {
+    pub(crate) fn release_or_take_dirty(&mut self) -> bool {
         let mut claim = self
             .claim
             .state

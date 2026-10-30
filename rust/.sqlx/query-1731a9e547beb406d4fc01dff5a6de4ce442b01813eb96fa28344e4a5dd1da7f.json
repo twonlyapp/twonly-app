@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE received_receipts\n            SET pending_plaintext = NULL,\n                pending_since = NULL,\n                pending_attempts = 0,\n                pending_retry_at = NULL,\n                pending_waits_for_acceptance = 0\n            WHERE pending_plaintext IS NOT NULL\n              AND COALESCE(pending_since, created_at) < ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "1731a9e547beb406d4fc01dff5a6de4ce442b01813eb96fa28344e4a5dd1da7f"
+}

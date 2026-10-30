@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT pending_from_user_id, pending_plaintext AS \"plaintext!\"\n            FROM received_receipts\n            WHERE receipt_id = ? AND pending_plaintext IS NOT NULL\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "pending_from_user_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "received_receipts",
+            "name": "pending_from_user_id"
+          }
+        }
+      },
+      {
+        "name": "plaintext!",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "received_receipts",
+            "name": "pending_plaintext"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "b0a3d3276b1c463217a59ffa47715ae590b42a0bdd3c72186fb643cf76d3a82d"
+}

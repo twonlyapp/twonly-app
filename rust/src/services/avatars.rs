@@ -857,7 +857,18 @@ where
 fn svg_tree(svg: &[u8]) -> Result<resvg::usvg::Tree> {
     let decoded = decode_svg_bytes(svg)?;
 
-    resvg::usvg::Tree::from_data(&decoded, &resvg::usvg::Options::default())
+    // Any peer can send an avatar, and usvg's default resolver opens whatever
+    // path an `<image href>` names: `/dev/zero` reads until the app runs out
+    // of memory. The avatar builder never emits `<image>`, so refuse them all.
+    let options = resvg::usvg::Options {
+        image_href_resolver: resvg::usvg::ImageHrefResolver {
+            resolve_data: Box::new(|_, _, _| None),
+            resolve_string: Box::new(|_, _| None),
+        },
+        ..Default::default()
+    };
+
+    resvg::usvg::Tree::from_data(&decoded, &options)
         .map_err(|error| TwonlyError::Generic(format!("invalid avatar SVG: {error}")))
 }
 
@@ -1000,6 +1011,30 @@ mod tests {
         cached
             .expect("a cached photo waited for the SVG render lock")
             .unwrap();
+    }
+
+    #[test]
+    fn avatar_svg_images_are_not_loaded() {
+        let directory = tempfile::tempdir().unwrap();
+        let local = directory.path().join("local.svg");
+        std::fs::write(&local, SVG).unwrap();
+
+        let inline = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='20'%3E%3Crect width='10' height='20' fill='red'/%3E%3C/svg%3E";
+
+        for href in [local.to_str().unwrap(), inline] {
+            let svg = format!(
+                r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="20"><image href="{href}" width="10" height="20"/></svg>"#
+            );
+
+            let png = render_at_size(svg.as_bytes(), 10, 20).unwrap();
+
+            let rendered = image::load_from_memory(&png).unwrap().to_rgba8();
+
+            assert!(
+                rendered.pixels().all(|pixel| pixel[3] == 0),
+                "the avatar drew the image at {href}"
+            );
+        }
     }
 
     #[test]

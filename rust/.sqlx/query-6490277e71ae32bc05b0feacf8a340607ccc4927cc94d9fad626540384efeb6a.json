@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE received_receipts\n            SET pending_waits_for_acceptance = 1,\n                pending_from_user_id = COALESCE(pending_from_user_id, ?),\n                pending_since = COALESCE(\n                    pending_since, CAST(strftime('%s', 'now') AS INTEGER)\n                )\n            WHERE receipt_id = ? AND pending_plaintext IS NOT NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "6490277e71ae32bc05b0feacf8a340607ccc4927cc94d9fad626540384efeb6a"
+}

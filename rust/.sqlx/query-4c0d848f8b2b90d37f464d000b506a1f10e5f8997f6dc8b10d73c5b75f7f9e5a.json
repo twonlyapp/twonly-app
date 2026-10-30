@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(\n                SELECT 1 FROM messages WHERE message_id = ? AND sender_id = ?\n            ) AS \"sent!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "sent!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4c0d848f8b2b90d37f464d000b506a1f10e5f8997f6dc8b10d73c5b75f7f9e5a"
+}

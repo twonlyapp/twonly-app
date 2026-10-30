@@ -20,7 +20,8 @@ mod verification;
 use crate::api::messages::incoming::messages::{
     ensure_contact_exists, handle_plaintext_content, handle_sender_delivery_receipt,
     process_encrypted_or_queue_error, queue_decryption_error, queue_sender_delivery_receipt,
-    release_deferred_receipts, retransmit_queued_receipts, spawn_receipt_delivery, SessionRepair,
+    release_deferred_receipts, retransmit_queued_receipts, spawn_receipt_delivery, FlushGuard,
+    SessionRepair,
 };
 use crate::api::messages::{content_type_kind, mailbox_sync};
 use crate::api::proto::server_to_client::NewMessage;
@@ -40,6 +41,7 @@ use proto::plaintext_content::decryption_error_message::Type as DecryptionErrorT
 use server_to_client::v0::Kind;
 use sqlx::{Sqlite, Transaction};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex, PoisonError, Weak};
 
 /// Serialises the handling of one receipt ID against itself.
@@ -138,6 +140,8 @@ pub(crate) async fn handle_server_message(
 
             mailbox_sync::finish();
 
+            spawn_parked_message_retry(ctx);
+
             ok::Ok::None(true)
         }
         other => {
@@ -167,6 +171,11 @@ pub(crate) async fn handle_server_message(
 /// claim together with its plaintext one step ahead of the message itself,
 /// because the ratchet step decryption spends cannot be rolled back; a retry
 /// that finds that plaintext resumes from it instead of decrypting again.
+///
+/// Once that plaintext is parked, the message counts as durable here even if
+/// handling it failed or has to wait for its sender to be accepted: it is
+/// retried from this device, see [`retry_parked_messages`], so it cannot hold
+/// its place at the front of the mailbox.
 async fn acknowledge_pending_messages(
     ctx: &Arc<Context>, batch: server_to_client::PendingMessagesV2,
 ) -> client_to_server::Response {
@@ -458,7 +467,7 @@ pub async fn handle_decoded_server_message(
         tracing::Span::current().record("user", from_user_id);
 
         if message.receipt_id.is_empty() {
-            return Err(TwonlyError::Generic(
+            return Err(TwonlyError::UnprocessableContent(
                 "client message has no receipt ID".into(),
             ));
         }
@@ -471,365 +480,574 @@ pub async fn handle_decoded_server_message(
 
         let _in_flight = in_flight.lock.lock().await;
 
-        let message_type = Type::try_from(message.r#type)?;
+        let receipt_id = message.receipt_id.clone();
 
-        let is_encrypted_message = matches!(
-            message_type,
-            Type::Ciphertext | Type::PrekeyBundle | Type::CiphertextV2
-        );
+        let parked = AtomicBool::new(false);
 
-        tracing::info!(
-            is_encrypted_message,
-            ?message_type,
-            "Parsed incoming message type"
-        );
-
-        if is_encrypted_message {
-            ensure_contact_exists(ctx, from_user_id).await?;
+        // Boxed: the handler's state machine is large, and every caller, the
+        // retry of parked messages among them, would otherwise carry it inline.
+        match Box::pin(handle_message(ctx, from_user_id, message, &parked)).await {
+            Err(error) if parked.load(Ordering::Acquire) => {
+                retry_parked_later(ctx, &receipt_id, from_user_id, error).await
+            }
+            result => result,
         }
+    })
+    .await
+}
 
+/// First wait before a parked message that failed is tried again. It doubles
+/// with every failure, up to [`PARKED_RETRY_MAX_BACKOFF_SECS`].
+const PARKED_RETRY_FIRST_BACKOFF_SECS: i64 = 60;
+
+const PARKED_RETRY_MAX_BACKOFF_SECS: i64 = 24 * 60 * 60;
+
+/// Failed attempts after which a parked message is dropped.
+const MAX_PARKED_ATTEMPTS: i64 = 10;
+
+/// How long a message stays parked at most, whatever it waits for. The server
+/// keeps a mailbox row as long, and a parked message stands in for that row.
+const PARKED_MESSAGE_LIFETIME_SECS: i64 = 60 * 24 * 60 * 60;
+
+/// Takes over the retry of a message whose plaintext is parked here but whose
+/// handling failed, so that the mailbox can acknowledge it.
+///
+/// The server serves a mailbox oldest first and keeps every row the client
+/// leaves out of its acknowledgement. A message that kept failing stayed at
+/// the front, and a page of them, which anyone can send, kept everything
+/// behind them from being delivered again. Once the plaintext is parked this
+/// device holds all the message needs, so it is retried from here with a
+/// backoff: dropped at once when it can never be handled, and after
+/// [`MAX_PARKED_ATTEMPTS`] otherwise.
+///
+/// Only when the failure cannot be recorded is the original error returned,
+/// which leaves the row on the server as before.
+async fn retry_parked_later(
+    ctx: &Arc<Context>, receipt_id: &str, from_user_id: i64, error: TwonlyError,
+) -> Result<()> {
+    let permanent = matches!(
+        error,
+        TwonlyError::UnprocessableContent(_)
+            | TwonlyError::ProtobufDecode(_)
+            | TwonlyError::UnknownProtobufEnumValue(_)
+    );
+
+    let recorded = async {
         let database = ctx.app_db.read().await.clone();
-
-        // Upgrading a legacy peer to a v2 session needs a server round-trip and
-        // writes through the pool itself, so it has to finish before the
-        // transaction below claims the single app-database connection.
-        if matches!(message_type, Type::Ciphertext | Type::PrekeyBundle) {
-            upgrade_legacy_session_to_v2(ctx, &database, from_user_id).await?;
-        }
 
         let mut t = database.pool.begin().await?;
 
-        let claimed = Receipt::claim_received(&mut t, &message.receipt_id).await?;
-
-        // A claim that was committed with a plaintext still parked on it belongs to
-        // a message whose handling did not commit. Its ratchet step is spent, so the
-        // redelivery has to resume from that plaintext instead of decrypting again.
-        let resumed_plaintext = if claimed || message_type != Type::CiphertextV2 {
+        let attempts = if permanent {
             None
         } else {
-            Receipt::pending_plaintext(&mut t, &message.receipt_id).await?
+            Receipt::record_parked_failure(
+                &mut t,
+                receipt_id,
+                from_user_id,
+                crate::utils::current_time().timestamp(),
+                PARKED_RETRY_FIRST_BACKOFF_SECS,
+                PARKED_RETRY_MAX_BACKOFF_SECS,
+            )
+            .await?
         };
 
-        if resumed_plaintext.is_some() {
-            tracing::info!("Resuming a redelivered message from its parked plaintext");
+        let give_up = permanent || attempts.is_some_and(|count| count >= MAX_PARKED_ATTEMPTS);
+
+        if give_up {
+            Receipt::clear_pending_plaintext(&mut t, receipt_id).await?;
         }
 
-        // A claim with no plaintext parked on it says nothing about whether the
-        // message was handled: a decryption that failed leaves exactly the same
-        // trace as one that succeeded and committed. Dropping the redelivery on
-        // that ambiguity is what left a peer whose session had broken with no way
-        // back to the decrypt path -- and no answer at all, so they resent the same
-        // receipt forever. Decrypt again and let the outcome say which it was: a
-        // message that opens was never handled, and one the ratchet has already
-        // consumed comes back as a duplicate and is acknowledged below.
-        let retry_decryption = !claimed && resumed_plaintext.is_none() && is_encrypted_message;
+        t.commit().await?;
 
-        // The outcome of decrypting again stops telling the two apart once the
-        // peer opens a new session: it re-encrypts its queue under the same receipt
-        // IDs, and every copy opens. Only the mark says a copy was handled, and
-        // handling it again repeats everything it did -- a reupload request answered
-        // with another full reupload.
-        let already_handled =
-            retry_decryption && Receipt::was_handled(&mut t, &message.receipt_id).await?;
+        Ok::<_, TwonlyError>((attempts, give_up))
+    }
+    .await;
 
-        if already_handled {
-            tracing::info!("Decrypting a redelivered message that was already handled");
-        } else if retry_decryption {
-            tracing::info!("Decrypting a redelivered message that was claimed but not handled");
+    match recorded {
+        Ok((attempts, true)) => {
+            tracing::warn!(
+                receipt_id,
+                from_user_id,
+                attempts,
+                "dropping a parked message that cannot be handled: {error}"
+            );
+
+            Ok(())
+        }
+        Ok((attempts, false)) => {
+            tracing::warn!(
+                receipt_id,
+                from_user_id,
+                attempts,
+                "parked message failed; retrying it from this device: {error}"
+            );
+
+            Ok(())
+        }
+        Err(record_error) => {
+            tracing::warn!(
+                receipt_id,
+                "could not schedule the retry of a parked message: {record_error}"
+            );
+
+            Err(error)
+        }
+    }
+}
+
+/// Tries again every message parked on this device whose next attempt is due,
+/// see [`Receipt::due_parked`].
+///
+/// Runs after each mailbox drain, by which point a sender accepted through
+/// their own message (an accept, a QR proof) has been handled, and after the
+/// user accepts a request. A trigger that arrives while a run is underway
+/// makes it look once more instead of starting a second one.
+pub(crate) async fn retry_parked_messages(ctx: &Arc<Context>) -> Result<()> {
+    let Some(mut guard) = FlushGuard::claim(&ctx.parked_message_retry) else {
+        return Ok(());
+    };
+
+    loop {
+        let database = ctx.app_db.read().await.clone();
+
+        let now = crate::utils::current_time().timestamp();
+
+        let expired =
+            Receipt::drop_expired_parked(&database.pool, now - PARKED_MESSAGE_LIFETIME_SECS)
+                .await?;
+
+        if expired > 0 {
+            tracing::info!(
+                expired,
+                "dropped messages parked for longer than a mailbox keeps them"
+            );
         }
 
-        if !claimed && resumed_plaintext.is_none() && !retry_decryption {
-            // Delivery receipts are terminal messages and must never themselves be
-            // acknowledged. For regular messages Dart retries the delivery receipt
-            // after ten days, atomically claiming the retry by moving created_at.
-            let should_resend = message_type != Type::SenderDeliveryReceipt
-                && Receipt::claim_received_retry(&mut t, &message.receipt_id).await?;
+        let due = Receipt::due_parked(&database.pool, now).await?;
 
-            // A claim does not prove the receipt this one acknowledges is gone.
-            // Our own receipt IDs share the claim table: a peer's decryption
-            // error arrives under the ID of the receipt it failed on. Once such
-            // an ID is claimed, every later acknowledgement of that receipt
-            // lands here, and skipping it kept the receipt in the queue, resent
-            // on each message from the peer and acknowledged again each time.
-            // Clearing it is idempotent; a receipt already gone matches nothing.
-            if message_type == Type::SenderDeliveryReceipt {
-                handle_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
+        drop(database);
+
+        for parked in due {
+            let message = proto::Message {
+                receipt_id: parked.receipt_id,
+                r#type: Type::CiphertextV2 as i32,
+                encrypted_content: None,
+                plaintext_content: None,
+            };
+
+            if let Err(error) =
+                handle_decoded_server_message(ctx, parked.from_user_id, message).await
+            {
+                tracing::warn!(
+                    from_user_id = parked.from_user_id,
+                    "could not retry a parked message: {error}"
+                );
             }
+        }
 
-            if should_resend {
-                tracing::info!("Queueing sender delivery receipt for retry");
-
-                queue_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
-            }
-
-            t.commit().await?;
-
-            if should_resend {
-                tracing::info!("Spawning receipt delivery for retry");
-
-                spawn_receipt_delivery(ctx, message.receipt_id);
-            }
-
-            tracing::info!("Returning early because receipt was already claimed");
-
+        if !guard.release_or_take_dirty() {
             return Ok(());
         }
+    }
+}
 
-        let mut withhold_delivery_receipt = false;
-        let mut defer_until_accepted = false;
-        let mut handled = false;
+pub(crate) fn spawn_parked_message_retry(ctx: &Arc<Context>) {
+    let ctx = ctx.clone();
 
-        let mut session_repair = SessionRepair::None;
+    crate::database::lifecycle::spawn(async move {
+        if let Err(error) = retry_parked_messages(&ctx).await {
+            tracing::warn!("could not retry parked messages: {error}");
+        }
+    });
+}
 
-        match message_type {
-            Type::SenderDeliveryReceipt => {
-                tracing::info!("Received sender delivery receipt");
+/// The body of [`handle_decoded_server_message`], run while the receipt's
+/// in-flight lock is held. Sets `parked` once the message's plaintext is
+/// parked on this device, from which point a failure is retried from here.
+async fn handle_message(
+    ctx: &Arc<Context>, from_user_id: i64, message: proto::Message, parked: &AtomicBool,
+) -> Result<()> {
+    let message_type = Type::try_from(message.r#type)?;
 
-                handle_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
+    let is_encrypted_message = matches!(
+        message_type,
+        Type::Ciphertext | Type::PrekeyBundle | Type::CiphertextV2
+    );
+
+    tracing::info!(
+        is_encrypted_message,
+        ?message_type,
+        "Parsed incoming message type"
+    );
+
+    if is_encrypted_message {
+        ensure_contact_exists(ctx, from_user_id).await?;
+    }
+
+    let database = ctx.app_db.read().await.clone();
+
+    // Upgrading a legacy peer to a v2 session needs a server round-trip and
+    // writes through the pool itself, so it has to finish before the
+    // transaction below claims the single app-database connection.
+    if matches!(message_type, Type::Ciphertext | Type::PrekeyBundle) {
+        upgrade_legacy_session_to_v2(ctx, &database, from_user_id).await?;
+    }
+
+    let mut t = database.pool.begin().await?;
+
+    let claimed = Receipt::claim_received(&mut t, &message.receipt_id).await?;
+
+    // A claim that was committed with a plaintext still parked on it belongs to
+    // a message whose handling did not commit. Its ratchet step is spent, so the
+    // redelivery has to resume from that plaintext instead of decrypting again.
+    let resumed_plaintext = if claimed || message_type != Type::CiphertextV2 {
+        None
+    } else {
+        match Receipt::pending_plaintext(&mut t, &message.receipt_id).await? {
+            // Only the server names the sender of an envelope, so a copy
+            // naming someone else is the server passing one account's
+            // message off as another's. Resuming it would apply the
+            // content as theirs. The parked plaintext stays for its sender.
+            Some(resumed)
+                if resumed
+                    .from_user_id
+                    .is_some_and(|sender| sender != from_user_id) =>
+            {
+                tracing::warn!(
+                    parked_for = resumed.from_user_id,
+                    "ignoring a redelivery that names another sender than its parked message"
+                );
+
+                return Ok(());
             }
-            Type::Ciphertext | Type::PrekeyBundle => {
-                if claim_legacy_upgrade_request(&mut t, from_user_id).await? {
-                    tracing::info!("Asking the legacy peer to fetch our v2 prekey bundle");
+            resumed => resumed.map(|resumed| resumed.plaintext),
+        }
+    };
+
+    if resumed_plaintext.is_some() {
+        tracing::info!("Resuming a redelivered message from its parked plaintext");
+
+        parked.store(true, Ordering::Release);
+    }
+
+    // A claim with no plaintext parked on it says nothing about whether the
+    // message was handled: a decryption that failed leaves exactly the same
+    // trace as one that succeeded and committed. Dropping the redelivery on
+    // that ambiguity is what left a peer whose session had broken with no way
+    // back to the decrypt path -- and no answer at all, so they resent the same
+    // receipt forever. Decrypt again and let the outcome say which it was: a
+    // message that opens was never handled, and one the ratchet has already
+    // consumed comes back as a duplicate and is acknowledged below.
+    let retry_decryption = !claimed && resumed_plaintext.is_none() && is_encrypted_message;
+
+    // The outcome of decrypting again stops telling the two apart once the
+    // peer opens a new session: it re-encrypts its queue under the same receipt
+    // IDs, and every copy opens. Only the mark says a copy was handled, and
+    // handling it again repeats everything it did -- a reupload request answered
+    // with another full reupload.
+    let already_handled =
+        retry_decryption && Receipt::was_handled(&mut t, &message.receipt_id).await?;
+
+    if already_handled {
+        tracing::info!("Decrypting a redelivered message that was already handled");
+    } else if retry_decryption {
+        tracing::info!("Decrypting a redelivered message that was claimed but not handled");
+    }
+
+    if !claimed && resumed_plaintext.is_none() && !retry_decryption {
+        // Delivery receipts are terminal messages and must never themselves be
+        // acknowledged. For regular messages Dart retries the delivery receipt
+        // after ten days, atomically claiming the retry by moving created_at.
+        let should_resend = message_type != Type::SenderDeliveryReceipt
+            && Receipt::claim_received_retry(&mut t, &message.receipt_id).await?;
+
+        // A claim does not prove the receipt this one acknowledges is gone.
+        // Our own receipt IDs share the claim table: a peer's decryption
+        // error arrives under the ID of the receipt it failed on. Once such
+        // an ID is claimed, every later acknowledgement of that receipt
+        // lands here, and skipping it kept the receipt in the queue, resent
+        // on each message from the peer and acknowledged again each time.
+        // Clearing it is idempotent; a receipt already gone matches nothing.
+        if message_type == Type::SenderDeliveryReceipt {
+            handle_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
+        }
+
+        if should_resend {
+            tracing::info!("Queueing sender delivery receipt for retry");
+
+            queue_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
+        }
+
+        t.commit().await?;
+
+        if should_resend {
+            tracing::info!("Spawning receipt delivery for retry");
+
+            spawn_receipt_delivery(ctx, message.receipt_id);
+        }
+
+        tracing::info!("Returning early because receipt was already claimed");
+
+        return Ok(());
+    }
+
+    let mut withhold_delivery_receipt = false;
+    let mut defer_until_accepted = false;
+    let mut handled = false;
+
+    let mut session_repair = SessionRepair::None;
+
+    match message_type {
+        Type::SenderDeliveryReceipt => {
+            tracing::info!("Received sender delivery receipt");
+
+            handle_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
+        }
+        Type::Ciphertext | Type::PrekeyBundle => {
+            if claim_legacy_upgrade_request(&mut t, from_user_id).await? {
+                tracing::info!("Asking the legacy peer to fetch our v2 prekey bundle");
+
+                queue_decryption_error(
+                    &mut t,
+                    from_user_id,
+                    &message.receipt_id,
+                    DecryptionErrorType::PrekeyUnknown as i32,
+                )
+                .await?;
+            } else {
+                tracing::info!(
+                    "Leaving a legacy message unanswered; the peer was already asked to upgrade"
+                );
+            }
+
+            // Never acknowledged: the message was not read, so the sender must
+            // not be told it was delivered.
+            withhold_delivery_receipt = true;
+        }
+        Type::CiphertextV2 => {
+            let decrypted = match resumed_plaintext {
+                Some(plaintext) => Ok(plaintext),
+                None => {
+                    let ciphertext = message.encrypted_content.ok_or_else(|| {
+                        TwonlyError::UnprocessableContent(
+                            "V2 encrypted client message has no ciphertext".into(),
+                        )
+                    })?;
+
+                    let engine = ctx.signal_engine.lock().await;
+
+                    engine
+                        .as_ref()
+                        .ok_or(TwonlyError::SignalIdentityNotFound)?
+                        .decrypt_message(from_user_id.to_string(), 1, ciphertext)
+                        .await
+                }
+            };
+
+            match decrypted {
+                // Decrypting kept the session in step; the content itself was
+                // handled the first time. Falling through queues the sender
+                // delivery receipt the peer keeps resending for.
+                Ok(_) if already_handled => {
+                    tracing::info!(
+                        receipt_id = message.receipt_id,
+                        "acknowledging a redelivered message without handling it again"
+                    );
+                }
+                Ok(plaintext) => {
+                    // Decryption consumed a ratchet step in the signal database,
+                    // which this transaction cannot roll back. Commit the
+                    // plaintext with the claim first, so a rollback further down
+                    // leaves a retry something to resume from instead of a
+                    // session that can no longer decrypt the message.
+                    Receipt::store_pending_plaintext(
+                        &mut t,
+                        &message.receipt_id,
+                        from_user_id,
+                        &plaintext,
+                    )
+                    .await?;
+
+                    t.commit().await?;
+
+                    parked.store(true, Ordering::Release);
+
+                    let mut content = proto::EncryptedContent::decode(plaintext.as_slice())
+                        .map_err(|error| {
+                            TwonlyError::UnprocessableContent(format!(
+                                "invalid decrypted client content: {error}"
+                            ))
+                        })?;
+
+                    contact::prepare_contact_request(ctx, from_user_id, &content).await?;
+
+                    contact::verify_claimed_username(ctx, from_user_id, &mut content).await?;
+
+                    t = database.pool.begin().await?;
+
+                    // Decrypting proves the peer speaks v2, so drop any 'v1'
+                    // marking left by a contact lookup that ran before the peer
+                    // published a prekey bundle. Otherwise every receipt back to
+                    // them would keep fetching a bundle the server does not have.
+                    sqlx::query!(
+                        "UPDATE contacts SET signal_version = 'v2' WHERE user_id = ? AND \
+                     signal_version != 'v2'",
+                        from_user_id,
+                    )
+                    .execute(&mut *t)
+                    .await?;
+
+                    // The account just wrote to us, so it exists after all: a
+                    // deleted mark on it was wrong, and would keep every reply
+                    // from being queued.
+                    sqlx::query!(
+                        "UPDATE contacts SET account_deleted = 0 WHERE user_id = ? AND \
+                     account_deleted = 1",
+                        from_user_id,
+                    )
+                    .execute(&mut *t)
+                    .await?;
+
+                    sqlx::query!(
+                        "UPDATE user_discovery_announced_users SET account_deleted = 0 WHERE \
+                     announced_user_id = ? AND account_deleted = 1",
+                        from_user_id,
+                    )
+                    .execute(&mut *t)
+                    .await?;
+
+                    // Decrypting means a session now exists, so anything parked
+                    // for want of one can go out again.
+                    sqlx::query!(
+                        "UPDATE receipts SET deferred_until_session = NULL WHERE contact_id = ? \
+                     AND deferred_until_session IS NOT NULL",
+                        from_user_id,
+                    )
+                    .execute(&mut *t)
+                    .await?;
+
+                    let delivery = process_encrypted_or_queue_error(
+                        ctx,
+                        &mut t,
+                        from_user_id,
+                        &message.receipt_id,
+                        content,
+                    )
+                    .await?;
+                    withhold_delivery_receipt = delivery != Delivery::Ack;
+                    defer_until_accepted = delivery == Delivery::Deferred;
+                    handled = delivery == Delivery::Ack;
+                }
+                // The ratchet has already consumed this message, so it was
+                // handled and the peer is only missing the answer. Falling
+                // through without an error response queues the sender delivery
+                // receipt below, which is the terminal message that stops them
+                // resending it.
+                Err(TwonlyError::SignalDuplicateMessage(reason)) => {
+                    tracing::info!(
+                        receipt_id = message.receipt_id,
+                        "acknowledging a message this session already handled: {reason}"
+                    );
+                }
+                Err(error @ TwonlyError::SignalStorage(_)) => return Err(error),
+                Err(error) => {
+                    tracing::warn!(
+                        receipt_id = message.receipt_id,
+                        "V2 decryption failed: {error}"
+                    );
+
+                    if matches!(error, TwonlyError::SignalPreKeyUnavailable(_)) {
+                        // Do not pin the app writer while checking/publishing
+                        // keys over the network. The per-receipt lock still
+                        // excludes another handler for this same envelope.
+                        t.rollback().await?;
+                        crate::api::Server::repair_pqc_bundle(ctx).await?;
+                        t = database.pool.begin().await?;
+                        Receipt::claim_received(&mut t, &message.receipt_id).await?;
+                    }
+
+                    let error_type = reset_unusable_session(ctx, from_user_id, &error).await;
 
                     queue_decryption_error(
                         &mut t,
                         from_user_id,
                         &message.receipt_id,
-                        DecryptionErrorType::PrekeyUnknown as i32,
+                        error_type as i32,
                     )
                     .await?;
-                } else {
-                    tracing::info!(
-                    "Leaving a legacy message unanswered; the peer was already asked to upgrade"
-                );
-                }
 
-                // Never acknowledged: the message was not read, so the sender must
-                // not be told it was delivered.
-                withhold_delivery_receipt = true;
-            }
-            Type::CiphertextV2 => {
-                let decrypted = match resumed_plaintext {
-                    Some(plaintext) => Ok(plaintext),
-                    None => {
-                        let ciphertext = message.encrypted_content.ok_or_else(|| {
-                            TwonlyError::UnprocessableContent(
-                                "V2 encrypted client message has no ciphertext".into(),
-                            )
-                        })?;
-
-                        let engine = ctx.signal_engine.lock().await;
-
-                        engine
-                            .as_ref()
-                            .ok_or(TwonlyError::SignalIdentityNotFound)?
-                            .decrypt_message(from_user_id.to_string(), 1, ciphertext)
-                            .await
-                    }
-                };
-
-                match decrypted {
-                    // Decrypting kept the session in step; the content itself was
-                    // handled the first time. Falling through queues the sender
-                    // delivery receipt the peer keeps resending for.
-                    Ok(_) if already_handled => {
-                        tracing::info!(
-                            receipt_id = message.receipt_id,
-                            "acknowledging a redelivered message without handling it again"
-                        );
-                    }
-                    Ok(plaintext) => {
-                        // Decryption consumed a ratchet step in the signal database,
-                        // which this transaction cannot roll back. Commit the
-                        // plaintext with the claim first, so a rollback further down
-                        // leaves a redelivery something to resume from instead of a
-                        // session that can no longer decrypt the message.
-                        Receipt::store_pending_plaintext(&mut t, &message.receipt_id, &plaintext)
-                            .await?;
-
-                        t.commit().await?;
-
-                        let content = proto::EncryptedContent::decode(plaintext.as_slice())
-                            .map_err(|error| {
-                                TwonlyError::UnprocessableContent(format!(
-                                    "invalid decrypted client content: {error}"
-                                ))
-                            })?;
-
-                        contact::prepare_contact_request(ctx, from_user_id, &content).await?;
-
-                        t = database.pool.begin().await?;
-
-                        // Decrypting proves the peer speaks v2, so drop any 'v1'
-                        // marking left by a contact lookup that ran before the peer
-                        // published a prekey bundle. Otherwise every receipt back to
-                        // them would keep fetching a bundle the server does not have.
-                        sqlx::query!(
-                            "UPDATE contacts SET signal_version = 'v2' WHERE user_id = ? AND \
-                         signal_version != 'v2'",
-                            from_user_id,
-                        )
-                        .execute(&mut *t)
-                        .await?;
-
-                        // The account just wrote to us, so it exists after all: a
-                        // deleted mark on it was wrong, and would keep every reply
-                        // from being queued.
-                        sqlx::query!(
-                            "UPDATE contacts SET account_deleted = 0 WHERE user_id = ? AND \
-                         account_deleted = 1",
-                            from_user_id,
-                        )
-                        .execute(&mut *t)
-                        .await?;
-
-                        sqlx::query!(
-                            "UPDATE user_discovery_announced_users SET account_deleted = 0 WHERE \
-                         announced_user_id = ? AND account_deleted = 1",
-                            from_user_id,
-                        )
-                        .execute(&mut *t)
-                        .await?;
-
-                        // Decrypting means a session now exists, so anything parked
-                        // for want of one can go out again.
-                        sqlx::query!(
-                        "UPDATE receipts SET deferred_until_session = NULL WHERE contact_id = ? \
-                         AND deferred_until_session IS NOT NULL",
-                        from_user_id,
-                    )
-                        .execute(&mut *t)
-                        .await?;
-
-                        let delivery = process_encrypted_or_queue_error(
-                            ctx,
-                            &mut t,
-                            from_user_id,
-                            &message.receipt_id,
-                            content,
-                        )
-                        .await?;
-                        withhold_delivery_receipt = delivery != Delivery::Ack;
-                        defer_until_accepted = delivery == Delivery::Deferred;
-                        handled = delivery == Delivery::Ack;
-                    }
-                    // The ratchet has already consumed this message, so it was
-                    // handled and the peer is only missing the answer. Falling
-                    // through without an error response queues the sender delivery
-                    // receipt below, which is the terminal message that stops them
-                    // resending it.
-                    Err(TwonlyError::SignalDuplicateMessage(reason)) => {
-                        tracing::info!(
-                            receipt_id = message.receipt_id,
-                            "acknowledging a message this session already handled: {reason}"
-                        );
-                    }
-                    Err(error @ TwonlyError::SignalStorage(_)) => return Err(error),
-                    Err(error) => {
-                        tracing::warn!(
-                            receipt_id = message.receipt_id,
-                            "V2 decryption failed: {error}"
-                        );
-
-                        if matches!(error, TwonlyError::SignalPreKeyUnavailable(_)) {
-                            // Do not pin the app writer while checking/publishing
-                            // keys over the network. The per-receipt lock still
-                            // excludes another handler for this same envelope.
-                            t.rollback().await?;
-                            crate::api::Server::repair_pqc_bundle(ctx).await?;
-                            t = database.pool.begin().await?;
-                            Receipt::claim_received(&mut t, &message.receipt_id).await?;
-                        }
-
-                        let error_type = reset_unusable_session(ctx, from_user_id, &error).await;
-
-                        queue_decryption_error(
-                            &mut t,
-                            from_user_id,
-                            &message.receipt_id,
-                            error_type as i32,
-                        )
-                        .await?;
-
-                        withhold_delivery_receipt = true;
-                    }
+                    withhold_delivery_receipt = true;
                 }
             }
-            Type::PlaintextContent => {
-                tracing::info!("Handling plaintext content");
+        }
+        Type::PlaintextContent => {
+            tracing::info!("Handling plaintext content");
 
-                let plaintext = message.plaintext_content.ok_or_else(|| {
-                    TwonlyError::Generic("plaintext client message has no content".into())
-                })?;
+            let plaintext = message.plaintext_content.ok_or_else(|| {
+                TwonlyError::UnprocessableContent("plaintext client message has no content".into())
+            })?;
 
-                session_repair = handle_plaintext_content(
-                    ctx,
-                    &mut t,
+            session_repair =
+                handle_plaintext_content(ctx, &mut t, from_user_id, &message.receipt_id, plaintext)
+                    .await?;
+        }
+        Type::TestNotification => {}
+    }
+
+    if is_encrypted_message & !withhold_delivery_receipt {
+        queue_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
+    }
+
+    // The message is about to become durable, so the plaintext parked for a
+    // retry that is no longer needed can go. One that waits for its sender
+    // to be accepted stays parked here instead of on the server, where it
+    // would hold its place at the front of the mailbox until then.
+    if defer_until_accepted {
+        tracing::info!("Keeping a message on this device until its sender is accepted");
+
+        Receipt::park_until_accepted(&mut t, &message.receipt_id, from_user_id).await?;
+    } else {
+        Receipt::clear_pending_plaintext(&mut t, &message.receipt_id).await?;
+    }
+
+    if handled {
+        Receipt::mark_handled(&mut t, &message.receipt_id).await?;
+    }
+
+    t.commit().await?;
+
+    if let Err(error) = crate::user_config::UserConfig::update(ctx, |user| {
+        user.last_server_message_at = Some(crate::utils::current_time().timestamp());
+    }) {
+        tracing::warn!(%error, "could not record the last server-message timestamp");
+    }
+
+    let ctx = ctx.clone();
+
+    crate::database::lifecycle::spawn(async move {
+        // The peer reset their session, or keeps failing to open ours, so the
+        // parked receipt has to wait for a session built from a fresh prekey
+        // bundle. `establish_signal_session` releases it, and the flush below
+        // then sends it as a prekey message the peer can open without any
+        // prior state.
+        if session_repair != SessionRepair::None {
+            if let Err(error) =
+                rebuild_session_and_release(&ctx, from_user_id, session_repair).await
+            {
+                tracing::warn!(
                     from_user_id,
-                    &message.receipt_id,
-                    plaintext,
-                )
-                .await?;
+                    ?session_repair,
+                    "could not rebuild the signal session: {error}"
+                );
             }
-            Type::TestNotification => {}
         }
 
-        if is_encrypted_message & !withhold_delivery_receipt {
-            queue_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
+        if let Err(error) = retransmit_queued_receipts(&ctx).await {
+            tracing::warn!("failed to flush messages queued during inbound handling: {error}");
         }
+    });
 
-        // The message is about to become durable, so the plaintext parked for a
-        // retry that is no longer needed can go.
-        if !defer_until_accepted {
-            Receipt::clear_pending_plaintext(&mut t, &message.receipt_id).await?;
-        }
-
-        if handled {
-            Receipt::mark_handled(&mut t, &message.receipt_id).await?;
-        }
-
-        t.commit().await?;
-
-        if let Err(error) = crate::user_config::UserConfig::update(ctx, |user| {
-            user.last_server_message_at = Some(crate::utils::current_time().timestamp());
-        }) {
-            tracing::warn!(%error, "could not record the last server-message timestamp");
-        }
-
-        let ctx = ctx.clone();
-
-        crate::database::lifecycle::spawn(async move {
-            // The peer reset their session, or keeps failing to open ours, so the
-            // parked receipt has to wait for a session built from a fresh prekey
-            // bundle. `establish_signal_session` releases it, and the flush below
-            // then sends it as a prekey message the peer can open without any
-            // prior state.
-            if session_repair != SessionRepair::None {
-                if let Err(error) =
-                    rebuild_session_and_release(&ctx, from_user_id, session_repair).await
-                {
-                    tracing::warn!(
-                        from_user_id,
-                        ?session_repair,
-                        "could not rebuild the signal session: {error}"
-                    );
-                }
-            }
-
-            if let Err(error) = retransmit_queued_receipts(&ctx).await {
-                tracing::warn!("failed to flush messages queued during inbound handling: {error}");
-            }
-        });
-
-        if defer_until_accepted {
-            // Keep the reliable-mailbox envelope on the server too. A redelivery
-            // resumes the plaintext; it must never reach the duplicate/ACK path.
-            Err(TwonlyError::ContactAcceptancePending)
-        } else {
-            Ok(())
-        }
-    })
-    .await
+    Ok(())
 }
 
 /// Opens a new session with a peer that reset theirs or cannot open ours.
@@ -1187,13 +1405,26 @@ async fn handle_encrypted_inner(
 
     groups::ensure_group_member(t, from_user_id, &group_id).await?;
 
-    // `ensure_group_member` accepts a member the outgoing fan-out excludes, so
-    // a stale `leftGroup` row makes the group one-way without a word at either
-    // end. Their message says the row is wrong; the group server settles it.
-    // Scheduled, not awaited: it is a network round trip and this transaction
-    // holds the app database's one connection.
+    // A member who left, or was removed, no longer writes to the group. Their
+    // row is kept, so `ensure_group_member` still finds them. The row can be
+    // stale, though (a restored backup that predates their rejoining, or a
+    // membership update lost while their session was broken), so the group
+    // server is asked, and the message stays parked here and is retried. It
+    // goes through once the refresh restores them, and is dropped after the
+    // last retry if it does not. It is not answered with a membership error:
+    // that makes their device invite us again and resend, over and over.
+    // The refresh is scheduled, not awaited: it is a network round trip and
+    // this transaction holds the app database's one connection.
     if Group::has_member_left(t, &group_id, from_user_id).await? {
         GroupService::spawn_stale_membership_refresh(ctx, group_id.clone(), from_user_id);
+
+        // Leaving is announced after the group server has taken it, so the
+        // announcement can arrive after a refresh already recorded it.
+        if !announces_own_departure(content.group_update.as_ref(), from_user_id) {
+            return Err(TwonlyError::Generic(format!(
+                "user {from_user_id} has left group {group_id}"
+            )));
+        }
     }
 
     if content.resend_group_public_key.is_some() {
@@ -1239,6 +1470,18 @@ async fn handle_encrypted_inner(
     Err(TwonlyError::UnprocessableContent(format!(
         "client2client content in receipt {receipt_id} is not implemented in Rust"
     )))
+}
+
+/// Whether `update` is its sender telling the group that they left: a member
+/// leaving, or an admin removing themselves.
+fn announces_own_departure(
+    update: Option<&proto::encrypted_content::GroupUpdate>, from_user_id: i64,
+) -> bool {
+    update.is_some_and(|update| {
+        update.group_action_type == "leftGroup"
+            || (update.group_action_type == "removedMember"
+                && update.affected_contact_id == Some(from_user_id))
+    })
 }
 
 #[cfg(test)]
@@ -1298,8 +1541,78 @@ mod tests {
         Ok(())
     }
 
+    /// The delivery IDs a mailbox page is acknowledged with.
+    async fn acknowledged(
+        ctx: &Arc<Context>, messages: Vec<server_to_client::PendingMessageV2>,
+    ) -> Vec<i64> {
+        let response = acknowledge_pending_messages(
+            ctx,
+            server_to_client::PendingMessagesV2 {
+                messages,
+                pending_count: None,
+            },
+        )
+        .await;
+
+        let Some(Response::Ok(response)) = response.response else {
+            panic!("expected mailbox response")
+        };
+
+        let Some(ok::Ok::AcknowledgedPendingMessages(ack)) = response.ok else {
+            panic!("expected delivery IDs")
+        };
+
+        ack.delivery_ids
+    }
+
+    /// A mailbox row for `receipt_id`, whose plaintext is already parked.
+    fn parked_row(
+        delivery_id: i64, from_user_id: i64, receipt_id: &str,
+    ) -> server_to_client::PendingMessageV2 {
+        server_to_client::PendingMessageV2 {
+            delivery_id,
+            from_user_id,
+            body: proto::Message {
+                receipt_id: receipt_id.into(),
+                r#type: Type::CiphertextV2 as i32,
+                ..Default::default()
+            }
+            .encode_to_vec(),
+        }
+    }
+
+    async fn park(
+        database: &crate::database::app::AppDatabase, receipt_id: &str, from_user_id: i64,
+        plaintext: &[u8],
+    ) -> Result<()> {
+        let mut t = database.pool.begin().await?;
+
+        Receipt::claim_received(&mut t, receipt_id).await?;
+
+        Receipt::store_pending_plaintext(&mut t, receipt_id, from_user_id, plaintext).await?;
+
+        t.commit().await?;
+
+        Ok(())
+    }
+
+    async fn parked_plaintext(
+        database: &crate::database::app::AppDatabase, receipt_id: &str,
+    ) -> Result<Option<Vec<u8>>> {
+        let mut t = database.pool.begin().await?;
+
+        let parked = Receipt::pending_plaintext(&mut t, receipt_id).await?;
+
+        t.rollback().await?;
+
+        Ok(parked.map(|parked| parked.plaintext))
+    }
+
+    /// A message waiting for its sender to be accepted is kept on this device,
+    /// not at the front of the mailbox, and handled once they are.
     #[tokio::test]
-    async fn media_waiting_for_acceptance_is_not_acked_and_survives_redelivery() -> Result<()> {
+    async fn media_waiting_for_acceptance_is_kept_here_until_the_sender_is_accepted() -> Result<()>
+    {
         let directory = tempfile::tempdir()?;
         let ctx = Context::init_for_testing(
             directory.path().join("database"),
@@ -1326,27 +1639,14 @@ mod tests {
             }),
             ..Default::default()
         };
-        let mut t = database.pool.begin().await?;
-        Receipt::claim_received(&mut t, "image-receipt").await?;
-        Receipt::store_pending_plaintext(&mut t, "image-receipt", &content.encode_to_vec()).await?;
-        t.commit().await?;
+        park(&database, "image-receipt", 7, &content.encode_to_vec()).await?;
         // Keep background delivery offline while exercising the real inbound path.
         let client = crate::api::ApiRuntime::client(&ctx).await?;
         let _transport = client.ws_client.lock().await;
-        let message = server_to_client::PendingMessageV2 {
-            delivery_id: 1,
-            from_user_id: 7,
-            body: proto::Message {
-                receipt_id: "image-receipt".into(),
-                r#type: Type::CiphertextV2 as i32,
-                ..Default::default()
-            }
-            .encode_to_vec(),
-        };
-        // Repeated image deliveries interleaved with new contact requests
-        // must neither accept the friendship nor let each mailbox drain
-        // create another error reply.
-        for attempt in 0..50 {
+        // A redelivery, as after an acknowledgement the server did not get,
+        // interleaved with new contact requests must neither accept the
+        // friendship nor create another error reply.
+        for attempt in 0..5 {
             if attempt > 0 {
                 let mut t = database.pool.begin().await?;
                 contact::handle_contact_request(
@@ -1364,50 +1664,37 @@ mod tests {
                 t.commit().await?;
             }
 
-            let response = acknowledge_pending_messages(
-                &ctx,
-                server_to_client::PendingMessagesV2 {
-                    messages: vec![message.clone()],
-                    pending_count: None,
-                },
-            )
-            .await;
-            let Some(Response::Ok(response)) = response.response else {
-                panic!("expected mailbox response")
-            };
-            let Some(ok::Ok::AcknowledgedPendingMessages(ack)) = response.ok else {
-                panic!("expected delivery IDs")
-            };
-            assert!(
-                ack.delivery_ids.is_empty(),
-                "the server must retain the undelivered image"
-            );
-            let mut t = database.pool.begin().await?;
             assert_eq!(
-                Receipt::pending_plaintext(&mut t, "image-receipt").await?,
+                acknowledged(&ctx, vec![parked_row(1, 7, "image-receipt")]).await,
+                vec![1],
+                "the mailbox must not hold the image until the sender is accepted"
+            );
+            // Nothing is due while the sender is still waiting.
+            retry_parked_messages(&ctx).await?;
+            assert_eq!(
+                parked_plaintext(&database, "image-receipt").await?,
                 Some(content.encode_to_vec())
             );
             let acked: bool = sqlx::query_scalar(
                 "SELECT EXISTS(SELECT 1 FROM receipts WHERE receipt_id = 'image-receipt')",
             )
-            .fetch_one(&mut *t)
+            .fetch_one(&database.pool)
             .await?;
             assert!(!acked, "no success receipt before the image is stored");
             let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM messages")
-                .fetch_one(&mut *t)
+                .fetch_one(&database.pool)
                 .await?;
             assert_eq!(count, 0);
             let notices: i64 = sqlx::query_scalar(
                 "SELECT COUNT(*) FROM receipts WHERE contact_id = 7 AND contact_will_sends_receipt = 0",
             )
-            .fetch_one(&mut *t)
+            .fetch_one(&database.pool)
             .await?;
             assert_eq!(
                 notices,
                 if attempt == 0 { 1 } else { 0 },
                 "redelivery must not generate another contact error after the first was sent"
             );
-            t.rollback().await?;
             // Simulate the terminal error being removed after server acceptance.
             sqlx::query(
                 "DELETE FROM receipts WHERE contact_id = 7 AND contact_will_sends_receipt = 0",
@@ -1422,39 +1709,514 @@ mod tests {
         let contact = Contact::get_contact_by_id(&mut t, 7).await?.unwrap();
         Group::create_direct_chat(&ctx, &mut t, contact).await?;
         t.commit().await?;
-        {
-            let response = acknowledge_pending_messages(
-                &ctx,
-                server_to_client::PendingMessagesV2 {
-                    messages: vec![message.clone()],
-                    pending_count: None,
-                },
-            )
-            .await;
-            let Some(Response::Ok(response)) = response.response else {
-                panic!("expected mailbox response")
-            };
-            let Some(ok::Ok::AcknowledgedPendingMessages(ack)) = response.ok else {
-                panic!("expected delivery IDs")
-            };
-            assert_eq!(ack.delivery_ids, vec![1]);
-        }
-        let mut t = database.pool.begin().await?;
-        assert!(Receipt::pending_plaintext(&mut t, "image-receipt")
+        // The image is handled from this device, with no server copy left.
+        retry_parked_messages(&ctx).await?;
+        assert!(parked_plaintext(&database, "image-receipt")
             .await?
             .is_none());
         let copies: i64 = sqlx::query_scalar(
             "SELECT COUNT(*) FROM messages WHERE message_id = 'new-image' AND media_id IS NOT NULL",
         )
-        .fetch_one(&mut *t)
+        .fetch_one(&database.pool)
         .await?;
         assert_eq!(copies, 1);
         let acked: bool = sqlx::query_scalar(
             "SELECT EXISTS(SELECT 1 FROM receipts WHERE receipt_id = 'image-receipt')",
         )
-        .fetch_one(&mut *t)
+        .fetch_one(&database.pool)
         .await?;
         assert!(acked);
+        Ok(())
+    }
+
+    /// A page of messages that keep failing, which anyone can send, used to
+    /// stay at the front of the mailbox and stop everything behind it. Each is
+    /// acknowledged now, retried from here with a backoff, and finally dropped.
+    #[tokio::test]
+    async fn a_message_that_keeps_failing_is_acknowledged_and_retried_from_here() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+        ctx.inject_test_user_id(42).await?;
+        let database = ctx.app_db.read().await.clone();
+        // Blocking the sender changes nothing: a group key is handled first.
+        sqlx::query("INSERT INTO contacts(user_id, username, blocked) VALUES (8, 'stranger', 1)")
+            .execute(&database.pool)
+            .await?;
+        let join = proto::EncryptedContent {
+            group_id: Some("no-such-group".into()),
+            group_join: Some(proto::encrypted_content::GroupJoin {
+                group_public_key: vec![1; 33],
+            }),
+            ..Default::default()
+        }
+        .encode_to_vec();
+        let mut page = Vec::new();
+        for index in 0..100 {
+            let receipt_id = format!("join-{index}");
+            park(&database, &receipt_id, 8, &join).await?;
+            page.push(parked_row(index, 8, &receipt_id));
+        }
+        // Undecodable content is dropped at once rather than retried.
+        park(&database, "garbage", 8, &[0xff, 0xff, 0xff]).await?;
+        page.push(parked_row(100, 8, "garbage"));
+
+        assert_eq!(
+            acknowledged(&ctx, page).await,
+            (0..=100).collect::<Vec<_>>()
+        );
+        assert!(parked_plaintext(&database, "garbage").await?.is_none());
+
+        let schedule = || async {
+            sqlx::query_as::<_, (i64, i64)>(
+                "SELECT pending_attempts, pending_retry_at - CAST(strftime('%s', 'now') AS                  INTEGER) FROM received_receipts WHERE receipt_id = 'join-0'",
+            )
+            .fetch_one(&database.pool)
+            .await
+        };
+        let (attempts, wait) = schedule().await?;
+        assert_eq!(attempts, 1);
+        assert!(
+            (55..=60).contains(&wait),
+            "first retry after a minute, not {wait}"
+        );
+
+        // Not due yet, so a drain does not try again.
+        retry_parked_messages(&ctx).await?;
+        assert_eq!(schedule().await?.0, 1);
+
+        // Once due it is tried again, and the wait doubles.
+        sqlx::query(
+            "UPDATE received_receipts SET pending_retry_at = 0 WHERE receipt_id = 'join-0'",
+        )
+        .execute(&database.pool)
+        .await?;
+        retry_parked_messages(&ctx).await?;
+        let (attempts, wait) = schedule().await?;
+        assert_eq!(attempts, 2);
+        assert!(
+            (115..=120).contains(&wait),
+            "second retry after two minutes, not {wait}"
+        );
+
+        // The last attempt gives up on it.
+        sqlx::query(
+            "UPDATE received_receipts SET pending_retry_at = 0, pending_attempts = ? WHERE              receipt_id = 'join-0'",
+        )
+        .bind(MAX_PARKED_ATTEMPTS - 1)
+        .execute(&database.pool)
+        .await?;
+        retry_parked_messages(&ctx).await?;
+        assert!(parked_plaintext(&database, "join-0").await?.is_none());
+        assert!(parked_plaintext(&database, "join-1").await?.is_some());
+
+        // Nothing stays parked for longer than the mailbox would have kept it.
+        sqlx::query("UPDATE received_receipts SET pending_since = 0")
+            .execute(&database.pool)
+            .await?;
+        retry_parked_messages(&ctx).await?;
+        let parked: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM received_receipts WHERE pending_plaintext IS NOT NULL",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(parked, 0);
+
+        Ok(())
+    }
+
+    /// Only the server names an envelope's sender. A copy of a parked message
+    /// naming someone else is not resumed, so one account's content is never
+    /// applied as another's.
+    #[tokio::test]
+    async fn a_parked_message_is_never_resumed_under_another_sender() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+        ctx.inject_test_user_id(42).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query(
+            "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'friend', 1),              (8, 'stranger', 0)",
+        )
+        .execute(&database.pool)
+        .await?;
+        let content = proto::EncryptedContent {
+            group_id: Some(Group::direct_chat_id(42, 8)),
+            sender_twonly_score: Some(999_999),
+            text_message: Some(proto::encrypted_content::TextMessage {
+                sender_message_id: "stranger-text".into(),
+                text: "hello".into(),
+                timestamp: chrono::Utc::now().timestamp_millis(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        park(&database, "parked", 8, &content.encode_to_vec()).await?;
+
+        // Waits for the stranger to be accepted, on this device.
+        assert_eq!(
+            acknowledged(&ctx, vec![parked_row(1, 8, "parked")]).await,
+            vec![1]
+        );
+
+        // The same receipt, now said to come from the friend.
+        assert_eq!(
+            acknowledged(&ctx, vec![parked_row(2, 7, "parked")]).await,
+            vec![2]
+        );
+
+        let score: Option<i64> =
+            sqlx::query_scalar("SELECT twonly_score FROM contacts WHERE user_id = 7")
+                .fetch_one(&database.pool)
+                .await?;
+        assert_eq!(
+            score, None,
+            "the stranger's content was applied as the friend's"
+        );
+        assert_eq!(
+            parked_plaintext(&database, "parked").await?,
+            Some(content.encode_to_vec()),
+            "the stranger's message stays parked for the stranger"
+        );
+
+        Ok(())
+    }
+
+    /// An envelope that names no receipt can never be handled. Leaving it out
+    /// of the acknowledgement kept it in the mailbox for good.
+    #[tokio::test]
+    async fn an_envelope_without_a_receipt_id_is_acknowledged() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+
+        assert_eq!(
+            acknowledged(&ctx, vec![parked_row(1, 8, "")]).await,
+            vec![1]
+        );
+
+        Ok(())
+    }
+
+    /// As user 42: contact 7 is a friend with a direct chat, 8 a stranger,
+    /// and 9 shares group `g` with us and 7. The direct chat holds an image
+    /// from 7, and a text and an image of ours; the group holds an image from
+    /// 7. Our text still waits in the outbox for 7's receipt.
+    async fn chats() -> Result<(tempfile::TempDir, Arc<Context>)> {
+        let directory = tempfile::tempdir()?;
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me","storeMediaFilesInGallery":false}"#,
+        )?;
+        ctx.inject_test_user_id(42).await?;
+        let database = ctx.app_db.read().await.clone();
+        let direct = Group::direct_chat_id(42, 7);
+        for statement in [
+            "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'alice', 1), (9, 'bob', 1)",
+            "INSERT INTO contacts(user_id, username, deleted_by_user) VALUES (8, 'mallory', 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat, joined_group) VALUES (?1, \
+             'Alice', 1, 1), ('g', 'G', 0, 1)",
+            "INSERT INTO group_members(group_id, contact_id) VALUES (?1, 7), ('g', 7), ('g', 9)",
+            "INSERT INTO media_files(media_id, type, download_state) VALUES ('alice-file', \
+             'image', 'ready'), ('my-file', 'image', NULL), ('group-file', 'image', 'ready')",
+            "INSERT INTO messages(message_id, group_id, sender_id, type, media_id, content) VALUES \
+             ('alice-media', ?1, 7, 'media', 'alice-file', NULL), ('my-text', ?1, NULL, 'text', \
+             NULL, 'hi'), ('my-media', ?1, NULL, 'media', 'my-file', NULL), ('group-media', 'g', \
+             7, 'media', 'group-file', NULL)",
+            "INSERT INTO receipts(receipt_id, contact_id, message, message_id) VALUES \
+             ('my-text-receipt', 7, x'00', 'my-text')",
+        ] {
+            sqlx::query(statement)
+                .bind(&direct)
+                .execute(&database.pool)
+                .await?;
+        }
+        Ok((directory, ctx))
+    }
+
+    async fn from(ctx: &Arc<Context>, sender: i64, content: proto::EncryptedContent) -> Result<()> {
+        let database = ctx.app_db.read().await.clone();
+        let mut t = database.pool.begin().await?;
+        handle_encrypted(ctx, &mut t, sender, &crate::utils::new_uuid_v4(), content).await?;
+        t.commit().await?;
+        Ok(())
+    }
+
+    fn opened(message_ids: &[&str]) -> proto::EncryptedContent {
+        proto::EncryptedContent {
+            message_update: Some(proto::encrypted_content::MessageUpdate {
+                r#type: proto::encrypted_content::message_update::Type::Opened as i32,
+                multiple_target_message_ids: message_ids.iter().map(|id| id.to_string()).collect(),
+                timestamp: chrono::Utc::now().timestamp_millis(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }
+    }
+
+    fn deleted(message_id: &str) -> proto::EncryptedContent {
+        proto::EncryptedContent {
+            message_update: Some(proto::encrypted_content::MessageUpdate {
+                r#type: proto::encrypted_content::message_update::Type::Delete as i32,
+                sender_message_id: Some(message_id.into()),
+                timestamp: chrono::Utc::now().timestamp_millis(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }
+    }
+
+    fn media_update(
+        kind: proto::encrypted_content::media_update::Type, message_id: &str,
+    ) -> proto::EncryptedContent {
+        proto::EncryptedContent {
+            media_update: Some(proto::encrypted_content::MediaUpdate {
+                r#type: kind as i32,
+                target_message_id: message_id.into(),
+            }),
+            ..Default::default()
+        }
+    }
+
+    /// `opened_at`, `media_stored`, `media_reopened`, `is_deleted_from_sender`.
+    async fn message_flags(
+        ctx: &Arc<Context>, message_id: &str,
+    ) -> Result<(Option<i64>, i64, i64, i64)> {
+        let database = ctx.app_db.read().await.clone();
+        Ok(sqlx::query_as(
+            "SELECT opened_at, media_stored, media_reopened, is_deleted_from_sender FROM messages \
+             WHERE message_id = ?",
+        )
+        .bind(message_id)
+        .fetch_one(&database.pool)
+        .await?)
+    }
+
+    /// An opened mark, a reopen and a delete count only from the person they
+    /// concern, and a stored mark only from someone in the media's chat.
+    #[tokio::test]
+    async fn read_store_and_delete_updates_count_only_from_the_people_they_concern() -> Result<()> {
+        use proto::encrypted_content::media_update::Type as MediaUpdateType;
+
+        let (_directory, ctx) = chats().await?;
+
+        // Opened: a stranger cannot hide Alice's image from us, and someone
+        // outside our chat with Alice cannot mark what we sent her.
+        from(&ctx, 8, opened(&["alice-media", "my-text"])).await?;
+        from(&ctx, 9, opened(&["my-text"])).await?;
+        assert_eq!(message_flags(&ctx, "alice-media").await?.0, None);
+        assert_eq!(message_flags(&ctx, "my-text").await?.0, None);
+        from(&ctx, 7, opened(&["my-text"])).await?;
+        assert!(message_flags(&ctx, "my-text").await?.0.is_some());
+
+        // Reopened: only the person our media went to.
+        from(&ctx, 9, media_update(MediaUpdateType::Reopened, "my-media")).await?;
+        assert_eq!(message_flags(&ctx, "my-media").await?.2, 0);
+        from(&ctx, 7, media_update(MediaUpdateType::Reopened, "my-media")).await?;
+        assert_eq!(message_flags(&ctx, "my-media").await?.2, 1);
+
+        // Stored: anyone in the media's chat, but nobody outside it.
+        from(
+            &ctx,
+            8,
+            media_update(MediaUpdateType::Stored, "alice-media"),
+        )
+        .await?;
+        from(
+            &ctx,
+            9,
+            media_update(MediaUpdateType::Stored, "alice-media"),
+        )
+        .await?;
+        assert_eq!(message_flags(&ctx, "alice-media").await?.1, 0);
+        from(
+            &ctx,
+            9,
+            media_update(MediaUpdateType::Stored, "group-media"),
+        )
+        .await?;
+        assert_eq!(message_flags(&ctx, "group-media").await?.1, 1);
+
+        // Delete: a stranger cannot drop our queued text, and only its sender
+        // takes a message back.
+        from(&ctx, 8, deleted("my-text")).await?;
+        from(&ctx, 8, deleted("alice-media")).await?;
+        let database = ctx.app_db.read().await.clone();
+        let queued: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM receipts WHERE receipt_id = 'my-text-receipt'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(queued, 1);
+        assert_eq!(message_flags(&ctx, "alice-media").await?.3, 0);
+        from(&ctx, 7, deleted("alice-media")).await?;
+        assert_eq!(message_flags(&ctx, "alice-media").await?.3, 1);
+
+        Ok(())
+    }
+
+    /// A reaction counts only on a message in the chat it was sent to, and
+    /// proves our media arrived only when it comes from someone it went to.
+    #[tokio::test]
+    async fn a_reaction_counts_only_on_a_message_in_its_own_chat() -> Result<()> {
+        let (_directory, ctx) = chats().await?;
+        let database = ctx.app_db.read().await.clone();
+        let react = |chat: String, message_id: &str| proto::EncryptedContent {
+            group_id: Some(chat),
+            reaction: Some(proto::encrypted_content::Reaction {
+                target_message_id: message_id.into(),
+                emoji: "👍".into(),
+                remove: false,
+            }),
+            ..Default::default()
+        };
+        let reactions = |message_id: &'static str| {
+            let database = database.clone();
+            async move {
+                sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM reactions WHERE message_id = ?")
+                    .bind(message_id)
+                    .fetch_one(&database.pool)
+                    .await
+            }
+        };
+        let upload_state = |media_id: &'static str| {
+            let database = database.clone();
+            async move {
+                sqlx::query_scalar::<_, Option<String>>(
+                    "SELECT upload_state FROM media_files WHERE media_id = ?",
+                )
+                .bind(media_id)
+                .fetch_one(&database.pool)
+                .await
+            }
+        };
+
+        // A member of the group, reacting through it to our chat with Alice,
+        // touches neither her image nor ours.
+        from(&ctx, 9, react("g".into(), "alice-media")).await?;
+        from(&ctx, 9, react("g".into(), "my-media")).await?;
+        assert_eq!(reactions("alice-media").await?, 0);
+        assert_eq!(reactions("my-media").await?, 0);
+        assert_eq!(upload_state("my-file").await?, None);
+
+        // In its own chat it counts, but a reaction to someone else's media
+        // says nothing about how ours was delivered.
+        from(&ctx, 9, react("g".into(), "group-media")).await?;
+        assert_eq!(reactions("group-media").await?, 1);
+        assert_eq!(upload_state("group-file").await?, None);
+
+        // Alice reacting to the image we sent her proves it arrived.
+        from(&ctx, 7, react(Group::direct_chat_id(42, 7), "my-media")).await?;
+        assert_eq!(reactions("my-media").await?, 1);
+        assert_eq!(upload_state("my-file").await?.as_deref(), Some("uploaded"));
+
+        Ok(())
+    }
+
+    /// A member the group server has taken out no longer posts into the group.
+    /// Their message waits here instead, and goes through once a refresh shows
+    /// that our record of them was stale. Their own leaving still shows.
+    #[tokio::test]
+    async fn a_member_who_left_no_longer_posts_into_the_group() -> Result<()> {
+        let (_directory, ctx) = chats().await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query(
+            "UPDATE group_members SET member_state = 'leftGroup' WHERE group_id = 'g' AND \
+             contact_id = 9",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        let text = proto::EncryptedContent {
+            group_id: Some("g".into()),
+            text_message: Some(proto::encrypted_content::TextMessage {
+                sender_message_id: "after-leaving".into(),
+                text: "still here".into(),
+                timestamp: chrono::Utc::now().timestamp_millis(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        park(&database, "left-text", 9, &text.encode_to_vec()).await?;
+        assert_eq!(
+            acknowledged(&ctx, vec![parked_row(1, 9, "left-text")]).await,
+            vec![1]
+        );
+        let stored = || async {
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM messages WHERE message_id = 'after-leaving'",
+            )
+            .fetch_one(&database.pool)
+            .await
+        };
+        assert_eq!(
+            stored().await?,
+            0,
+            "a member who left posted into the group"
+        );
+        assert!(parked_plaintext(&database, "left-text").await?.is_some());
+
+        // Announcing that they left still records it.
+        from(
+            &ctx,
+            9,
+            proto::EncryptedContent {
+                group_id: Some("g".into()),
+                group_update: Some(proto::encrypted_content::GroupUpdate {
+                    group_action_type: "leftGroup".into(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+        )
+        .await?;
+        let departures: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM group_histories WHERE group_id = 'g' AND contact_id = 9 AND \
+             type = 'leftGroup'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(departures, 1);
+
+        // A refresh finds that our record was stale, and the retry delivers.
+        sqlx::query(
+            "UPDATE group_members SET member_state = 'normal' WHERE group_id = 'g' AND \
+             contact_id = 9",
+        )
+        .execute(&database.pool)
+        .await?;
+        sqlx::query("UPDATE received_receipts SET pending_retry_at = 0")
+            .execute(&database.pool)
+            .await?;
+        retry_parked_messages(&ctx).await?;
+        assert_eq!(stored().await?, 1);
+
         Ok(())
     }
 
@@ -1714,7 +2476,7 @@ mod tests {
 
         Receipt::claim_received(&mut t, "contact-request").await?;
 
-        Receipt::store_pending_plaintext(&mut t, "contact-request", &content.encode_to_vec())
+        Receipt::store_pending_plaintext(&mut t, "contact-request", 7, &content.encode_to_vec())
             .await?;
 
         t.commit().await?;
@@ -1757,7 +2519,9 @@ mod tests {
         let mut t = database.pool.begin().await?;
 
         assert_eq!(
-            Receipt::pending_plaintext(&mut t, "contact-request").await?,
+            Receipt::pending_plaintext(&mut t, "contact-request")
+                .await?
+                .map(|parked| parked.plaintext),
             Some(content.encode_to_vec())
         );
 
@@ -1817,7 +2581,8 @@ mod tests {
 
             Receipt::claim_received(&mut t, &receipt_id).await?;
 
-            Receipt::store_pending_plaintext(&mut t, &receipt_id, &content.encode_to_vec()).await?;
+            Receipt::store_pending_plaintext(&mut t, &receipt_id, 7, &content.encode_to_vec())
+                .await?;
 
             t.commit().await?;
 
@@ -2094,7 +2859,7 @@ mod tests {
 
         Receipt::claim_received(&mut t, "join").await?;
 
-        Receipt::store_pending_plaintext(&mut t, "join", &content.encode_to_vec()).await?;
+        Receipt::store_pending_plaintext(&mut t, "join", 99, &content.encode_to_vec()).await?;
 
         t.commit().await?;
 
@@ -2140,7 +2905,13 @@ mod tests {
 
         Receipt::claim_received(&mut t, receipt_id).await?;
 
-        Receipt::store_pending_plaintext(&mut t, receipt_id, &content.encode_to_vec()).await?;
+        Receipt::store_pending_plaintext(
+            &mut t,
+            receipt_id,
+            from_user_id,
+            &content.encode_to_vec(),
+        )
+        .await?;
 
         t.commit().await?;
 

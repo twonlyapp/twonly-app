@@ -34,6 +34,21 @@ pub struct Receipt {
     pub wake_receiver: i64,
 }
 
+/// The decrypted content of a message, parked on its receipt claim until its
+/// handling commits.
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParkedPlaintext {
+    /// Who sent it. Claims parked before the sender was recorded have none.
+    pub from_user_id: Option<i64>,
+    pub plaintext: Vec<u8>,
+}
+
+/// A parked message whose next attempt is due.
+pub struct DueParkedMessage {
+    pub receipt_id: String,
+    pub from_user_id: i64,
+}
+
 pub struct NewReceipt<'a> {
     receipt_id: &'a str,
     contact_id: i64,
@@ -108,15 +123,21 @@ impl Receipt {
     /// finds it here resumes handling instead of decrypting again, which would
     /// fail with an old-counter error.
     pub async fn store_pending_plaintext(
-        transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str, plaintext: &[u8],
+        transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str, from_user_id: i64,
+        plaintext: &[u8],
     ) -> Result<()> {
         sqlx::query!(
             r#"
             UPDATE received_receipts
-            SET pending_plaintext = ?
+            SET pending_plaintext = ?,
+                pending_from_user_id = ?,
+                pending_since = COALESCE(
+                    pending_since, CAST(strftime('%s', 'now') AS INTEGER)
+                )
             WHERE receipt_id = ?
             "#,
             plaintext,
+            from_user_id,
             receipt_id,
         )
         .execute(&mut **transaction)
@@ -128,20 +149,22 @@ impl Receipt {
     /// Returns the parked plaintext of a receipt whose handling did not commit.
     pub async fn pending_plaintext(
         transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str,
-    ) -> Result<Option<Vec<u8>>> {
-        let plaintext = sqlx::query_scalar!(
+    ) -> Result<Option<ParkedPlaintext>> {
+        let parked = sqlx::query!(
             r#"
-            SELECT pending_plaintext
+            SELECT pending_from_user_id, pending_plaintext AS "plaintext!"
             FROM received_receipts
-            WHERE receipt_id = ?
+            WHERE receipt_id = ? AND pending_plaintext IS NOT NULL
             "#,
             receipt_id,
         )
         .fetch_optional(&mut **transaction)
-        .await?
-        .flatten();
+        .await?;
 
-        Ok(plaintext)
+        Ok(parked.map(|row| ParkedPlaintext {
+            from_user_id: row.pending_from_user_id,
+            plaintext: row.plaintext,
+        }))
     }
 
     /// Drops a parked plaintext once its message no longer needs it.
@@ -151,7 +174,11 @@ impl Receipt {
         sqlx::query!(
             r#"
             UPDATE received_receipts
-            SET pending_plaintext = NULL
+            SET pending_plaintext = NULL,
+                pending_since = NULL,
+                pending_attempts = 0,
+                pending_retry_at = NULL,
+                pending_waits_for_acceptance = 0
             WHERE receipt_id = ? AND pending_plaintext IS NOT NULL
             "#,
             receipt_id,
@@ -160,6 +187,108 @@ impl Receipt {
         .await?;
 
         Ok(())
+    }
+
+    /// Keeps a parked message until its sender is accepted. It is retried
+    /// once they are, or dropped once they are blocked.
+    pub async fn park_until_accepted(
+        transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str, from_user_id: i64,
+    ) -> Result<()> {
+        sqlx::query!(
+            r#"
+            UPDATE received_receipts
+            SET pending_waits_for_acceptance = 1,
+                pending_from_user_id = COALESCE(pending_from_user_id, ?),
+                pending_since = COALESCE(
+                    pending_since, CAST(strftime('%s', 'now') AS INTEGER)
+                )
+            WHERE receipt_id = ? AND pending_plaintext IS NOT NULL
+            "#,
+            from_user_id,
+            receipt_id,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
+    /// Counts a failed attempt at a parked message and schedules the next one,
+    /// doubling the wait from `first_backoff` up to `max_backoff` seconds.
+    /// Returns the attempts made so far, or `None` when nothing is parked.
+    pub async fn record_parked_failure(
+        transaction: &mut Transaction<'_, Sqlite>, receipt_id: &str, from_user_id: i64, now: i64,
+        first_backoff: i64, max_backoff: i64,
+    ) -> Result<Option<i64>> {
+        // Every SET expression reads the row as it was before the update, so
+        // the backoff doubles with the attempts made before this one.
+        let attempts = sqlx::query_scalar!(
+            r#"
+            UPDATE received_receipts
+            SET pending_attempts = pending_attempts + 1,
+                pending_retry_at = ? + MIN(? << MIN(pending_attempts, 30), ?),
+                pending_waits_for_acceptance = 0,
+                pending_from_user_id = COALESCE(pending_from_user_id, ?),
+                pending_since = COALESCE(pending_since, ?)
+            WHERE receipt_id = ? AND pending_plaintext IS NOT NULL
+            RETURNING pending_attempts
+            "#,
+            now,
+            first_backoff,
+            max_backoff,
+            from_user_id,
+            now,
+            receipt_id,
+        )
+        .fetch_optional(&mut **transaction)
+        .await?;
+
+        Ok(attempts)
+    }
+
+    /// The parked messages whose next attempt is due: failed ones once their
+    /// backoff has passed, and those that waited for a sender who has since
+    /// been accepted, or blocked, which drops them. Oldest first, so a chat
+    /// replays in the order it was sent.
+    pub async fn due_parked(pool: &sqlx::SqlitePool, now: i64) -> Result<Vec<DueParkedMessage>> {
+        Ok(sqlx::query_as!(
+            DueParkedMessage,
+            r#"
+            SELECT r.receipt_id, r.pending_from_user_id AS "from_user_id!: i64"
+            FROM received_receipts r
+            JOIN contacts c ON c.user_id = r.pending_from_user_id
+            WHERE r.pending_plaintext IS NOT NULL
+              AND CASE WHEN r.pending_waits_for_acceptance != 0
+                  THEN c.blocked != 0 OR (c.accepted != 0 AND c.deleted_by_user = 0)
+                  ELSE COALESCE(r.pending_retry_at, 0) <= ?
+              END
+            ORDER BY COALESCE(r.pending_since, r.created_at), r.receipt_id
+            "#,
+            now,
+        )
+        .fetch_all(pool)
+        .await?)
+    }
+
+    /// Drops every message parked since before `parked_before`, whatever it
+    /// waits for, and returns how many there were.
+    pub async fn drop_expired_parked(pool: &sqlx::SqlitePool, parked_before: i64) -> Result<u64> {
+        Ok(sqlx::query!(
+            r#"
+            UPDATE received_receipts
+            SET pending_plaintext = NULL,
+                pending_since = NULL,
+                pending_attempts = 0,
+                pending_retry_at = NULL,
+                pending_waits_for_acceptance = 0
+            WHERE pending_plaintext IS NOT NULL
+              AND COALESCE(pending_since, created_at) < ?
+            "#,
+            parked_before,
+        )
+        .execute(pool)
+        .await?
+        .rows_affected())
     }
 
     /// Records, in the commit that handles it, that a claimed message was
@@ -338,7 +467,7 @@ mod tests {
 
         assert!(Receipt::claim_received(&mut t, "receipt").await.unwrap());
 
-        Receipt::store_pending_plaintext(&mut t, "receipt", b"decrypted")
+        Receipt::store_pending_plaintext(&mut t, "receipt", 7, b"decrypted")
             .await
             .unwrap();
 
@@ -361,7 +490,10 @@ mod tests {
 
         assert_eq!(
             Receipt::pending_plaintext(&mut t, "receipt").await.unwrap(),
-            Some(b"decrypted".to_vec())
+            Some(ParkedPlaintext {
+                from_user_id: Some(7),
+                plaintext: b"decrypted".to_vec(),
+            })
         );
 
         // Once handling commits, the plaintext is gone and a later redelivery is

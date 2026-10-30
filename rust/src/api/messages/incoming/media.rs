@@ -7,6 +7,7 @@ use crate::api::messages::incoming::messages::queue_encrypted_content;
 use crate::api::proto::client::{encrypted_content, EncryptedContent};
 use crate::context::Context;
 use crate::database::app::groups::native::Group;
+use crate::database::app::messages::native::Message;
 use crate::error::{Result, TwonlyError};
 use crate::services::media_upload::MediaUploadService;
 use crate::services::mediafiles::MediaFileService;
@@ -310,7 +311,32 @@ pub(crate) async fn handle_media_update(
         return Ok(());
     };
 
-    match MediaUpdateType::try_from(update.r#type)? {
+    let update_type = MediaUpdateType::try_from(update.r#type)?;
+
+    // Reopened and a decryption error come from a receiver of our media, back
+    // to us. Stored goes to the whole chat, about anyone's media in it, and
+    // makes every member keep a copy, so only a current member may send it.
+    let authorized = match update_type {
+        MediaUpdateType::Reopened | MediaUpdateType::DecryptionError => {
+            Message::was_sent_to(t, &update.target_message_id, from_user_id).await?
+        }
+        MediaUpdateType::Stored => {
+            Message::is_in_chat_of_member(t, &update.target_message_id, from_user_id).await?
+        }
+    };
+
+    if !authorized {
+        tracing::warn!(
+            from_user_id,
+            message_id = update.target_message_id,
+            ?update_type,
+            "ignoring a media update from someone outside the media's chat"
+        );
+
+        return Ok(());
+    }
+
+    match update_type {
         MediaUpdateType::Reopened => {
             sqlx::query!(
                 r#"
@@ -433,6 +459,7 @@ mod tests {
         for statement in [
             "INSERT INTO contacts(user_id, username) VALUES (7, 'saver'), (42, 'author')",
             "INSERT INTO groups(group_id, group_name) VALUES ('group', 'Group')",
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('group', 7), ('group', 42)",
             "INSERT INTO media_files(media_id, type, download_state) VALUES ('available', \
              'image', 'ready'), ('missing', 'image', 'ready')",
             "INSERT INTO messages(message_id, group_id, sender_id, type, media_id) VALUES \
