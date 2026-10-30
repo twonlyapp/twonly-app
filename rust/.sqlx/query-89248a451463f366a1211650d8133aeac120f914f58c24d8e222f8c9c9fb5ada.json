@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS (\n            SELECT 1 FROM webxdc_instances i\n            JOIN messages m ON m.message_id = i.instance_id\n            WHERE m.type = 'webxdcApp' AND m.is_deleted_from_sender = 0\n                AND m.created_at >= ?\n        ) AS \"value!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "value!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "89248a451463f366a1211650d8133aeac120f914f58c24d8e222f8c9c9fb5ada"
+}

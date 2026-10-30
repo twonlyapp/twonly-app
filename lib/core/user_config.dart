@@ -156,7 +156,7 @@ class UserConfig {
   bool storyNotifications;
 
   /// Keeps a contact's story above the chats after all of it was seen.
-  /// Off by default, so only stories with something new are shown there.
+  /// Enabled by default.
   bool alwaysShowStories;
   bool showRestoreFlame;
 

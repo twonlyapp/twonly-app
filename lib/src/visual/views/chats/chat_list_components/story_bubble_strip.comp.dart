@@ -69,6 +69,8 @@ class StoryBubbleStrip extends StatelessWidget {
     return SizedBox(
       height: 100,
       child: ListView.separated(
+        // Keep this horizontal offset separate from the enclosing chat list.
+        key: const PageStorageKey('chat-list-stories'),
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
         itemCount: items.length,

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.6
+
+- Improve: UI layout for stories 
+- Fix: Recuring message loop
+- Fix: Multiple smaller issues
+- Security Fix: A malicious user could craft a self-attestation to get a verification badge (thx @PatrickBidinger)
+
 ## 0.6.5
 
 - Improve: Better game messages in chats

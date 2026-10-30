@@ -9,6 +9,7 @@ import 'package:twonly/core/bridge/database/contact_groups.dart'
     as rust_contact_groups;
 import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/stories.dart';
 import 'package:twonly/core/database/app/contact_groups/table.dart'
     as db_contact_groups;
 import 'package:twonly/core/database/app/contact_groups/table.dart';
@@ -19,14 +20,19 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/visual/components/custom_color_picker_dialog.comp.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/elements/my_chip.element.dart';
+import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/story_target_selector.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_group_settings.view.dart';
 
 import '../helpers/native_database.dart';
 
 class _AvatarApi extends NativeTestApi {
   final paths = <int, String>{};
+  final storyAudiences = <StoryAudience>[];
 
   @override
   Future<String?> crateBridgeApiRustApiEnsureAvatarPng({
@@ -35,6 +41,14 @@ class _AvatarApi extends NativeTestApi {
 
   @override
   Future<void> crateBridgeApiRustApiRefreshWidgetManifest() async {}
+
+  @override
+  Future<List<String>> crateBridgeStoriesStoryAudienceChats({
+    required StoryAudience audience,
+  }) async {
+    storyAudiences.add(audience);
+    return [for (final id in audience.contactGroupIds) 'story-group:$id'];
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -51,6 +65,7 @@ void main() {
 
   setUp(() async {
     await locator.reset();
+    api.storyAudiences.clear();
     database = await TestDatabase.create();
 
     directory = await Directory.systemTemp.createTemp('contact-group-test-');
@@ -134,7 +149,7 @@ void main() {
       .map((image) => (image.image as FileImage).file.path)
       .toList();
 
-  Future<void> pumpEditor(WidgetTester tester) async {
+  Future<void> pumpView(WidgetTester tester, Widget view) async {
     await tester.binding.setSurfaceSize(const Size(800, 2200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
@@ -142,8 +157,16 @@ void main() {
         theme: lightTheme,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: ContactGroupSettingsView(contactGroup: contactGroup),
+        home: view,
       ),
+    );
+    await settle(tester);
+  }
+
+  Future<void> pumpEditor(WidgetTester tester) async {
+    await pumpView(
+      tester,
+      ContactGroupSettingsView(contactGroup: contactGroup),
     );
     await pumpNative(
       tester,
@@ -155,6 +178,192 @@ void main() {
           selected(tester, 'Old team'),
     );
   }
+
+  test('a story audience always comes from explicitly selected groups', () {
+    final target = StoryTarget();
+    expect(target.toAudience(), isNull);
+    target.contactGroupIds.addAll([1, 2]);
+    expect(target.toAudience()!.all, isFalse);
+    expect(target.toAudience()!.contactGroupIds.map((id) => id.toInt()), [
+      1,
+      2,
+    ]);
+    target.clear();
+    expect(target.toAudience(), isNull);
+  });
+
+  testWidgets('the story picker creates and selects a story-only group', (
+    tester,
+  ) async {
+    final target = StoryTarget();
+    await pumpView(
+      tester,
+      Scaffold(
+        body: StoryTargetSelector(
+          target: target,
+          enabled: true,
+          onChanged: () {},
+          onAudienceChanged: (_) {},
+        ),
+      ),
+    );
+    expect(find.text('All contacts'), findsNothing);
+    expect(find.byType(MyChip), findsOneWidget);
+    expect(target.isEmpty, isTrue);
+
+    await tester.tap(find.text('New story group'));
+    await settle(tester);
+    final features = tester.widgetList<SwitchListTile>(
+      find.byType(SwitchListTile),
+    );
+    expect((features.first.title! as Text).data, 'Share stories');
+    expect(features.map((feature) => feature.value), [true, false, false]);
+    expect(find.text('Background color'), findsNothing);
+    expect(find.text('Text color'), findsNothing);
+    expect(find.byType(MyInput), findsNWidgets(2));
+
+    await tester.enterText(find.byType(TextField).first, 'Close friends');
+    await settle(tester);
+    await tester.tap(memberTile('Bob'));
+    await tester.tap(find.byType(MyButton));
+    await pumpNative(tester, until: () => target.contactGroupIds.isNotEmpty);
+    await settle(tester);
+
+    final saved = (await runNative(
+      tester,
+      () => rust_contact_groups.getContactGroup(
+        id: target.contactGroupIds.single,
+        transaction: currentDatabaseSession(),
+      ),
+    ))!;
+    expect(saved.shareStories, isTrue);
+    expect(saved.showAsLabel, isFalse);
+    expect(saved.showAsShortcut, isFalse);
+    final members = await runNative(
+      tester,
+      () => rust_contact_groups.getContactGroupMembers(
+        id: saved.id,
+        transaction: currentDatabaseSession(),
+      ),
+    );
+    expect(members.map((member) => member.userId), [8]);
+    expect(api.storyAudiences.last.all, isFalse);
+    expect(
+      api.storyAudiences.last.contactGroupIds.map((id) => id.toInt()),
+      [saved.id],
+    );
+    expect(find.text('All contacts'), findsNothing);
+
+    await tester.tap(find.text('Close friends'));
+    await settle(tester);
+    expect(target.isEmpty, isTrue);
+  });
+
+  testWidgets('members follow exchange counts and retain alphabetical ties', (
+    tester,
+  ) async {
+    await runNative(tester, () async {
+      for (final (id, count) in [('bob', 30), ('team', 20), ('alice', 10)]) {
+        await rust_groups.updateGroup(
+          id: id,
+          patch: GroupPatch(totalMediaCounter: count),
+          transaction: currentDatabaseSession(),
+        );
+      }
+    });
+    await pumpEditor(tester);
+    List<String> memberOrder() => [
+      for (final tile in tester.widgetList<ListTile>(find.byType(ListTile)))
+        if (tile.key is ValueKey<String>) (tile.key! as ValueKey<String>).value,
+    ];
+    expect(memberOrder(), [
+      'contact:8',
+      'group:team',
+      'contact:7',
+      'contact:9',
+      'group:old-team',
+    ]);
+
+    await runNative(
+      tester,
+      () => rust_groups.updateGroup(
+        id: 'alice',
+        patch: const GroupPatch(totalMediaCounter: 40),
+        transaction: currentDatabaseSession(),
+      ),
+    );
+    await settle(tester);
+    expect(memberOrder(), [
+      'contact:7',
+      'contact:8',
+      'group:team',
+      'contact:9',
+      'group:old-team',
+    ]);
+    expect(selected(tester, 'Alice'), isTrue);
+    expect(selected(tester, 'Old team'), isTrue);
+  });
+
+  testWidgets('label colors use bottom sheets and survive disabling labels', (
+    tester,
+  ) async {
+    await pumpEditor(tester);
+    expect(find.byType(MyInput), findsNWidgets(2));
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    await settle(tester);
+    expect(find.byType(Wrap), findsNothing);
+
+    await tester.tap(find.text('Text color'));
+    await settle(tester);
+    expect(find.byType(BottomSheet), findsOneWidget);
+    final textColor = find.byWidgetPredicate(
+      (widget) =>
+          widget is Container &&
+          widget.decoration is BoxDecoration &&
+          (widget.decoration! as BoxDecoration).color ==
+              const Color(0xFF4A148C),
+    );
+    await tester.tap(textColor);
+    await settle(tester);
+    expect(find.byType(BottomSheet), findsNothing);
+
+    await tester.tap(find.text('Background color'));
+    await settle(tester);
+    await tester.tap(find.byTooltip('Custom Color'));
+    await settle(tester);
+    expect(find.byType(CustomColorPickerDialog), findsOneWidget);
+    await tester.tap(
+      find.ancestor(of: find.text('Ok'), matching: find.byType(MyButton)),
+    );
+    await settle(tester);
+    expect(find.byType(BottomSheet), findsNothing);
+    await tester.tap(find.text('Background color'));
+    await settle(tester);
+    await tester.tap(find.byTooltip('No background'));
+    await settle(tester);
+
+    await tester.tap(find.text('Show as visible label'));
+    await settle(tester);
+    expect(find.text('Background color'), findsNothing);
+    expect(find.text('Text color'), findsNothing);
+    await tester.tap(find.text('Show as visible label'));
+    await settle(tester);
+    expect(find.text('Background color'), findsOneWidget);
+    expect(find.text('Text color'), findsOneWidget);
+    await tester.tap(find.byType(MyButton));
+    await settle(tester);
+    final saved = (await runNative(
+      tester,
+      () => rust_contact_groups.getContactGroup(
+        id: contactGroup.id,
+        transaction: currentDatabaseSession(),
+      ),
+    ))!;
+    expect(saved.textColor, 0xFF4A148C);
+    expect(saved.backgroundColor, 0);
+    expect(saved.showAsLabel, isTrue);
+    expect(saved.name, 'Favorites');
+  });
 
   testWidgets('archived contacts and groups are shown immediately', (
     tester,

@@ -35,6 +35,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/mention_editing_controller.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
+import 'package:twonly/src/visual/helpers/precache_file_image.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/additional_message_content.dart';
@@ -117,6 +118,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   final _textMessageFocus = FocusNode();
 
   final HashSet<String> _alreadyOpenedMediaIds = HashSet();
+  final Set<String> _preloadingStoryMediaIds = {};
+  Set<String> _upcomingStoryMediaIds = {};
+  int _storyPreloadGeneration = 0;
 
   bool _isTransitioning = false;
 
@@ -134,6 +138,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     _currentMediaSender = widget.group?.groupName ?? '';
 
     if (_isStory) {
+      _showDownloadingLoader = true;
       unawaited(_loadStory());
       return;
     }
@@ -210,18 +215,25 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               .map(ownStoryItems),
         );
       })().first;
-      for (final item in items.where((item) => item.isActiveAt(now))) {
-        final rows = await rust_messages.listMessages(
-          input: db_messages.MessageQuery(
-            filter: db_messages.MessageFilter.mediaIds,
-            ids: [item.mediaFile.mediaId].toList(),
-            nowMs: clock.now().millisecondsSinceEpoch,
-          ),
-          transaction: currentDatabaseSession(),
-        );
-        final row = rows
-            .where((row) => row.isStory && row.senderId == null)
-            .firstOrNull;
+      final activeItems = items.where((item) => item.isActiveAt(now)).toList();
+      final rows = activeItems.isEmpty
+          ? const <StoredMessage>[]
+          : await rust_messages.listMessages(
+              input: db_messages.MessageQuery(
+                filter: db_messages.MessageFilter.mediaIds,
+                ids: activeItems.map((item) => item.mediaFile.mediaId).toList(),
+                nowMs: clock.now().millisecondsSinceEpoch,
+              ),
+              transaction: currentDatabaseSession(),
+            );
+      final byMediaId = <String, StoredMessage>{};
+      for (final row in rows) {
+        if (row.isStory && row.senderId == null && row.mediaId != null) {
+          byMediaId.putIfAbsent(row.mediaId!, () => row);
+        }
+      }
+      for (final item in activeItems) {
+        final row = byMediaId[item.mediaFile.mediaId];
         if (row != null) playlist.add(row);
       }
       if (mounted) _currentMediaSender = context.lang.storyMine;
@@ -384,6 +396,67 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     }
   }
 
+  /// Decode only the next two items at full size, using the same FileImage
+  /// cache as the renderer. Downloads alone do not warm that cache, and the
+  /// small images in the story bubbles use a different, resized cache entry.
+  Future<void> _preloadUpcomingStoryImages() async {
+    final generation = ++_storyPreloadGeneration;
+    final ids = allMediaFiles
+        .skip(1)
+        .take(2)
+        .map((message) => message.mediaId)
+        .nonNulls
+        .toList();
+    _upcomingStoryMediaIds = ids.toSet();
+    if (ids.isEmpty) return;
+    try {
+      final files = await rust_mediafiles.listMediaFiles(
+        input: db_mediafiles.MediaQuery(
+          filter: db_mediafiles.MediaFilter.ids,
+          ids: ids,
+        ),
+        transaction: currentDatabaseSession(),
+      );
+      if (!mounted || generation != _storyPreloadGeneration) return;
+      for (final file in files) {
+        if (file.requiresAuthentication ||
+            (file.type != MediaType.image && file.type != MediaType.gif) ||
+            !_preloadingStoryMediaIds.add(file.mediaId)) {
+          continue;
+        }
+        final preload = _preloadStoryImage(file).whenComplete(() {
+          _preloadingStoryMediaIds.remove(file.mediaId);
+        });
+        unawaited(preload);
+      }
+    } catch (error, stackTrace) {
+      Log.warn('Could not preload story images', error, stackTrace);
+    }
+  }
+
+  Future<void> _preloadStoryImage(MediaFile file) async {
+    try {
+      if (!_isOwnStory && file.downloadState != DownloadState.ready) {
+        await startDownloadMedia(file, true);
+        if (!mounted) return;
+        final updated = await rust_mediafiles.getMediaFile(
+          id: file.mediaId,
+          transaction: currentDatabaseSession(),
+        );
+        if (updated == null || updated.downloadState != DownloadState.ready) {
+          return;
+        }
+        file = updated;
+      }
+      if (!mounted || !_upcomingStoryMediaIds.contains(file.mediaId)) return;
+      final path = MediaFileService(file).tempPath;
+      if (!path.existsSync()) return;
+      await precacheFileImage(path, context, source: 'story viewer');
+    } catch (error, stackTrace) {
+      Log.warn('Could not preload story ${file.mediaId}', error, stackTrace);
+    }
+  }
+
   Future<void> loadAndDownloadCurrentMedia({bool showTwonly = false}) async {
     if (!mounted || !context.mounted) return;
     if (_isStory) {
@@ -403,6 +476,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           if (mounted) unawaited(advanceToNextMediaOrExit());
         },
       );
+      unawaited(_preloadUpcomingStoryImages());
     }
     if (allMediaFiles.isEmpty || allMediaFiles.first.mediaId == null) {
       return advanceToNextMediaOrExit();
@@ -423,6 +497,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       canBeSeenUntil = null;
       imageSaving = false;
       imageSaved = false;
+      _showDownloadingLoader = _isStory;
       progress.value = 0;
       showSendTextMessageInput = false;
     });
@@ -469,14 +544,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             return;
           }
           await startDownloadMedia(mediaFile, true);
-          unawaited(tryDownloadAllMediaFiles(force: true));
+          if (!_isStory) unawaited(tryDownloadAllMediaFiles(force: true));
         }
         return;
       }
 
       await downloadStateListener?.cancel();
       try {
-        await initializeAndDisplayCurrentMedia(showTwonly);
+        await initializeAndDisplayCurrentMedia(showTwonly, mediaFile: updated);
       } catch (e, st) {
         Log.error('initializeAndDisplayCurrentMedia failed: $e\n$st');
         await advanceToNextMediaOrExit();
@@ -485,20 +560,21 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     });
   }
 
-  Future<void> initializeAndDisplayCurrentMedia(bool showTwonly) async {
-    if (allMediaFiles.isEmpty) return;
-    setState(() {
-      _showDownloadingLoader = false;
-    });
-    final currentMediaLocal = await MediaFileService.fromMediaId(
-      allMediaFiles.first.mediaId!,
-    );
+  Future<void> initializeAndDisplayCurrentMedia(
+    bool showTwonly, {
+    MediaFile? mediaFile,
+  }) async {
+    if (!mounted || allMediaFiles.isEmpty) return;
+    final currentMediaLocal = mediaFile == null
+        ? await MediaFileService.fromMediaId(allMediaFiles.first.mediaId!)
+        : MediaFileService(mediaFile);
     if (currentMediaLocal == null || !mounted) return;
 
     if (currentMediaLocal.mediaFile.requiresAuthentication) {
       if (!showTwonly) {
         setState(() {
           displayTwonlyPresent = true;
+          _showDownloadingLoader = false;
         });
         return;
       }
@@ -530,8 +606,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     await _updateSenderInfo();
     if (!mounted) return;
 
-    await _notifyMessageOpened(currentMediaLocal);
-    if (!mounted) return;
+    if (!_isStory) {
+      await _notifyMessageOpened(currentMediaLocal);
+      if (!mounted) return;
+    }
 
     if (!currentMediaLocal.tempPath.existsSync()) {
       Log.warn(
@@ -543,6 +621,17 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         );
       }
       return advanceToNextMediaOrExit();
+    }
+
+    if (_isStory &&
+        (currentMediaLocal.mediaFile.type == MediaType.image ||
+            currentMediaLocal.mediaFile.type == MediaType.gif)) {
+      await precacheFileImage(
+        currentMediaLocal.tempPath,
+        context,
+        source: 'current story',
+      );
+      if (!mounted) return;
     }
 
     // The server can now delete the encrypted bytes, as the user has successfully opened it.
@@ -566,7 +655,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     if (mounted) {
       setState(() {
         currentMedia = currentMediaLocal;
+        _showDownloadingLoader = false;
       });
+      // Queueing the opened receipt and clearing notifications must not delay
+      // displaying a story that is already on the device.
+      if (_isStory) {
+        unawaitedRustCall(
+          _notifyMessageOpened(currentMediaLocal),
+          'notifyStoryOpened',
+        );
+      }
     }
   }
 
@@ -584,25 +682,28 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future<void> _notifyMessageOpened(MediaFileService mediaLocal) async {
-    if (currentMessage == null || _isOwnStory) return;
+    // Keep the receipt tied to this item even if the viewer advances while
+    // notification cleanup or the network request is still in progress.
+    final message = currentMessage;
+    if (message == null || _isOwnStory) return;
     // A story item is reported the first time only; replays are not news.
-    if (_isStory && currentMessage!.openedAt != null) return;
-    var markAsOpenMessageIDs = [currentMessage!.messageId];
+    if (_isStory && message.openedAt != null) return;
+    var markAsOpenMessageIDs = [message.messageId];
 
     if (!_isStory &&
         userService.currentUser.automaticallyMarkEqualMediaFilesAsOpened &&
         mediaLocal.mediaFile.storedFileHash != null) {
       final messageIds = await rust_mediafiles.mediaMessageIdsByHash(
         hash: mediaLocal.mediaFile.storedFileHash!,
-        sender: currentMessage!.senderId!,
+        sender: message.senderId!,
         transaction: currentDatabaseSession(),
       );
 
-      if (!messageIds.contains(currentMessage!.messageId)) {
+      if (!messageIds.contains(message.messageId)) {
         Log.error(
           'Original message ID was not returned from `getMessageIdsByMediaHash`.',
         );
-        messageIds.add(currentMessage!.messageId);
+        messageIds.add(message.messageId);
       }
 
       markAsOpenMessageIDs = messageIds;
@@ -611,7 +712,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     await NativeNotificationService.cancelNotifications(markAsOpenMessageIDs);
     try {
       await RustApi.notifyMessagesOpened(
-        contactId: currentMessage!.senderId!,
+        contactId: message.senderId!,
         messageIds: markAsOpenMessageIDs,
       );
     } finally {
@@ -905,7 +1006,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 TwonlyPresentOverlay(
                   onTap: () => loadAndDownloadCurrentMedia(showTwonly: true),
                 ),
-              if (currentMedia != null &&
+              if (!_isOwnStory &&
+                  currentMedia != null &&
                   currentMedia?.mediaFile.downloadState != DownloadState.ready)
                 Positioned.fill(child: _loader()),
               // A story image has no clock to show; a video still shows how far

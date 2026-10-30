@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:clock/clock.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/database/webxdc.dart' as rust_webxdc;
 import 'package:twonly/core/bridge/webxdc.dart' as rust_webxdc;
 import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/locator.dart';
@@ -14,6 +16,7 @@ import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/shared/select_contacts.view.dart';
@@ -104,6 +107,24 @@ class WebxdcHost {
       Log.warn('warming up the webxdc runtime failed: ${error.message}');
     } on MissingPluginException {
       // No native side, as in widget tests: the app's own open starts it.
+    }
+  }
+
+  /// Starts the WebRTC hold in the background at startup for recent players.
+  /// The local existence check avoids loading message histories or bundles.
+  static Future<void> warmUpForRecentGames() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      final since = databaseSeconds(
+        clock.now().subtract(const Duration(hours: 24)),
+      );
+      final hasRecentGames = await rust_webxdc.hasRecentWebxdcMessages(
+        since: since,
+        transaction: currentDatabaseSession(),
+      );
+      if (hasRecentGames) await warmUp();
+    } catch (error) {
+      Log.warn('checking recent games for webxdc warm-up failed: $error');
     }
   }
 

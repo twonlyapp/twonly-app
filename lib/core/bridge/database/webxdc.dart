@@ -8,6 +8,14 @@ import '../../frb_generated.dart';
 import '../database.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+Future<bool> hasRecentWebxdcMessages({
+  required PlatformInt64 since,
+  required DatabaseSession transaction,
+}) => RustLib.instance.api.crateBridgeDatabaseWebxdcHasRecentWebxdcMessages(
+  since: since,
+  transaction: transaction,
+);
+
 Future<WebxdcCardApp?> webxdcCardApp({
   required String id,
   required PlatformInt64 version,
