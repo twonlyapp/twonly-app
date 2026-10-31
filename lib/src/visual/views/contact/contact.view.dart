@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
 import 'package:twonly/core/database/app/contacts/table.dart';
@@ -373,9 +374,9 @@ class _ContactViewState extends State<ContactView> {
           ),
           AvatarPreferenceTile(contact: contact),
           SelectChatDeletionTimeListTitle(
-            groupId: getUUIDforDirectChat(
-              widget.userId,
-              userService.currentUser.userId,
+            groupId: rust_groups.directChatId(
+              userId: widget.userId,
+              otherUserId: userService.currentUser.userId,
             ),
           ),
           ContactGroupsSubtitleBuilder(

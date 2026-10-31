@@ -1,0 +1,42 @@
+[
+  {
+    "url": "https://mastodon.social/@islieb/115883317936171927",
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "mastodon_social.html"
+  },
+  {
+    "url": "https://chaos.social/@netzpolitik_feed/115921534467938262",
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "chaos_social.html"
+  },
+  {
+    "url": "https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=7FeqF1-Z1g0&format=json",
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": "youtube_oembed.json"
+  },
+  {
+    "url": "https://x.com/netzpolitik_org/status/1782791019412529665",
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=UTF-8"
+    },
+    "body": "x_1782791019412529665.html"
+  },
+  {
+    "url": "https://x.com/netzpolitik_org/status/1162346968124968960",
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=UTF-8"
+    },
+    "body": "x_1162346968124968960.html"
+  }
+]

@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview/parse_link.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview/parser/base.dart';
 
@@ -29,21 +32,44 @@ class LinkParserTest {
   int? shareAction;
 }
 
+/// Serves the pages recorded on 2026-10-31 in `link_parser_fixtures`, so the
+/// parsers are tested against fixed input rather than whatever the sites serve
+/// today. Anything not recorded fails as a 404.
+http.Client _recordedClient() {
+  const directory = 'test/features/link_parser_fixtures';
+  final entries =
+      jsonDecode(File('$directory/responses.json').readAsStringSync())
+          as List<dynamic>;
+  final recorded = {
+    for (final entry in entries.cast<Map<String, dynamic>>())
+      entry['url'] as String: entry,
+  };
+
+  return MockClient((request) async {
+    final entry = recorded[request.url.toString()];
+    if (entry == null) return http.Response('not recorded', 404);
+
+    return http.Response.bytes(
+      File('$directory/${entry['body']}').readAsBytesSync(),
+      entry['status'] as int,
+      headers: (entry['headers'] as Map<String, dynamic>)
+          .cast<String, String>(),
+    );
+  });
+}
+
 void main() {
   test('testing different urls', () async {
-    if (!Platform.isMacOS) {
-      return;
-    }
     final testCases = [
       LinkParserTest(
         url: 'https://mastodon.social/@islieb/115883317936171927',
         title: 'islieb? (@islieb@mastodon.social)',
-        siteName: 'Mastodon',
+        siteName: 'Mastodon.social',
         desc: 'Attached: 1 image',
         image:
             'https://files.mastodon.social/media_attachments/files/115/883/317/526/523/824/original/6fa7ef90ec68f1f1.jpg',
         vendor: Vendor.mastodonSocialMediaPosting,
-        shareAction: 60,
+        shareAction: 78,
         likeAction: 290,
       ),
       LinkParserTest(
@@ -55,8 +81,8 @@ void main() {
             '\n'
             'https://netzpolitik.org/2026/konsultation-eu-kommission-arbeitet-an-neuer-open-source-strategie/',
         vendor: Vendor.mastodonSocialMediaPosting,
-        shareAction: 70,
-        likeAction: 90,
+        shareAction: 73,
+        likeAction: 100,
       ),
       LinkParserTest(
         title:
@@ -82,40 +108,25 @@ void main() {
         siteName: 'X (formerly Twitter)',
         desc:
             'Weil unsere Datenanalyse zum Twitter-Account von Maaßen rechte Millieus und ihre Verbindungen offengelegt hat, haben wir einen rechten Shitstorm an der Backe. Klar ist: Wir lassen uns nicht einsch…',
-        image: 'https://pbs.twimg.com/media/ECF8Z5KWwAIBZ6o.jpg:large',
+        image:
+            'https://pbs.twimg.com/media/ECF8Z5KWwAIBZ6o?format=webp&name=large',
         vendor: Vendor.twitterPosting,
-      ),
-      LinkParserTest(
-        title: 'twonly Public Launch',
-        siteName: 'twonly',
-        desc:
-            'After about a year of development, twonly is finally ready for its public launch.',
-        url: 'https://twonly.eu/en/blog/2026-public-launch.html',
-        image: 'https://twonly.eu/assets/blog/2026-public-launch.webp',
       ),
     ];
 
-    for (final testCase in testCases) {
-      final metadata = (await getMetadata(testCase.url))!;
-      expect(metadata.title, testCase.title);
-      expect(metadata.siteName, testCase.siteName);
-      expect(metadata.desc, testCase.desc);
-      expect(metadata.url, testCase.url);
-      expect(metadata.image, testCase.image);
-      expect(metadata.vendor, testCase.vendor, reason: metadata.url);
-      if (testCase.shareAction != null) {
-        expect(
-          metadata.shareAction,
-          greaterThanOrEqualTo(testCase.shareAction!),
-        );
+    await http.runWithClient(() async {
+      for (final testCase in testCases) {
+        final metadata = (await getMetadata(testCase.url))!;
+        expect(metadata.title, testCase.title);
+        expect(metadata.siteName, testCase.siteName);
+        expect(metadata.desc, testCase.desc);
+        expect(metadata.url, testCase.url);
+        expect(metadata.image, testCase.image);
+        expect(metadata.vendor, testCase.vendor, reason: metadata.url);
+        expect(metadata.shareAction, testCase.shareAction);
+        expect(metadata.likeAction, testCase.likeAction);
+        expect(metadata.publishDate, testCase.publishDate);
       }
-      if (testCase.shareAction != null) {
-        expect(
-          metadata.likeAction,
-          greaterThanOrEqualTo(testCase.likeAction!),
-        );
-      }
-      expect(metadata.publishDate, testCase.publishDate);
-    }
+    }, _recordedClient);
   });
 }

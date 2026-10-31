@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.8
+
+- Fix: Some contacts were not displayed
+- Improve: Polish layouts and controls throughout the app
+
 ## 0.6.7
 
 - Improve: Reduce backup size

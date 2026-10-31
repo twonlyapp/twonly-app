@@ -13,6 +13,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/unlock_twonly.view.dart';
 
 import '../mocks/user_config.dart';
@@ -118,7 +119,14 @@ void main() {
     api.readCount = () => pending.future;
     await tester.tap(find.byType(FilledButton));
     await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    // The retry goes back to the splash screen while it loads.
+    expect(find.byType(FilledButton), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is ColoredBox && widget.color == defaultPrimaryColor,
+      ),
+      findsOneWidget,
+    );
     pending.complete(1);
     await tester.pumpAndSettle();
     expect(api.attempts, 2);
