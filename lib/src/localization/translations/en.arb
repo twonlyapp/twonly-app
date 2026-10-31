@@ -1276,7 +1276,7 @@
   "sticker": "Sticker",
   "stickers": "Stickers",
   "createSticker": "Create sticker",
-  "stickerPickFromGallery": "Gallery",
+  "stickerPickFromGallery": "Pick from gallery",
   "stickerAdded": "Sticker saved",
   "stickerCreateFailed": "The sticker could not be created.",
   "stickerSaveFailed": "The sticker could not be saved.",

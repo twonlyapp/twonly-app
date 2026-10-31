@@ -5,7 +5,6 @@ import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/globals.dart';
@@ -33,6 +32,7 @@ import 'package:twonly/src/visual/views/camera/camera_preview_components/video_r
 import 'package:twonly/src/visual/views/camera/camera_preview_components/video_recording_time.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/home.view.dart';
+import 'package:twonly/src/visual/views/memories/memories_picker.view.dart';
 
 class SelectedCameraDetails {
   double maxAvailableZoom = 1;
@@ -421,9 +421,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
     }
 
     if (videoFilePath != null) {
-      videoFilePath
-        ..copySync(mediaFileService.originalPath.path)
-        ..deleteSync();
+      videoFilePath.copySync(mediaFileService.originalPath.path);
+      // Imported paths can point to saved Memories that must be kept.
+      if (!sharedFromGallery) videoFilePath.deleteSync();
 
       // Transcode while the user is still editing. A send then only has to
       // encrypt and hand over, which is short enough to survive the app being
@@ -548,16 +548,23 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
     }
   }
 
-  Future<void> pickImageFromGallery() async {
+  Future<void> pickMediaFromMemories() async {
+    if (!mounted || mc.isSharePreviewIsShown || mc.isVideoRecording) return;
     setState(() {
       _galleryLoadedImageIsShown = true;
       mc.isSharePreviewIsShown = true;
     });
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickMedia();
-
-    if (pickedFile != null) {
-      final imageExtensions = [
+    try {
+      await _deInitVolumeControl();
+      if (!mounted) return;
+      final path = await Navigator.of(context).push<String>(
+        MemoriesPickerView.route(
+          title: context.lang.memoriesMenu,
+          allowVideos: true,
+        ),
+      );
+      if (!mounted || path == null) return;
+      const imageExtensions = [
         '.png',
         '.jpg',
         '.jpeg',
@@ -568,24 +575,21 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
         '.avif',
       ];
 
-      Log.info('Picket from gallery: ${pickedFile.path}');
-
       File? videoFilePath;
       ScreenshotImageHelper? image;
       MediaType? mediaType;
 
-      final isImage = imageExtensions.any(
-        (ext) => pickedFile.name.contains(ext),
-      );
+      final lowerPath = path.toLowerCase();
+      final isImage = imageExtensions.any(lowerPath.endsWith);
       if (isImage) {
-        if (pickedFile.name.contains('.gif')) {
+        if (lowerPath.endsWith('.gif')) {
           mediaType = MediaType.gif;
         }
         image = ScreenshotImageHelper(
-          imageBytesFuture: pickedFile.readAsBytes(),
+          imageBytesFuture: File(path).readAsBytes(),
         );
       } else {
-        videoFilePath = File(pickedFile.path);
+        videoFilePath = File(path);
       }
 
       await pushMediaEditor(
@@ -594,11 +598,15 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
         sharedFromGallery: true,
         mediaType: mediaType,
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _galleryLoadedImageIsShown = false;
+          mc.isSharePreviewIsShown = false;
+        });
+        await initVolumeControl();
+      }
     }
-    setState(() {
-      _galleryLoadedImageIsShown = false;
-      mc.isSharePreviewIsShown = false;
-    });
   }
 
   /// How long this recording may run before the file stops being uploadable
@@ -860,7 +868,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
                     keyTriggerButton: keyTriggerButton,
                     keyLockButton: keyLockButton,
                     onTakePicture: takePicture,
-                    onPickImageFromGallery: pickImageFromGallery,
+                    onPickFromMemories: pickMediaFromMemories,
                     updateScaleFactor: updateScaleFactor,
                     onStopVideoRecording: () => stopVideoRecording(force: true),
                   ),

@@ -158,7 +158,10 @@ void main() {
         tester.widget<MemoriesPickerView>(source).title,
         'Choose avatar photo',
       );
-      expect(find.text('Gallery'), findsOneWidget);
+      expect(
+        find.widgetWithText(MyButton, 'Pick from gallery'),
+        findsOneWidget,
+      );
       await tester.pageBack();
       await pumpNative(tester);
       expect(api.photoInput, isNull);

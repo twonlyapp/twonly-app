@@ -34,10 +34,7 @@ class _StickerPickerState extends State<StickerPicker> {
     setState(() => _creating = true);
     try {
       final imagePath = await Navigator.of(context).push<String>(
-        MaterialPageRoute(
-          builder: (context) =>
-              MemoriesPickerView(title: context.lang.createSticker),
-        ),
+        MemoriesPickerView.route(title: context.lang.createSticker),
       );
       if (!mounted || imagePath == null) return;
       final sticker = await StickerService.createFromPath(imagePath);

@@ -189,9 +189,12 @@ pub async fn list(connection: &mut SqliteConnection, input: &MediaQuery) -> Resu
             "#,
             input.hash.as_deref()
         ),
+        // Keep developer gallery fixtures local, including already-queued retries.
         MediaFilter::MemoriesToBackup => select!(
             r#"
-                WHERE f.stored = 1 AND f.cloud_state IN ('none','pending') ORDER BY f.rowid
+                WHERE f.stored = 1 AND f.cloud_state IN ('none','pending')
+                    AND f.media_id NOT GLOB 'mock_gen_*'
+                ORDER BY f.rowid
             "#
         ),
     })

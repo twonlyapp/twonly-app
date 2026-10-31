@@ -19778,7 +19778,6 @@ impl SseDecode for crate::user_config::UserConfig {
         let mut var_avatarSvg = <Option<String>>::sse_decode(deserializer);
         let mut var_appVersion = <i64>::sse_decode(deserializer);
         let mut var_avatarCounter = <i64>::sse_decode(deserializer);
-        let mut var_videoStabilizationEnabled = <bool>::sse_decode(deserializer);
         let mut var_isDeveloper = <bool>::sse_decode(deserializer);
         let mut var_deviceId = <i64>::sse_decode(deserializer);
         let mut var_setupProfile = <crate::user_config::SetupProfile>::sse_decode(deserializer);
@@ -19855,7 +19854,6 @@ impl SseDecode for crate::user_config::UserConfig {
             avatar_svg: var_avatarSvg,
             app_version: var_appVersion,
             avatar_counter: var_avatarCounter,
-            video_stabilization_enabled: var_videoStabilizationEnabled,
             is_developer: var_isDeveloper,
             device_id: var_deviceId,
             setup_profile: var_setupProfile,
@@ -23562,9 +23560,6 @@ impl flutter_rust_bridge::IntoDart for crate::user_config::UserConfig {
             self.avatar_svg.into_into_dart().into_dart(),
             self.app_version.into_into_dart().into_dart(),
             self.avatar_counter.into_into_dart().into_dart(),
-            self.video_stabilization_enabled
-                .into_into_dart()
-                .into_dart(),
             self.is_developer.into_into_dart().into_dart(),
             self.device_id.into_into_dart().into_dart(),
             self.setup_profile.into_into_dart().into_dart(),
@@ -27425,7 +27420,6 @@ impl SseEncode for crate::user_config::UserConfig {
         <Option<String>>::sse_encode(self.avatar_svg, serializer);
         <i64>::sse_encode(self.app_version, serializer);
         <i64>::sse_encode(self.avatar_counter, serializer);
-        <bool>::sse_encode(self.video_stabilization_enabled, serializer);
         <bool>::sse_encode(self.is_developer, serializer);
         <i64>::sse_encode(self.device_id, serializer);
         <crate::user_config::SetupProfile>::sse_encode(self.setup_profile, serializer);

@@ -14,7 +14,6 @@ UserConfig testUserConfig({
   displayName: displayName,
   appVersion: appVersion,
   avatarCounter: 0,
-  videoStabilizationEnabled: true,
   isDeveloper: false,
   deviceId: 0,
   setupProfile: SetupProfile.standard,

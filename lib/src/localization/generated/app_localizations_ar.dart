@@ -3337,7 +3337,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createSticker => 'إنشاء ملصق';
 
   @override
-  String get stickerPickFromGallery => 'المعرض';
+  String get stickerPickFromGallery => 'اختر من المعرض';
 
   @override
   String get stickerAdded => 'تم حفظ الملصق';

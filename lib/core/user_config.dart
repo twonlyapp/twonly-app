@@ -115,7 +115,6 @@ class UserConfig {
   String? avatarSvg;
   PlatformInt64 appVersion;
   PlatformInt64 avatarCounter;
-  bool videoStabilizationEnabled;
   bool isDeveloper;
   PlatformInt64 deviceId;
   SetupProfile setupProfile;
@@ -219,7 +218,6 @@ class UserConfig {
     this.avatarSvg,
     required this.appVersion,
     required this.avatarCounter,
-    required this.videoStabilizationEnabled,
     required this.isDeveloper,
     required this.deviceId,
     required this.setupProfile,
@@ -292,7 +290,6 @@ class UserConfig {
       avatarSvg.hashCode ^
       appVersion.hashCode ^
       avatarCounter.hashCode ^
-      videoStabilizationEnabled.hashCode ^
       isDeveloper.hashCode ^
       deviceId.hashCode ^
       setupProfile.hashCode ^
@@ -367,7 +364,6 @@ class UserConfig {
           avatarSvg == other.avatarSvg &&
           appVersion == other.appVersion &&
           avatarCounter == other.avatarCounter &&
-          videoStabilizationEnabled == other.videoStabilizationEnabled &&
           isDeveloper == other.isDeveloper &&
           deviceId == other.deviceId &&
           setupProfile == other.setupProfile &&

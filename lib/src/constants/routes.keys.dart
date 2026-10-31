@@ -71,8 +71,6 @@ class Routes {
       '/settings/developer/retransmission_database';
   static const String settingsDeveloperAutomatedTesting =
       '/settings/developer/automated_testing';
-  static const String settingsDeveloperReduceFlames =
-      '/settings/developer/reduce_flames';
   static const String settingsDeveloperInformations =
       '/settings/developer/informations';
   static const String settingsInvite = '/settings/invite';

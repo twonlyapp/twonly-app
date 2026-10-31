@@ -5521,7 +5521,7 @@ abstract class AppLocalizations {
   /// No description provided for @stickerPickFromGallery.
   ///
   /// In en, this message translates to:
-  /// **'Gallery'**
+  /// **'Pick from gallery'**
   String get stickerPickFromGallery;
 
   /// No description provided for @stickerAdded.

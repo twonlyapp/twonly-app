@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
@@ -11,7 +10,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart'
     show PasswordlessRecoveryService;
@@ -312,26 +310,24 @@ class MainCameraController {
           return;
         }
 
-        if (userService.currentUser.videoStabilizationEnabled && !kDebugMode) {
-          // Stabilization buys its steadiness with a margin of sensor pixels to
-          // warp against, so it always narrows the field of view. On Android
-          // level2 maps to Camera2's PREVIEW_STABILIZATION, which narrows the
-          // preview by the same amount as the recording, so the viewfinder
-          // shows what gets sent; level1 is plain VIDEO_STABILIZATION_MODE_ON,
-          // which crops the recording alone and leaves the preview wider than
-          // the result. On iOS level2 is AVFoundation's `.cinematic`, which
-          // crops harder than the `.standard` level1 maps to without matching
-          // the preview any better, so iOS stays where it was. Both fall back
-          // down the levels, and finally to off, on a camera without the mode.
-          await controller.setVideoStabilizationMode(
-            Platform.isAndroid
-                ? VideoStabilizationMode.level2
-                : VideoStabilizationMode.level1,
-          );
-          if (sessionId != _cameraSessionId) {
-            await disposeCameraController(controller);
-            return;
-          }
+        // Stabilization buys its steadiness with a margin of sensor pixels to
+        // warp against, so it always narrows the field of view. On Android
+        // level2 maps to Camera2's PREVIEW_STABILIZATION, which narrows the
+        // preview by the same amount as the recording, so the viewfinder
+        // shows what gets sent; level1 is plain VIDEO_STABILIZATION_MODE_ON,
+        // which crops the recording alone and leaves the preview wider than
+        // the result. On iOS level2 is AVFoundation's `.cinematic`, which
+        // crops harder than the `.standard` level1 maps to without matching
+        // the preview any better, so iOS stays where it was. Both fall back
+        // down the levels, and finally to off, on a camera without the mode.
+        await controller.setVideoStabilizationMode(
+          Platform.isAndroid
+              ? VideoStabilizationMode.level2
+              : VideoStabilizationMode.level1,
+        );
+        if (sessionId != _cameraSessionId) {
+          await disposeCameraController(controller);
+          return;
         }
 
         cameraController = controller;
