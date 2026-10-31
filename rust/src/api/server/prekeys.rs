@@ -54,7 +54,10 @@ impl Server {
         let bytes = Self::application(
             ctx,
             client_to_server::application_data::ApplicationData::GetUserById(
-                client_to_server::application_data::GetUserById { user_id },
+                client_to_server::application_data::GetUserById {
+                    user_id,
+                    ..Default::default()
+                },
             ),
         )
         .await?;

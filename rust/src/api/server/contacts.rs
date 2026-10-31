@@ -21,7 +21,10 @@ impl Server {
         Self::application_for_contact(
             ctx,
             client_to_server::application_data::ApplicationData::GetUserById(
-                client_to_server::application_data::GetUserById { user_id },
+                client_to_server::application_data::GetUserById {
+                    user_id,
+                    ..Default::default()
+                },
             ),
             user_id,
         )
@@ -32,6 +35,28 @@ impl Server {
         ctx: &Arc<Context>, user_id: i64,
     ) -> Result<ServerResult<proto::server_to_client::response::UserData>> {
         let bytes = Self::get_user_by_id_response(ctx, user_id).await?;
+
+        decode_ok_value(bytes, |value| match value {
+            proto::server_to_client::response::ok::Ok::Userdata(user) => Some(user),
+            _ => None,
+        })
+    }
+
+    /// Reads profile metadata without spending one-time session prekeys.
+    pub(crate) async fn get_user_metadata(
+        ctx: &Arc<Context>, user_id: i64,
+    ) -> Result<ServerResult<proto::server_to_client::response::UserData>> {
+        let bytes = Self::application_for_contact(
+            ctx,
+            client_to_server::application_data::ApplicationData::GetUserById(
+                client_to_server::application_data::GetUserById {
+                    user_id,
+                    metadata_only: true,
+                },
+            ),
+            user_id,
+        )
+        .await?;
 
         decode_ok_value(bytes, |value| match value {
             proto::server_to_client::response::ok::Ok::Userdata(user) => Some(user),
@@ -55,7 +80,7 @@ impl Server {
         .await?;
 
         for contact_id in contact_ids {
-            let user = match Self::get_user_by_id(ctx, contact_id).await? {
+            let user = match Self::get_user_metadata(ctx, contact_id).await? {
                 ServerResult::Ok(user) => user,
                 // The shared API error handler marks UserIdNotFound contacts
                 // as deleted. Other per-contact errors should not prevent the
@@ -104,7 +129,7 @@ impl Server {
         let database = ctx.app_db.read().await.clone();
 
         for user_id in user_ids {
-            let user = match Self::get_user_by_id(ctx, user_id).await? {
+            let user = match Self::get_user_metadata(ctx, user_id).await? {
                 ServerResult::Ok(u) => u,
                 ServerResult::ErrorCode(_) => continue,
             };

@@ -1229,6 +1229,12 @@ async fn handle_encrypted_inner(
 ) -> Result<()> {
     Receipt::mark_all_for_retry(t, from_user_id).await?;
 
+    ctx.user_discovery
+        .get()
+        .await
+        .refresh_session_identity(from_user_id, t)
+        .await?;
+
     if let Some(version) = content.sender_user_discovery_version.clone() {
         user_discovery::check_sender_version(ctx, t, from_user_id, version).await?;
     }
@@ -2594,7 +2600,8 @@ mod tests {
 
     #[tokio::test]
 
-    async fn contact_request_lookup_does_not_hold_the_app_connection() -> anyhow::Result<()> {
+    async fn contact_request_metadata_does_not_hold_the_mailbox_or_app_connection(
+    ) -> anyhow::Result<()> {
         let directory = tempfile::tempdir()?;
 
         let ctx = Context::init_for_testing(
@@ -2638,39 +2645,38 @@ mod tests {
             ..Default::default()
         };
 
-        {
-            let handling = handle_decoded_server_message(&ctx, 7, message);
+        // The transport is deliberately stalled, but metadata is independent
+        // of the mailbox message and must not prevent it from committing.
+        tokio::time::timeout(
+            std::time::Duration::from_secs(1),
+            handle_decoded_server_message(&ctx, 7, message),
+        )
+        .await??;
 
-            tokio::pin!(handling);
+        let rows = tokio::time::timeout(
+            std::time::Duration::from_secs(1),
+            database.raw_select(
+                "SELECT username FROM contacts WHERE user_id = 7".into(),
+                vec![],
+            ),
+        )
+        .await??;
 
-            // Drive handling until it waits for the deliberately stalled lookup.
-            assert!(
-                tokio::time::timeout(std::time::Duration::from_millis(100), &mut handling,)
-                    .await
-                    .is_err()
-            );
+        assert_eq!(rows.rows[0].values[0].text_value.as_deref(), Some("alice"));
 
-            let rows = tokio::time::timeout(
-                std::time::Duration::from_secs(1),
-                database.raw_select(
-                    "SELECT username FROM contacts WHERE user_id = 7".into(),
-                    vec![],
-                ),
-            )
-            .await??;
-
-            assert_eq!(rows.rows[0].values[0].text_value.as_deref(), Some("alice"));
-        }
-
-        // Cancelling the lookup leaves the plaintext durable for redelivery.
         let mut t = database.pool.begin().await?;
 
-        assert_eq!(
-            Receipt::pending_plaintext(&mut t, "contact-request")
-                .await?
-                .map(|parked| parked.plaintext),
-            Some(content.encode_to_vec())
-        );
+        assert!(Receipt::pending_plaintext(&mut t, "contact-request")
+            .await?
+            .is_none());
+
+        let pending: i64 = sqlx::query_scalar(
+            "SELECT pending FROM contact_metadata_refreshes WHERE contact_id = 7",
+        )
+        .fetch_one(&mut *t)
+        .await?;
+
+        assert_eq!(pending, 1, "only the metadata refresh remains pending");
 
         t.rollback().await?;
 

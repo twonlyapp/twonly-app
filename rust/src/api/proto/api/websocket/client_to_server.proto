@@ -157,6 +157,9 @@ message ApplicationData {
 
   message GetUserById {
     int64 user_id = 1;
+    // Profile refreshes do not need or consume one-time prekeys. Older
+    // servers ignore this flag and still return a compatible UserData.
+    bool metadata_only = 2;
   }
 
   message GetAvailablePlans {}

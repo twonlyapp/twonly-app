@@ -39,6 +39,52 @@ fn query(filter: ContactFilter) -> ContactQuery {
 }
 
 #[tokio::test]
+async fn direct_chat_acceptance_migration_repairs_existing_contacts() {
+    let (_directory, database) = open().await;
+    sqlx::raw_sql(
+        "INSERT INTO contacts(user_id, username, accepted, requested, requested_by_user,
+                              blocked, deleted_by_user, account_deleted) VALUES
+         (1, 'friend', 0, 1, 1, 0, 0, 0), (2, 'group-only', 0, 1, 0, 0, 0, 0),
+         (3, 'blocked', 0, 1, 0, 1, 0, 0), (4, 'removed', 0, 1, 0, 0, 1, 0),
+         (5, 'deleted-account', 0, 1, 0, 0, 0, 1), (6, 'outgoing', 0, 0, 1, 0, 0, 0),
+         (7, 'stale-request', 1, 1, 1, 0, 0, 0), (8, 'incidental', 0, 0, 0, 0, 0, 0);
+         INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES
+         ('direct', 'Direct', 1), ('group', 'Group', 0);
+         INSERT INTO group_members(group_id, contact_id) VALUES
+         ('direct', 1), ('direct', 3), ('direct', 4), ('direct', 5), ('direct', 7), ('group', 2);",
+    )
+    .execute(&database.pool)
+    .await
+    .unwrap();
+    sqlx::raw_sql(include_str!(
+        "../migrations/0059_direct_chat_contact_acceptance.sql"
+    ))
+    .execute(&database.pool)
+    .await
+    .unwrap();
+
+    let states: Vec<(i64, i64, i64)> = sqlx::query_as(
+        "SELECT accepted, requested, requested_by_user FROM contacts ORDER BY user_id",
+    )
+    .fetch_all(&database.pool)
+    .await
+    .unwrap();
+    assert_eq!(
+        states,
+        vec![
+            (1, 0, 0),
+            (0, 1, 0),
+            (0, 1, 0),
+            (0, 1, 0),
+            (0, 1, 0),
+            (0, 0, 1),
+            (1, 0, 0),
+            (0, 0, 0),
+        ]
+    );
+}
+
+#[tokio::test]
 async fn direct_chat_repair_restores_friends_without_reviving_removed_contacts() {
     let (_directory, database) = open().await;
     for statement in [

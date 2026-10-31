@@ -41,8 +41,8 @@ async fn recovery_selection_deduplicates_evidence_and_share_updates_roll_back_to
 
     sqlx::query(
         r#"
-        INSERT INTO user_discovery_announced_users(announced_user_id, announced_public_key, public_id)
-        VALUES (8, X'01', 8)
+        INSERT INTO user_discovery_announced_users(announced_user_id, announced_public_key, public_id, session_identity_key)
+        VALUES (8, X'01', 8, X'01')
         "#,
     ).execute(&mut *tx).await.unwrap();
 

@@ -55,8 +55,8 @@ async fn trust_summaries_match_direct_transferred_missing_and_duplicate_verifier
 
     sqlx::query(
         r#"
-        INSERT INTO user_discovery_announced_users(announced_user_id,announced_public_key,public_id)
-        VALUES (2,X'01',2)
+        INSERT INTO user_discovery_announced_users(announced_user_id,announced_public_key,public_id,session_identity_key)
+        VALUES (2,X'01',2,X'01')
         "#,
     )
     .execute(&mut *tx)
@@ -134,8 +134,8 @@ async fn fixture() -> (tempfile::TempDir, AppDatabase) {
          (1,'root',1),(2,'shared',1),(3,'untrusted',1),(4,'other',1);
          INSERT INTO groups(group_id, group_name) VALUES ('g','group');
          INSERT INTO group_members(group_id, contact_id) VALUES ('g',2),('g',3);
-         INSERT INTO user_discovery_announced_users(announced_user_id, announced_public_key, public_id)
-         VALUES (3,X'01',3),(4,X'02',4);",
+         INSERT INTO user_discovery_announced_users(announced_user_id, announced_public_key, public_id, session_identity_key)
+         VALUES (3,X'01',3,X'01'),(4,X'02',4,X'02');",
     ).execute(&database.pool).await.unwrap();
     (directory, database)
 }

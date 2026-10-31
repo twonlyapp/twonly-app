@@ -1,9 +1,9 @@
 name: twonly
-description: "twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing."
+description: "Open-source, end-to-end encrypted Snapchat alternative."
 
 publish_to: 'none'
 
-version: 0.6.7+206
+version: 0.6.8+207
 
 environment:
   sdk: ^3.11.0
