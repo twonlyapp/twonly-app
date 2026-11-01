@@ -171,6 +171,7 @@ impl Context {
             database_dir.to_str().unwrap(),
             key_manager.clone(),
             rust_db.clone(),
+            app_db.clone(),
         )?);
 
         let ctx = Arc::new(Context {
@@ -440,6 +441,7 @@ impl Context {
                         &config.database_dir,
                         key_manager.clone(),
                         rust_db_handle.clone(),
+                        app_db.clone(),
                     )?);
 
                     let ctx = Arc::new(Context {
@@ -508,6 +510,7 @@ impl Context {
                         &config.database_dir,
                         key_manager.clone(),
                         rust_db_handle.clone(),
+                        app_db.clone(),
                     )?);
 
                     let ctx = Arc::new(Context {
