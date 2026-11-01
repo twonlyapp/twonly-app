@@ -3,6 +3,7 @@ import 'dart:collection';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mutex/mutex.dart';
 import 'package:screen_protector/screen_protector.dart';
@@ -81,7 +82,8 @@ class MediaViewerView extends StatefulWidget {
   State<MediaViewerView> createState() => _MediaViewerViewState();
 }
 
-class _MediaViewerViewState extends State<MediaViewerView> {
+class _MediaViewerViewState extends State<MediaViewerView>
+    with WidgetsBindingObserver {
   Timer? nextMediaTimer;
   Timer? progressTimer;
   final StoryExpiryTimer _storyExpiryTimer = StoryExpiryTimer();
@@ -107,6 +109,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   bool imageSaving = false;
   bool displayTwonlyPresent = false;
   bool _showDownloadingLoader = false;
+  bool _mediaLoadDeferred = false;
+  bool _videoPlaybackFailed = false;
+  int _mediaLoadGeneration = 0;
   late String _currentMediaSender;
   final emojiKey = GlobalKey<EmojiFloatWidgetState>();
 
@@ -134,6 +139,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _group = widget.group;
     _currentMediaSender = widget.group?.groupName ?? '';
 
@@ -153,6 +159,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   @override
   void dispose() {
+    _mediaLoadGeneration++;
+    WidgetsBinding.instance.removeObserver(this);
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
     _storyExpiryTimer.cancel();
@@ -167,7 +175,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     // Persist draft message on close
     final draftText = textMessageController.messageText;
     if (!_isStory) {
-      unawaited(
+      unawaitedRustCall(
         rust_groups.updateGroup(
           id: widget.group!.groupId,
           patch: GroupPatch(
@@ -177,12 +185,26 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           ),
           transaction: currentDatabaseSession(),
         ),
+        'Persist media viewer draft',
       );
     }
     textMessageController.dispose();
     _textMessageFocus.dispose();
 
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        _mediaLoadDeferred &&
+        allMediaFiles.isNotEmpty) {
+      _mediaLoadDeferred = false;
+      unawaitedRustCall(
+        loadAndDownloadCurrentMedia(showTwonly: displayTwonlyPresent),
+        'Resume media loading',
+      );
+    }
   }
 
   void _disposeVideoController() {
@@ -193,7 +215,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     if (listener != null) {
       controller?.removeListener(listener);
     }
-    controller?.dispose();
+    if (controller != null) {
+      unawaitedRustCall(controller.dispose(), 'Dispose media video');
+    }
   }
 
   final Mutex _messageUpdateLock = Mutex();
@@ -458,6 +482,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future<void> loadAndDownloadCurrentMedia({bool showTwonly = false}) async {
+    final generation = ++_mediaLoadGeneration;
     if (!mounted || !context.mounted) return;
     if (_isStory) {
       final now = clock.now();
@@ -490,14 +515,23 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
     if (!mounted) return;
 
+    // Keep the visible story image while reading the next item's metadata.
+    // Clearing it here flashes a loader even when that image is precached.
+    final keepStoryImage =
+        _isStory &&
+        (currentMedia?.mediaFile.type == MediaType.image ||
+            currentMedia?.mediaFile.type == MediaType.gif);
     setState(() {
       videoController = null;
-      currentMedia = null;
-      currentMessage = null;
+      _videoPlaybackFailed = false;
+      if (!keepStoryImage) {
+        currentMedia = null;
+        currentMessage = null;
+      }
       canBeSeenUntil = null;
       imageSaving = false;
       imageSaved = false;
-      _showDownloadingLoader = _isStory;
+      _showDownloadingLoader = _isStory && !keepStoryImage;
       progress.value = 0;
       showSendTextMessageInput = false;
     });
@@ -515,60 +549,140 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     ).map((rows) => rows.isEmpty ? null : rows.single);
 
     var downloadTriggered = false;
+    final loadingMessage = allMediaFiles.first;
+    final mediaId = loadingMessage.mediaId!;
+    bool isCurrent() => mounted && generation == _mediaLoadGeneration;
+
+    void deferUntilForeground() {
+      _mediaLoadDeferred = true;
+      // Initialization removes the queue head before its database awaits.
+      // Preserve that item if shutdown interrupts those awaits.
+      if (currentMessage?.messageId == loadingMessage.messageId &&
+          !allMediaFiles.any((m) => m.messageId == loadingMessage.messageId)) {
+        allMediaFiles.insert(0, loadingMessage);
+        _alreadyOpenedMediaIds.remove(mediaId);
+      }
+    }
 
     await downloadStateListener?.cancel();
-    downloadStateListener = stream.listen((updated) async {
-      if (updated == null) {
-        // Media file record no longer exists — skip to next or exit rather
-        // than leaving the screen permanently black with no content/loader.
-        await downloadStateListener?.cancel();
-        await advanceToNextMediaOrExit();
-        return;
-      }
-      // The user's own story plays from the file they sent; there is
-      // nothing to download.
-      if (!_isOwnStory && updated.downloadState != DownloadState.ready) {
-        setState(() {
-          _showDownloadingLoader = true;
-        });
-        if (!downloadTriggered) {
-          downloadTriggered = true;
-          final mediaFile = await rust_mediafiles.getMediaFile(
-            id: allMediaFiles.first.mediaId!,
-            transaction: currentDatabaseSession(),
-          );
-          if (mediaFile == null) {
-            // DB record gone — skip to next or exit.
+    if (!isCurrent()) return;
+    downloadStateListener = stream.listen(
+      (updated) async {
+        if (!isCurrent()) return;
+        try {
+          if (updated == null) {
+            // Media file record no longer exists — skip to next or exit rather
+            // than leaving the screen permanently black with no content/loader.
             await downloadStateListener?.cancel();
+            if (!isCurrent()) return;
             await advanceToNextMediaOrExit();
             return;
           }
-          await startDownloadMedia(mediaFile, true);
-          if (!_isStory) unawaited(tryDownloadAllMediaFiles(force: true));
-        }
-        return;
-      }
+          // The user's own story plays from the file they sent; there is
+          // nothing to download.
+          if (!_isOwnStory && updated.downloadState != DownloadState.ready) {
+            setState(() {
+              currentMedia = null;
+              currentMessage = null;
+              _showDownloadingLoader = true;
+            });
+            if (!downloadTriggered) {
+              downloadTriggered = true;
+              final mediaFile = await rust_mediafiles.getMediaFile(
+                id: mediaId,
+                transaction: currentDatabaseSession(),
+              );
+              if (!isCurrent()) return;
+              if (mediaFile == null) {
+                // DB record gone — skip to next or exit.
+                await downloadStateListener?.cancel();
+                if (!isCurrent()) return;
+                await advanceToNextMediaOrExit();
+                return;
+              }
+              await startDownloadMedia(mediaFile, true);
+              if (!_isStory) {
+                unawaitedRustCall(
+                  tryDownloadAllMediaFiles(force: true),
+                  'Download remaining media',
+                );
+              }
+            }
+            return;
+          }
 
-      await downloadStateListener?.cancel();
-      try {
-        await initializeAndDisplayCurrentMedia(showTwonly, mediaFile: updated);
-      } catch (e, st) {
-        Log.error('initializeAndDisplayCurrentMedia failed: $e\n$st');
-        await advanceToNextMediaOrExit();
-      }
-      // start downloading all the other possible missing media files.
-    });
+          await downloadStateListener?.cancel();
+          if (!isCurrent()) return;
+          await initializeAndDisplayCurrentMedia(
+            showTwonly,
+            mediaFile: updated,
+          );
+        } catch (error, stackTrace) {
+          if (!isCurrent()) return;
+          downloadTriggered = false;
+          if (isBackgroundCancellation(error)) {
+            deferUntilForeground();
+            Log.info('Media loading deferred until foreground');
+            return;
+          }
+          Log.error(
+            'Could not load media',
+            error: error,
+            stackTrace: stackTrace,
+          );
+          if (isCurrent()) {
+            unawaitedRustCall(
+              advanceToNextMediaOrExit(),
+              'Skip unavailable media',
+            );
+          }
+        }
+        // start downloading all the other possible missing media files.
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (!isCurrent()) return;
+        if (isBackgroundCancellation(error)) {
+          deferUntilForeground();
+          Log.info('Media subscription deferred until foreground');
+        } else {
+          Log.error(
+            'Media subscription failed',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }
+      },
+    );
   }
 
   Future<void> initializeAndDisplayCurrentMedia(
     bool showTwonly, {
     MediaFile? mediaFile,
   }) async {
+    final generation = _mediaLoadGeneration;
+    bool isCurrent() => mounted && generation == _mediaLoadGeneration;
     if (!mounted || allMediaFiles.isEmpty) return;
     final currentMediaLocal = mediaFile == null
         ? await MediaFileService.fromMediaId(allMediaFiles.first.mediaId!)
         : MediaFileService(mediaFile);
-    if (currentMediaLocal == null || !mounted) return;
+    if (currentMediaLocal == null || !isCurrent()) return;
+
+    if (_isStory) {
+      final file = currentMediaLocal.mediaFile;
+      final imageStatus = PaintingBinding.instance.imageCache.statusForKey(
+        FileImage(currentMediaLocal.tempPath),
+      );
+      final cachedImage =
+          (file.type == MediaType.image || file.type == MediaType.gif) &&
+          (imageStatus.keepAlive || imageStatus.live);
+      if (!cachedImage || file.requiresAuthentication) {
+        setState(() {
+          currentMedia = null;
+          currentMessage = null;
+          _showDownloadingLoader = true;
+        });
+      }
+    }
 
     if (currentMediaLocal.mediaFile.requiresAuthentication) {
       if (!showTwonly) {
@@ -579,15 +693,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         return;
       }
 
+      if (!mounted) return;
       final isAuth = await authenticateUser(
         context.lang.mediaViewerAuthReason,
         force: false,
       );
-      if (!mounted) return;
+      if (!isCurrent()) return;
 
       if (!isAuth) {
         await advanceToNextMediaOrExit();
-        if (mounted) {
+        if (isCurrent()) {
           setState(() {
             displayTwonlyPresent = false;
           });
@@ -604,11 +719,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     });
 
     await _updateSenderInfo();
-    if (!mounted) return;
+    if (!isCurrent()) return;
 
     if (!_isStory) {
       await _notifyMessageOpened(currentMediaLocal);
-      if (!mounted) return;
+      if (!isCurrent()) return;
     }
 
     if (!currentMediaLocal.tempPath.existsSync()) {
@@ -626,12 +741,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     if (_isStory &&
         (currentMediaLocal.mediaFile.type == MediaType.image ||
             currentMediaLocal.mediaFile.type == MediaType.gif)) {
+      if (!mounted) return;
       await precacheFileImage(
         currentMediaLocal.tempPath,
         context,
         source: 'current story',
       );
-      if (!mounted) return;
+      if (!isCurrent()) return;
     }
 
     // The server can now delete the encrypted bytes, as the user has successfully opened it.
@@ -652,7 +768,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       _setupImageTimer(currentMediaLocal);
     }
 
-    if (mounted) {
+    if (isCurrent()) {
       setState(() {
         currentMedia = currentMediaLocal;
         _showDownloadingLoader = false;
@@ -721,60 +837,61 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future<void> _setupVideoPlayer(MediaFileService mediaLocal) async {
+    final generation = _mediaLoadGeneration;
+    bool isCurrent() => mounted && generation == _mediaLoadGeneration;
     final controller = VideoPlayerController.file(
       mediaLocal.tempPath,
       videoPlayerOptions: VideoPlayerOptions(),
     );
 
-    await controller.setLooping(
-      _isStory || mediaLocal.mediaFile.displayLimitInMilliseconds == null,
-    );
+    try {
+      await controller.initialize();
+      if (!isCurrent() || videoController != null) {
+        await controller.dispose();
+        return;
+      }
+      await controller.setLooping(
+        _isStory || mediaLocal.mediaFile.displayLimitInMilliseconds == null,
+      );
+      if (!isCurrent()) {
+        await controller.dispose();
+        return;
+      }
+      void listener() {
+        if (!isCurrent() || !identical(videoController, controller)) return;
+        final duration = controller.value.duration.inSeconds;
+        if (duration > 0) {
+          progress.value = 1 - controller.value.position.inSeconds / duration;
+        }
+        if (!_isStory &&
+            mediaLocal.mediaFile.displayLimitInMilliseconds != null &&
+            controller.value.position == controller.value.duration) {
+          unawaitedRustCall(advanceToNextMediaOrExit(), 'Advance video');
+        }
+      }
 
-    if (!mounted) {
-      await controller.dispose();
-      return;
+      _videoListener = listener;
+      videoController = controller;
+      controller.addListener(listener);
+      await controller.play();
+    } catch (error, stackTrace) {
+      if (identical(videoController, controller)) {
+        _disposeVideoController();
+      } else {
+        unawaitedRustCall(controller.dispose(), 'Dispose failed video');
+      }
+      if (!isCurrent()) return;
+      setState(() => _videoPlaybackFailed = true);
+      if (error is PlatformException && error.code == 'VideoError') {
+        Log.warn('Could not open video', error, stackTrace);
+      } else {
+        Log.error(
+          'Video player initialization failed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
     }
-
-    await controller
-        .initialize()
-        .then((_) {
-          if (!mounted || videoController != null) {
-            controller.dispose();
-            return;
-          }
-
-          void listener() {
-            if (!mounted) return;
-            final ctrl = videoController;
-            if (ctrl == null) return;
-
-            final duration = ctrl.value.duration.inSeconds;
-            if (duration > 0) {
-              progress.value = 1 - ctrl.value.position.inSeconds / duration;
-            }
-
-            if (!_isStory &&
-                mediaLocal.mediaFile.displayLimitInMilliseconds != null) {
-              if (ctrl.value.position == ctrl.value.duration) {
-                advanceToNextMediaOrExit();
-              }
-            }
-          }
-
-          _videoListener = listener;
-          videoController = controller;
-          controller
-            ..addListener(listener)
-            ..play();
-        })
-        .catchError((Object err, StackTrace st) {
-          Log.error(
-            'Video player initialization error',
-            error: err,
-            stackTrace: st,
-          );
-          return null;
-        });
   }
 
   void _setupImageTimer(MediaFileService mediaLocal) {
@@ -998,6 +1115,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     child: MediaContentRenderer(
                       currentMedia: currentMedia,
                       videoController: videoController,
+                      videoFailed: _videoPlaybackFailed,
                       loader: _loader(),
                     ),
                   ),

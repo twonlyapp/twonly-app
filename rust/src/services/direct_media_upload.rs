@@ -403,6 +403,8 @@ enum Outcome {
     Uploaded,
     Rejected,
     Retry,
+    Reprepare,
+    Failed,
 }
 
 pub struct DirectMediaUploadService {
@@ -994,7 +996,7 @@ impl DirectMediaUploadService {
         Ok(matches!(status, 400 | 413).then_some(status))
     }
 
-    /// Ends a send whose manifest the server refuses.
+    /// Rebuilds empty media, or ends a send whose manifest is otherwise refused.
     ///
     /// Servers before 2026-10-29 refused the whole manifest when a single
     /// recipient had deleted their account, which this client only learns by
@@ -1005,6 +1007,14 @@ impl DirectMediaUploadService {
     /// expires.
     async fn refuse_manifest(&self, job: &PendingJob, status: u16) -> Result<()> {
         let manifest = AttachmentManifest::decode(std::fs::read(&job.manifest_path)?.as_slice())?;
+
+        if manifest.encrypted_object_size <= 0 {
+            tracing::warn!(
+                media_id = job.media_id,
+                "rebuilding an empty media upload instead of failing its recipients"
+            );
+            return self.settle(job, Outcome::Reprepare).await;
+        }
 
         let recipients: std::collections::BTreeSet<i64> = manifest
             .dispatches
@@ -1069,8 +1079,15 @@ impl DirectMediaUploadService {
              the send when there were none"
         );
 
-        // A preparation that finds no recipient left stops by itself.
-        self.settle(job, Outcome::Retry).await
+        self.settle(
+            job,
+            if deleted > 0 {
+                Outcome::Retry
+            } else {
+                Outcome::Failed
+            },
+        )
+        .await
     }
 
     /// The server gave this account's reserved slots up while this client was
@@ -1361,6 +1378,26 @@ impl DirectMediaUploadService {
             return Ok(());
         }
 
+        if matches!(outcome, Outcome::Reprepare) {
+            crate::services::media_upload::renew_encryption_material(
+                &mut transaction,
+                &job.media_id,
+            )
+            .await?;
+            let manifest =
+                AttachmentManifest::decode(std::fs::read(&job.manifest_path)?.as_slice())?;
+            for dispatch in manifest.dispatches {
+                let envelope =
+                    crate::api::proto::client::Message::decode(dispatch.encrypted_body.as_slice())?;
+                sqlx::query(
+                    "DELETE FROM receipts WHERE receipt_id = ? AND ack_by_server_at IS NULL",
+                )
+                .bind(envelope.receipt_id)
+                .execute(&mut *transaction)
+                .await?;
+            }
+        }
+
         let slot_state = if matches!(outcome, Outcome::Uploaded) {
             "consumed"
         } else {
@@ -1401,7 +1438,15 @@ impl DirectMediaUploadService {
                 .execute(&mut *transaction)
                 .await?;
             }
-            Outcome::Retry => {
+            Outcome::Failed => {
+                sqlx::query(
+                    "UPDATE media_files SET upload_state = 'preparationFailed' WHERE media_id = ?",
+                )
+                .bind(&job.media_id)
+                .execute(&mut *transaction)
+                .await?;
+            }
+            Outcome::Retry | Outcome::Reprepare => {
                 sqlx::query!(
                     r#"UPDATE media_files SET upload_state = 'preprocessing'
                        WHERE media_id = ?
@@ -1445,6 +1490,36 @@ impl DirectMediaUploadService {
 
         if matches!(outcome, Outcome::Uploaded) {
             self.remove_encrypted_copy(&job.media_id).await;
+            // A newer reupload may still need the camera source. Drop it only
+            // after acceptance and when no preparation or transfer owns it.
+            let kind: Option<String> = sqlx::query_scalar(
+                "SELECT type FROM media_files WHERE media_id = ? AND upload_state = 'uploaded'
+                 AND reupload_requested_by IS NULL AND reupload_targets IS NULL
+                 AND NOT EXISTS (SELECT 1 FROM direct_media_upload_jobs j WHERE j.media_id = media_files.media_id)",
+            ).bind(&job.media_id).fetch_optional(&database.pool).await?;
+            if let Some(kind) = kind {
+                let source = crate::services::mediafiles::MediaFileService::new(&self.ctx)
+                    .original_path(&job.media_id, &kind);
+                let _ = std::fs::remove_file(source);
+            }
+        }
+        if matches!(outcome, Outcome::Reprepare) {
+            let kind: Option<String> =
+                sqlx::query_scalar("SELECT type FROM media_files WHERE media_id = ?")
+                    .bind(&job.media_id)
+                    .fetch_optional(&database.pool)
+                    .await?;
+            if let Some(kind) = kind {
+                let files = crate::services::mediafiles::MediaFileService::new(&self.ctx);
+                let temp = files.temp_path(&job.media_id, &kind);
+                if std::fs::metadata(&temp).is_ok_and(|metadata| metadata.len() == 0)
+                    || (kind == "video" && crate::native::video::validate_file(&temp).is_err())
+                {
+                    let _ = std::fs::remove_file(temp);
+                }
+            }
+            self.remove_encrypted_copy(&job.media_id).await;
+            MediaUploadService::new(&self.ctx).spawn_preparation(job.media_id.clone());
         }
 
         Ok(())
@@ -1540,6 +1615,9 @@ impl DirectMediaUploadService {
         transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
     ) -> Result<String> {
         let (encrypted_path, encrypted_size, mut manifest) = prepared;
+        if encrypted_size <= 0 {
+            return Err(TwonlyError::Generic("cannot schedule empty media".into()));
+        }
         // Membership can change while compression and Signal encryption run.
         // Check under the writer lock that also persists the manifest: a later
         // group-state commit will find its receipts and cancel the job above.
@@ -1738,6 +1816,12 @@ impl DirectMediaUploadService {
         }
 
         let mut encrypted = std::fs::read(&temp_path)?;
+        if encrypted.is_empty() {
+            return Err(TwonlyError::Generic("cannot upload empty media".into()));
+        }
+        if media.media_type == "video" {
+            crate::native::video::validate_file(&temp_path)?;
+        }
 
         let cipher = ChaCha20Poly1305::new_from_slice(key)
             .map_err(|_| TwonlyError::Generic("invalid media encryption key".into()))?;
@@ -2155,6 +2239,110 @@ fn write_multipart_body(
 mod tests {
 
     use super::*;
+
+    #[tokio::test]
+    async fn empty_media_is_rejected_before_preparing_a_manifest() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me"}"#,
+        )?;
+        let id = MediaUploadService::new(&ctx)
+            .initialize("video".into(), None, false)
+            .await?;
+        let path = crate::services::mediafiles::MediaFileService::new(&ctx).temp_path(&id, "video");
+        std::fs::create_dir_all(path.parent().unwrap())?;
+        std::fs::write(path, [])?;
+        let direct = DirectMediaUploadService::new(&ctx);
+        let error = direct
+            .prepare_media(&id)
+            .await
+            .err()
+            .expect("empty upload must be refused locally");
+        assert!(error.to_string().contains("empty media"));
+        assert_eq!(direct.pending_job_count().await?, 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn empty_manifest_rebuilds_without_failing_recipients_and_keeps_the_original(
+    ) -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql("INSERT INTO contacts(user_id, username) VALUES (7, 'peer');
+            INSERT INTO groups(group_id, group_name) VALUES ('g', 'g');
+            INSERT INTO group_members(group_id, contact_id) VALUES ('g', 7);
+            INSERT INTO media_files(media_id, type, upload_state) VALUES ('broken', 'video', 'backgroundUploadTaskStarted');
+            INSERT INTO messages(message_id, group_id, type, media_id, is_story) VALUES ('s', 'g', 'media', 'broken', 1);
+            INSERT INTO receipts(receipt_id, contact_id, message_id, message) VALUES ('r', 7, 's', X'00');")
+            .execute(&database.pool).await?;
+        let files = crate::services::mediafiles::MediaFileService::new(&ctx);
+        let temp = files.temp_path("broken", "video");
+        std::fs::create_dir_all(temp.parent().unwrap())?;
+        std::fs::write(&temp, [])?;
+        let original = files.original_path("broken", "video");
+        std::fs::write(&original, crate::native::video::test_video_bytes())?;
+        let mut job = reupload_test_job(&database, "broken", "empty-slot").await?;
+        job.manifest_path = directory.path().join("manifest.pb").display().to_string();
+        let manifest = AttachmentManifest {
+            encrypted_object_size: 0,
+            dispatches: vec![AttachmentDispatch {
+                recipient_user_id: 7,
+                encrypted_body: crate::api::proto::client::Message {
+                    receipt_id: "r".into(),
+                    ..Default::default()
+                }
+                .encode_to_vec(),
+                ..Default::default()
+            }],
+        };
+        std::fs::write(&job.manifest_path, manifest.encode_to_vec())?;
+        let direct = DirectMediaUploadService::new(&ctx);
+        // This path must not query each recipient on the server: the object,
+        // rather than a deleted account, is known to be the problem.
+        direct.refuse_manifest(&job, 400).await?;
+        assert_eq!(direct.pending_job_count().await?, 0);
+        assert!(original.exists());
+        assert!(!temp.exists());
+        assert_eq!(
+            sqlx::query_scalar::<_, String>(
+                "SELECT upload_state FROM media_files WHERE media_id = 'broken'"
+            )
+            .fetch_one(&database.pool)
+            .await?,
+            "preprocessing"
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM message_actions WHERE type = 'sendFailed'"
+            )
+            .fetch_one(&database.pool)
+            .await?,
+            0
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM receipts WHERE receipt_id = 'r'")
+                .fetch_one(&database.pool)
+                .await?,
+            0
+        );
+        // Once its repaired replacement is accepted, the retained camera
+        // source can be removed, but the delivery copy stays available.
+        std::fs::write(&temp, crate::native::video::test_video_bytes())?;
+        let accepted = reupload_test_job(&database, "broken", "accepted-slot").await?;
+        direct.settle(&accepted, Outcome::Uploaded).await?;
+        assert!(!original.exists());
+        assert!(temp.exists());
+        Ok(())
+    }
     use crate::services::media_upload::MediaUploadService;
     use crate::user_config::UserConfig;
     use libsignal_protocol::IdentityKeyPair;

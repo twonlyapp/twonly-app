@@ -348,7 +348,9 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
       if (message.senderId == null &&
           !message.isDeletedFromSender &&
-          failedMessageIds.contains(message.messageId)) {
+          (failedMessageIds.contains(message.messageId) ||
+              (mediaFile?.uploadState == UploadState.preparationFailed &&
+                  state == MessageSendState.sending))) {
         icon = Icon(Icons.error_outline, size: 14, color: context.color.error);
         text = context.lang.mediaSendFailed;
         textWidget = null;

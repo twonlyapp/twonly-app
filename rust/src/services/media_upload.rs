@@ -423,7 +423,7 @@ impl MediaUploadService {
     /// Runs `start_upload` under whatever protection the platform offers. On
     /// Android the work itself moves into a `WorkManager` job and nothing is
     /// started here.
-    fn spawn_preparation(&self, media_id: String) {
+    pub(crate) fn spawn_preparation(&self, media_id: String) {
         match prepare::begin(&media_id) {
             prepare::Preparation::Scheduled => {
                 tracing::info!(media_id, "handed media preparation to the OS");
@@ -499,6 +499,7 @@ impl MediaUploadService {
                 return Ok(());
             }
 
+            files.discard_interrupted_renders(media_id)?;
             // A marker from earlier settings would otherwise outlive its clip.
             files.discard_prerender(media_id);
 
@@ -582,9 +583,19 @@ impl MediaUploadService {
         let temp_path = files.temp_path(media_id, &media.media_type);
 
         let stored_path = files.stored_path(media_id, &media.media_type);
+        if media.media_type == "video" {
+            files.discard_interrupted_renders(media_id)?;
+        }
+        // Older renderers wrote directly to this path. An interrupted export
+        // must be rebuilt, even when it left a nonempty partial container.
+        if temp_path.exists() && !delivery_file_is_ready(&temp_path, &media.media_type) {
+            tracing::warn!(media_id, "discarding incomplete media preparation");
+            remove_file(&temp_path);
+        }
 
+        let rebuilding_video = media.media_type == "video" && !temp_path.exists();
         if !temp_path.exists() {
-            if stored_path.exists() {
+            if delivery_file_is_ready(&stored_path, &media.media_type) {
                 MediaFileService::ensure_parent(&temp_path)?;
 
                 let (source, destination) = (stored_path.clone(), temp_path.clone());
@@ -593,21 +604,48 @@ impl MediaUploadService {
                     // A Memory may be an original JPEG/PNG or lossless WebP.
                     // Prepare its separate delivery copy without changing it.
                     blocking(move || media_codec::compress_for_send(&source, &destination)).await?;
+                } else if media.media_type == "video" {
+                    blocking(move || {
+                        video::publish_output(&destination, |staging| {
+                            std::fs::copy(source, staging)?;
+                            Ok(())
+                        })
+                    })
+                    .await?;
                 } else {
                     blocking(move || {
                         std::fs::copy(source, destination)?;
-
                         Ok(())
                     })
                     .await?;
                 }
             } else {
-                self.compress(&media).await?;
+                if let Err(error) = self.compress(&media).await {
+                    if let Some(operation) = crate::database::lifecycle::Operation::current() {
+                        operation.check()?;
+                    }
+                    if media.media_type == "video"
+                        && !delivery_file_is_ready(&files.original_path(media_id, "video"), "video")
+                    {
+                        tracing::warn!(media_id, %error, "video preparation has no usable source");
+                        return self.fail_preparation(media_id).await;
+                    }
+                    return Err(error);
+                }
             }
         }
 
         if !temp_path.exists() {
             return self.retire_media(&media).await;
+        }
+
+        if !delivery_file_is_ready(&temp_path, &media.media_type) {
+            return self.fail_preparation(media_id).await;
+        }
+
+        if rebuilding_video {
+            let database = self.ctx.app_db.read().await.clone();
+            renew_encryption_material(&mut *database.pool.acquire().await?, media_id).await?;
         }
 
         // What the recipient ends up with is this plaintext, so its size is
@@ -650,10 +688,8 @@ impl MediaUploadService {
                 self.set_upload_state(media_id, "backgroundUploadTaskStarted")
                     .await?;
 
-                // Both native tasks now own durable request files, so the
-                // uncompressed original is no longer needed.
-                remove_file(&files.original_path(media_id, &media.media_type));
-
+                // Retain the original until the server accepts the media:
+                // a refused manifest may require rebuilding the render.
                 tracing::info!(media_id, attachment_id, "scheduled native media upload");
 
                 Ok(())
@@ -718,6 +754,8 @@ impl MediaUploadService {
         if let Err(error) = direct.reconcile().await {
             tracing::warn!(%error, "direct media reconciliation failed");
         }
+
+        self.recover_legacy_story_preparations().await?;
 
         // Transfers the OS is still carrying settle without notifying this
         // process, so keep asking while the app is up.
@@ -1592,6 +1630,82 @@ impl MediaUploadService {
         .await
     }
 
+    pub(crate) async fn fail_preparation(&self, media_id: &str) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        sqlx::query(
+            "INSERT INTO message_actions(message_id, contact_id, type)
+             SELECT m.message_id, gm.contact_id, 'sendFailed'
+             FROM messages m JOIN group_members gm ON gm.group_id = m.group_id
+             WHERE m.media_id = ? AND m.sender_id IS NULL AND m.ack_by_server IS NULL
+               AND m.ack_by_user IS NULL AND m.opened_at IS NULL
+             ON CONFLICT(message_id, contact_id, type) DO NOTHING",
+        )
+        .bind(media_id)
+        .execute(&mut *tx)
+        .await?;
+        sqlx::query(
+            "DELETE FROM receipts WHERE ack_by_server_at IS NULL AND message_id IN
+             (SELECT message_id FROM messages WHERE media_id = ? AND sender_id IS NULL
+                AND ack_by_server IS NULL AND ack_by_user IS NULL AND opened_at IS NULL)",
+        )
+        .bind(media_id)
+        .execute(&mut *tx)
+        .await?;
+        sqlx::query("UPDATE media_files SET upload_state = 'preparationFailed' WHERE media_id = ?")
+            .bind(media_id)
+            .execute(&mut *tx)
+            .await?;
+        tx.commit().await?;
+        Ok(())
+    }
+
+    /// The old manifest-refusal handler left some empty stories as storedOnly
+    /// and failed all their recipients. Repair those with a retained source;
+    /// otherwise expose a terminal failure instead of an endless pending item.
+    async fn recover_legacy_story_preparations(&self) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let media: Vec<String> = sqlx::query_scalar(
+            "SELECT media_id FROM media_files WHERE type = 'video' AND upload_state = 'storedOnly'
+             AND EXISTS (SELECT 1 FROM messages m WHERE m.media_id = media_files.media_id
+                 AND m.is_story = 1 AND m.sender_id IS NULL AND m.ack_by_server IS NULL
+                 AND m.ack_by_user IS NULL AND m.opened_at IS NULL)
+             AND NOT EXISTS (SELECT 1 FROM direct_media_upload_jobs j WHERE j.media_id = media_files.media_id)",
+        ).fetch_all(&database.pool).await?;
+        let files = MediaFileService::new(&self.ctx);
+        for media_id in media {
+            let temp = files.temp_path(&media_id, "video");
+            if delivery_file_is_ready(&temp, "video") {
+                continue;
+            }
+            let prerender = self.load(&media_id).await?.is_some_and(|media| {
+                files.prerender_matches(&media_id, &render_fingerprint(&media))
+            });
+            if !delivery_file_is_ready(&files.original_path(&media_id, "video"), "video")
+                && !delivery_file_is_ready(&files.stored_path(&media_id, "video"), "video")
+                && !prerender
+            {
+                self.fail_preparation(&media_id).await?;
+                continue;
+            }
+            let mut tx = database.pool.begin().await?;
+            sqlx::query(
+                "DELETE FROM message_actions WHERE type = 'sendFailed' AND message_id IN
+                (SELECT message_id FROM messages WHERE media_id = ? AND sender_id IS NULL
+                 AND ack_by_server IS NULL AND ack_by_user IS NULL AND opened_at IS NULL)",
+            )
+            .bind(&media_id)
+            .execute(&mut *tx)
+            .await?;
+            sqlx::query("UPDATE media_files SET upload_state = 'preprocessing' WHERE media_id = ?")
+                .bind(&media_id)
+                .execute(&mut *tx)
+                .await?;
+            tx.commit().await?;
+        }
+        Ok(())
+    }
+
     /// The media cannot be sent as it stands: either its plaintext is gone or
     /// nothing references it any more. What that means depends entirely on who
     /// is still waiting for it.
@@ -1675,14 +1789,7 @@ impl MediaUploadService {
                 "media source is gone but messages still reference it"
             );
 
-            sqlx::query!(
-                "UPDATE media_files SET upload_state = 'uploaded' WHERE media_id = ?",
-                media_id
-            )
-            .execute(&database.pool)
-            .await?;
-
-            return Ok(());
+            return self.fail_preparation(media_id).await;
         }
 
         if media.created_at > chrono::Utc::now().timestamp() - ORPHAN_GRACE_SECONDS {
@@ -1750,6 +1857,12 @@ impl MediaUploadService {
         let original = files.original_path(&media.media_id, &media.media_type);
 
         let temp = files.temp_path(&media.media_id, &media.media_type);
+
+        if media.media_type == "video"
+            && files.prerender_matches(&media.media_id, &render_fingerprint(media))
+        {
+            return self.render_video(media, &original, &temp).await;
+        }
 
         if !original.exists() {
             tracing::warn!(media_id = media.media_id, "no original media to compress");
@@ -1874,6 +1987,9 @@ impl MediaUploadService {
         let media_id = media.media_id.clone();
 
         if let Err(error) = blocking(move || video::render(&request)).await {
+            if let Some(operation) = crate::database::lifecycle::Operation::current() {
+                operation.check()?;
+            }
             // Last resort: the camera file is the only remaining way to deliver
             // the moment, but it carries no overlay and the recipient's platform
             // may not decode it, so this is worth seeing in the logs.
@@ -1881,7 +1997,10 @@ impl MediaUploadService {
 
             MediaFileService::ensure_parent(temp)?;
 
-            std::fs::copy(original, temp)?;
+            video::publish_output(temp, |staging| {
+                std::fs::copy(original, staging)?;
+                Ok(())
+            })?;
         }
 
         Ok(())
@@ -2335,6 +2454,32 @@ fn remove_file(path: &Path) {
     }
 }
 
+/// A rebuilt render can differ from a previously encrypted partial file.
+/// Never encrypt different bytes with its old AEAD key/nonce pair. Existing
+/// native requests already carry their own immutable encrypted envelopes.
+pub(crate) async fn renew_encryption_material(
+    connection: &mut sqlx::SqliteConnection, media_id: &str,
+) -> Result<()> {
+    let mut key = [0_u8; 32];
+    let mut nonce = [0_u8; 12];
+    rand::rng().fill_bytes(&mut key);
+    rand::rng().fill_bytes(&mut nonce);
+    sqlx::query(
+        "UPDATE media_files SET encryption_key = ?, encryption_nonce = ?, encryption_mac = NULL
+        WHERE media_id = ? AND encryption_mac IS NOT NULL",
+    )
+    .bind(key.as_slice())
+    .bind(nonce.as_slice())
+    .bind(media_id)
+    .execute(connection)
+    .await?;
+    Ok(())
+}
+
+fn delivery_file_is_ready(path: &Path, media_type: &str) -> bool {
+    file_size_or_zero(path) > 0 && (media_type != "video" || video::validate_file(path).is_ok())
+}
+
 fn file_size_or_zero(path: &Path) -> u64 {
     std::fs::metadata(path)
         .map(|metadata| metadata.len())
@@ -2359,6 +2504,147 @@ pub(crate) fn parse_reupload_requested_by(value: Option<&str>) -> Vec<i64> {
 mod tests {
 
     use super::*;
+
+    #[tokio::test]
+    async fn interrupted_video_preparation_rebuilds_from_a_retained_source() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+        let service = MediaUploadService::new(&ctx);
+        // Keep this local: exercise preparation without an external transfer.
+        let id = service.initialize("video".into(), None, true).await?;
+        let files = MediaFileService::new(&ctx);
+        let original = files.original_path(&id, "video");
+        let temp = files.temp_path(&id, "video");
+        MediaFileService::ensure_parent(&original)?;
+        let complete = video::test_video_bytes();
+        std::fs::write(&original, &complete)?;
+        for partial in [Vec::new(), complete[..complete.len() - 1].to_vec()] {
+            std::fs::write(&temp, partial)?;
+            let database = ctx.app_db.read().await.clone();
+            sqlx::query("UPDATE media_files SET upload_state = 'preprocessing' WHERE media_id = ?")
+                .bind(&id)
+                .execute(&database.pool)
+                .await?;
+            let old_key: Vec<u8> =
+                sqlx::query_scalar("SELECT encryption_key FROM media_files WHERE media_id = ?")
+                    .bind(&id)
+                    .fetch_one(&database.pool)
+                    .await?;
+            sqlx::query("UPDATE media_files SET encryption_mac = X'01' WHERE media_id = ?")
+                .bind(&id)
+                .execute(&database.pool)
+                .await?;
+            service.start_upload(&id).await?;
+            let new_key: Vec<u8> =
+                sqlx::query_scalar("SELECT encryption_key FROM media_files WHERE media_id = ?")
+                    .bind(&id)
+                    .fetch_one(&database.pool)
+                    .await?;
+            assert_ne!(new_key, old_key);
+            assert_eq!(std::fs::read(&original)?, complete);
+            assert_eq!(std::fs::read(&temp)?, complete);
+            video::validate_file(&temp)?;
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn unusable_video_stories_fail_instead_of_appearing_uploaded() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql("INSERT INTO contacts(user_id, username) VALUES (7, 'peer');
+            INSERT INTO groups(group_id, group_name) VALUES ('g', 'g');
+            INSERT INTO group_members(group_id, contact_id) VALUES ('g', 7);
+            INSERT INTO media_files(media_id, type, upload_state) VALUES ('broken', 'video', 'preprocessing');
+            INSERT INTO messages(message_id, group_id, type, media_id, is_story) VALUES ('s', 'g', 'media', 'broken', 1);
+            INSERT INTO receipts(receipt_id, contact_id, message_id, message) VALUES ('r', 7, 's', X'00');")
+            .execute(&database.pool).await?;
+        let temp = MediaFileService::new(&ctx).temp_path("broken", "video");
+        MediaFileService::ensure_parent(&temp)?;
+        std::fs::write(&temp, [])?;
+        MediaUploadService::new(&ctx).start_upload("broken").await?;
+        assert_eq!(
+            sqlx::query_scalar::<_, String>(
+                "SELECT upload_state FROM media_files WHERE media_id = 'broken'"
+            )
+            .fetch_one(&database.pool)
+            .await?,
+            "preparationFailed"
+        );
+        assert_eq!(sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM message_actions WHERE message_id = 's' AND type = 'sendFailed'")
+            .fetch_one(&database.pool).await?, 1);
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM receipts")
+                .fetch_one(&database.pool)
+                .await?,
+            0
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn legacy_failed_story_preparations_recover_only_with_a_usable_source() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'peer');
+            INSERT INTO groups(group_id, group_name) VALUES ('g', 'g');
+            INSERT INTO group_members(group_id, contact_id) VALUES ('g', 7);",
+        )
+        .execute(&database.pool)
+        .await?;
+        let files = MediaFileService::new(&ctx);
+        for id in ["recoverable", "lost"] {
+            sqlx::query("INSERT INTO media_files(media_id, type, upload_state) VALUES (?, 'video', 'storedOnly')")
+                .bind(id).execute(&database.pool).await?;
+            sqlx::query("INSERT INTO messages(message_id, group_id, type, media_id, is_story) VALUES (?, 'g', 'media', ?, 1)")
+                .bind(id).bind(id).execute(&database.pool).await?;
+            sqlx::query("INSERT INTO message_actions(message_id, contact_id, type) VALUES (?, 7, 'sendFailed')")
+                .bind(id).execute(&database.pool).await?;
+            let temp = files.temp_path(id, "video");
+            MediaFileService::ensure_parent(&temp)?;
+            std::fs::write(temp, [])?;
+        }
+        std::fs::write(
+            files.original_path("recoverable", "video"),
+            video::test_video_bytes(),
+        )?;
+        MediaUploadService::new(&ctx)
+            .recover_legacy_story_preparations()
+            .await?;
+        let states: Vec<(String, String)> =
+            sqlx::query_as("SELECT media_id, upload_state FROM media_files ORDER BY media_id")
+                .fetch_all(&database.pool)
+                .await?;
+        assert_eq!(
+            states,
+            vec![
+                ("lost".into(), "preparationFailed".into()),
+                ("recoverable".into(), "preprocessing".into())
+            ]
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM message_actions WHERE message_id = 'recoverable'"
+            )
+            .fetch_one(&database.pool)
+            .await?,
+            0
+        );
+        Ok(())
+    }
 
     #[test]
 

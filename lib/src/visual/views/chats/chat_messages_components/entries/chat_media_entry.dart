@@ -16,6 +16,7 @@ import 'package:twonly/src/services/mediafiles/media_download_policy.dart'
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
@@ -108,25 +109,43 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
     }
     if (widget.mediaService.canBeOpenedAgain &&
         widget.message.senderId != null) {
-      await RustApi.sendEncryptedContent(
-        contactId: widget.message.senderId!,
-        content: EncryptedContent(
-          mediaUpdate: EncryptedContent_MediaUpdate(
-            type: EncryptedContent_MediaUpdate_Type.REOPENED,
-            targetMessageId: widget.message.messageId,
+      try {
+        await rust_messages.updateMessages(
+          id: widget.message.messageId,
+          byMedia: false,
+          patch: MessagePatch(
+            openedAt: NullableInt(value: databaseNullableSeconds(null)),
           ),
-        ).writeToBuffer(),
-        onlySendIfNoReceiptsAreOpen: false,
-        onlyReturnEncryptedData: false,
-        blocking: true,
-      );
-      await rust_messages.updateMessages(
-        id: widget.message.messageId,
-        byMedia: false,
-        patch: MessagePatch(
-          openedAt: NullableInt(value: databaseNullableSeconds(null)),
-        ),
-        transaction: currentDatabaseSession(),
+          transaction: currentDatabaseSession(),
+        );
+      } catch (error, stackTrace) {
+        if (isBackgroundCancellation(error)) {
+          Log.info('Reopen media deferred until foreground');
+        } else {
+          Log.error(
+            'Could not reopen media',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }
+        return;
+      }
+      // Reopening is local. Queue the advisory update in Rust's durable
+      // outbox so an offline recipient cannot prevent it.
+      unawaitedRustCall(
+        RustApi.sendEncryptedContent(
+          contactId: widget.message.senderId!,
+          content: EncryptedContent(
+            mediaUpdate: EncryptedContent_MediaUpdate(
+              type: EncryptedContent_MediaUpdate_Type.REOPENED,
+              targetMessageId: widget.message.messageId,
+            ),
+          ).writeToBuffer(),
+          onlySendIfNoReceiptsAreOpen: false,
+          onlyReturnEncryptedData: false,
+          blocking: false,
+        ).then((_) {}),
+        'Send media reopen update',
       );
     }
   }
@@ -141,7 +160,10 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
       );
     } else if (widget.mediaService.mediaFile.downloadState ==
         DownloadState.pending) {
-      await received.startDownloadMedia(widget.mediaService.mediaFile, true);
+      unawaitedRustCall(
+        received.startDownloadMedia(widget.mediaService.mediaFile, true),
+        'Download selected media',
+      );
     }
   }
 

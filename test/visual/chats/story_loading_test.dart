@@ -4,7 +4,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/bridge/database.dart';
 import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/database/app/mediafiles/table.dart'
+    as db_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/core/frb_generated.dart';
@@ -14,6 +17,7 @@ import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/media_content_renderer.comp.dart';
@@ -27,6 +31,25 @@ class _StoryLoadingApi extends NativeTestApi {
   final pendingReceipts = <Completer<void>>[];
   Future<void> Function(String)? onDownload;
   int bulkDownloads = 0;
+  String? delayedMediaId;
+  Completer<void>? mediaWatchReady;
+  bool waitingForMediaWatch = false;
+
+  @override
+  Stream<db_mediafiles.MediaCollection>
+  crateBridgeDatabaseMediafilesWatchMediaFiles({
+    required db_mediafiles.MediaQuery input,
+    required DatabaseWatch control,
+  }) async* {
+    if (input.ids.contains(delayedMediaId)) {
+      waitingForMediaWatch = true;
+      await mediaWatchReady?.future;
+    }
+    yield* super.crateBridgeDatabaseMediafilesWatchMediaFiles(
+      input: input,
+      control: control,
+    );
+  }
 
   @override
   Future<void> crateBridgeApiRustApiNotifyMessagesOpened({
@@ -82,6 +105,9 @@ void main() {
       ..downloads.clear()
       ..pendingReceipts.clear()
       ..onDownload = null
+      ..delayedMediaId = null
+      ..mediaWatchReady = null
+      ..waitingForMediaWatch = false
       ..bulkDownloads = 0;
     cache
       ..clear()
@@ -156,7 +182,11 @@ void main() {
         .mediaId;
   }
 
-  Future<void> pumpViewer(WidgetTester tester, {bool own = false}) async {
+  Future<void> pumpViewer(
+    WidgetTester tester, {
+    bool own = false,
+    bool waitForMedia = true,
+  }) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: lightTheme,
@@ -167,11 +197,55 @@ void main() {
         ),
       ),
     );
+    if (!waitForMedia) return;
     await pumpNative(
       tester,
       until: () => find.byType(MediaContentRenderer).evaluate().isNotEmpty,
     );
   }
+
+  testWidgets(
+    'a closed database during download retries the same story on resume',
+    (tester) async {
+      await runNative(tester, () async {
+        await media['image-0']!.tempPath.delete();
+        await rust_mediafiles.updateMediaFiles(
+          id: 'image-0',
+          patch: const MediaFilePatch(
+            downloadState: NullableText(value: 'pending'),
+          ),
+          transaction: currentDatabaseSession(),
+        );
+      });
+      var attempts = 0;
+      api.onDownload = (id) async {
+        if (attempts++ == 0) {
+          throw Exception('attempted to acquire a connection on a closed pool');
+        }
+        await File(
+          'assets/images/default_avatar.png',
+        ).copy(media[id]!.tempPath.path);
+        await rust_mediafiles.updateMediaFiles(
+          id: id,
+          patch: const MediaFilePatch(
+            downloadState: NullableText(value: 'ready'),
+          ),
+          transaction: currentDatabaseSession(),
+        );
+      };
+      await pumpViewer(tester, waitForMedia: false);
+      await pumpNative(tester, until: () => api.downloads.isNotEmpty);
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await pumpNative(tester, until: () => displayed(tester) == 'image-0');
+      expect(api.downloads.where((id) => id == 'image-0'), hasLength(2));
+      expect(api.opened, [(7, 'message-0')]);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   testWidgets('images display and advance while opened receipts are pending', (
     tester,
@@ -202,6 +276,87 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets(
+    'cached stories advance without flashing a loader during metadata reads',
+    (tester) async {
+      await pumpViewer(tester);
+      await pumpNative(tester, until: () => cached('image-1'));
+      final ready = Completer<void>();
+      api
+        ..delayedMediaId = 'image-1'
+        ..mediaWatchReady = ready;
+      try {
+        await tester.tap(find.byType(MediaContentRenderer));
+        await pumpNative(tester, until: () => api.waitingForMediaWatch);
+        expect(displayed(tester), 'image-0');
+        expect(find.byType(ThreeRotatingDots), findsNothing);
+        ready.complete();
+        await pumpNative(
+          tester,
+          until: () {
+            expect(find.byType(ThreeRotatingDots), findsNothing);
+            return displayed(tester) == 'image-1';
+          },
+        );
+        expect(api.opened, [(7, 'message-0'), (7, 'message-1')]);
+        expect(tester.takeException(), isNull);
+      } finally {
+        if (!ready.isCompleted) ready.complete();
+        await tester.pumpWidget(const SizedBox());
+      }
+    },
+  );
+
+  testWidgets(
+    'an uncached next story shows a loader until its download finishes',
+    (tester) async {
+      await runNative(tester, () async {
+        await media['image-1']!.tempPath.delete();
+        await rust_mediafiles.updateMediaFiles(
+          id: 'image-1',
+          patch: const MediaFilePatch(
+            downloadState: NullableText(value: 'pending'),
+          ),
+          transaction: currentDatabaseSession(),
+        );
+      });
+      final download = Completer<void>();
+      api.onDownload = (id) async {
+        await download.future;
+        await File(
+          'assets/images/default_avatar.png',
+        ).copy(media[id]!.tempPath.path);
+        await rust_mediafiles.updateMediaFiles(
+          id: id,
+          patch: const MediaFilePatch(
+            downloadState: NullableText(value: 'ready'),
+          ),
+          transaction: currentDatabaseSession(),
+        );
+      };
+      try {
+        await pumpViewer(tester);
+        await pumpNative(
+          tester,
+          until: () => api.downloads.contains('image-1'),
+        );
+        await tester.tap(find.byType(MediaContentRenderer));
+        await pumpNative(
+          tester,
+          until: () => find.byType(ThreeRotatingDots).evaluate().isNotEmpty,
+        );
+        expect(displayed(tester), isNull);
+        download.complete();
+        await pumpNative(tester, until: () => displayed(tester) == 'image-1');
+        expect(find.byType(ThreeRotatingDots), findsNothing);
+        expect(tester.takeException(), isNull);
+      } finally {
+        if (!download.isCompleted) download.complete();
+        await tester.pumpWidget(const SizedBox());
+      }
+    },
+  );
 
   testWidgets('upcoming images download and decode before they are opened', (
     tester,

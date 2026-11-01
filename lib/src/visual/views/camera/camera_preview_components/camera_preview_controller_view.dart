@@ -11,6 +11,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/permission_requests.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -273,6 +274,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
 
   Future<void> initAsync() async {
     _hasAudioPermission = await Permission.microphone.isGranted;
+    if (!mounted) return;
 
     if (!_hasAudioPermission &&
         !userService.currentUser.requestedAudioPermission) {
@@ -281,32 +283,24 @@ class _CameraPreviewViewState extends State<CameraPreviewView>
     }
   }
 
-  Future<void> requestMicrophonePermission({int retryCount = 0}) async {
+  Future<void> requestMicrophonePermission() async {
+    if (!mounted) return;
     try {
-      final statuses = await [
+      final statuses = await requestPermissions([
         Permission.microphone,
-      ].request();
-      if (statuses[Permission.microphone]!.isPermanentlyDenied) {
+      ]);
+      if (!mounted) return;
+      if (statuses[Permission.microphone]?.isPermanentlyDenied == true) {
         await openAppSettings();
       } else {
         _hasAudioPermission = await Permission.microphone.isGranted;
+        if (!mounted) return;
         setState(() {
           // _hasAudioPermission
         });
       }
-    } on PlatformException catch (e) {
-      if (e.message?.contains('already running') ?? false) {
-        if (retryCount < 5) {
-          Log.warn(
-            'Microphone permission request conflict, retrying in 300ms... (attempt ${retryCount + 1})',
-          );
-          await Future.delayed(const Duration(milliseconds: 300));
-          return requestMicrophonePermission(retryCount: retryCount + 1);
-        }
-      }
-      Log.error('PlatformException in requestMicrophonePermission: $e');
-    } catch (e) {
-      Log.error('Error in requestMicrophonePermission: $e');
+    } catch (error, stackTrace) {
+      Log.warn('Microphone permission request failed', error, stackTrace);
     }
   }
 

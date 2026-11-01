@@ -20,6 +20,7 @@ enum UploadState {
   storedOnly,
   // At this point the user is finished with editing, and the media file can be uploaded
   preprocessing,
+  preparationFailed,
   uploading,
   backgroundUploadTaskStarted,
   uploaded,

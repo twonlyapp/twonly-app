@@ -88,8 +88,10 @@ object NativeErrorReporting {
         val reason = when (error) {
             "Database operation cancelled; retry when active",
             "Native database admission cancelled",
+            "Database operation deferred until foreground",
             "Notification run cancelled",
             "Notification run is closing" -> "cancelled"
+            "Notification run is closed or unknown" -> "notification_run_closed"
             "attempted to acquire a connection on a closed pool" -> "database_pool_closed"
             "pool timed out while waiting for an open connection" -> "database_pool_timeout"
             "main_key could not be loaded from the key_chain",
@@ -99,7 +101,8 @@ object NativeErrorReporting {
             "notification finalization panicked" -> "panic"
             else -> "unknown"
         }
-        if (reason == "cancelled") {
+        if (reason == "cancelled" ||
+            (operation == "notification_finalize" && reason == "notification_run_closed")) {
             breadcrumb(context, "${operation}_cancelled")
             return
         }

@@ -70,6 +70,20 @@ class StoryPreview extends StatelessWidget {
             borderRadius: BorderRadius.circular(radius),
             child: picture,
           );
+    if (mediaFile.uploadState == UploadState.preparationFailed) {
+      picture = Tooltip(
+        message: context.lang.mediaSendFailed,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            picture,
+            Center(
+              child: Icon(Icons.error_outline, color: context.color.error),
+            ),
+          ],
+        ),
+      );
+    }
     if (faded) picture = Opacity(opacity: 0.5, child: picture);
     final sized = SizedBox(width: width, height: height, child: picture);
     if (badge == null) return sized;

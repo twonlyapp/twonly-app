@@ -2,7 +2,7 @@ require "minitest/autorun"
 require "fileutils"
 require "tmpdir"
 
-# Exercise the actual lane with a temporary project and fake command results.
+# Exercise the actual lanes with temporary projects and fake command results.
 # No command is executed and successful cases stop before F-Droid deployment.
 class LaneError < StandardError; end
 class GithubFinished < StandardError; end
@@ -18,6 +18,45 @@ module UI
   end
 end
 
+class InternalLaneTest < Minitest::Test
+  def setup
+    @root = Dir.mktmpdir("twonly-internal-test")
+    FileUtils.mkdir_p(File.join(@root, "fastlane"))
+    @bundle = File.join(@root, "build/app/outputs/bundle/release/app-release.aab")
+    FileUtils.mkdir_p(File.dirname(@bundle))
+    File.write(@bundle, "stale bundle")
+    @lane = LaneHarness.new(@root)
+  end
+
+  def teardown
+    FileUtils.remove_entry(@root)
+  end
+
+  def test_builds_from_project_root_before_uploading_the_fresh_bundle
+    Dir.mktmpdir("twonly-internal-caller") do |caller_dir|
+      Dir.chdir(caller_dir) do
+        @lane.run_internal
+        assert_equal File.realpath(caller_dir), Dir.pwd
+      end
+    end
+
+    assert_equal [File.realpath(@root)], @lane.bundle_build_directories
+    assert_equal [["flutter build appbundle --release"]], @lane.commands
+    assert_equal 1, @lane.play_uploads.length
+    assert_equal "fresh bundle", @lane.play_uploads.first.fetch(:bundle)
+    assert_equal @bundle, @lane.play_uploads.first.fetch(:aab)
+    assert_equal "internal", @lane.play_uploads.first.fetch(:track)
+  end
+
+  def test_failed_build_never_uploads_an_existing_stale_bundle
+    @lane.fail_build = true
+    error = assert_raises(LaneError) { @lane.run_internal }
+    assert_match(/Build failed/, error.message)
+    assert_empty @lane.play_uploads
+    assert_equal "stale bundle", File.read(@bundle)
+  end
+end
+
 class LaneHarness
   EXPECTED_CERTIFICATE = "e3c44d568c67f932ac8c3390998ab95ee8ff2d7a073c24e3667793e6eacd770a"
 
@@ -29,6 +68,7 @@ class LaneHarness
 
   attr_accessor :view_result, :upload_failures, :fail_build
   attr_reader :commands, :delays, :notes, :signature_results
+  attr_reader :play_uploads, :bundle_build_directories
 
   def initialize(root)
     @commands = []
@@ -37,6 +77,8 @@ class LaneHarness
     @view_result = [true, "Existing release"]
     @upload_failures = 0
     @signature_results = {}
+    @play_uploads = []
+    @bundle_build_directories = []
     source = File.read(File.expand_path("../Fastfile", __dir__))
     instance_eval(source, File.join(root, "fastlane", "Fastfile"))
   end
@@ -52,12 +94,26 @@ class LaneHarness
   def run(options = {})
     @lanes.fetch(:fdroid).call(options)
   end
+  def run_internal
+    @lanes.fetch(:internal).call
+  end
+  def upload_to_play_store(**options)
+    @play_uploads << options.merge(bundle: File.read(options.fetch(:aab)))
+  end
   def sleep(seconds)
     @delays << seconds
   end
 
   def sh(*command, **_options, &block)
     @commands << command
+    if command == ["flutter build appbundle --release"]
+      @bundle_build_directories << Dir.pwd
+      raise LaneError, "Build failed" if fail_build
+      path = File.join(Dir.pwd, "build/app/outputs/bundle/release/app-release.aab")
+      FileUtils.mkdir_p(File.dirname(path))
+      File.write(path, "fresh bundle")
+      return "Built"
+    end
     if command == ["flutter build apk --release --split-per-abi"]
       raise LaneError, "Build failed" if fail_build
       return "Built"

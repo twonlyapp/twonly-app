@@ -21,13 +21,11 @@ class FaqView extends StatefulWidget {
 
 class _FaqViewState extends State<FaqView> {
   Map<String, FaqCategory>? _faqData;
-  late String domain;
   bool _noInternet = false;
 
   @override
   void initState() {
     super.initState();
-    domain = 'https://twonly.eu';
     unawaited(_fetchFAQData());
   }
 
@@ -35,46 +33,67 @@ class _FaqViewState extends State<FaqView> {
     final cacheFile = File('${AppEnvironment.cacheDir}/faq.json');
     FaqData? faqData;
     try {
-      final response = await http.get(Uri.parse('$domain/faq.json'));
-
-      if (response.statusCode == 200) {
-        final jsonData = utf8.decode(response.bodyBytes);
-        setState(() {
-          faqData = FaqData.fromJson(
-            json.decode(jsonData) as Map<String, dynamic>,
-          );
-          _noInternet = false;
-        });
-        cacheFile.writeAsStringSync(jsonData);
-      } else {
-        Log.error('FAQ got ${response.statusCode}');
+      final response = await http
+          .get(Uri.parse('https://twonly.eu/faq.json'))
+          .timeout(const Duration(seconds: 15));
+      if (response.statusCode != 200) {
+        throw HttpException('FAQ got ${response.statusCode}');
       }
-    } catch (e) {
-      Log.error(e);
-      setState(() {
-        _noInternet = true;
-      });
-    }
-    if (_noInternet && cacheFile.existsSync()) {
-      final jsonData = cacheFile.readAsStringSync();
-      setState(() {
-        faqData = FaqData.fromJson(
-          json.decode(jsonData) as Map<String, dynamic>,
+      final jsonData = utf8.decode(response.bodyBytes);
+      final parsed = FaqData.fromJson(
+        json.decode(jsonData) as Map<String, dynamic>,
+      );
+      if (parsed.languages.isEmpty ||
+          (mounted &&
+              parsed.languages[Localizations.localeOf(context).languageCode] ==
+                  null &&
+              parsed.languages['en'] == null)) {
+        throw const FormatException('FAQ has no usable language');
+      }
+      faqData = parsed;
+      // A cache write failure must not discard a successful response.
+      try {
+        cacheFile.writeAsStringSync(jsonData);
+      } catch (error, stackTrace) {
+        Log.warn(
+          'Could not cache the FAQ',
+          error,
+          stackTrace,
         );
-        _noInternet = false;
-      });
+      }
+    } catch (error, stackTrace) {
+      Log.warn('Could not fetch the FAQ', error, stackTrace);
+    }
+    if (faqData == null) {
+      try {
+        if (cacheFile.existsSync()) {
+          faqData = FaqData.fromJson(
+            json.decode(cacheFile.readAsStringSync()) as Map<String, dynamic>,
+          );
+        }
+      } catch (error, stackTrace) {
+        Log.warn(
+          'Could not read the cached FAQ',
+          error,
+          stackTrace,
+        );
+      }
     }
 
     if (!mounted) return;
-
     final locale = Localizations.localeOf(context).languageCode;
-    _faqData = faqData!.languages[locale] ?? faqData!.languages['en'];
+    final data = faqData?.languages[locale] ?? faqData?.languages['en'];
+    setState(() {
+      _faqData = data;
+      _noInternet = data == null;
+    });
 
-    if (widget.questionId != null && _faqData != null) {
-      if (!_navigateToQuestion(widget.questionId!, _faqData!)) {
-        final englishData = faqData!.languages['en'];
-        if (englishData != null && englishData != _faqData) {
-          _navigateToQuestion(widget.questionId!, englishData);
+    final questionId = widget.questionId;
+    if (questionId != null && data != null) {
+      if (!_navigateToQuestion(questionId, data)) {
+        final englishData = faqData?.languages['en'];
+        if (englishData != null && englishData != data) {
+          _navigateToQuestion(questionId, englishData);
         }
       }
     }
@@ -106,8 +125,20 @@ class _FaqViewState extends State<FaqView> {
         appBar: AppBar(
           title: Text(context.lang.settingsHelpFAQ),
         ),
-        body: const Center(
-          child: Text('Could not load the FAQ.'),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Could not load the FAQ.'),
+              TextButton(
+                onPressed: () {
+                  setState(() => _noInternet = false);
+                  unawaited(_fetchFAQData());
+                },
+                child: Text(context.lang.retry),
+              ),
+            ],
+          ),
         ),
       );
     }

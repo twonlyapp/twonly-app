@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.9
+
+- Fix: Video story uploads, media playback and FAQ loading
+- Fix: Contact discovery, permission requests and several crashes
+
 ## 0.6.8
 
 - Fix: Some contacts were not displayed

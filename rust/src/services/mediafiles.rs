@@ -577,6 +577,9 @@ impl MediaFileService {
     }
 
     pub fn remove_files(&self, media_id: &str, media_type: &str) -> Result<()> {
+        if media_type == "video" {
+            self.discard_interrupted_renders(media_id)?;
+        }
         for path in self.paths(media_id, media_type) {
             match std::fs::remove_file(path) {
                 Ok(()) => {}
@@ -692,12 +695,35 @@ impl MediaFileService {
     /// Whether the pre-rendered clip can be sent as it stands, which is true
     /// only while the editor still asks for exactly what it was produced with.
     pub(crate) fn prerender_matches(&self, media_id: &str, fingerprint: &str) -> bool {
-        if !self.prerendered_path(media_id).exists() {
+        if crate::native::video::validate_file(&self.prerendered_path(media_id)).is_err() {
             return false;
         }
 
         std::fs::read_to_string(self.prerender_marker_path(media_id))
             .is_ok_and(|marker| marker == fingerprint)
+    }
+
+    pub(crate) fn discard_interrupted_renders(&self, media_id: &str) -> Result<()> {
+        let directory = PathBuf::from(&self.ctx.config.data_dir).join("mediafiles/tmp");
+        let entries = match std::fs::read_dir(directory) {
+            Ok(entries) => entries,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+            Err(error) => return Err(error.into()),
+        };
+        let prefix = format!("{media_id}.");
+        for entry in entries {
+            let entry = entry?;
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            if name.starts_with(&prefix) && name.contains(".rendering-") {
+                match std::fs::remove_file(entry.path()) {
+                    Ok(()) => {}
+                    Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                    Err(error) => return Err(error.into()),
+                }
+            }
+        }
+        Ok(())
     }
 
     pub(crate) fn discard_prerender(&self, media_id: &str) {

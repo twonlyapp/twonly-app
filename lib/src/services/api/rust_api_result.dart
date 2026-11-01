@@ -46,12 +46,12 @@ Future<Result<T, ErrorCode>> rustApiResult<T>(Future<T> request) async {
 /// only has to be logged.
 void unawaitedRustCall(Future<void> request, String description) {
   unawaited(
-    request.catchError((Object error) {
+    request.catchError((Object error, StackTrace stackTrace) {
       if (isBackgroundCancellation(error)) {
         Log.info('$description stopped: the app left the foreground');
         return;
       }
-      Log.warn('$description failed', error);
+      Log.warn('$description failed', error, stackTrace);
     }),
   );
 }
@@ -64,5 +64,7 @@ void unawaitedRustCall(Future<void> request, String description) {
 bool isBackgroundCancellation(Object error) {
   final text = error.toString();
   return text.contains('retry when active') ||
+      text.contains('Database operation deferred until foreground') ||
+      text.contains('Native database admission cancelled') ||
       text.contains('attempted to acquire a connection on a closed pool');
 }
