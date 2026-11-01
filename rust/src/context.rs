@@ -73,6 +73,8 @@ pub struct Context {
     /// Coalesces overlapping retries of the messages parked on this account's
     /// device, per context for the same reason as `queued_receipt_flush`.
     pub(crate) parked_message_retry: crate::api::messages::incoming::messages::FlushClaim,
+    pub(crate) contact_metadata_refresh:
+        crate::api::messages::incoming::contact::metadata::Refresher,
     /// Serializes this account's upload preparation, which reserves slots and
     /// writes request files that a second concurrent pass would duplicate.
     /// Held across a reconciliation round trip, so one account waiting on the
@@ -193,6 +195,7 @@ impl Context {
             prekey_publication: Mutex::new(None),
             queued_receipt_flush: Default::default(),
             parked_message_retry: Default::default(),
+            contact_metadata_refresh: Default::default(),
             media_preprocessing: Mutex::new(()),
             media_retransmission: Mutex::new(()),
             webxdc_visibility: Default::default(),
@@ -461,6 +464,7 @@ impl Context {
                         prekey_publication: Mutex::new(None),
                         queued_receipt_flush: Default::default(),
                         parked_message_retry: Default::default(),
+                        contact_metadata_refresh: Default::default(),
                         media_preprocessing: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
                         webxdc_visibility: Default::default(),
@@ -530,6 +534,7 @@ impl Context {
                         prekey_publication: Mutex::new(None),
                         queued_receipt_flush: Default::default(),
                         parked_message_retry: Default::default(),
+                        contact_metadata_refresh: Default::default(),
                         media_preprocessing: Mutex::new(()),
                         media_retransmission: Mutex::new(()),
                         webxdc_visibility: Default::default(),

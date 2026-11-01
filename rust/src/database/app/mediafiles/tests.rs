@@ -278,6 +278,77 @@ fn input(filter: MediaFilter) -> MediaQuery {
 }
 
 #[tokio::test]
+async fn memories_backup_excludes_mock_gallery_entries_including_pending_retries() {
+    use crate::database::app::diagnostics::{table::MockGalleryItem, writes::seed_gallery};
+
+    let directory = tempfile::tempdir().unwrap();
+    let database = AppDatabase::new(
+        directory.path().join("app.sqlite").to_str().unwrap(),
+        None,
+        false,
+    )
+    .await
+    .unwrap();
+    database.run_migrations().await.unwrap();
+    let mut tx = database.pool.begin().await.unwrap();
+
+    seed_gallery(
+        &mut tx,
+        (0..2)
+            .map(|created_at| MockGalleryItem {
+                created_at,
+                month: "October 2026".into(),
+            })
+            .collect(),
+        100,
+    )
+    .await
+    .unwrap();
+    sqlx::query("UPDATE media_files SET cloud_state = 'pending' WHERE media_id = 'mock_gen_1'")
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+
+    let local_id = uuid::Uuid::new_v4().to_string();
+    let retry_id = uuid::Uuid::new_v4().to_string();
+    let uploaded_id = uuid::Uuid::new_v4().to_string();
+    let unstored_id = uuid::Uuid::new_v4().to_string();
+    for (id, stored, cloud_state) in [
+        (&local_id, true, "none"),
+        (&retry_id, true, "pending"),
+        (&uploaded_id, true, "uploaded"),
+        (&unstored_id, false, "none"),
+    ] {
+        sqlx::query(
+            "INSERT INTO media_files(media_id, type, stored, cloud_state) VALUES (?, 'image', ?, ?)",
+        )
+        .bind(id)
+        .bind(stored)
+        .bind(cloud_state)
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    }
+
+    let pending = queries::list(&mut tx, &input(MediaFilter::MemoriesToBackup))
+        .await
+        .unwrap();
+    assert_eq!(
+        pending
+            .into_iter()
+            .map(|file| file.media_id)
+            .collect::<Vec<_>>(),
+        vec![local_id, retry_id]
+    );
+    let stored = queries::list(&mut tx, &input(MediaFilter::Stored))
+        .await
+        .unwrap();
+    for id in ["mock_gen_0", "mock_gen_1"] {
+        assert!(stored.iter().any(|file| file.media_id == id));
+    }
+}
+
+#[tokio::test]
 
 async fn media_queries_preserve_states_deduplication_links_and_small_storage_results() {
     let directory = tempfile::tempdir().unwrap();

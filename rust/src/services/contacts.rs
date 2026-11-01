@@ -220,6 +220,16 @@ impl ContactService {
             )
             .await?;
 
+        let database = self.ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+        self.ctx
+            .user_discovery
+            .get()
+            .await
+            .refresh_session_identity(user.user_id, &mut transaction)
+            .await?;
+        transaction.commit().await?;
+
         Ok(())
     }
 

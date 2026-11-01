@@ -142,9 +142,7 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
     final title = context.lang.memoriesMenu;
     widget.onDismiss();
     final path = await navigator.push<String>(
-      MaterialPageRoute(
-        builder: (context) => MemoriesPickerView(title: title),
-      ),
+      MemoriesPickerView.route(title: title),
     );
     if (path == null) return;
 

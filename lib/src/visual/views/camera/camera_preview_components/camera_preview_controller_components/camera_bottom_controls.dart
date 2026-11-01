@@ -15,7 +15,7 @@ class CameraBottomControls extends StatelessWidget {
     required this.keyTriggerButton,
     required this.keyLockButton,
     required this.onTakePicture,
-    required this.onPickImageFromGallery,
+    required this.onPickFromMemories,
     required this.updateScaleFactor,
     required this.onStopVideoRecording,
     super.key,
@@ -27,7 +27,7 @@ class CameraBottomControls extends StatelessWidget {
   final GlobalKey keyTriggerButton;
   final GlobalKey keyLockButton;
   final VoidCallback onTakePicture;
-  final VoidCallback onPickImageFromGallery;
+  final VoidCallback onPickFromMemories;
   final Future<void> Function(double) updateScaleFactor;
   final VoidCallback onStopVideoRecording;
 
@@ -105,7 +105,7 @@ class CameraBottomControls extends StatelessWidget {
 
   Widget _buildSideButtonLeft(BuildContext context) {
     return GestureDetector(
-      onTap: onPickImageFromGallery,
+      onTap: onPickFromMemories,
       child: Align(
         child: Container(
           height: 50,

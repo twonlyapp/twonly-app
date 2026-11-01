@@ -108,8 +108,14 @@ class BackupService {
   static String _getIdentityBackupUrl(String backupId) =>
       '${RustApi.apiBaseUrl(protocol: 'https')}backup/identity/$backupId';
 
-  static String _getArchiveBackupUrl(String backupDownloadToken, int? userId) =>
-      '${RustApi.apiBaseUrl(protocol: 'https')}backup/archive/${userId == null ? '' : '${userId.toRadixString(16).padLeft(16, '0').toUpperCase()}/'}$backupDownloadToken';
+  static String _getArchiveBackupUrl(String backupDownloadToken, int? userId) {
+    // The server reads the ID as its eight big-endian bytes, the encoding Rust
+    // sends too. A signed hex string would put a minus sign in front instead.
+    final userPath = userId == null
+        ? ''
+        : '${uint8ListToHex((ByteData(8)..setInt64(0, userId)).buffer.asUint8List()).toUpperCase()}/';
+    return '${RustApi.apiBaseUrl(protocol: 'https')}backup/archive/$userPath$backupDownloadToken';
+  }
 
   static final _backupUpdateController = StreamController<void>.broadcast();
   static Stream<void> get onBackupUpdated => _backupUpdateController.stream;

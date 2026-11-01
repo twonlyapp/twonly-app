@@ -3288,7 +3288,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get createSticker => 'Sticker erstellen';
 
   @override
-  String get stickerPickFromGallery => 'Galerie';
+  String get stickerPickFromGallery => 'Aus Galerie auswählen';
 
   @override
   String get stickerAdded => 'Sticker gespeichert';

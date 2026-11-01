@@ -296,9 +296,9 @@ pub async fn purge_expired(ctx: &Arc<Context>) -> Result<()> {
     Ok(())
 }
 
-/// Takes one of the user's own story items down before it expires: every
-/// recipient is told to drop it if it was dispatched. Unsent uploads are
-/// cancelled first, so nobody receives either the story or a deletion.
+/// Takes one of the user's own story items down before it expires. Saved
+/// copies remain as ordinary chat media; unsaved recipients are told to drop
+/// the item if it was dispatched. Unsent uploads are cancelled first.
 pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
     let lock = media_lock(media_id);
 
@@ -307,8 +307,8 @@ pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
     let rows = sqlx::query!(
-        r#"SELECT message_id, group_id FROM messages
-           WHERE media_id = ? AND is_story = 1 AND sender_id IS NULL AND media_stored = 0"#,
+        r#"SELECT message_id, group_id, media_stored AS "media_stored!: bool" FROM messages
+           WHERE media_id = ? AND is_story = 1 AND sender_id IS NULL"#,
         media_id,
     )
     .fetch_all(&database.pool)
@@ -339,7 +339,7 @@ pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
 
     let messages = MessageService::new(ctx);
 
-    for row in rows.iter().filter(|_| dispatched) {
+    for row in rows.iter().filter(|row| dispatched && !row.media_stored) {
         let content = EncryptedContent {
             message_update: Some(encrypted_content::MessageUpdate {
                 r#type: encrypted_content::message_update::Type::Delete as i32,
@@ -356,16 +356,31 @@ pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
             .await?;
     }
 
-    let message_ids = rows
-        .into_iter()
-        .map(|row| row.message_id)
-        .collect::<Vec<_>>();
-
     let database = ctx.app_db.read().await.clone();
 
     let mut transaction = database.pool.begin().await?;
 
+    // Saving can finish while deletion messages are being queued. Recheck in
+    // the cleanup transaction before retiring any recipient's media copy.
+    let message_ids = sqlx::query_scalar!(
+        r#"SELECT message_id FROM messages
+           WHERE media_id = ? AND is_story = 1 AND sender_id IS NULL AND media_stored = 0"#,
+        media_id,
+    )
+    .fetch_all(&mut *transaction)
+    .await?;
+
     let released = retire_rows(&mut transaction, &message_ids, timestamp / 1_000).await?;
+
+    // Keeping the saved photo must not keep the deleted story in the profile
+    // or leave a viewer list consisting only of the people who saved it.
+    sqlx::query!(
+        r#"UPDATE messages SET is_story = 0
+           WHERE media_id = ? AND is_story = 1 AND sender_id IS NULL AND media_stored = 1"#,
+        media_id,
+    )
+    .execute(&mut *transaction)
+    .await?;
 
     // A stored Memory may outlive the story. Stop retrying its cancelled send;
     // if the same media was also sent in a chat, prepare that remaining send
@@ -622,6 +637,128 @@ mod tests {
         t.commit().await?;
 
         assert_eq!(audience_chats(&ctx, &everybody).await?, vec![group_id]);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+
+    async fn deleting_story_retires_saved_copies_and_preserves_chat_media() -> Result<()> {
+        for saved_count in [1, 18] {
+            let (_directory, ctx) = context().await?;
+            let database = ctx.app_db.read().await.clone();
+            let now = chrono::Utc::now().timestamp();
+
+            sqlx::query(
+                "INSERT INTO media_files(media_id, type, upload_state, stored) \
+                 VALUES ('story', 'image', 'uploaded', 1)",
+            )
+            .execute(&database.pool)
+            .await?;
+
+            for index in 0..18 {
+                let contact_id = index + 7;
+                let group_id = Group::direct_chat_id(42, contact_id);
+                sqlx::query("INSERT INTO contacts(user_id, username, accepted) VALUES (?, ?, 1)")
+                    .bind(contact_id)
+                    .bind(format!("friend-{contact_id}"))
+                    .execute(&database.pool)
+                    .await?;
+                sqlx::query(
+                    "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES (?, ?, 1)",
+                )
+                .bind(&group_id)
+                .bind(format!("Friend {contact_id}"))
+                .execute(&database.pool)
+                .await?;
+                sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES (?, ?)")
+                    .bind(&group_id)
+                    .bind(contact_id)
+                    .execute(&database.pool)
+                    .await?;
+                sqlx::query(
+                    "INSERT INTO messages(message_id, group_id, type, media_id, is_story, \
+                     media_stored, opened_at, created_at) VALUES (?, ?, 'media', 'story', 1, ?, ?, ?)",
+                )
+                .bind(format!("story-{contact_id}"))
+                .bind(&group_id)
+                .bind(index < saved_count)
+                .bind(now)
+                .bind(now)
+                .execute(&database.pool)
+                .await?;
+            }
+
+            sqlx::query(
+                "INSERT INTO messages(message_id, group_id, type, content, quotes_message_id) \
+                 VALUES ('reply', ?, 'text', 'Reply', 'story-8')",
+            )
+            .bind(Group::direct_chat_id(42, 8))
+            .execute(&database.pool)
+            .await?;
+
+            let saved_path = MediaFileService::new(&ctx).stored_path("story", "image");
+            MediaFileService::ensure_parent(&saved_path)?;
+            std::fs::write(&saved_path, b"saved-photo")?;
+
+            let mut transaction = database.pool.begin().await?;
+            let before =
+                crate::database::app::stories::queries::own(&mut transaction, now - 60).await?;
+            assert_eq!(before.items[0].recipient_count, 18);
+            transaction.rollback().await?;
+
+            delete_item(&ctx, "story").await?;
+
+            let mut transaction = database.pool.begin().await?;
+            let own =
+                crate::database::app::stories::queries::own(&mut transaction, now - 60).await?;
+            assert!(
+                own.items.is_empty(),
+                "a saved copy must not keep the deleted story visible"
+            );
+            let viewers =
+                crate::database::app::stories::queries::viewers(&mut transaction, "story").await?;
+            assert!(viewers.links.is_empty());
+
+            let saved: i64 = sqlx::query_scalar(
+                "SELECT COUNT(*) FROM messages WHERE media_id = 'story' AND media_stored = 1 \
+                 AND is_story = 0 AND is_deleted_from_sender = 0 AND opened_at = ?",
+            )
+            .bind(now)
+            .fetch_one(&mut *transaction)
+            .await?;
+            assert_eq!(saved, saved_count);
+
+            let quote: Option<String> = sqlx::query_scalar(
+                "SELECT quotes_message_id FROM messages WHERE message_id = 'reply'",
+            )
+            .fetch_one(&mut *transaction)
+            .await?;
+            assert_eq!(quote.as_deref(), Some("story-8"));
+            let quoted_media: Option<String> =
+                sqlx::query_scalar("SELECT media_id FROM messages WHERE message_id = 'story-8'")
+                    .fetch_one(&mut *transaction)
+                    .await?;
+            assert_eq!(
+                quoted_media.as_deref(),
+                (saved_count == 18).then_some("story")
+            );
+            transaction.rollback().await?;
+
+            assert_eq!(std::fs::read(&saved_path)?, b"saved-photo");
+
+            let receipts_before: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM receipts")
+                .fetch_one(&database.pool)
+                .await?;
+            delete_item(&ctx, "story").await?;
+            let receipts_after: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM receipts")
+                .fetch_one(&database.pool)
+                .await?;
+            assert_eq!(
+                receipts_after, receipts_before,
+                "repeated deletion must be a no-op"
+            );
+        }
 
         Ok(())
     }

@@ -65,6 +65,8 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
             }
         }
 
+        crate::api::messages::incoming::contact::metadata::schedule(&ctx);
+
         let replay: Pin<Box<dyn Future<Output = Result<()>> + Send>> =
             Box::pin(ApiRuntime::replay_outbox(&ctx));
 

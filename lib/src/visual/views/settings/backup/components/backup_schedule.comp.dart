@@ -34,7 +34,9 @@ class _BackupScheduleTileState extends State<BackupScheduleTile>
   }
 
   void _refresh() {
-    setState(() => _schedule = NativeBackupScheduler.getSchedule());
+    setState(() {
+      _schedule = NativeBackupScheduler.getSchedule();
+    });
   }
 
   String _description(NativeBackupSchedule schedule) {

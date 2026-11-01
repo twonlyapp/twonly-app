@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twonly/core/bridge.dart' show FlameState;
 import 'package:twonly/core/bridge/database.dart';
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/webxdc.dart' show WebxdcStoreApp;
 import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
@@ -40,6 +41,26 @@ class _PickerApi extends NativeTestApi {
   Future<List<String>> crateBridgeApiRustApiClearConversationNotifications({
     required String conversationId,
   }) async => [];
+
+  // The + panel shows its Apps entry only when the store offers an app.
+  @override
+  Future<List<WebxdcStoreApp>> crateBridgeWebxdcCatalog({
+    required String groupId,
+    required List<String> languages,
+  }) async => const [
+    WebxdcStoreApp(
+      appId: 'app',
+      version: 1,
+      name: 'App',
+      bundleBytes: 0,
+      proOnly: false,
+      oneTime: false,
+    ),
+  ];
+
+  // The panel refreshes a stale catalog from the server; tests stay offline.
+  @override
+  Future<void> crateBridgeWebxdcRefreshCatalog() async {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -125,6 +146,8 @@ void main() {
     await openChat(tester);
     final originalInputTop = tester.getTopLeft(find.byType(TextField)).dy;
     await tester.tap(icon(FontAwesomeIcons.plus));
+    await tester.pump();
+    // Lets the panel's catalog check land and show the Apps entry.
     await tester.pump();
 
     final panel = find.byType(ShareAdditionalView);

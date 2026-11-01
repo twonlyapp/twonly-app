@@ -38,6 +38,7 @@ pub async fn transferred(
             "contacts",
             "key_verifications",
             "user_discovery_user_relations",
+            "user_discovery_announced_users",
         ],
         cancellation,
         move |database| async move {
@@ -65,6 +66,7 @@ pub async fn groups(
             "group_members",
             "key_verifications",
             "user_discovery_user_relations",
+            "user_discovery_announced_users",
         ],
         cancellation,
         move |database| {

@@ -39,9 +39,9 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
   @override
   void initState() {
     super.initState();
-    _groupId = getUUIDforDirectChat(
-      widget.contactId,
-      userService.currentUser.userId,
+    _groupId = rust_groups.directChatId(
+      userId: widget.contactId,
+      otherUserId: userService.currentUser.userId,
     );
     final stream = watchRustDatabase(
       (control) => rust_groups.watchGroups(

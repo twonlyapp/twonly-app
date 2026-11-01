@@ -1000,6 +1000,35 @@ mod tests {
         assert!(!Group::is_direct_chat_id("", 42));
     }
 
+    /// The vectors the removed Dart `getUUIDforDirectChat` was tested with.
+    /// Direct chats created by older releases carry these IDs, so the
+    /// derivation must keep producing them.
+    #[test]
+    fn a_direct_chat_id_matches_the_ids_older_releases_created() {
+        let cases = [
+            (0, 0, "00000000-0000-0000-0000-000000000000"),
+            (0x7fffffff, 0x7fffffff, "00000000-7fff-ffff-0000-00007fffffff"),
+            (1, 0, "00000000-0000-0001-0000-000000000000"),
+            (0, 1, "00000000-0000-0001-0000-000000000000"),
+            (0x12345678, 0x0abcdef0, "00000000-1234-5678-0000-00000abcdef0"),
+            (
+                0x7dc8a4f20a75de46,
+                0x7ffffffffffffff8,
+                "7fffffff-ffff-fff8-7dc8-a4f20a75de46",
+            ),
+        ];
+
+        for (a, b, expected) in cases {
+            assert_eq!(Group::direct_chat_id(a, b), expected, "({a:#x}, {b:#x})");
+        }
+
+        // The Dart version threw here; a peer can send any ID, so this must not.
+        assert_eq!(
+            Group::direct_chat_id(-1, 7),
+            "00000000-0000-0007-ffff-ffffffffffff"
+        );
+    }
+
     /// Local midnight of the given date, which is what the derivation compares
     /// against. Mirrors the `DateTime(2026, 2, 2)` literals the Dart tests
     /// used.

@@ -163,6 +163,8 @@ impl UserDiscovery {
     }
 
     pub async fn initialize_from_config(&self, ctx: &Context) -> Result<()> {
+        self.refresh_session_identities(ctx).await?;
+
         let config = crate::user_config::UserConfig::load_required_from(ctx)?;
 
         if !config.is_user_discovery_enabled {
@@ -320,6 +322,59 @@ impl UserDiscovery {
         .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
 
         Ok(stored.as_deref() == Some(public_key))
+    }
+
+    /// Claims about another key remain stored but cannot verify this session.
+    /// This snapshot lets all app queries use the same key comparison without
+    /// attaching the separate, encrypted Signal database to every connection.
+    pub(crate) async fn refresh_session_identity(
+        &self,
+        contact_id: UserID,
+        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+    ) -> Result<()> {
+        let announced: bool = sqlx::query_scalar(
+            "SELECT EXISTS(SELECT 1 FROM user_discovery_announced_users WHERE announced_user_id = ?)",
+        )
+        .bind(contact_id)
+        .fetch_one(&mut **t)
+        .await?;
+        if !announced {
+            return Ok(());
+        }
+
+        let database = self.rust_db.read().await.clone();
+        let identity: Option<Vec<u8>> =
+            sqlx::query_scalar("SELECT identity_key FROM signal_identities WHERE name = ?")
+                .bind(contact_id.to_string())
+                .fetch_optional(&database.pool)
+                .await?;
+
+        sqlx::query(
+            "UPDATE user_discovery_announced_users SET session_identity_key = ?
+             WHERE announced_user_id = ? AND session_identity_key IS NOT ?",
+        )
+        .bind(&identity)
+        .bind(contact_id)
+        .bind(&identity)
+        .execute(&mut **t)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn refresh_session_identities(&self, ctx: &Context) -> Result<()> {
+        let database = ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+        let contacts: Vec<i64> =
+            sqlx::query_scalar("SELECT announced_user_id FROM user_discovery_announced_users")
+                .fetch_all(&mut *transaction)
+                .await?;
+        for contact_id in contacts {
+            self.refresh_session_identity(contact_id, &mut transaction)
+                .await?;
+        }
+        transaction.commit().await?;
+        Ok(())
     }
 
     /// Initializes or updates the user discovery.
@@ -1275,6 +1330,8 @@ impl UserDiscovery {
         .await
         .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;
 
+        self.refresh_session_identity(announced_user.user_id, t).await?;
+
         sqlx::query!(
             r#"
             INSERT INTO user_discovery_user_relations (
@@ -1314,6 +1371,149 @@ impl Default for UserDiscoveryConfig {
 mod tests {
 
     use super::*;
+
+    #[tokio::test]
+    async fn discovery_verification_requires_the_current_session_key() -> Result<()> {
+        use crate::database::app::key_verifications::queries as verification_queries;
+        use crate::database::app::key_verifications::table::VerificationStatus;
+        use crate::database::app::recovery::queries as recovery_queries;
+
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        let discovery = ctx.user_discovery.get().await;
+        let database = ctx.app_db.read().await.clone();
+        let signal = ctx.rust_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id,username,accepted) VALUES (1,'bob',1),(7,'carol',1);
+             INSERT INTO key_verifications(contact_id,type) VALUES (1,'manual');
+             INSERT INTO groups(group_id,group_name) VALUES ('g','group');
+             INSERT INTO group_members(group_id,contact_id) VALUES ('g',7);",
+        )
+        .execute(&mut *tx)
+        .await?;
+        let announced = |key| AnnouncedUser {
+            user_id: 7,
+            public_key: vec![key],
+            public_id: 70,
+        };
+
+        discovery
+            .push_new_user_relation(1, announced(1), Some(123), &mut tx)
+            .await?;
+        assert!(verification_queries::transferred(&mut tx, 7)
+            .await?
+            .relations
+            .is_empty());
+
+        // A server-authorized identity can establish a session while the old
+        // discovery claim remains stored. Only the inherited trust disappears.
+        sqlx::query(
+            "INSERT INTO signal_identities(name,identity_key,timestamp) VALUES ('7',X'02',0)",
+        )
+        .execute(&signal.pool)
+        .await?;
+        discovery.refresh_session_identity(7, &mut tx).await?;
+        assert!(verification_queries::transferred(&mut tx, 7)
+            .await?
+            .relations
+            .is_empty());
+        assert_eq!(
+            verification_queries::groups(&mut tx, Some("g")).await?[0].status,
+            VerificationStatus::NotTrusted,
+        );
+        assert!(!recovery_queries::verified_ids(&mut tx).await?.contains(&7));
+        assert_eq!(
+            Contact::get_contact_by_id(&mut tx, 7)
+                .await?
+                .unwrap()
+                .accepted,
+            1
+        );
+        let timestamp: Option<i64> = sqlx::query_scalar(
+            "SELECT public_key_verified_timestamp FROM user_discovery_user_relations WHERE announced_user_id = 7",
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+        assert_eq!(timestamp, Some(123));
+
+        discovery
+            .push_new_user_relation(1, announced(2), Some(124), &mut tx)
+            .await?;
+        assert_eq!(
+            verification_queries::transferred(&mut tx, 7)
+                .await?
+                .relations
+                .len(),
+            1
+        );
+        assert_eq!(
+            verification_queries::groups(&mut tx, Some("g")).await?[0].status,
+            VerificationStatus::PartialTrusted,
+        );
+        assert!(recovery_queries::verified_ids(&mut tx).await?.contains(&7));
+
+        // A later claim for the old key cannot restore inherited verification.
+        discovery
+            .push_new_user_relation(1, announced(1), Some(125), &mut tx)
+            .await?;
+        assert!(verification_queries::transferred(&mut tx, 7)
+            .await?
+            .relations
+            .is_empty());
+
+        // Independent personal verification still applies.
+        crate::database::app::key_verifications::writes::insert(&mut tx, 7, "manual", None).await?;
+        assert_eq!(
+            verification_queries::groups(&mut tx, Some("g")).await?[0].status,
+            VerificationStatus::Trusted,
+        );
+        tx.commit().await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn initialization_refreshes_discovery_identity_snapshots() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::api::ApiRuntime::close(&ctx).await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":42,"username":"me","displayName":"Me","isUserDiscoveryEnabled":false}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        let signal = ctx.rust_db.read().await.clone();
+        sqlx::raw_sql(
+            "INSERT INTO user_discovery_announced_users
+             (announced_user_id,announced_public_key,public_id,session_identity_key)
+             VALUES (7,X'01',70,NULL),(8,X'02',80,X'02'),(9,X'03',90,X'03');",
+        )
+        .execute(&database.pool)
+        .await?;
+        sqlx::raw_sql(
+            "INSERT INTO signal_identities(name,identity_key,timestamp)
+             VALUES ('7',X'01',0),('8',X'09',0);",
+        )
+        .execute(&signal.pool)
+        .await?;
+        ctx.user_discovery
+            .get()
+            .await
+            .initialize_from_config(&ctx)
+            .await?;
+        let identities: Vec<Option<Vec<u8>>> = sqlx::query_scalar(
+            "SELECT session_identity_key FROM user_discovery_announced_users ORDER BY announced_user_id",
+        )
+        .fetch_all(&database.pool)
+        .await?;
+        assert_eq!(identities, vec![Some(vec![1]), Some(vec![9]), None]);
+        Ok(())
+    }
 
     #[test]
 

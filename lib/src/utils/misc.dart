@@ -245,34 +245,6 @@ Uint8List hexToUint8List(String hex) => Uint8List.fromList(
   ),
 );
 
-String getUUIDforDirectChat(int a, int b) {
-  if (a < 0 || b < 0) {
-    throw ArgumentError('Inputs must be non-negative integers.');
-  }
-
-  // Mask to 64 bits in case inputs exceed 64 bits
-  final mask64 = (BigInt.one << 64) - BigInt.one;
-  final ai = BigInt.from(a) & mask64;
-  final bi = BigInt.from(b) & mask64;
-
-  // Ensure the bigger integer is in front (high 64 bits)
-  final hi = ai >= bi ? ai : bi;
-  final lo = ai >= bi ? bi : ai;
-
-  final combined = (hi << 64) | lo;
-
-  final hex = combined.toRadixString(16).padLeft(32, '0');
-
-  final parts = [
-    hex.substring(0, 8),
-    hex.substring(8, 12),
-    hex.substring(12, 16),
-    hex.substring(16, 20),
-    hex.substring(20, 32),
-  ];
-  return parts.join('-');
-}
-
 String friendlyDateTime(
   BuildContext context,
   DateTime dt, {

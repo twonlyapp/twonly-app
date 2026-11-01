@@ -1,16 +1,10 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/model/protobuf/client/generated/http_requests.pb.dart';
+import 'package:twonly/src/services/feedback.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -31,131 +25,54 @@ class _ContactUsState extends State<ContactUsView> {
   bool includeDebugLog = true;
   int? _selectedFeedback;
   String? _selectedReason;
-  String? debugLogDownloadToken;
-  String? debugLogEncryptionKey;
+  final FeedbackService _feedbackService = FeedbackService();
+  FeedbackDebugLog? _debugLog;
 
-  Future<(String, String)?> uploadDebugLog() async {
-    if (debugLogDownloadToken != null && debugLogEncryptionKey != null) {
-      return (debugLogDownloadToken!, debugLogEncryptionKey!);
-    }
-    final downloadToken = getRandomUint8List(32);
-    final encryptionKey = getRandomUint8List(32);
+  @override
+  void dispose() {
+    _controller.dispose();
+    _feedbackService.close();
+    super.dispose();
+  }
 
-    final debugLog = await loadLogFile();
-
-    // 1. Compress the debug log
-    final logBytes = utf8.encode(debugLog);
-    final compressedBytes = gzip.encode(logBytes);
-
-    // 2. Encrypt using AES-GCM (with 256 bits)
-    final algorithm = AesGcm.with256bits();
-    final secretBox = await algorithm.encrypt(
-      compressedBytes,
-      secretKey: SecretKey(encryptionKey),
+  Future<FeedbackDebugLog> uploadDebugLog() async {
+    return _debugLog ??= await _feedbackService.uploadDebugLog(
+      await loadLogFile(),
     );
-    final encryptedData = secretBox.concatenation();
-
-    final messageOnSuccess = TextMessage()
-      ..body = []
-      ..userId = Int64();
-
-    final uploadRequest = UploadRequest(
-      messagesOnSuccess: [messageOnSuccess],
-      downloadTokens: [downloadToken],
-      encryptedData: encryptedData,
-    );
-
-    final uploadRequestBytes = uploadRequest.writeToBuffer();
-
-    final apiUrl = '${RustApi.apiBaseUrl(protocol: 'https')}upload';
-
-    final requestMultipart = http.MultipartRequest('POST', Uri.parse(apiUrl));
-
-    late final Map<String, String> headers;
-    try {
-      headers = await RustApi.authenticationHeaders();
-    } catch (error) {
-      Log.error('Could not load authentication headers', error: error);
-      return null;
-    }
-
-    requestMultipart.headers.addAll(headers);
-
-    requestMultipart.files.add(
-      http.MultipartFile.fromBytes(
-        'file',
-        uploadRequestBytes,
-        filename: 'upload',
-      ),
-    );
-
-    final response = await requestMultipart.send();
-    if (response.statusCode == 200) {
-      final tokenHex = uint8ListToHex(downloadToken);
-      final keyHex = uint8ListToHex(encryptionKey);
-      setState(() {
-        debugLogDownloadToken = tokenHex;
-        debugLogEncryptionKey = keyHex;
-      });
-      return (tokenHex, keyHex);
-    }
-    return null;
   }
 
   Future<String?> _getFeedbackText() async {
-    var osVersion = '';
-    final locale = context.lang.localeName;
-    final deviceInfo = DeviceInfoPlugin();
-    var phoneModel = '';
-    final packageInfo = await PackageInfo.fromPlatform();
-    final appVersion = packageInfo.version;
-    final packageName = packageInfo.packageName;
-    final feedback = _controller.text;
-    var debugLogToken = '';
-
-    if (!mounted) return null;
-
     setState(() {
       isLoading = true;
     });
+    try {
+      final locale = context.lang.localeName;
+      final platform = Theme.of(context).platform;
+      final feedback = _controller.text;
+      final packageInfo = await PackageInfo.fromPlatform();
+      final deviceInfo = DeviceInfoPlugin();
+      var osVersion = '';
+      var phoneModel = '';
+      var debugLogToken = '';
 
-    // Get device information
-    if (Theme.of(context).platform == TargetPlatform.android) {
-      final androidInfo = await deviceInfo.androidInfo;
-      osVersion = 'Android version: ${androidInfo.version.release}';
-      phoneModel = ' ${androidInfo.model} (${androidInfo.brand})';
-    } else if (Theme.of(context).platform == TargetPlatform.iOS) {
-      final iosInfo = await deviceInfo.iosInfo;
-      osVersion = 'iOS version: ${iosInfo.utsname.release}';
-      phoneModel = ' ${iosInfo.name}';
-    }
-
-    if (includeDebugLog) {
-      (String, String)? result;
-      try {
-        result = await uploadDebugLog();
-      } catch (e) {
-        Log.error(e);
+      if (platform == TargetPlatform.android) {
+        final androidInfo = await deviceInfo.androidInfo;
+        osVersion = 'Android version: ${androidInfo.version.release}';
+        phoneModel = ' ${androidInfo.model} (${androidInfo.brand})';
+      } else if (platform == TargetPlatform.iOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        osVersion = 'iOS version: ${iosInfo.utsname.release}';
+        phoneModel = ' ${iosInfo.name}';
       }
-      if (result == null) {
-        if (!mounted) return null;
-        showSnackbar(context, 'Could not upload the debug log!');
-        setState(() {
-          isLoading = false;
-        });
-        return null;
+
+      if (includeDebugLog) {
+        final result = await uploadDebugLog();
+        debugLogToken =
+            'Debug Log: https://logs.twonly.eu#${result.downloadToken}/${result.encryptionKey}';
       }
-      final downloadToken = result.$1;
-      final encryptionKey = result.$2;
-      debugLogToken =
-          'Debug Log: https://logs.twonly.eu#$downloadToken/$encryptionKey';
-    }
 
-    setState(() {
-      isLoading = false;
-    });
-
-    return """
+      if (!mounted) return null;
+      return """
 $feedback
 
 ----------
@@ -163,11 +80,28 @@ Reason: ${_selectedReason ?? "Other"}
 Locale: $locale
 Emoji: ${FeedbackEmojiRow.getEmoji(_selectedFeedback)}
 Device info: $phoneModel
-twonly Version: $appVersion
-twonly Package: $packageName
+twonly Version: ${packageInfo.version}
+twonly Package: ${packageInfo.packageName}
 $osVersion
 $debugLogToken
 """;
+    } catch (error, stackTrace) {
+      Log.error(
+        'Could not prepare feedback.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        showSnackbar(context, 'Could not prepare feedback. Please try again.');
+      }
+      return null;
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -274,7 +208,10 @@ $debugLogToken
                         if (!context.mounted || fullMessage == null) return;
 
                         final feedbackSend = await context.navPush(
-                          SubmitMessage(fullMessage: fullMessage),
+                          SubmitMessage(
+                            fullMessage: fullMessage,
+                            debugLog: _debugLog,
+                          ),
                         );
 
                         if (feedbackSend == true && context.mounted) {

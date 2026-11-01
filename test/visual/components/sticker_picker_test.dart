@@ -260,7 +260,7 @@ void main() {
     await _settle(tester);
 
     expect(find.byType(MemoriesPickerView), findsOneWidget);
-    expect(find.text('Gallery'), findsOneWidget);
+    expect(find.widgetWithText(MyButton, 'Pick from gallery'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.runAsync(

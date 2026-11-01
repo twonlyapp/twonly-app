@@ -9,6 +9,7 @@ import 'package:twonly/src/services/live_location.service.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/location_map.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 class LiveLocationMapView extends StatefulWidget {
   const LiveLocationMapView({required this.message, super.key});
@@ -116,7 +117,8 @@ class _LiveLocationMapViewState extends State<LiveLocationMapView> {
                         ),
                       ),
                     if (!ended && message!.senderId == null)
-                      FilledButton(
+                      MyButton(
+                        variant: MyButtonVariant.primaryMiddle,
                         onPressed: _stopping
                             ? null
                             : () => _stop(location.sessionId),

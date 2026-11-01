@@ -229,9 +229,6 @@ pub struct UserConfig {
     #[serde(default)]
     #[frb(non_final)]
     pub avatar_counter: i64,
-    #[serde(default = "defaults::true_value")]
-    #[frb(non_final)]
-    pub video_stabilization_enabled: bool,
     #[serde(default)]
     #[frb(non_final)]
     pub is_developer: bool,
@@ -613,6 +610,7 @@ mod tests {
                 "userId": 42,
                 "username": "alice",
                 "displayName": "Alice",
+                "videoStabilizationEnabled": false,
                 "unrelatedFlutterSetting": {"ignored": true}
             }"#,
         )
@@ -645,6 +643,11 @@ mod tests {
         assert_eq!(config.last_server_message_at, None);
 
         assert_eq!(config.last_release_notes_version, None);
+
+        assert!(serde_json::to_value(&config)
+            .unwrap()
+            .get("videoStabilizationEnabled")
+            .is_none());
     }
 
     #[test]

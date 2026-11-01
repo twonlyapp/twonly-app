@@ -9,6 +9,13 @@ use crate::database::app::groups::native::{FlameState, Group};
 use crate::error::Result;
 use crate::services::groups::GroupService;
 
+/// The group ID of the direct chat between two users. The app asks here instead
+/// of deriving it itself, so both sides can never disagree on it.
+#[flutter_rust_bridge::frb(sync)]
+pub fn direct_chat_id(user_id: i64, other_user_id: i64) -> String {
+    Group::direct_chat_id(user_id, other_user_id)
+}
+
 /// The flame counter for one chat, derived against today rather than read from
 /// the stored column. See `Group::flame_states`.
 pub async fn flame_state(group_id: String) -> Result<FlameState> {

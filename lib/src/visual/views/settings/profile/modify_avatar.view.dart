@@ -47,10 +47,8 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
   Future<void> _chooseCustomAvatar() async {
     if (_processingCustomAvatar) return;
     final path = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (context) => MemoriesPickerView(
-          title: context.lang.customAvatarChooseSource,
-        ),
+      MemoriesPickerView.route(
+        title: context.lang.customAvatarChooseSource,
       ),
     );
     if (!mounted || path == null) return;

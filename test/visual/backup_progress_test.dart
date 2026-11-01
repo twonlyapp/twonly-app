@@ -47,7 +47,7 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Uploading contacts and messages… · 25%'), findsOneWidget);
+    expect(find.text('Uploading encrypted backup… · 25%'), findsOneWidget);
     expect(find.text('250 KB / 1 MB'), findsOneWidget);
     expect(
       tester

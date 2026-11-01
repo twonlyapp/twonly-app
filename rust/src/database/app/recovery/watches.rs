@@ -11,6 +11,7 @@ const DEPENDENCIES: &[&str] = &[
     "contacts",
     "key_verifications",
     "user_discovery_user_relations",
+    "user_discovery_announced_users",
 ];
 
 pub async fn contacts(

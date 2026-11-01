@@ -7,6 +7,16 @@ import '../bridge.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+/// The group ID of the direct chat between two users. The app asks here instead
+/// of deriving it itself, so both sides can never disagree on it.
+String directChatId({
+  required PlatformInt64 userId,
+  required PlatformInt64 otherUserId,
+}) => RustLib.instance.api.crateBridgeGroupsDirectChatId(
+  userId: userId,
+  otherUserId: otherUserId,
+);
+
 /// The flame counter for one chat, derived against today rather than read from
 /// the stored column. See `Group::flame_states`.
 Future<FlameState> flameState({required String groupId}) =>

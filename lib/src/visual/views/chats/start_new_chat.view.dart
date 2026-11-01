@@ -35,11 +35,17 @@ class StartNewChatView extends StatefulWidget {
 }
 
 class _StartNewChatView extends State<StartNewChatView> {
+  // Match the chat-list button's margin and the home navigation bar below it.
+  static const double _searchButtonBottomPadding =
+      kBottomNavigationBarHeight + 30;
+
   List<Contact> filteredContacts = [];
   List<Group> filteredGroups = [];
   List<Contact> allContacts = [];
   List<Group> allNonDirectGroups = [];
   final TextEditingController searchUserName = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  final ScrollController _contactsScrollController = ScrollController();
   late StreamSubscription<List<Contact>> contactSub;
   late StreamSubscription<List<Group>> allNonDirectGroupsSub;
 
@@ -92,6 +98,8 @@ class _StartNewChatView extends State<StartNewChatView> {
     allNonDirectGroupsSub.cancel();
     contactSub.cancel();
     searchUserName.dispose();
+    _searchFocusNode.dispose();
+    _contactsScrollController.dispose();
     super.dispose();
   }
 
@@ -177,20 +185,50 @@ class _StartNewChatView extends State<StartNewChatView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.startNewChatTitle),
+        scrolledUnderElevation: 0,
+      ),
+      floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
+      floatingActionButton: ListenableBuilder(
+        listenable: _searchFocusNode,
+        builder: (context, child) =>
+            _searchFocusNode.hasFocus ? const SizedBox.shrink() : child!,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: _searchButtonBottomPadding),
+          child: FloatingActionButton(
+            heroTag: 'new_chat_fab',
+            elevation: 2,
+            backgroundColor: context.color.primary,
+            foregroundColor: context.color.onPrimary,
+            tooltip: context.lang.shareImageSearchAllContacts,
+            onPressed: _searchFocusNode.requestFocus,
+            child: const Icon(Icons.search),
+          ),
+        ),
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(
-            bottom: 40,
-            left: 10,
-            right: 10,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+              ListenableBuilder(
+                listenable: _contactsScrollController,
+                builder: (context, child) => Padding(
+                  padding: EdgeInsets.only(
+                    // Grow the gap over the first 64 pixels of scrolling.
+                    top: _contactsScrollController.hasClients
+                        ? (_contactsScrollController.offset / 16).clamp(
+                            0.0,
+                            4.0,
+                          )
+                        : 0,
+                    left: 10,
+                    right: 10,
+                  ),
+                  child: child,
+                ),
                 child: MyInput(
                   controller: searchUserName,
+                  focusNode: _searchFocusNode,
                   dense: true,
                   fontWeight: FontWeight.normal,
                   hintText: context.lang.startNewChatSearchHint,
@@ -201,7 +239,12 @@ class _StartNewChatView extends State<StartNewChatView> {
               const SizedBox(height: 10),
               Expanded(
                 child: ListView.builder(
+                  controller: _contactsScrollController,
                   restorationId: 'new_message_users_list',
+                  // Let the final contact scroll clear of the floating button.
+                  padding: const EdgeInsets.only(
+                    bottom: _searchButtonBottomPadding + 88,
+                  ),
                   itemCount:
                       filteredContacts.length + 3 + filteredGroups.length,
                   itemBuilder: (context, i) {
