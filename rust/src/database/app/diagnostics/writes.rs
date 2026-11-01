@@ -168,8 +168,8 @@ pub async fn seed_messages(
     Ok(count)
 }
 
-/// A consistent inspection copy preserving the source encryption and SQLite
-/// metadata. The bound path also supports quotes; existing files are refused.
+/// A consistent, unencrypted inspection copy preserving SQLite metadata.
+/// The bound path also supports quotes; existing files are refused.
 pub async fn export_debug(database: &AppDatabase, path: &Path) -> Result<()> {
     if path.try_exists()? {
         return Err(TwonlyError::Generic(
@@ -182,7 +182,7 @@ pub async fn export_debug(database: &AppDatabase, path: &Path) -> Result<()> {
     let path = path.to_owned();
 
     crate::database::lifecycle::run(move |operation| async move {
-        crate::database::snapshot::create(&pool, &path, &operation).await
+        crate::database::snapshot::create_plaintext(&pool, &path, &operation).await
     })
     .await
 }

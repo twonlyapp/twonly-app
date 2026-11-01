@@ -1,9 +1,10 @@
 //! Consistent snapshots preserve the source's SQLCipher key and SQLite header
-//! metadata. Never copy a live main file or return an export connection early.
+//! metadata. Developer exports explicitly produce plaintext instead. Never copy
+//! a live main file or return an export connection early.
 
 use super::lifecycle::Operation;
 use crate::error::{Result, TwonlyError};
-use sqlx::SqlitePool;
+use sqlx::{Connection, SqliteConnection, SqlitePool};
 use std::path::Path;
 use std::time::Duration;
 
@@ -20,6 +21,19 @@ pub(crate) async fn watch(
 }
 
 pub(crate) async fn create(pool: &SqlitePool, path: &Path, operation: &Operation) -> Result<()> {
+    create_export(pool, path, operation, false).await
+}
+
+/// An inspection copy that opens in ordinary SQLite without the source key.
+pub(crate) async fn create_plaintext(
+    pool: &SqlitePool, path: &Path, operation: &Operation,
+) -> Result<()> {
+    create_export(pool, path, operation, true).await
+}
+
+async fn create_export(
+    pool: &SqlitePool, path: &Path, operation: &Operation, plaintext: bool,
+) -> Result<()> {
     operation.check()?;
 
     if path.try_exists()? {
@@ -54,9 +68,14 @@ pub(crate) async fn create(pool: &SqlitePool, path: &Path, operation: &Operation
         loop {
             operation.check()?;
 
-            let result = sqlx::query!("VACUUM INTO ?", destination.as_ref())
-                .execute(&mut *connection)
-                .await;
+            let result = if plaintext {
+                export_plaintext(&mut connection, destination.as_ref()).await
+            } else {
+                sqlx::query!("VACUUM INTO ?", destination.as_ref())
+                    .execute(&mut *connection)
+                    .await
+                    .map(|_| ())
+            };
 
             match result {
                 Err(sqlx::Error::Database(ref error))
@@ -99,6 +118,58 @@ pub(crate) async fn create(pool: &SqlitePool, path: &Path, operation: &Operation
     closed?;
 
     cancellation
+}
+
+async fn export_plaintext(
+    connection: &mut SqliteConnection, destination: &str,
+) -> sqlx::Result<()> {
+    // An explicit empty key prevents the attached database from inheriting
+    // the source's SQLCipher encryption. The source is never rekeyed.
+    sqlx::query("ATTACH DATABASE ? AS debug_export KEY ''")
+        .bind(destination)
+        .execute(&mut *connection)
+        .await?;
+
+    let result = async {
+        // Pin the source snapshot across the schema, rows and header reads,
+        // including commits that are still in its WAL.
+        let mut transaction = connection.begin().await?;
+
+        let user_version: i64 = sqlx::query_scalar("PRAGMA main.user_version")
+            .fetch_one(&mut *transaction)
+            .await?;
+        let application_id: i64 = sqlx::query_scalar("PRAGMA main.application_id")
+            .fetch_one(&mut *transaction)
+            .await?;
+
+        sqlx::query("SELECT sqlcipher_export('debug_export')")
+            .execute(&mut *transaction)
+            .await?;
+
+        // sqlcipher_export copies schema and rows, but not these header fields.
+        for (pragma, value) in [
+            ("user_version", user_version),
+            ("application_id", application_id),
+        ] {
+            sqlx::query(sqlx::AssertSqlSafe(format!(
+                "PRAGMA debug_export.{pragma} = {value}"
+            )))
+            .execute(&mut *transaction)
+            .await?;
+        }
+
+        transaction.commit().await
+    }
+    .await;
+
+    // Detach before a busy retry removes the incomplete file and tries again.
+    let detached = sqlx::query("DETACH DATABASE debug_export")
+        .execute(&mut *connection)
+        .await;
+
+    result?;
+    detached?;
+    Ok(())
 }
 
 #[cfg(test)]

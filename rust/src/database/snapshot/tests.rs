@@ -82,17 +82,19 @@ async fn a_sqlite_lock_wait_respects_the_operation_deadline() {
         .await
         .unwrap();
 
-    let target = directory.path().join("blocked.sqlite");
-
-    let operation = Operation::new(Duration::from_millis(120));
-
-    let result = tokio::time::timeout(Duration::from_secs(2), create(&pool, &target, &operation))
+    for plaintext in [true, false] {
+        let target = directory.path().join(format!("blocked-{plaintext}.sqlite"));
+        let operation = Operation::new(Duration::from_millis(120));
+        let result = tokio::time::timeout(
+            Duration::from_secs(2),
+            create_export(&pool, &target, &operation, plaintext),
+        )
         .await
         .expect("SQLite's busy handler exceeded the cancellation budget");
 
-    assert!(result.is_err());
-
-    assert!(!target.exists());
+        assert!(result.is_err());
+        assert!(!target.exists());
+    }
 
     sqlx::query!("ROLLBACK")
         .execute(&mut *blocker)
@@ -297,6 +299,9 @@ async fn refused_or_cancelled_snapshots_leave_existing_files_untouched() {
     let operation = Operation::new(Duration::from_secs(1));
 
     assert!(create(&database.pool, &target, &operation).await.is_err());
+    assert!(create_plaintext(&database.pool, &target, &operation)
+        .await
+        .is_err());
 
     operation.cancel();
 
@@ -307,10 +312,18 @@ async fn refused_or_cancelled_snapshots_leave_existing_files_untouched() {
     )
     .await
     .is_err());
+    assert!(create_plaintext(
+        &database.pool,
+        &directory.path().join("cancelled-plaintext.sqlite"),
+        &operation
+    )
+    .await
+    .is_err());
 
     assert_eq!(std::fs::read(target).unwrap(), b"previous-valid-backup");
 
     assert!(!directory.path().join("cancelled.sqlite").exists());
+    assert!(!directory.path().join("cancelled-plaintext.sqlite").exists());
 
     database.pool.close().await;
 }
