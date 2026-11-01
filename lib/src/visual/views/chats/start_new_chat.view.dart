@@ -35,16 +35,11 @@ class StartNewChatView extends StatefulWidget {
 }
 
 class _StartNewChatView extends State<StartNewChatView> {
-  // Match the chat-list button's margin and the home navigation bar below it.
-  static const double _searchButtonBottomPadding =
-      kBottomNavigationBarHeight + 30;
-
   List<Contact> filteredContacts = [];
   List<Group> filteredGroups = [];
   List<Contact> allContacts = [];
   List<Group> allNonDirectGroups = [];
   final TextEditingController searchUserName = TextEditingController();
-  final FocusNode _searchFocusNode = FocusNode();
   final ScrollController _contactsScrollController = ScrollController();
   late StreamSubscription<List<Contact>> contactSub;
   late StreamSubscription<List<Group>> allNonDirectGroupsSub;
@@ -98,7 +93,6 @@ class _StartNewChatView extends State<StartNewChatView> {
     allNonDirectGroupsSub.cancel();
     contactSub.cancel();
     searchUserName.dispose();
-    _searchFocusNode.dispose();
     _contactsScrollController.dispose();
     super.dispose();
   }
@@ -182,28 +176,15 @@ class _StartNewChatView extends State<StartNewChatView> {
 
   @override
   Widget build(BuildContext context) {
+    final isSearching = searchUserName.text.isNotEmpty;
+    final contactHeaderCount = isSearching
+        ? (filteredContacts.isEmpty ? 0 : 1)
+        : 3;
+    final groupHeaderCount = filteredGroups.isEmpty ? 0 : 1;
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.startNewChatTitle),
         scrolledUnderElevation: 0,
-      ),
-      floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-      floatingActionButton: ListenableBuilder(
-        listenable: _searchFocusNode,
-        builder: (context, child) =>
-            _searchFocusNode.hasFocus ? const SizedBox.shrink() : child!,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: _searchButtonBottomPadding),
-          child: FloatingActionButton(
-            heroTag: 'new_chat_fab',
-            elevation: 2,
-            backgroundColor: context.color.primary,
-            foregroundColor: context.color.onPrimary,
-            tooltip: context.lang.shareImageSearchAllContacts,
-            onPressed: _searchFocusNode.requestFocus,
-            child: const Icon(Icons.search),
-          ),
-        ),
       ),
       body: SafeArea(
         child: Padding(
@@ -216,9 +197,9 @@ class _StartNewChatView extends State<StartNewChatView> {
                   padding: EdgeInsets.only(
                     // Grow the gap over the first 64 pixels of scrolling.
                     top: _contactsScrollController.hasClients
-                        ? (_contactsScrollController.offset / 16).clamp(
+                        ? (_contactsScrollController.offset / 8).clamp(
                             0.0,
-                            4.0,
+                            8.0,
                           )
                         : 0,
                     left: 10,
@@ -228,7 +209,7 @@ class _StartNewChatView extends State<StartNewChatView> {
                 ),
                 child: MyInput(
                   controller: searchUserName,
-                  focusNode: _searchFocusNode,
+                  autofocus: true,
                   dense: true,
                   fontWeight: FontWeight.normal,
                   hintText: context.lang.startNewChatSearchHint,
@@ -241,14 +222,14 @@ class _StartNewChatView extends State<StartNewChatView> {
                 child: ListView.builder(
                   controller: _contactsScrollController,
                   restorationId: 'new_message_users_list',
-                  // Let the final contact scroll clear of the floating button.
-                  padding: const EdgeInsets.only(
-                    bottom: _searchButtonBottomPadding + 88,
-                  ),
+                  padding: EdgeInsets.zero,
                   itemCount:
-                      filteredContacts.length + 3 + filteredGroups.length,
+                      contactHeaderCount +
+                      filteredContacts.length +
+                      groupHeaderCount +
+                      filteredGroups.length,
                   itemBuilder: (context, i) {
-                    if (searchUserName.text.isEmpty) {
+                    if (!isSearching) {
                       if (i == 0) {
                         return ListTile(
                           title: Text(context.lang.newGroup),
@@ -284,24 +265,18 @@ class _StartNewChatView extends State<StartNewChatView> {
                       if (i == 2) {
                         return const Divider();
                       }
-                      i = i - 3;
-                    } else {
-                      if (i == 0) {
-                        return filteredContacts.isNotEmpty
-                            ? ListTile(
-                                title: Text(
-                                  context.lang.contacts,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              )
-                            : Container();
-                      } else {
-                        i -= 1;
-                      }
+                    } else if (contactHeaderCount > 0 && i == 0) {
+                      return ListTile(
+                        title: Text(
+                          context.lang.contacts,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
                     }
+                    i -= contactHeaderCount;
 
                     if (i < filteredContacts.length) {
                       final contact = filteredContacts[i];
@@ -342,39 +317,36 @@ class _StartNewChatView extends State<StartNewChatView> {
                     }
                     i -= filteredContacts.length;
 
-                    if (i == 0) {
-                      return filteredGroups.isNotEmpty
-                          ? ListTile(
-                              title: Text(
-                                context.lang.groups,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            )
-                          : Container();
-                    }
-
-                    i -= 1;
-
-                    if (i < filteredGroups.length) {
-                      return GroupContextMenu(
-                        key: ValueKey(filteredGroups[i].groupId),
-                        group: filteredGroups[i],
-                        child: ListTile(
+                    if (groupHeaderCount > 0) {
+                      if (i == 0) {
+                        return ListTile(
                           title: Text(
-                            filteredGroups[i].groupName,
+                            context.lang.groups,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          leading: AvatarIcon(
-                            group: filteredGroups[i],
-                            fontSize: 13,
-                          ),
-                          onTap: () => _onTapGroup(filteredGroups[i]),
-                        ),
-                      );
+                        );
+                      }
+                      i -= 1;
                     }
-                    return Container();
+
+                    final group = filteredGroups[i];
+                    return GroupContextMenu(
+                      key: ValueKey(group.groupId),
+                      group: group,
+                      child: ListTile(
+                        title: Text(
+                          group.groupName,
+                        ),
+                        leading: AvatarIcon(
+                          group: group,
+                          fontSize: 13,
+                        ),
+                        onTap: () => _onTapGroup(group),
+                      ),
+                    );
                   },
                 ),
               ),
