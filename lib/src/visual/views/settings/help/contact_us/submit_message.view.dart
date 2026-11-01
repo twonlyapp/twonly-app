@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:twonly/src/services/feedback.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 class SubmitMessage extends StatefulWidget {
-  const SubmitMessage({required this.fullMessage, super.key});
+  const SubmitMessage({required this.fullMessage, this.debugLog, super.key});
 
   final String fullMessage;
+  final FeedbackDebugLog? debugLog;
 
   @override
   State<SubmitMessage> createState() => _ContactUsState();
@@ -15,6 +17,7 @@ class SubmitMessage extends StatefulWidget {
 
 class _ContactUsState extends State<SubmitMessage> {
   final TextEditingController _controller = TextEditingController();
+  final FeedbackService _feedbackService = FeedbackService();
   bool isLoading = false;
 
   @override
@@ -23,12 +26,15 @@ class _ContactUsState extends State<SubmitMessage> {
     _controller.text = widget.fullMessage;
   }
 
-  Future<void> _submitFeedback() async {
-    final feedback = _controller.text;
-    setState(() {
-      isLoading = true;
-    });
+  @override
+  void dispose() {
+    _controller.dispose();
+    _feedbackService.close();
+    super.dispose();
+  }
 
+  Future<void> _submitFeedback() async {
+    final feedback = _controller.text.trim();
     if (feedback.isEmpty) {
       showSnackbar(
         context,
@@ -38,32 +44,47 @@ class _ContactUsState extends State<SubmitMessage> {
       return;
     }
 
-    final response = await http.post(
-      Uri.parse('https://twonly.theconnectapp.de/subscribe.twonly.php'),
-      headers: <String, String>{
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: {
-        'feedback': feedback,
-      },
-    );
-    if (!mounted) return;
     setState(() {
-      isLoading = false;
+      isLoading = true;
     });
 
-    if (response.statusCode == 200) {
+    try {
+      final debugLog = widget.debugLog;
+      // The preview is editable: removing its log link must also remove the
+      // attachment sent to the API.
+      final includesLog =
+          debugLog != null &&
+          feedback.contains(
+            'https://logs.twonly.eu#${debugLog.downloadToken}/${debugLog.encryptionKey}',
+          );
+      await _feedbackService.submit(
+        feedback,
+        debugLog: includesLog ? debugLog : null,
+      );
+      if (!mounted) return;
       showSnackbar(
         context,
         context.lang.contactUsSuccess,
         level: SnackbarLevel.success,
       );
       Navigator.pop(context, true);
-    } else {
+    } catch (error, stackTrace) {
+      Log.error(
+        'Could not submit feedback.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
       showSnackbar(
         context,
         'Failed to submit feedback.',
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
