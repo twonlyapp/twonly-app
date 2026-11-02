@@ -41,10 +41,11 @@ class BackupReminderPresenter {
   /// already took this one.
   static void skipThisSession() => _handledThisSession = true;
 
-  static Future<void> showIfNeeded(BuildContext context) async {
-    if (_handledThisSession) return;
+  /// Returns whether the reminder was shown.
+  static Future<bool> showIfNeeded(BuildContext context) async {
+    if (_handledThisSession) return false;
     final reminder = BackupReminder.forUser(userService.currentUser);
-    if (reminder == null) return;
+    if (reminder == null) return false;
     _handledThisSession = true;
 
     final eligible = await rust_recovery.recoveryContacts(
@@ -52,11 +53,12 @@ class BackupReminderPresenter {
       limit: _minEligibleFriends,
       transaction: currentDatabaseSession(),
     );
-    if (eligible.length < _minEligibleFriends) return;
+    if (eligible.length < _minEligibleFriends) return false;
     if (!context.mounted || !(ModalRoute.of(context)?.isCurrent ?? false)) {
-      return;
+      return false;
     }
     await showBackupReminderSheet(context, reminder);
+    return true;
   }
 }
 

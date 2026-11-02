@@ -941,5 +941,9 @@
   "chatGameLost": "لقد خسرت.",
   "chatGamePlayed": "لقد لعبت.",
   "chatGameOtherPlayed": "لعب.",
-  "chatGameDraw": "تعادل."
+  "chatGameDraw": "تعادل.",
+  "storeReviewPromptTitle": "شكرًا لاختبارك twonly",
+  "storeReviewPromptDesc": "إذا أردت مساعدة twonly، فيُرجى ترك تقييم في {store}.",
+  "storeReviewPromptReview": "اكتب تقييمًا",
+  "storeReviewPromptHide": "عدم الإظهار مرة أخرى"
 }

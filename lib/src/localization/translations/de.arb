@@ -1304,5 +1304,9 @@
   "chatGameLost": "Du hast verloren.",
   "chatGamePlayed": "Du hast gespielt.",
   "chatGameOtherPlayed": "Hat gespielt.",
-  "chatGameDraw": "Unentschieden."
+  "chatGameDraw": "Unentschieden.",
+  "storeReviewPromptTitle": "Danke, dass du twonly testest",
+  "storeReviewPromptDesc": "Wenn du twonly helfen möchtest, hinterlasse bitte eine Bewertung im {store}.",
+  "storeReviewPromptReview": "Bewertung schreiben",
+  "storeReviewPromptHide": "Nicht mehr anzeigen"
 }

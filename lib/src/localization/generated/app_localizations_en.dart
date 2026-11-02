@@ -3426,4 +3426,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatGameDraw => 'It is a draw.';
+
+  @override
+  String get storeReviewPromptTitle => 'Thank you for testing twonly';
+
+  @override
+  String storeReviewPromptDesc(String store) {
+    return 'If you want to help twonly, please leave a review on the $store.';
+  }
+
+  @override
+  String get storeReviewPromptReview => 'Write a review';
+
+  @override
+  String get storeReviewPromptHide => 'Don\'t show again';
 }

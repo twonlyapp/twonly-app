@@ -19867,6 +19867,7 @@ impl SseDecode for crate::user_config::UserConfig {
         let mut var_hideMemoriesBackupPromo = <bool>::sse_decode(deserializer);
         let mut var_hidePasswordlessRecoveryReminder = <bool>::sse_decode(deserializer);
         let mut var_hideWidgetShareExplainer = <bool>::sse_decode(deserializer);
+        let mut var_showStoreReviewPrompt = <bool>::sse_decode(deserializer);
         let mut var_updateFcmToken = <bool>::sse_decode(deserializer);
         let mut var_canUseLoginTokenForAuth = <bool>::sse_decode(deserializer);
         let mut var_twonlySafeBackup =
@@ -19939,6 +19940,7 @@ impl SseDecode for crate::user_config::UserConfig {
             hide_memories_backup_promo: var_hideMemoriesBackupPromo,
             hide_passwordless_recovery_reminder: var_hidePasswordlessRecoveryReminder,
             hide_widget_share_explainer: var_hideWidgetShareExplainer,
+            show_store_review_prompt: var_showStoreReviewPrompt,
             update_fcm_token: var_updateFcmToken,
             can_use_login_token_for_auth: var_canUseLoginTokenForAuth,
             twonly_safe_backup: var_twonlySafeBackup,
@@ -23673,6 +23675,7 @@ impl flutter_rust_bridge::IntoDart for crate::user_config::UserConfig {
             self.hide_widget_share_explainer
                 .into_into_dart()
                 .into_dart(),
+            self.show_store_review_prompt.into_into_dart().into_dart(),
             self.update_fcm_token.into_into_dart().into_dart(),
             self.can_use_login_token_for_auth
                 .into_into_dart()
@@ -27520,6 +27523,7 @@ impl SseEncode for crate::user_config::UserConfig {
         <bool>::sse_encode(self.hide_memories_backup_promo, serializer);
         <bool>::sse_encode(self.hide_passwordless_recovery_reminder, serializer);
         <bool>::sse_encode(self.hide_widget_share_explainer, serializer);
+        <bool>::sse_encode(self.show_store_review_prompt, serializer);
         <bool>::sse_encode(self.update_fcm_token, serializer);
         <bool>::sse_encode(self.can_use_login_token_for_auth, serializer);
         <Option<crate::user_config::TwonlySafeBackup>>::sse_encode(

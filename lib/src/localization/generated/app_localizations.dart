@@ -5793,6 +5793,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'It is a draw.'**
   String get chatGameDraw;
+
+  /// No description provided for @storeReviewPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for testing twonly'**
+  String get storeReviewPromptTitle;
+
+  /// No description provided for @storeReviewPromptDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you want to help twonly, please leave a review on the {store}.'**
+  String storeReviewPromptDesc(String store);
+
+  /// No description provided for @storeReviewPromptReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a review'**
+  String get storeReviewPromptReview;
+
+  /// No description provided for @storeReviewPromptHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show again'**
+  String get storeReviewPromptHide;
 }
 
 class _AppLocalizationsDelegate

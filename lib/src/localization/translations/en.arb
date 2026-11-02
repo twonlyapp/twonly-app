@@ -1338,5 +1338,16 @@
   "chatGameLost": "You have lost.",
   "chatGamePlayed": "You have played.",
   "chatGameOtherPlayed": "Played.",
-  "chatGameDraw": "It is a draw."
+  "chatGameDraw": "It is a draw.",
+  "storeReviewPromptTitle": "Thank you for testing twonly",
+  "storeReviewPromptDesc": "If you want to help twonly, please leave a review on the {store}.",
+  "@storeReviewPromptDesc": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "storeReviewPromptReview": "Write a review",
+  "storeReviewPromptHide": "Don't show again"
 }

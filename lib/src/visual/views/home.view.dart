@@ -25,6 +25,7 @@ import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/release_notes.comp.dart';
+import 'package:twonly/src/visual/components/store_review_prompt.comp.dart';
 import 'package:twonly/src/visual/release_notes/release_notes_0_6_0.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
@@ -57,6 +58,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   bool _startPreloading = false;
   bool _startupChecksComplete = false;
   bool _releaseNotesCheckScheduled = false;
+  Timer? _storeReviewTimer;
 
   final MainCameraController _mainCameraController = MainCameraController();
   late final PageController _homeViewPageController;
@@ -112,6 +114,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         unawaited(_mainCameraController.closeCamera());
       }
       _scheduleReleaseNotesIfNeeded();
+      _syncStoreReviewTimer();
     });
 
     _selectNotificationSub = selectNotificationStream.stream.listen((
@@ -203,6 +206,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       _initAsync().whenComplete(() {
         _startupChecksComplete = true;
         _scheduleReleaseNotesIfNeeded();
+        _syncStoreReviewTimer();
       }),
     );
 
@@ -361,6 +365,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _nativeNotificationSub?.cancel();
     _widgetTapSub?.cancel();
     _disableCameraTimer?.cancel();
+    _storeReviewTimer?.cancel();
     _mainCameraController.setState = null;
     _mainCameraController.closeCamera();
     _sharedLinkSub?.cancel();
@@ -373,7 +378,10 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     return ModalRoute.of(context)?.isCurrent ?? false;
   }
 
-  void _onRouteChanged() => _scheduleReleaseNotesIfNeeded();
+  void _onRouteChanged() {
+    _scheduleReleaseNotesIfNeeded();
+    _syncStoreReviewTimer();
+  }
 
   void _scheduleReleaseNotesIfNeeded() {
     if (!_startupChecksComplete ||
@@ -397,10 +405,36 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     // One sheet per app start is enough.
     if (releaseNotesShown) {
       BackupReminderPresenter.skipThisSession();
+      StoreReviewPromptPresenter.skipThisSession();
       return;
     }
     if (!mounted) return;
-    await BackupReminderPresenter.showIfNeeded(context);
+    if (await BackupReminderPresenter.showIfNeeded(context)) {
+      StoreReviewPromptPresenter.skipThisSession();
+    }
+  }
+
+  bool get _isChatListShown =>
+      _startupChecksComplete &&
+      _activePageIdx == 0 &&
+      _offsetFromOne == 1 &&
+      WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
+      _isViewActive();
+
+  /// Runs the store review countdown only while the chat list is shown, so
+  /// it restarts whenever the user swipes away, opens a chat or leaves the
+  /// app.
+  void _syncStoreReviewTimer() {
+    if (!_isChatListShown || !StoreReviewPromptPresenter.isDue) {
+      _storeReviewTimer?.cancel();
+      _storeReviewTimer = null;
+      return;
+    }
+    _storeReviewTimer ??= Timer(StoreReviewPromptPresenter.delay, () {
+      _storeReviewTimer = null;
+      if (!_isChatListShown) return;
+      unawaited(StoreReviewPromptPresenter.showIfDue(context));
+    });
   }
 
   @override
@@ -408,6 +442,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       _scheduleReleaseNotesIfNeeded();
+      _syncStoreReviewTimer();
       if (AppState.hasCameraPermissions &&
           _offsetRatio < 1 &&
           !_mainCameraController.isSharePreviewIsShown &&
@@ -422,6 +457,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         );
       }
     } else if (state == AppLifecycleState.paused) {
+      _syncStoreReviewTimer();
       unawaited(_mainCameraController.closeCamera());
     }
   }
@@ -475,6 +511,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       if (notification is ScrollEndNotification) {
         _scheduleReleaseNotesIfNeeded();
       }
+      _syncStoreReviewTimer();
     }
 
     if (AppState.hasCameraPermissions &&
@@ -605,6 +642,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                   if (mounted) {
                     setState(() {});
                     _scheduleReleaseNotesIfNeeded();
+                    _syncStoreReviewTimer();
                   }
                 },
                 currentIndex: _activePageIdx,

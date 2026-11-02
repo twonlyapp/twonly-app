@@ -393,6 +393,12 @@ pub struct UserConfig {
     #[serde(default)]
     #[frb(non_final)]
     pub hide_widget_share_explainer: bool,
+    /// Asks for an App Store or Play Store review on the chat list. Only
+    /// offered on the Tester plan; cleared by "Don't show again" or once the
+    /// store page was opened.
+    #[serde(default = "defaults::true_value")]
+    #[frb(non_final)]
+    pub show_store_review_prompt: bool,
     #[serde(default = "defaults::true_value")]
     #[frb(non_final)]
     pub update_fcm_token: bool,

@@ -3460,4 +3460,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatGameDraw => 'Unentschieden.';
+
+  @override
+  String get storeReviewPromptTitle => 'Danke, dass du twonly testest';
+
+  @override
+  String storeReviewPromptDesc(String store) {
+    return 'Wenn du twonly helfen möchtest, hinterlasse bitte eine Bewertung im $store.';
+  }
+
+  @override
+  String get storeReviewPromptReview => 'Bewertung schreiben';
+
+  @override
+  String get storeReviewPromptHide => 'Nicht mehr anzeigen';
 }

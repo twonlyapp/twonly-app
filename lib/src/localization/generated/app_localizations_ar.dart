@@ -3514,4 +3514,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatGameDraw => 'تعادل.';
+
+  @override
+  String get storeReviewPromptTitle => 'شكرًا لاختبارك twonly';
+
+  @override
+  String storeReviewPromptDesc(String store) {
+    return 'إذا أردت مساعدة twonly، فيُرجى ترك تقييم في $store.';
+  }
+
+  @override
+  String get storeReviewPromptReview => 'اكتب تقييمًا';
+
+  @override
+  String get storeReviewPromptHide => 'عدم الإظهار مرة أخرى';
 }
