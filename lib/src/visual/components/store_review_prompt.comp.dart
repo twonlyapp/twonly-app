@@ -93,15 +93,7 @@ class StoreReviewPromptSheet extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
               child: Column(
                 children: [
-                  Container(
-                    width: 68,
-                    height: 68,
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.star_rounded, size: 34, color: accent),
-                  ),
+                  _StarArc(color: accent),
                   const SizedBox(height: 16),
                   Text(
                     context.lang.storeReviewPromptTitle,
@@ -123,6 +115,7 @@ class StoreReviewPromptSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   MyButton(
+                    variant: MyButtonVariant.primaryMiddle,
                     onPressed: () => _openStore(context),
                     child: Text(context.lang.storeReviewPromptReview),
                   ),
@@ -138,6 +131,35 @@ class StoreReviewPromptSheet extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Five stars on an arc, the middle one largest and highest.
+class _StarArc extends StatelessWidget {
+  const _StarArc({required this.color});
+
+  final Color color;
+
+  static const _sizes = [30.0, 36.0, 44.0, 36.0, 30.0];
+  static const _drops = [22.0, 6.0, 0.0, 6.0, 22.0];
+  static const _tilts = [-0.35, -0.17, 0.0, 0.17, 0.35];
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < 5; i++)
+          Padding(
+            padding: EdgeInsets.only(top: _drops[i], left: 2, right: 2),
+            child: Transform.rotate(
+              angle: _tilts[i],
+              child: Icon(Icons.star_rounded, size: _sizes[i], color: color),
+            ),
+          ),
+      ],
     );
   }
 }
