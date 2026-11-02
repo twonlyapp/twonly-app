@@ -402,15 +402,8 @@ class MemoriesCloudService {
         error is http.ClientException) {
       return true;
     }
-    if (error is! AnyhowException) return false;
     // Rust transport failures can race with the authenticated state check.
-    final message = error.message;
-    if (message == 'Not connected' ||
-        message == 'API request timed out' ||
-        message == 'response channel closed' ||
-        message.startsWith('send error:')) {
-      return true;
-    }
+    if (isConnectionError(error)) return true;
     final code = _apiErrorCode(error);
     return code == ErrorCode.PlanNotAllowed ||
         code == ErrorCode.PlanLimitReached ||

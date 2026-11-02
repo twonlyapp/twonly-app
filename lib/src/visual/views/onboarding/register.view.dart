@@ -154,11 +154,18 @@ class _RegisterViewState extends State<RegisterView> {
           setState(() {
             _isTryingToRegister = false;
           });
-          await showAlertDialog(
-            context,
-            'Oh no!',
-            errorCodeToText(context, res.error!),
-          );
+          final cause = res.cause;
+          if (cause != null && isConnectionError(cause)) {
+            showNetworkIssue(context);
+          } else {
+            // A failure inside the app is not the server being down; show
+            // what failed so it can be reported.
+            await showAlertDialog(
+              context,
+              'Oh no!',
+              cause?.toString() ?? errorCodeToText(context, res.error!),
+            );
+          }
         }
         return;
       }
