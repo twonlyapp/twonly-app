@@ -1094,7 +1094,10 @@ impl RustApi {
     ) -> Result<()> {
         let ctx = Context::get_static()?;
 
-        empty_api_response(Server::ipa_purchase(ctx, product_id, source, verification_data).await?)
+        crate::api::runtime::helpers::decode_plan_update_ok(
+            Server::ipa_purchase(ctx, product_id, source, verification_data).await?,
+        )
+        .and_then(api_result)
     }
 
     pub async fn change_username(username: String) -> Result<()> {

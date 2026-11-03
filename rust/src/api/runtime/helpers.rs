@@ -209,3 +209,66 @@ pub(crate) fn decode_empty_ok(bytes: Vec<u8>) -> Result<ServerResult<()>> {
         _ => None,
     })
 }
+
+/// Purchases return the updated plan; a forced check can also return an empty
+/// success when the plan has not changed. Metadata is applied by the runtime
+/// before either response reaches the bridge.
+pub(crate) fn decode_plan_update_ok(bytes: Vec<u8>) -> Result<ServerResult<()>> {
+    decode_ok_value(bytes, |value| match value {
+        server_to_client::response::ok::Ok::Authenticated(_)
+        | server_to_client::response::ok::Ok::None(_) => Some(()),
+        _ => None,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use server_to_client::response::{self, ok::Ok as ResponseOk};
+
+    fn response(value: response::Response) -> Vec<u8> {
+        server_to_client::ServerToClient {
+            v: Some(server_to_client::server_to_client::V::V0(
+                server_to_client::V0 {
+                    seq: 1,
+                    kind: Some(server_to_client::v0::Kind::Response(
+                        server_to_client::Response {
+                            response: Some(value),
+                        },
+                    )),
+                },
+            )),
+        }
+        .encode_to_vec()
+    }
+
+    #[test]
+    fn plan_updates_accept_changed_and_unchanged_entitlements() {
+        for value in [
+            ResponseOk::Authenticated(server_to_client::response::Authenticated {
+                plan: "premium".into(),
+                ..Default::default()
+            }),
+            ResponseOk::None(true),
+        ] {
+            let bytes = response(response::Response::Ok(response::Ok { ok: Some(value) }));
+            assert!(matches!(
+                decode_plan_update_ok(bytes),
+                Ok(ServerResult::Ok(()))
+            ));
+        }
+    }
+
+    #[test]
+    fn plan_updates_preserve_rejections_and_reject_unrelated_successes() {
+        let bytes = response(response::Response::Error(500));
+        assert!(matches!(
+            decode_plan_update_ok(bytes),
+            Ok(ServerResult::ErrorCode(500))
+        ));
+        let bytes = response(response::Response::Ok(response::Ok {
+            ok: Some(ResponseOk::Planballance(Default::default())),
+        }));
+        assert!(decode_plan_update_ok(bytes).is_err());
+    }
+}

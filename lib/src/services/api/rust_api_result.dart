@@ -48,7 +48,11 @@ Future<Result<T, ErrorCode>> rustApiResult<T>(Future<T> request) async {
     if (code != null) {
       return Result.error(ErrorCode.valueOf(code));
     }
-    Log.error('Rust API call failed', error: error);
+    if (isConnectionError(error) || isBackgroundCancellation(error)) {
+      Log.warn('Rust API call deferred', error);
+    } else {
+      Log.error('Rust API call failed', error: error);
+    }
     return Result.error(ErrorCode.InternalError, cause: error);
   }
 }

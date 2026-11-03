@@ -6,7 +6,7 @@
 use super::Server;
 use crate::api::proto::server_to_client::response::ok::Ok as ResponseOk;
 use crate::api::proto::{client_to_server, server_to_client};
-use crate::api::runtime::helpers::decode_ok_value;
+use crate::api::runtime::helpers::{decode_ok_value, decode_plan_update_ok};
 use crate::api::server::server_ok;
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
@@ -70,7 +70,7 @@ impl Server {
     }
 
     pub async fn force_ipa_check(ctx: &Arc<Context>) -> Result<ServerResult<()>> {
-        server_ok!(
+        decode_plan_update_ok(
             Self::application(
                 ctx,
                 client_to_server::application_data::ApplicationData::IpaForceCheck(

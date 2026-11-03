@@ -218,7 +218,17 @@ async fn visible() -> Result<()> {
             return Ok(());
         }
 
-        tokio::select! { _ = changed => {}, _ = tokio::time::sleep(std::time::Duration::from_millis(100)) => {} }
+        // Once native events are installed, every transition to active
+        // notifies CHANGED. Each iOS check blocks on the main queue, and a
+        // background launch can wait here for its whole BGTask, so polling is
+        // only a backstop then.
+        let poll = if NATIVE_EVENTS.load(Ordering::Acquire) {
+            std::time::Duration::from_secs(5)
+        } else {
+            std::time::Duration::from_millis(100)
+        };
+
+        tokio::select! { _ = changed => {}, _ = tokio::time::sleep(poll) => {} }
     }
 }
 

@@ -30,6 +30,7 @@ void main() {
       'Not connected',
       'API request timed out',
       'response channel closed',
+      'send error: ChannelClosed',
       'send error: NotConnected (timeout)',
     ]) {
       expect(isConnectionError(AnyhowException(message)), isTrue);
@@ -51,6 +52,38 @@ void main() {
     expect(server.error, ErrorCode.InternalError);
     expect(server.cause, isNull);
   });
+
+  test(
+    'retryable API failures are warnings while unexpected failures are errors',
+    () async {
+      final previous = Logger.root.level;
+      Logger.root.level = Level.ALL;
+      final records = <LogRecord>[];
+      final subscription = Logger.root.onRecord.listen(records.add);
+      try {
+        for (final message in [
+          'send error: ChannelClosed',
+          'send error: NotConnected (timeout)',
+          'attempted to acquire a connection on a closed pool',
+          'successful API response has an unexpected value',
+        ]) {
+          final error = AnyhowException(message);
+          final result = await rustApiResult<void>(Future.error(error));
+          expect(result.isError, isTrue);
+          expect(result.cause, same(error));
+        }
+        expect(records.map((record) => record.level), [
+          Level.WARNING,
+          Level.WARNING,
+          Level.WARNING,
+          Level.SHOUT,
+        ]);
+      } finally {
+        await subscription.cancel();
+        Logger.root.level = previous;
+      }
+    },
+  );
 
   test(
     'unawaited transport failures retain a warning and their original stack',
