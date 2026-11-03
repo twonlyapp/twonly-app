@@ -12,36 +12,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String get subscriptionAllApps => 'Zugriff auf alle Apps';
 
   @override
-  String get registerSlogan => 'Privat in Kontakt bleiben.';
+  String get onboardingHeadline => 'Momente';
 
   @override
-  String get onboardingWelcomeTitle => 'Willkommen bei twonly!';
+  String get onboardingHeadlineHighlight => 'privat teilen.';
 
   @override
-  String get onboardingWelcomeBody =>
-      'Erlebe eine private und sichere Möglichkeit mit Freunden in Kontakt zu bleiben, indem du spontane Bilder teilst.';
+  String get onboardingBody =>
+      'Fotos, Videos und Unterhaltungen. Ein privater Ort, um mit deinen Freunden in Kontakt zu bleiben.';
 
   @override
-  String get onboardingE2eTitle => 'Unbekümmert teilen';
+  String get onboardingFeatureE2e => 'Ende-zu-Ende verschlüsselt.';
 
   @override
-  String get onboardingE2eBody =>
-      'Genieße durch die Ende-zu-Ende-Verschlüsselung die Gewissheit, dass nur du und deine Freunde die geteilten Momente sehen können.';
+  String get onboardingFeatureNoAds => 'Keine Werbung und kein Tracking.';
 
   @override
-  String get onboardingFocusTitle =>
-      'Fokussiere dich auf das Teilen von Momenten';
-
-  @override
-  String get onboardingFocusBody =>
-      'Verabschiede dich von süchtig machenden Funktionen! twonly wurde für das Teilen von Momenten ohne nutzlose Ablenkungen oder Werbung entwickelt.';
-
-  @override
-  String get onboardingNotProductTitle => 'Du bist nicht das Produkt!';
-
-  @override
-  String get onboardingNotProductBody =>
-      'twonly wird durch ein optionales Abonnement finanziert. Deine Daten werden niemals verkauft.';
+  String get onboardingRegisterButton => 'Registrieren';
 
   @override
   String get registerUsernameSlogan => 'Konto erstellen';
@@ -1093,6 +1080,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get twonlySafeRecoverBtn => 'Backup wiederherstellen';
+
+  @override
+  String get twonlySafeRecoverDesc =>
+      'Gib deinen Benutzernamen und das Passwort deines Backups ein.';
+
+  @override
+  String get twonlySafeRecoverOr => 'oder';
 
   @override
   String get inviteFriends => 'Freunde einladen';
@@ -2659,14 +2653,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Lass deine Freunde den QR-Code scannen oder teile den Link.';
 
   @override
-  String get recoverPasswordlessShareBtn => 'Wiederherstellungs-Link teilen';
-
-  @override
-  String get recoverPasswordlessCopyBtn => 'Kopieren';
-
-  @override
-  String get recoverPasswordlessCopiedSnackbar =>
-      'Link in die Zwischenablage kopiert!';
+  String get recoverPasswordlessShareBtn => 'Link teilen';
 
   @override
   String get passwordlessRecoveryNoShareStored =>

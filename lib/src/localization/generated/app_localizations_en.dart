@@ -12,35 +12,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionAllApps => 'Access to all apps';
 
   @override
-  String get registerSlogan => 'Stay in touch privately.';
+  String get onboardingHeadline => 'Share moments';
 
   @override
-  String get onboardingWelcomeTitle => 'Welcome to twonly!';
+  String get onboardingHeadlineHighlight => 'privately.';
 
   @override
-  String get onboardingWelcomeBody =>
-      'Experience a private and secure way to stay in touch with friends by sharing instant pictures.';
+  String get onboardingBody =>
+      'Photos, videos and conversations. A private place to keep up with your friends.';
 
   @override
-  String get onboardingE2eTitle => 'Carefree sharing';
+  String get onboardingFeatureE2e => 'End-to-end encrypted.';
 
   @override
-  String get onboardingE2eBody =>
-      'With end-to-end encryption, enjoy the peace of mind that only you and your friends can see the moments you share.';
+  String get onboardingFeatureNoAds => 'No ads and no tracking.';
 
   @override
-  String get onboardingFocusTitle => 'Focus on sharing moments';
-
-  @override
-  String get onboardingFocusBody =>
-      'Say goodbye to addictive features! twonly was created for sharing moments, free from useless distractions or ads.';
-
-  @override
-  String get onboardingNotProductTitle => 'You are not the product!';
-
-  @override
-  String get onboardingNotProductBody =>
-      'twonly is financed by an optional subscription. Your data will never be sold.';
+  String get onboardingRegisterButton => 'Register';
 
   @override
   String get registerUsernameSlogan => 'Create your account';
@@ -1085,6 +1073,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get twonlySafeRecoverBtn => 'Restore backup';
+
+  @override
+  String get twonlySafeRecoverDesc =>
+      'Enter your username and the password of your backup.';
+
+  @override
+  String get twonlySafeRecoverOr => 'or';
 
   @override
   String get inviteFriends => 'Invite your friends';
@@ -2638,13 +2633,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Let friends scan the QR code or share the link.';
 
   @override
-  String get recoverPasswordlessShareBtn => 'Share Recovery Link';
-
-  @override
-  String get recoverPasswordlessCopyBtn => 'Copy';
-
-  @override
-  String get recoverPasswordlessCopiedSnackbar => 'Link copied to clipboard!';
+  String get recoverPasswordlessShareBtn => 'Share link';
 
   @override
   String get passwordlessRecoveryNoShareStored =>

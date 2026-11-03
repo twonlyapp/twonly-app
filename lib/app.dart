@@ -186,7 +186,6 @@ class AppMainWidget extends StatefulWidget {
 }
 
 class _AppMainWidgetState extends State<AppMainWidget> {
-  bool _showOnboarding = true;
   bool _isLoaded = false;
   bool _initializationFailed = false;
   bool _isTwonlyLocked = true;
@@ -273,7 +272,6 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       KeyValueKeys.onboardingState,
     ).timeout(const Duration(seconds: 10));
     if (!mounted) return;
-    _showOnboarding = !onboardingState.hasOnboardingFinished;
     if (userService.isUserCreated) {
       if (_initialPage != 0) {
         final count = await rust_contacts
@@ -383,20 +381,23 @@ class _AppMainWidgetState extends State<AppMainWidget> {
           initialPage: _initialPage,
         );
       }
-    } else if (_showOnboarding) {
-      child = OnboardingView(
-        callbackOnSuccess: () async {
-          await KeyValueStore.update<OnboardingState>(
-            key: KeyValueKeys.onboardingState,
-            update: (state) => state.hasOnboardingFinished = true,
-          );
-          if (mounted) setState(() => _showOnboarding = false);
-        },
-      );
     } else {
-      child = RegisterView(
-        callbackOnSuccess: initAsync,
-        proofOfWork: _proofOfWork,
+      child = OnboardingView(
+        onRegister: () => context.navPush(
+          Stack(
+            children: [
+              RegisterView(
+                callbackOnSuccess: () {
+                  // Back to this widget, which now shows the setup pages.
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  initAsync();
+                },
+                proofOfWork: _proofOfWork,
+              ),
+              const AppOutdatedComp(),
+            ],
+          ),
+        ),
       );
     }
 

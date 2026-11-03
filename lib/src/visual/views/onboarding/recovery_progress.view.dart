@@ -6,7 +6,7 @@ import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
-import 'package:twonly/src/visual/views/onboarding/components/link_logo_animation.dart';
+import 'package:twonly/src/visual/views/onboarding/components/onboarding_brand.comp.dart';
 
 /// Runs the actual recovery and reports every step it enters.
 typedef RecoveryRunner =
@@ -256,7 +256,6 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = context.color.onSurface;
     final hasFailed = _error != null;
 
     return PopScope(
@@ -265,91 +264,114 @@ class _RecoveryProgressViewState extends State<RecoveryProgressView> {
       canPop: hasFailed,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: hasFailed
-                          ? () => Navigator.of(context).pop()
-                          : null,
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                      color: context.color.onSurfaceVariant,
-                      iconSize: 20,
+        body: Stack(
+          children: [
+            const OnboardingBackgroundGlow(),
+            SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: IntrinsicHeight(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              // Keeps its space so the page does not jump
+                              // when a failure brings the arrow back.
+                              child: Visibility.maintain(
+                                visible: hasFailed,
+                                child: IconButton(
+                                  // Lines the arrow up with the text below.
+                                  padding: EdgeInsets.zero,
+                                  alignment: AlignmentDirectional.centerStart,
+                                  icon: const BackButtonIcon(),
+                                  tooltip: MaterialLocalizations.of(
+                                    context,
+                                  ).backButtonTooltip,
+                                  onPressed: hasFailed
+                                      ? () => Navigator.of(context).pop()
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            const SizedBox(height: 24),
+                            Text(
+                              context.lang.recoverProgressTitle,
+                              style: TextStyle(
+                                fontSize: 32,
+                                height: 1.15,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -1,
+                                color: context.color.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              context.lang.recoverProgressSubtitle,
+                              style: TextStyle(
+                                fontSize: 16,
+                                height: 1.45,
+                                color: context.color.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            for (var i = 0; i < _stepCount; i++)
+                              _buildStepRow(context, i),
+                            if (hasFailed) ...[
+                              const SizedBox(height: 20),
+                              Container(
+                                padding: const EdgeInsets.all(18),
+                                decoration: BoxDecoration(
+                                  color: context.color.errorContainer,
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline_rounded,
+                                      color: context.color.onErrorContainer,
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Text(
+                                        _error!.toLocalizedString(context),
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          height: 1.4,
+                                          fontWeight: FontWeight.w500,
+                                          color: context.color.onErrorContainer,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              MyButton(
+                                onPressed: _startRecovery,
+                                child: Text(context.lang.tryRestoreAgain),
+                              ),
+                            ],
+                            const Spacer(flex: 3),
+                            const SizedBox(height: 24),
+                          ],
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: LinkLogoAnimation(
-                      size: 90,
-                      color: context.color.onSurface,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  context.lang.recoverProgressTitle,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: titleColor,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  context.lang.recoverProgressSubtitle,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: context.color.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Container(
-                  decoration: BoxDecoration(
-                    color: context.color.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: context.color.outlineVariant,
-                    ),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < _stepCount; i++)
-                        _buildStepRow(context, i),
-                    ],
-                  ),
-                ),
-                if (hasFailed) ...[
-                  const SizedBox(height: 24),
-                  Text(
-                    _error!.toLocalizedString(context),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: context.color.error,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  MyButton(
-                    onPressed: _startRecovery,
-                    child: Text(context.lang.tryRestoreAgain),
-                  ),
-                ],
-                const SizedBox(height: 40),
-              ],
+                  );
+                },
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

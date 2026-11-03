@@ -106,59 +106,41 @@ abstract class AppLocalizations {
   /// **'Access to all apps'**
   String get subscriptionAllApps;
 
-  /// No description provided for @registerSlogan.
+  /// No description provided for @onboardingHeadline.
   ///
   /// In en, this message translates to:
-  /// **'Stay in touch privately.'**
-  String get registerSlogan;
+  /// **'Share moments'**
+  String get onboardingHeadline;
 
-  /// No description provided for @onboardingWelcomeTitle.
+  /// No description provided for @onboardingHeadlineHighlight.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to twonly!'**
-  String get onboardingWelcomeTitle;
+  /// **'privately.'**
+  String get onboardingHeadlineHighlight;
 
-  /// No description provided for @onboardingWelcomeBody.
+  /// No description provided for @onboardingBody.
   ///
   /// In en, this message translates to:
-  /// **'Experience a private and secure way to stay in touch with friends by sharing instant pictures.'**
-  String get onboardingWelcomeBody;
+  /// **'Photos, videos and conversations. A private place to keep up with your friends.'**
+  String get onboardingBody;
 
-  /// No description provided for @onboardingE2eTitle.
+  /// No description provided for @onboardingFeatureE2e.
   ///
   /// In en, this message translates to:
-  /// **'Carefree sharing'**
-  String get onboardingE2eTitle;
+  /// **'End-to-end encrypted.'**
+  String get onboardingFeatureE2e;
 
-  /// No description provided for @onboardingE2eBody.
+  /// No description provided for @onboardingFeatureNoAds.
   ///
   /// In en, this message translates to:
-  /// **'With end-to-end encryption, enjoy the peace of mind that only you and your friends can see the moments you share.'**
-  String get onboardingE2eBody;
+  /// **'No ads and no tracking.'**
+  String get onboardingFeatureNoAds;
 
-  /// No description provided for @onboardingFocusTitle.
+  /// No description provided for @onboardingRegisterButton.
   ///
   /// In en, this message translates to:
-  /// **'Focus on sharing moments'**
-  String get onboardingFocusTitle;
-
-  /// No description provided for @onboardingFocusBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Say goodbye to addictive features! twonly was created for sharing moments, free from useless distractions or ads.'**
-  String get onboardingFocusBody;
-
-  /// No description provided for @onboardingNotProductTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'You are not the product!'**
-  String get onboardingNotProductTitle;
-
-  /// No description provided for @onboardingNotProductBody.
-  ///
-  /// In en, this message translates to:
-  /// **'twonly is financed by an optional subscription. Your data will never be sold.'**
-  String get onboardingNotProductBody;
+  /// **'Register'**
+  String get onboardingRegisterButton;
 
   /// No description provided for @registerUsernameSlogan.
   ///
@@ -1971,6 +1953,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore backup'**
   String get twonlySafeRecoverBtn;
+
+  /// No description provided for @twonlySafeRecoverDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your username and the password of your backup.'**
+  String get twonlySafeRecoverDesc;
+
+  /// No description provided for @twonlySafeRecoverOr.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get twonlySafeRecoverOr;
 
   /// No description provided for @inviteFriends.
   ///
@@ -4537,20 +4531,8 @@ abstract class AppLocalizations {
   /// No description provided for @recoverPasswordlessShareBtn.
   ///
   /// In en, this message translates to:
-  /// **'Share Recovery Link'**
+  /// **'Share link'**
   String get recoverPasswordlessShareBtn;
-
-  /// No description provided for @recoverPasswordlessCopyBtn.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy'**
-  String get recoverPasswordlessCopyBtn;
-
-  /// No description provided for @recoverPasswordlessCopiedSnackbar.
-  ///
-  /// In en, this message translates to:
-  /// **'Link copied to clipboard!'**
-  String get recoverPasswordlessCopiedSnackbar;
 
   /// No description provided for @passwordlessRecoveryNoShareStored.
   ///

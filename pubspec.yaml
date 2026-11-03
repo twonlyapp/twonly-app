@@ -100,8 +100,6 @@ dependencies:
   hashlib: ^2.3.0
   hashlib_codecs: ^3.0.1
   image: ^4.9.2
-  introduction_screen: ^4.0.0
-  dots_indicator: ^4.0.1
   lottie: ^3.5.1
   mutex: ^3.1.0
   photo_view: ^0.15.0
@@ -153,10 +151,6 @@ dependency_overrides:
     path: ./dependencies/hashlib_codecs
   image:
     path: ./dependencies/image
-  introduction_screen:
-    path: ./dependencies/introduction_screen
-  dots_indicator:
-    path: ./dependencies/dots_indicator
   lottie:
     path: ./dependencies/lottie
   mutex:

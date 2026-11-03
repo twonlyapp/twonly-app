@@ -12,35 +12,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get subscriptionAllApps => 'الوُصُولُ إِلَى جَمِيعِ التَّطْبِيقَات';
 
   @override
-  String get registerSlogan => 'ابْقَ عَلَى تَوَاصُلٍ بِخُصُوصِيَّةٍ.';
+  String get onboardingHeadline => 'شارِك لحظاتك';
 
   @override
-  String get onboardingWelcomeTitle => 'مَرْحَباً بِكَ فِي twonly!';
+  String get onboardingHeadlineHighlight => 'بخصوصية.';
 
   @override
-  String get onboardingWelcomeBody =>
-      'اِسْتَمْتِعْ بِطَرِيقَةٍ خَاصَّةٍ وَآمِنَةٍ لِلبَقَاءِ عَلَى تَوَاصُلٍ مَعَ أَصْدِقَائِكَ مِنْ خِلَالِ مُشَارَكَةِ الصُّوَرِ الْفَوْرِيَّةِ.';
+  String get onboardingBody =>
+      'صور ومقاطع فيديو ومحادثات. مكان خاص للبقاء على تواصل مع أصدقائك.';
 
   @override
-  String get onboardingE2eTitle => 'مُشَارَكَةٌ بِكُلِّ أَرْيَحِيَّةٍ';
+  String get onboardingFeatureE2e => 'مشفّر من الطرف إلى الطرف.';
 
   @override
-  String get onboardingE2eBody =>
-      'مَعَ التَّشْفِيرِ مِنَ الطَّرَفِ إِلَى الطَّرَفِ اِسْتَمْتِعْ بِطُمَأْنِينَةٍ تَامَّةٍ فَلَنْ يَتَمَكَّنَ مِنْ رُؤْيَةِ اللَّحَظَاتِ الَّتِي تُشَارِكُهَا إِلَّا أَنْتَ وَأَصْدِقَاؤُكَ.';
+  String get onboardingFeatureNoAds => 'لا إعلانات ولا تتبّع.';
 
   @override
-  String get onboardingFocusTitle => 'رَكِّزْ عَلَى مُشَارَكَةِ اللَّحَظَاتِ';
-
-  @override
-  String get onboardingFocusBody =>
-      'وَدِّعِ الْمِيِّزَاتِ الَّتِي تُسَبِّبُ الإِدْمَانَ! أُنْشِئَ twonly لِمُشَارَكَةِ اللَّحَظَاتِ، بِعِيداً عَنِ التَّشْتِيتَاتِ غَيْرِ الضَّرُورِيَّةِ وَالإِعْلَانَاتِ.';
-
-  @override
-  String get onboardingNotProductTitle => 'أَنْتَ لَسْتَ الْمُنْتَجَ!';
-
-  @override
-  String get onboardingNotProductBody =>
-      'يَتِمُّ تَمْوِيلُ twonly مِنْ خِلَالِ اشْتِرَاكٍ اخْتِيَارِيٍّ. لَنْ نَبِيعَ بَيَانَاتِكَ أَبَداً.';
+  String get onboardingRegisterButton => 'إنشاء حساب';
 
   @override
   String get registerUsernameSlogan => 'أَنْشِئْ حِسَابَكَ';
@@ -1140,6 +1128,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get twonlySafeRecoverBtn => 'استعادة النسخة الاحتياطية';
+
+  @override
+  String get twonlySafeRecoverDesc =>
+      'أدخل اسم المستخدم وكلمة مرور نسختك الاحتياطية.';
+
+  @override
+  String get twonlySafeRecoverOr => 'أو';
 
   @override
   String get inviteFriends => 'ادعُ أصدقاءك';
@@ -2699,13 +2694,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'اطلب من أصدقائك مسح رمز QR أو شارك الرابط.';
 
   @override
-  String get recoverPasswordlessShareBtn => 'مشاركة رابط الاستعادة';
-
-  @override
-  String get recoverPasswordlessCopyBtn => 'نسخ';
-
-  @override
-  String get recoverPasswordlessCopiedSnackbar => 'تم نسخ الرابط إلى الحافظة!';
+  String get recoverPasswordlessShareBtn => 'مشاركة الرابط';
 
   @override
   String get passwordlessRecoveryNoShareStored =>

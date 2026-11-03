@@ -9,7 +9,7 @@ import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
-import 'package:twonly/src/visual/views/onboarding/components/link_logo_animation.dart';
+import 'package:twonly/src/visual/views/onboarding/components/onboarding_brand.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/recovery_progress.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_setup.comp.dart';
 
@@ -58,7 +58,6 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = context.color.onSurface;
     final iconColor = context.color.onSurfaceVariant;
 
     return GestureDetector(
@@ -66,121 +65,166 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
       behavior: HitTestBehavior.opaque,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight,
-                  ),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
+        body: Stack(
+          children: [
+            const OnboardingBackgroundGlow(),
+            SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: IntrinsicHeight(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            IconButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              icon: const Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                              ),
-                              color: iconColor,
-                              iconSize: 20,
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                IconButton(
+                                  // Lines the arrow up with the text below.
+                                  padding: EdgeInsets.zero,
+                                  alignment: AlignmentDirectional.centerStart,
+                                  icon: const BackButtonIcon(),
+                                  tooltip: MaterialLocalizations.of(
+                                    context,
+                                  ).backButtonTooltip,
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                                const Spacer(),
+                                IconButton(
+                                  padding: EdgeInsets.zero,
+                                  alignment: AlignmentDirectional.centerEnd,
+                                  onPressed: () =>
+                                      showBackupExplanation(context),
+                                  icon: const Icon(Icons.info_outline_rounded),
+                                  color: iconColor,
+                                ),
+                              ],
                             ),
                             const Spacer(),
-                            IconButton(
-                              onPressed: () => showBackupExplanation(context),
-                              icon: const FaIcon(FontAwesomeIcons.circleInfo),
-                              color: iconColor,
-                              iconSize: 20,
+                            const SizedBox(height: 24),
+                            Text(
+                              context.lang.twonlySafeRecoverTitle,
+                              style: TextStyle(
+                                fontSize: 32,
+                                height: 1.15,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -1,
+                                color: context.color.onSurface,
+                              ),
                             ),
+                            const SizedBox(height: 12),
+                            Text(
+                              context.lang.twonlySafeRecoverDesc,
+                              style: TextStyle(
+                                fontSize: 16,
+                                height: 1.45,
+                                color: iconColor,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            MyInput(
+                              controller: usernameCtrl,
+                              onChanged: (value) => setState(() {}),
+                              hintText: context.lang.registerUsernameDecoration,
+                              prefixIcon: const Icon(Icons.alternate_email),
+                            ),
+                            const SizedBox(height: 14),
+                            MyInput(
+                              controller: passwordCtrl,
+                              onChanged: (value) => setState(() {}),
+                              onSubmitted: (_) => _recoverTwonlySafe(),
+                              obscureText: obscureText,
+                              hintText: context.lang.password,
+                              prefixIcon: const Icon(
+                                Icons.lock_outline_rounded,
+                              ),
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    obscureText = !obscureText;
+                                  });
+                                },
+                                icon: FaIcon(
+                                  obscureText
+                                      ? FontAwesomeIcons.eye
+                                      : FontAwesomeIcons.eyeSlash,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+                            MyButton(
+                              onPressed: _recoverTwonlySafe,
+                              child: Text(context.lang.twonlySafeRecoverBtn),
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                const Expanded(child: Divider()),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                  ),
+                                  child: Text(
+                                    context.lang.twonlySafeRecoverOr,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: iconColor,
+                                    ),
+                                  ),
+                                ),
+                                const Expanded(child: Divider()),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            MyButton(
+                              variant: MyButtonVariant.secondary,
+                              onPressed: () async {
+                                await KeyValueStore.update<OnboardingState>(
+                                  key: KeyValueKeys.onboardingState,
+                                  update: (state) =>
+                                      state.hasStartedPasswordlessRecovery =
+                                          true,
+                                );
+                                if (context.mounted) {
+                                  await context.push(
+                                    Routes.recoverPasswordless,
+                                  );
+                                }
+                              },
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.group_outlined, size: 22),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: Text(
+                                      context
+                                          .lang
+                                          .passwordlessRecoveryRecoverBtn,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Spacer(flex: 3),
+                            const SizedBox(height: 24),
                           ],
                         ),
-                        const SizedBox(height: 20),
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: LinkLogoAnimation(
-                              color: context.color.onSurface,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Text(
-                            context.lang.twonlySafeRecoverTitle,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              color: titleColor,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 48),
-                        MyInput(
-                          controller: usernameCtrl,
-                          onChanged: (value) => setState(() {}),
-                          hintText: context.lang.registerUsernameDecoration,
-                          prefixIcon: const Icon(Icons.alternate_email),
-                        ),
-                        const SizedBox(height: 16),
-                        MyInput(
-                          controller: passwordCtrl,
-                          onChanged: (value) => setState(() {}),
-                          obscureText: obscureText,
-                          hintText: context.lang.password,
-                          prefixIcon: const Icon(Icons.lock_outline_rounded),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                obscureText = !obscureText;
-                              });
-                            },
-                            icon: FaIcon(
-                              obscureText
-                                  ? FontAwesomeIcons.eye
-                                  : FontAwesomeIcons.eyeSlash,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        MyButton(
-                          onPressed: _recoverTwonlySafe,
-                          child: Text(context.lang.twonlySafeRecoverBtn),
-                        ),
-                        const SizedBox(height: 16),
-                        MyButton(
-                          variant: MyButtonVariant.secondary,
-                          onPressed: () async {
-                            await KeyValueStore.update<OnboardingState>(
-                              key: KeyValueKeys.onboardingState,
-                              update: (state) =>
-                                  state.hasStartedPasswordlessRecovery = true,
-                            );
-                            if (context.mounted) {
-                              await context.push(Routes.recoverPasswordless);
-                            }
-                          },
-                          child: Text(
-                            context.lang.passwordlessRecoveryRecoverBtn,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        const Spacer(),
-                        const SizedBox(height: 40),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              );
-            },
-          ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

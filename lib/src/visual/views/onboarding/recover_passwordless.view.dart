@@ -26,6 +26,7 @@ import 'package:twonly/src/visual/elements/contact_chip.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/onboarding/components/animated_bell_icon.comp.dart';
+import 'package:twonly/src/visual/views/onboarding/components/onboarding_brand.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/recovery_progress.view.dart';
 
 class RecoverPasswordless extends StatefulWidget {
@@ -527,6 +528,160 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
     }
   }
 
+  bool get _emailRequested =>
+      _onboardingState != null && _onboardingState!.emailRecoveryRequested;
+
+  BoxDecoration _cardDecoration(BuildContext context) => BoxDecoration(
+    color: context.color.surfaceContainerLow,
+    borderRadius: BorderRadius.circular(28),
+    border: Border.all(
+      color: context.color.outlineVariant.withValues(alpha: 0.5),
+    ),
+  );
+
+  Widget _buildTopBar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 8, 28, 0),
+      child: Row(
+        children: [
+          IconButton(
+            // Lines the arrow up with the text below.
+            padding: EdgeInsets.zero,
+            alignment: AlignmentDirectional.centerStart,
+            icon: const BackButtonIcon(),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          const Spacer(),
+          if (!_isLoading && _onboardingState?.notificationId != null)
+            IconButton(
+              padding: EdgeInsets.zero,
+              alignment: AlignmentDirectional.centerEnd,
+              icon: const Icon(Icons.restart_alt_rounded),
+              color: context.color.onSurfaceVariant,
+              tooltip: context.lang.passwordlessRecoveryStartOver,
+              onPressed: _isRecovering ? null : _confirmStartOver,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationCard(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: context.color.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: context.color.primary.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Center(child: AnimatedBellIcon()),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.lang.recoverPasswordlessNotificationCardTitle,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: context.color.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.lang.recoverPasswordlessNotificationCardSubtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.35,
+                    color: context.color.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                MyButton(
+                  variant: MyButtonVariant.primaryDense,
+                  onPressed: _requestNotificationPermission,
+                  child: Text(
+                    context.lang.recoverPasswordlessNotificationCardBtn,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// The QR code and link friends open to send their share.
+  Widget _buildShareSection(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: context.appColor(AppColor.qrBackground),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: context.color.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
+          child: QrImageView.withQr(
+            qr: QrCode.fromData(
+              data: _shareUrl,
+              errorCorrectLevel: QrErrorCorrectLevel.M,
+            ),
+            eyeStyle: QrEyeStyle(
+              color: context.appColor(AppColor.qrForeground),
+              borderRadius: 4,
+            ),
+            dataModuleStyle: QrDataModuleStyle(
+              color: context.appColor(AppColor.qrForeground),
+              borderRadius: 4,
+            ),
+            gapless: false,
+            size: 200,
+          ),
+        ),
+        const SizedBox(height: 14),
+        ConstrainedBox(
+          // Not wider than the QR code above it.
+          constraints: const BoxConstraints(maxWidth: 240),
+          child: Text(
+            context.lang.recoverPasswordlessQrInstructions,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.4,
+              color: context.color.onSurfaceVariant,
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        MyButton(
+          variant: MyButtonVariant.primaryMiddle,
+          onPressed: () =>
+              SharePlus.instance.share(ShareParams(text: _shareUrl)),
+          child: _ButtonLabel(
+            icon: Icons.ios_share_rounded,
+            text: context.lang.recoverPasswordlessShareBtn,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildProgressSection(BuildContext context) {
     final analysis = _analysis;
     final first = analysis.account!;
@@ -538,97 +693,126 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: _cardDecoration(context),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AvatarIcon(
-                svg: first.myAvatarSvg != null
-                    ? RustApi.decodeAvatarSvg(
-                        avatarSvgCompressed: first.myAvatarSvg!,
-                      )
-                    : null,
-                fontSize: 60,
+              Row(
+                children: [
+                  AvatarIcon(
+                    svg: first.myAvatarSvg != null
+                        ? RustApi.decodeAvatarSvg(
+                            avatarSvgCompressed: first.myAvatarSvg!,
+                          )
+                        : null,
+                    fontSize: 28,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          first.myDisplayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.3,
+                            color: context.color.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          context.lang.recoverPasswordlessSharesReceived(
+                            shares.length,
+                            threshold,
+                          ),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: context.color.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                first.myDisplayName,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+              const SizedBox(height: 18),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: (shares.length / threshold).clamp(0.0, 1.0),
+                  minHeight: 10,
+                  backgroundColor: context.color.surfaceContainerHighest,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    thresholdReached
+                        ? context.appColor(AppColor.success)
+                        : context.color.primary,
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
+              if (shares.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: shares.map((share) {
+                    return ContactChip(
+                      username: share.trustedFriendDisplayName,
+                      avatarSvg: share.trustedFriendAvatarSvg,
+                    );
+                  }).toList(),
+                ),
+              ],
+              if (analysis.ignoredShares > 0) ...[
+                const SizedBox(height: 12),
+                Text(
+                  context.lang.recoverPasswordlessSharesIgnored(
+                    analysis.ignoredShares,
+                  ),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: context.color.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
         const SizedBox(height: 24),
-
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              context.lang.recoverPasswordlessSharesReceived(
-                shares.length,
-                threshold,
-              ),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: LinearProgressIndicator(
-            value: (shares.length / threshold).clamp(0.0, 1.0),
-            minHeight: 12,
-            backgroundColor: context.color.surfaceContainerHighest,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              thresholdReached
-                  ? context.appColor(AppColor.success)
-                  : context.color.primary,
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          alignment: WrapAlignment.center,
-          children: shares.map((share) {
-            return ContactChip(
-              username: share.trustedFriendDisplayName,
-              avatarSvg: share.trustedFriendAvatarSvg,
-            );
-          }).toList(),
-        ),
-
-        if (analysis.ignoredShares > 0) ...[
-          const SizedBox(height: 12),
-          Text(
-            context.lang.recoverPasswordlessSharesIgnored(
-              analysis.ignoredShares,
-            ),
-            style: TextStyle(
-              fontSize: 13,
-              color: context.color.onSurfaceVariant,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-
-        const SizedBox(height: 24),
-
         if (secret == null && (thresholdReached || analysis.tooManyShares))
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              analysis.tooManyShares
-                  ? context.lang.recoverPasswordlessTooManyShares
-                  : context.lang.recoverPasswordlessSharesDoNotFit,
-              style: TextStyle(color: context.color.error),
-              textAlign: TextAlign.center,
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: context.color.errorContainer,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  color: context.color.onErrorContainer,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    analysis.tooManyShares
+                        ? context.lang.recoverPasswordlessTooManyShares
+                        : context.lang.recoverPasswordlessSharesDoNotFit,
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.4,
+                      fontWeight: FontWeight.w500,
+                      color: context.color.onErrorContainer,
+                    ),
+                  ),
+                ),
+              ],
             ),
           )
         else if (secret != null) ...[
@@ -636,12 +820,12 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
             MyInput(
               controller: _secondFactorController,
               hintText: context.lang.passwordlessRecoveryMethodPinHint,
+              prefixIcon: const Icon(Icons.pin_outlined),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
           ] else if (secret.hasEmailHint()) ...[
-            if (_onboardingState != null &&
-                !_onboardingState!.emailRecoveryRequested) ...[
+            if (_onboardingState != null && !_emailRequested) ...[
               MyInput(
                 controller: _secondFactorController,
                 hintText: secret.emailHint,
@@ -672,15 +856,13 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
                 : Text(
                     secret.hasEmailHint() &&
                             _onboardingState != null &&
-                            !_onboardingState!.emailRecoveryRequested
+                            !_emailRequested
                         ? 'Send recovery email'
                         : context.lang.recoverPasswordlessRecoverNowBtn,
                   ),
           ),
-          const SizedBox(height: 16),
-          if (secret.hasEmailHint() &&
-              _onboardingState != null &&
-              _onboardingState!.emailRecoveryRequested) ...[
+          if (secret.hasEmailHint() && _emailRequested) ...[
+            const SizedBox(height: 12),
             MyButton(
               onPressed: _isRecovering
                   ? null
@@ -699,8 +881,8 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
               variant: MyButtonVariant.secondary,
               child: Text(context.lang.passwordlessRecoveryResendEmail),
             ),
-            const SizedBox(height: 16),
           ],
+          const SizedBox(height: 24),
         ],
       ],
     );
@@ -712,218 +894,91 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
     // Friends still need the link until the shares rebuild the data.
     final needsMoreShares = _analysis.secret == null;
 
-    if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(context.lang.passwordlessRecoveryRecoverBtn),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            color: context.color.onSurfaceVariant,
-            iconSize: 20,
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.lang.passwordlessRecoveryRecoverBtn),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          color: context.color.onSurfaceVariant,
-          iconSize: 20,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          if (_onboardingState?.notificationId != null)
-            IconButton(
-              icon: const Icon(Icons.restart_alt_rounded),
-              tooltip: context.lang.passwordlessRecoveryStartOver,
-              onPressed: _isRecovering ? null : _confirmStartOver,
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (!hasShares) ...[
-                Text(
-                  context.lang.recoverPasswordlessExplanation,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 24),
-              ],
-
-              if (hasShares) _buildProgressSection(context),
-
-              if (!_notificationsEnabled && !hasShares) ...[
-                Container(
-                  decoration: BoxDecoration(
-                    color: context.color.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: context.color.outlineVariant,
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const AnimatedBellIcon(),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context
-                                  .lang
-                                  .recoverPasswordlessNotificationCardTitle,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      behavior: HitTestBehavior.opaque,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Stack(
+          children: [
+            const OnboardingBackgroundGlow(),
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildTopBar(context),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            context.lang.passwordlessRecoveryRecoverBtn,
+                            style: TextStyle(
+                              fontSize: 32,
+                              height: 1.15,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -1,
+                              color: context.color.onSurface,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              context
-                                  .lang
-                                  .recoverPasswordlessNotificationCardSubtitle,
-                              style: const TextStyle(fontSize: 13),
-                            ),
+                          ),
+                          if (!hasShares) ...[
                             const SizedBox(height: 12),
-                            MyButton(
-                              variant: MyButtonVariant.secondaryDense,
-                              onPressed: _requestNotificationPermission,
-                              child: Text(
-                                context
-                                    .lang
-                                    .recoverPasswordlessNotificationCardBtn,
+                            Text(
+                              context.lang.recoverPasswordlessExplanation,
+                              style: TextStyle(
+                                fontSize: 16,
+                                height: 1.45,
+                                color: context.color.onSurfaceVariant,
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-              ],
-
-              if (needsMoreShares) ...[
-                if (!hasShares)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: context.color.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: context.color.outlineVariant,
+                          const SizedBox(height: 28),
+                          if (_isLoading)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 60),
+                              child: Center(
+                                child: CircularProgressIndicator.adaptive(),
+                              ),
+                            )
+                          else ...[
+                            if (hasShares) _buildProgressSection(context),
+                            if (!_notificationsEnabled && !hasShares) ...[
+                              _buildNotificationCard(context),
+                              const SizedBox(height: 16),
+                            ],
+                            if (needsMoreShares) _buildShareSection(context),
+                          ],
+                        ],
                       ),
                     ),
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline_rounded,
-                          color: context.color.onSurfaceVariant,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            context.lang.recoverPasswordlessQrInstructions,
-                            style: const TextStyle(fontSize: 14, height: 1.4),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-
-                if (!hasShares) const SizedBox(height: 20),
-
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: context.appColor(AppColor.qrBackground),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.color.shadow.withValues(alpha: 0.2),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: QrImageView.withQr(
-                      qr: QrCode.fromData(
-                        data: _shareUrl,
-                        errorCorrectLevel: QrErrorCorrectLevel.M,
-                      ),
-                      eyeStyle: QrEyeStyle(
-                        color: context.appColor(AppColor.qrForeground),
-                        borderRadius: 4,
-                      ),
-                      dataModuleStyle: QrDataModuleStyle(
-                        color: context.appColor(AppColor.qrForeground),
-                        borderRadius: 4,
-                      ),
-                      gapless: false,
-                      size: 200,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                MyInput(
-                  controller: TextEditingController(text: _shareUrl),
-                  readOnly: true,
-                  hintText: '',
-                  prefixIcon: const Icon(Icons.link_rounded),
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.copy_rounded),
-                        tooltip: context.lang.recoverPasswordlessCopyBtn,
-                        onPressed: () {
-                          Clipboard.setData(
-                            ClipboardData(text: _shareUrl),
-                          );
-                          showSnackbar(
-                            context,
-                            context.lang.recoverPasswordlessCopiedSnackbar,
-                            level: SnackbarLevel.success,
-                          );
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.share_rounded),
-                        tooltip: context.lang.recoverPasswordlessShareBtn,
-                        onPressed: () {
-                          final params = ShareParams(
-                            text: _shareUrl,
-                          );
-                          SharePlus.instance.share(params);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
-            ],
-          ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _ButtonLabel extends StatelessWidget {
+  const _ButtonLabel({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 20),
+        const SizedBox(width: 10),
+        Flexible(child: Text(text, overflow: TextOverflow.ellipsis)),
+      ],
     );
   }
 }

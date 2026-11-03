@@ -68,13 +68,6 @@ dependencies:
   image:
     git: https://github.com/brendan-duncan/image.git
     tag: v4.9.2
-  introduction_screen:
-    git: https://github.com/Pyozer/introduction_screen.git
-    dependencies:
-      dots_indicator:
-        git: https://github.com/Pyozer/dots_indicator.git
-        commit: 508f5883ac79bdbc10254092de3f28f571d261cd
-    commit: 4a90e557630b28834479ed9c64a9d2d0185d8e48
   lottie:
     git: https://github.com/xvrh/lottie-flutter.git
     commit: 127bc29f2c6bd8b32ec4064a09e54e6b31cd0a88

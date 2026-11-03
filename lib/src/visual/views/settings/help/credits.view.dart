@@ -100,18 +100,6 @@ class _CreditsViewState extends State<CreditsView> {
             ),
           ),
           const UrlListTitle(
-            title: 'selfie fast Animation',
-            subtitle: 'Brandon Ambuila',
-            url:
-                'https://lottiefiles.com/free-animation/selfie-fast-JZx4Ftrg1E',
-          ),
-          const UrlListTitle(
-            title: 'Security status - Safe Animation',
-            subtitle: 'Yogesh Pal',
-            url:
-                'https://lottiefiles.com/free-animation/security-status-safe-CePJPAwLVx',
-          ),
-          const UrlListTitle(
             title: 'send mail Animation',
             subtitle: 'jignesh gajjar',
             url: 'https://lottiefiles.com/free-animation/send-mail-3pvzm2kmNq',
@@ -139,12 +127,6 @@ class _CreditsViewState extends State<CreditsView> {
             subtitle: 'Aman Awasthy',
             url:
                 'https://lottiefiles.com/de/free-animation/success-tick-cuwjLHAR7g',
-          ),
-          const UrlListTitle(
-            title: 'Donation-Animation',
-            subtitle: 'Abdul Latif',
-            url:
-                'https://lottiefiles.com/free-animation/international-day-of-charity-NBAKAkCcBr',
           ),
           const UrlListTitle(
             title: 'Failed-Animation',
