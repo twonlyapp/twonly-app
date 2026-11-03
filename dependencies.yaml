@@ -32,6 +32,8 @@ dependencies:
   flutter_blurhash:
     git: https://github.com/fluttercommunity/flutter_blurhash.git
     commit: c5cdec4986432e835bb91f5ce00564534450cdc7
+    custom_changes: true
+    custom_changes_description: Give each image stream its own clone so evicting one does not dispose the shared decoded image.
   flutter_markdown_plus:
     git: https://github.com/foresightmobile/flutter_markdown_plus.git
     commit: dc1185c933fbf9dba559ef6c91586ff1503be3ee

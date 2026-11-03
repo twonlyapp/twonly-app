@@ -97,7 +97,7 @@ void main() {
       );
 
       test(
-        'developer batches and encrypted-aware snapshot use typed bridge commands',
+        'developer batches and plaintext snapshot use typed bridge commands',
         () async {
           await TestDatabase.create();
           final session = currentDatabaseSession();
@@ -151,9 +151,11 @@ void main() {
             await rust_diagnostics.exportDebugDatabase(path: path);
             final bytes = File(path).readAsBytesSync();
             expect(bytes.length, greaterThan(4096));
+            // The developer export is plaintext so it opens in any SQLite
+            // tool (e9243ede).
             expect(
               bytes.take(16),
-              isNot(orderedEquals([...ascii.encode('SQLite format 3'), 0])),
+              orderedEquals([...ascii.encode('SQLite format 3'), 0]),
             );
             await expectLater(
               rust_diagnostics.exportDebugDatabase(path: path),
