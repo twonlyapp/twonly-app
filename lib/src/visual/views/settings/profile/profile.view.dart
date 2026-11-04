@@ -15,6 +15,7 @@ import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
+import 'package:twonly/src/visual/views/settings/components/settings_layout.dart';
 import 'package:twonly/src/visual/views/settings/profile/own_story_strip.comp.dart';
 
 class ProfileView extends StatefulWidget {
@@ -105,8 +106,7 @@ class _ProfileViewState extends State<ProfileView> {
       body: StreamBuilder<void>(
         stream: userService.onUserUpdated,
         builder: (context, _) {
-          return ListView(
-            physics: const BouncingScrollPhysics(),
+          return SettingsList(
             children: <Widget>[
               const SizedBox(height: 25),
               const AvatarIcon(
@@ -132,7 +132,7 @@ class _ProfileViewState extends State<ProfileView> {
               ),
               const SizedBox(height: 20),
               const OwnStoryStrip(),
-              const Divider(),
+              const SettingsDivider(),
               BetterListTile(
                 leading: const Padding(
                   padding: EdgeInsets.only(right: 5, left: 1),
@@ -192,6 +192,12 @@ class _ProfileViewState extends State<ProfileView> {
                     await updateUserDisplayName(displayName);
                   }
                 },
+              ),
+              BetterListTile(
+                icon: FontAwesomeIcons.shareFromSquare,
+                text: context.lang.inviteFriends,
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(Routes.settingsInvite),
               ),
               BetterListTile(
                 text: context.lang.yourTwonlyScore,

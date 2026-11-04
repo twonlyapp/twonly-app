@@ -31,13 +31,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingRegisterButton => 'Register';
 
   @override
-  String get registerUsernameSlogan => 'Create your account';
+  String get registerUsernameSlogan => 'Create\nyour account';
 
   @override
   String get registerUsernameDecoration => 'Username';
 
   @override
   String get registerUsernameLimits => 'At least 3 characters.';
+
+  @override
+  String get registerUsernameBody =>
+      'Your friends find you by your username. You can change it later.';
 
   @override
   String get registerProofOfWorkFailed =>
@@ -202,10 +206,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTitle => 'Settings';
 
   @override
-  String get settingsChats => 'Chats';
+  String get settingsChats => 'Chats & camera';
 
   @override
-  String get settingsPreSelectedReactions => 'Preselected reaction emojis';
+  String get settingsPreSelectedReactions => 'Quick reactions';
 
   @override
   String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle =>
@@ -223,7 +227,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsProfile => 'Profile';
 
   @override
-  String get settingsStorageData => 'Memories & Storage';
+  String get settingsStorageData => 'Storage & downloads';
 
   @override
   String get memoryDetailsTitle => 'Details';
@@ -375,13 +379,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSubscription => 'Subscription';
 
   @override
-  String get settingsAppearance => 'Appearance';
+  String get settingsAppearance => 'Design & language';
 
   @override
   String get settingsPrivacy => 'Privacy & Security';
 
   @override
-  String get settingsPrivacyBlockUsers => 'Block contacts';
+  String get settingsPrivacyBlockUsers => 'Blocked contacts';
 
   @override
   String get settingsPrivacyBlockUsersDesc =>
@@ -452,14 +456,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyVisibilityEveryone => 'Everyone';
 
   @override
-  String get settingsNotification => 'Notification';
+  String get settingsNotification => 'Notifications';
 
   @override
   String get settingsNotifyPermission => 'Notification permissions';
 
   @override
   String get settingsNotifyPermissionDesc =>
-      'Open system settings to allow push notifications.';
+      'Open your phone’s settings to manage notification permissions.';
 
   @override
   String get settingsNotifyResetTitle => 'Reset notification tokens';
@@ -469,15 +473,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reset your notification tokens if you have problems receiving push notifications.';
 
   @override
-  String get settingsNotifyResetTitleReset =>
-      'Your notification tokens have been reset.';
+  String get settingsNotifyResetTitleReset => 'Notification connection renewed';
 
   @override
   String get settingsNotifyResetTitleResetDesc =>
-      'If the problem persists, please send us your debug log via Settings > Help so we can investigate the issue.';
+      'If notifications still do not arrive, contact us under Settings > Help & information. You can attach a diagnostic log there.';
 
   @override
-  String get settingsHelp => 'Help';
+  String get settingsHelp => 'Help & information';
 
   @override
   String get settingsHelpDiagnostics => 'Diagnostic protocol';
@@ -557,7 +560,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHelpTerms => 'Terms of Service';
 
   @override
-  String get settingsAppearanceTheme => 'Theme';
+  String get settingsAppearanceTheme => 'Light / dark mode';
 
   @override
   String get settingsAppearanceLanguage => 'Language';
@@ -577,16 +580,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your account will be deleted. There is no change to restore it.';
 
   @override
-  String get contactVerifyNumberTitle => 'Verify contacts';
-
-  @override
   String verifyUserIdentity(Object username) {
     return 'Verify $username\'s identity';
   }
-
-  @override
-  String get contactVerifyNumberSubtitle =>
-      'Verify the identity of your contacts to make sure you are texting the right person.';
 
   @override
   String get inChatContactNotVerified => 'Contact not verified.';
@@ -1637,15 +1633,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingFinishLater => 'Finish later';
 
   @override
-  String get onboardingProfileTitle => 'Choose your look';
+  String get onboardingProfileTitle => 'Create\nyour avatar';
 
   @override
   String get onboardingProfileBody =>
-      'Select an avatar and a display name that friends will see.';
+      'Your public avatar helps others recognize you on twonly.';
 
   @override
   String get onboardingBackupBody =>
-      'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.';
+      'So you can restore your account on a new phone.';
 
   @override
   String get onboardingUserDiscoveryShareFriends => 'Share your friends';
@@ -1758,10 +1754,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alwaysShowStories => 'Always show stories';
-
-  @override
-  String get alwaysShowStoriesSubtitle =>
-      'Keep stories above your chats after you\'ve watched them.';
 
   @override
   String verifiedPublicKey(Object username) {
@@ -1979,11 +1971,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileYourQrCode => 'Your QR code';
 
   @override
-  String get settingsScreenLock => 'Screen lock';
+  String get settingsScreenLock => 'Lock the app';
 
   @override
   String get settingsScreenLockSubtitle =>
-      'To open twonly, you\'ll need to use your smartphone\'s unlock feature.';
+      'Use your phone’s unlock method to open twonly.';
 
   @override
   String get settingsScreenLockAuthMessageEnable =>
@@ -2004,11 +1996,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use your phone\'s unlock settings to unlock twonly';
 
   @override
-  String get settingsTypingIndication => 'Typing Indicators';
+  String get settingsTypingIndication => 'Typing indicator';
 
   @override
   String get settingsTypingIndicationSubtitle =>
-      'When the typing indicator is turned off, you can\'t see when others are typing a message.';
+      'Show each other when you are typing. Turning this off also hides other people’s typing indicators.';
 
   @override
   String get contactActionBlock => 'Block';
@@ -2303,7 +2295,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dragToZoom => 'Drag to Zoom';
 
   @override
-  String get onboardingProfileSelectionTitle => 'Choose your setup path';
+  String get onboardingProfileSelectionTitle => 'Choose your\nsetup path';
 
   @override
   String get onboardingProfileSelectionSubtitle =>
@@ -3429,4 +3421,109 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get storeReviewPromptHide => 'Don\'t show again';
+
+  @override
+  String get settingsProfileSubtitle => 'Edit profile · QR code';
+
+  @override
+  String get settingsChatsSubtitle => 'Reactions, stories, camera & sending';
+
+  @override
+  String get settingsNotificationsSubtitle =>
+      'Story alerts & notification problems';
+
+  @override
+  String get settingsAppearanceSubtitle =>
+      'Light / dark mode, colors & app language';
+
+  @override
+  String get settingsPrivacySubtitle =>
+      'Profile visibility, friends & app lock';
+
+  @override
+  String get settingsBackupSubtitle => 'Account access, messages & Memories';
+
+  @override
+  String get settingsStorageSubtitle => 'Free up space & save media';
+
+  @override
+  String get settingsRecoveryMissing => 'No account recovery set up';
+
+  @override
+  String get settingsNotificationsDisabled =>
+      'Notifications are off in system settings';
+
+  @override
+  String get settingsNotificationsEnabled => 'Notifications allowed';
+
+  @override
+  String get settingsNotificationsDisabledHelp =>
+      'Allow notifications in your phone’s settings first. Tap the status above to open them.';
+
+  @override
+  String get settingsStatusLoading => 'Checking status…';
+
+  @override
+  String get settingsStatusUnavailable => 'Status could not be loaded';
+
+  @override
+  String get settingsNewsShortcut => 'Show news shortcut';
+
+  @override
+  String get settingsDownloadNone => 'No automatic photo or video downloads';
+
+  @override
+  String get settingsDeleteAccountFailed =>
+      'Your account could not be deleted. Check your internet connection and try again.';
+
+  @override
+  String get settingsAccountDeleted => 'Account deleted';
+
+  @override
+  String get settingsOpenAppAgain => 'Tap to open the app again';
+
+  @override
+  String get settingsBackupIntro =>
+      'If you lose your phone, you need a way back into your account and a backup of your content.';
+
+  @override
+  String get settingsBackupNever => 'Not backed up yet';
+
+  @override
+  String get settingsBackupPending => 'Backup pending';
+
+  @override
+  String get settingsBackupFailed => 'Last backup failed';
+
+  @override
+  String get settingsBackupSaved => 'Last successful backup';
+
+  @override
+  String get settingsPasswordConfigured => 'Password set up · Manage';
+
+  @override
+  String get settingsMemoriesBackupActive => 'Backup enabled · View progress';
+
+  @override
+  String get settingsMemoriesBackupInactive => 'Not enabled · Set up backup';
+
+  @override
+  String get settingsRecoveryFriendsLoading => 'Checking your trusted friends…';
+
+  @override
+  String settingsRecoveryFriendsReady(int count, int required) {
+    return 'Enough active friends · $count active (at least $required needed)';
+  }
+
+  @override
+  String settingsRecoveryFriendsWaiting(int count, int required) {
+    return 'Not enough active friends yet · $count of $required required';
+  }
+
+  @override
+  String get settingsArchiveNeedsPassword =>
+      'Set up a recovery password above to back up contacts and messages.';
+
+  @override
+  String get settingsChangelog => 'Changelog';
 }

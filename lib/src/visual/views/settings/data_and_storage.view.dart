@@ -15,6 +15,7 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/views/settings/components/settings_layout.dart';
 
 class DataAndStorageView extends StatefulWidget {
   const DataAndStorageView({super.key});
@@ -155,7 +156,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
           final autoDownloadOptions =
               userService.currentUser.autoDownloadOptions ??
               defaultAutoDownloadOptions;
-          return ListView(
+          return SettingsList(
             children: [
               FutureBuilder<Map<MediaType, int>>(
                 future: _storageStatsFuture,
@@ -172,7 +173,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
                   );
                 },
               ),
-              const Divider(),
+              const SettingsDivider(),
               ListTile(
                 title: Text(context.lang.settingsStorageDataStoreInGTitle),
                 onTap: toggleStoreInGallery,
@@ -185,7 +186,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
                 title: Text(context.lang.memoryLocationTitle),
                 subtitle: Text(
                   context.lang.memoryLocationSubtitle,
-                  style: const TextStyle(fontSize: 12),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 onTap: _isUpdatingLocationSetting
                     ? null
@@ -201,7 +202,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
                 title: Text(context.lang.autoStoreAllSendUnlimitedMediaFiles),
                 subtitle: Text(
                   context.lang.autoStoreAllSendUnlimitedMediaFilesSubtitle,
-                  style: const TextStyle(fontSize: 9),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 onTap: toggleAutoStoreMediaFiles,
                 trailing: Switch.adaptive(
@@ -217,7 +218,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
                   context.push(Routes.settingsStorageImportGallery);
                 },
               ),
-              const Divider(),
+              const SettingsDivider(),
               ListTile(
                 title: Text(
                   context.lang.settingsStorageDataMediaAutoDownload,
@@ -227,9 +228,10 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
               ListTile(
                 title: Text(context.lang.settingsStorageDataAutoDownMobile),
                 subtitle: Text(
-                  autoDownloadOptions[ConnectivityResult.mobile.name]!
-                      .where((e) => e != 'audio')
-                      .join(', '),
+                  _downloadLabel(
+                    context,
+                    autoDownloadOptions[ConnectivityResult.mobile.name]!,
+                  ),
                   style: TextStyle(color: context.color.onSurfaceVariant),
                 ),
                 onTap: () async {
@@ -242,9 +244,10 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
               ListTile(
                 title: Text(context.lang.settingsStorageDataAutoDownWifi),
                 subtitle: Text(
-                  autoDownloadOptions[ConnectivityResult.wifi.name]!
-                      .where((e) => e != 'audio')
-                      .join(', '),
+                  _downloadLabel(
+                    context,
+                    autoDownloadOptions[ConnectivityResult.wifi.name]!,
+                  ),
                   style: TextStyle(color: context.color.onSurfaceVariant),
                 ),
                 onTap: () async {
@@ -260,6 +263,14 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
       ),
     );
   }
+}
+
+String _downloadLabel(BuildContext context, List<String> types) {
+  final labels = [
+    if (types.contains('image')) context.lang.settingsStorageImages,
+    if (types.contains('video')) context.lang.settingsStorageVideos,
+  ];
+  return labels.isEmpty ? context.lang.settingsDownloadNone : labels.join(', ');
 }
 
 class AutoDownloadOptionsDialog extends StatefulWidget {
@@ -295,7 +306,7 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           CheckboxListTile.adaptive(
-            title: const Text('Image'),
+            title: Text(context.lang.settingsStorageImages),
             value: autoDownloadOptions[widget.connectionMode.name]!.contains(
               DownloadMediaTypes.image.name,
             ),
@@ -304,7 +315,7 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
             },
           ),
           CheckboxListTile.adaptive(
-            title: const Text('Video'),
+            title: Text(context.lang.settingsStorageVideos),
             value: autoDownloadOptions[widget.connectionMode.name]!.contains(
               DownloadMediaTypes.video.name,
             ),

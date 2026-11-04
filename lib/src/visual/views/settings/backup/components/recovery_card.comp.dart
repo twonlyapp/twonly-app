@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_card.element.dart';
 
-/// A recovery option, tinted red until it is actually set up.
+/// A recovery option with a positive accent when it is set up.
 class RecoveryCard extends StatelessWidget {
   const RecoveryCard({
     required this.icon,
@@ -25,7 +25,9 @@ class RecoveryCard extends StatelessWidget {
       title: title,
       subtitle: subtitle,
       onTap: onTap,
-      accentColor: isEnabled ? context.color.primary : context.color.error,
+      accentColor: isEnabled
+          ? context.color.primary
+          : context.color.onSurfaceVariant,
     );
   }
 }

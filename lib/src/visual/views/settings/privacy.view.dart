@@ -9,7 +9,7 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/elements/svg_icon.element.dart';
+import 'package:twonly/src/visual/views/settings/components/settings_layout.dart';
 
 class PrivacyView extends StatefulWidget {
   const PrivacyView({super.key});
@@ -81,14 +81,16 @@ class _PrivacyViewState extends State<PrivacyView> {
       appBar: AppBar(
         title: Text(context.lang.settingsPrivacy),
       ),
-      body: ListView(
+      body: SettingsList(
         children: [
           ListTile(
             title: Text(context.lang.publicProfilePrivacyTitle),
+            trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(Routes.settingsPrivacyPublicProfile),
           ),
           ListTile(
             title: Text(context.lang.settingsPrivacyBlockUsers),
+            trailing: const Icon(Icons.chevron_right),
             subtitle: StreamBuilder(
               stream: watchRustDatabase(
                 (control) => rust_contacts.watchContactsCount(
@@ -111,22 +113,14 @@ class _PrivacyViewState extends State<PrivacyView> {
             onTap: () => context.push(Routes.settingsPrivacyBlockUsers),
           ),
           ListTile(
-            title: Text(context.lang.contactVerifyNumberTitle),
-            subtitle: Text(context.lang.contactVerifyNumberSubtitle),
-            trailing: const _VerificationBadgeTriangle(),
-            onTap: () async {
-              await context.push(Routes.settingsHelpFaqVerifyBadge);
-              setState(() {});
-            },
-          ),
-          ListTile(
             title: Text(context.lang.userDiscoverySettingsTitle),
+            trailing: const Icon(Icons.chevron_right),
             onTap: () async {
               await context.push(Routes.settingsPrivacyUserDiscovery);
               setState(() {});
             },
           ),
-          const Divider(),
+          const SettingsDivider(),
           ListTile(
             title: Text(context.lang.locationStickerSettingTitle),
             subtitle: Text(context.lang.locationStickerSettingSubtitle),
@@ -147,7 +141,7 @@ class _PrivacyViewState extends State<PrivacyView> {
               onChanged: (a) => toggleTypingIndicators(),
             ),
           ),
-          const Divider(),
+          const SettingsDivider(),
           ListTile(
             title: Text(context.lang.settingsScreenLock),
             subtitle: Text(context.lang.settingsScreenLockSubtitle),
@@ -155,47 +149,6 @@ class _PrivacyViewState extends State<PrivacyView> {
             trailing: Switch.adaptive(
               value: userService.currentUser.screenLockEnabled,
               onChanged: (a) => toggleAuthRequirementOnStartup(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _VerificationBadgeTriangle extends StatelessWidget {
-  const _VerificationBadgeTriangle();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 30,
-      height: 30,
-      child: Stack(
-        children: [
-          const Positioned(
-            top: 0,
-            left: 9,
-            child: SvgIcon(
-              assetPath: SvgIcons.verifiedGreen,
-              size: 14,
-            ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            child: SvgIcon(
-              assetPath: SvgIcons.verifiedGreen,
-              size: 14,
-              color: context.appColor(AppColor.verificationPending),
-            ),
-          ),
-          const Positioned(
-            bottom: 0,
-            right: 0,
-            child: SvgIcon(
-              assetPath: SvgIcons.verifiedRed,
-              size: 14,
             ),
           ),
         ],

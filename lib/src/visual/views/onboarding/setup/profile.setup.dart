@@ -1,114 +1,92 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/avatar_icon.comp.dart'
-    show AvatarIcon;
 import 'package:twonly/src/visual/elements/my_button.element.dart';
-import 'package:twonly/src/visual/elements/my_input.element.dart';
+import 'package:twonly/src/visual/views/onboarding/components/onboarding_step.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/next_button.comp.dart';
+import 'package:twonly/src/visual/views/settings/profile/modify_avatar.view.dart';
+import 'package:vector_graphics/vector_graphics_compat.dart'
+    show RenderingStrategy;
 
-class ProfileSetupPage extends StatefulWidget {
+/// Only the public avatar. The display name stays the username and the
+/// photo avatar is left for the profile settings.
+class ProfileSetupPage extends StatelessWidget {
   const ProfileSetupPage({super.key});
 
-  @override
-  State<ProfileSetupPage> createState() => _ProfileSetupPageState();
-}
+  static const _avatarSize = 168.0;
 
-class _ProfileSetupPageState extends State<ProfileSetupPage> {
-  late final TextEditingController _displayNameController;
-  @override
-  void initState() {
-    super.initState();
-    _displayNameController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _displayNameController.dispose();
-    super.dispose();
+  Future<void> _openAvatarEditor(BuildContext context) {
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => const SvgAvatarEditorView()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
+    return StreamBuilder<void>(
       stream: userService.onUserUpdated,
-      builder: (context, asyncSnapshot) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
+      builder: (context, _) {
+        final svg = userService.currentUser.avatarSvg;
+        final hasAvatar = svg != null && svg.isNotEmpty;
+
+        return OnboardingStep(
+          title: context.lang.onboardingProfileTitle,
+          body: context.lang.onboardingProfileBody,
+          button: const NextButtonComp(),
           children: [
-            Text(
-              context.lang.onboardingProfileTitle,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.lang.onboardingProfileBody,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: context.color.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 40),
-            StreamBuilder(
-              stream: userService.onUserUpdated,
-              builder: (context, asyncSnapshot) {
-                return Container(
-                  padding: const EdgeInsets.all(4),
-                  clipBehavior: Clip.antiAlias,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                  ),
-                  foregroundDecoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: context.color.primary,
-                      width: 4,
-                    ),
-                  ),
-                  child: const AvatarIcon(
-                    fontSize: 68,
-                    myAvatar: true,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            MyButton(
-              onPressed: () async {
-                await context.push(Routes.settingsProfileModifyAvatar);
-              },
-              variant: MyButtonVariant.text,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            Center(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.palette_outlined),
-                  const SizedBox(width: 8),
-                  Text(context.lang.settingsProfileCustomizeAvatar),
+                  GestureDetector(
+                    onTap: () => _openAvatarEditor(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: context.color.primary.withValues(alpha: 0.4),
+                          width: 3,
+                        ),
+                      ),
+                      child: ClipOval(
+                        child: SizedBox.square(
+                          dimension: _avatarSize,
+                          child: ColoredBox(
+                            color: context.color.surfaceContainerHigh,
+                            child: hasAvatar
+                                ? SvgPicture.string(
+                                    svg,
+                                    width: _avatarSize,
+                                    height: _avatarSize,
+                                    renderingStrategy: RenderingStrategy.raster,
+                                  )
+                                : Icon(
+                                    Icons.person_outline,
+                                    size: 84,
+                                    color: context.color.onSurfaceVariant,
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  MyButton(
+                    variant: MyButtonVariant.secondaryMiddle,
+                    onPressed: () => _openAvatarEditor(context),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.palette_outlined, size: 20),
+                        const SizedBox(width: 8),
+                        Text(context.lang.settingsProfileCustomizeAvatar),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(height: 30),
-            MyInput(
-              controller: _displayNameController,
-              hintText: context.lang.settingsProfileEditDisplayNameNew,
-              prefixIcon: const Icon(Icons.person_outline),
-            ),
-            const SizedBox(height: 40),
-            NextButtonComp(
-              onPressed: () async {
-                await UserService.update((user) {
-                  if (_displayNameController.text.isNotEmpty) {
-                    user.displayName = _displayNameController.text;
-                  }
-                });
-                return false;
-              },
             ),
           ],
         );

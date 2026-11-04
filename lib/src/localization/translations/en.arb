@@ -7,9 +7,10 @@
   "onboardingFeatureE2e": "End-to-end encrypted.",
   "onboardingFeatureNoAds": "No ads and no tracking.",
   "onboardingRegisterButton": "Register",
-  "registerUsernameSlogan": "Create your account",
+  "registerUsernameSlogan": "Create\nyour account",
   "registerUsernameDecoration": "Username",
   "registerUsernameLimits": "At least 3 characters.",
+  "registerUsernameBody": "Your friends find you by your username. You can change it later.",
   "registerProofOfWorkFailed": "There was an issue with the captcha test. Please try again.",
   "registerSubmitButton": "Register now!",
   "chatsTapToSend": "Click to send your first image",
@@ -63,13 +64,13 @@
   "messageReopened": "Re-opened",
   "imageEditorDrawOk": "Take drawing",
   "settingsTitle": "Settings",
-  "settingsChats": "Chats",
-  "settingsPreSelectedReactions": "Preselected reaction emojis",
+  "settingsChats": "Chats & camera",
+  "settingsPreSelectedReactions": "Quick reactions",
   "settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle": "Mark duplicates as opened",
   "settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle": "If you receive the same media in multiple chats, opening one marks all others as opened.",
   "settingsPreSelectedReactionsError": "A maximum of 12 reactions can be selected.",
   "settingsProfile": "Profile",
-  "settingsStorageData": "Memories & Storage",
+  "settingsStorageData": "Storage & downloads",
   "memoryDetailsTitle": "Details",
   "memoryDetailsCapturedAt": "Captured",
   "memoryDetailsLocation": "Location",
@@ -134,9 +135,9 @@
   "settingsProfileEditDisplayNameNew": "New Displayname",
   "settingsAccount": "Account",
   "settingsSubscription": "Subscription",
-  "settingsAppearance": "Appearance",
+  "settingsAppearance": "Design & language",
   "settingsPrivacy": "Privacy & Security",
-  "settingsPrivacyBlockUsers": "Block contacts",
+  "settingsPrivacyBlockUsers": "Blocked contacts",
   "settingsPrivacyBlockUsersDesc": "Blocked contacts will not be able to communicate with you. You can unblock a blocked contact at any time.",
   "settingsPrivacyBlockUsersCount": "{len} contact(s)",
   "@settingsPrivacyBlockUsersCount": {
@@ -155,14 +156,14 @@
   "privacyVisibilityNobody": "Nobody",
   "privacyVisibilityOnlyContacts": "Only Contacts",
   "privacyVisibilityEveryone": "Everyone",
-  "settingsNotification": "Notification",
+  "settingsNotification": "Notifications",
   "settingsNotifyPermission": "Notification permissions",
-  "settingsNotifyPermissionDesc": "Open system settings to allow push notifications.",
+  "settingsNotifyPermissionDesc": "Open your phone’s settings to manage notification permissions.",
   "settingsNotifyResetTitle": "Reset notification tokens",
   "settingsNotifyResetTitleSubtitle": "Reset your notification tokens if you have problems receiving push notifications.",
-  "settingsNotifyResetTitleReset": "Your notification tokens have been reset.",
-  "settingsNotifyResetTitleResetDesc": "If the problem persists, please send us your debug log via Settings > Help so we can investigate the issue.",
-  "settingsHelp": "Help",
+  "settingsNotifyResetTitleReset": "Notification connection renewed",
+  "settingsNotifyResetTitleResetDesc": "If notifications still do not arrive, contact us under Settings > Help & information. You can attach a diagnostic log there.",
+  "settingsHelp": "Help & information",
   "settingsHelpDiagnostics": "Diagnostic protocol",
   "settingsHelpFAQ": "FAQ",
   "settingsHelpContactUs": "Contact us",
@@ -188,20 +189,18 @@
   "contactUsSuccess": "Feedback submitted successfully!",
   "hideNewsIcon": "Hide News Icon",
   "settingsHelpTerms": "Terms of Service",
-  "settingsAppearanceTheme": "Theme",
+  "settingsAppearanceTheme": "Light / dark mode",
   "settingsAppearanceLanguage": "Language",
   "settingsAccountDeleteAccount": "Delete account",
   "settingsAccountDeleteAccountNoBallance": "Once you delete your account, there is no going back.",
   "settingsAccountDeleteModalTitle": "Are you sure?",
   "settingsAccountDeleteModalBody": "Your account will be deleted. There is no change to restore it.",
-  "contactVerifyNumberTitle": "Verify contacts",
   "verifyUserIdentity": "Verify {username}'s identity",
   "@verifyUserIdentity": {
     "placeholders": {
       "username": {}
     }
   },
-  "contactVerifyNumberSubtitle": "Verify the identity of your contacts to make sure you are texting the right person.",
   "inChatContactNotVerified": "Contact not verified.",
   "groupMembersNotVerified": "{count} members are not verified.",
   "@groupMembersNotVerified": {
@@ -566,9 +565,9 @@
   "passwordlessRecoveryReminderHideDesc": "If you lose your password, there is no other way to recover your account.",
   "passwordlessRecoveryReminderEnable": "Enable",
   "onboardingFinishLater": "Finish later",
-  "onboardingProfileTitle": "Choose your look",
-  "onboardingProfileBody": "Select an avatar and a display name that friends will see.",
-  "onboardingBackupBody": "Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.",
+  "onboardingProfileTitle": "Create\nyour avatar",
+  "onboardingProfileBody": "Your public avatar helps others recognize you on twonly.",
+  "onboardingBackupBody": "So you can restore your account on a new phone.",
   "onboardingUserDiscoveryShareFriends": "Share your friends",
   "onboardingUserDiscoveryShareFriendsDesc": "Share with your friends who you know and who you have verified. Friends can *only see mutual friends* from your friend list. You can change your mind at *any time* or *hide specific people*.",
   "onboardingUserDiscoveryContactsVerifiedBadge": "Contacts verified by your friends get a badge",
@@ -600,7 +599,6 @@
   "startWithCameraOpen": "Start with camera open",
   "showImagePreviewWhenSending": "Display image preview when selecting recipients",
   "alwaysShowStories": "Always show stories",
-  "alwaysShowStoriesSubtitle": "Keep stories above your chats after you've watched them.",
   "verifiedPublicKey": "The identity of {username} has been successfully verified.",
   "memoriesAYearAgo": "One year ago",
   "memoriesXYearsAgo": "{years} years ago",
@@ -704,15 +702,15 @@
   "chatEntryFlameRestored": "{count} flames restored",
   "requestedUserToastText": "{username} was successfully requested.",
   "profileYourQrCode": "Your QR code",
-  "settingsScreenLock": "Screen lock",
-  "settingsScreenLockSubtitle": "To open twonly, you'll need to use your smartphone's unlock feature.",
+  "settingsScreenLock": "Lock the app",
+  "settingsScreenLockSubtitle": "Use your phone’s unlock method to open twonly.",
   "settingsScreenLockAuthMessageEnable": "Use the screen lock from twonly.",
   "settingsScreenLockAuthMessageDisable": "Disable the screen lock from twonly.",
   "unlockTwonly": "Unlock twonly",
   "unlockTwonlyTryAgain": "Try again",
   "unlockTwonlyDesc": "Use your phone's unlock settings to unlock twonly",
-  "settingsTypingIndication": "Typing Indicators",
-  "settingsTypingIndicationSubtitle": "When the typing indicator is turned off, you can't see when others are typing a message.",
+  "settingsTypingIndication": "Typing indicator",
+  "settingsTypingIndicationSubtitle": "Show each other when you are typing. Turning this off also hides other people’s typing indicators.",
   "contactActionBlock": "Block",
   "contactActionAccept": "Accept",
   "userDiscoverySettingsMutualFriends": "Choose how many mutual friends a person must have for you to be suggested to them.",
@@ -855,7 +853,7 @@
   "subscriptionPledgeSubtitle": "Zero ads. Total privacy.",
   "subscriptionManage": "Manage subscription",
   "dragToZoom": "Drag to Zoom",
-  "onboardingProfileSelectionTitle": "Choose your setup path",
+  "onboardingProfileSelectionTitle": "Choose your\nsetup path",
   "onboardingProfileSelectionSubtitle": "Choose how you want to configure your security and privacy settings.",
   "onboardingProfileSelectionDefaultTitle": "Default",
   "onboardingProfileSelectionDefaultDesc": "Instantly applies recommended settings so you can start using the app.",
@@ -1324,11 +1322,29 @@
     }
   },
   "notificationGameTurn": "has played {gameName}. It is your turn.",
-  "@notificationGameTurn": {"placeholders": {"gameName": {"type": "String"}}},
+  "@notificationGameTurn": {
+    "placeholders": {
+      "gameName": {
+        "type": "String"
+      }
+    }
+  },
   "notificationGameWon": "has played {gameName}. You have won.",
-  "@notificationGameWon": {"placeholders": {"gameName": {"type": "String"}}},
+  "@notificationGameWon": {
+    "placeholders": {
+      "gameName": {
+        "type": "String"
+      }
+    }
+  },
   "notificationGameLost": "has played {gameName}. You have lost.",
-  "@notificationGameLost": {"placeholders": {"gameName": {"type": "String"}}},
+  "@notificationGameLost": {
+    "placeholders": {
+      "gameName": {
+        "type": "String"
+      }
+    }
+  },
   "notificationGameFallbackName": "a game",
   "chatGameTurn": "It is your turn.",
   "chatGameWon": "You have won.",
@@ -1346,5 +1362,56 @@
     }
   },
   "storeReviewPromptReview": "Write a review",
-  "storeReviewPromptHide": "Don't show again"
+  "storeReviewPromptHide": "Don't show again",
+  "settingsProfileSubtitle": "Edit profile · QR code",
+  "settingsChatsSubtitle": "Reactions, stories, camera & sending",
+  "settingsNotificationsSubtitle": "Story alerts & notification problems",
+  "settingsAppearanceSubtitle": "Light / dark mode, colors & app language",
+  "settingsPrivacySubtitle": "Profile visibility, friends & app lock",
+  "settingsBackupSubtitle": "Account access, messages & Memories",
+  "settingsStorageSubtitle": "Free up space & save media",
+  "settingsRecoveryMissing": "No account recovery set up",
+  "settingsNotificationsDisabled": "Notifications are off in system settings",
+  "settingsNotificationsEnabled": "Notifications allowed",
+  "settingsNotificationsDisabledHelp": "Allow notifications in your phone’s settings first. Tap the status above to open them.",
+  "settingsStatusLoading": "Checking status…",
+  "settingsStatusUnavailable": "Status could not be loaded",
+  "settingsNewsShortcut": "Show news shortcut",
+  "settingsDownloadNone": "No automatic photo or video downloads",
+  "settingsDeleteAccountFailed": "Your account could not be deleted. Check your internet connection and try again.",
+  "settingsAccountDeleted": "Account deleted",
+  "settingsOpenAppAgain": "Tap to open the app again",
+  "settingsBackupIntro": "If you lose your phone, you need a way back into your account and a backup of your content.",
+  "settingsBackupNever": "Not backed up yet",
+  "settingsBackupPending": "Backup pending",
+  "settingsBackupFailed": "Last backup failed",
+  "settingsBackupSaved": "Last successful backup",
+  "settingsPasswordConfigured": "Password set up · Manage",
+  "settingsMemoriesBackupActive": "Backup enabled · View progress",
+  "settingsMemoriesBackupInactive": "Not enabled · Set up backup",
+  "settingsRecoveryFriendsLoading": "Checking your trusted friends…",
+  "settingsRecoveryFriendsReady": "Enough active friends · {count} active (at least {required} needed)",
+  "settingsRecoveryFriendsWaiting": "Not enough active friends yet · {count} of {required} required",
+  "@settingsRecoveryFriendsReady": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+  "@settingsRecoveryFriendsWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArchiveNeedsPassword": "Set up a recovery password above to back up contacts and messages.",
+  "settingsChangelog": "Changelog"
 }

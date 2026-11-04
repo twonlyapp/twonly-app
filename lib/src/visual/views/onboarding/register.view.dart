@@ -19,7 +19,7 @@ import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/release_notes/release_notes_0_6_0.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
-import 'package:twonly/src/visual/views/onboarding/components/onboarding_brand.comp.dart';
+import 'package:twonly/src/visual/views/onboarding/components/onboarding_step.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 
 class RegisterView extends StatefulWidget {
@@ -214,178 +214,106 @@ class _RegisterViewState extends State<RegisterView> {
 
     return PopScope(
       canPop: !_isTryingToRegister,
-      child: GestureDetector(
-        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        behavior: HitTestBehavior.opaque,
-        child: Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: Stack(
-            children: [
-              const OnboardingBackgroundGlow(),
-              SafeArea(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 28),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: IntrinsicHeight(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const SizedBox(height: 8),
-                              Align(
-                                alignment: AlignmentDirectional.centerStart,
-                                child: IconButton(
-                                  // Lines the arrow up with the text below.
-                                  padding: EdgeInsets.zero,
-                                  alignment: AlignmentDirectional.centerStart,
-                                  icon: const BackButtonIcon(),
-                                  tooltip: MaterialLocalizations.of(
-                                    context,
-                                  ).backButtonTooltip,
-                                  onPressed: _isTryingToRegister
-                                      ? null
-                                      : () => Navigator.of(context).pop(),
-                                ),
-                              ),
-                              const Spacer(),
-                              const SizedBox(height: 24),
-                              const OnboardingHeadline(fontSize: 36),
-                              const SizedBox(height: 40),
-                              if (_registrationDisabled)
-                                Container(
-                                  padding: const EdgeInsets.all(18),
-                                  decoration: BoxDecoration(
-                                    color: context.color.errorContainer,
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Icon(
-                                        Icons.hourglass_top_rounded,
-                                        color: context.color.onErrorContainer,
-                                      ),
-                                      const SizedBox(width: 14),
-                                      Expanded(
-                                        child: Text(
-                                          context.lang.registrationClosed,
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            height: 1.4,
-                                            color:
-                                                context.color.onErrorContainer,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              else ...[
-                                Text(
-                                  context.lang.registerUsernameSlogan,
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: context.color.onSurface,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: -0.3,
-                                  ),
-                                ),
-                                const SizedBox(height: 14),
-                                MyInput(
-                                  controller: usernameController,
-                                  errorText: _usernameErrorText,
-                                  onChanged: (value) {
-                                    usernameController.text = value
-                                        .toLowerCase();
-                                    usernameController
-                                        .selection = TextSelection.fromPosition(
-                                      TextPosition(
-                                        offset: usernameController.text.length,
-                                      ),
-                                    );
-                                    setState(() {
-                                      _isValidUserName =
-                                          usernameController.text.length >= 3;
-                                      _usernameErrorText = null;
-                                    });
-                                  },
-                                  onSubmitted: (_) {
-                                    if (!_isTryingToRegister) createNewUser();
-                                  },
-                                  inputFormatters: [
-                                    LengthLimitingTextInputFormatter(12),
-                                    FilteringTextInputFormatter.allow(
-                                      RegExp('[a-z0-9A-Z._]'),
-                                    ),
-                                  ],
-                                  hintText:
-                                      context.lang.registerUsernameDecoration,
-                                  prefixIcon: const Icon(
-                                    Icons.alternate_email,
-                                  ),
-                                ),
-                                if (_usernameErrorText == null) ...[
-                                  const SizedBox(height: 10),
-                                  Padding(
-                                    padding: const EdgeInsetsDirectional.only(
-                                      start: 4,
-                                    ),
-                                    child: Text(
-                                      context.lang.registerUsernameLimits,
-                                      style: mutedStyle,
-                                    ),
-                                  ),
-                                ],
-                                if (_showProofOfWorkError) ...[
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    context.lang.registerProofOfWorkFailed,
-                                    style: mutedStyle.copyWith(
-                                      color: context.color.error,
-                                    ),
-                                  ),
-                                ],
-                                const SizedBox(height: 28),
-                                MyButton(
-                                  onPressed: _isTryingToRegister
-                                      ? null
-                                      : createNewUser,
-                                  child: _isTryingToRegister
-                                      ? SizedBox(
-                                          width: 24,
-                                          height: 24,
-                                          child:
-                                              CircularProgressIndicator.adaptive(
-                                                valueColor:
-                                                    AlwaysStoppedAnimation(
-                                                      context.color.onPrimary,
-                                                    ),
-                                                strokeWidth: 3,
-                                              ),
-                                        )
-                                      : Text(
-                                          context.lang.registerSubmitButton,
-                                        ),
-                                ),
-                              ],
-                              const Spacer(flex: 3),
-                              const SizedBox(height: 24),
-                            ],
+      child: OnboardingScaffold(
+        onBack: _isTryingToRegister ? null : () => Navigator.of(context).pop(),
+        child: OnboardingStep(
+          title: context.lang.registerUsernameSlogan,
+          body: _registrationDisabled
+              ? null
+              : context.lang.registerUsernameBody,
+          button: _registrationDisabled
+              ? null
+              : MyButton(
+                  onPressed: _isTryingToRegister ? null : createNewUser,
+                  child: _isTryingToRegister
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator.adaptive(
+                            valueColor: AlwaysStoppedAnimation(
+                              context.color.onPrimary,
+                            ),
+                            strokeWidth: 3,
                           ),
+                        )
+                      : Text(context.lang.registerSubmitButton),
+                ),
+          children: [
+            if (_registrationDisabled)
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: context.color.errorContainer,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.hourglass_top_rounded,
+                      color: context.color.onErrorContainer,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        context.lang.registrationClosed,
+                        style: TextStyle(
+                          fontSize: 15,
+                          height: 1.4,
+                          color: context.color.onErrorContainer,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
+              )
+            else ...[
+              MyInput(
+                controller: usernameController,
+                errorText: _usernameErrorText,
+                autofocus: true,
+                onChanged: (value) {
+                  usernameController.text = value.toLowerCase();
+                  usernameController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: usernameController.text.length),
+                  );
+                  setState(() {
+                    _isValidUserName = usernameController.text.length >= 3;
+                    _usernameErrorText = null;
+                  });
+                },
+                onSubmitted: (_) {
+                  if (!_isTryingToRegister) createNewUser();
+                },
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(12),
+                  FilteringTextInputFormatter.allow(
+                    RegExp('[a-z0-9A-Z._]'),
+                  ),
+                ],
+                hintText: context.lang.registerUsernameDecoration,
+                prefixIcon: const Icon(Icons.alternate_email),
               ),
+              if (_usernameErrorText == null) ...[
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 4),
+                  child: Text(
+                    context.lang.registerUsernameLimits,
+                    style: mutedStyle,
+                  ),
+                ),
+              ],
+              if (_showProofOfWorkError) ...[
+                const SizedBox(height: 10),
+                Text(
+                  context.lang.registerProofOfWorkFailed,
+                  style: mutedStyle.copyWith(color: context.color.error),
+                ),
+              ],
             ],
-          ),
+          ],
         ),
       ),
     );

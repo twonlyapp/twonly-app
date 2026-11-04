@@ -8,6 +8,7 @@ import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/views/settings/components/settings_layout.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpView extends StatefulWidget {
@@ -36,7 +37,7 @@ class _HelpViewState extends State<HelpView> {
           final isTester =
               planFromString(userService.currentUser.subscriptionPlan) ==
               SubscriptionPlan.Tester;
-          return ListView(
+          return SettingsList(
             children: [
               ListTile(
                 title: Text(context.lang.settingsHelpFAQ),
@@ -46,12 +47,12 @@ class _HelpViewState extends State<HelpView> {
                 title: Text(context.lang.settingsHelpContactUs),
                 onTap: () => context.push(Routes.settingsHelpContactUs),
               ),
-              const Divider(),
+              const SettingsDivider(),
               ListTile(
                 title: Text(context.lang.allowErrorTracking),
                 subtitle: Text(
                   context.lang.allowErrorTrackingSubtitle,
-                  style: const TextStyle(fontSize: 10),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 onTap: isTester ? null : toggleAllowErrorTrackingViaSentry,
                 trailing: Switch.adaptive(
@@ -65,7 +66,7 @@ class _HelpViewState extends State<HelpView> {
                 title: Text(context.lang.settingsHelpDiagnostics),
                 onTap: () => context.push(Routes.settingsHelpDiagnostics),
               ),
-              const Divider(),
+              const SettingsDivider(),
               FutureBuilder(
                 future: PackageInfo.fromPlatform(),
                 builder: (context, snap) {
@@ -88,7 +89,7 @@ class _HelpViewState extends State<HelpView> {
                 onTap: () => context.push(Routes.settingsHelpCredits),
               ),
               ListTile(
-                title: const Text('Changelog'),
+                title: Text(context.lang.settingsChangelog),
                 onTap: () => context.push(Routes.settingsHelpChangelog),
               ),
               ListTile(
@@ -123,6 +124,14 @@ class _HelpViewState extends State<HelpView> {
                   FontAwesomeIcons.arrowUpRightFromSquare,
                   size: 15,
                 ),
+              ),
+              const SettingsDivider(),
+              ListTile(
+                title: Text(
+                  context.lang.settingsAccountDeleteAccount,
+                  style: TextStyle(color: context.color.error),
+                ),
+                onTap: () => context.push(Routes.settingsAccount),
               ),
               ListTile(
                 onLongPress: () async {

@@ -13,35 +13,10 @@ class AccountView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.lang.settingsAccount),
+        title: Text(context.lang.settingsAccountDeleteAccount),
       ),
       body: ListView(
         children: [
-          // ListTile(
-          //   title: const Text('Transfer account'),
-          //   subtitle: const Text('Coming soon'),
-          //   onTap: () async {
-          //     await showAlertDialog(
-          //       context,
-          //       'Coming soon',
-          //       'This feature is not yet implemented!',
-          //     );
-          //   },
-          // ),
-          // const Divider(),
-          Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-            child: Text(
-              'Danger Zone',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20,
-                color: context.color.error,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
           ListTile(
             title: Text(
               context.lang.settingsAccountDeleteAccount,
@@ -50,6 +25,7 @@ class AccountView extends StatelessWidget {
             subtitle: Text(context.lang.settingsAccountDeleteAccountNoBallance),
             onTap: () async {
               if (!context.mounted) return;
+              final lang = context.lang;
               final ok = await showAlertDialog(
                 context,
                 context.lang.settingsAccountDeleteModalTitle,
@@ -61,14 +37,14 @@ class AccountView extends StatelessWidget {
                   if (!context.mounted) return;
                   showSnackbar(
                     context,
-                    'Could not delete the account. Please ensure you have a internet connection!',
+                    context.lang.settingsDeleteAccountFailed,
                   );
                   return;
                 }
                 await deleteLocalUserData(removeCredentials: true);
                 await Restart.restartApp(
-                  notificationTitle: 'Account successfully deleted',
-                  notificationBody: 'Click here to open the app again',
+                  notificationTitle: lang.settingsAccountDeleted,
+                  notificationBody: lang.settingsOpenAppAgain,
                   forceKill: true,
                 );
               }

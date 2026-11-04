@@ -31,13 +31,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingRegisterButton => 'إنشاء حساب';
 
   @override
-  String get registerUsernameSlogan => 'أَنْشِئْ حِسَابَكَ';
+  String get registerUsernameSlogan => 'أَنْشِئْ\nحِسَابَكَ';
 
   @override
   String get registerUsernameDecoration => 'اِسْمُ المُسْتَخْدِمِ';
 
   @override
   String get registerUsernameLimits => '3 حُرُوفٍ عَلَى الأَقَلِّ.';
+
+  @override
+  String get registerUsernameBody =>
+      'يجدك أصدقاؤك من خلال اسم المستخدم. يمكنك تغييره لاحقًا.';
 
   @override
   String get registerProofOfWorkFailed =>
@@ -209,11 +213,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsTitle => 'الإِعْدَادَاتُ';
 
   @override
-  String get settingsChats => 'المُحَادَثَاتُ';
+  String get settingsChats => 'الدردشات والكاميرا';
 
   @override
-  String get settingsPreSelectedReactions =>
-      'رُمُوزُ التَّفَاعُلِ المُحَدَّدَةُ مُسْبَقاً';
+  String get settingsPreSelectedReactions => 'التفاعلات السريعة';
 
   @override
   String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle =>
@@ -231,7 +234,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsProfile => 'المَلَفُّ الشَّخْصِيُّ';
 
   @override
-  String get settingsStorageData => 'الذِّكْرَيَاتُ وَالتَّخْزِينُ';
+  String get settingsStorageData => 'التخزين والتنزيلات';
 
   @override
   String get memoryDetailsTitle => 'التفاصيل';
@@ -388,13 +391,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSubscription => 'الاِشْتِرَاكُ';
 
   @override
-  String get settingsAppearance => 'المَظْهَرُ';
+  String get settingsAppearance => 'المظهر واللغة';
 
   @override
   String get settingsPrivacy => 'الخُصُوصِيَّةُ وَالأَمَانُ';
 
   @override
-  String get settingsPrivacyBlockUsers => 'حَظْرُ جِهَاتِ الاِتِّصَالِ';
+  String get settingsPrivacyBlockUsers => 'جهات الاتصال المحظورة';
 
   @override
   String get settingsPrivacyBlockUsersDesc =>
@@ -474,14 +477,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get privacyVisibilityEveryone => 'الجميع';
 
   @override
-  String get settingsNotification => 'الإِشْعَارَاتُ';
+  String get settingsNotification => 'الإشعارات';
 
   @override
   String get settingsNotifyPermission => 'أَذُونَاتُ الإِشْعَارَاتِ';
 
   @override
   String get settingsNotifyPermissionDesc =>
-      'اِفْتَحْ إِعْدَادَاتِ النِّظَامِ لِلسَّمَاحِ بِالإِشْعَارَاتِ الفَوْرِيَّةِ.';
+      'افتح إعدادات هاتفك لإدارة أذونات الإشعارات.';
 
   @override
   String get settingsNotifyResetTitle =>
@@ -492,15 +495,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'أَعِدْ تَعْيِينِ رُمُوزِ الإِشْعَارَاتِ الخَاصَّةِ بِكَ إِذَا كَانَتْ لَدَيْكَ مُشْكِلَةٌ فِي تَلَقِّي الإِشْعَارَاتِ الفَوْرِيَّةِ.';
 
   @override
-  String get settingsNotifyResetTitleReset =>
-      'تَمَّتْ إِعَادَةُ تَعْيِينِ رُمُوزِ الإِشْعَارَاتِ الخَاصَّةِ بِكَ.';
+  String get settingsNotifyResetTitleReset => 'تم تجديد اتصال الإشعارات';
 
   @override
   String get settingsNotifyResetTitleResetDesc =>
-      'إِذَا اسْتَمَرَّتِ المُشْكِلَةُ يُرْجَى إِرْسَالُ سِجِلِّ التَّصْحِيحِ إِلَيْنَا عَبْرَ الإِعْدَادَاتِ > المُسَاعَدَةِ لِنَتَمَكَّنَ مِنْ فَحْصِ المَسْأَلَةِ.';
+      'إذا استمرت المشكلة، تواصل معنا عبر الإعدادات > المساعدة والمعلومات. يمكنك إرفاق سجل تشخيصي هناك.';
 
   @override
-  String get settingsHelp => 'المُسَاعَدَةُ';
+  String get settingsHelp => 'المساعدة والمعلومات';
 
   @override
   String get settingsHelpDiagnostics => 'سِجِلُّ التَّشْخِيصِ';
@@ -583,7 +585,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsHelpTerms => 'شُرُوطُ الخِدْمَةِ';
 
   @override
-  String get settingsAppearanceTheme => 'المَظْهَرُ';
+  String get settingsAppearanceTheme => 'الوضع الفاتح أو الداكن';
 
   @override
   String get settingsAppearanceLanguage => 'اللغة';
@@ -603,17 +605,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'سَيُحْذَفُ حِسَابُكَ وَلَنْ تَكُونَ هُنَاكَ أَيُّ فُرْصَةٍ لاِسْتِرْدَادِهِ.';
 
   @override
-  String get contactVerifyNumberTitle =>
-      'التَّحَقُّقُ مِنَ جِهَاتِ الإِتِّصَالِ';
-
-  @override
   String verifyUserIdentity(Object username) {
     return 'التَّحَقُّقُ مِنْ هُوِيَّةِ $username';
   }
-
-  @override
-  String get contactVerifyNumberSubtitle =>
-      'تَحَقَّقْ مِنْ هُوِيَّةِ جِهَاتِ اتِّصَالِكَ لِلتَّأَكُّدِ مِنْ أَنَّكَ تُراَسِلُ الشَّخْصَ الصَّحِيحَ.';
 
   @override
   String get inChatContactNotVerified =>
@@ -1692,15 +1686,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingFinishLater => 'الإكمال لاحقًا';
 
   @override
-  String get onboardingProfileTitle => 'اختر مظهرك';
+  String get onboardingProfileTitle => 'صمّم\nصورتك الرمزية';
 
   @override
   String get onboardingProfileBody =>
-      'اختر صورة رمزية واسمًا معروضًا سيراه أصدقاؤك.';
+      'تساعد صورتك الرمزية العامة الآخرين على التعرّف عليك في twonly.';
 
   @override
-  String get onboardingBackupBody =>
-      'احتفظ بنسخة احتياطية من هويتك في twonly، فهذه هي الطريقة الوحيدة لاستعادة حسابك إذا ألغيت تثبيت التطبيق أو فقدت هاتفك.';
+  String get onboardingBackupBody => 'لتتمكن من استعادة حسابك على هاتف جديد.';
 
   @override
   String get onboardingUserDiscoveryShareFriends => 'شارك أصدقاءك';
@@ -1811,10 +1804,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get alwaysShowStories => 'إظهار القصص دائمًا';
-
-  @override
-  String get alwaysShowStoriesSubtitle =>
-      'تبقى القصص أعلى محادثاتك حتى بعد مشاهدتها.';
 
   @override
   String verifiedPublicKey(Object username) {
@@ -2039,11 +2028,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileYourQrCode => 'رمز QR الخاص بك';
 
   @override
-  String get settingsScreenLock => 'قفل الشاشة';
+  String get settingsScreenLock => 'قفل التطبيق';
 
   @override
   String get settingsScreenLockSubtitle =>
-      'لفتح twonly، ستحتاج إلى استخدام ميزة فتح القفل في هاتفك.';
+      'استخدم طريقة فتح قفل هاتفك لفتح twonly.';
 
   @override
   String get settingsScreenLockAuthMessageEnable =>
@@ -2064,11 +2053,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'استخدم إعدادات فتح القفل في هاتفك لفتح twonly';
 
   @override
-  String get settingsTypingIndication => 'مؤشرات الكتابة';
+  String get settingsTypingIndication => 'مؤشر الكتابة';
 
   @override
   String get settingsTypingIndicationSubtitle =>
-      'عند إيقاف مؤشر الكتابة، لن تتمكن من رؤية متى يكتب الآخرون رسالة.';
+      'اعرض لجهات اتصالك عندما تكتب وشاهد عندما يكتبون. عند إيقافه لن ترى مؤشرات الكتابة للآخرين.';
 
   @override
   String get contactActionBlock => 'حظر';
@@ -2361,7 +2350,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dragToZoom => 'اسحب للتكبير';
 
   @override
-  String get onboardingProfileSelectionTitle => 'اختر طريقة الإعداد';
+  String get onboardingProfileSelectionTitle => 'اختر\nطريقة الإعداد';
 
   @override
   String get onboardingProfileSelectionSubtitle =>
@@ -3517,4 +3506,111 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get storeReviewPromptHide => 'عدم الإظهار مرة أخرى';
+
+  @override
+  String get settingsProfileSubtitle => 'تعديل الملف الشخصي · رمز QR';
+
+  @override
+  String get settingsChatsSubtitle => 'التفاعلات والقصص والتصوير والإرسال';
+
+  @override
+  String get settingsNotificationsSubtitle => 'تنبيهات القصص ومشاكل الإشعارات';
+
+  @override
+  String get settingsAppearanceSubtitle =>
+      'الوضع الفاتح والداكن والألوان ولغة التطبيق';
+
+  @override
+  String get settingsPrivacySubtitle =>
+      'ظهور الملف الشخصي والأصدقاء وقفل التطبيق';
+
+  @override
+  String get settingsBackupSubtitle => 'الوصول إلى الحساب والرسائل وMemories';
+
+  @override
+  String get settingsStorageSubtitle => 'إخلاء مساحة وحفظ الوسائط';
+
+  @override
+  String get settingsRecoveryMissing => 'لم يتم إعداد استرداد الحساب';
+
+  @override
+  String get settingsNotificationsDisabled =>
+      'الإشعارات معطلة في إعدادات النظام';
+
+  @override
+  String get settingsNotificationsEnabled => 'الإشعارات مسموحة';
+
+  @override
+  String get settingsNotificationsDisabledHelp =>
+      'اسمح بالإشعارات أولًا في إعدادات هاتفك. اضغط على الحالة أعلاه لفتحها.';
+
+  @override
+  String get settingsStatusLoading => 'جارٍ التحقق من الحالة…';
+
+  @override
+  String get settingsStatusUnavailable => 'تعذر تحميل الحالة';
+
+  @override
+  String get settingsNewsShortcut => 'إظهار اختصار الأخبار';
+
+  @override
+  String get settingsDownloadNone => 'عدم تنزيل الصور والفيديوهات تلقائيًا';
+
+  @override
+  String get settingsDeleteAccountFailed =>
+      'تعذر حذف حسابك. تحقق من اتصالك بالإنترنت وحاول مجددًا.';
+
+  @override
+  String get settingsAccountDeleted => 'تم حذف الحساب';
+
+  @override
+  String get settingsOpenAppAgain => 'اضغط لفتح التطبيق مجددًا';
+
+  @override
+  String get settingsBackupIntro =>
+      'إذا فقدت هاتفك، فستحتاج إلى طريقة لاستعادة حسابك ونسخة احتياطية من محتواك.';
+
+  @override
+  String get settingsBackupNever => 'لم يتم النسخ الاحتياطي بعد';
+
+  @override
+  String get settingsBackupPending => 'النسخ الاحتياطي قيد الانتظار';
+
+  @override
+  String get settingsBackupFailed => 'فشل آخر نسخ احتياطي';
+
+  @override
+  String get settingsBackupSaved => 'آخر نسخ احتياطي ناجح';
+
+  @override
+  String get settingsPasswordConfigured => 'تم إعداد كلمة المرور · إدارة';
+
+  @override
+  String get settingsMemoriesBackupActive =>
+      'النسخ الاحتياطي مفعل · عرض التقدم';
+
+  @override
+  String get settingsMemoriesBackupInactive =>
+      'غير مفعل · إعداد النسخ الاحتياطي';
+
+  @override
+  String get settingsRecoveryFriendsLoading =>
+      'جارٍ التحقق من أصدقائك الموثوقين…';
+
+  @override
+  String settingsRecoveryFriendsReady(int count, int required) {
+    return 'أصدقاء نشطون كافون · $count نشطين (يلزم $required على الأقل)';
+  }
+
+  @override
+  String settingsRecoveryFriendsWaiting(int count, int required) {
+    return 'لا يوجد أصدقاء نشطون كافون بعد · $count من $required مطلوبين';
+  }
+
+  @override
+  String get settingsArchiveNeedsPassword =>
+      'أعدّ كلمة مرور للاسترداد أعلاه لنسخ جهات الاتصال والرسائل احتياطيًا.';
+
+  @override
+  String get settingsChangelog => 'Changelog';
 }

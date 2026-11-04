@@ -137,7 +137,7 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
 
   Future<void> _openAvatarMaker() async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (context) => const _SvgAvatarEditorView()),
+      MaterialPageRoute(builder: (context) => const SvgAvatarEditorView()),
     );
     if (mounted) setState(() {});
   }
@@ -350,14 +350,15 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
   }
 }
 
-class _SvgAvatarEditorView extends StatefulWidget {
-  const _SvgAvatarEditorView();
+/// Editor for the public avatar everyone sees, without the photo avatar.
+class SvgAvatarEditorView extends StatefulWidget {
+  const SvgAvatarEditorView({super.key});
 
   @override
-  State<_SvgAvatarEditorView> createState() => _SvgAvatarEditorViewState();
+  State<SvgAvatarEditorView> createState() => _SvgAvatarEditorViewState();
 }
 
-class _SvgAvatarEditorViewState extends State<_SvgAvatarEditorView> {
+class _SvgAvatarEditorViewState extends State<SvgAvatarEditorView> {
   late final _CustomAvatarMakerController _avatarMakerController;
 
   @override

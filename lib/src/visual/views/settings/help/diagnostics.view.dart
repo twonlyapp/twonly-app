@@ -33,40 +33,60 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
     await deleteLogFile();
     if (!mounted) return;
     showSnackbar(context, 'Log file deleted!', level: SnackbarLevel.info);
+    setState(() => _debugLogText = null);
+    await initAsync();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Diagnostics')),
+      appBar: AppBar(
+        title: const Text('Diagnostics'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (val) {
+              switch (val) {
+                case 'share':
+                  context.push(Routes.settingsHelpContactUs);
+                case 'delete':
+                  _deleteDebugLog();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'share',
+                child: Row(
+                  children: [
+                    Icon(Icons.share_outlined, size: 20),
+                    SizedBox(width: 12),
+                    Text('Share debug log'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.delete_outline,
+                      size: 20,
+                      color: context.color.error,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Delete log file',
+                      style: TextStyle(color: context.color.error),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: (_debugLogText == null)
           ? const Center(child: ThreeRotatingDots(size: 40))
-          : Column(
-              children: [
-                Expanded(
-                  child: LogViewerWidget(
-                    logLines: _debugLogText!,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton(
-                        onPressed: () =>
-                            context.push(Routes.settingsHelpContactUs),
-                        child: const Text('Share debug log'),
-                      ),
-                      TextButton(
-                        onPressed: _deleteDebugLog,
-                        child: const Text('Delete Log File'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          : LogViewerWidget(logLines: _debugLogText!),
     );
   }
 }

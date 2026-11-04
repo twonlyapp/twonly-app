@@ -145,7 +145,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerUsernameSlogan.
   ///
   /// In en, this message translates to:
-  /// **'Create your account'**
+  /// **'Create\nyour account'**
   String get registerUsernameSlogan;
 
   /// No description provided for @registerUsernameDecoration.
@@ -159,6 +159,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'At least 3 characters.'**
   String get registerUsernameLimits;
+
+  /// No description provided for @registerUsernameBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friends find you by your username. You can change it later.'**
+  String get registerUsernameBody;
 
   /// No description provided for @registerProofOfWorkFailed.
   ///
@@ -481,13 +487,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsChats.
   ///
   /// In en, this message translates to:
-  /// **'Chats'**
+  /// **'Chats & camera'**
   String get settingsChats;
 
   /// No description provided for @settingsPreSelectedReactions.
   ///
   /// In en, this message translates to:
-  /// **'Preselected reaction emojis'**
+  /// **'Quick reactions'**
   String get settingsPreSelectedReactions;
 
   /// No description provided for @settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle.
@@ -517,7 +523,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStorageData.
   ///
   /// In en, this message translates to:
-  /// **'Memories & Storage'**
+  /// **'Storage & downloads'**
   String get settingsStorageData;
 
   /// No description provided for @memoryDetailsTitle.
@@ -781,7 +787,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAppearance.
   ///
   /// In en, this message translates to:
-  /// **'Appearance'**
+  /// **'Design & language'**
   String get settingsAppearance;
 
   /// No description provided for @settingsPrivacy.
@@ -793,7 +799,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPrivacyBlockUsers.
   ///
   /// In en, this message translates to:
-  /// **'Block contacts'**
+  /// **'Blocked contacts'**
   String get settingsPrivacyBlockUsers;
 
   /// No description provided for @settingsPrivacyBlockUsersDesc.
@@ -877,7 +883,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotification.
   ///
   /// In en, this message translates to:
-  /// **'Notification'**
+  /// **'Notifications'**
   String get settingsNotification;
 
   /// No description provided for @settingsNotifyPermission.
@@ -889,7 +895,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotifyPermissionDesc.
   ///
   /// In en, this message translates to:
-  /// **'Open system settings to allow push notifications.'**
+  /// **'Open your phone’s settings to manage notification permissions.'**
   String get settingsNotifyPermissionDesc;
 
   /// No description provided for @settingsNotifyResetTitle.
@@ -907,19 +913,19 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotifyResetTitleReset.
   ///
   /// In en, this message translates to:
-  /// **'Your notification tokens have been reset.'**
+  /// **'Notification connection renewed'**
   String get settingsNotifyResetTitleReset;
 
   /// No description provided for @settingsNotifyResetTitleResetDesc.
   ///
   /// In en, this message translates to:
-  /// **'If the problem persists, please send us your debug log via Settings > Help so we can investigate the issue.'**
+  /// **'If notifications still do not arrive, contact us under Settings > Help & information. You can attach a diagnostic log there.'**
   String get settingsNotifyResetTitleResetDesc;
 
   /// No description provided for @settingsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Help'**
+  /// **'Help & information'**
   String get settingsHelp;
 
   /// No description provided for @settingsHelpDiagnostics.
@@ -1075,7 +1081,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAppearanceTheme.
   ///
   /// In en, this message translates to:
-  /// **'Theme'**
+  /// **'Light / dark mode'**
   String get settingsAppearanceTheme;
 
   /// No description provided for @settingsAppearanceLanguage.
@@ -1108,23 +1114,11 @@ abstract class AppLocalizations {
   /// **'Your account will be deleted. There is no change to restore it.'**
   String get settingsAccountDeleteModalBody;
 
-  /// No description provided for @contactVerifyNumberTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify contacts'**
-  String get contactVerifyNumberTitle;
-
   /// No description provided for @verifyUserIdentity.
   ///
   /// In en, this message translates to:
   /// **'Verify {username}\'s identity'**
   String verifyUserIdentity(Object username);
-
-  /// No description provided for @contactVerifyNumberSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify the identity of your contacts to make sure you are texting the right person.'**
-  String get contactVerifyNumberSubtitle;
 
   /// No description provided for @inChatContactNotVerified.
   ///
@@ -2893,19 +2887,19 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingProfileTitle.
   ///
   /// In en, this message translates to:
-  /// **'Choose your look'**
+  /// **'Create\nyour avatar'**
   String get onboardingProfileTitle;
 
   /// No description provided for @onboardingProfileBody.
   ///
   /// In en, this message translates to:
-  /// **'Select an avatar and a display name that friends will see.'**
+  /// **'Your public avatar helps others recognize you on twonly.'**
   String get onboardingProfileBody;
 
   /// No description provided for @onboardingBackupBody.
   ///
   /// In en, this message translates to:
-  /// **'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.'**
+  /// **'So you can restore your account on a new phone.'**
   String get onboardingBackupBody;
 
   /// No description provided for @onboardingUserDiscoveryShareFriends.
@@ -3093,12 +3087,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Always show stories'**
   String get alwaysShowStories;
-
-  /// No description provided for @alwaysShowStoriesSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep stories above your chats after you\'ve watched them.'**
-  String get alwaysShowStoriesSubtitle;
 
   /// No description provided for @verifiedPublicKey.
   ///
@@ -3421,13 +3409,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsScreenLock.
   ///
   /// In en, this message translates to:
-  /// **'Screen lock'**
+  /// **'Lock the app'**
   String get settingsScreenLock;
 
   /// No description provided for @settingsScreenLockSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'To open twonly, you\'ll need to use your smartphone\'s unlock feature.'**
+  /// **'Use your phone’s unlock method to open twonly.'**
   String get settingsScreenLockSubtitle;
 
   /// No description provided for @settingsScreenLockAuthMessageEnable.
@@ -3463,13 +3451,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsTypingIndication.
   ///
   /// In en, this message translates to:
-  /// **'Typing Indicators'**
+  /// **'Typing indicator'**
   String get settingsTypingIndication;
 
   /// No description provided for @settingsTypingIndicationSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'When the typing indicator is turned off, you can\'t see when others are typing a message.'**
+  /// **'Show each other when you are typing. Turning this off also hides other people’s typing indicators.'**
   String get settingsTypingIndicationSubtitle;
 
   /// No description provided for @contactActionBlock.
@@ -3973,7 +3961,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingProfileSelectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Choose your setup path'**
+  /// **'Choose your\nsetup path'**
   String get onboardingProfileSelectionTitle;
 
   /// No description provided for @onboardingProfileSelectionSubtitle.
@@ -5799,6 +5787,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Don\'t show again'**
   String get storeReviewPromptHide;
+
+  /// No description provided for @settingsProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile · QR code'**
+  String get settingsProfileSubtitle;
+
+  /// No description provided for @settingsChatsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions, stories, camera & sending'**
+  String get settingsChatsSubtitle;
+
+  /// No description provided for @settingsNotificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Story alerts & notification problems'**
+  String get settingsNotificationsSubtitle;
+
+  /// No description provided for @settingsAppearanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Light / dark mode, colors & app language'**
+  String get settingsAppearanceSubtitle;
+
+  /// No description provided for @settingsPrivacySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile visibility, friends & app lock'**
+  String get settingsPrivacySubtitle;
+
+  /// No description provided for @settingsBackupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account access, messages & Memories'**
+  String get settingsBackupSubtitle;
+
+  /// No description provided for @settingsStorageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free up space & save media'**
+  String get settingsStorageSubtitle;
+
+  /// No description provided for @settingsRecoveryMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'No account recovery set up'**
+  String get settingsRecoveryMissing;
+
+  /// No description provided for @settingsNotificationsDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off in system settings'**
+  String get settingsNotificationsDisabled;
+
+  /// No description provided for @settingsNotificationsEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications allowed'**
+  String get settingsNotificationsEnabled;
+
+  /// No description provided for @settingsNotificationsDisabledHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications in your phone’s settings first. Tap the status above to open them.'**
+  String get settingsNotificationsDisabledHelp;
+
+  /// No description provided for @settingsStatusLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking status…'**
+  String get settingsStatusLoading;
+
+  /// No description provided for @settingsStatusUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Status could not be loaded'**
+  String get settingsStatusUnavailable;
+
+  /// No description provided for @settingsNewsShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Show news shortcut'**
+  String get settingsNewsShortcut;
+
+  /// No description provided for @settingsDownloadNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No automatic photo or video downloads'**
+  String get settingsDownloadNone;
+
+  /// No description provided for @settingsDeleteAccountFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account could not be deleted. Check your internet connection and try again.'**
+  String get settingsDeleteAccountFailed;
+
+  /// No description provided for @settingsAccountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted'**
+  String get settingsAccountDeleted;
+
+  /// No description provided for @settingsOpenAppAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open the app again'**
+  String get settingsOpenAppAgain;
+
+  /// No description provided for @settingsBackupIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'If you lose your phone, you need a way back into your account and a backup of your content.'**
+  String get settingsBackupIntro;
+
+  /// No description provided for @settingsBackupNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Not backed up yet'**
+  String get settingsBackupNever;
+
+  /// No description provided for @settingsBackupPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup pending'**
+  String get settingsBackupPending;
+
+  /// No description provided for @settingsBackupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup failed'**
+  String get settingsBackupFailed;
+
+  /// No description provided for @settingsBackupSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Last successful backup'**
+  String get settingsBackupSaved;
+
+  /// No description provided for @settingsPasswordConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Password set up · Manage'**
+  String get settingsPasswordConfigured;
+
+  /// No description provided for @settingsMemoriesBackupActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup enabled · View progress'**
+  String get settingsMemoriesBackupActive;
+
+  /// No description provided for @settingsMemoriesBackupInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enabled · Set up backup'**
+  String get settingsMemoriesBackupInactive;
+
+  /// No description provided for @settingsRecoveryFriendsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your trusted friends…'**
+  String get settingsRecoveryFriendsLoading;
+
+  /// No description provided for @settingsRecoveryFriendsReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Enough active friends · {count} active (at least {required} needed)'**
+  String settingsRecoveryFriendsReady(int count, int required);
+
+  /// No description provided for @settingsRecoveryFriendsWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough active friends yet · {count} of {required} required'**
+  String settingsRecoveryFriendsWaiting(int count, int required);
+
+  /// No description provided for @settingsArchiveNeedsPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up a recovery password above to back up contacts and messages.'**
+  String get settingsArchiveNeedsPassword;
+
+  /// No description provided for @settingsChangelog.
+  ///
+  /// In en, this message translates to:
+  /// **'Changelog'**
+  String get settingsChangelog;
 }
 
 class _AppLocalizationsDelegate

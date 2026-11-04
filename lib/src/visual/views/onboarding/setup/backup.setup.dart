@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/views/onboarding/components/onboarding_step.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/next_button.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_setup.comp.dart';
@@ -71,24 +71,15 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
         !_isLoading &&
         (isPasswordValid && isRepeatedPasswordValid || !kReleaseMode);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return OnboardingStep(
+      title: context.lang.settingsBackup,
+      body: context.lang.onboardingBackupBody,
+      button: NextButtonComp(
+        isLoading: _isLoading,
+        canSubmit: canSubmit,
+        onPressed: onPressedEnableTwonlySafe,
+      ),
       children: [
-        Text(
-          context.lang.settingsBackup,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          context.lang.onboardingBackupBody,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: context.color.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 32),
         BackupPasswordTextField(
           controller: _passwordCtrl,
           labelText: context.lang.password,
@@ -108,32 +99,6 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
           text: context.lang.passwordRepeatedNotEqual,
           showError:
               _repeatedPasswordCtrl.text.isNotEmpty && !isRepeatedPasswordValid,
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            FaIcon(
-              FontAwesomeIcons.circleInfo,
-              size: 14,
-              color: context.color.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                context.lang.backupNoPasswordRecovery,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: context.color.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 40),
-        NextButtonComp(
-          isLoading: _isLoading,
-          canSubmit: canSubmit,
-          onPressed: onPressedEnableTwonlySafe,
         ),
       ],
     );
