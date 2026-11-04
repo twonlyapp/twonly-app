@@ -315,7 +315,16 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         _proofOfWork = (null, disabled);
       }
 
-      if (onboardingState.hasStartedPasswordlessRecovery ||
+      if (onboardingState.openBackupRecovery) {
+        await KeyValueStore.update<OnboardingState>(
+          key: KeyValueKeys.onboardingState,
+          update: (state) => state.openBackupRecovery = false,
+        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          routerProvider.push(Routes.settingsBackupRecovery);
+        });
+      } else if (onboardingState.hasStartedPasswordlessRecovery ||
           onboardingState.emailRecoveryRequested) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;

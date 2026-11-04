@@ -124,9 +124,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
     _textColor = contactGroup?.textColor ?? _textColors[0];
     _showAsShortcut =
         contactGroup?.showAsShortcut ?? widget.initialShowAsShortcut;
-    _showAsLabel =
-        contactGroup?.showAsLabel ??
-        !(widget.initialShowAsShortcut || widget.initialShareStories);
+    _showAsLabel = contactGroup?.showAsLabel ?? false;
     _shareStories = contactGroup?.shareStories ?? widget.initialShareStories;
     _emoji = contactGroup?.emoji;
     if (contactGroup != null) unawaited(_loadWidgetUsage(contactGroup.id));
@@ -510,7 +508,8 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
             context.lang.contactGroupDeleteBlockedByWidget(_widgetCount),
           ),
           actions: [
-            TextButton(
+            MyButton(
+              variant: MyButtonVariant.text,
               onPressed: () => Navigator.pop(context),
               child: Text(context.lang.ok),
             ),
@@ -525,11 +524,13 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
         title: Text(context.lang.deleteContactGroup),
         content: Text(context.lang.deleteContactGroupConfirmation),
         actions: [
-          TextButton(
+          MyButton(
+            variant: MyButtonVariant.text,
             onPressed: () => Navigator.pop(context, false),
             child: Text(context.lang.cancel),
           ),
-          FilledButton(
+          MyButton(
+            variant: MyButtonVariant.error,
             onPressed: () => Navigator.pop(context, true),
             child: Text(context.lang.delete),
           ),
@@ -739,10 +740,6 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
             if (_isEditing && _widgetUsageLoaded)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  Icons.widgets_outlined,
-                  color: context.color.primary,
-                ),
                 title: Text(context.lang.contactGroupUsedByWidget),
                 subtitle: Text(
                   _widgetCount > 0

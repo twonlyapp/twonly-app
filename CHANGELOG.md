@@ -3,6 +3,9 @@
 ## 0.6.10
 
 - Improve: Redesign onboarding flow
+- Improve: Better UI for the contact groups
+- Fix: Show error message when sending to an inactive user
+- Fix: Backup did not work in some cases
 
 ## 0.6.9
 

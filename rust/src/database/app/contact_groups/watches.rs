@@ -58,6 +58,23 @@ pub async fn membership_ids(
     .await
 }
 
+pub async fn member_counts(
+    databases: Arc<RwLock<Arc<AppDatabase>>>, cancellation: CancellationToken,
+    emit: impl Fn(Vec<ContactGroupMemberCount>) -> bool,
+) -> Result<()> {
+    watch::snapshots(
+        databases,
+        &["contact_group_members"],
+        cancellation,
+        move |database| async move {
+            queries::member_counts(&mut *crate::performance::acquire(&database.read_pool).await?)
+                .await
+        },
+        emit,
+    )
+    .await
+}
+
 pub async fn labels(
     databases: Arc<RwLock<Arc<AppDatabase>>>, for_users: bool, cancellation: CancellationToken,
     emit: impl Fn(ContactGroupLabels) -> bool,

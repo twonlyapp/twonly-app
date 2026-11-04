@@ -229,6 +229,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_StreamSink_list_contact_group_Sse(dynamic raw);
 
   @protected
+  RustStreamSink<List<ContactGroupMemberCount>>
+  dco_decode_StreamSink_list_contact_group_member_count_Sse(dynamic raw);
+
+  @protected
   RustStreamSink<List<Group>> dco_decode_StreamSink_list_group_Sse(dynamic raw);
 
   @protected
@@ -554,6 +558,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ContactGroupMember dco_decode_contact_group_member(dynamic raw);
 
   @protected
+  ContactGroupMemberCount dco_decode_contact_group_member_count(dynamic raw);
+
+  @protected
   ContactPatch dco_decode_contact_patch(dynamic raw);
 
   @protected
@@ -696,6 +703,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ContactGroupMember> dco_decode_list_contact_group_member(dynamic raw);
+
+  @protected
+  List<ContactGroupMemberCount> dco_decode_list_contact_group_member_count(
+    dynamic raw,
+  );
 
   @protected
   List<FirstVerificationType> dco_decode_list_first_verification_type(
@@ -1403,6 +1415,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   sse_decode_StreamSink_list_contact_group_Sse(SseDeserializer deserializer);
 
   @protected
+  RustStreamSink<List<ContactGroupMemberCount>>
+  sse_decode_StreamSink_list_contact_group_member_count_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RustStreamSink<List<Group>> sse_decode_StreamSink_list_group_Sse(
     SseDeserializer deserializer,
   );
@@ -1832,6 +1850,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ContactGroupMemberCount sse_decode_contact_group_member_count(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ContactPatch sse_decode_contact_patch(SseDeserializer deserializer);
 
   @protected
@@ -2008,6 +2031,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ContactGroupMember> sse_decode_list_contact_group_member(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<ContactGroupMemberCount> sse_decode_list_contact_group_member_count(
     SseDeserializer deserializer,
   );
 
@@ -2881,6 +2909,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_list_contact_group_member_count_Sse(
+    RustStreamSink<List<ContactGroupMemberCount>> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_StreamSink_list_group_Sse(
     RustStreamSink<List<Group>> self,
     SseSerializer serializer,
@@ -3409,6 +3443,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_contact_group_member_count(
+    ContactGroupMemberCount self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_contact_patch(ContactPatch self, SseSerializer serializer);
 
   @protected
@@ -3630,6 +3670,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_contact_group_member(
     List<ContactGroupMember> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_contact_group_member_count(
+    List<ContactGroupMemberCount> self,
     SseSerializer serializer,
   );
 

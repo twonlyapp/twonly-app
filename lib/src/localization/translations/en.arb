@@ -825,6 +825,7 @@
   "recoverErrorPasswordInvalid": "The password provided is incorrect.",
   "recoverErrorTryAgainLater": "The server is currently unavailable. Please try again later.",
   "recoverErrorUnknown": "An unknown error occurred. Please try again.",
+  "recoverErrorAppUpdateRequired": "The backup was made with a newer version of twonly. Please update the app and try again.",
   "recoverSuccessTitle": "Backup successfully recovered.",
   "recoverSuccessBody": "Click here to open the app again",
   "recoverProgressTitle": "Restoring your backup",
@@ -1134,6 +1135,14 @@
   "contactGroupShowAsShortcutSubtitle": "Use its emoji to select all members when sharing.",
   "contactGroupShortcutNeedsEmoji": "Select an emoji before enabling the shortcut.",
   "contactGroupMembers": "Members",
+  "contactGroupMemberCount": "{count, plural, =0{No members} =1{1 member} other{{count} members}}",
+  "@contactGroupMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "contactGroupLabelFeature": "Visible label",
   "contactGroupShortcutFeature": "Shortcut",
   "contactGroupSettings": "Edit contact group",
@@ -1311,6 +1320,7 @@
     }
   },
   "mediaSendFailed": "Send failed",
+  "messageSendFailedUserInactive": "User inactive",
   "mailboxSyncTitle": "Synchronizing twonly",
   "mailboxSyncBody": "twonly is synchronizing this device and downloading your messages. Please keep the app open until it is done.",
   "mailboxSyncRemaining": "{count, plural, =1{1 message left} other{{count} messages left}}",

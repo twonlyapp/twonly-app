@@ -808,6 +808,7 @@
   "recoverErrorPasswordInvalid": "Das eingegebene Passwort ist falsch.",
   "recoverErrorTryAgainLater": "Der Server ist derzeit nicht erreichbar. Bitte versuche es später erneut.",
   "recoverErrorUnknown": "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es erneut.",
+  "recoverErrorAppUpdateRequired": "Das Backup wurde mit einer neueren Version von twonly erstellt. Bitte aktualisiere die App und versuche es erneut.",
   "recoverSuccessTitle": "Backup erfolgreich wiederhergestellt.",
   "recoverSuccessBody": "Klicke hier, um die App wieder zu öffnen",
   "recoverProgressTitle": "Backup wird wiederhergestellt",
@@ -1117,6 +1118,14 @@
   "contactGroupShowAsShortcutSubtitle": "Wählt beim Teilen über das Emoji alle Mitglieder aus.",
   "contactGroupShortcutNeedsEmoji": "Wähle ein Emoji aus, bevor du den Shortcut aktivierst.",
   "contactGroupMembers": "Mitglieder",
+  "contactGroupMemberCount": "{count, plural, =0{Keine Mitglieder} =1{1 Mitglied} other{{count} Mitglieder}}",
+  "@contactGroupMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "contactGroupLabelFeature": "Sichtbares Label",
   "contactGroupShortcutFeature": "Shortcut",
   "contactGroupSettings": "Kontaktgruppe anpassen",
@@ -1287,6 +1296,7 @@
   "memoriesMapLoadError": "Die Karte konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
   "memoriesMapVisibleCount": "{count, plural, =1 {1 Erinnerung in diesem Bereich} other {{count} Erinnerungen in diesem Bereich}}",
   "mediaSendFailed": "Senden fehlgeschlagen",
+  "messageSendFailedUserInactive": "Benutzer inaktiv",
   "mailboxSyncTitle": "twonly wird synchronisiert",
   "mailboxSyncBody": "twonly synchronisiert dieses Gerät und lädt deine Nachrichten herunter. Bitte lass die App geöffnet, bis der Vorgang abgeschlossen ist.",
   "mailboxSyncRemaining": "{count, plural, =1 {Noch 1 Nachricht} other {Noch {count} Nachrichten}}",

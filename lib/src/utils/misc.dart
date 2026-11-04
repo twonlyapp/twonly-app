@@ -371,6 +371,8 @@ extension RecoveryErrorLocalization on RecoveryError {
         return context.lang.recoverErrorTryAgainLater;
       case RecoveryError.unkownError:
         return context.lang.recoverErrorUnknown;
+      case RecoveryError.appUpdateRequired:
+        return context.lang.recoverErrorAppUpdateRequired;
     }
   }
 }

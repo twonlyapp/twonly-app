@@ -27,6 +27,7 @@ import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/story_target_selector.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_group_settings.view.dart';
+import 'package:twonly/src/visual/views/settings/chat/contact_groups.view.dart';
 
 import '../helpers/native_database.dart';
 
@@ -190,6 +191,32 @@ void main() {
     ]);
     target.clear();
     expect(target.toAudience(), isNull);
+  });
+
+  testWidgets('the group list shows member counts and features', (
+    tester,
+  ) async {
+    await pumpView(tester, const ContactGroupsView());
+    await pumpNative(
+      tester,
+      until: () => find.text('2 members · Visible label').evaluate().isNotEmpty,
+    );
+    expect(find.byIcon(Icons.people_outline), findsNothing);
+    expect(find.byIcon(Icons.chevron_right), findsNothing);
+
+    await runNative(
+      tester,
+      () => rust_contact_groups.replaceContactGroupMembers(
+        transaction: currentDatabaseSession(),
+        id: contactGroup.id,
+        userIds: Int64List.fromList([7, 8].toList()),
+        groupIds: ['old-team'].toList(),
+      ),
+    );
+    await pumpNative(
+      tester,
+      until: () => find.text('3 members · Visible label').evaluate().isNotEmpty,
+    );
   });
 
   testWidgets('the story picker creates and selects a story-only group', (

@@ -46,6 +46,7 @@ class OnboardingState {
     this.serverRegistered = false,
     this.encryptionKey,
     this.emailRecoveryRequested = false,
+    this.openBackupRecovery = false,
   });
 
   factory OnboardingState.fromJson(Map<String, dynamic> json) =>
@@ -59,6 +60,10 @@ class OnboardingState {
   bool serverRegistered;
   List<int>? encryptionKey;
   bool emailRecoveryRequested;
+
+  /// Set by the critical error view after it reset the local data, so the
+  /// next start opens the backup recovery directly. Cleared on use.
+  bool openBackupRecovery;
 
   List<ReceivedRecoveryShare> receivedShares = [];
 

@@ -2219,6 +2219,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'An unknown error occurred. Please try again.';
 
   @override
+  String get recoverErrorAppUpdateRequired =>
+      'The backup was made with a newer version of twonly. Please update the app and try again.';
+
+  @override
   String get recoverSuccessTitle => 'Backup successfully recovered.';
 
   @override
@@ -2916,6 +2920,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactGroupMembers => 'Members';
 
   @override
+  String contactGroupMemberCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+      zero: 'No members',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get contactGroupLabelFeature => 'Visible label';
 
   @override
@@ -3353,6 +3369,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaSendFailed => 'Send failed';
+
+  @override
+  String get messageSendFailedUserInactive => 'User inactive';
 
   @override
   String get mailboxSyncTitle => 'Synchronizing twonly';

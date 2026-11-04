@@ -41,7 +41,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 2008985373;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1899940884;
 
 // Section: executor
 
@@ -12820,6 +12820,30 @@ fn wire__crate__bridge__database__contact_groups__watch_contact_group_labels_imp
         },
     )
 }
+fn wire__crate__bridge__database__contact_groups__watch_contact_group_member_counts_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr, rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "watch_contact_group_member_counts", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_control = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DatabaseWatch>>>::sse_decode(&mut deserializer);
+let api_sink = <StreamSink<Vec<crate::database::app::contact_groups::table::ContactGroupMemberCount>,flutter_rust_bridge::for_generated::SseCodec>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                        let mut api_control_guard = None;
+let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(&api_control, 0, false)]);
+        for i in decode_indices_ {
+            match i {
+                0 => api_control_guard = Some(api_control.lockable_decode_async_ref().await),
+                _ => unreachable!(),
+            }
+        }
+        let api_control_guard = api_control_guard.unwrap();
+ let output_ok = crate::bridge::database::contact_groups::watch_contact_group_member_counts(&*api_control_guard, api_sink).await?;   std::result::Result::Ok(output_ok)
+                    })().await)
+                } })
+}
 fn wire__crate__bridge__database__contact_groups__watch_contact_groups_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr, rust_vec_len_: i32,
@@ -15934,6 +15958,19 @@ impl SseDecode
 
 impl SseDecode
     for StreamSink<
+        Vec<crate::database::app::contact_groups::table::ContactGroupMemberCount>,
+        flutter_rust_bridge::for_generated::SseCodec,
+    >
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return StreamSink::deserialize(inner);
+    }
+}
+
+impl SseDecode
+    for StreamSink<
         Vec<crate::database::app::groups::table::Group>,
         flutter_rust_bridge::for_generated::SseCodec,
     >
@@ -16699,6 +16736,18 @@ impl SseDecode for crate::database::app::contact_groups::table::ContactGroupMemb
             contact_group_id: var_contactGroupId,
             user_id: var_userId,
             group_id: var_groupId,
+        };
+    }
+}
+
+impl SseDecode for crate::database::app::contact_groups::table::ContactGroupMemberCount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_contactGroupId = <i64>::sse_decode(deserializer);
+        let mut var_memberCount = <i64>::sse_decode(deserializer);
+        return crate::database::app::contact_groups::table::ContactGroupMemberCount {
+            contact_group_id: var_contactGroupId,
+            member_count: var_memberCount,
         };
     }
 }
@@ -17591,6 +17640,22 @@ impl SseDecode for Vec<crate::database::app::contact_groups::table::ContactGroup
         for idx_ in 0..len_ {
             ans_.push(
                 <crate::database::app::contact_groups::table::ContactGroupMember>::sse_decode(
+                    deserializer,
+                ),
+            );
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::database::app::contact_groups::table::ContactGroupMemberCount> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(
+                <crate::database::app::contact_groups::table::ContactGroupMemberCount>::sse_decode(
                     deserializer,
                 ),
             );
@@ -20526,49 +20591,50 @@ fn pde_ffi_dispatcher_primary_impl(
 296 => wire__crate__bridge__database__mediafiles__watch_chat_media_files_impl(port, ptr, rust_vec_len, data_len),
 297 => wire__crate__bridge__database__contact_groups__watch_contact_group_ids_impl(port, ptr, rust_vec_len, data_len),
 298 => wire__crate__bridge__database__contact_groups__watch_contact_group_labels_impl(port, ptr, rust_vec_len, data_len),
-299 => wire__crate__bridge__database__contact_groups__watch_contact_groups_impl(port, ptr, rust_vec_len, data_len),
-300 => wire__crate__bridge__database__contacts__watch_contact_photo_impl(port, ptr, rust_vec_len, data_len),
-301 => wire__crate__bridge__database__key_verifications__watch_contact_verifications_impl(port, ptr, rust_vec_len, data_len),
-302 => wire__crate__bridge__database__contacts__watch_contacts_impl(port, ptr, rust_vec_len, data_len),
-303 => wire__crate__bridge__database__contacts__watch_contacts_count_impl(port, ptr, rust_vec_len, data_len),
-304 => wire__crate__bridge__database__messages__watch_delivery_actions_impl(port, ptr, rust_vec_len, data_len),
-305 => wire__crate__bridge__database__user_discovery__watch_discovery_announcement_impl(port, ptr, rust_vec_len, data_len),
-306 => wire__crate__bridge__database__user_discovery__watch_discovery_announcements_impl(port, ptr, rust_vec_len, data_len),
-307 => wire__crate__bridge__database__user_discovery__watch_discovery_count_impl(port, ptr, rust_vec_len, data_len),
-308 => wire__crate__bridge__database__user_discovery__watch_discovery_other_promotions_impl(port, ptr, rust_vec_len, data_len),
-309 => wire__crate__bridge__database__user_discovery__watch_discovery_own_promotions_impl(port, ptr, rust_vec_len, data_len),
-310 => wire__crate__bridge__database__user_discovery__watch_discovery_relations_impl(port, ptr, rust_vec_len, data_len),
-311 => wire__crate__bridge__database__user_discovery__watch_discovery_shares_impl(port, ptr, rust_vec_len, data_len),
-312 => wire__crate__bridge__database__user_discovery__watch_discovery_suggestions_impl(port, ptr, rust_vec_len, data_len),
-313 => wire__crate__bridge__database__groups__watch_group_contacts_impl(port, ptr, rust_vec_len, data_len),
-314 => wire__crate__bridge__database__groups__watch_group_flame_impl(port, ptr, rust_vec_len, data_len),
-315 => wire__crate__bridge__database__groups__watch_group_flames_impl(port, ptr, rust_vec_len, data_len),
-316 => wire__crate__bridge__database__groups__watch_group_history_impl(port, ptr, rust_vec_len, data_len),
-317 => wire__crate__bridge__database__groups__watch_group_members_impl(port, ptr, rust_vec_len, data_len),
-318 => wire__crate__bridge__database__groups__watch_groups_impl(port, ptr, rust_vec_len, data_len),
-319 => wire__crate__bridge__database__groups__watch_groups_total_media_impl(port, ptr, rust_vec_len, data_len),
-320 => wire__crate__bridge__database__key_verifications__watch_groups_verification_impl(port, ptr, rust_vec_len, data_len),
-321 => wire__crate__bridge__database__reactions__watch_last_reaction_impl(port, ptr, rust_vec_len, data_len),
-322 => wire__crate__bridge__database__reactions__watch_latest_group_reactions_impl(port, ptr, rust_vec_len, data_len),
-323 => wire__crate__bridge__database__mediafiles__watch_media_files_impl(port, ptr, rust_vec_len, data_len),
-324 => wire__crate__bridge__database__messages__watch_message_actions_impl(port, ptr, rust_vec_len, data_len),
-325 => wire__crate__bridge__database__messages__watch_message_history_impl(port, ptr, rust_vec_len, data_len),
-326 => wire__crate__bridge__database__messages__watch_messages_impl(port, ptr, rust_vec_len, data_len),
-327 => wire__crate__bridge__database__stories__watch_own_stories_impl(port, ptr, rust_vec_len, data_len),
-328 => wire__crate__bridge__database__reactions__watch_reactions_impl(port, ptr, rust_vec_len, data_len),
-329 => wire__crate__bridge__database__reactions__watch_reactions_with_contacts_impl(port, ptr, rust_vec_len, data_len),
-330 => wire__crate__bridge__database__receipts__watch_receipts_impl(port, ptr, rust_vec_len, data_len),
-331 => wire__crate__bridge__database__stories__watch_received_stories_impl(port, ptr, rust_vec_len, data_len),
-332 => wire__crate__bridge__database__recovery__watch_recovery_contacts_impl(port, ptr, rust_vec_len, data_len),
-333 => wire__crate__bridge__database__recovery__watch_recovery_count_impl(port, ptr, rust_vec_len, data_len),
-334 => wire__crate__bridge__database__stickers__watch_stickers_impl(port, ptr, rust_vec_len, data_len),
-335 => wire__crate__bridge__database__stories__watch_story_viewers_impl(port, ptr, rust_vec_len, data_len),
-336 => wire__crate__bridge__database__key_verifications__watch_transferred_verifications_impl(port, ptr, rust_vec_len, data_len),
-337 => wire__crate__bridge__database__messages__watch_unopened_media_impl(port, ptr, rust_vec_len, data_len),
-338 => wire__crate__bridge__database__webxdc__watch_webxdc_card_impl(port, ptr, rust_vec_len, data_len),
-339 => wire__crate__bridge__database__webxdc__watch_webxdc_serial_impl(port, ptr, rust_vec_len, data_len),
-340 => wire__crate__bridge__database__webxdc__webxdc_card_app_impl(port, ptr, rust_vec_len, data_len),
-341 => wire__crate__bridge__database__webxdc__webxdc_card_instance_impl(port, ptr, rust_vec_len, data_len),
+299 => wire__crate__bridge__database__contact_groups__watch_contact_group_member_counts_impl(port, ptr, rust_vec_len, data_len),
+300 => wire__crate__bridge__database__contact_groups__watch_contact_groups_impl(port, ptr, rust_vec_len, data_len),
+301 => wire__crate__bridge__database__contacts__watch_contact_photo_impl(port, ptr, rust_vec_len, data_len),
+302 => wire__crate__bridge__database__key_verifications__watch_contact_verifications_impl(port, ptr, rust_vec_len, data_len),
+303 => wire__crate__bridge__database__contacts__watch_contacts_impl(port, ptr, rust_vec_len, data_len),
+304 => wire__crate__bridge__database__contacts__watch_contacts_count_impl(port, ptr, rust_vec_len, data_len),
+305 => wire__crate__bridge__database__messages__watch_delivery_actions_impl(port, ptr, rust_vec_len, data_len),
+306 => wire__crate__bridge__database__user_discovery__watch_discovery_announcement_impl(port, ptr, rust_vec_len, data_len),
+307 => wire__crate__bridge__database__user_discovery__watch_discovery_announcements_impl(port, ptr, rust_vec_len, data_len),
+308 => wire__crate__bridge__database__user_discovery__watch_discovery_count_impl(port, ptr, rust_vec_len, data_len),
+309 => wire__crate__bridge__database__user_discovery__watch_discovery_other_promotions_impl(port, ptr, rust_vec_len, data_len),
+310 => wire__crate__bridge__database__user_discovery__watch_discovery_own_promotions_impl(port, ptr, rust_vec_len, data_len),
+311 => wire__crate__bridge__database__user_discovery__watch_discovery_relations_impl(port, ptr, rust_vec_len, data_len),
+312 => wire__crate__bridge__database__user_discovery__watch_discovery_shares_impl(port, ptr, rust_vec_len, data_len),
+313 => wire__crate__bridge__database__user_discovery__watch_discovery_suggestions_impl(port, ptr, rust_vec_len, data_len),
+314 => wire__crate__bridge__database__groups__watch_group_contacts_impl(port, ptr, rust_vec_len, data_len),
+315 => wire__crate__bridge__database__groups__watch_group_flame_impl(port, ptr, rust_vec_len, data_len),
+316 => wire__crate__bridge__database__groups__watch_group_flames_impl(port, ptr, rust_vec_len, data_len),
+317 => wire__crate__bridge__database__groups__watch_group_history_impl(port, ptr, rust_vec_len, data_len),
+318 => wire__crate__bridge__database__groups__watch_group_members_impl(port, ptr, rust_vec_len, data_len),
+319 => wire__crate__bridge__database__groups__watch_groups_impl(port, ptr, rust_vec_len, data_len),
+320 => wire__crate__bridge__database__groups__watch_groups_total_media_impl(port, ptr, rust_vec_len, data_len),
+321 => wire__crate__bridge__database__key_verifications__watch_groups_verification_impl(port, ptr, rust_vec_len, data_len),
+322 => wire__crate__bridge__database__reactions__watch_last_reaction_impl(port, ptr, rust_vec_len, data_len),
+323 => wire__crate__bridge__database__reactions__watch_latest_group_reactions_impl(port, ptr, rust_vec_len, data_len),
+324 => wire__crate__bridge__database__mediafiles__watch_media_files_impl(port, ptr, rust_vec_len, data_len),
+325 => wire__crate__bridge__database__messages__watch_message_actions_impl(port, ptr, rust_vec_len, data_len),
+326 => wire__crate__bridge__database__messages__watch_message_history_impl(port, ptr, rust_vec_len, data_len),
+327 => wire__crate__bridge__database__messages__watch_messages_impl(port, ptr, rust_vec_len, data_len),
+328 => wire__crate__bridge__database__stories__watch_own_stories_impl(port, ptr, rust_vec_len, data_len),
+329 => wire__crate__bridge__database__reactions__watch_reactions_impl(port, ptr, rust_vec_len, data_len),
+330 => wire__crate__bridge__database__reactions__watch_reactions_with_contacts_impl(port, ptr, rust_vec_len, data_len),
+331 => wire__crate__bridge__database__receipts__watch_receipts_impl(port, ptr, rust_vec_len, data_len),
+332 => wire__crate__bridge__database__stories__watch_received_stories_impl(port, ptr, rust_vec_len, data_len),
+333 => wire__crate__bridge__database__recovery__watch_recovery_contacts_impl(port, ptr, rust_vec_len, data_len),
+334 => wire__crate__bridge__database__recovery__watch_recovery_count_impl(port, ptr, rust_vec_len, data_len),
+335 => wire__crate__bridge__database__stickers__watch_stickers_impl(port, ptr, rust_vec_len, data_len),
+336 => wire__crate__bridge__database__stories__watch_story_viewers_impl(port, ptr, rust_vec_len, data_len),
+337 => wire__crate__bridge__database__key_verifications__watch_transferred_verifications_impl(port, ptr, rust_vec_len, data_len),
+338 => wire__crate__bridge__database__messages__watch_unopened_media_impl(port, ptr, rust_vec_len, data_len),
+339 => wire__crate__bridge__database__webxdc__watch_webxdc_card_impl(port, ptr, rust_vec_len, data_len),
+340 => wire__crate__bridge__database__webxdc__watch_webxdc_serial_impl(port, ptr, rust_vec_len, data_len),
+341 => wire__crate__bridge__database__webxdc__webxdc_card_app_impl(port, ptr, rust_vec_len, data_len),
+342 => wire__crate__bridge__database__webxdc__webxdc_card_instance_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
@@ -20612,7 +20678,7 @@ fn pde_ffi_dispatcher_sync_impl(
             rust_vec_len,
             data_len,
         ),
-        342 => wire__crate__bridge__logging__write_log_impl(ptr, rust_vec_len, data_len),
+        343 => wire__crate__bridge__logging__write_log_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -21191,6 +21257,33 @@ impl
     > for crate::database::app::contact_groups::table::ContactGroupMember
 {
     fn into_into_dart(self) -> crate::database::app::contact_groups::table::ContactGroupMember {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart
+    for crate::database::app::contact_groups::table::ContactGroupMemberCount
+{
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.contact_group_id.into_into_dart().into_dart(),
+            self.member_count.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::database::app::contact_groups::table::ContactGroupMemberCount
+{
+}
+impl
+    flutter_rust_bridge::IntoIntoDart<
+        crate::database::app::contact_groups::table::ContactGroupMemberCount,
+    > for crate::database::app::contact_groups::table::ContactGroupMemberCount
+{
+    fn into_into_dart(
+        self,
+    ) -> crate::database::app::contact_groups::table::ContactGroupMemberCount {
         self
     }
 }
@@ -24367,6 +24460,18 @@ impl SseEncode
 
 impl SseEncode
     for StreamSink<
+        Vec<crate::database::app::contact_groups::table::ContactGroupMemberCount>,
+        flutter_rust_bridge::for_generated::SseCodec,
+    >
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        unimplemented!("")
+    }
+}
+
+impl SseEncode
+    for StreamSink<
         Vec<crate::database::app::groups::table::Group>,
         flutter_rust_bridge::for_generated::SseCodec,
     >
@@ -25011,6 +25116,14 @@ impl SseEncode for crate::database::app::contact_groups::table::ContactGroupMemb
         <i64>::sse_encode(self.contact_group_id, serializer);
         <Option<i64>>::sse_encode(self.user_id, serializer);
         <Option<String>>::sse_encode(self.group_id, serializer);
+    }
+}
+
+impl SseEncode for crate::database::app::contact_groups::table::ContactGroupMemberCount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.contact_group_id, serializer);
+        <i64>::sse_encode(self.member_count, serializer);
     }
 }
 
@@ -25687,6 +25800,18 @@ impl SseEncode for Vec<crate::database::app::contact_groups::table::ContactGroup
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::database::app::contact_groups::table::ContactGroupMember>::sse_encode(
+                item, serializer,
+            );
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::database::app::contact_groups::table::ContactGroupMemberCount> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::database::app::contact_groups::table::ContactGroupMemberCount>::sse_encode(
                 item, serializer,
             );
         }

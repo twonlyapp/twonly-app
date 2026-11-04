@@ -1,0 +1,33 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT contact_group_id AS \"contact_group_id!\",\n                COUNT(*) AS \"member_count!\"\n            FROM contact_group_members\n            GROUP BY contact_group_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "contact_group_id!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_group_members",
+            "name": "contact_group_id"
+          }
+        }
+      },
+      {
+        "name": "member_count!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "265592f62782c0ed01d385d066e78c360189c04c2852031d5d377e7c6cc7a744"
+}

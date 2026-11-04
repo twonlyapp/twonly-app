@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO message_actions(message_id, contact_id, type)\n            SELECT ?, ?, 'sendFailed'\n            WHERE EXISTS (SELECT 1 FROM messages WHERE message_id = ?)\n            ON CONFLICT(message_id, contact_id, type) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "8fe8912c15d136c9715f4d36e5b7eb964116de00e562c2263e507977fcde7bf8"
+}

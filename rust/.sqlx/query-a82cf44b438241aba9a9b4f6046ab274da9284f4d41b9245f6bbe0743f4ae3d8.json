@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT message_id FROM messages\n           WHERE media_id = ? AND is_story = 1 AND sender_id IS NULL AND media_stored = 0",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a82cf44b438241aba9a9b4f6046ab274da9284f4d41b9245f6bbe0743f4ae3d8"
+}

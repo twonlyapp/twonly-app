@@ -278,7 +278,9 @@ class BackupService {
           Log.info('Recovery finished, restarting the app.');
         } catch (e) {
           Log.error(e);
-          return RecoveryError.unkownError;
+          return _requiresAppUpdate(e)
+              ? RecoveryError.appUpdateRequired
+              : RecoveryError.unkownError;
         }
       }
 
@@ -317,7 +319,16 @@ class BackupService {
       userId = await RustApi.getUserIdFromUsername(username: username);
     } catch (error) {
       Log.error('Could not resolve backup username', error: error);
-      return RecoveryError.usernameNotValid;
+      // Only the server saying so means the account does not exist. A local
+      // or connection failure must not tell the user their account is gone.
+      final code = apiErrorCodeOf(error);
+      if (code == ErrorCode.UsernameNotFound.value) {
+        return RecoveryError.usernameNotValid;
+      }
+      if (isConnectionError(error)) return RecoveryError.noInternet;
+      return code != null
+          ? RecoveryError.tryAgainLater
+          : RecoveryError.unkownError;
     }
 
     final state = BackupRecovery(
@@ -351,6 +362,10 @@ class BackupService {
     Log.info('Stored the recovery state, entering the archive stage.');
     return _nextBackupStage(onProgress: onProgress);
   }
+
+  /// Rust reports a backup written by a newer app version with this text.
+  static bool _requiresAppUpdate(Object error) =>
+      error.toString().contains('written by a newer app version');
 
   static Future<(Uint8List?, RecoveryError?)> _downloadBackup(
     String backupServerUrl,
@@ -388,6 +403,9 @@ enum RecoveryError {
   tryAgainLater,
   noInternet,
   unkownError,
+
+  /// The backup was made by a newer app version than the one installed.
+  appUpdateRequired,
 }
 
 /// Granular steps of a backup recovery, reported via the `onProgress`

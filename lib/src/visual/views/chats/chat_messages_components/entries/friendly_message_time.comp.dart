@@ -72,6 +72,31 @@ class FriendlyMessageTime extends StatelessWidget {
               message.messageId,
             ) ??
             false)) {
+      // Media fails for several reasons. Text only fails when the contact
+      // has no keys on the server, meaning they have not opened a current
+      // app version, so say so next to the icon.
+      if (message.type == MessageType.text.name ||
+          message.type == MessageType.webxdcApp.name) {
+        return Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 12, color: context.color.error),
+              const SizedBox(width: 2),
+              Text(
+                context.lang.messageSendFailedUserInactive,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: context.color.error,
+                  decoration: TextDecoration.none,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
       return Padding(
         padding: const EdgeInsets.only(left: 4),
         child: Tooltip(

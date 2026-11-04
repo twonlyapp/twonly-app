@@ -750,6 +750,8 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         return Ok(());
     }
 
+    let message_id = row.message_id.clone();
+
     let receipt = match prepare_queued_receipt_from_row(ctx, receipt_id, row).await {
         Ok(receipt) => receipt,
         // `prepare_queued_receipt_from_row` only lets this through when there
@@ -762,7 +764,8 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
                 "peer has no prekey bundle and no session; deferring the receipt until one exists"
             );
 
-            defer_receipt_until_session(&app_db, receipt_id).await?;
+            defer_receipt_until_session(&app_db, receipt_id, contact_id, message_id.as_deref())
+                .await?;
 
             return Ok(());
         }
@@ -810,6 +813,17 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
             message_id,
             receipt.contact_id,
             message_id,
+        )
+        .execute(&mut *t)
+        .await?;
+
+        // A parked message is shown as failed. If the peer became reachable
+        // after all, the delivery that just happened takes that back.
+        sqlx::query!(
+            "DELETE FROM message_actions WHERE message_id = ? AND contact_id = ? AND type = \
+             'sendFailed'",
+            message_id,
+            receipt.contact_id,
         )
         .execute(&mut *t)
         .await?;
@@ -868,9 +882,16 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
 /// every sweep would repeat the same failing server round-trip. The receipt is
 /// kept, not dropped: `release_deferred_receipts` puts it back in the queue as
 /// soon as a session exists.
+///
+/// Such a peer has not opened a current app version, possibly ever again, so a
+/// message the user wrote is marked as failed instead of spinning forever. The
+/// mark goes away if the parked receipt is delivered after all.
 async fn defer_receipt_until_session(
-    database: &Arc<crate::database::app::AppDatabase>, receipt_id: &str,
+    database: &Arc<crate::database::app::AppDatabase>, receipt_id: &str, contact_id: i64,
+    message_id: Option<&str>,
 ) -> Result<()> {
+    let mut transaction = database.pool.begin().await?;
+
     sqlx::query!(
         r#"
         UPDATE receipts
@@ -879,8 +900,26 @@ async fn defer_receipt_until_session(
         "#,
         receipt_id,
     )
-    .execute(&database.pool)
+    .execute(&mut *transaction)
     .await?;
+
+    if let Some(message_id) = message_id {
+        sqlx::query!(
+            r#"
+            INSERT INTO message_actions(message_id, contact_id, type)
+            SELECT ?, ?, 'sendFailed'
+            WHERE EXISTS (SELECT 1 FROM messages WHERE message_id = ?)
+            ON CONFLICT(message_id, contact_id, type) DO NOTHING
+            "#,
+            message_id,
+            contact_id,
+            message_id,
+        )
+        .execute(&mut *transaction)
+        .await?;
+    }
+
+    transaction.commit().await?;
 
     Ok(())
 }
@@ -1450,6 +1489,49 @@ mod tests {
         let retained =
             proto::EncryptedContent::decode(envelope.encrypted_content.unwrap().as_slice())?;
         assert_eq!(retained.media.unwrap().download_token, Some(vec![9; 32]));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn a_message_parked_for_a_peer_without_keys_is_marked_failed() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let database = Arc::new(
+            crate::database::app::AppDatabase::new(
+                directory.path().join("app.sqlite").to_str().unwrap(),
+                None,
+                false,
+            )
+            .await?,
+        );
+        database.run_migrations().await?;
+        sqlx::raw_sql(
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'inactive');
+             INSERT INTO groups(group_id, group_name) VALUES ('chat', 'Chat');
+             INSERT INTO messages(message_id, group_id, type) VALUES ('text', 'chat', 'text');
+             INSERT INTO receipts(receipt_id, contact_id, message_id, message)
+             VALUES ('text-receipt', 7, 'text', x'00'), ('typing', 7, NULL, x'00');",
+        )
+        .execute(&database.pool)
+        .await?;
+
+        defer_receipt_until_session(&database, "text-receipt", 7, Some("text")).await?;
+        defer_receipt_until_session(&database, "typing", 7, None).await?;
+        // The chat row may be purged while its receipt is still queued.
+        defer_receipt_until_session(&database, "typing", 7, Some("purged")).await?;
+
+        let failed: Vec<(String, i64)> = sqlx::query_as(
+            "SELECT message_id, contact_id FROM message_actions WHERE type = 'sendFailed'",
+        )
+        .fetch_all(&database.pool)
+        .await?;
+        assert_eq!(failed, [("text".to_owned(), 7)]);
+
+        let parked: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM receipts WHERE deferred_until_session IS NOT NULL",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(parked, 2);
         Ok(())
     }
 

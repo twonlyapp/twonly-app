@@ -8,6 +8,7 @@ use crate::frb_generated::StreamSink;
 
 pub use crate::database::app::contact_groups::table::{
     ContactGroup, ContactGroupFilter, ContactGroupInput, ContactGroupLabels, ContactGroupMember,
+    ContactGroupMemberCount,
 };
 
 pub async fn list_contact_groups(
@@ -112,6 +113,18 @@ pub async fn watch_contact_group_ids(
             get_twonly_flutter()?.app_db.clone(),
             user_id,
             group_id,
+            control.cancellation.clone(),
+            move |value| sink.add(value).is_ok(),
+        ))
+        .await
+}
+
+pub async fn watch_contact_group_member_counts(
+    control: &DatabaseWatch, sink: StreamSink<Vec<ContactGroupMemberCount>>,
+) -> Result<()> {
+    control
+        .traced(watches::member_counts(
+            get_twonly_flutter()?.app_db.clone(),
             control.cancellation.clone(),
             move |value| sink.add(value).is_ok(),
         ))

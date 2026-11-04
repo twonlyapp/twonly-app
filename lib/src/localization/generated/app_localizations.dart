@@ -3820,6 +3820,12 @@ abstract class AppLocalizations {
   /// **'An unknown error occurred. Please try again.'**
   String get recoverErrorUnknown;
 
+  /// No description provided for @recoverErrorAppUpdateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup was made with a newer version of twonly. Please update the app and try again.'**
+  String get recoverErrorAppUpdateRequired;
+
   /// No description provided for @recoverSuccessTitle.
   ///
   /// In en, this message translates to:
@@ -4978,6 +4984,12 @@ abstract class AppLocalizations {
   /// **'Members'**
   String get contactGroupMembers;
 
+  /// No description provided for @contactGroupMemberCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No members} =1{1 member} other{{count} members}}'**
+  String contactGroupMemberCount(num count);
+
   /// No description provided for @contactGroupLabelFeature.
   ///
   /// In en, this message translates to:
@@ -5685,6 +5697,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send failed'**
   String get mediaSendFailed;
+
+  /// No description provided for @messageSendFailedUserInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'User inactive'**
+  String get messageSendFailedUserInactive;
 
   /// No description provided for @mailboxSyncTitle.
   ///

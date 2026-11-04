@@ -247,6 +247,49 @@ async fn membership_replacement_deduplicates_and_excludes_direct_and_missing_cha
 
 #[tokio::test]
 
+async fn member_counts_include_users_and_chats_and_skip_empty_groups() {
+    let (_directory, database) = open().await;
+
+    let favorites = create(&database, input("Favorites")).await;
+    let family = create(&database, input("Family")).await;
+    let empty = create(&database, input("Empty")).await;
+
+    let mut transaction = database.pool.begin().await.unwrap();
+
+    writes::replace_members(
+        &mut transaction,
+        favorites,
+        vec![7, 8],
+        vec!["group".into()],
+    )
+    .await
+    .unwrap();
+
+    writes::replace_members(&mut transaction, family, vec![8], vec![])
+        .await
+        .unwrap();
+
+    transaction.commit().await.unwrap();
+
+    let mut counts = queries::member_counts(&mut database.pool.acquire().await.unwrap())
+        .await
+        .unwrap();
+
+    counts.sort_by_key(|count| count.contact_group_id);
+
+    assert_eq!(
+        counts
+            .iter()
+            .map(|count| (count.contact_group_id, count.member_count))
+            .collect::<Vec<_>>(),
+        vec![(favorites, 3), (family, 1)]
+    );
+
+    assert!(counts.iter().all(|count| count.contact_group_id != empty));
+}
+
+#[tokio::test]
+
 async fn failed_replacement_rolls_back_existing_members_and_emits_no_change() {
     let (_directory, database) = open().await;
 

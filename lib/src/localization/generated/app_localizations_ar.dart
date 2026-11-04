@@ -2274,6 +2274,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'حدث خطأ غير معروف. يُرجى المحاولة مرة أخرى.';
 
   @override
+  String get recoverErrorAppUpdateRequired =>
+      'تم إنشاء النسخة الاحتياطية باستخدام إصدار أحدث من twonly. يُرجى تحديث التطبيق والمحاولة مرة أخرى.';
+
+  @override
   String get recoverSuccessTitle => 'تمت استعادة النسخة الاحتياطية بنجاح.';
 
   @override
@@ -2987,6 +2991,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contactGroupMembers => 'الأعضاء';
 
   @override
+  String contactGroupMemberCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عضو',
+      many: '$count عضوًا',
+      few: '$count أعضاء',
+      two: 'عضوان',
+      one: 'عضو واحد',
+      zero: 'لا يوجد أعضاء',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get contactGroupLabelFeature => 'تسمية ظاهرة';
 
   @override
@@ -3435,6 +3454,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mediaSendFailed => 'تعذّر الإرسال';
+
+  @override
+  String get messageSendFailedUserInactive => 'المستخدم غير نشط';
 
   @override
   String get mailboxSyncTitle => 'جارٍ مزامنة twonly';

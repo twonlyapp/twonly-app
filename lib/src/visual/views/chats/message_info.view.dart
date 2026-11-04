@@ -229,7 +229,9 @@ class _MessageInfoViewState extends State<MessageInfoView> {
         actionAt = openedByUser.$1.actionAt;
       }
       if (sendFailed != null) {
-        actionTypeText = context.lang.mediaSendFailed;
+        actionTypeText = widget.message.type == MessageType.media.name
+            ? context.lang.mediaSendFailed
+            : context.lang.messageSendFailedUserInactive;
         actionAt = sendFailed.$1.actionAt;
       }
 

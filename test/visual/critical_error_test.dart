@@ -48,4 +48,40 @@ void main() {
     expect(find.byType(AlertDialog), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('backup recovery requires confirmation and can be cancelled', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: CriticalErrorView(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final recover = find.text('Recovery from backup');
+    Finder button(Finder label) =>
+        find.ancestor(of: label, matching: find.byType(MyButton));
+    await tester.scrollUntilVisible(recover, 200);
+    await tester.tap(button(recover));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(
+      find.textContaining('delete all local account data'),
+      findsOneWidget,
+    );
+
+    await tester.tap(button(find.text('Cancel')));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(recover, findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
