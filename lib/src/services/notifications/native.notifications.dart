@@ -44,6 +44,8 @@ class NativeNotificationService {
       kind == 'response' ||
       kind == 'sticker' ||
       kind == 'live_location' ||
+      kind == 'vacation' ||
+      kind == 'vacation_end' ||
       kind == 'webxdc' ||
       kind == 'story_reply' ||
       kind == 'story_reaction' ||

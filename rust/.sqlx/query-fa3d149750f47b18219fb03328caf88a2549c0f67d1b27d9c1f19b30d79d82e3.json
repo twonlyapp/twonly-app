@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE groups SET last_message_send = ?, last_message_received = ? WHERE group_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "fa3d149750f47b18219fb03328caf88a2549c0f67d1b27d9c1f19b30d79d82e3"
+}

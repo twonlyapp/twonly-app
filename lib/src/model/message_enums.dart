@@ -7,6 +7,7 @@ enum MessageType {
   restoreFlameCounter,
   askAboutUser,
   webxdcApp,
+  onVacation,
 }
 
 enum MessageActionType {

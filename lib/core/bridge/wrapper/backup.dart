@@ -83,6 +83,9 @@ class RustBackupIdentity {
         encryptedBytes: encryptedBytes,
       );
 
+  /// Sets the first backup password or changes it. A change fails, keeping
+  /// the previous password, unless the identity backup is online under the
+  /// new one; the backup under the previous password is deleted afterwards.
   static Future<void> setBackupPasswordKeys({
     required PlatformInt64 userId,
     required String password,

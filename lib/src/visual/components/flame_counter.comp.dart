@@ -31,6 +31,16 @@ class FlameCounterWidget extends StatefulWidget {
   State<FlameCounterWidget> createState() => _FlameCounterWidgetState();
 }
 
+const _defaultVacationIcon = '🏕️';
+
+/// The icon a vacation announced, or the default when it is nothing an emoji
+/// widget can show. Peers on newer releases may pick icons this one does not
+/// know; those still show as plain emoji.
+String vacationIconOrDefault(String? icon) =>
+    icon != null && icon.isNotEmpty && EmojiAnimationComp.supported(icon)
+    ? icon
+    : _defaultVacationIcon;
+
 const emptyFlameState = FlameState(
   counter: 0,
   isExpiring: false,
@@ -137,21 +147,27 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget>
       flameEmoji = '🎂';
     }
 
+    // A frozen streak shows the vacation instead, with its number: 💯 alone
+    // would hide what is frozen.
+    final onVacation = state.vacationIcon != null;
+    if (onVacation) flameEmoji = vacationIconOrDefault(state.vacationIcon);
+
     return Row(
       children: [
         if (widget.prefix) const SizedBox(width: 5),
         if (widget.prefix) const Text('•'),
         if (widget.prefix) const SizedBox(width: 5),
-        if (flameCounter != 100)
+        if (flameCounter != 100 || onVacation)
           Text(
             flameCounter.toString(),
             style: const TextStyle(fontSize: 13),
           ),
         SizedBox(
           height: 15,
-          child: EmojiAnimationComp(
-            emoji: flameEmoji,
-          ),
+          child: EmojiAnimationComp.animatedIcons.containsKey(flameEmoji)
+              ? EmojiAnimationComp(emoji: flameEmoji)
+              // An icon without an animation renders as large text.
+              : FittedBox(child: EmojiAnimationComp(emoji: flameEmoji)),
         ),
         if (state.isExpiring)
           const SizedBox(

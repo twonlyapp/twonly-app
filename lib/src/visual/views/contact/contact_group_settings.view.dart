@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
@@ -28,10 +29,10 @@ import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/custom_color_picker_dialog.comp.dart';
 import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
-import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
+import 'package:twonly/src/visual/views/shared/select_contacts.view.dart';
 
 class ContactGroupSettingsView extends StatefulWidget {
   const ContactGroupSettingsView({
@@ -48,20 +49,6 @@ class ContactGroupSettingsView extends StatefulWidget {
   @override
   State<ContactGroupSettingsView> createState() =>
       _ContactGroupSettingsViewState();
-}
-
-class _MemberEntry {
-  const _MemberEntry({
-    required this.name,
-    required this.messageCount,
-    this.contact,
-    this.group,
-  });
-
-  final String name;
-  final int messageCount;
-  final Contact? contact;
-  final Group? group;
 }
 
 class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
@@ -87,9 +74,23 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
     0xFF004D40,
     0xFF4A148C,
   ];
+  static const _quickEmojis = [
+    '❤️',
+    '⭐',
+    '🔥',
+    '🏠',
+    '👨‍👩‍👧',
+    '💼',
+    '🎉',
+    '⚽',
+    '🎮',
+  ];
+
+  /// More members than this collapse into a "+n" chip that opens the picker.
+  static const _visibleMemberChips = 12;
 
   late final TextEditingController _nameController;
-  final TextEditingController _memberFilterController = TextEditingController();
+  final _pickerMembers = ValueNotifier<List<ContactPickerEntry>>([]);
   late int _backgroundColor;
   late int _textColor;
   late bool _showAsShortcut;
@@ -97,7 +98,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   late bool _shareStories;
   String? _emoji;
   bool _saving = false;
-  String _memberFilter = '';
+  bool _membersLoaded = false;
   List<Contact> _contacts = [];
   List<Group> _groups = [];
   Map<String, Group> _directChats = {};
@@ -105,6 +106,8 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   Map<String, List<String>> _groupMemberNames = {};
   final Set<int> _selectedUserIds = {};
   final Set<String> _selectedGroupIds = {};
+  final Set<int> _savedUserIds = {};
+  final Set<String> _savedGroupIds = {};
   final List<StreamSubscription<dynamic>> _subscriptions = [];
 
   /// Widgets on the home screen configured with this contact group. Its
@@ -114,6 +117,23 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   bool _widgetUsageLoaded = false;
 
   bool get _isEditing => widget.contactGroup != null;
+
+  /// Save only appears once there is something to store: a name for a new
+  /// group, or any difference from the stored one.
+  bool get _canSave {
+    if (!_membersLoaded || _nameController.text.trim().isEmpty) return false;
+    final saved = widget.contactGroup;
+    if (saved == null) return true;
+    return _nameController.text.trim() != saved.name ||
+        _emoji != saved.emoji ||
+        _backgroundColor != saved.backgroundColor ||
+        _textColor != saved.textColor ||
+        _showAsShortcut != saved.showAsShortcut ||
+        _showAsLabel != saved.showAsLabel ||
+        _shareStories != saved.shareStories ||
+        !setEquals(_selectedUserIds, _savedUserIds) ||
+        !setEquals(_selectedGroupIds, _savedGroupIds);
+  }
 
   @override
   void initState() {
@@ -141,6 +161,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
       ).listen((contacts) {
         if (!mounted) return;
         setState(() => _contacts = contacts);
+        _refreshPickerMembers();
       }),
     );
     _subscriptions.add(
@@ -163,6 +184,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
               if (group.isDirectChat) group.groupId: group,
           };
         });
+        _refreshPickerMembers();
       }),
     );
     _subscriptions.add(
@@ -194,10 +216,13 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
           _groupMemberNames = names;
           _groupContacts = contacts;
         });
+        _refreshPickerMembers();
       }),
     );
     if (contactGroup != null) {
       unawaited(_loadMembers(contactGroup.id));
+    } else {
+      _membersLoaded = true;
     }
   }
 
@@ -208,6 +233,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
     );
     if (!mounted) return;
     setState(() {
+      _membersLoaded = true;
       _selectedUserIds
         ..clear()
         ..addAll(members.where((m) => m.userId != null).map((m) => m.userId!));
@@ -216,6 +242,12 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
         ..addAll(
           members.where((m) => m.groupId != null).map((m) => m.groupId!),
         );
+      _savedUserIds
+        ..clear()
+        ..addAll(_selectedUserIds);
+      _savedGroupIds
+        ..clear()
+        ..addAll(_selectedGroupIds);
     });
   }
 
@@ -225,11 +257,11 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
       unawaited(subscription.cancel());
     }
     _nameController.dispose();
-    _memberFilterController.dispose();
+    _pickerMembers.dispose();
     super.dispose();
   }
 
-  List<_MemberEntry> get _members {
+  List<ContactPickerEntry> get _members {
     final messageCounts = <int, int>{};
     for (final chat in _directChats.values) {
       for (final contact in _groupContacts[chat.groupId] ?? const <Contact>[]) {
@@ -252,18 +284,19 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
       for (final contact in _contacts) contact.userId: contact,
     };
     final entries =
-        <_MemberEntry>[
+        <ContactPickerEntry>[
           for (final contact in contacts.values)
-            _MemberEntry(
+            ContactPickerEntry(
               name: getContactDisplayName(contact),
               messageCount: messageCounts[contact.userId] ?? 0,
               contact: contact,
             ),
           for (final group in _groups)
-            _MemberEntry(
+            ContactPickerEntry(
               name: group.groupName,
               messageCount: group.totalMediaCounter,
               group: group,
+              memberNames: _groupMemberNames[group.groupId] ?? const [],
             ),
         ]..sort(
           (a, b) {
@@ -273,11 +306,42 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
                 : a.name.toLowerCase().compareTo(b.name.toLowerCase());
           },
         );
-    final filter = _memberFilter.trim().toLowerCase();
-    if (filter.isEmpty) return entries;
-    return entries
-        .where((entry) => entry.name.toLowerCase().contains(filter))
-        .toList();
+    return entries;
+  }
+
+  void _refreshPickerMembers() => _pickerMembers.value = _members;
+
+  Future<void> _selectMembers() async {
+    FocusScope.of(context).unfocus();
+    final selection = await Navigator.push<(List<int>, List<String>)>(
+      context,
+      MaterialPageRoute(
+        builder: (pickerContext) => SelectContactsView(
+          text: SelectedContactView(
+            title: context.lang.selectMembers,
+            submitButton: (count, _) =>
+                context.lang.contactGroupMemberCount(count),
+            submitIcon: FontAwesomeIcons.check,
+          ),
+          members: _pickerMembers,
+          alreadySelected: _selectedUserIds.toList(),
+          alreadySelectedGroupIds: _selectedGroupIds.toList(),
+          isAlreadySelectedLocked: false,
+          allowEmptySelection: true,
+          onSubmit: (userIds, groupIds) =>
+              Navigator.pop(pickerContext, (userIds, groupIds)),
+        ),
+      ),
+    );
+    if (selection == null || !mounted) return;
+    setState(() {
+      _selectedUserIds
+        ..clear()
+        ..addAll(selection.$1);
+      _selectedGroupIds
+        ..clear()
+        ..addAll(selection.$2);
+    });
   }
 
   Future<void> _selectEmoji() async {
@@ -291,78 +355,43 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
     }
   }
 
-  Future<void> _selectColor({required bool background}) async {
+  void _setColor(int color, {required bool background}) {
     FocusScope.of(context).unfocus();
-    final currentColor = background ? _backgroundColor : _textColor;
-    final selected = await showModalBottomSheet<int>(
-      context: context,
-      backgroundColor: context.color.surface,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                background
-                    ? context.lang.contactGroupBackgroundColor
-                    : context.lang.contactGroupTextColor,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 20),
-              Center(child: _labelPreview()),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  if (background)
-                    _colorButton(
-                      noContactGroupBackgroundColor,
-                      !contactGroupHasBackground(currentColor),
-                      () => Navigator.pop(
-                        sheetContext,
-                        noContactGroupBackgroundColor,
-                      ),
-                      tooltip: context.lang.contactGroupNoBackground,
-                    ),
-                  for (final color
-                      in background ? _backgroundColors : _textColors)
-                    _colorButton(
-                      color,
-                      currentColor == color,
-                      () => Navigator.pop(sheetContext, color),
-                    ),
-                  IconButton.outlined(
-                    tooltip: context.lang.customColor,
-                    icon: const Icon(Icons.colorize, size: 18),
-                    onPressed: () async {
-                      final color = await showDialog<int>(
-                        context: sheetContext,
-                        builder: (context) => CustomColorPickerDialog(
-                          initialColor: Color(currentColor),
-                        ),
-                      );
-                      if (color != null && sheetContext.mounted) {
-                        Navigator.pop(sheetContext, color);
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (selected == null || !mounted) return;
     setState(() {
       if (background) {
-        _backgroundColor = selected;
+        _backgroundColor = color;
       } else {
-        _textColor = selected;
+        _textColor = color;
+      }
+    });
+  }
+
+  Future<void> _pickCustomColor({required bool background}) async {
+    FocusScope.of(context).unfocus();
+    final color = await showDialog<int>(
+      context: context,
+      builder: (context) => CustomColorPickerDialog(
+        initialColor: Color(background ? _backgroundColor : _textColor),
+      ),
+    );
+    if (color == null || !mounted) return;
+    _setColor(color, background: background);
+  }
+
+  bool _isSelected(ContactPickerEntry entry) {
+    final contact = entry.contact;
+    return contact != null
+        ? _selectedUserIds.contains(contact.userId)
+        : _selectedGroupIds.contains(entry.group!.groupId);
+  }
+
+  void _removeMember(ContactPickerEntry entry) {
+    setState(() {
+      final contact = entry.contact;
+      if (contact != null) {
+        _selectedUserIds.remove(contact.userId);
+      } else {
+        _selectedGroupIds.remove(entry.group!.groupId);
       }
     });
   }
@@ -465,7 +494,8 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
           ),
         ),
         actions: [
-          TextButton(
+          MyButton(
+            variant: MyButtonVariant.text,
             onPressed: () => Navigator.pop(context),
             child: Text(context.lang.ok),
           ),
@@ -546,33 +576,171 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
     if (mounted) Navigator.pop(context);
   }
 
-  Widget _colorButton(
-    int color,
-    bool selected,
-    VoidCallback onTap, {
+  Widget _colorSwatch(
+    int color, {
+    required bool selected,
+    required VoidCallback onTap,
     String? tooltip,
   }) {
-    final button = GestureDetector(
+    final none = color == noContactGroupBackgroundColor;
+    final swatch = GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 40,
+        height: 40,
+        padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
-          color: color == noContactGroupBackgroundColor ? null : Color(color),
           shape: BoxShape.circle,
           border: Border.all(
-            color: selected ? context.color.onSurface : context.color.outline,
-            width: selected ? 3 : 1,
+            color: selected ? context.color.primary : Colors.transparent,
+            width: 2,
           ),
         ),
-        child: color == noContactGroupBackgroundColor
-            ? const Icon(Icons.format_color_reset, size: 18)
-            : selected
-            ? const Icon(Icons.check, size: 18)
-            : null,
+        child: Container(
+          decoration: BoxDecoration(
+            color: none ? context.color.surface : Color(color),
+            shape: BoxShape.circle,
+            border: Border.all(color: context.color.outlineVariant),
+          ),
+          child: none
+              ? Icon(
+                  Icons.format_color_reset,
+                  size: 16,
+                  color: context.color.onSurfaceVariant,
+                )
+              : null,
+        ),
       ),
     );
-    return tooltip == null ? button : Tooltip(message: tooltip, child: button);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: tooltip == null
+          ? swatch
+          : Tooltip(message: tooltip, child: swatch),
+    );
+  }
+
+  Widget _colorPalette({required bool background}) {
+    final current = background ? _backgroundColor : _textColor;
+    final palette = background ? _backgroundColors : _textColors;
+    final hasColor = !background || contactGroupHasBackground(current);
+    final isCustom = hasColor && !palette.contains(current);
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        if (background)
+          _colorSwatch(
+            noContactGroupBackgroundColor,
+            selected: !hasColor,
+            onTap: () => _setColor(
+              noContactGroupBackgroundColor,
+              background: background,
+            ),
+            tooltip: context.lang.contactGroupNoBackground,
+          ),
+        for (final color in palette)
+          _colorSwatch(
+            color,
+            selected: current == color,
+            onTap: () => _setColor(color, background: background),
+          ),
+        if (isCustom)
+          _colorSwatch(
+            current,
+            selected: true,
+            onTap: () => _pickCustomColor(background: background),
+          ),
+        Tooltip(
+          message: context.lang.customColor,
+          child: GestureDetector(
+            onTap: () => _pickCustomColor(background: background),
+            child: Container(
+              width: 40,
+              height: 40,
+              margin: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SweepGradient(
+                  colors: [
+                    Color(0xFFE57373),
+                    Color(0xFFFFB74D),
+                    Color(0xFFFFF176),
+                    Color(0xFF81C784),
+                    Color(0xFF64B5F6),
+                    Color(0xFFBA68C8),
+                    Color(0xFFE57373),
+                  ],
+                ),
+              ),
+              child: const Icon(Icons.add, size: 18, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _emojiChoice(String emoji) {
+    final selected = _emoji == emoji;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: GestureDetector(
+        onTap: () => setState(() => _emoji = emoji),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected
+                ? context.color.primaryContainer
+                : context.color.surface,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: selected ? context.color.primary : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: Text(emoji, style: const TextStyle(fontSize: 22)),
+        ),
+      ),
+    );
+  }
+
+  Widget _emojiOptions() {
+    final emoji = _emoji;
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        // An emoji picked from the full picker stays visible and selected.
+        if (emoji != null && !_quickEmojis.contains(emoji)) _emojiChoice(emoji),
+        for (final emoji in _quickEmojis) _emojiChoice(emoji),
+        Tooltip(
+          message: context.lang.selectEmoji,
+          child: GestureDetector(
+            onTap: _selectEmoji,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: context.color.outlineVariant),
+              ),
+              child: Icon(
+                Icons.add_reaction_outlined,
+                size: 20,
+                color: context.color.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _labelPreview() {
@@ -600,21 +768,153 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
     );
   }
 
-  Widget _featureOptions({required Widget child}) {
+  Widget _labelOptions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: context.color.surface,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: _labelPreview(),
+        ),
+        const SizedBox(height: 16),
+        _optionCaption(context.lang.contactGroupBackgroundColor),
+        _colorPalette(background: true),
+        const SizedBox(height: 12),
+        _optionCaption(context.lang.contactGroupTextColor),
+        _colorPalette(background: false),
+      ],
+    );
+  }
+
+  Widget _optionCaption(String text) {
     return Padding(
-      padding: const EdgeInsets.only(left: 16, bottom: 8),
+      padding: const EdgeInsets.only(left: 3, bottom: 6),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: context.color.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+
+  /// A feature and its options share one card, so the options read as part of
+  /// the switch above them and fold away with it.
+  Widget _card({required Widget header, Widget? options}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: context.color.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
-        child: child,
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: Column(
+            children: [
+              header,
+              if (options != null) ...[
+                Divider(
+                  height: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: context.color.outlineVariant,
+                ),
+                Padding(padding: const EdgeInsets.all(16), child: options),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title, {String? trailing}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+          ),
+          if (trailing != null)
+            Text(
+              trailing,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: context.color.onSurfaceVariant,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _membersCard() {
+    final selected = _pickerMembers.value.where(_isSelected).toList()
+      ..sort(
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      );
+    final visible = selected.take(_visibleMemberChips).toList();
+    final hidden = selected.length - visible.length;
+    return _card(
+      header: Column(
+        children: [
+          if (selected.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final entry in visible)
+                      InputChip(
+                        key: ValueKey(
+                          entry.contact != null
+                              ? 'member:contact:${entry.contact!.userId}'
+                              : 'member:group:${entry.group!.groupId}',
+                        ),
+                        avatar: entry.contact != null
+                            ? AvatarIcon(
+                                contactId: entry.contact!.userId,
+                                fontSize: 10,
+                              )
+                            : AvatarIcon(group: entry.group, fontSize: 10),
+                        label: Text(entry.name),
+                        onDeleted: () => _removeMember(entry),
+                      ),
+                    if (hidden > 0)
+                      ActionChip(
+                        label: Text('+$hidden'),
+                        onPressed: _selectMembers,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            leading: const Icon(Icons.person_add_alt_1_outlined),
+            title: Text(context.lang.selectMembers),
+            trailing: const Icon(Icons.chevron_right),
+            enabled: _membersLoaded,
+            onTap: _selectMembers,
+          ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final members = _members;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -636,29 +936,28 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
         ],
       ),
       floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-      floatingActionButton: MyButton(
-        variant: MyButtonVariant.primaryMiddle,
-        onPressed: (_saving || _nameController.text.trim().isEmpty)
-            ? null
-            : _save,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_saving)
-              const SizedBox.square(
-                dimension: 15,
-                child: CircularProgressIndicator.adaptive(strokeWidth: 1),
-              )
-            else
-              const FaIcon(FontAwesomeIcons.check, size: 16),
-            const SizedBox(width: 8),
-            Text(context.lang.save),
-          ],
-        ),
-      ),
+      floatingActionButton: !_saving && !_canSave
+          ? null
+          : MyButton(
+              variant: MyButtonVariant.primaryMiddle,
+              onPressed: _saving ? null : _save,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_saving)
+                    const SizedBox.square(
+                      dimension: 15,
+                      child: CircularProgressIndicator.adaptive(strokeWidth: 1),
+                    )
+                  else
+                    const FaIcon(FontAwesomeIcons.check, size: 16),
+                  const SizedBox(width: 8),
+                  Text(context.lang.save),
+                ],
+              ),
+            ),
       body: GestureDetector(
-        // The name and filter fields sit in a long scrolling page, so tapping
-        // anywhere that is not a control should put the keyboard away.
+        // Tapping outside controls should put the keyboard away.
         behavior: HitTestBehavior.translucent,
         onTap: () => FocusScope.of(context).unfocus(),
         child: ListView(
@@ -671,177 +970,64 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
               inputFormatters: [LengthLimitingTextInputFormatter(24)],
               onChanged: (_) => setState(() {}),
             ),
-            const Divider(height: 40),
-            Text(
-              context.lang.contactGroupFeatures,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              title: Text(context.lang.contactGroupShareStories),
-              subtitle: Text(context.lang.contactGroupShareStoriesSubtitle),
-              value: _shareStories,
-              onChanged: (value) => setState(() => _shareStories = value),
-            ),
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              title: Text(context.lang.contactGroupShowAsLabel),
-              subtitle: Text(context.lang.contactGroupShowAsLabelSubtitle),
-              value: _showAsLabel,
-              onChanged: (value) => setState(() => _showAsLabel = value),
-            ),
-            if (_showAsLabel)
-              _featureOptions(
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.format_color_fill),
-                      title: Text(context.lang.contactGroupBackgroundColor),
-                      trailing: _colorButton(
-                        _backgroundColor,
-                        false,
-                        () => _selectColor(background: true),
-                      ),
-                      onTap: () => _selectColor(background: true),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.format_color_text),
-                      title: Text(context.lang.contactGroupTextColor),
-                      trailing: _colorButton(
-                        _textColor,
-                        false,
-                        () => _selectColor(background: false),
-                      ),
-                      onTap: () => _selectColor(background: false),
-                    ),
-                  ],
-                ),
-              ),
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              title: Text(context.lang.contactGroupShowAsShortcut),
-              subtitle: Text(context.lang.contactGroupShowAsShortcutSubtitle),
-              value: _showAsShortcut,
-              onChanged: (value) => setState(() => _showAsShortcut = value),
-            ),
-            if (_showAsShortcut)
-              _featureOptions(
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  leading: const Icon(Icons.emoji_emotions_outlined),
-                  title: Text(context.lang.selectEmoji),
-                  trailing: Text(
-                    _emoji ?? '+',
-                    style: const TextStyle(fontSize: 24),
-                  ),
-                  onTap: _selectEmoji,
-                ),
-              ),
-            if (_isEditing && _widgetUsageLoaded)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(context.lang.contactGroupUsedByWidget),
-                subtitle: Text(
-                  _widgetCount > 0
-                      ? context.lang.contactGroupUsedByWidgetSubtitle(
-                          _widgetCount,
-                        )
-                      : context.lang.contactGroupAddWidgetSubtitle,
-                ),
-                trailing: _widgetCount == 0
-                    ? const Icon(Icons.chevron_right)
-                    : null,
-                onTap: _widgetCount == 0 ? _showWidgetTutorial : null,
-              ),
-            const Divider(height: 40),
-            Text(
+            const SizedBox(height: 28),
+            _sectionTitle(
               context.lang.contactGroupMembers,
-              style: Theme.of(context).textTheme.titleMedium,
+              trailing: _selectedUserIds.isEmpty && _selectedGroupIds.isEmpty
+                  ? null
+                  : context.lang.contactGroupMemberCount(
+                      _selectedUserIds.length + _selectedGroupIds.length,
+                    ),
             ),
-            const SizedBox(height: 12),
-            MyInput(
-              controller: _memberFilterController,
-              dense: true,
-              fontWeight: FontWeight.normal,
-              hintText: context.lang.shareImageSearchAllContacts,
-              prefixIcon: const Icon(Icons.search, size: 20),
-              onChanged: (value) => setState(() => _memberFilter = value),
+            _membersCard(),
+            const SizedBox(height: 16),
+            _sectionTitle(context.lang.contactGroupFeatures),
+            _card(
+              header: SwitchListTile.adaptive(
+                title: Text(context.lang.contactGroupShareStories),
+                subtitle: Text(context.lang.contactGroupShareStoriesSubtitle),
+                value: _shareStories,
+                onChanged: (value) => setState(() => _shareStories = value),
+              ),
             ),
-            for (final entry in members) _memberTile(entry),
+            _card(
+              header: SwitchListTile.adaptive(
+                title: Text(context.lang.contactGroupShowAsLabel),
+                subtitle: Text(context.lang.contactGroupShowAsLabelSubtitle),
+                value: _showAsLabel,
+                onChanged: (value) => setState(() => _showAsLabel = value),
+              ),
+              options: _showAsLabel ? _labelOptions() : null,
+            ),
+            _card(
+              header: SwitchListTile.adaptive(
+                title: Text(context.lang.contactGroupShowAsShortcut),
+                subtitle: Text(context.lang.contactGroupShowAsShortcutSubtitle),
+                value: _showAsShortcut,
+                onChanged: (value) => setState(() => _showAsShortcut = value),
+              ),
+              options: _showAsShortcut ? _emojiOptions() : null,
+            ),
+            if (_isEditing && _widgetUsageLoaded)
+              _card(
+                header: ListTile(
+                  title: Text(context.lang.contactGroupUsedByWidget),
+                  subtitle: Text(
+                    _widgetCount > 0
+                        ? context.lang.contactGroupUsedByWidgetSubtitle(
+                            _widgetCount,
+                          )
+                        : context.lang.contactGroupAddWidgetSubtitle,
+                  ),
+                  trailing: _widgetCount == 0
+                      ? const Icon(Icons.chevron_right)
+                      : null,
+                  onTap: _widgetCount == 0 ? _showWidgetTutorial : null,
+                ),
+              ),
           ],
         ),
       ),
-    );
-  }
-
-  void _toggleEntry(_MemberEntry entry) {
-    setState(() {
-      final contact = entry.contact;
-      if (contact != null) {
-        if (!_selectedUserIds.add(contact.userId)) {
-          _selectedUserIds.remove(contact.userId);
-        }
-      } else if (!_selectedGroupIds.add(entry.group!.groupId)) {
-        _selectedGroupIds.remove(entry.group!.groupId);
-      }
-    });
-  }
-
-  Widget _memberTile(_MemberEntry entry) {
-    final contact = entry.contact;
-    final group = entry.group;
-    final selected = contact != null
-        ? _selectedUserIds.contains(contact.userId)
-        : _selectedGroupIds.contains(group!.groupId);
-    final memberNames = group == null
-        ? const <String>[]
-        : _groupMemberNames[group.groupId] ?? const <String>[];
-    return ListTile(
-      // Filtering and sorting must keep each avatar and badge with its member.
-      key: ValueKey(
-        contact != null
-            ? 'contact:${contact.userId}'
-            : 'group:${group!.groupId}',
-      ),
-      contentPadding: EdgeInsets.zero,
-      leading: contact != null
-          ? AvatarIcon(contactId: contact.userId, fontSize: 14)
-          : AvatarIcon(group: group, fontSize: 14),
-      title: Row(
-        children: [
-          Flexible(
-            child: Text(
-              entry.name,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-          const SizedBox(width: 4),
-          VerificationBadgeComp(
-            contact: contact,
-            group: group,
-            showOnlyIfVerified: true,
-            clickable: false,
-            size: 12,
-          ),
-        ],
-      ),
-      subtitle: memberNames.isEmpty
-          ? null
-          : Text(
-              memberNames.join(', '),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).disabledColor,
-              ),
-            ),
-      trailing: Checkbox.adaptive(
-        value: selected,
-        onChanged: (_) => _toggleEntry(entry),
-      ),
-      onTap: () => _toggleEntry(entry),
     );
   }
 }

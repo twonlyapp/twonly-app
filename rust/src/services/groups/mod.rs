@@ -5,6 +5,7 @@
 
 pub(crate) mod crypto;
 pub(crate) mod model;
+pub(crate) mod vacation;
 
 use crate::api::groups::GroupApi;
 use crate::api::messages::incoming::messages::{
@@ -358,6 +359,7 @@ impl GroupService {
             webxdc_sync_request: None,
             sticker: None,
             live_location: None,
+            vacation: None,
         }
         .encode_to_vec();
 

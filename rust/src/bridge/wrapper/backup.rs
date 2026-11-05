@@ -31,18 +31,16 @@ impl RustBackupIdentity {
         Some(hex::encode(key_manager.backup_password.clone()?.backup_id))
     }
 
+    /// Sets the first backup password or changes it. A change fails, keeping
+    /// the previous password, unless the identity backup is online under the
+    /// new one; the backup under the previous password is deleted afterwards.
     pub async fn set_backup_password_keys(user_id: i64, password: String) -> Result<()> {
-        let backup_keys = BackupPasswordKeys::from_password(&password, user_id)?;
+        let ctx = Context::get_static()?.clone();
 
-        let ctx = get_twonly_flutter()?;
-
-        let mut key_manager = ctx.key_manager.lock().await;
-
-        key_manager.backup_password = Some(backup_keys);
-
-        key_manager.store_to_keychain(&ctx.secure_storage)?;
-
-        Ok(())
+        crate::database::lifecycle::run(move |operation| async move {
+            crate::backup::upload::change_password(&ctx, user_id, &password, &operation).await
+        })
+        .await
     }
 
     pub async fn import_backup_password_keys(

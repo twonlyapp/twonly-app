@@ -38,6 +38,8 @@ void main() {
       'stored_story',
       'added_to_group',
       'webxdc',
+      'vacation',
+      'vacation_end',
     ]) {
       expect(
         NativeNotificationService.opensConversation(kind),

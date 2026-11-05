@@ -611,7 +611,7 @@ pub(crate) async fn record_incoming_event(
             kind: if announcement.is_some() {
                 "webxdc"
             } else {
-                "text"
+                vacation_kind(message).unwrap_or("text")
             },
             content: announcement,
             created_at: milliseconds_to_seconds(message.timestamp),
@@ -879,19 +879,15 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
             .conversation_id
             .as_ref()
             .and_then(|id| flame_states.get(id))
-            .copied()
+            .cloned()
             .unwrap_or_default();
 
         let is_group = row.conversation_id.is_some() && row.is_direct_chat == 0;
 
         let sender_name = if is_group {
-            row.conversation_name = row
-                .conversation_name
-                .map(|name| notification_display_name(&name, flame_state));
-
             row.sender_name.clone()
         } else {
-            notification_display_name(&row.sender_name, flame_state)
+            notification_display_name(&row.sender_name, &flame_state)
         };
 
         let title = sender_name.clone();
@@ -906,7 +902,9 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
         // A direct chat's stored name may predate a contact profile update.
         // Every native presentation should use the current resolved name.
         let conversation_name = if is_group {
+            // Keep flames in the title, after rendering bodies with the plain group name.
             row.conversation_name
+                .map(|name| notification_display_name(&name, &flame_state))
         } else {
             Some(sender_name.clone())
         };
@@ -974,12 +972,14 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
 /// Match FlameCounterWidget, using the same derived state as the app so expired
 /// counters disappear even before the next media exchange updates the stored
 /// row.
-fn notification_display_name(name: &str, state: FlameState) -> String {
+fn notification_display_name(name: &str, state: &FlameState) -> String {
     if state.counter < 1 {
         return name.to_owned();
     }
 
-    let emoji = if state.counter % 365 == 0 {
+    let emoji = if let Some(icon) = state.vacation_icon.as_deref() {
+        icon
+    } else if state.counter % 365 == 0 {
         "🎂"
     } else if state.counter == 100 {
         "💯"
@@ -989,7 +989,7 @@ fn notification_display_name(name: &str, state: FlameState) -> String {
         "🔥"
     };
 
-    let counter = if state.counter == 100 {
+    let counter = if state.counter == 100 && state.vacation_icon.is_none() {
         String::new()
     } else {
         state.counter.to_string()
@@ -1518,6 +1518,26 @@ async fn localize_game_notification(
     Ok(())
 }
 
+/// An "On Vacation" entry says whether the sender left or came back early: a
+/// window ending before the message was sent is an early end.
+fn vacation_kind(message: &encrypted_content::AdditionalDataMessage) -> Option<&'static str> {
+    if message.r#type != crate::services::groups::vacation::VACATION_MESSAGE_TYPE {
+        return None;
+    }
+
+    let vacation = message
+        .additional_message_data
+        .as_deref()
+        .and_then(|bytes| <proto::AdditionalMessageData as prost::Message>::decode(bytes).ok())
+        .and_then(|data| data.vacation)?;
+
+    Some(if vacation.ends_at_ms > message.timestamp {
+        "vacation"
+    } else {
+        "vacation_end"
+    })
+}
+
 fn localized_body(locale: &str, row: &PendingRow) -> String {
     let in_group = group_suffix(locale, row);
 
@@ -1535,6 +1555,8 @@ fn localized_body(locale: &str, row: &PendingRow) -> String {
         "response" => "notificationResponse",
         "sticker" => "notificationSticker",
         "live_location" => "notificationLiveLocation",
+        "vacation" => "notificationVacation",
+        "vacation_end" => "notificationVacationEnd",
         "twonly" => "notificationTwonly",
         "video" => "notificationVideo",
         "image" => "notificationImage",
@@ -1925,6 +1947,66 @@ mod tests {
 
     #[test]
 
+    fn vacation_entries_say_whether_the_sender_left_or_came_back() {
+        use crate::database::app::groups::vacation::VacationWindow;
+        use crate::services::groups::vacation::{vacation_data, VACATION_MESSAGE_TYPE};
+
+        let message = |r#type: &str, data: Option<Vec<u8>>| encrypted_content::AdditionalDataMessage {
+            sender_message_id: "m".into(),
+            timestamp: 1_000_000,
+            r#type: r#type.into(),
+            additional_message_data: data,
+            hidden: false,
+        };
+
+        let window = |until| {
+            Some(vacation_data(&VacationWindow {
+                from: 900,
+                until,
+                icon: "🏕️".into(),
+            }))
+        };
+
+        assert_eq!(
+            vacation_kind(&message(VACATION_MESSAGE_TYPE, window(5_000))),
+            Some("vacation")
+        );
+
+        // Sent at the second it ends, or later: the sender is back.
+        assert_eq!(
+            vacation_kind(&message(VACATION_MESSAGE_TYPE, window(1_000))),
+            Some("vacation_end")
+        );
+
+        assert_eq!(
+            vacation_kind(&message(VACATION_MESSAGE_TYPE, window(900))),
+            Some("vacation_end")
+        );
+
+        assert_eq!(vacation_kind(&message(VACATION_MESSAGE_TYPE, None)), None);
+
+        assert_eq!(
+            vacation_kind(&message(VACATION_MESSAGE_TYPE, Some(vec![0xff, 0xff]))),
+            None
+        );
+
+        assert_eq!(vacation_kind(&message("restoreFlameCounter", window(5_000))), None);
+
+        for (kind, key) in [
+            ("vacation", "notificationVacation"),
+            ("vacation_end", "notificationVacationEnd"),
+        ] {
+            for locale in ["en", "de", "ar"] {
+                assert_eq!(
+                    localized_body(locale, &pending_row(kind)),
+                    translation(locale, key)
+                );
+            }
+        }
+    }
+
+    #[test]
+
     fn notification_names_match_the_app_flame_counter() {
         for (counter, is_best_friend, is_expiring, expected) in [
             (0, false, false, "Alice"),
@@ -1942,10 +2024,32 @@ mod tests {
             assert_eq!(
                 notification_display_name(
                     "Alice",
-                    FlameState {
+                    &FlameState {
                         counter,
                         is_best_friend,
-                        is_expiring
+                        is_expiring,
+                        vacation_icon: None,
+                    },
+                ),
+                expected,
+            );
+        }
+
+        // A vacation replaces every other emoji, the anniversaries included.
+        for (counter, is_best_friend, expected) in [
+            (12, false, "Alice 12✈️"),
+            (12, true, "Alice 12✈️"),
+            (100, false, "Alice 100✈️"),
+            (365, false, "Alice 365✈️"),
+        ] {
+            assert_eq!(
+                notification_display_name(
+                    "Alice",
+                    &FlameState {
+                        counter,
+                        is_best_friend,
+                        is_expiring: false,
+                        vacation_icon: Some("✈️".into()),
                     },
                 ),
                 expected,
@@ -1955,7 +2059,7 @@ mod tests {
 
     #[tokio::test]
 
-    async fn notification_batches_put_flames_on_direct_senders_and_group_names() -> Result<()> {
+    async fn notification_batches_keep_flames_in_titles_and_out_of_group_bodies() -> Result<()> {
         let directory = tempfile::tempdir()?;
 
         let ctx =
@@ -2037,11 +2141,11 @@ mod tests {
 
             assert_eq!(group.conversation_name.as_deref(), Some(expected_group));
 
-            assert_eq!(group.body, format!("sent a message in {expected_group}."));
+            assert_eq!(group.body, "sent a message in Friends.");
 
             assert_eq!(
                 group.text_messages_body.as_deref(),
-                Some(format!("sent {{count}} messages in {expected_group}.").as_str()),
+                Some("sent {count} messages in Friends."),
             );
 
             assert_eq!(batch.additions[2].sender_name, "Ali");
@@ -2530,6 +2634,8 @@ mod tests {
             "mention",
             "sticker",
             "live_location",
+            "vacation",
+            "vacation_end",
             "webxdc",
             "story_reply",
             "story_reaction",

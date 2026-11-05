@@ -22,6 +22,7 @@ import 'package:twonly/src/utils/mentions.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/mention_text.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_vacation.entry.dart';
 
 class ResponseContainer extends StatelessWidget {
   const ResponseContainer({
@@ -259,6 +260,9 @@ class _ResponsePreviewState extends State<ResponsePreview> {
         } else {
           subtitle = context.lang.replyFlameRestored;
         }
+      }
+      if (_message!.type == MessageType.onVacation.name) {
+        subtitle = vacationEntryText(context, _message!) ?? subtitle;
       }
       if (_message!.type == MessageType.askAboutUser.name) {
         subtitle = context.lang.replyAskAFriend;

@@ -516,6 +516,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_box_autoadd_user_discovery_announced_user_patch(dynamic raw);
 
   @protected
+  VacationWindow dco_decode_box_autoadd_vacation_window(dynamic raw);
+
+  @protected
   WebxdcCardApp dco_decode_box_autoadd_webxdc_card_app(dynamic raw);
 
   @protected
@@ -1034,6 +1037,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_opt_box_autoadd_user_discovery_announced_user(dynamic raw);
 
   @protected
+  VacationWindow? dco_decode_opt_box_autoadd_vacation_window(dynamic raw);
+
+  @protected
   WebxdcCardApp? dco_decode_opt_box_autoadd_webxdc_card_app(dynamic raw);
 
   @protected
@@ -1238,6 +1244,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
+
+  @protected
+  VacationOptions dco_decode_vacation_options(dynamic raw);
+
+  @protected
+  VacationWindow dco_decode_vacation_window(dynamic raw);
 
   @protected
   VerificationStatus dco_decode_verification_status(dynamic raw);
@@ -1788,6 +1800,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   UserDiscoveryAnnouncedUserPatch
   sse_decode_box_autoadd_user_discovery_announced_user_patch(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  VacationWindow sse_decode_box_autoadd_vacation_window(
     SseDeserializer deserializer,
   );
 
@@ -2448,6 +2465,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  VacationWindow? sse_decode_opt_box_autoadd_vacation_window(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   WebxdcCardApp? sse_decode_opt_box_autoadd_webxdc_card_app(
     SseDeserializer deserializer,
   );
@@ -2678,6 +2700,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
+
+  @protected
+  VacationOptions sse_decode_vacation_options(SseDeserializer deserializer);
+
+  @protected
+  VacationWindow sse_decode_vacation_window(SseDeserializer deserializer);
 
   @protected
   VerificationStatus sse_decode_verification_status(
@@ -3370,6 +3398,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_user_discovery_announced_user_patch(
     UserDiscoveryAnnouncedUserPatch self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_vacation_window(
+    VacationWindow self,
     SseSerializer serializer,
   );
 
@@ -4193,6 +4227,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_vacation_window(
+    VacationWindow? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_webxdc_card_app(
     WebxdcCardApp? self,
     SseSerializer serializer,
@@ -4488,6 +4528,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_vacation_options(
+    VacationOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_vacation_window(
+    VacationWindow self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_verification_status(

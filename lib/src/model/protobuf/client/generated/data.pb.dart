@@ -113,6 +113,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     WebxdcSyncRequest? webxdcSyncRequest,
     StickerData? sticker,
     LiveLocationData? liveLocation,
+    VacationData? vacation,
   }) {
     final result = create();
     if (type != null) result.type = type;
@@ -128,6 +129,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     if (webxdcSyncRequest != null) result.webxdcSyncRequest = webxdcSyncRequest;
     if (sticker != null) result.sticker = sticker;
     if (liveLocation != null) result.liveLocation = liveLocation;
+    if (vacation != null) result.vacation = vacation;
     return result;
   }
 
@@ -164,6 +166,8 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
         subBuilder: StickerData.create)
     ..aOM<LiveLocationData>(12, _omitFieldNames ? '' : 'liveLocation',
         subBuilder: LiveLocationData.create)
+    ..aOM<VacationData>(13, _omitFieldNames ? '' : 'vacation',
+        subBuilder: VacationData.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -301,6 +305,99 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
   void clearLiveLocation() => $_clearField(12);
   @$pb.TagNumber(12)
   LiveLocationData ensureLiveLocation() => $_ensure(11);
+
+  @$pb.TagNumber(13)
+  VacationData get vacation => $_getN(12);
+  @$pb.TagNumber(13)
+  set vacation(VacationData value) => $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasVacation() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearVacation() => $_clearField(13);
+  @$pb.TagNumber(13)
+  VacationData ensureVacation() => $_ensure(12);
+}
+
+/// "On Vacation": the sender's streak with the receiver is frozen from
+/// `starts_at_ms` until `ends_at_ms`, the local midnight after the last
+/// vacation day. The same start again announces an early end, so it can only
+/// shorten the window it names.
+class VacationData extends $pb.GeneratedMessage {
+  factory VacationData({
+    $fixnum.Int64? startsAtMs,
+    $fixnum.Int64? endsAtMs,
+    $core.String? icon,
+  }) {
+    final result = create();
+    if (startsAtMs != null) result.startsAtMs = startsAtMs;
+    if (endsAtMs != null) result.endsAtMs = endsAtMs;
+    if (icon != null) result.icon = icon;
+    return result;
+  }
+
+  VacationData._();
+
+  factory VacationData.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory VacationData.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'VacationData',
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'startsAtMs')
+    ..aInt64(2, _omitFieldNames ? '' : 'endsAtMs')
+    ..aOS(3, _omitFieldNames ? '' : 'icon')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  VacationData clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  VacationData copyWith(void Function(VacationData) updates) =>
+      super.copyWith((message) => updates(message as VacationData))
+          as VacationData;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static VacationData create() => VacationData._();
+  @$core.override
+  VacationData createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static VacationData getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<VacationData>(create);
+  static VacationData? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get startsAtMs => $_getI64(0);
+  @$pb.TagNumber(1)
+  set startsAtMs($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasStartsAtMs() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearStartsAtMs() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get endsAtMs => $_getI64(1);
+  @$pb.TagNumber(2)
+  set endsAtMs($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEndsAtMs() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEndsAtMs() => $_clearField(2);
+
+  /// An emoji the receiver shows instead of the flame meanwhile.
+  @$pb.TagNumber(3)
+  $core.String get icon => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set icon($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasIcon() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearIcon() => $_clearField(3);
 }
 
 /// One text-message card. Hidden updates replace this payload in place.

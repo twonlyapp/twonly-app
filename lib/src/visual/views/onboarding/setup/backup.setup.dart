@@ -1,9 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/onboarding/components/onboarding_step.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/next_button.comp.dart';
@@ -18,10 +23,19 @@ class BackupSetupPage extends StatefulWidget {
 
 class _BackupSetupPageState extends State<BackupSetupPage> {
   bool _isLoading = false;
+
+  /// Set when the user returns to this step after already choosing a
+  /// password and asks to replace it.
+  bool _changePassword = false;
   final TextEditingController _passwordCtrl = TextEditingController();
   final TextEditingController _repeatedPasswordCtrl = TextEditingController();
 
+  bool get _keepPassword =>
+      userService.currentUser.isBackupEnabled && !_changePassword;
+
   Future<bool> onPressedEnableTwonlySafe() async {
+    if (_keepPassword) return false;
+
     if (!await isSecurePassword(_passwordCtrl.text)) {
       if (!mounted) return true;
       final ignore = await showAlertDialog(
@@ -42,7 +56,15 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
     });
 
     await Future.delayed(const Duration(milliseconds: 100));
-    await BackupService.updateBackupPassword(_passwordCtrl.text);
+    try {
+      await BackupService.updateBackupPassword(_passwordCtrl.text);
+    } catch (error, stackTrace) {
+      Log.warn('Could not set the backup password.', error, stackTrace);
+      if (!mounted) return true;
+      setState(() => _isLoading = false);
+      showSnackbar(context, context.lang.backupChangePasswordFailed);
+      return true;
+    }
 
     await UserService.update((user) {
       user.currentSetupPage = SetupPages.backup.next()?.name;
@@ -69,7 +91,9 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
         _passwordCtrl.text == _repeatedPasswordCtrl.text;
     final canSubmit =
         !_isLoading &&
-        (isPasswordValid && isRepeatedPasswordValid || !kReleaseMode);
+        (_keepPassword ||
+            isPasswordValid && isRepeatedPasswordValid ||
+            !kReleaseMode);
 
     return OnboardingStep(
       title: context.lang.settingsBackup,
@@ -79,28 +103,51 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
         canSubmit: canSubmit,
         onPressed: onPressedEnableTwonlySafe,
       ),
-      children: [
-        BackupPasswordTextField(
-          controller: _passwordCtrl,
-          labelText: context.lang.password,
-          onChanged: (_) => setState(() {}),
-        ),
-        PasswordRequirementText(
-          text: context.lang.backupPasswordRequirement,
-          showError: _passwordCtrl.text.isNotEmpty && !isPasswordValid,
-        ),
-        const SizedBox(height: 8),
-        BackupPasswordTextField(
-          controller: _repeatedPasswordCtrl,
-          labelText: context.lang.passwordRepeated,
-          onChanged: (_) => setState(() {}),
-        ),
-        PasswordRequirementText(
-          text: context.lang.passwordRepeatedNotEqual,
-          showError:
-              _repeatedPasswordCtrl.text.isNotEmpty && !isRepeatedPasswordValid,
-        ),
-      ],
+      children: _keepPassword
+          ? [
+              Row(
+                children: [
+                  FaIcon(
+                    FontAwesomeIcons.circleCheck,
+                    size: 18,
+                    color: context.color.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(context.lang.onboardingBackupPasswordSet),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              MyButton(
+                onPressed: () => setState(() => _changePassword = true),
+                variant: MyButtonVariant.secondary,
+                child: Text(context.lang.backupChangePassword),
+              ),
+            ]
+          : [
+              BackupPasswordTextField(
+                controller: _passwordCtrl,
+                labelText: context.lang.password,
+                onChanged: (_) => setState(() {}),
+              ),
+              PasswordRequirementText(
+                text: context.lang.backupPasswordRequirement,
+                showError: _passwordCtrl.text.isNotEmpty && !isPasswordValid,
+              ),
+              const SizedBox(height: 8),
+              BackupPasswordTextField(
+                controller: _repeatedPasswordCtrl,
+                labelText: context.lang.passwordRepeated,
+                onChanged: (_) => setState(() {}),
+              ),
+              PasswordRequirementText(
+                text: context.lang.passwordRepeatedNotEqual,
+                showError:
+                    _repeatedPasswordCtrl.text.isNotEmpty &&
+                    !isRepeatedPasswordValid,
+              ),
+            ],
     );
   }
 }

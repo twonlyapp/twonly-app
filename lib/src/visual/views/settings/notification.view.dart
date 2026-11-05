@@ -76,22 +76,16 @@ class _NotificationViewState extends State<NotificationView>
       appBar: AppBar(title: Text(lang.settingsNotification)),
       body: SettingsList(
         children: [
-          ListTile(
-            leading: Icon(
-              _hasNotificationPermission == true
-                  ? Icons.notifications_active_outlined
-                  : Icons.notifications_off_outlined,
+          if (_hasNotificationPermission == false) ...[
+            ListTile(
+              leading: const Icon(Icons.notifications_off_outlined),
+              title: Text(lang.settingsNotificationsDisabled),
+              subtitle: Text(lang.settingsNotifyPermissionDesc),
+              trailing: const Icon(Icons.open_in_new),
+              onTap: openAppSettings,
             ),
-            title: Text(switch (_hasNotificationPermission) {
-              true => lang.settingsNotificationsEnabled,
-              false => lang.settingsNotificationsDisabled,
-              null => lang.settingsStatusLoading,
-            }),
-            subtitle: Text(lang.settingsNotifyPermissionDesc),
-            trailing: const Icon(Icons.open_in_new),
-            onTap: openAppSettings,
-          ),
-          const SettingsDivider(),
+            const SettingsDivider(),
+          ],
           SwitchListTile.adaptive(
             title: Text(lang.settingsNotifyStories),
             subtitle: Text(lang.settingsNotifyStoriesSubtitle),

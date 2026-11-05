@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT group_id, vacation_from AS \"from!\", vacation_until AS \"until!\", vacation_icon\n               FROM groups\n               WHERE vacation_from IS NOT NULL AND vacation_until > ?\n               ORDER BY group_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "from!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "vacation_from"
+          }
+        }
+      },
+      {
+        "name": "until!",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "vacation_until"
+          }
+        }
+      },
+      {
+        "name": "vacation_icon",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "vacation_icon"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "c1c418f9f8957e59f29f20edcb87a1239b03286c8b2f5cde3c55dc6c25c76539"
+}

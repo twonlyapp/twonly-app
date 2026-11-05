@@ -19,7 +19,6 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
-import 'package:twonly/src/visual/views/settings/backup/backup_utils.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_archive_subtitle.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_progress.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_schedule.comp.dart';
@@ -117,17 +116,12 @@ class _BackupViewState extends State<BackupView> {
     }
   }
 
-  Future<void> _toggleMemories(bool enabled) async {
+  Future<void> _enableMemories() async {
     if (_updatingMemories) return;
     setState(() => _updatingMemories = true);
     try {
-      if (enabled) {
-        await UserService.update((user) => user.isCloudBackupEnabled = true);
-        unawaited(memoriesCloudService.checkUploads());
-      } else {
-        await promptAndDisableMemoriesBackup(context);
-      }
-      if (mounted) await _loadBackupStatus();
+      await UserService.update((user) => user.isCloudBackupEnabled = true);
+      unawaited(memoriesCloudService.checkUploads());
     } catch (error, stackTrace) {
       Log.warn('Could not update Memories backup.', error, stackTrace);
       if (mounted) showSnackbar(context, context.lang.recoverErrorUnknown);
@@ -166,10 +160,6 @@ class _BackupViewState extends State<BackupView> {
           appBar: AppBar(title: Text(lang.settingsBackup)),
           body: SettingsList(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: Text(lang.settingsBackupIntro),
-              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -202,11 +192,43 @@ class _BackupViewState extends State<BackupView> {
               BetterListTile(
                 icon: FontAwesomeIcons.comments,
                 text: lang.backupCloudContactsMessages,
-                subtitle: BackupArchiveSubtitle(
-                  date: _backupStatus?.archiveLastSuccessFull,
-                  size: _backupStatus?.archiveSize,
-                  state: _backupStatus?.archiveState,
-                  loading: _isLoading,
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    BackupArchiveSubtitle(
+                      date: _backupStatus?.archiveLastSuccessFull,
+                      size: _backupStatus?.archiveSize,
+                      state: _backupStatus?.archiveState,
+                      loading: _isLoading,
+                    ),
+                    if (backupActive)
+                      BackupProgressComp(
+                        padding: const EdgeInsets.only(top: 12),
+                        progress:
+                            _progress ??
+                            const BackupProgress(
+                              stage: BackupStage.preparing,
+                              completedBytes: 0,
+                              totalBytes: 0,
+                            ),
+                      ),
+                    if (!user.isBackupEnabled)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(lang.settingsArchiveNeedsPassword),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: MyButton(
+                        variant: MyButtonVariant.secondaryDense,
+                        onPressed:
+                            _isLoading || backupActive || !user.isBackupEnabled
+                            ? null
+                            : _backUpNow,
+                        child: Text(lang.backupTwonlySaveNow),
+                      ),
+                    ),
+                  ],
                 ),
                 trailing: Icon(
                   _backupStatus?.archiveState ==
@@ -219,85 +241,36 @@ class _BackupViewState extends State<BackupView> {
                       : Icons.cloud_outlined,
                 ),
               ),
-              if (backupActive)
-                BackupProgressComp(
-                  progress:
-                      _progress ??
-                      const BackupProgress(
-                        stage: BackupStage.preparing,
-                        completedBytes: 0,
-                        totalBytes: 0,
-                      ),
+              BetterListTile(
+                icon: FontAwesomeIcons.photoFilm,
+                text: lang.backupCloudImagesMedia,
+                subtitle: Text(
+                  isFreePlan
+                      ? lang.backupMemoriesUpgradeRequired
+                      : !user.isCloudBackupEnabled
+                      ? lang.settingsMemoriesBackupInactive
+                      : _memoriesUsage != null
+                      ? lang.settingsMemoriesBackupActiveUsage(
+                          formatBytes(_memoriesUsage!.currentBytes),
+                          formatBytes(_memoriesUsage!.maxBytes),
+                        )
+                      : lang.settingsMemoriesBackupActive,
                 ),
-              if (!user.isBackupEnabled)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  child: Text(lang.settingsArchiveNeedsPassword),
-                ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Center(
-                  child: MyButton(
-                    variant: MyButtonVariant.secondaryMiddle,
-                    onPressed:
-                        _isLoading || backupActive || !user.isBackupEnabled
-                        ? null
-                        : _backUpNow,
-                    child: Text(lang.backupTwonlySaveNow),
-                  ),
-                ),
-              ),
-              Column(
-                children: [
-                  BetterListTile(
-                    icon: FontAwesomeIcons.photoFilm,
-                    text: lang.backupCloudImagesMedia,
-                    subtitle: Text(
-                      isFreePlan
-                          ? lang.backupMemoriesUpgradeRequired
-                          : user.isCloudBackupEnabled
-                          ? lang.settingsMemoriesBackupActive
-                          : lang.settingsMemoriesBackupInactive,
-                    ),
-                    trailing: isFreePlan
-                        ? const Icon(Icons.chevron_right)
-                        : Switch.adaptive(
-                            value: user.isCloudBackupEnabled,
-                            onChanged: _updatingMemories
-                                ? null
-                                : _toggleMemories,
-                          ),
-                    onTap: _updatingMemories
-                        ? null
-                        : () async {
-                            if (isFreePlan) {
-                              await context.push(Routes.settingsSubscription);
-                            } else if (user.isCloudBackupEnabled) {
-                              await context.navPush(
-                                const MemoriesBackupDetailView(),
-                              );
-                            } else {
-                              await _toggleMemories(true);
-                            }
-                            if (mounted) await _loadBackupStatus();
-                          },
-                  ),
-                  if (!isFreePlan &&
-                      user.isCloudBackupEnabled &&
-                      _memoriesUsage != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          '${formatBytes(_memoriesUsage!.currentBytes)} / ${formatBytes(_memoriesUsage!.maxBytes)}',
-                        ),
-                      ),
-                    ),
-                ],
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _updatingMemories
+                    ? null
+                    : () async {
+                        if (isFreePlan) {
+                          await context.push(Routes.settingsSubscription);
+                        } else if (!user.isCloudBackupEnabled) {
+                          await _enableMemories();
+                        } else {
+                          await context.navPush(
+                            const MemoriesBackupDetailView(),
+                          );
+                        }
+                        if (mounted) await _loadBackupStatus();
+                      },
               ),
               if (user.isDeveloper) const BackupScheduleTile(),
             ],

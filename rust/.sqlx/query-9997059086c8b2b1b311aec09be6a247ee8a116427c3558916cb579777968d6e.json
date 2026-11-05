@@ -1,0 +1,158 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT flame_counter, max_flame_counter, max_flame_counter_from,\n                      last_message_send, last_message_received, last_flame_counter_change,\n                      vacation_from, vacation_until, vacation_icon,\n                      peer_vacation_from, peer_vacation_until, peer_vacation_icon\n               FROM groups WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "flame_counter",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "flame_counter"
+          }
+        }
+      },
+      {
+        "name": "max_flame_counter",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "max_flame_counter"
+          }
+        }
+      },
+      {
+        "name": "max_flame_counter_from",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "max_flame_counter_from"
+          }
+        }
+      },
+      {
+        "name": "last_message_send",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_message_send"
+          }
+        }
+      },
+      {
+        "name": "last_message_received",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_message_received"
+          }
+        }
+      },
+      {
+        "name": "last_flame_counter_change",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_flame_counter_change"
+          }
+        }
+      },
+      {
+        "name": "vacation_from",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "vacation_from"
+          }
+        }
+      },
+      {
+        "name": "vacation_until",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "vacation_until"
+          }
+        }
+      },
+      {
+        "name": "vacation_icon",
+        "ordinal": 8,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "vacation_icon"
+          }
+        }
+      },
+      {
+        "name": "peer_vacation_from",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "peer_vacation_from"
+          }
+        }
+      },
+      {
+        "name": "peer_vacation_until",
+        "ordinal": 10,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "peer_vacation_until"
+          }
+        }
+      },
+      {
+        "name": "peer_vacation_icon",
+        "ordinal": 11,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "peer_vacation_icon"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "9997059086c8b2b1b311aec09be6a247ee8a116427c3558916cb579777968d6e"
+}

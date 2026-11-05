@@ -387,6 +387,7 @@
   "backupChangePassword": "Change password",
   "backupChangePasswordAuthReason": "Changing backup password",
   "backupChangePasswordAuthFailed": "You can only change your password after you have authenticated!",
+  "backupChangePasswordFailed": "Your password could not be changed. Your previous password still works. Check your internet connection and try again.",
   "backupFreeSpaceWithCloud": "Free Space with Cloud Backup",
   "backupMemoriesNotEnabled": "Not enabled",
   "backupMemoriesUpgradeRequired": "Upgrade required",
@@ -568,6 +569,7 @@
   "onboardingProfileTitle": "Create\nyour avatar",
   "onboardingProfileBody": "Your public avatar helps others recognize you on twonly.",
   "onboardingBackupBody": "So you can restore your account on a new phone.",
+  "onboardingBackupPasswordSet": "Your backup password is set. You can keep it or choose a new one.",
   "onboardingUserDiscoveryShareFriends": "Share your friends",
   "onboardingUserDiscoveryShareFriendsDesc": "Share with your friends who you know and who you have verified. Friends can *only see mutual friends* from your friend list. You can change your mind at *any time* or *hide specific people*.",
   "onboardingUserDiscoveryContactsVerifiedBadge": "Contacts verified by your friends get a badge",
@@ -1118,7 +1120,7 @@
       }
     }
   },
-  "settingsShowRestoreFlameTitle": "Show flame restore warning",
+  "settingsShowRestoreFlameTitle": "Offer restore",
   "contactGroupsTitle": "Contact Groups",
   "contactGroupsSubtitleEmpty": "No visible contact groups selected",
   "createContactGroup": "Create contact group",
@@ -1156,8 +1158,8 @@
   "themeLight": "Light",
   "themeDark": "Dark",
   "backupRecoverySectionTitle": "Secure Account Access",
-  "backupRecoverySectionDescNone": "You must select at least one recovery option, as otherwise no one can help you if you lose access to your device.",
-  "backupRecoverySectionDescSome": "You can recover your account with the recovery options below. It is recommended to enable both options.",
+  "backupRecoverySectionDescNone": "Set up at least one option.",
+  "backupRecoverySectionDescSome": "Best to enable both options.",
   "backupRecoveryOptionAFriends": "Via trusted friends",
   "backupRecoveryOptionAMicrocopy": "Select friends who can help you recover your account.",
   "backupRecoveryOptionBPassword": "Classic Password",
@@ -1391,14 +1393,24 @@
   "settingsDeleteAccountFailed": "Your account could not be deleted. Check your internet connection and try again.",
   "settingsAccountDeleted": "Account deleted",
   "settingsOpenAppAgain": "Tap to open the app again",
-  "settingsBackupIntro": "If you lose your phone, you need a way back into your account and a backup of your content.",
   "settingsBackupNever": "Not backed up yet",
   "settingsBackupPending": "Backup pending",
   "settingsBackupFailed": "Last backup failed",
   "settingsBackupSaved": "Last successful backup",
   "settingsPasswordConfigured": "Password set up · Manage",
-  "settingsMemoriesBackupActive": "Backup enabled · View progress",
-  "settingsMemoriesBackupInactive": "Not enabled · Set up backup",
+  "settingsMemoriesBackupActive": "Backup enabled",
+  "settingsMemoriesBackupActiveUsage": "Backup enabled · {used} of {max} used",
+  "@settingsMemoriesBackupActiveUsage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsMemoriesBackupInactive": "Not enabled · Tap to enable",
   "settingsRecoveryFriendsLoading": "Checking your trusted friends…",
   "settingsRecoveryFriendsReady": "Enough active friends · {count} active (at least {required} needed)",
   "settingsRecoveryFriendsWaiting": "Not enough active friends yet · {count} of {required} required",
@@ -1423,5 +1435,28 @@
     }
   },
   "settingsArchiveNeedsPassword": "Set up a recovery password above to back up contacts and messages.",
-  "settingsChangelog": "Changelog"
+  "settingsChangelog": "Changelog",
+  "settingsOnVacationTitle": "On Vacation",
+  "settingsOnVacationSubtitle": "Freeze your flames while you are away",
+  "onVacationActiveUntil": "On vacation until {date}",
+  "onVacationExplanation": "While you are on vacation, your flames are frozen: they cannot be lost, but they do not grow either. Everyone you have more than {count} flames with gets a message and sees your vacation icon instead of the flame.",
+  "onVacationIcon": "Icon",
+  "onVacationDuration": "Duration",
+  "onVacationDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "onVacationCountsAgain": "Your flames count again from {date}.",
+  "onVacationAffectedChats": "{count, plural, =0{No chat has more than {min} flames yet.} =1{1 chat will be frozen.} other{{count} chats will be frozen.}}",
+  "onVacationNothingToFreeze": "None of your chats has more than {count} flames, so there is nothing to freeze.",
+  "onVacationStart": "Go on vacation",
+  "onVacationStarted": "{count, plural, =1{Enjoy your vacation! 1 chat is frozen.} other{Enjoy your vacation! {count} chats are frozen.}}",
+  "onVacationEnd": "End vacation",
+  "onVacationEndConfirmTitle": "End your vacation?",
+  "onVacationEndConfirmBody": "Your flames count again from today, and your friends will be told.",
+  "onVacationFailed": "Could not start your vacation. Please try again.",
+  "chatEntryVacationStarted": "On vacation until {date}. The flames are frozen until then.",
+  "chatEntryVacationEnded": "Back from vacation. The flames count again.",
+  "notificationVacation": "is on vacation. Your flames are frozen.",
+  "notificationVacationEnd": "is back from vacation.",
+  "settingsChatsSectionChats": "Chats",
+  "settingsChatsSectionFlames": "Flames",
+  "settingsChatsSectionCamera": "Camera"
 }

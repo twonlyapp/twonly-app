@@ -185,11 +185,13 @@ class AppMainWidget extends StatefulWidget {
   State<AppMainWidget> createState() => _AppMainWidgetState();
 }
 
-class _AppMainWidgetState extends State<AppMainWidget> {
+class _AppMainWidgetState extends State<AppMainWidget>
+    with WidgetsBindingObserver {
   bool _isLoaded = false;
   bool _initializationFailed = false;
   bool _isTwonlyLocked = true;
   int _initializationAttempt = 0;
+  bool _initializationDeferred = false;
   late int _initialPage;
 
   StreamSubscription<Uri>? _deepLinkSub;
@@ -201,6 +203,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initialPage = widget.initialPage;
     Log.info('AppWidgetState: initState started');
     initAsync();
@@ -239,7 +242,34 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     );
   }
 
+  bool get _isBackground => switch (WidgetsBinding.instance.lifecycleState) {
+    AppLifecycleState.hidden ||
+    AppLifecycleState.paused ||
+    AppLifecycleState.detached => true,
+    _ => false,
+  };
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_isBackground && !_isLoaded && !_initializationFailed) {
+      // A foreground database read can wait until resume. Retire its UI
+      // attempt so its ten-second timeout cannot become a startup error.
+      _initializationAttempt++;
+      _initializationDeferred = true;
+    } else if (state == AppLifecycleState.resumed && _initializationDeferred) {
+      unawaited(initAsync());
+    }
+  }
+
+  bool _isCurrentAttempt(int attempt) =>
+      mounted && attempt == _initializationAttempt;
+
   Future<void> initAsync() async {
+    if (_isBackground) {
+      _initializationDeferred = true;
+      return;
+    }
+    _initializationDeferred = false;
     final attempt = ++_initializationAttempt;
     setState(() {
       _isLoaded = false;
@@ -247,7 +277,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     });
     Log.info('AppWidgetState: initAsync started');
     try {
-      await _initializeRoute();
+      await _initializeRoute(attempt);
       if (!mounted || attempt != _initializationAttempt) return;
       setState(() => _isLoaded = true);
       Log.info('AppWidgetState: initAsync finished');
@@ -257,6 +287,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         }
       });
     } catch (error, stackTrace) {
+      if (!_isCurrentAttempt(attempt)) return;
       Log.error(
         'Could not initialize the app screen',
         error: error,
@@ -267,11 +298,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     }
   }
 
-  Future<void> _initializeRoute() async {
-    final onboardingState = await KeyValueStore.getModel<OnboardingState>(
-      KeyValueKeys.onboardingState,
-    ).timeout(const Duration(seconds: 10));
-    if (!mounted) return;
+  Future<void> _initializeRoute(int attempt) async {
     if (userService.isUserCreated) {
       if (_initialPage != 0) {
         final count = await rust_contacts
@@ -280,7 +307,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
               transaction: currentDatabaseSession(),
             )
             .timeout(const Duration(seconds: 10));
-        if (!mounted) return;
+        if (!_isCurrentAttempt(attempt)) return;
         if (count == 0) {
           _initialPage = 0;
         }
@@ -297,12 +324,16 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         _isTwonlyLocked = userService.currentUser.screenLockEnabled;
       }
     } else {
+      final onboardingState = await KeyValueStore.getModel<OnboardingState>(
+        KeyValueKeys.onboardingState,
+      ).timeout(const Duration(seconds: 10));
+      if (!_isCurrentAttempt(attempt)) return;
       // This means the user is in the onboarding screen, so start with the Proof of Work.
 
       final proofResult = await rustApiResult(
         RustApi.getProofOfWork(),
       ).timeout(const Duration(seconds: 10));
-      if (!mounted) return;
+      if (!_isCurrentAttempt(attempt)) return;
       final proof = proofResult.value;
       final disabled = proofResult.error == ErrorCode.RegistrationDisabled;
       if (proof != null) {
@@ -420,6 +451,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _deepLinkSub?.cancel();
     _intentStreamSub?.cancel();
     _emailTokenSub?.cancel();

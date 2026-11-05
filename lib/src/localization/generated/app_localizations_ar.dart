@@ -1098,6 +1098,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يمكنك تغيير كلمة المرور إلا بعد المصادقة!';
 
   @override
+  String get backupChangePasswordFailed =>
+      'تعذّر تغيير كلمة المرور. لا تزال كلمة المرور السابقة صالحة. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.';
+
+  @override
   String get backupFreeSpaceWithCloud =>
       'وفّر المساحة بالنسخ الاحتياطي السحابي';
 
@@ -1694,6 +1698,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingBackupBody => 'لتتمكن من استعادة حسابك على هاتف جديد.';
+
+  @override
+  String get onboardingBackupPasswordSet =>
+      'تم تعيين كلمة مرور النسخ الاحتياطي. يمكنك الاحتفاظ بها أو اختيار كلمة مرور جديدة.';
 
   @override
   String get onboardingUserDiscoveryShareFriends => 'شارك أصدقاءك';
@@ -2935,7 +2943,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get settingsShowRestoreFlameTitle => 'إظهار تحذير استعادة الشعلات';
+  String get settingsShowRestoreFlameTitle => 'عرض الاستعادة';
 
   @override
   String get contactGroupsTitle => 'مجموعات جهات الاتصال';
@@ -3045,12 +3053,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupRecoverySectionTitle => 'وصول آمن إلى الحساب';
 
   @override
-  String get backupRecoverySectionDescNone =>
-      'يجب عليك اختيار خيار استعادة واحد على الأقل، وإلا فلن يتمكن أحد من مساعدتك إذا فقدت الوصول إلى جهازك.';
+  String get backupRecoverySectionDescNone => 'فعّل خيارًا واحدًا على الأقل.';
 
   @override
-  String get backupRecoverySectionDescSome =>
-      'يمكنك استعادة حسابك باستخدام خيارات الاستعادة أدناه. يُنصح بتفعيل الخيارين كليهما.';
+  String get backupRecoverySectionDescSome => 'يُفضّل تفعيل الخيارين كليهما.';
 
   @override
   String get backupRecoveryOptionAFriends => 'عبر الأصدقاء الموثوقين';
@@ -3589,10 +3595,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsOpenAppAgain => 'اضغط لفتح التطبيق مجددًا';
 
   @override
-  String get settingsBackupIntro =>
-      'إذا فقدت هاتفك، فستحتاج إلى طريقة لاستعادة حسابك ونسخة احتياطية من محتواك.';
-
-  @override
   String get settingsBackupNever => 'لم يتم النسخ الاحتياطي بعد';
 
   @override
@@ -3608,12 +3610,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsPasswordConfigured => 'تم إعداد كلمة المرور · إدارة';
 
   @override
-  String get settingsMemoriesBackupActive =>
-      'النسخ الاحتياطي مفعل · عرض التقدم';
+  String get settingsMemoriesBackupActive => 'النسخ الاحتياطي مفعل';
 
   @override
-  String get settingsMemoriesBackupInactive =>
-      'غير مفعل · إعداد النسخ الاحتياطي';
+  String settingsMemoriesBackupActiveUsage(String used, String max) {
+    return 'النسخ الاحتياطي مفعل · $used من $max مستخدمة';
+  }
+
+  @override
+  String get settingsMemoriesBackupInactive => 'غير مفعل · اضغط للتفعيل';
 
   @override
   String get settingsRecoveryFriendsLoading =>
@@ -3635,4 +3640,112 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsChangelog => 'Changelog';
+
+  @override
+  String get settingsOnVacationTitle => 'في إجازة';
+
+  @override
+  String get settingsOnVacationSubtitle => 'جمّد شعلاتك أثناء غيابك';
+
+  @override
+  String onVacationActiveUntil(Object date) {
+    return 'في إجازة حتى $date';
+  }
+
+  @override
+  String onVacationExplanation(Object count) {
+    return 'أثناء إجازتك تكون شعلاتك مجمّدة: لا يمكن أن تضيع، لكنها لا تزداد أيضًا. كل من لديك معه أكثر من $count شعلات يتلقى رسالة ويرى رمز إجازتك بدلًا من الشعلة.';
+  }
+
+  @override
+  String get onVacationIcon => 'الرمز';
+
+  @override
+  String get onVacationDuration => 'المدة';
+
+  @override
+  String onVacationDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوم',
+      many: '$count يومًا',
+      few: '$count أيام',
+      two: 'يومان',
+      one: 'يوم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String onVacationCountsAgain(Object date) {
+    return 'تُحتسب شعلاتك مجددًا اعتبارًا من $date.';
+  }
+
+  @override
+  String onVacationAffectedChats(num count, Object min) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'سيتم تجميد $count محادثات.',
+      one: 'سيتم تجميد محادثة واحدة.',
+      zero: 'لا توجد محادثة لديها أكثر من $min شعلات بعد.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String onVacationNothingToFreeze(Object count) {
+    return 'لا توجد لديك محادثة بأكثر من $count شعلات، لذلك لا يوجد ما يمكن تجميده.';
+  }
+
+  @override
+  String get onVacationStart => 'ابدأ الإجازة';
+
+  @override
+  String onVacationStarted(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'إجازة سعيدة! تم تجميد $count محادثات.',
+      one: 'إجازة سعيدة! تم تجميد محادثة واحدة.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onVacationEnd => 'إنهاء الإجازة';
+
+  @override
+  String get onVacationEndConfirmTitle => 'هل تريد إنهاء إجازتك؟';
+
+  @override
+  String get onVacationEndConfirmBody =>
+      'ستُحتسب شعلاتك مجددًا اعتبارًا من اليوم، وسيتم إبلاغ أصدقائك.';
+
+  @override
+  String get onVacationFailed => 'تعذّر بدء إجازتك. يُرجى المحاولة مرة أخرى.';
+
+  @override
+  String chatEntryVacationStarted(Object date) {
+    return 'في إجازة حتى $date. الشعلات مجمّدة حتى ذلك الحين.';
+  }
+
+  @override
+  String get chatEntryVacationEnded => 'عاد من الإجازة. تُحتسب الشعلات مجددًا.';
+
+  @override
+  String get notificationVacation => 'في إجازة. شعلاتكما مجمّدة.';
+
+  @override
+  String get notificationVacationEnd => 'عاد من الإجازة.';
+
+  @override
+  String get settingsChatsSectionChats => 'المحادثات';
+
+  @override
+  String get settingsChatsSectionFlames => 'الشعلات';
+
+  @override
+  String get settingsChatsSectionCamera => 'الكاميرا';
 }

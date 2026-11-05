@@ -812,6 +812,19 @@ impl MediaUploadService {
             return Ok(());
         }
 
+        self.start_reupload_locked(media_id).await
+    }
+
+    /// Sends a reupload whose request is already recorded.
+    pub async fn start_reupload(&self, media_id: &str) -> Result<()> {
+        let lock = media_lock(media_id);
+
+        let _guard = lock.lock().await;
+
+        self.start_reupload_locked(media_id).await
+    }
+
+    async fn start_reupload_locked(&self, media_id: &str) -> Result<()> {
         let Some(media) = self.load(media_id).await? else {
             return Ok(());
         };
@@ -828,13 +841,35 @@ impl MediaUploadService {
     pub(crate) async fn record_reupload_request(
         &self, contact_id: i64, media_id: &str, message_id: &str,
     ) -> Result<bool> {
-        let Some(media) = self.load(media_id).await? else {
-            return Ok(false);
-        };
-
         let database = self.ctx.app_db.read().await.clone();
 
         let mut transaction = database.pool.begin().await?;
+
+        let recorded =
+            Self::record_reupload_request_in(&mut transaction, contact_id, media_id, message_id)
+                .await?;
+
+        transaction.commit().await?;
+
+        Ok(recorded)
+    }
+
+    /// Records the request inside the caller's transaction, so it commits with
+    /// the message that asked for it. A pending request leaves the media in
+    /// `preprocessing`, which `finish_started_uploads` resumes.
+    pub(crate) async fn record_reupload_request_in(
+        transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>, contact_id: i64, media_id: &str,
+        message_id: &str,
+    ) -> Result<bool> {
+        let Some(reupload_targets) = sqlx::query_scalar!(
+            "SELECT reupload_targets FROM media_files WHERE media_id = ?",
+            media_id
+        )
+        .fetch_optional(&mut **transaction)
+        .await?
+        else {
+            return Ok(false);
+        };
 
         let allowed = sqlx::query_scalar!(
             r#"SELECT EXISTS(SELECT 1 FROM messages m
@@ -851,7 +886,7 @@ impl MediaUploadService {
             media_id,
             contact_id
         )
-        .fetch_one(&mut *transaction)
+        .fetch_one(&mut **transaction)
         .await?;
 
         if allowed == 0 {
@@ -864,11 +899,10 @@ impl MediaUploadService {
             contact_id,
             message_id
         )
-        .execute(&mut *transaction)
+        .execute(&mut **transaction)
         .await?;
 
-        let mut targets: Vec<MediaReuploadTarget> = media
-            .reupload_targets
+        let mut targets: Vec<MediaReuploadTarget> = reupload_targets
             .as_deref()
             .map(serde_json::from_str)
             .transpose()?
@@ -898,10 +932,8 @@ impl MediaUploadService {
             serde_json::to_string(&targets)?,
             media_id
         )
-        .execute(&mut *transaction)
+        .execute(&mut **transaction)
         .await?;
-
-        transaction.commit().await?;
 
         Ok(true)
     }
@@ -1147,6 +1179,47 @@ impl MediaUploadService {
         if config.store_media_files_in_gallery {
             if let Err(error) = self.save_to_gallery(media_id).await {
                 tracing::warn!(media_id, %error, "could not export the media to the gallery");
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Finishes saves that a chat member asked for but this device never
+    /// completed: the media was not downloaded yet when the request arrived,
+    /// or the background session ended and aborted the store halfway. The
+    /// message already shows it as saved, so without this it stays an empty
+    /// placeholder for good.
+    pub async fn store_pending_saves(&self, media_id: Option<&str>) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+
+        let pending = sqlx::query!(
+            r#"SELECT DISTINCT f.media_id AS "media_id!", f.type AS media_type
+               FROM media_files f
+               JOIN messages m ON m.media_id = f.media_id
+               WHERE m.media_stored = 1 AND f.stored = 0
+                 AND (? IS NULL OR f.media_id = ?)"#,
+            media_id,
+            media_id,
+        )
+        .fetch_all(&database.pool)
+        .await?;
+
+        drop(database);
+
+        let files = MediaFileService::new(&self.ctx);
+
+        for row in pending {
+            // Media that never arrived, or whose bytes are gone, cannot be
+            // kept. Skip it quietly instead of warning on every sweep.
+            if !files.temp_path(&row.media_id, &row.media_type).exists()
+                && !files.original_path(&row.media_id, &row.media_type).exists()
+            {
+                continue;
+            }
+
+            if let Err(error) = self.store(&row.media_id).await {
+                tracing::warn!(media_id = row.media_id, %error, "could not finish a pending save");
             }
         }
 
@@ -1516,6 +1589,8 @@ impl MediaUploadService {
                    -- A story replays until it expires, and a viewer saving it
                    -- makes the sender store its own copy from these bytes.
                    OR (m.is_story = 1 AND m.created_at > ?)
+                   -- A save whose store has not finished yet needs these bytes.
+                   OR (m.media_stored = 1 AND f.stored = 0)
                  )"#,
             media_id,
             now - 3 * 60,

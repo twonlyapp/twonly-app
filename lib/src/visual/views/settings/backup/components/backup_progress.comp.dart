@@ -3,9 +3,14 @@ import 'package:twonly/core/backup/progress.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class BackupProgressComp extends StatelessWidget {
-  const BackupProgressComp({required this.progress, super.key});
+  const BackupProgressComp({
+    required this.progress,
+    this.padding = const EdgeInsets.fromLTRB(16, 0, 16, 16),
+    super.key,
+  });
 
   final BackupProgress progress;
+  final EdgeInsets padding;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +30,7 @@ class BackupProgressComp extends StatelessWidget {
         ? (progress.completedBytes / progress.totalBytes).clamp(0.0, 1.0)
         : null;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show Int64List;
@@ -11,6 +12,7 @@ import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/core/bridge/database/recovery.dart' as rust_recovery;
 import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
 import 'package:twonly/core/database/app/contacts/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
@@ -19,8 +21,29 @@ import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
-import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/elements/contact_chip.element.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/elements/my_input.element.dart';
+
+/// An optional chat group or contact supplied by a caller with its own live list.
+class ContactPickerEntry {
+  const ContactPickerEntry({
+    required this.name,
+    required this.messageCount,
+    this.contact,
+    this.group,
+    this.memberNames = const [],
+  }) : assert(
+         (contact == null) != (group == null),
+         'Provide either a contact or a chat group',
+       );
+
+  final String name;
+  final int messageCount;
+  final Contact? contact;
+  final Group? group;
+  final List<String> memberNames;
+}
 
 class SelectedContactView {
   const SelectedContactView({
@@ -43,6 +66,10 @@ class SelectContactsView extends StatefulWidget {
     this.isAlreadySelectedLocked = true,
     this.onlyVerified = false,
     this.sortByMediaCount = false,
+    this.members,
+    this.alreadySelectedGroupIds = const [],
+    this.allowEmptySelection = false,
+    this.onSubmit,
     super.key,
   });
   final SelectedContactView text;
@@ -52,6 +79,12 @@ class SelectContactsView extends StatefulWidget {
   final bool onlyVerified;
   final bool sortByMediaCount;
 
+  /// Overrides the accepted-contact list, preserving the supplied order.
+  final ValueListenable<List<ContactPickerEntry>>? members;
+  final List<String> alreadySelectedGroupIds;
+  final bool allowEmptySelection;
+  final void Function(List<int> userIds, List<String> groupIds)? onSubmit;
+
   @override
   State<SelectContactsView> createState() => _SelectAdditionalUsers();
 }
@@ -60,7 +93,8 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
   List<Contact> contacts = [];
   List<Contact> allContacts = [];
   final TextEditingController searchUserName = TextEditingController();
-  late StreamSubscription<List<Contact>> contactSub;
+  StreamSubscription<List<Contact>>? contactSub;
+  final Set<String> _selectedGroupIds = {};
 
   final HashSet<int> selectedUsers = HashSet();
   late HashSet<int> _alreadySelected;
@@ -76,6 +110,14 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
       _alreadySelected.clear();
     }
 
+    _selectedGroupIds.addAll(widget.alreadySelectedGroupIds);
+    if (widget.members != null) {
+      widget.members!.addListener(_updateMembers);
+      _updateMembers();
+      unawaited(_loadVerifiedContacts());
+      return;
+    }
+
     final stream = watchRustDatabase(
       (control) => rust_contacts.watchContacts(
         input: db_contacts.ContactQuery(
@@ -87,6 +129,7 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
     );
 
     contactSub = stream.listen((update) async {
+      if (!mounted) return;
       update.sort(
         (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)),
       );
@@ -114,8 +157,31 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
 
   @override
   void dispose() {
-    unawaited(contactSub.cancel());
+    unawaited(contactSub?.cancel());
+    widget.members?.removeListener(_updateMembers);
+    searchUserName.dispose();
     super.dispose();
+  }
+
+  void _updateMembers() {
+    allContacts = [
+      for (final entry in widget.members!.value)
+        if (entry.contact != null) entry.contact!,
+    ];
+    unawaited(filterUsers());
+  }
+
+  List<ContactPickerEntry>? get _memberEntries {
+    final filter = searchUserName.text.trim().toLowerCase();
+    return widget.members?.value
+        .where((entry) => entry.name.toLowerCase().contains(filter))
+        .toList();
+  }
+
+  void _toggleGroup(String id) {
+    setState(() {
+      if (!_selectedGroupIds.add(id)) _selectedGroupIds.remove(id);
+    });
   }
 
   Future<void> filterUsers() async {
@@ -130,7 +196,7 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
           .toList();
     }
 
-    if (widget.sortByMediaCount) {
+    if (widget.members == null && widget.sortByMediaCount) {
       filtered.sort((a, b) {
         final aVerified = verifiedUserIds.contains(a.userId);
         final bVerified = verifiedUserIds.contains(b.userId);
@@ -142,7 +208,7 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
 
         return getContactDisplayName(a).compareTo(getContactDisplayName(b));
       });
-    } else {
+    } else if (widget.members == null) {
       filtered.sort(
         (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)),
       );
@@ -167,6 +233,8 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
 
   @override
   Widget build(BuildContext context) {
+    final entries = _memberEntries;
+    final selectedCount = selectedUsers.length + _selectedGroupIds.length;
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -174,22 +242,41 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
           title: Text(widget.text.title),
         ),
         floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        floatingActionButton: FilledButton.icon(
-          onPressed: selectedUsers.isEmpty
+        floatingActionButton: MyButton(
+          variant: MyButtonVariant.primaryMiddle,
+          onPressed: selectedCount == 0 && !widget.allowEmptySelection
               ? null
-              : () => Navigator.pop(context, selectedUsers.toList()),
-          label: Text(
-            widget.text.submitButton(
-              selectedUsers.length + _alreadySelected.length,
-              widget.limit,
-            ),
+              : () {
+                  final onSubmit = widget.onSubmit;
+                  if (onSubmit != null) {
+                    onSubmit(
+                      selectedUsers.toList(),
+                      _selectedGroupIds.toList(),
+                    );
+                  } else {
+                    Navigator.pop(context, selectedUsers.toList());
+                  }
+                },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FaIcon(widget.text.submitIcon, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                widget.text.submitButton(
+                  selectedCount + _alreadySelected.length,
+                  widget.limit,
+                ),
+              ),
+            ],
           ),
-          icon: FaIcon(widget.text.submitIcon),
         ),
         body: SafeArea(
+          // The list runs to the screen edge and scrolls out from under the
+          // submit button instead of stopping short above it.
+          bottom: false,
           child: Padding(
             padding: const EdgeInsets.only(
-              bottom: 40,
               left: 10,
               top: 20,
               right: 10,
@@ -198,25 +285,27 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: TextField(
-                    onChanged: (_) async {
-                      await filterUsers();
-                    },
+                  child: MyInput(
                     controller: searchUserName,
-                    decoration: getInputDecoration(
-                      context,
-                      context.lang.shareImageSearchAllContacts,
-                    ),
+                    dense: true,
+                    fontWeight: FontWeight.normal,
+                    hintText: context.lang.shareImageSearchAllContacts,
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    onChanged: (_) => unawaited(filterUsers()),
                   ),
                 ),
                 const SizedBox(height: 10),
                 Expanded(
                   child: ListView.builder(
                     restorationId: 'new_message_users_list',
+                    padding: EdgeInsets.only(
+                      bottom: 100 + MediaQuery.paddingOf(context).bottom,
+                    ),
                     itemCount:
-                        contacts.length + (selectedUsers.isEmpty ? 0 : 2),
+                        (entries?.length ?? contacts.length) +
+                        (selectedCount == 0 ? 0 : 2),
                     itemBuilder: (context, i) {
-                      if (selectedUsers.isNotEmpty) {
+                      if (selectedCount > 0) {
                         final selected = selectedUsers.toList();
                         if (i == 0) {
                           return Container(
@@ -229,19 +318,39 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
                                 builder: (context, constraints) {
                                   return Wrap(
                                     spacing: 8,
-                                    children: selected.map((w) {
-                                      final contact = allContacts
-                                          .where((t) => t.userId == w)
-                                          .firstOrNull;
-                                      if (contact == null) {
-                                        return const SizedBox.shrink();
-                                      }
-                                      return ContactChip(
-                                        key: ValueKey(contact.userId),
-                                        contact: contact,
-                                        onTap: toggleSelectedUser,
-                                      );
-                                    }).toList(),
+                                    children: [
+                                      ...selected.map((w) {
+                                        final contact = allContacts
+                                            .where((t) => t.userId == w)
+                                            .firstOrNull;
+                                        if (contact == null) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        return ContactChip(
+                                          key: ValueKey(contact.userId),
+                                          contact: contact,
+                                          onTap: toggleSelectedUser,
+                                        );
+                                      }),
+                                      for (final entry
+                                          in widget.members?.value ??
+                                              const <ContactPickerEntry>[])
+                                        if (entry.group != null &&
+                                            _selectedGroupIds.contains(
+                                              entry.group!.groupId,
+                                            ))
+                                          InputChip(
+                                            key: ValueKey(entry.group!.groupId),
+                                            avatar: AvatarIcon(
+                                              group: entry.group,
+                                              fontSize: 10,
+                                            ),
+                                            label: Text(entry.name),
+                                            onDeleted: () => _toggleGroup(
+                                              entry.group!.groupId,
+                                            ),
+                                          ),
+                                    ],
                                   );
                                 },
                               ),
@@ -253,7 +362,9 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
                         }
                         i -= 2;
                       }
-                      final user = contacts[i];
+                      final entry = entries?[i];
+                      if (entry?.group != null) return _groupTile(entry!);
+                      final user = entry?.contact ?? contacts[i];
                       final isVerified = verifiedUserIds.contains(user.userId);
                       final isSelectionDisabled =
                           widget.onlyVerified && !isVerified;
@@ -261,6 +372,7 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
                         key: ValueKey(user.userId),
                         contact: user,
                         child: ListTile(
+                          key: ValueKey('contact:${user.userId}'),
                           enabled: !isSelectionDisabled,
                           title: Row(
                             children: [
@@ -335,6 +447,38 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _groupTile(ContactPickerEntry entry) {
+    final group = entry.group!;
+    return ListTile(
+      key: ValueKey('group:${group.groupId}'),
+      leading: AvatarIcon(group: group, fontSize: 13),
+      title: Row(
+        children: [
+          Flexible(child: Text(entry.name, overflow: TextOverflow.ellipsis)),
+          const SizedBox(width: 4),
+          VerificationBadgeComp(
+            group: group,
+            showOnlyIfVerified: true,
+            clickable: false,
+            size: 12,
+          ),
+        ],
+      ),
+      subtitle: entry.memberNames.isEmpty
+          ? null
+          : Text(
+              entry.memberNames.join(', '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+      trailing: Checkbox.adaptive(
+        value: _selectedGroupIds.contains(group.groupId),
+        onChanged: (_) => _toggleGroup(group.groupId),
+      ),
+      onTap: () => _toggleGroup(group.groupId),
     );
   }
 }

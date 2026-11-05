@@ -1906,6 +1906,12 @@ abstract class AppLocalizations {
   /// **'You can only change your password after you have authenticated!'**
   String get backupChangePasswordAuthFailed;
 
+  /// No description provided for @backupChangePasswordFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password could not be changed. Your previous password still works. Check your internet connection and try again.'**
+  String get backupChangePasswordFailed;
+
   /// No description provided for @backupFreeSpaceWithCloud.
   ///
   /// In en, this message translates to:
@@ -2901,6 +2907,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'So you can restore your account on a new phone.'**
   String get onboardingBackupBody;
+
+  /// No description provided for @onboardingBackupPasswordSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your backup password is set. You can keep it or choose a new one.'**
+  String get onboardingBackupPasswordSet;
 
   /// No description provided for @onboardingUserDiscoveryShareFriends.
   ///
@@ -4885,7 +4897,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsShowRestoreFlameTitle.
   ///
   /// In en, this message translates to:
-  /// **'Show flame restore warning'**
+  /// **'Offer restore'**
   String get settingsShowRestoreFlameTitle;
 
   /// No description provided for @contactGroupsTitle.
@@ -5071,13 +5083,13 @@ abstract class AppLocalizations {
   /// No description provided for @backupRecoverySectionDescNone.
   ///
   /// In en, this message translates to:
-  /// **'You must select at least one recovery option, as otherwise no one can help you if you lose access to your device.'**
+  /// **'Set up at least one option.'**
   String get backupRecoverySectionDescNone;
 
   /// No description provided for @backupRecoverySectionDescSome.
   ///
   /// In en, this message translates to:
-  /// **'You can recover your account with the recovery options below. It is recommended to enable both options.'**
+  /// **'Best to enable both options.'**
   String get backupRecoverySectionDescSome;
 
   /// No description provided for @backupRecoveryOptionAFriends.
@@ -5914,12 +5926,6 @@ abstract class AppLocalizations {
   /// **'Tap to open the app again'**
   String get settingsOpenAppAgain;
 
-  /// No description provided for @settingsBackupIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'If you lose your phone, you need a way back into your account and a backup of your content.'**
-  String get settingsBackupIntro;
-
   /// No description provided for @settingsBackupNever.
   ///
   /// In en, this message translates to:
@@ -5953,13 +5959,19 @@ abstract class AppLocalizations {
   /// No description provided for @settingsMemoriesBackupActive.
   ///
   /// In en, this message translates to:
-  /// **'Backup enabled · View progress'**
+  /// **'Backup enabled'**
   String get settingsMemoriesBackupActive;
+
+  /// No description provided for @settingsMemoriesBackupActiveUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup enabled · {used} of {max} used'**
+  String settingsMemoriesBackupActiveUsage(String used, String max);
 
   /// No description provided for @settingsMemoriesBackupInactive.
   ///
   /// In en, this message translates to:
-  /// **'Not enabled · Set up backup'**
+  /// **'Not enabled · Tap to enable'**
   String get settingsMemoriesBackupInactive;
 
   /// No description provided for @settingsRecoveryFriendsLoading.
@@ -5991,6 +6003,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Changelog'**
   String get settingsChangelog;
+
+  /// No description provided for @settingsOnVacationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On Vacation'**
+  String get settingsOnVacationTitle;
+
+  /// No description provided for @settingsOnVacationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Freeze your flames while you are away'**
+  String get settingsOnVacationSubtitle;
+
+  /// No description provided for @onVacationActiveUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'On vacation until {date}'**
+  String onVacationActiveUntil(Object date);
+
+  /// No description provided for @onVacationExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'While you are on vacation, your flames are frozen: they cannot be lost, but they do not grow either. Everyone you have more than {count} flames with gets a message and sees your vacation icon instead of the flame.'**
+  String onVacationExplanation(Object count);
+
+  /// No description provided for @onVacationIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get onVacationIcon;
+
+  /// No description provided for @onVacationDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get onVacationDuration;
+
+  /// No description provided for @onVacationDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String onVacationDays(num count);
+
+  /// No description provided for @onVacationCountsAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Your flames count again from {date}.'**
+  String onVacationCountsAgain(Object date);
+
+  /// No description provided for @onVacationAffectedChats.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No chat has more than {min} flames yet.} =1{1 chat will be frozen.} other{{count} chats will be frozen.}}'**
+  String onVacationAffectedChats(num count, Object min);
+
+  /// No description provided for @onVacationNothingToFreeze.
+  ///
+  /// In en, this message translates to:
+  /// **'None of your chats has more than {count} flames, so there is nothing to freeze.'**
+  String onVacationNothingToFreeze(Object count);
+
+  /// No description provided for @onVacationStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Go on vacation'**
+  String get onVacationStart;
+
+  /// No description provided for @onVacationStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Enjoy your vacation! 1 chat is frozen.} other{Enjoy your vacation! {count} chats are frozen.}}'**
+  String onVacationStarted(num count);
+
+  /// No description provided for @onVacationEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End vacation'**
+  String get onVacationEnd;
+
+  /// No description provided for @onVacationEndConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End your vacation?'**
+  String get onVacationEndConfirmTitle;
+
+  /// No description provided for @onVacationEndConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your flames count again from today, and your friends will be told.'**
+  String get onVacationEndConfirmBody;
+
+  /// No description provided for @onVacationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start your vacation. Please try again.'**
+  String get onVacationFailed;
+
+  /// No description provided for @chatEntryVacationStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'On vacation until {date}. The flames are frozen until then.'**
+  String chatEntryVacationStarted(Object date);
+
+  /// No description provided for @chatEntryVacationEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Back from vacation. The flames count again.'**
+  String get chatEntryVacationEnded;
+
+  /// No description provided for @notificationVacation.
+  ///
+  /// In en, this message translates to:
+  /// **'is on vacation. Your flames are frozen.'**
+  String get notificationVacation;
+
+  /// No description provided for @notificationVacationEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'is back from vacation.'**
+  String get notificationVacationEnd;
+
+  /// No description provided for @settingsChatsSectionChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get settingsChatsSectionChats;
+
+  /// No description provided for @settingsChatsSectionFlames.
+  ///
+  /// In en, this message translates to:
+  /// **'Flames'**
+  String get settingsChatsSectionFlames;
+
+  /// No description provided for @settingsChatsSectionCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get settingsChatsSectionCamera;
 }
 
 class _AppLocalizationsDelegate

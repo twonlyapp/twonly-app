@@ -53,6 +53,7 @@ void main() {
   for (final message in [
     'attempted to acquire a connection on a closed pool',
     'retry when active',
+    'error returned from database: (code: 9) interrupted',
   ]) {
     test(
       'in-flight cleanup tolerates $message and retries on resume',

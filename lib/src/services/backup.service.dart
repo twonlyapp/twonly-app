@@ -135,23 +135,22 @@ class BackupService {
     );
   }
 
+  /// Throws when an existing password could not be changed; the previous
+  /// password then stays in effect.
   static Future<void> updateBackupPassword(String password) async {
-    await KeyValueStore.putAtomically(
-      KeyValueKeys.backupFallbackMonitoring,
-      {'since': clock.clock.now().toIso8601String()},
-    );
-    // Set or reset the backup data...
-    await KeyValueStore.put(
-      KeyValueKeys.currentBackupState,
-      CurrentBackupStatus().toJson(),
-    );
-    _backupUpdateController.add(null);
-
+    // A change uploads the identity under the new password and deletes the
+    // one under the previous password before it returns.
     await RustBackupIdentity.setBackupPasswordKeys(
       password: password,
       // Using the userId is this will never change in a users lifecycle
       userId: userService.currentUser.userId,
     );
+
+    await KeyValueStore.putAtomically(
+      KeyValueKeys.backupFallbackMonitoring,
+      {'since': clock.clock.now().toIso8601String()},
+    );
+    _backupUpdateController.add(null);
 
     await UserService.update((u) => u.isBackupEnabled = true);
 

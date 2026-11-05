@@ -42,13 +42,14 @@ fn spawn_media_store(ctx: &Arc<Context>, media_id: String) {
 }
 
 /// The receiver could not decrypt the media, so it has to be re-encrypted and
-/// uploaded again for that contact.
-fn spawn_media_reupload(ctx: &Arc<Context>, media_id: String, contact_id: i64, message_id: String) {
+/// uploaded again for that contact. The request is already recorded; if this
+/// task is aborted, `finish_started_uploads` sends it on the next connection.
+fn spawn_media_reupload(ctx: &Arc<Context>, media_id: String) {
     let ctx = ctx.clone();
 
     crate::database::lifecycle::spawn(async move {
         if let Err(error) = MediaUploadService::new(&ctx)
-            .reupload(contact_id, &media_id, &message_id)
+            .start_reupload(&media_id)
             .await
         {
             tracing::warn!(media_id, %error, "media reupload failed");
@@ -376,10 +377,20 @@ pub(crate) async fn handle_media_update(
             }
         }
         MediaUpdateType::DecryptionError => {
-            // The upload state and the requester list are owned by the reupload
-            // path itself, which appends this contact instead of replacing
-            // whoever else is still waiting for the same media.
-            spawn_media_reupload(ctx, media_id, from_user_id, update.target_message_id);
+            // Recorded with this message, not in the spawned task: a background
+            // session that ends right after the commit aborts that task, and
+            // the request would be gone. Appends this contact instead of
+            // replacing whoever else is still waiting for the same media.
+            if MediaUploadService::record_reupload_request_in(
+                t,
+                from_user_id,
+                &media_id,
+                &update.target_message_id,
+            )
+            .await?
+            {
+                spawn_media_reupload(ctx, media_id);
+            }
         }
     }
 
@@ -532,6 +543,106 @@ mod tests {
             messages, 2,
             "save updates must not add visible chat messages"
         );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn a_reupload_request_commits_with_the_message_that_asked() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        let database = ctx.app_db.read().await.clone();
+        let mut tx = database.pool.begin().await?;
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES (7, 'receiver')",
+            "INSERT INTO groups(group_id, group_name) VALUES ('group', 'Group')",
+            "INSERT INTO group_members(group_id, contact_id) VALUES ('group', 7)",
+            "INSERT INTO media_files(media_id, type, upload_state) VALUES ('sent', 'image', \
+             'uploaded')",
+            "INSERT INTO messages(message_id, group_id, type, media_id) VALUES ('sent', 'group', \
+             'media', 'sent')",
+        ] {
+            sqlx::query(statement).execute(&mut *tx).await?;
+        }
+
+        super::super::handle_encrypted(
+            &ctx,
+            &mut tx,
+            7,
+            "decryption-error",
+            EncryptedContent {
+                media_update: Some(encrypted_content::MediaUpdate {
+                    r#type: MediaUpdateType::DecryptionError as i32,
+                    target_message_id: "sent".into(),
+                }),
+                ..Default::default()
+            },
+        )
+        .await?;
+
+        // The spawned upload may be aborted at any point after this; the
+        // request must already be part of the handler's own transaction.
+        let (state, targets): (String, Option<String>) = sqlx::query_as(
+            "SELECT upload_state, reupload_targets FROM media_files WHERE media_id = 'sent'",
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+        assert_eq!(state, "preprocessing");
+        assert_eq!(
+            targets.as_deref(),
+            Some(r#"[{"contact_id":7,"message_id":"sent"}]"#)
+        );
+        tx.commit().await?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn an_unfinished_save_is_completed_by_the_sweep() -> anyhow::Result<()> {
+        let directory = tempfile::tempdir()?;
+        let ctx =
+            Context::init_for_testing(directory.path().join("db"), directory.path().join("data"))
+                .await?;
+        crate::user_config::UserConfig::save_json(
+            &ctx,
+            r#"{"userId":43,"username":"member","displayName":"Member","storeMediaFilesInGallery":false}"#,
+        )?;
+        let database = ctx.app_db.read().await.clone();
+        // The save request was handled, but its store was aborted or found no
+        // plaintext yet: the message says saved, the file is not.
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES (42, 'author')",
+            "INSERT INTO groups(group_id, group_name) VALUES ('group', 'Group')",
+            "INSERT INTO media_files(media_id, type, download_state) VALUES ('arrived', \
+             'image', 'ready'), ('missing', 'image', 'pending')",
+            "INSERT INTO messages(message_id, group_id, sender_id, type, media_id, media_stored) \
+             VALUES ('arrived', 'group', 42, 'media', 'arrived', 1), ('missing', 'group', 42, \
+             'media', 'missing', 1)",
+        ] {
+            sqlx::query(statement).execute(&database.pool).await?;
+        }
+
+        let files = MediaFileService::new(&ctx);
+        let path = files.temp_path("arrived", "image");
+        MediaFileService::ensure_parent(&path)?;
+        image::RgbImage::from_pixel(8, 6, image::Rgb([12, 34, 56]))
+            .save_with_format(&path, image::ImageFormat::Png)?;
+
+        MediaUploadService::new(&ctx).store_pending_saves(None).await?;
+
+        let stored: bool =
+            sqlx::query_scalar("SELECT stored FROM media_files WHERE media_id = 'arrived'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert!(stored);
+        assert!(files.stored_path("arrived", "image").is_file());
+        let missing_stored: bool =
+            sqlx::query_scalar("SELECT stored FROM media_files WHERE media_id = 'missing'")
+                .fetch_one(&database.pool)
+                .await?;
+        assert!(!missing_stored, "media without plaintext waits for its download");
 
         Ok(())
     }

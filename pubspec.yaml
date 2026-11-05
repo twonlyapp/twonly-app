@@ -3,7 +3,7 @@ description: "Open-source, end-to-end encrypted Snapchat alternative."
 
 publish_to: 'none'
 
-version: 0.6.9+213
+version: 0.7.0+214
 
 environment:
   sdk: ^3.11.0

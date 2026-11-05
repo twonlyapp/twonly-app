@@ -21,6 +21,28 @@ class SettingsList extends StatelessWidget {
   }
 }
 
+/// Names a group of settings on a screen that holds several.
+class SettingsSectionTitle extends StatelessWidget {
+  const SettingsSectionTitle(this.title, {super.key});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Text(
+        title,
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
 /// A quiet separator between groups of settings.
 class SettingsDivider extends StatelessWidget {
   const SettingsDivider({super.key});

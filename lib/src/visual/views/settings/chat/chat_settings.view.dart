@@ -4,6 +4,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/pro_badge.element.dart';
 import 'package:twonly/src/visual/views/settings/components/settings_layout.dart';
 
 class ChatSettingsView extends StatelessWidget {
@@ -12,6 +13,11 @@ class ChatSettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = context.lang;
+    // One size for every subtitle here, whatever tile carries it.
+    final subtitleStyle = TextStyle(
+      fontSize: 13,
+      color: context.color.onSurfaceVariant,
+    );
     return Scaffold(
       appBar: AppBar(title: Text(lang.settingsChats)),
       body: StreamBuilder<void>(
@@ -19,7 +25,9 @@ class ChatSettingsView extends StatelessWidget {
         builder: (context, snapshot) {
           final user = userService.currentUser;
           return SettingsList(
+            padding: const EdgeInsets.only(top: 8, bottom: 24),
             children: [
+              SettingsSectionTitle(lang.settingsChatsSectionChats),
               ListTile(
                 title: Text(lang.settingsPreSelectedReactions),
                 trailing: const Icon(Icons.chevron_right),
@@ -29,6 +37,21 @@ class ChatSettingsView extends StatelessWidget {
                 title: Text(lang.contactGroupsTitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(Routes.settingsChatsContactGroups),
+              ),
+              ListTile(
+                title: Row(
+                  children: [
+                    Flexible(child: Text(lang.settingsOnVacationTitle)),
+                    const SizedBox(width: 8),
+                    const ProBadge(),
+                  ],
+                ),
+                subtitle: Text(
+                  lang.settingsOnVacationSubtitle,
+                  style: subtitleStyle,
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(Routes.settingsChatsOnVacation),
               ),
               SwitchListTile.adaptive(
                 title: Text(lang.alwaysShowStories),
@@ -43,9 +66,7 @@ class ChatSettingsView extends StatelessWidget {
                 ),
                 subtitle: Text(
                   lang.settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.color.onSurfaceVariant,
-                  ),
+                  style: subtitleStyle,
                 ),
                 value: user.automaticallyMarkEqualMediaFilesAsOpened,
                 onChanged: (value) => UserService.update(
@@ -53,14 +74,8 @@ class ChatSettingsView extends StatelessWidget {
                       user.automaticallyMarkEqualMediaFilesAsOpened = value,
                 ),
               ),
-              SwitchListTile.adaptive(
-                title: Text(lang.settingsShowRestoreFlameTitle),
-                value: user.showRestoreFlame,
-                onChanged: (value) => UserService.update(
-                  (user) => user.showRestoreFlame = value,
-                ),
-              ),
               const SettingsDivider(),
+              SettingsSectionTitle(lang.settingsChatsSectionCamera),
               SwitchListTile.adaptive(
                 title: Text(lang.startWithCameraOpen),
                 value: user.startWithCameraOpen,
@@ -73,6 +88,15 @@ class ChatSettingsView extends StatelessWidget {
                 value: user.showShowImagePreviewWhenSending,
                 onChanged: (value) => UserService.update(
                   (user) => user.showShowImagePreviewWhenSending = value,
+                ),
+              ),
+              const SettingsDivider(),
+              SettingsSectionTitle(lang.settingsChatsSectionFlames),
+              SwitchListTile.adaptive(
+                title: Text(lang.settingsShowRestoreFlameTitle),
+                value: user.showRestoreFlame,
+                onChanged: (value) => UserService.update(
+                  (user) => user.showRestoreFlame = value,
                 ),
               ),
             ],

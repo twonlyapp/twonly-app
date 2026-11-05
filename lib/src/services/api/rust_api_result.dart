@@ -86,5 +86,6 @@ bool isBackgroundCancellation(Object error) {
   return text.contains('retry when active') ||
       text.contains('Database operation deferred until foreground') ||
       text.contains('Native database admission cancelled') ||
+      text.contains('(code: 9) interrupted') ||
       text.contains('attempted to acquire a connection on a closed pool');
 }

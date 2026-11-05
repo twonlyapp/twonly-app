@@ -179,6 +179,16 @@ impl MediaFileService {
                 tracing::warn!(media_id, %error, "media download deferred until a retry");
                 Ok(())
             }
+            Ok(()) => {
+                // A chat member may have saved this before it arrived here.
+                if let Err(error) = MediaUploadService::new(&self.ctx)
+                    .store_pending_saves(Some(media_id))
+                    .await
+                {
+                    tracing::warn!(media_id, %error, "could not keep media saved before download");
+                }
+                Ok(())
+            }
             result => result,
         }
     }

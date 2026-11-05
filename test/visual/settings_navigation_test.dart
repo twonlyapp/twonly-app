@@ -19,6 +19,7 @@ import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/elements/pro_badge.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/settings/appearance.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/backup_settings.view.dart';
@@ -181,6 +182,64 @@ void main() {
     expect(saved!.startWithCameraOpen, isFalse);
   });
 
+  testWidgets('chat settings are grouped into chats, flames and camera', (
+    tester,
+  ) async {
+    await pumpSettings(tester, location: Routes.settingsChats);
+    double top(String text) => tester.getTopLeft(find.text(text)).dy;
+
+    final chats = top('Chats');
+    final camera = top('Kamera');
+    final flames = top('Flammen');
+    expect(chats, lessThan(camera));
+    expect(camera, lessThan(flames));
+
+    final chatEntries = [
+      'Schnellreaktionen',
+      'Kontaktgruppen',
+      'Im Urlaub',
+      'Stories immer anzeigen',
+      'Duplikate als geöffnet markieren',
+    ];
+    for (final (index, entry) in chatEntries.indexed) {
+      expect(top(entry), inExclusiveRange(chats, camera), reason: entry);
+      if (index > 0) {
+        expect(top(entry), greaterThan(top(chatEntries[index - 1])));
+      }
+    }
+    for (final entry in [
+      'Mit geöffneter Kamera starten',
+      'Bildvorschau bei der Auswahl von Empfängern anzeigen',
+    ]) {
+      expect(top(entry), inExclusiveRange(camera, flames), reason: entry);
+    }
+    expect(top('Wiederherstellung anbieten'), greaterThan(flames));
+
+    // On Vacation is a Pro feature and says so.
+    expect(
+      find.descendant(
+        of: find.ancestor(
+          of: find.text('Im Urlaub'),
+          matching: find.byType(ListTile),
+        ),
+        matching: find.byType(ProBadge),
+      ),
+      findsOneWidget,
+    );
+
+    // Every subtitle on the page has the same size.
+    double? size(String text) =>
+        tester.widget<Text>(find.text(text)).style?.fontSize;
+    expect(size('Friere deine Flammen ein, während du weg bist'), isNotNull);
+    expect(
+      size(
+        'Wenn du die selbe Mediendatei in mehreren Chats erhältst, markiert '
+        'das Öffnen einer Kopie alle anderen als geöffnet.',
+      ),
+      size('Friere deine Flammen ein, während du weg bist'),
+    );
+  });
+
   testWidgets(
     'design contains no camera controls and uses a positive news switch',
     (tester) async {
@@ -214,7 +273,10 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pumpAndSettle();
-      expect(find.text('Benachrichtigungen erlaubt'), findsOneWidget);
+      expect(
+        find.text('Benachrichtigungen im System ausgeschaltet'),
+        findsNothing,
+      );
     },
   );
 

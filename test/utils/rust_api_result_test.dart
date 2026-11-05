@@ -12,12 +12,15 @@ void main() {
         'Native database admission cancelled',
         'Database operation deferred until foreground',
         'attempted to acquire a connection on a closed pool',
+        'error returned from database: (code: 9) interrupted',
       ]) {
         expect(isBackgroundCancellation(Exception(message)), isTrue);
       }
       for (final message in [
         'response channel closed',
         'database is corrupt',
+        'download interrupted',
+        '(code: 5) database is locked',
         'send error: NotConnected (timeout)',
       ]) {
         expect(isBackgroundCancellation(Exception(message)), isFalse);

@@ -1046,6 +1046,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can only change your password after you have authenticated!';
 
   @override
+  String get backupChangePasswordFailed =>
+      'Your password could not be changed. Your previous password still works. Check your internet connection and try again.';
+
+  @override
   String get backupFreeSpaceWithCloud => 'Free Space with Cloud Backup';
 
   @override
@@ -1642,6 +1646,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingBackupBody =>
       'So you can restore your account on a new phone.';
+
+  @override
+  String get onboardingBackupPasswordSet =>
+      'Your backup password is set. You can keep it or choose a new one.';
 
   @override
   String get onboardingUserDiscoveryShareFriends => 'Share your friends';
@@ -2865,7 +2873,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settingsShowRestoreFlameTitle => 'Show flame restore warning';
+  String get settingsShowRestoreFlameTitle => 'Offer restore';
 
   @override
   String get contactGroupsTitle => 'Contact Groups';
@@ -2971,12 +2979,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupRecoverySectionTitle => 'Secure Account Access';
 
   @override
-  String get backupRecoverySectionDescNone =>
-      'You must select at least one recovery option, as otherwise no one can help you if you lose access to your device.';
+  String get backupRecoverySectionDescNone => 'Set up at least one option.';
 
   @override
-  String get backupRecoverySectionDescSome =>
-      'You can recover your account with the recovery options below. It is recommended to enable both options.';
+  String get backupRecoverySectionDescSome => 'Best to enable both options.';
 
   @override
   String get backupRecoveryOptionAFriends => 'Via trusted friends';
@@ -3502,10 +3508,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsOpenAppAgain => 'Tap to open the app again';
 
   @override
-  String get settingsBackupIntro =>
-      'If you lose your phone, you need a way back into your account and a backup of your content.';
-
-  @override
   String get settingsBackupNever => 'Not backed up yet';
 
   @override
@@ -3521,10 +3523,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPasswordConfigured => 'Password set up · Manage';
 
   @override
-  String get settingsMemoriesBackupActive => 'Backup enabled · View progress';
+  String get settingsMemoriesBackupActive => 'Backup enabled';
 
   @override
-  String get settingsMemoriesBackupInactive => 'Not enabled · Set up backup';
+  String settingsMemoriesBackupActiveUsage(String used, String max) {
+    return 'Backup enabled · $used of $max used';
+  }
+
+  @override
+  String get settingsMemoriesBackupInactive => 'Not enabled · Tap to enable';
 
   @override
   String get settingsRecoveryFriendsLoading => 'Checking your trusted friends…';
@@ -3545,4 +3552,112 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsChangelog => 'Changelog';
+
+  @override
+  String get settingsOnVacationTitle => 'On Vacation';
+
+  @override
+  String get settingsOnVacationSubtitle =>
+      'Freeze your flames while you are away';
+
+  @override
+  String onVacationActiveUntil(Object date) {
+    return 'On vacation until $date';
+  }
+
+  @override
+  String onVacationExplanation(Object count) {
+    return 'While you are on vacation, your flames are frozen: they cannot be lost, but they do not grow either. Everyone you have more than $count flames with gets a message and sees your vacation icon instead of the flame.';
+  }
+
+  @override
+  String get onVacationIcon => 'Icon';
+
+  @override
+  String get onVacationDuration => 'Duration';
+
+  @override
+  String onVacationDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String onVacationCountsAgain(Object date) {
+    return 'Your flames count again from $date.';
+  }
+
+  @override
+  String onVacationAffectedChats(num count, Object min) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chats will be frozen.',
+      one: '1 chat will be frozen.',
+      zero: 'No chat has more than $min flames yet.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String onVacationNothingToFreeze(Object count) {
+    return 'None of your chats has more than $count flames, so there is nothing to freeze.';
+  }
+
+  @override
+  String get onVacationStart => 'Go on vacation';
+
+  @override
+  String onVacationStarted(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Enjoy your vacation! $count chats are frozen.',
+      one: 'Enjoy your vacation! 1 chat is frozen.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onVacationEnd => 'End vacation';
+
+  @override
+  String get onVacationEndConfirmTitle => 'End your vacation?';
+
+  @override
+  String get onVacationEndConfirmBody =>
+      'Your flames count again from today, and your friends will be told.';
+
+  @override
+  String get onVacationFailed =>
+      'Could not start your vacation. Please try again.';
+
+  @override
+  String chatEntryVacationStarted(Object date) {
+    return 'On vacation until $date. The flames are frozen until then.';
+  }
+
+  @override
+  String get chatEntryVacationEnded =>
+      'Back from vacation. The flames count again.';
+
+  @override
+  String get notificationVacation => 'is on vacation. Your flames are frozen.';
+
+  @override
+  String get notificationVacationEnd => 'is back from vacation.';
+
+  @override
+  String get settingsChatsSectionChats => 'Chats';
+
+  @override
+  String get settingsChatsSectionFlames => 'Flames';
+
+  @override
+  String get settingsChatsSectionCamera => 'Camera';
 }

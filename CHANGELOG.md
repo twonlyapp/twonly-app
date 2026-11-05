@@ -1,11 +1,15 @@
 # Changelog
 
-## 0.6.10
+## 0.7.0
 
+- New: On Vacation lets you freeze your flames while you are away
 - Improve: Redesign onboarding flow
 - Improve: Better UI for the contact groups
+- Improve: Redesigned settings and clearer backup status
 - Fix: Show error message when sending to an inactive user
 - Fix: Backup did not work in some cases
+- Fix: Startup errors and iOS background crashes
+- Fix: Saved media sometimes remained unavailable
 
 ## 0.6.9
 

@@ -39,6 +39,7 @@ class Routes {
   static const String settingsChatsReactions = '/settings/chats/reactions';
   static const String settingsChatsContactGroups =
       '/settings/chats/contact_groups';
+  static const String settingsChatsOnVacation = '/settings/chats/on_vacation';
   static const String settingsPrivacy = '/settings/privacy';
   static const String settingsPrivacyBlockUsers =
       '/settings/privacy/block_users';

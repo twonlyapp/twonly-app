@@ -22,6 +22,7 @@ use crate::error::Result;
 use flutter_rust_bridge::frb;
 
 pub use crate::database::app::groups::native::FlameState;
+pub use crate::database::app::groups::vacation::VacationWindow;
 pub use crate::user_discovery::{AnnouncedUser, OtherPromotion};
 
 pub struct InitConfig {
@@ -54,6 +55,15 @@ pub struct _FlameState {
     pub counter: i64,
     pub is_expiring: bool,
     pub is_best_friend: bool,
+    pub vacation_icon: Option<String>,
+}
+
+#[frb(mirror(VacationWindow))]
+
+pub struct _VacationWindow {
+    pub from: i64,
+    pub until: i64,
+    pub icon: String,
 }
 
 pub(super) fn get_twonly_flutter() -> Result<&'static Context> {

@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `catalog_for_context`
+// These functions are ignored because they are not marked as `pub`: `catalog_for_context`, `read_after_reopen`
 
 /// Marks the instance currently visible in the foreground, or clears it.
 void setVisibleInstance({String? instanceId}) => RustLib.instance.api

@@ -10,9 +10,33 @@
 //! may put in front of the user are all decided on this side, because
 //! `webxdc.js` is code the app can replace.
 
-use crate::error::Result;
+use crate::error::{Result, TwonlyError};
 use crate::services::webxdc::store::WebxdcStore;
 use crate::services::webxdc::{bundle, WebxdcService};
+use std::future::Future;
+use std::time::Duration;
+
+/// Coming back from the background closes the pools of the background run and
+/// reopens them for Flutter. A page that reads in that window waits for the
+/// reopen instead of getting an error. Bounded, so a call while the app is
+/// really suspended still fails. Only for reads: a retried write could repeat
+/// a step that already happened.
+async fn read_after_reopen<T, F, Fut>(read: F) -> Result<T>
+where
+    F: Fn() -> Fut,
+    Fut: Future<Output = Result<T>>,
+{
+    for _ in 0..20 {
+        match read().await {
+            Err(TwonlyError::SqliteError(sqlx::Error::PoolClosed)) => {
+                tokio::time::sleep(Duration::from_millis(100)).await;
+            }
+            result => return result,
+        }
+    }
+
+    read().await
+}
 
 /// Marks the instance currently visible in the foreground, or clears it.
 #[flutter_rust_bridge::frb(sync)]
@@ -263,7 +287,7 @@ pub async fn serve(instance_id: String, request_path: String) -> Result<WebxdcRe
     // The bundle the instance is pinned to, not whatever the store offers now:
     // every file of one run comes out of the same `.xdc`, and the store was
     // never changed by a background update check.
-    let path = service.pinned_bundle(&instance_id).await?;
+    let path = read_after_reopen(|| service.pinned_bundle(&instance_id)).await?;
 
     let init = service.init_script_values(&instance_id).await?;
 
@@ -283,8 +307,9 @@ pub async fn serve(instance_id: String, request_path: String) -> Result<WebxdcRe
 pub async fn updates_after(instance_id: String, serial: i64) -> Result<Vec<WebxdcUpdateEntry>> {
     let ctx = crate::context::Context::get_static()?;
 
-    Ok(WebxdcService::new(ctx)
-        .updates_after(&instance_id, serial)
+    let service = WebxdcService::new(ctx);
+
+    Ok(read_after_reopen(|| service.updates_after(&instance_id, serial))
         .await?
         .into_iter()
         .map(|update| WebxdcUpdateEntry {
@@ -338,13 +363,38 @@ pub async fn delete_instance(instance_id: String) -> Result<Option<String>> {
 pub async fn members(instance_id: String) -> Result<String> {
     let ctx = crate::context::Context::get_static()?;
 
-    WebxdcService::new(ctx).members(&instance_id).await
+    let service = WebxdcService::new(ctx);
+
+    read_after_reopen(|| service.members(&instance_id)).await
 }
 
 #[cfg(test)]
 mod tests {
 
     use super::*;
+
+    #[tokio::test]
+    async fn a_read_waits_for_the_pools_to_reopen() -> Result<()> {
+        let attempts = std::sync::atomic::AtomicUsize::new(0);
+
+        let members = read_after_reopen(|| async {
+            if attempts.fetch_add(1, std::sync::atomic::Ordering::SeqCst) < 2 {
+                Err(TwonlyError::SqliteError(sqlx::Error::PoolClosed))
+            } else {
+                Ok("members")
+            }
+        })
+        .await?;
+
+        assert_eq!(members, "members");
+        assert_eq!(attempts.load(std::sync::atomic::Ordering::SeqCst), 3);
+
+        let other: Result<()> =
+            read_after_reopen(|| async { Err(TwonlyError::Generic("unknown".into())) }).await;
+        assert!(other.is_err(), "other errors are not retried");
+
+        Ok(())
+    }
 
     #[tokio::test]
 

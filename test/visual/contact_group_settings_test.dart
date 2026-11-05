@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show Int64List;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/core/bridge/database/contact_groups.dart'
     as rust_contact_groups;
 import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
@@ -28,6 +29,7 @@ import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/story_target_selector.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_group_settings.view.dart';
 import 'package:twonly/src/visual/views/settings/chat/contact_groups.view.dart';
+import 'package:twonly/src/visual/views/shared/select_contacts.view.dart';
 
 import '../helpers/native_database.dart';
 
@@ -150,6 +152,11 @@ void main() {
       .map((image) => (image.image as FileImage).file.path)
       .toList();
 
+  Future<void> reveal(WidgetTester tester, Finder finder) async {
+    await tester.ensureVisible(finder);
+    await settle(tester);
+  }
+
   Future<void> pumpView(WidgetTester tester, Widget view) async {
     await tester.binding.setSurfaceSize(const Size(800, 2200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -164,11 +171,45 @@ void main() {
     await settle(tester);
   }
 
-  Future<void> pumpEditor(WidgetTester tester) async {
+  Future<void> openPicker(WidgetTester tester) async {
+    final button = find.text('Select members');
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await settle(tester);
+    expect(find.byType(SelectContactsView), findsOneWidget);
+    expect(find.byType(MyInput), findsOneWidget);
+    expect(find.byType(MyButton), findsOneWidget);
+  }
+
+  Future<void> applyPicker(WidgetTester tester) async {
+    await tester.tap(find.byType(MyButton));
+    await settle(tester);
+  }
+
+  Future<void> saveEditor(WidgetTester tester) async {
+    if (find.byType(SelectContactsView).evaluate().isNotEmpty) {
+      await applyPicker(tester);
+    }
+    await tester.tap(
+      find.ancestor(of: find.text('Save'), matching: find.byType(MyButton)),
+    );
+    await settle(tester);
+  }
+
+  Future<void> pumpEditor(
+    WidgetTester tester, {
+    bool openMembers = true,
+  }) async {
     await pumpView(
       tester,
       ContactGroupSettingsView(contactGroup: contactGroup),
     );
+    await pumpNative(
+      tester,
+      until: () => find.text('2 members').evaluate().isNotEmpty,
+    );
+    if (!openMembers) return;
+    await openPicker(tester);
     await pumpNative(
       tester,
       until: () =>
@@ -247,12 +288,16 @@ void main() {
     expect(features.map((feature) => feature.value), [true, false, false]);
     expect(find.text('Background color'), findsNothing);
     expect(find.text('Text color'), findsNothing);
-    expect(find.byType(MyInput), findsNWidgets(2));
+    expect(find.byType(MyInput), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).first, 'Close friends');
     await settle(tester);
+    await openPicker(tester);
     await tester.tap(memberTile('Bob'));
-    await tester.tap(find.byType(MyButton));
+    await applyPicker(tester);
+    await tester.tap(
+      find.ancestor(of: find.text('Save'), matching: find.byType(MyButton)),
+    );
     await pumpNative(tester, until: () => target.contactGroupIds.isNotEmpty);
     await settle(tester);
 
@@ -285,6 +330,104 @@ void main() {
     await settle(tester);
     expect(target.isEmpty, isTrue);
   });
+
+  testWidgets(
+    'the editor opens the shared picker and cancellation keeps members',
+    (tester) async {
+      await pumpEditor(tester, openMembers: false);
+      expect(memberTile('Alice'), findsNothing);
+      expect(memberTile('Bob'), findsNothing);
+      expect(find.text('2 members'), findsOneWidget);
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      await settle(tester);
+      await openPicker(tester);
+      await tester.tap(memberTile('Bob'));
+      await tester.tap(memberTile('Old team'));
+      await tester.pageBack();
+      await settle(tester);
+      await openPicker(tester);
+      expect(selected(tester, 'Alice'), isTrue);
+      expect(selected(tester, 'Bob'), isFalse);
+      expect(selected(tester, 'Old team'), isTrue);
+    },
+  );
+
+  testWidgets('the shared picker can remove every contact and chat group', (
+    tester,
+  ) async {
+    await pumpEditor(tester);
+    await tester.tap(memberTile('Alice'));
+    await tester.tap(memberTile('Old team'));
+    await applyPicker(tester);
+    expect(find.text('No members'), findsNothing);
+    expect(find.byType(InputChip), findsNothing);
+    await openPicker(tester);
+    expect(selected(tester, 'Alice'), isFalse);
+    expect(selected(tester, 'Old team'), isFalse);
+    await saveEditor(tester);
+    final members = await runNative(
+      tester,
+      () => rust_contact_groups.getContactGroupMembers(
+        id: contactGroup.id,
+        transaction: currentDatabaseSession(),
+      ),
+    );
+    expect(members, isEmpty);
+  });
+
+  testWidgets(
+    'the default contact picker preserves locked contacts, limits and its result',
+    (tester) async {
+      List<int>? result;
+      await pumpView(
+        tester,
+        Builder(
+          builder: (context) => Scaffold(
+            body: MyButton(
+              onPressed: () async {
+                result = await Navigator.push<List<int>>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SelectContactsView(
+                      text: SelectedContactView(
+                        title: 'Choose contacts',
+                        submitButton: (count, _) => 'Choose $count',
+                        submitIcon: FontAwesomeIcons.check,
+                      ),
+                      alreadySelected: const [7],
+                      limit: 1,
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Open picker'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(MyButton));
+      await pumpNative(
+        tester,
+        until: () => memberTile('Carol').evaluate().isNotEmpty,
+      );
+      await settle(tester);
+      expect(selected(tester, 'Alice'), isTrue);
+      await tester.tap(memberTile('Alice'));
+      expect(selected(tester, 'Alice'), isTrue);
+      expect(tester.widget<MyButton>(find.byType(MyButton)).onPressed, isNull);
+      await tester.tap(memberTile('Bob'));
+      await tester.tap(memberTile('Carol'));
+      await tester.pump();
+      expect(selected(tester, 'Bob'), isTrue);
+      expect(selected(tester, 'Carol'), isFalse);
+      await tester.enterText(find.byType(TextField), 'car');
+      await settle(tester);
+      expect(memberTile('Bob'), findsNothing);
+      expect(memberTile('Carol'), findsOneWidget);
+      await applyPicker(tester);
+      expect(result, [8]);
+    },
+  );
 
   testWidgets('members follow exchange counts and retain alphabetical ties', (
     tester,
@@ -331,18 +474,15 @@ void main() {
     expect(selected(tester, 'Old team'), isTrue);
   });
 
-  testWidgets('label colors use bottom sheets and survive disabling labels', (
+  testWidgets('label colors are picked inline and survive disabling labels', (
     tester,
   ) async {
-    await pumpEditor(tester);
-    expect(find.byType(MyInput), findsNWidgets(2));
+    await pumpEditor(tester, openMembers: false);
+    expect(find.byType(MyInput), findsOneWidget);
     await tester.binding.setSurfaceSize(const Size(390, 844));
     await settle(tester);
-    expect(find.byType(Wrap), findsNothing);
+    expect(find.byType(BottomSheet), findsNothing);
 
-    await tester.tap(find.text('Text color'));
-    await settle(tester);
-    expect(find.byType(BottomSheet), findsOneWidget);
     final textColor = find.byWidgetPredicate(
       (widget) =>
           widget is Container &&
@@ -350,34 +490,36 @@ void main() {
           (widget.decoration! as BoxDecoration).color ==
               const Color(0xFF4A148C),
     );
+    await reveal(tester, textColor);
     await tester.tap(textColor);
     await settle(tester);
     expect(find.byType(BottomSheet), findsNothing);
 
-    await tester.tap(find.text('Background color'));
-    await settle(tester);
-    await tester.tap(find.byTooltip('Custom Color'));
+    final customColor = find.byTooltip('Custom Color').first;
+    await reveal(tester, customColor);
+    await tester.tap(customColor);
     await settle(tester);
     expect(find.byType(CustomColorPickerDialog), findsOneWidget);
     await tester.tap(
       find.ancestor(of: find.text('Ok'), matching: find.byType(MyButton)),
     );
     await settle(tester);
-    expect(find.byType(BottomSheet), findsNothing);
-    await tester.tap(find.text('Background color'));
-    await settle(tester);
-    await tester.tap(find.byTooltip('No background'));
+    final noBackground = find.byTooltip('No background');
+    await reveal(tester, noBackground);
+    await tester.tap(noBackground);
     await settle(tester);
 
-    await tester.tap(find.text('Show as visible label'));
+    final labelSwitch = find.text('Show as visible label');
+    await reveal(tester, labelSwitch);
+    await tester.tap(labelSwitch);
     await settle(tester);
     expect(find.text('Background color'), findsNothing);
     expect(find.text('Text color'), findsNothing);
-    await tester.tap(find.text('Show as visible label'));
+    await tester.tap(labelSwitch);
     await settle(tester);
     expect(find.text('Background color'), findsOneWidget);
     expect(find.text('Text color'), findsOneWidget);
-    await tester.tap(find.byType(MyButton));
+    await saveEditor(tester);
     await settle(tester);
     final saved = (await runNative(
       tester,
@@ -390,6 +532,87 @@ void main() {
     expect(saved.backgroundColor, 0);
     expect(saved.showAsLabel, isTrue);
     expect(saved.name, 'Favorites');
+  });
+
+  testWidgets('selected members show as removable chips in the editor', (
+    tester,
+  ) async {
+    await pumpEditor(tester, openMembers: false);
+    await pumpNative(
+      tester,
+      until: () =>
+          find.byKey(const ValueKey('member:contact:7')).evaluate().isNotEmpty,
+    );
+    expect(find.byKey(const ValueKey('member:group:old-team')), findsOneWidget);
+    expect(find.byKey(const ValueKey('member:contact:8')), findsNothing);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const ValueKey('member:contact:7')),
+        matching: find.byType(Icon),
+      ),
+    );
+    await settle(tester);
+    expect(find.text('1 member'), findsOneWidget);
+    expect(find.byKey(const ValueKey('member:contact:7')), findsNothing);
+
+    await saveEditor(tester);
+    final members = await runNative(
+      tester,
+      () => rust_contact_groups.getContactGroupMembers(
+        id: contactGroup.id,
+        transaction: currentDatabaseSession(),
+      ),
+    );
+    expect(members.map((member) => member.groupId), ['old-team']);
+  });
+
+  testWidgets('save only appears once something changed', (tester) async {
+    Finder save() =>
+        find.ancestor(of: find.text('Save'), matching: find.byType(MyButton));
+    await pumpEditor(tester, openMembers: false);
+    expect(save(), findsNothing);
+
+    final storiesSwitch = find.text('Share stories');
+    await tester.tap(storiesSwitch);
+    await settle(tester);
+    expect(save(), findsOneWidget);
+    await tester.tap(storiesSwitch);
+    await settle(tester);
+    expect(save(), findsNothing);
+
+    await openPicker(tester);
+    await tester.tap(memberTile('Bob'));
+    await applyPicker(tester);
+    expect(save(), findsOneWidget);
+    await openPicker(tester);
+    await tester.tap(memberTile('Bob'));
+    await applyPicker(tester);
+    expect(save(), findsNothing);
+
+    await tester.enterText(find.byType(TextField).first, 'Close friends');
+    await settle(tester);
+    expect(save(), findsOneWidget);
+  });
+
+  testWidgets('quick emojis select the shortcut emoji inline', (tester) async {
+    await pumpEditor(tester, openMembers: false);
+    final shortcutSwitch = find.text('Show as shortcut');
+    await reveal(tester, shortcutSwitch);
+    await tester.tap(shortcutSwitch);
+    await settle(tester);
+    await reveal(tester, find.text('🏠'));
+    await tester.tap(find.text('🏠'));
+    await saveEditor(tester);
+    final saved = (await runNative(
+      tester,
+      () => rust_contact_groups.getContactGroup(
+        id: contactGroup.id,
+        transaction: currentDatabaseSession(),
+      ),
+    ))!;
+    expect(saved.showAsShortcut, isTrue);
+    expect(saved.emoji, '🏠');
   });
 
   testWidgets('archived contacts and groups are shown immediately', (
@@ -433,7 +656,7 @@ void main() {
       expect(selected(tester, 'Alice'), isTrue);
 
       await tester.tap(memberTile('Bob'));
-      await tester.tap(find.byType(MyButton));
+      await saveEditor(tester);
       await settle(tester);
       final members = await runNative(
         tester,
@@ -526,6 +749,13 @@ void main() {
       ),
     );
     await settle(tester);
+    await pumpNative(
+      tester,
+      until: () =>
+          avatarPaths(tester, 'A team').length == 2 &&
+          avatarPaths(tester, 'Bob').isNotEmpty &&
+          avatarPaths(tester, 'Carol').isNotEmpty,
+    );
     expect(avatarPaths(tester, 'A team'), [api.paths[8], api.paths[7]]);
     expect(avatarPaths(tester, 'Bob'), [api.paths[8]]);
     expect(avatarPaths(tester, 'Carol'), [api.paths[9]]);
@@ -568,8 +798,8 @@ void main() {
     tester,
   ) async {
     await pumpEditor(tester);
-    await tester.tap(find.text('Bob'));
-    await tester.tap(find.byType(MyButton));
+    await tester.tap(memberTile('Bob'));
+    await saveEditor(tester);
     await settle(tester);
     final members = await runNative(
       tester,

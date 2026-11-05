@@ -1053,6 +1053,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Du kannst dein Passwort nur ändern, wenn du dich authentifiziert hast!';
 
   @override
+  String get backupChangePasswordFailed =>
+      'Dein Passwort konnte nicht geändert werden. Dein bisheriges Passwort gilt weiterhin. Prüfe deine Internetverbindung und versuche es erneut.';
+
+  @override
   String get backupFreeSpaceWithCloud =>
       'Speicherplatz mit Cloud-Backup freigeben';
 
@@ -1653,6 +1657,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingBackupBody =>
       'Damit du dein Konto auch auf einem neuen Handy wiederherstellen kannst.';
+
+  @override
+  String get onboardingBackupPasswordSet =>
+      'Dein Backup-Passwort ist gesetzt. Du kannst es behalten oder ein neues wählen.';
 
   @override
   String get onboardingUserDiscoveryShareFriends => 'Freunde teilen';
@@ -2890,8 +2898,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get settingsShowRestoreFlameTitle =>
-      'Hinweis zur Flammen-Wiederherstellung anzeigen';
+  String get settingsShowRestoreFlameTitle => 'Wiederherstellung anbieten';
 
   @override
   String get contactGroupsTitle => 'Kontaktgruppen';
@@ -2999,11 +3006,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupRecoverySectionDescNone =>
-      'Du musst mindestens eine Wiederherstellungsoption auswählen, da dir sonst niemand helfen kann, falls du den Zugriff auf dein Gerät verlierst.';
+      'Richte mindestens eine Option ein.';
 
   @override
   String get backupRecoverySectionDescSome =>
-      'Mit den untenstehenden Wiederherstellungsoptionen kannst du dein Konto wiederherstellen. Es wird empfohlen, beide Optionen zu aktivieren.';
+      'Aktiviere am besten beide Optionen.';
 
   @override
   String get backupRecoveryOptionAFriends => 'Über vertraute Freunde';
@@ -3536,10 +3543,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsOpenAppAgain => 'Tippe, um die App wieder zu öffnen';
 
   @override
-  String get settingsBackupIntro =>
-      'Wenn du dein Handy verlierst, brauchst du einen Weg zurück in dein Konto und eine Sicherung deiner Inhalte.';
-
-  @override
   String get settingsBackupNever => 'Noch nicht gesichert';
 
   @override
@@ -3555,12 +3558,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsPasswordConfigured => 'Passwort eingerichtet · Verwalten';
 
   @override
-  String get settingsMemoriesBackupActive =>
-      'Sicherung aktiviert · Fortschritt ansehen';
+  String get settingsMemoriesBackupActive => 'Sicherung aktiviert';
+
+  @override
+  String settingsMemoriesBackupActiveUsage(String used, String max) {
+    return 'Sicherung aktiviert · $used von $max belegt';
+  }
 
   @override
   String get settingsMemoriesBackupInactive =>
-      'Nicht aktiviert · Sicherung einrichten';
+      'Nicht aktiviert · Tippen zum Aktivieren';
 
   @override
   String get settingsRecoveryFriendsLoading =>
@@ -3582,4 +3589,113 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsChangelog => 'Changelog';
+
+  @override
+  String get settingsOnVacationTitle => 'Im Urlaub';
+
+  @override
+  String get settingsOnVacationSubtitle =>
+      'Friere deine Flammen ein, während du weg bist';
+
+  @override
+  String onVacationActiveUntil(Object date) {
+    return 'Im Urlaub bis $date';
+  }
+
+  @override
+  String onVacationExplanation(Object count) {
+    return 'Während du im Urlaub bist, sind deine Flammen eingefroren: Sie gehen nicht verloren, wachsen aber auch nicht. Alle, mit denen du mehr als $count Flammen hast, bekommen eine Nachricht und sehen dein Urlaubssymbol statt der Flamme.';
+  }
+
+  @override
+  String get onVacationIcon => 'Symbol';
+
+  @override
+  String get onVacationDuration => 'Dauer';
+
+  @override
+  String onVacationDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage',
+      one: '1 Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String onVacationCountsAgain(Object date) {
+    return 'Ab $date zählen deine Flammen wieder.';
+  }
+
+  @override
+  String onVacationAffectedChats(num count, Object min) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Chats werden eingefroren.',
+      one: '1 Chat wird eingefroren.',
+      zero: 'Noch kein Chat hat mehr als $min Flammen.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String onVacationNothingToFreeze(Object count) {
+    return 'Keiner deiner Chats hat mehr als $count Flammen, es gibt also nichts einzufrieren.';
+  }
+
+  @override
+  String get onVacationStart => 'Urlaub starten';
+
+  @override
+  String onVacationStarted(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Schönen Urlaub! $count Chats sind eingefroren.',
+      one: 'Schönen Urlaub! 1 Chat ist eingefroren.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onVacationEnd => 'Urlaub beenden';
+
+  @override
+  String get onVacationEndConfirmTitle => 'Urlaub beenden?';
+
+  @override
+  String get onVacationEndConfirmBody =>
+      'Ab heute zählen deine Flammen wieder, und deine Freunde werden informiert.';
+
+  @override
+  String get onVacationFailed =>
+      'Dein Urlaub konnte nicht gestartet werden. Bitte versuche es erneut.';
+
+  @override
+  String chatEntryVacationStarted(Object date) {
+    return 'Im Urlaub bis $date. Bis dahin sind die Flammen eingefroren.';
+  }
+
+  @override
+  String get chatEntryVacationEnded =>
+      'Zurück aus dem Urlaub. Die Flammen zählen wieder.';
+
+  @override
+  String get notificationVacation =>
+      'ist im Urlaub. Eure Flammen sind eingefroren.';
+
+  @override
+  String get notificationVacationEnd => 'ist zurück aus dem Urlaub.';
+
+  @override
+  String get settingsChatsSectionChats => 'Chats';
+
+  @override
+  String get settingsChatsSectionFlames => 'Flammen';
+
+  @override
+  String get settingsChatsSectionCamera => 'Kamera';
 }

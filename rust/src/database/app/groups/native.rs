@@ -12,6 +12,8 @@ use crate::utils::{current_time, start_of_local_day};
 
 use crate::database::app::contacts::table::Contact;
 
+use super::vacation::{freeze, VacationWindow};
+
 pub(crate) const MAX_FUTURE_TIMESTAMP_SKEW_SECONDS: i64 = 10 * 60;
 
 pub use super::table::Group;
@@ -51,7 +53,9 @@ impl Group {
         let rows = sqlx::query_as!(
             FlameRow,
             r#"SELECT group_id, flame_counter, also_best_friend,
-                      last_message_send, last_message_received, last_flame_counter_change
+                      last_message_send, last_message_received, last_flame_counter_change,
+                      vacation_from, vacation_until, vacation_icon,
+                      peer_vacation_from, peer_vacation_until, peer_vacation_icon
                FROM groups"#
         )
         .fetch_all(pool)
@@ -60,6 +64,8 @@ impl Group {
         let best_friend = Self::best_friend_group_id(pool).await?;
 
         let start_of_today = start_of_local_day()?;
+
+        let now = current_time().timestamp();
 
         let wanted = group_ids.map(|ids| ids.into_iter().collect::<HashSet<_>>());
 
@@ -74,7 +80,7 @@ impl Group {
                 let is_best_friend = row.also_best_friend != 0
                     && best_friend.as_deref() == Some(row.group_id.as_str());
 
-                let state = row.derive(start_of_today, is_best_friend);
+                let state = row.derive(start_of_today, now, is_best_friend);
 
                 (row.group_id, state)
             })
@@ -119,7 +125,9 @@ impl Group {
     ) -> Result<Option<i64>> {
         let Some(group) = sqlx::query!(
             r#"SELECT flame_counter, max_flame_counter, max_flame_counter_from,
-                      last_message_send, last_message_received, last_flame_counter_change
+                      last_message_send, last_message_received, last_flame_counter_change,
+                      vacation_from, vacation_until, vacation_icon,
+                      peer_vacation_from, peer_vacation_until, peer_vacation_icon
                FROM groups WHERE group_id = ?"#,
             group_id,
         )
@@ -138,8 +146,14 @@ impl Group {
             last_message_send: group.last_message_send,
             last_message_received: group.last_message_received,
             last_flame_counter_change: group.last_flame_counter_change,
+            vacation_from: group.vacation_from,
+            vacation_until: group.vacation_until,
+            vacation_icon: group.vacation_icon,
+            peer_vacation_from: group.peer_vacation_from,
+            peer_vacation_until: group.peer_vacation_until,
+            peer_vacation_icon: group.peer_vacation_icon,
         }
-        .derive(start_of_local_day()?, false);
+        .derive(start_of_local_day()?, now, false);
 
         if !can_restore(
             group.max_flame_counter,
@@ -193,7 +207,9 @@ impl Group {
         let Some(group) = sqlx::query!(
             r#"SELECT last_message_send, last_message_received,
                       last_flame_counter_change, flame_counter,
-                      max_flame_counter, max_flame_counter_from
+                      max_flame_counter, max_flame_counter_from,
+                      vacation_from, vacation_until, vacation_icon,
+                      peer_vacation_from, peer_vacation_until, peer_vacation_icon
                FROM groups WHERE group_id = ?"#,
             group_id,
         )
@@ -241,15 +257,45 @@ impl Group {
 
         let mut last_flame_counter_change = group.last_flame_counter_change;
 
-        if group
-            .last_message_send
-            .zip(group.last_message_received)
+        let own_vacation = VacationWindow::from_columns(
+            group.vacation_from,
+            group.vacation_until,
+            group.vacation_icon,
+        );
+
+        let peer_vacation = VacationWindow::from_columns(
+            group.peer_vacation_from,
+            group.peer_vacation_until,
+            group.peer_vacation_icon,
+        );
+
+        let vacations: Vec<&VacationWindow> =
+            own_vacation.iter().chain(peer_vacation.iter()).collect();
+
+        // A vacation that ended recently is what kept the streak alive, so the
+        // reset has to judge the frozen times, not the last real exchange.
+        let frozen = freeze(
+            group.last_message_send,
+            group.last_message_received,
+            group.last_flame_counter_change,
+            &vacations,
+            now.timestamp(),
+            None,
+        );
+
+        if frozen
+            .sent
+            .zip(frozen.received)
             .is_some_and(|(sent, received)| sent < two_days_ago || received < two_days_ago)
         {
             flame_counter = 0;
         }
 
-        if last_flame_counter_change.is_none_or(|changed| changed < start_of_today) {
+        // While either side is on vacation the streak is frozen: the media
+        // still counts towards the totals, never towards the flames.
+        if frozen.active.is_none()
+            && last_flame_counter_change.is_none_or(|changed| changed < start_of_today)
+        {
             let completes_today = if received {
                 group
                     .last_message_send
@@ -532,7 +578,7 @@ pub struct FlameSyncGroup {
 /// The flame counter as the UI shows it. Everything here is derived from the
 /// group row against the current local day, never read straight out of a
 /// column.
-#[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
 
 pub struct FlameState {
     pub counter: i64,
@@ -540,44 +586,95 @@ pub struct FlameState {
     pub is_expiring: bool,
     /// Mutual: our most-exchanged chat, and they said the same about us.
     pub is_best_friend: bool,
+    /// Shown instead of the flame while a vacation freezes the streak. The
+    /// user's own vacation wins over the peer's.
+    pub vacation_icon: Option<String>,
 }
 
-struct FlameRow {
-    group_id: String,
-    flame_counter: i64,
-    also_best_friend: i64,
-    last_message_send: Option<i64>,
-    last_message_received: Option<i64>,
-    last_flame_counter_change: Option<i64>,
+/// Whether a streak with these exchange times is still shown on the day
+/// starting at `start_of_day`.
+pub(crate) fn flame_alive_on(
+    sent: Option<i64>, received: Option<i64>, changed: Option<i64>, start_of_day: i64,
+) -> bool {
+    let (Some(sent), Some(received), Some(changed)) = (sent, received, changed) else {
+        return false;
+    };
+
+    let two_days_ago = start_of_day - 2 * 24 * 60 * 60;
+
+    let one_day_ago = start_of_day - 24 * 60 * 60;
+
+    sent > two_days_ago && received > two_days_ago || changed > one_day_ago
+}
+
+pub(super) struct FlameRow {
+    pub(super) group_id: String,
+    pub(super) flame_counter: i64,
+    pub(super) also_best_friend: i64,
+    pub(super) last_message_send: Option<i64>,
+    pub(super) last_message_received: Option<i64>,
+    pub(super) last_flame_counter_change: Option<i64>,
+    pub(super) vacation_from: Option<i64>,
+    pub(super) vacation_until: Option<i64>,
+    pub(super) vacation_icon: Option<String>,
+    pub(super) peer_vacation_from: Option<i64>,
+    pub(super) peer_vacation_until: Option<i64>,
+    pub(super) peer_vacation_icon: Option<String>,
 }
 
 impl FlameRow {
-    fn derive(&self, start_of_today: i64, is_best_friend: bool) -> FlameState {
+    pub(super) fn derive(&self, start_of_today: i64, now: i64, is_best_friend: bool) -> FlameState {
         let expired = FlameState {
             is_best_friend,
             ..FlameState::default()
         };
 
-        let (Some(sent), Some(received), Some(changed)) = (
+        let own = VacationWindow::from_columns(
+            self.vacation_from,
+            self.vacation_until,
+            self.vacation_icon.clone(),
+        );
+
+        let peer = VacationWindow::from_columns(
+            self.peer_vacation_from,
+            self.peer_vacation_until,
+            self.peer_vacation_icon.clone(),
+        );
+
+        let vacations: Vec<&VacationWindow> = own.iter().chain(peer.iter()).collect();
+
+        let frozen = freeze(
             self.last_message_send,
             self.last_message_received,
             self.last_flame_counter_change,
-        ) else {
+            &vacations,
+            now,
+            None,
+        );
+
+        if !flame_alive_on(
+            frozen.sent,
+            frozen.received,
+            self.last_flame_counter_change,
+            start_of_today,
+        ) {
+            return expired;
+        }
+
+        let (Some(sent), Some(received)) = (frozen.sent, frozen.received) else {
             return expired;
         };
 
-        let two_days_ago = start_of_today - 2 * 24 * 60 * 60;
-
         let one_day_ago = start_of_today - 24 * 60 * 60;
 
-        if sent > two_days_ago && received > two_days_ago || changed > one_day_ago {
-            FlameState {
-                counter: self.flame_counter,
-                is_expiring: sent < one_day_ago || received < one_day_ago,
-                is_best_friend,
-            }
-        } else {
-            expired
+        FlameState {
+            counter: self.flame_counter,
+            is_expiring: sent < one_day_ago || received < one_day_ago,
+            is_best_friend,
+            vacation_icon: frozen
+                .active
+                .filter(|_| self.flame_counter > 0)
+                .map(|window| window.icon.clone()),
         }
     }
 }
@@ -1048,6 +1145,12 @@ mod tests {
             last_message_send: Some(sent),
             last_message_received: Some(received),
             last_flame_counter_change: Some(changed),
+            vacation_from: None,
+            vacation_until: None,
+            vacation_icon: None,
+            peer_vacation_from: None,
+            peer_vacation_until: None,
+            peer_vacation_icon: None,
         }
     }
 
@@ -1061,9 +1164,15 @@ mod tests {
             last_message_send: None,
             last_message_received: None,
             last_flame_counter_change: None,
+            vacation_from: None,
+            vacation_until: None,
+            vacation_icon: None,
+            peer_vacation_from: None,
+            peer_vacation_until: None,
+            peer_vacation_icon: None,
         };
 
-        assert_eq!(empty.derive(local_midnight(2026, 2, 3), false).counter, 0);
+        assert_eq!(empty.derive(local_midnight(2026, 2, 3), local_midnight(2026, 2, 3), false).counter, 0);
     }
 
     /// The day-by-day walk the Dart `normal flame expiring` test performed: one
@@ -1077,15 +1186,15 @@ mod tests {
 
         let row = row(1, sent, received, sent);
 
-        assert_eq!(row.derive(local_midnight(2026, 2, 2), false).counter, 1);
+        assert_eq!(row.derive(local_midnight(2026, 2, 2), local_midnight(2026, 2, 2), false).counter, 1);
 
-        assert_eq!(row.derive(local_midnight(2026, 2, 3), false).counter, 1);
+        assert_eq!(row.derive(local_midnight(2026, 2, 3), local_midnight(2026, 2, 3), false).counter, 1);
 
-        assert_eq!(row.derive(local_midnight(2026, 2, 4), false).counter, 1);
+        assert_eq!(row.derive(local_midnight(2026, 2, 4), local_midnight(2026, 2, 4), false).counter, 1);
 
-        assert_eq!(row.derive(local_midnight(2026, 2, 5), false).counter, 0);
+        assert_eq!(row.derive(local_midnight(2026, 2, 5), local_midnight(2026, 2, 5), false).counter, 0);
 
-        assert_eq!(row.derive(local_midnight(2026, 3, 1), false).counter, 0);
+        assert_eq!(row.derive(local_midnight(2026, 3, 1), local_midnight(2026, 3, 1), false).counter, 0);
     }
 
     /// The `isExpiring` half of the same Dart test: an exchange from two days
@@ -1097,19 +1206,19 @@ mod tests {
 
         let row = row(3, exchange, exchange - 3600, exchange);
 
-        let same_day = row.derive(local_midnight(2026, 2, 7), false);
+        let same_day = row.derive(local_midnight(2026, 2, 7), local_midnight(2026, 2, 7), false);
 
         assert_eq!((same_day.counter, same_day.is_expiring), (3, false));
 
-        let next_day = row.derive(local_midnight(2026, 2, 8), false);
+        let next_day = row.derive(local_midnight(2026, 2, 8), local_midnight(2026, 2, 8), false);
 
         assert_eq!((next_day.counter, next_day.is_expiring), (3, false));
 
-        let last_day = row.derive(local_midnight(2026, 2, 9), false);
+        let last_day = row.derive(local_midnight(2026, 2, 9), local_midnight(2026, 2, 9), false);
 
         assert_eq!((last_day.counter, last_day.is_expiring), (3, true));
 
-        let lapsed = row.derive(local_midnight(2026, 2, 10), false);
+        let lapsed = row.derive(local_midnight(2026, 2, 10), local_midnight(2026, 2, 10), false);
 
         assert_eq!((lapsed.counter, lapsed.is_expiring), (0, false));
     }

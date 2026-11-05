@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/backup/progress.dart';
+import 'package:twonly/core/bridge/wrapper/backup.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/backup_progress.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_setup.comp.dart';
 
 class SetupBackupView extends StatefulWidget {
@@ -28,6 +34,25 @@ class _SetupBackupViewState extends State<SetupBackupView> {
   bool _isLoading = false;
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _repeatedController = TextEditingController();
+  StreamSubscription<BackupProgress>? _progressSub;
+  BackupProgress? _progress;
+
+  @override
+  void initState() {
+    super.initState();
+    // A password change uploads the identity before it returns.
+    _progressSub = RustBackupArchive.progress().listen((progress) {
+      if (mounted) setState(() => _progress = progress);
+    });
+  }
+
+  @override
+  void dispose() {
+    _progressSub?.cancel();
+    _passwordController.dispose();
+    _repeatedController.dispose();
+    super.dispose();
+  }
 
   Future<void> _updateBackupPassword() async {
     if (!await isSecurePassword(_passwordController.text)) {
@@ -53,6 +78,7 @@ class _SetupBackupViewState extends State<SetupBackupView> {
     );
     if (!mounted) return;
     if (!verified) {
+      setState(() => _isLoading = false);
       showSnackbar(
         context,
         context.lang.backupChangePasswordAuthFailed,
@@ -61,7 +87,15 @@ class _SetupBackupViewState extends State<SetupBackupView> {
     }
 
     await Future.delayed(const Duration(milliseconds: 100));
-    await BackupService.updateBackupPassword(_passwordController.text);
+    try {
+      await BackupService.updateBackupPassword(_passwordController.text);
+    } catch (error, stackTrace) {
+      Log.warn('Could not change the backup password.', error, stackTrace);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      showSnackbar(context, context.lang.backupChangePasswordFailed);
+      return;
+    }
     await UserService.update((u) => u.isBackupEnabled = true);
 
     if (!mounted) return;
@@ -161,6 +195,12 @@ class _SetupBackupViewState extends State<SetupBackupView> {
                   ),
                 ),
               ),
+              if (_isLoading &&
+                  _progress != null &&
+                  _progress!.stage != BackupStage.idle) ...[
+                const SizedBox(height: 20),
+                BackupProgressComp(progress: _progress!),
+              ],
             ],
           ),
         ),
