@@ -255,16 +255,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Capture coordinates for Memories and gallery exports. These coordinates are never sent to contacts.';
 
   @override
-  String get locationStickerSettingTitle => 'Location sticker';
-
-  @override
-  String get locationStickerSettingSubtitle =>
-      'Shows your city or country, or coordinates if no place name is available. Your location is shared only when you select the location filter.';
-
-  @override
-  String get locationStickerLoading => 'Finding your location…';
-
-  @override
   String get liveLocationMenu => 'Location';
 
   @override
@@ -3492,7 +3482,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStatusUnavailable => 'Status could not be loaded';
 
   @override
-  String get settingsNewsShortcut => 'Show news shortcut';
+  String get settingsNewsShortcut => 'Always hide news icon';
 
   @override
   String get settingsDownloadNone => 'No automatic photo or video downloads';

@@ -638,7 +638,9 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
             .await?;
 
         assert!(!tester_b.is_contact_verified(tester_c.user_id).await?);
-        tester_b.set_contact_verified(tester_a.user_id, true).await?;
+        tester_b
+            .set_contact_verified(tester_a.user_id, true)
+            .await?;
         MessageService::new(&tester_a.context)
             .insert_and_send_contact_share(group_id.clone(), vec![tester_c.user_id])
             .await?;

@@ -77,7 +77,7 @@ impl Server {
                     client_to_server::application_data::IpaForceCheck {},
                 ),
             )
-            .await?
+            .await?,
         )
     }
 }

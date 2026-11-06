@@ -485,9 +485,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ReceiptPatch dco_decode_box_autoadd_receipt_patch(dynamic raw);
 
   @protected
-  StickerLocation dco_decode_box_autoadd_sticker_location(dynamic raw);
-
-  @protected
   StoredMessage dco_decode_box_autoadd_stored_message(dynamic raw);
 
   @protected
@@ -1010,9 +1007,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Receipt? dco_decode_opt_box_autoadd_receipt(dynamic raw);
 
   @protected
-  StickerLocation? dco_decode_opt_box_autoadd_sticker_location(dynamic raw);
-
-  @protected
   StoredMessage? dco_decode_opt_box_autoadd_stored_message(dynamic raw);
 
   @protected
@@ -1149,9 +1143,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StickerCollection dco_decode_sticker_collection(dynamic raw);
-
-  @protected
-  StickerLocation dco_decode_sticker_location(dynamic raw);
 
   @protected
   StickerMetadata dco_decode_sticker_metadata(dynamic raw);
@@ -1755,11 +1746,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ReceiptPatch sse_decode_box_autoadd_receipt_patch(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  StickerLocation sse_decode_box_autoadd_sticker_location(
     SseDeserializer deserializer,
   );
 
@@ -2424,11 +2410,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Receipt? sse_decode_opt_box_autoadd_receipt(SseDeserializer deserializer);
 
   @protected
-  StickerLocation? sse_decode_opt_box_autoadd_sticker_location(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   StoredMessage? sse_decode_opt_box_autoadd_stored_message(
     SseDeserializer deserializer,
   );
@@ -2597,9 +2578,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StickerCollection sse_decode_sticker_collection(SseDeserializer deserializer);
-
-  @protected
-  StickerLocation sse_decode_sticker_location(SseDeserializer deserializer);
 
   @protected
   StickerMetadata sse_decode_sticker_metadata(SseDeserializer deserializer);
@@ -3345,12 +3323,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_receipt_patch(
     ReceiptPatch self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_sticker_location(
-    StickerLocation self,
     SseSerializer serializer,
   );
 
@@ -4180,12 +4152,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_opt_box_autoadd_sticker_location(
-    StickerLocation? self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_opt_box_autoadd_stored_message(
     StoredMessage? self,
     SseSerializer serializer,
@@ -4398,12 +4364,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_sticker_collection(
     StickerCollection self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_sticker_location(
-    StickerLocation self,
     SseSerializer serializer,
   );
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/location_sticker.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 
@@ -145,15 +144,6 @@ class _StickerImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = layerData;
-    if (data is LocationStickerLayerData) {
-      return SizedBox(
-        width: data.size,
-        child: Opacity(
-          opacity: data.opacity,
-          child: FittedBox(child: LocationSticker(city: data.city)),
-        ),
-      );
-    }
     if (data is! StickerLayerData) return const SizedBox.shrink();
     final aspect = data.width / data.height;
     final width = aspect >= 1 ? layerData.size : layerData.size * aspect;

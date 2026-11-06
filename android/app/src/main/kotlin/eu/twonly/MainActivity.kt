@@ -185,18 +185,6 @@ class MainActivity : FlutterFragmentActivity() {
                 result.success(NativeLocation.hasPrecisePermission())
                 return@setMethodCallHandler
             }
-            if (call.method == "resolveCity") {
-                val latitude = call.argument<Double>("latitude")
-                val longitude = call.argument<Double>("longitude")
-                if (latitude == null || longitude == null) {
-                    result.success(null)
-                } else {
-                    NativeLocation.resolveCity(latitude, longitude, call.argument<String>("locale")) { city ->
-                        result.success(city)
-                    }
-                }
-                return@setMethodCallHandler
-            }
             if (call.method != "requestPrecisePermission") {
                 result.notImplemented()
                 return@setMethodCallHandler

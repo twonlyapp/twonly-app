@@ -360,6 +360,17 @@ pub(crate) async fn ensure_contact_exists(ctx: &Arc<Context>, from_user_id: i64)
 
     let user = match Server::get_user_by_id(ctx, from_user_id).await? {
         ServerResult::Ok(u) => u,
+        // The server has no account with this ID, and IDs are never handed
+        // out again, so this sender's messages can never be opened. The server
+        // keeps a deleted account's sent messages, though, and a page of them
+        // left unacknowledged held back everything behind it in the mailbox.
+        ServerResult::ErrorCode(code)
+            if code == crate::api::proto::error::ErrorCode::UserIdNotFound as i32 =>
+        {
+            return Err(TwonlyError::UnprocessableContent(format!(
+                "sender {from_user_id} has no account"
+            )));
+        }
         ServerResult::ErrorCode(code) => {
             return Err(TwonlyError::Generic(format!(
                 "Failed to get user by id: {}",

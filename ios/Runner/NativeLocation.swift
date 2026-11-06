@@ -1,7 +1,6 @@
 import CoreLocation
 import Flutter
 import Foundation
-import MapKit
 import UIKit
 import UserNotifications
 
@@ -39,24 +38,6 @@ final class NativeLocationPermission: NSObject, CLLocationManagerDelegate {
       }
       if call.method == "hasPrecisePermission" {
         result(hasPreciseLocationPermission())
-        return
-      }
-      if call.method == "resolveCity" {
-        guard let arguments = call.arguments as? [String: Any],
-          let latitude = arguments["latitude"] as? Double,
-          let longitude = arguments["longitude"] as? Double,
-          latitude.isFinite, longitude.isFinite,
-          (-90...90).contains(latitude), (-180...180).contains(longitude),
-          hasPreciseLocationPermission()
-        else {
-          result(nil)
-          return
-        }
-        NativeCityRequest.start(
-          location: CLLocation(latitude: latitude, longitude: longitude),
-          locale: Locale(identifier: arguments["locale"] as? String ?? Locale.current.identifier),
-          completion: result
-        )
         return
       }
       guard call.method == "requestPrecisePermission" else {
@@ -286,73 +267,6 @@ private func hasPreciseLocationPermission() -> Bool {
   return CLLocationManager.locationServicesEnabled()
     && [.authorizedAlways, .authorizedWhenInUse].contains(manager.authorizationStatus)
     && manager.accuracyAuthorization == .fullAccuracy
-}
-
-/// Retained until completion/timeout; a timeout cannot complete Flutter twice.
-private final class NativeCityRequest {
-  private static var active: [UUID: NativeCityRequest] = [:]
-  private let id = UUID()
-  private let completion: FlutterResult
-  private var geocoder: CLGeocoder?
-  private var mapRequest: AnyObject?
-  private var timeout: DispatchWorkItem?
-  private var finished = false
-
-  private init(completion: @escaping FlutterResult) {
-    self.completion = completion
-  }
-
-  static func start(location: CLLocation, locale: Locale, completion: @escaping FlutterResult) {
-    let request = NativeCityRequest(completion: completion)
-    active[request.id] = request
-    request.begin(location: location, locale: locale)
-  }
-
-  private func begin(location: CLLocation, locale: Locale) {
-    let timeout = DispatchWorkItem { [weak self] in self?.finish(nil) }
-    self.timeout = timeout
-    DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: timeout)
-    if #available(iOS 26.0, *) {
-      guard let request = MKReverseGeocodingRequest(location: location) else {
-        finish(nil)
-        return
-      }
-      mapRequest = request
-      request.preferredLocale = locale
-      request.getMapItems { [weak self] items, _ in
-        let address = items?.first?.addressRepresentations
-        self?.finish(Self.placeLabel(city: address?.cityName, country: address?.regionName))
-      }
-    } else {
-      let geocoder = CLGeocoder()
-      self.geocoder = geocoder
-      geocoder.reverseGeocodeLocation(location, preferredLocale: locale) { [weak self] places, _ in
-        let place = places?.first
-        self?.finish(Self.placeLabel(city: place?.locality, country: place?.country))
-      }
-    }
-  }
-
-  private static func placeLabel(city: String?, country: String?) -> String? {
-    for value in [city, country] {
-      if let name = value?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
-        return name
-      }
-    }
-    return nil
-  }
-
-  private func finish(_ city: String?) {
-    guard !finished else { return }
-    finished = true
-    timeout?.cancel()
-    geocoder?.cancelGeocode()
-    if #available(iOS 26.0, *), let request = mapRequest as? MKReverseGeocodingRequest {
-      request.cancel()
-    }
-    Self.active.removeValue(forKey: id)
-    completion(hasPreciseLocationPermission() ? city : nil)
-  }
 }
 
 private final class NativeLocationRequest: NSObject, CLLocationManagerDelegate {

@@ -1951,13 +1951,14 @@ mod tests {
         use crate::database::app::groups::vacation::VacationWindow;
         use crate::services::groups::vacation::{vacation_data, VACATION_MESSAGE_TYPE};
 
-        let message = |r#type: &str, data: Option<Vec<u8>>| encrypted_content::AdditionalDataMessage {
-            sender_message_id: "m".into(),
-            timestamp: 1_000_000,
-            r#type: r#type.into(),
-            additional_message_data: data,
-            hidden: false,
-        };
+        let message =
+            |r#type: &str, data: Option<Vec<u8>>| encrypted_content::AdditionalDataMessage {
+                sender_message_id: "m".into(),
+                timestamp: 1_000_000,
+                r#type: r#type.into(),
+                additional_message_data: data,
+                hidden: false,
+            };
 
         let window = |until| {
             Some(vacation_data(&VacationWindow {
@@ -1990,7 +1991,10 @@ mod tests {
             None
         );
 
-        assert_eq!(vacation_kind(&message("restoreFlameCounter", window(5_000))), None);
+        assert_eq!(
+            vacation_kind(&message("restoreFlameCounter", window(5_000))),
+            None
+        );
 
         for (kind, key) in [
             ("vacation", "notificationVacation"),

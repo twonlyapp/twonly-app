@@ -574,24 +574,6 @@ abstract class AppLocalizations {
   /// **'Capture coordinates for Memories and gallery exports. These coordinates are never sent to contacts.'**
   String get memoryLocationSubtitle;
 
-  /// No description provided for @locationStickerSettingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Location sticker'**
-  String get locationStickerSettingTitle;
-
-  /// No description provided for @locationStickerSettingSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Shows your city or country, or coordinates if no place name is available. Your location is shared only when you select the location filter.'**
-  String get locationStickerSettingSubtitle;
-
-  /// No description provided for @locationStickerLoading.
-  ///
-  /// In en, this message translates to:
-  /// **'Finding your location…'**
-  String get locationStickerLoading;
-
   /// No description provided for @liveLocationMenu.
   ///
   /// In en, this message translates to:
@@ -5899,7 +5881,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNewsShortcut.
   ///
   /// In en, this message translates to:
-  /// **'Show news shortcut'**
+  /// **'Always hide news icon'**
   String get settingsNewsShortcut;
 
   /// No description provided for @settingsDownloadNone.

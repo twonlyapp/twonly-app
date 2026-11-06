@@ -1104,10 +1104,18 @@ mod tests {
     fn a_direct_chat_id_matches_the_ids_older_releases_created() {
         let cases = [
             (0, 0, "00000000-0000-0000-0000-000000000000"),
-            (0x7fffffff, 0x7fffffff, "00000000-7fff-ffff-0000-00007fffffff"),
+            (
+                0x7fffffff,
+                0x7fffffff,
+                "00000000-7fff-ffff-0000-00007fffffff",
+            ),
             (1, 0, "00000000-0000-0001-0000-000000000000"),
             (0, 1, "00000000-0000-0001-0000-000000000000"),
-            (0x12345678, 0x0abcdef0, "00000000-1234-5678-0000-00000abcdef0"),
+            (
+                0x12345678,
+                0x0abcdef0,
+                "00000000-1234-5678-0000-00000abcdef0",
+            ),
             (
                 0x7dc8a4f20a75de46,
                 0x7ffffffffffffff8,
@@ -1172,7 +1180,16 @@ mod tests {
             peer_vacation_icon: None,
         };
 
-        assert_eq!(empty.derive(local_midnight(2026, 2, 3), local_midnight(2026, 2, 3), false).counter, 0);
+        assert_eq!(
+            empty
+                .derive(
+                    local_midnight(2026, 2, 3),
+                    local_midnight(2026, 2, 3),
+                    false
+                )
+                .counter,
+            0
+        );
     }
 
     /// The day-by-day walk the Dart `normal flame expiring` test performed: one
@@ -1186,15 +1203,55 @@ mod tests {
 
         let row = row(1, sent, received, sent);
 
-        assert_eq!(row.derive(local_midnight(2026, 2, 2), local_midnight(2026, 2, 2), false).counter, 1);
+        assert_eq!(
+            row.derive(
+                local_midnight(2026, 2, 2),
+                local_midnight(2026, 2, 2),
+                false
+            )
+            .counter,
+            1
+        );
 
-        assert_eq!(row.derive(local_midnight(2026, 2, 3), local_midnight(2026, 2, 3), false).counter, 1);
+        assert_eq!(
+            row.derive(
+                local_midnight(2026, 2, 3),
+                local_midnight(2026, 2, 3),
+                false
+            )
+            .counter,
+            1
+        );
 
-        assert_eq!(row.derive(local_midnight(2026, 2, 4), local_midnight(2026, 2, 4), false).counter, 1);
+        assert_eq!(
+            row.derive(
+                local_midnight(2026, 2, 4),
+                local_midnight(2026, 2, 4),
+                false
+            )
+            .counter,
+            1
+        );
 
-        assert_eq!(row.derive(local_midnight(2026, 2, 5), local_midnight(2026, 2, 5), false).counter, 0);
+        assert_eq!(
+            row.derive(
+                local_midnight(2026, 2, 5),
+                local_midnight(2026, 2, 5),
+                false
+            )
+            .counter,
+            0
+        );
 
-        assert_eq!(row.derive(local_midnight(2026, 3, 1), local_midnight(2026, 3, 1), false).counter, 0);
+        assert_eq!(
+            row.derive(
+                local_midnight(2026, 3, 1),
+                local_midnight(2026, 3, 1),
+                false
+            )
+            .counter,
+            0
+        );
     }
 
     /// The `isExpiring` half of the same Dart test: an exchange from two days
@@ -1206,19 +1263,35 @@ mod tests {
 
         let row = row(3, exchange, exchange - 3600, exchange);
 
-        let same_day = row.derive(local_midnight(2026, 2, 7), local_midnight(2026, 2, 7), false);
+        let same_day = row.derive(
+            local_midnight(2026, 2, 7),
+            local_midnight(2026, 2, 7),
+            false,
+        );
 
         assert_eq!((same_day.counter, same_day.is_expiring), (3, false));
 
-        let next_day = row.derive(local_midnight(2026, 2, 8), local_midnight(2026, 2, 8), false);
+        let next_day = row.derive(
+            local_midnight(2026, 2, 8),
+            local_midnight(2026, 2, 8),
+            false,
+        );
 
         assert_eq!((next_day.counter, next_day.is_expiring), (3, false));
 
-        let last_day = row.derive(local_midnight(2026, 2, 9), local_midnight(2026, 2, 9), false);
+        let last_day = row.derive(
+            local_midnight(2026, 2, 9),
+            local_midnight(2026, 2, 9),
+            false,
+        );
 
         assert_eq!((last_day.counter, last_day.is_expiring), (3, true));
 
-        let lapsed = row.derive(local_midnight(2026, 2, 10), local_midnight(2026, 2, 10), false);
+        let lapsed = row.derive(
+            local_midnight(2026, 2, 10),
+            local_midnight(2026, 2, 10),
+            false,
+        );
 
         assert_eq!((lapsed.counter, lapsed.is_expiring), (0, false));
     }

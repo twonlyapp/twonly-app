@@ -1239,9 +1239,18 @@ async fn handle_encrypted_inner(
         user_discovery::check_sender_version(ctx, t, from_user_id, version).await?;
     }
 
-    contact::check_for_profile_update(t, from_user_id, &content).await?;
+    // A block ends the profile exchange both ways: a blocked sender is neither
+    // answered with our name and avatar nor asked for theirs. Their group
+    // messages still show, so the rest of their content is handled below.
+    let blocked = Contact::get_contact_by_id(t, from_user_id)
+        .await?
+        .is_some_and(|contact| contact.blocked != 0);
 
-    contact::check_for_custom_avatar_update(t, from_user_id, &content).await?;
+    if !blocked {
+        contact::check_for_profile_update(t, from_user_id, &content).await?;
+
+        contact::check_for_custom_avatar_update(t, from_user_id, &content).await?;
+    }
 
     if content.ask_for_friend_promotions == Some(true) {
         Contact::update_ask_for_friend_promotions(t, from_user_id).await?;
@@ -1272,6 +1281,12 @@ async fn handle_encrypted_inner(
     }
 
     if let Some(update) = content.contact_update {
+        if blocked {
+            tracing::info!("Ignoring a profile exchange with a blocked contact");
+
+            return Ok(());
+        }
+
         return contact::handle_contact_update(
             ctx,
             t,
@@ -2285,6 +2300,79 @@ mod tests {
                 ("group-after-block".to_owned(), "after".to_owned()),
             ]
         );
+
+        Ok(())
+    }
+
+    /// A block promises the contact learns nothing more about us, so asking
+    /// for our profile gets no answer, and a newer profile of theirs is not
+    /// asked for either.
+    #[tokio::test]
+    async fn a_blocked_contact_gets_no_profile_back() -> Result<()> {
+        let (_directory, ctx) = chats().await?;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query("UPDATE contacts SET blocked = 1 WHERE user_id = 7")
+            .execute(&database.pool)
+            .await?;
+
+        from(
+            &ctx,
+            7,
+            proto::EncryptedContent {
+                contact_update: Some(proto::encrypted_content::ContactUpdate {
+                    r#type: proto::encrypted_content::contact_update::Type::Request as i32,
+                    custom_avatar_requested: Some(true),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+        )
+        .await?;
+        from(
+            &ctx,
+            7,
+            proto::EncryptedContent {
+                sender_profile_counter: Some(5),
+                sender_custom_avatar_counter: Some(5),
+                custom_avatar_protocol_version: Some(
+                    crate::services::avatars::CUSTOM_AVATAR_PROTOCOL_VERSION,
+                ),
+                ..Default::default()
+            },
+        )
+        .await?;
+
+        let queued: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM receipts WHERE contact_id = 7 AND receipt_id != \
+             'my-text-receipt'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(queued, 0);
+
+        // The same request from a contact who is not blocked is answered.
+        sqlx::query("UPDATE contacts SET blocked = 0 WHERE user_id = 7")
+            .execute(&database.pool)
+            .await?;
+        from(
+            &ctx,
+            7,
+            proto::EncryptedContent {
+                contact_update: Some(proto::encrypted_content::ContactUpdate {
+                    r#type: proto::encrypted_content::contact_update::Type::Request as i32,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+        )
+        .await?;
+        let queued: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM receipts WHERE contact_id = 7 AND receipt_id != \
+             'my-text-receipt'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(queued, 1);
 
         Ok(())
     }

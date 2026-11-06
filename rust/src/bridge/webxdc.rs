@@ -309,17 +309,19 @@ pub async fn updates_after(instance_id: String, serial: i64) -> Result<Vec<Webxd
 
     let service = WebxdcService::new(ctx);
 
-    Ok(read_after_reopen(|| service.updates_after(&instance_id, serial))
-        .await?
-        .into_iter()
-        .map(|update| WebxdcUpdateEntry {
-            serial: update.serial,
-            payload: update.payload,
-            info: update.info,
-            href: update.href,
-            sender_id: update.sender_id,
-        })
-        .collect())
+    Ok(
+        read_after_reopen(|| service.updates_after(&instance_id, serial))
+            .await?
+            .into_iter()
+            .map(|update| WebxdcUpdateEntry {
+                serial: update.serial,
+                payload: update.payload,
+                info: update.info,
+                href: update.href,
+                sender_id: update.sender_id,
+            })
+            .collect(),
+    )
 }
 
 pub async fn send_update(

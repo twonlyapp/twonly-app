@@ -3,7 +3,7 @@
  *
  */
 
-//! Shared opt-in location acquisition for Memories and city stickers.
+//! Opt-in location acquisition for Memories.
 
 use crate::context::Context;
 use crate::error::Result;
@@ -80,9 +80,7 @@ async fn request_fix(
 pub(crate) fn prewarm(ctx: &Arc<Context>) -> Result<()> {
     let config = UserConfig::load_required_from(ctx)?;
 
-    if !(config.store_location_in_memories || config.enable_location_sticker)
-        || CAMERA_WARMUP_IN_FLIGHT.swap(true, Ordering::AcqRel)
-    {
+    if !config.store_location_in_memories || CAMERA_WARMUP_IN_FLIGHT.swap(true, Ordering::AcqRel) {
         return Ok(());
     }
 
@@ -106,41 +104,6 @@ pub(crate) fn prewarm(ctx: &Arc<Context>) -> Result<()> {
     });
 
     Ok(())
-}
-
-/// Reuses the same native request/cache as Memories without creating or
-/// modifying a media row. The editor never waits for the full Memory window.
-pub(crate) async fn current_for_sticker(ctx: &Arc<Context>) -> Result<Option<LocationFix>> {
-    if !UserConfig::load_required_from(ctx)?.enable_location_sticker {
-        return Ok(None);
-    }
-
-    let Ok(request) = tokio::time::timeout(Duration::from_secs(15), LOCATION_REQUEST.lock()).await
-    else {
-        return Ok(None);
-    };
-
-    // Recheck after waiting for another request or a settings change.
-    if !UserConfig::load_required_from(ctx)?.enable_location_sticker {
-        return Ok(None);
-    }
-
-    if let Some((captured_at, location)) = *request {
-        if captured_at.elapsed().unwrap_or(Duration::MAX)
-            < Duration::from_secs(LOCATION_WINDOW_SECONDS as u64)
-        {
-            return Ok(Some(location));
-        }
-    }
-
-    let location = request_fix(request, Duration::from_secs(12)).await?;
-
-    // Disabling stickers while a native lookup runs must discard its result.
-    if !UserConfig::load_required_from(ctx)?.enable_location_sticker {
-        return Ok(None);
-    }
-
-    Ok(location)
 }
 
 pub(crate) async fn initialize_for_media(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
@@ -333,11 +296,10 @@ pub(crate) async fn resume(ctx: &Arc<Context>) -> Result<()> {
 pub(crate) async fn disable_pending(ctx: &Arc<Context>) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
 
-    let media_ids = sqlx::query_scalar!(
-        "SELECT media_id FROM media_files WHERE location_status = 'pending'",
-    )
-    .fetch_all(&database.pool)
-    .await?;
+    let media_ids =
+        sqlx::query_scalar!("SELECT media_id FROM media_files WHERE location_status = 'pending'",)
+            .fetch_all(&database.pool)
+            .await?;
 
     sqlx::query!(
         "UPDATE media_files SET location_status = 'timedOut' WHERE location_status = 'pending'",
@@ -360,57 +322,6 @@ pub(crate) async fn disable_pending(ctx: &Arc<Context>) -> Result<()> {
 mod tests {
 
     use super::*;
-
-    #[tokio::test]
-
-    async fn sticker_opt_in_does_not_enable_memory_metadata() -> anyhow::Result<()> {
-        let temp = tempfile::tempdir()?;
-
-        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
-            .await?;
-
-        UserConfig::save_json(
-            &ctx,
-            r#"{"userId":42,"username":"me","displayName":"Me","enableLocationSticker":true}"#,
-        )?;
-
-        let db = ctx.app_db.read().await.clone();
-
-        sqlx::query("INSERT INTO media_files(media_id, type) VALUES ('sticker-only', 'image')")
-            .execute(&db.pool)
-            .await?;
-
-        initialize_for_media(&ctx, "sticker-only").await?;
-
-        let actual: (Option<String>, Option<f64>, Option<f64>) = sqlx::query_as(
-            "SELECT location_status, location_latitude, location_longitude FROM media_files WHERE \
-             media_id = 'sticker-only'",
-        )
-        .fetch_one(&db.pool)
-        .await?;
-
-        assert_eq!(actual, (None, None, None));
-
-        Ok(())
-    }
-
-    #[tokio::test]
-
-    async fn memory_opt_in_does_not_expose_sticker_coordinates() -> anyhow::Result<()> {
-        let temp = tempfile::tempdir()?;
-
-        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
-            .await?;
-
-        UserConfig::save_json(
-            &ctx,
-            r#"{"userId":42,"username":"me","displayName":"Me","storeLocationInMemories":true}"#,
-        )?;
-
-        assert!(current_for_sticker(&ctx).await?.is_none());
-
-        Ok(())
-    }
 
     #[tokio::test]
 

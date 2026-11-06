@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -202,6 +203,13 @@ class _LocationMapState extends State<LocationMap> {
             zoomGesturesEnabled: widget.interactive,
             rotateGesturesEnabled: widget.interactive,
             tiltGesturesEnabled: false,
+            // The fullscreen view keeps its controls at the bottom.
+            attributionButtonPosition: widget.interactive
+                ? AttributionButtonPosition.topRight
+                : AttributionButtonPosition.bottomRight,
+            attributionButtonMargins: widget.interactive
+                ? math.Point(16, MediaQuery.paddingOf(context).top + 16)
+                : null,
             onMapCreated: (map) {
               if (mounted && generation == _generation) {
                 _map = map;

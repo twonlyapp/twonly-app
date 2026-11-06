@@ -179,15 +179,14 @@ mod tests {
         .execute(&mut *tx)
         .await?;
 
-        let announce = |id: &str, window: VacationWindow| {
-            encrypted_content::AdditionalDataMessage {
+        let announce =
+            |id: &str, window: VacationWindow| encrypted_content::AdditionalDataMessage {
                 sender_message_id: id.into(),
                 timestamp: now * 1000,
                 r#type: VACATION_MESSAGE_TYPE.into(),
                 additional_message_data: Some(vacation_data(&window)),
                 hidden: false,
-            }
-        };
+            };
 
         let window = VacationWindow {
             from: now,
@@ -196,20 +195,31 @@ mod tests {
         };
 
         for (id, group_id) in [("in-group", "friends"), ("in-bobs-chat", with_bob.as_str())] {
-            handle_additional_data_message(&ctx, &mut tx, 7, group_id, announce(id, window.clone()))
-                .await?;
+            handle_additional_data_message(
+                &ctx,
+                &mut tx,
+                7,
+                group_id,
+                announce(id, window.clone()),
+            )
+            .await?;
         }
 
-        handle_additional_data_message(&ctx, &mut tx, 7, &with_alice, announce("direct", window.clone()))
-            .await?;
+        handle_additional_data_message(
+            &ctx,
+            &mut tx,
+            7,
+            &with_alice,
+            announce("direct", window.clone()),
+        )
+        .await?;
 
-        let peer_windows: Vec<(String, Option<i64>, Option<i64>, Option<String>)> =
-            sqlx::query_as(
-                "SELECT group_id, peer_vacation_from, peer_vacation_until, peer_vacation_icon \
+        let peer_windows: Vec<(String, Option<i64>, Option<i64>, Option<String>)> = sqlx::query_as(
+            "SELECT group_id, peer_vacation_from, peer_vacation_until, peer_vacation_icon \
                  FROM groups ORDER BY group_id",
-            )
-            .fetch_all(&mut *tx)
-            .await?;
+        )
+        .fetch_all(&mut *tx)
+        .await?;
 
         for (group_id, from, until, icon) in peer_windows {
             if group_id == with_alice {
@@ -255,7 +265,10 @@ mod tests {
         .fetch_one(&mut *tx)
         .await?;
 
-        assert_eq!(forged, (now + 60, now + 60 + 9 * 24 * 3600, "🏕️".to_owned()));
+        assert_eq!(
+            forged,
+            (now + 60, now + 60 + 9 * 24 * 3600, "🏕️".to_owned())
+        );
 
         Ok(())
     }

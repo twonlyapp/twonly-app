@@ -93,6 +93,10 @@ class _HelpViewState extends State<HelpView> {
                 onTap: () => context.push(Routes.settingsHelpChangelog),
               ),
               ListTile(
+                title: Text(context.lang.settingsHelpNews),
+                onTap: () => context.push(Routes.settingsHelpNews),
+              ),
+              ListTile(
                 title: const Text('Open Source'),
                 onTap: () => launchUrl(
                   Uri.parse('https://github.com/twonlyapp/twonly-app'),

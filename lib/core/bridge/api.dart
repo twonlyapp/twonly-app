@@ -304,6 +304,7 @@ class MailboxSyncProgress {
           remaining == other.remaining;
 }
 
+/// Flutter-facing facade for the Rust-owned API runtime.
 class RustApi {
   const RustApi();
 
@@ -415,10 +416,6 @@ class RustApi {
       RustLib.instance.api.crateBridgeApiRustApiCropMediaTransparentBorders(
         mediaId: mediaId,
       );
-
-  /// Coordinates for native city lookup, available only with sticker opt-in.
-  static Future<StickerLocation?> currentLocationForSticker() =>
-      RustLib.instance.api.crateBridgeApiRustApiCurrentLocationForSticker();
 
   static Future<String?> currentUserAvatarPath() =>
       RustLib.instance.api.crateBridgeApiRustApiCurrentUserAvatarPath();
@@ -659,8 +656,7 @@ class RustApi {
   static Future<void> previewMailboxSync() =>
       RustLib.instance.api.crateBridgeApiRustApiPreviewMailboxSync();
 
-  /// Warms the shared location cache if Memories or city stickers are
-  /// enabled.
+  /// Warms the shared location cache if Memories are enabled.
   static Future<void> prewarmMemoryLocation() =>
       RustLib.instance.api.crateBridgeApiRustApiPrewarmMemoryLocation();
 
@@ -1016,26 +1012,4 @@ class RustApi {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is RustApi && runtimeType == other.runtimeType;
-}
-
-/// Flutter-facing facade for the Rust-owned API runtime.
-class StickerLocation {
-  final double latitude;
-  final double longitude;
-
-  const StickerLocation({
-    required this.latitude,
-    required this.longitude,
-  });
-
-  @override
-  int get hashCode => latitude.hashCode ^ longitude.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is StickerLocation &&
-          runtimeType == other.runtimeType &&
-          latitude == other.latitude &&
-          longitude == other.longitude;
 }

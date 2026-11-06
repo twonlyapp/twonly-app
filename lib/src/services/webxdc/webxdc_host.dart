@@ -183,15 +183,22 @@ class WebxdcHost {
     _openInstanceId = instanceId;
     _closeView = close;
     _deliveredSerial = 0;
+    Log.info('webxdc $instanceId opened');
     unawaited(_updateSubscription?.cancel());
     _updateSubscription = WebxdcService.watchUpdates(instanceId).listen(
       (_) => unawaited(_pushPendingUpdates()),
+      // Without this the open app silently stops seeing other players' moves.
+      onError: (Object error) =>
+          Log.warn('watching webxdc $instanceId updates failed: $error'),
     );
     return session;
   }
 
   static void detach(WebxdcSession session) {
     if (!identical(_session, session)) return;
+    Log.info(
+      'webxdc ${session.instanceId} closed at serial $_deliveredSerial',
+    );
     setVisible(session, visible: false);
     unawaited(_updateSubscription?.cancel());
     _updateSubscription = null;
@@ -544,6 +551,9 @@ class WebxdcHost {
           'params': {'updates': updates},
         }),
       });
+      Log.info(
+        'webxdc $instanceId got serials ${pending.first.serial}-$maxSerial',
+      );
       _deliveredSerial = maxSerial;
     } on PlatformException catch (error) {
       Log.warn('delivering webxdc updates failed: ${error.message}');

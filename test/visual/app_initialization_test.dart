@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/core/bridge/database.dart';
@@ -149,6 +150,67 @@ void main() {
     pending.complete(1);
     await tester.pumpAndSettle();
     expect(find.byType(UnlockTwonlyView), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('startup recovers from temporary SQLite contention', (
+    tester,
+  ) async {
+    api.readCount = () async {
+      if (api.attempts < 3) {
+        throw AnyhowException(
+          'error returned from database: (code: 5) database is locked',
+        );
+      }
+      return 1;
+    };
+    await tester.pumpWidget(app());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(api.attempts, 3);
+    expect(find.byType(UnlockTwonlyView), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('persistent SQLite contention still offers a manual retry', (
+    tester,
+  ) async {
+    api.readCount = () async => throw AnyhowException(
+      'error returned from database: (code: 5) database is locked',
+    );
+    await tester.pumpWidget(app());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(api.attempts, 3);
+    expect(find.byType(FilledButton), findsOneWidget);
+    api.readCount = () async => 1;
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    expect(find.byType(UnlockTwonlyView), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a pending SQLite retry stops when startup is backgrounded', (
+    tester,
+  ) async {
+    api.readCount = () async => throw AnyhowException(
+      'error returned from database: (code: 5) database is locked',
+    );
+    await tester.pumpWidget(app());
+    await tester.pump();
+    expect(api.attempts, 1);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump(const Duration(seconds: 1));
+    expect(api.attempts, 1);
+    api.readCount = () async => 1;
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(api.attempts, 2);
+    expect(find.byType(UnlockTwonlyView), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

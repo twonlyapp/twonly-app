@@ -6,6 +6,7 @@ import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc_host.dart';
 import 'package:twonly/src/utils/database_values.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
@@ -44,6 +45,7 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
   StreamSubscription<WebxdcCardInstance?>? _subscription;
   WebxdcCardInstance? _instance;
   WebxdcCardApp? _app;
+  bool _reportedMissing = false;
 
   @override
   void initState() {
@@ -72,6 +74,7 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
   void _seed() {
     final instance = WebxdcService.cachedInstance(widget.message.messageId);
     _instance = instance;
+    _reportedMissing = false;
     _app = instance == null
         ? null
         : WebxdcService.cachedApp(instance.appId, instance.version);
@@ -85,13 +88,28 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
 
   void _subscribe() {
     unawaited(_subscription?.cancel());
-    _subscription = WebxdcService.watchInstance(
-      widget.message.messageId,
-    ).listen(_onInstance);
+    _subscription =
+        WebxdcService.watchInstance(
+          widget.message.messageId,
+        ).listen(
+          _onInstance,
+          // The card stays an empty box until the watch answers.
+          onError: (Object error) => Log.warn(
+            'watching game card ${widget.message.messageId} failed: $error',
+          ),
+        );
   }
 
   Future<void> _onInstance(WebxdcCardInstance? instance) async {
     if (!mounted) return;
+    // Every move re-runs the watch, so a broken card is reported once.
+    if (instance == null && !_reportedMissing) {
+      _reportedMissing = true;
+      Log.warn(
+        'game card ${widget.message.messageId} '
+        '${_instance == null ? 'has no' : 'lost its'} instance',
+      );
+    }
     setState(() => _instance = instance);
     if (instance == null) return;
 

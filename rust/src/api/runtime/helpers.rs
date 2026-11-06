@@ -119,7 +119,10 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
 
         // A save that the end of a background session aborted is only
         // finished by a sweep like this one.
-        if let Err(error) = MediaUploadService::new(&ctx).store_pending_saves(None).await {
+        if let Err(error) = MediaUploadService::new(&ctx)
+            .store_pending_saves(None)
+            .await
+        {
             tracing::warn!("failed to finish pending media saves: {error}");
         }
 

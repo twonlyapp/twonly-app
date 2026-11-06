@@ -185,11 +185,6 @@ pub struct FrbMemoriesUploadUrls {
 }
 
 /// Flutter-facing facade for the Rust-owned API runtime.
-pub struct StickerLocation {
-    pub latitude: f64,
-    pub longitude: f64,
-}
-
 pub struct RustApi {}
 
 impl RustApi {
@@ -330,24 +325,11 @@ impl RustApi {
         crate::services::location_metadata::initialize_for_media(ctx, &media_id).await
     }
 
-    /// Warms the shared location cache if Memories or city stickers are
-    /// enabled.
+    /// Warms the shared location cache if Memories are enabled.
     pub async fn prewarm_memory_location() -> Result<()> {
         let ctx = Context::get_static()?;
 
         crate::services::location_metadata::prewarm(ctx)
-    }
-
-    /// Coordinates for native city lookup, available only with sticker opt-in.
-    pub async fn current_location_for_sticker() -> Result<Option<StickerLocation>> {
-        let ctx = Context::get_static()?;
-
-        Ok(crate::services::location_metadata::current_for_sticker(ctx)
-            .await?
-            .map(|location| StickerLocation {
-                latitude: location.latitude,
-                longitude: location.longitude,
-            }))
     }
 
     /// Creates one outgoing message per selected group, plus the story rows

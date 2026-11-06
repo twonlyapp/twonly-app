@@ -241,15 +241,15 @@ void main() {
   });
 
   testWidgets(
-    'design contains no camera controls and uses a positive news switch',
+    'design contains no camera controls and can always hide the news icon',
     (tester) async {
       await pumpSettings(tester, location: Routes.settingsAppearance);
       expect(find.text('Mit geöffneter Kamera starten'), findsNothing);
       final shortcut = find.ancestor(
-        of: find.text('Neuigkeiten-Symbol anzeigen'),
+        of: find.text('News-Symbol immer ausblenden'),
         matching: find.byType(SwitchListTile),
       );
-      expect(tester.widget<SwitchListTile>(shortcut).value, isTrue);
+      expect(tester.widget<SwitchListTile>(shortcut).value, isFalse);
       await tester.tap(shortcut);
       await pumpNative(
         tester,

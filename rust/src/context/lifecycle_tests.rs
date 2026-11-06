@@ -12,7 +12,9 @@ async fn foreground_connection_policy_does_not_query_retired_pools() {
     )
     .await
     .unwrap();
-    ApiRuntime::set_network_available(&context, false).await.unwrap();
+    ApiRuntime::set_network_available(&context, false)
+        .await
+        .unwrap();
     let app = context.app_db.read().await.clone();
     let signal = context.rust_db.read().await.clone();
     tokio::join!(app.close(), signal.pool.close());

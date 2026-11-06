@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1
+
+- Improve: Fullscreen map for live locations
+- Fix: App sometimes failed to start
+- Fix: Multiple smaller issues
+
 ## 0.7.0
 
 - New: On Vacation lets you freeze your flames while you are away

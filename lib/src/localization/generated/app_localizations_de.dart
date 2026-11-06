@@ -256,16 +256,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Aufnahmekoordinaten für Memories und Galerie-Exporte. Diese Koordinaten werden nie an Kontakte gesendet.';
 
   @override
-  String get locationStickerSettingTitle => 'Standort-Sticker';
-
-  @override
-  String get locationStickerSettingSubtitle =>
-      'Zeigt deine Stadt oder dein Land, oder Koordinaten, wenn kein Ortsname verfügbar ist. Dein Standort wird nur geteilt, wenn du den Standortfilter auswählst.';
-
-  @override
-  String get locationStickerLoading => 'Dein Standort wird ermittelt…';
-
-  @override
   String get liveLocationMenu => 'Standort';
 
   @override
@@ -3527,7 +3517,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStatusUnavailable => 'Status konnte nicht geladen werden';
 
   @override
-  String get settingsNewsShortcut => 'Neuigkeiten-Symbol anzeigen';
+  String get settingsNewsShortcut => 'News-Symbol immer ausblenden';
 
   @override
   String get settingsDownloadNone => 'Bilder & Videos nicht automatisch laden';

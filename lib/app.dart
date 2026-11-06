@@ -301,12 +301,13 @@ class _AppMainWidgetState extends State<AppMainWidget>
   Future<void> _initializeRoute(int attempt) async {
     if (userService.isUserCreated) {
       if (_initialPage != 0) {
-        final count = await rust_contacts
-            .countContacts(
-              metric: db_contacts.ContactCount.all,
-              transaction: currentDatabaseSession(),
-            )
-            .timeout(const Duration(seconds: 10));
+        final count = await _readStartupValue(
+          () => rust_contacts.countContacts(
+            metric: db_contacts.ContactCount.all,
+            transaction: currentDatabaseSession(),
+          ),
+          attempt,
+        ).timeout(const Duration(seconds: 10));
         if (!_isCurrentAttempt(attempt)) return;
         if (count == 0) {
           _initialPage = 0;
@@ -324,8 +325,11 @@ class _AppMainWidgetState extends State<AppMainWidget>
         _isTwonlyLocked = userService.currentUser.screenLockEnabled;
       }
     } else {
-      final onboardingState = await KeyValueStore.getModel<OnboardingState>(
-        KeyValueKeys.onboardingState,
+      final onboardingState = await _readStartupValue(
+        () => KeyValueStore.getModel<OnboardingState>(
+          KeyValueKeys.onboardingState,
+        ),
+        attempt,
       ).timeout(const Duration(seconds: 10));
       if (!_isCurrentAttempt(attempt)) return;
       // This means the user is in the onboarding screen, so start with the Proof of Work.
@@ -361,6 +365,33 @@ class _AppMainWidgetState extends State<AppMainWidget>
           if (!mounted) return;
           routerProvider.push(Routes.recoverPasswordless);
         });
+      }
+    }
+  }
+
+  Future<T> _readStartupValue<T>(
+    Future<T> Function() read,
+    int attempt,
+  ) async {
+    for (var retry = 0; ; retry++) {
+      try {
+        return await read();
+      } catch (error) {
+        // Another process or SQLite writer can briefly hold the startup read
+        // lock. Retry reads only, within the existing ten-second deadline.
+        if (retry >= 2 ||
+            !error.toString().contains('(code: 5) database is locked') ||
+            !_isCurrentAttempt(attempt) ||
+            _isBackground ||
+            _initializationFailed) {
+          rethrow;
+        }
+        await Future<void>.delayed(Duration(milliseconds: 200 * (retry + 1)));
+        if (!_isCurrentAttempt(attempt) ||
+            _isBackground ||
+            _initializationFailed) {
+          rethrow;
+        }
       }
     }
   }

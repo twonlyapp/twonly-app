@@ -262,16 +262,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'المَوْقِعُ لِلذِّكْرَيَاتِ وَتَصْدِيرِ الصُّوَرِ إِلَى مَعْرِضِ الصُّوَرِ. لَنْ يُرْسَلَ أَبَداً إِلَى جِهَاتِ الاِتِّصَالِ.';
 
   @override
-  String get locationStickerSettingTitle => 'ملصق الموقع';
-
-  @override
-  String get locationStickerSettingSubtitle =>
-      'يعرض مدينتك أو بلدك، أو الإحداثيات إذا لم يتوفر اسم المكان. لا يُشارك موقعك إلا عند اختيار فلتر الموقع.';
-
-  @override
-  String get locationStickerLoading => 'جارٍ تحديد موقعك…';
-
-  @override
   String get liveLocationMenu => 'الموقع';
 
   @override
@@ -3579,7 +3569,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsStatusUnavailable => 'تعذر تحميل الحالة';
 
   @override
-  String get settingsNewsShortcut => 'إظهار اختصار الأخبار';
+  String get settingsNewsShortcut => 'إخفاء رمز الأخبار دائمًا';
 
   @override
   String get settingsDownloadNone => 'عدم تنزيل الصور والفيديوهات تلقائيًا';

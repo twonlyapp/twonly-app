@@ -106,7 +106,9 @@ impl ApiRuntime {
         let sharing = in_background
             && crate::services::live_location::active(ctx)
                 .await?
-                .is_some_and(|session| session.expires_at_ms > chrono::Utc::now().timestamp_millis());
+                .is_some_and(|session| {
+                    session.expires_at_ms > chrono::Utc::now().timestamp_millis()
+                });
 
         client.set_background(in_background && !sharing).await
     }

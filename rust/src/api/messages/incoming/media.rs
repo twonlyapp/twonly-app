@@ -630,7 +630,9 @@ mod tests {
         image::RgbImage::from_pixel(8, 6, image::Rgb([12, 34, 56]))
             .save_with_format(&path, image::ImageFormat::Png)?;
 
-        MediaUploadService::new(&ctx).store_pending_saves(None).await?;
+        MediaUploadService::new(&ctx)
+            .store_pending_saves(None)
+            .await?;
 
         let stored: bool =
             sqlx::query_scalar("SELECT stored FROM media_files WHERE media_id = 'arrived'")
@@ -642,7 +644,10 @@ mod tests {
             sqlx::query_scalar("SELECT stored FROM media_files WHERE media_id = 'missing'")
                 .fetch_one(&database.pool)
                 .await?;
-        assert!(!missing_stored, "media without plaintext waits for its download");
+        assert!(
+            !missing_stored,
+            "media without plaintext waits for its download"
+        );
 
         Ok(())
     }

@@ -17,12 +17,9 @@ import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/services/stickers/sticker_cache.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
-import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/components/emoji_picker/emoji_picker.dart';
-import 'package:twonly/src/visual/components/location_sticker.dart';
 import 'package:twonly/src/visual/components/sticker_picker.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
@@ -30,7 +27,6 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/c
 import 'package:twonly/src/visual/views/memories/memories_picker.view.dart';
 
 import '../../helpers/native_database.dart';
-import '../../mocks/user_config.dart';
 
 // Rust tests exercise the real WebP codec; here a PNG-backed mock lets us test
 // the complete dialog, database replacement and picker refresh.
@@ -111,47 +107,6 @@ void main() {
 
   tearDown(() async {
     await locator.reset();
-  });
-
-  testWidgets('editor picker excludes location even when enabled in privacy', (
-    tester,
-  ) async {
-    locator.registerSingleton<UserService>(UserService());
-    userService
-      ..isUserCreated = true
-      ..currentUser = testUserConfig(
-        userId: 1,
-        username: 'me',
-        displayName: 'Me',
-        subscriptionPlan: 'Free',
-        currentSetupPage: null,
-        appVersion: 100,
-      );
-    userService.currentUser.enableLocationSticker = true;
-    const channel = MethodChannel('eu.twonly/location_metadata');
-    final calls = <MethodCall>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
-      call,
-    ) async {
-      calls.add(call);
-      return null;
-    });
-    try {
-      await tester.pumpWidget(
-        _app(const EmojiPickerBottom(allowStickers: true)),
-      );
-      await _settle(tester);
-      await tester.tap(find.text('Sticker'));
-      await _settle(tester);
-      expect(find.byType(StickerPicker), findsOneWidget);
-      expect(find.byType(LocationSticker), findsNothing);
-      expect(calls, isEmpty);
-    } finally {
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        channel,
-        null,
-      );
-    }
   });
 
   testWidgets(

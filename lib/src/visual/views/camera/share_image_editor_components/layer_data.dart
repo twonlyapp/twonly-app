@@ -88,21 +88,6 @@ abstract class TransformableStickerLayerData extends Layer {
   double size;
 }
 
-class LocationStickerLayerData extends TransformableStickerLayerData {
-  LocationStickerLayerData({
-    required super.key,
-    required this.city,
-    super.size = 220,
-    super.offset,
-    super.opacity,
-    super.rotation,
-    super.scale,
-    super.isEditing,
-  });
-
-  final String city;
-}
-
 class StickerLayerData extends TransformableStickerLayerData {
   StickerLayerData({
     required super.key,
