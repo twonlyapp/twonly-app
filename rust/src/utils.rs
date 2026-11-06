@@ -40,6 +40,39 @@ pub(crate) fn start_of_local_day() -> Result<i64> {
         .timestamp())
 }
 
+/// Midnight of the local day `timestamp` falls on.
+pub(crate) fn start_of_local_day_at(timestamp: i64) -> Option<i64> {
+    Local
+        .from_local_datetime(
+            &Local
+                .timestamp_opt(timestamp, 0)
+                .single()?
+                .date_naive()
+                .and_hms_opt(0, 0, 0)?,
+        )
+        .earliest()
+        .map(|midnight| midnight.timestamp())
+}
+
+/// Midnight starting the local day `days` after today. Counted in calendar
+/// days rather than seconds, so a daylight saving change in between still lands
+/// on midnight.
+pub(crate) fn start_of_local_day_in(days: u32) -> Result<i64> {
+    let day = current_time()
+        .date_naive()
+        .checked_add_days(chrono::Days::new(days.into()))
+        .ok_or_else(|| TwonlyError::Generic("local date out of range".into()))?;
+
+    Ok(Local
+        .from_local_datetime(
+            &day.and_hms_opt(0, 0, 0)
+                .ok_or_else(|| TwonlyError::Generic("invalid local date".into()))?,
+        )
+        .earliest()
+        .ok_or_else(|| TwonlyError::Generic("local day has no midnight".into()))?
+        .timestamp())
+}
+
 pub(crate) fn new_uuid_v4() -> String {
     uuid::Uuid::new_v4().to_string()
 }
@@ -71,7 +104,10 @@ impl<T> Shared<T> {
 #[cfg(test)]
 mod tests {
 
-    use super::{current_time, is_today, milliseconds_to_seconds};
+    use super::{
+        current_time, is_today, milliseconds_to_seconds, start_of_local_day,
+        start_of_local_day_at, start_of_local_day_in,
+    };
 
     #[test]
 
@@ -89,5 +125,36 @@ mod tests {
         assert!(is_today(current_time().timestamp()));
 
         assert!(!is_today(i64::MAX));
+    }
+
+    #[test]
+
+    fn finds_the_midnight_of_any_day() {
+        let today = start_of_local_day().unwrap();
+
+        assert_eq!(start_of_local_day_at(today), Some(today));
+
+        assert_eq!(start_of_local_day_at(today + 60), Some(today));
+
+        assert_eq!(start_of_local_day_at(today - 1), start_of_local_day_at(today - 3600));
+
+        assert!(start_of_local_day_at(today - 1).unwrap() < today);
+
+        assert_eq!(start_of_local_day_at(i64::MAX), None);
+    }
+
+    #[test]
+
+    fn counts_days_ahead_in_calendar_days() {
+        assert_eq!(start_of_local_day_in(0).unwrap(), start_of_local_day().unwrap());
+
+        let in_five = start_of_local_day_in(5).unwrap();
+
+        // Midnight, whatever daylight saving does in between.
+        assert_eq!(start_of_local_day_at(in_five), Some(in_five));
+
+        let hours = (in_five - start_of_local_day().unwrap()) / 3600;
+
+        assert!((119..=121).contains(&hours), "{hours} hours");
     }
 }

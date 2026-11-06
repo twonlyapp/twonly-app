@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT reupload_targets FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "reupload_targets",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "reupload_targets"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "0c04d897ccbeed5f8390e87dbaedacc6dfdf707a7a79f1b9f55efa5ec1bf0543"
+}

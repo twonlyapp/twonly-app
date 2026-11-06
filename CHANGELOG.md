@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.0
+
+- New: On Vacation lets you freeze your flames while you are away
+- Improve: Redesign onboarding flow
+- Improve: Better UI for the contact groups
+- Improve: Redesigned settings and clearer backup status
+- Fix: Show error message when sending to an inactive user
+- Fix: Backup did not work in some cases
+- Fix: Startup errors and iOS background crashes
+- Fix: Saved media sometimes remained unavailable
+
+## 0.6.9
+
+- Fix: Video story uploads, media playback and FAQ loading
+- Fix: Contact discovery, permission requests and several crashes
+
 ## 0.6.8
 
 - Fix: Some contacts were not displayed
@@ -14,8 +30,8 @@
 
 ## 0.6.6
 
-- Improve: UI layout for stories 
-- Fix: Recuring message loop
+- Improve: UI layout for stories
+- Fix: Recurring message loop
 - Fix: Multiple smaller issues
 - Security Fix: A malicious user could craft a self-attestation to get a verification badge (thx @PatrickBidinger)
 
@@ -301,7 +317,7 @@
 
 - New: The option to share contacts
 - New: Option to zoom in received images / videos
-- Fix: Issue with "reuploaded requested" not working
+- Fix: Issue with "reupload requested" not working
 - Fix: Race condition while writing to the log file
 
 ## 0.0.91
@@ -313,7 +329,7 @@
 
 - Fix: Issue that media files were not reuploaded
 - Fix: iOS zooming issue when switching between .5 and x1
-- Fix: Biometric auth bypass when opening a twonly/reopen send image
+- Fix: Biometric auth bypass when opening a twonly/reopen sent image
 - Fix: That media files could not be downloaded in case the contact deleted his account
 - Fix: Database issue in case twonly is opened multiple times
 - Fix: Typos in translation
@@ -321,7 +337,7 @@
 ## 0.0.87
 
 - New: Link preview to shared links
-- New: Option to manual focus in the camera
+- New: Option to manually focus in the camera
 - New: Support to switch between front and back cameras during video recording
 - New: Basic face filters
 - Improve: Image editor, like emojis or text under a drawing can be moved
@@ -330,7 +346,7 @@
 
 ## 0.0.86
 
-- New: Allows to reopen send images (if send without time limit or enabled auth)
+- New: Allows reopening sent images (if sent without a time limit or with auth enabled)
 - New: Support for front camera zoom
 - Fix: Several bug fixes
 
@@ -421,7 +437,7 @@
 
 ## 0.0.59
 
-- New: Location Filter are now stored as WebP instead of PNG
+- New: Location filters are now stored as WebP instead of PNG
 - Fix: Media download error
 - Fix: Issue with video recording
 

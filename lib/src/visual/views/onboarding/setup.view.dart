@@ -6,6 +6,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/views/onboarding/components/onboarding_step.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/backup.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/let_your_friends_find_you.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/profile.setup.dart';
@@ -95,6 +96,11 @@ class _SetupViewState extends State<SetupView> {
   late UserDiscoverySetupState state;
   bool _setupDone = false;
 
+  // Steps slide in from the end when going forward and from the start when
+  // going back.
+  int _lastPageIndex = -1;
+  bool _forward = true;
+
   @override
   void initState() {
     super.initState();
@@ -136,77 +142,72 @@ class _SetupViewState extends State<SetupView> {
         if (currentPageString == null) return const SizedBox.shrink();
         final currentPage = SetupPagesExtension.fromStr(currentPageString);
 
-        return Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: List.generate(currentPage.totalPages, (index) {
-                    final isFinished = index < currentPage.pageNumber;
-                    return Expanded(
-                      child: Container(
-                        height: 6,
-                        margin: EdgeInsets.only(
-                          right: index == currentPage.totalPages - 1 ? 0 : 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isFinished
-                              ? context.color.primary
-                              : context.color.surfaceContainer,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    );
-                  }),
+        final previous = currentPage.previous();
+
+        final pageIndex = SetupPagesExtension.activePages.indexOf(currentPage);
+        if (pageIndex != _lastPageIndex) {
+          _forward = pageIndex > _lastPageIndex;
+          _lastPageIndex = pageIndex;
+        }
+        final currentKey = ValueKey(currentPage.name);
+        final rtl = Directionality.of(context) == TextDirection.rtl;
+
+        return OnboardingScaffold(
+          onBack: previous == null
+              ? null
+              : () => UserService.update(
+                  (u) => u.currentSetupPage = previous.name,
                 ),
-              ],
-            ),
-            toolbarHeight: 48,
+          progress: OnboardingProgress(
+            current: currentPage.pageNumber,
+            total: currentPage.totalPages,
           ),
-          body: ListView(
-            key: ValueKey(currentPage.name),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            children: [
-              _buildPage(currentPage, state),
-              if (currentPage.index > 0 || !currentPage.isLast)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (currentPage.index > 0)
-                        MyButton(
-                          onPressed: () async {
-                            await UserService.update((u) {
-                              u.currentSetupPage = currentPage.previous()?.name;
-                            });
-                          },
-                          variant: MyButtonVariant.text,
-                          child: Text(
-                            context.lang.back,
-                          ),
-                        ),
-                      if (currentPage.index > 0 && !currentPage.isLast)
-                        const SizedBox(width: 24),
-                      if (!currentPage.isLast)
-                        MyButton(
-                          onPressed: () async {
-                            await UserService.update(
-                              (u) => u.skipSetupPages = true,
-                            );
-                            _notifySetupDone();
-                          },
-                          variant: MyButtonVariant.text,
-                          child: Text(
-                            context.lang.onboardingFinishLater,
-                          ),
-                        ),
-                    ],
+          footer: currentPage.isLast
+              ? null
+              : Center(
+                  child: MyButton(
+                    onPressed: () async {
+                      await UserService.update(
+                        (u) => u.skipSetupPages = true,
+                      );
+                      _notifySetupDone();
+                    },
+                    variant: MyButtonVariant.text,
+                    child: Text(context.lang.onboardingFinishLater),
                   ),
                 ),
-            ],
+          child: AnimatedSwitcher(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 250),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) {
+              // The outgoing step runs this animation in reverse, so it
+              // leaves to the side opposite to where the new one comes from.
+              final incoming = child.key == currentKey;
+              var dx = (incoming == _forward) ? 0.25 : -0.25;
+              if (rtl) dx = -dx;
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: Offset(dx, 0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            // Steps fill the height so their button stays at the bottom.
+            layoutBuilder: (current, previous) => Stack(
+              fit: StackFit.expand,
+              children: [...previous, ?current],
+            ),
+            child: KeyedSubtree(
+              key: currentKey,
+              child: _buildPage(currentPage, state),
+            ),
           ),
         );
       },

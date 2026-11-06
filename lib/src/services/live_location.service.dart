@@ -9,6 +9,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/location_metadata.service.dart';
+import 'package:twonly/src/services/permission_requests.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class LiveLocationService {
@@ -55,7 +56,10 @@ class LiveLocationService {
     required String stopLabel,
   }) async {
     if (!await LocationMetadataService.requestPrecisePermission() ||
-        !await Permission.notification.request().isGranted) {
+        (await requestPermissions([
+              Permission.notification,
+            ]))[Permission.notification] !=
+            PermissionStatus.granted) {
       throw PlatformException(code: 'permission_denied');
     }
     final session = await live.startLiveLocation(

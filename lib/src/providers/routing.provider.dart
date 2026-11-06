@@ -24,6 +24,7 @@ import 'package:twonly/src/visual/views/settings/backup/backup_setup.view.dart';
 import 'package:twonly/src/visual/views/settings/chat/chat_reactions.view.dart';
 import 'package:twonly/src/visual/views/settings/chat/chat_settings.view.dart';
 import 'package:twonly/src/visual/views/settings/chat/contact_groups.view.dart';
+import 'package:twonly/src/visual/views/settings/chat/on_vacation.view.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage.view.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage/import_from_gallery.view.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage/manage_storage.view.dart';
@@ -232,6 +233,10 @@ final routerProvider = GoRouter(
             GoRoute(
               path: 'contact_groups',
               builder: (context, state) => const ContactGroupsView(),
+            ),
+            GoRoute(
+              path: 'on_vacation',
+              builder: (context, state) => const OnVacationView(),
             ),
           ],
         ),

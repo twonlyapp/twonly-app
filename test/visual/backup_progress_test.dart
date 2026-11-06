@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/backup/progress.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/json/backup.model.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_archive_subtitle.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_progress.comp.dart';
 
@@ -67,7 +68,13 @@ void main() {
       Clock.fixed(DateTime(local.year, local.month, local.day, 12)),
       () async {
         await tester.pumpWidget(
-          app(BackupArchiveSubtitle(date: timestamp, size: 32000000)),
+          app(
+            BackupArchiveSubtitle(
+              date: timestamp,
+              size: 32000000,
+              state: LastBackupUploadState.success,
+            ),
+          ),
         );
         final hour = local.hour.toString().padLeft(2, '0');
         final minute = local.minute.toString().padLeft(2, '0');

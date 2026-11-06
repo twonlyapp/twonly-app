@@ -8,6 +8,7 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/custom_color_picker_dialog.comp.dart';
 import 'package:twonly/src/visual/elements/radio_button.element.dart';
+import 'package:twonly/src/visual/views/settings/components/settings_layout.dart';
 
 /// Each language is listed in its own name, so it can be found again after
 /// switching to a language the user cannot read.
@@ -244,32 +245,6 @@ class _AppearanceViewState extends State<AppearanceView> {
     );
   }
 
-  Future<void> updateHideNewsIcon(bool hideNewsIcon) async {
-    await UserService.update((u) {
-      u.showNewsShortcut = !hideNewsIcon;
-    });
-  }
-
-  Future<void> updateStartWithCameraOpen(bool startWithCameraOpen) async {
-    await UserService.update((u) {
-      u.startWithCameraOpen = startWithCameraOpen;
-    });
-  }
-
-  Future<void> updateShowImagePreviewWhenSending(
-    bool showImagePreviewWhenSending,
-  ) async {
-    await UserService.update((u) {
-      u.showShowImagePreviewWhenSending = showImagePreviewWhenSending;
-    });
-  }
-
-  Future<void> updateAlwaysShowStories(bool alwaysShowStories) async {
-    await UserService.update((u) {
-      u.alwaysShowStories = alwaysShowStories;
-    });
-  }
-
   String _themeModeLabel(BuildContext context, ThemeMode mode) {
     switch (mode) {
       case ThemeMode.system:
@@ -297,14 +272,7 @@ class _AppearanceViewState extends State<AppearanceView> {
       body: StreamBuilder<void>(
         stream: userService.onUserUpdated,
         builder: (context, snapshot) {
-          final hideNewsIcon = !userService.currentUser.showNewsShortcut;
-          final startWithCameraOpen =
-              userService.currentUser.startWithCameraOpen;
-          final showImagePreviewWhenSending =
-              userService.currentUser.showShowImagePreviewWhenSending;
-          final alwaysShowStories = userService.currentUser.alwaysShowStories;
-
-          return ListView(
+          return SettingsList(
             children: [
               ListTile(
                 title: Text(context.lang.settingsAppearanceTheme),
@@ -346,50 +314,11 @@ class _AppearanceViewState extends State<AppearanceView> {
                   await _showSelectPrimaryColor(context);
                 },
               ),
-              ListTile(
-                title: Text(context.lang.hideNewsIcon),
-                onTap: () async {
-                  await updateHideNewsIcon(!hideNewsIcon);
-                },
-                trailing: Switch.adaptive(
-                  value: hideNewsIcon,
-                  onChanged: updateHideNewsIcon,
-                ),
-              ),
-              ListTile(
-                title: Text(context.lang.startWithCameraOpen),
-                onTap: () async {
-                  await updateStartWithCameraOpen(!startWithCameraOpen);
-                },
-                trailing: Switch.adaptive(
-                  value: startWithCameraOpen,
-                  onChanged: updateStartWithCameraOpen,
-                ),
-              ),
-              ListTile(
-                title: Text(context.lang.showImagePreviewWhenSending),
-                onTap: () async {
-                  await updateShowImagePreviewWhenSending(
-                    !showImagePreviewWhenSending,
-                  );
-                },
-                trailing: Switch.adaptive(
-                  value: showImagePreviewWhenSending,
-                  onChanged: updateShowImagePreviewWhenSending,
-                ),
-              ),
-              ListTile(
-                title: Text(context.lang.alwaysShowStories),
-                subtitle: Text(
-                  context.lang.alwaysShowStoriesSubtitle,
-                  style: TextStyle(color: context.color.onSurfaceVariant),
-                ),
-                onTap: () async {
-                  await updateAlwaysShowStories(!alwaysShowStories);
-                },
-                trailing: Switch.adaptive(
-                  value: alwaysShowStories,
-                  onChanged: updateAlwaysShowStories,
+              SwitchListTile.adaptive(
+                title: Text(context.lang.settingsNewsShortcut),
+                value: userService.currentUser.showNewsShortcut,
+                onChanged: (value) => UserService.update(
+                  (user) => user.showNewsShortcut = value,
                 ),
               ),
             ],

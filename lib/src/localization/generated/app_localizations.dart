@@ -106,64 +106,46 @@ abstract class AppLocalizations {
   /// **'Access to all apps'**
   String get subscriptionAllApps;
 
-  /// No description provided for @registerSlogan.
+  /// No description provided for @onboardingHeadline.
   ///
   /// In en, this message translates to:
-  /// **'Stay in touch privately.'**
-  String get registerSlogan;
+  /// **'Share moments'**
+  String get onboardingHeadline;
 
-  /// No description provided for @onboardingWelcomeTitle.
+  /// No description provided for @onboardingHeadlineHighlight.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to twonly!'**
-  String get onboardingWelcomeTitle;
+  /// **'privately.'**
+  String get onboardingHeadlineHighlight;
 
-  /// No description provided for @onboardingWelcomeBody.
+  /// No description provided for @onboardingBody.
   ///
   /// In en, this message translates to:
-  /// **'Experience a private and secure way to stay in touch with friends by sharing instant pictures.'**
-  String get onboardingWelcomeBody;
+  /// **'Photos, videos and conversations. A private place to keep up with your friends.'**
+  String get onboardingBody;
 
-  /// No description provided for @onboardingE2eTitle.
+  /// No description provided for @onboardingFeatureE2e.
   ///
   /// In en, this message translates to:
-  /// **'Carefree sharing'**
-  String get onboardingE2eTitle;
+  /// **'End-to-end encrypted.'**
+  String get onboardingFeatureE2e;
 
-  /// No description provided for @onboardingE2eBody.
+  /// No description provided for @onboardingFeatureNoAds.
   ///
   /// In en, this message translates to:
-  /// **'With end-to-end encryption, enjoy the peace of mind that only you and your friends can see the moments you share.'**
-  String get onboardingE2eBody;
+  /// **'No ads and no tracking.'**
+  String get onboardingFeatureNoAds;
 
-  /// No description provided for @onboardingFocusTitle.
+  /// No description provided for @onboardingRegisterButton.
   ///
   /// In en, this message translates to:
-  /// **'Focus on sharing moments'**
-  String get onboardingFocusTitle;
-
-  /// No description provided for @onboardingFocusBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Say goodbye to addictive features! twonly was created for sharing moments, free from useless distractions or ads.'**
-  String get onboardingFocusBody;
-
-  /// No description provided for @onboardingNotProductTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'You are not the product!'**
-  String get onboardingNotProductTitle;
-
-  /// No description provided for @onboardingNotProductBody.
-  ///
-  /// In en, this message translates to:
-  /// **'twonly is financed by an optional subscription. Your data will never be sold.'**
-  String get onboardingNotProductBody;
+  /// **'Register'**
+  String get onboardingRegisterButton;
 
   /// No description provided for @registerUsernameSlogan.
   ///
   /// In en, this message translates to:
-  /// **'Create your account'**
+  /// **'Create\nyour account'**
   String get registerUsernameSlogan;
 
   /// No description provided for @registerUsernameDecoration.
@@ -177,6 +159,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'At least 3 characters.'**
   String get registerUsernameLimits;
+
+  /// No description provided for @registerUsernameBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friends find you by your username. You can change it later.'**
+  String get registerUsernameBody;
 
   /// No description provided for @registerProofOfWorkFailed.
   ///
@@ -499,13 +487,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsChats.
   ///
   /// In en, this message translates to:
-  /// **'Chats'**
+  /// **'Chats & camera'**
   String get settingsChats;
 
   /// No description provided for @settingsPreSelectedReactions.
   ///
   /// In en, this message translates to:
-  /// **'Preselected reaction emojis'**
+  /// **'Quick reactions'**
   String get settingsPreSelectedReactions;
 
   /// No description provided for @settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle.
@@ -535,7 +523,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStorageData.
   ///
   /// In en, this message translates to:
-  /// **'Memories & Storage'**
+  /// **'Storage & downloads'**
   String get settingsStorageData;
 
   /// No description provided for @memoryDetailsTitle.
@@ -799,7 +787,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAppearance.
   ///
   /// In en, this message translates to:
-  /// **'Appearance'**
+  /// **'Design & language'**
   String get settingsAppearance;
 
   /// No description provided for @settingsPrivacy.
@@ -811,7 +799,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPrivacyBlockUsers.
   ///
   /// In en, this message translates to:
-  /// **'Block contacts'**
+  /// **'Blocked contacts'**
   String get settingsPrivacyBlockUsers;
 
   /// No description provided for @settingsPrivacyBlockUsersDesc.
@@ -895,7 +883,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotification.
   ///
   /// In en, this message translates to:
-  /// **'Notification'**
+  /// **'Notifications'**
   String get settingsNotification;
 
   /// No description provided for @settingsNotifyPermission.
@@ -907,7 +895,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotifyPermissionDesc.
   ///
   /// In en, this message translates to:
-  /// **'Open system settings to allow push notifications.'**
+  /// **'Open your phone’s settings to manage notification permissions.'**
   String get settingsNotifyPermissionDesc;
 
   /// No description provided for @settingsNotifyResetTitle.
@@ -925,19 +913,19 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotifyResetTitleReset.
   ///
   /// In en, this message translates to:
-  /// **'Your notification tokens have been reset.'**
+  /// **'Notification connection renewed'**
   String get settingsNotifyResetTitleReset;
 
   /// No description provided for @settingsNotifyResetTitleResetDesc.
   ///
   /// In en, this message translates to:
-  /// **'If the problem persists, please send us your debug log via Settings > Help so we can investigate the issue.'**
+  /// **'If notifications still do not arrive, contact us under Settings > Help & information. You can attach a diagnostic log there.'**
   String get settingsNotifyResetTitleResetDesc;
 
   /// No description provided for @settingsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Help'**
+  /// **'Help & information'**
   String get settingsHelp;
 
   /// No description provided for @settingsHelpDiagnostics.
@@ -1093,7 +1081,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAppearanceTheme.
   ///
   /// In en, this message translates to:
-  /// **'Theme'**
+  /// **'Light / dark mode'**
   String get settingsAppearanceTheme;
 
   /// No description provided for @settingsAppearanceLanguage.
@@ -1126,23 +1114,11 @@ abstract class AppLocalizations {
   /// **'Your account will be deleted. There is no change to restore it.'**
   String get settingsAccountDeleteModalBody;
 
-  /// No description provided for @contactVerifyNumberTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify contacts'**
-  String get contactVerifyNumberTitle;
-
   /// No description provided for @verifyUserIdentity.
   ///
   /// In en, this message translates to:
   /// **'Verify {username}\'s identity'**
   String verifyUserIdentity(Object username);
-
-  /// No description provided for @contactVerifyNumberSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify the identity of your contacts to make sure you are texting the right person.'**
-  String get contactVerifyNumberSubtitle;
 
   /// No description provided for @inChatContactNotVerified.
   ///
@@ -1930,6 +1906,12 @@ abstract class AppLocalizations {
   /// **'You can only change your password after you have authenticated!'**
   String get backupChangePasswordAuthFailed;
 
+  /// No description provided for @backupChangePasswordFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password could not be changed. Your previous password still works. Check your internet connection and try again.'**
+  String get backupChangePasswordFailed;
+
   /// No description provided for @backupFreeSpaceWithCloud.
   ///
   /// In en, this message translates to:
@@ -1971,6 +1953,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore backup'**
   String get twonlySafeRecoverBtn;
+
+  /// No description provided for @twonlySafeRecoverDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your username and the password of your backup.'**
+  String get twonlySafeRecoverDesc;
+
+  /// No description provided for @twonlySafeRecoverOr.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get twonlySafeRecoverOr;
 
   /// No description provided for @inviteFriends.
   ///
@@ -2899,20 +2893,26 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingProfileTitle.
   ///
   /// In en, this message translates to:
-  /// **'Choose your look'**
+  /// **'Create\nyour avatar'**
   String get onboardingProfileTitle;
 
   /// No description provided for @onboardingProfileBody.
   ///
   /// In en, this message translates to:
-  /// **'Select an avatar and a display name that friends will see.'**
+  /// **'Your public avatar helps others recognize you on twonly.'**
   String get onboardingProfileBody;
 
   /// No description provided for @onboardingBackupBody.
   ///
   /// In en, this message translates to:
-  /// **'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.'**
+  /// **'So you can restore your account on a new phone.'**
   String get onboardingBackupBody;
+
+  /// No description provided for @onboardingBackupPasswordSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your backup password is set. You can keep it or choose a new one.'**
+  String get onboardingBackupPasswordSet;
 
   /// No description provided for @onboardingUserDiscoveryShareFriends.
   ///
@@ -3099,12 +3099,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Always show stories'**
   String get alwaysShowStories;
-
-  /// No description provided for @alwaysShowStoriesSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep stories above your chats after you\'ve watched them.'**
-  String get alwaysShowStoriesSubtitle;
 
   /// No description provided for @verifiedPublicKey.
   ///
@@ -3427,13 +3421,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsScreenLock.
   ///
   /// In en, this message translates to:
-  /// **'Screen lock'**
+  /// **'Lock the app'**
   String get settingsScreenLock;
 
   /// No description provided for @settingsScreenLockSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'To open twonly, you\'ll need to use your smartphone\'s unlock feature.'**
+  /// **'Use your phone’s unlock method to open twonly.'**
   String get settingsScreenLockSubtitle;
 
   /// No description provided for @settingsScreenLockAuthMessageEnable.
@@ -3469,13 +3463,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsTypingIndication.
   ///
   /// In en, this message translates to:
-  /// **'Typing Indicators'**
+  /// **'Typing indicator'**
   String get settingsTypingIndication;
 
   /// No description provided for @settingsTypingIndicationSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'When the typing indicator is turned off, you can\'t see when others are typing a message.'**
+  /// **'Show each other when you are typing. Turning this off also hides other people’s typing indicators.'**
   String get settingsTypingIndicationSubtitle;
 
   /// No description provided for @contactActionBlock.
@@ -3838,6 +3832,12 @@ abstract class AppLocalizations {
   /// **'An unknown error occurred. Please try again.'**
   String get recoverErrorUnknown;
 
+  /// No description provided for @recoverErrorAppUpdateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup was made with a newer version of twonly. Please update the app and try again.'**
+  String get recoverErrorAppUpdateRequired;
+
   /// No description provided for @recoverSuccessTitle.
   ///
   /// In en, this message translates to:
@@ -3979,7 +3979,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingProfileSelectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Choose your setup path'**
+  /// **'Choose your\nsetup path'**
   String get onboardingProfileSelectionTitle;
 
   /// No description provided for @onboardingProfileSelectionSubtitle.
@@ -4537,20 +4537,8 @@ abstract class AppLocalizations {
   /// No description provided for @recoverPasswordlessShareBtn.
   ///
   /// In en, this message translates to:
-  /// **'Share Recovery Link'**
+  /// **'Share link'**
   String get recoverPasswordlessShareBtn;
-
-  /// No description provided for @recoverPasswordlessCopyBtn.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy'**
-  String get recoverPasswordlessCopyBtn;
-
-  /// No description provided for @recoverPasswordlessCopiedSnackbar.
-  ///
-  /// In en, this message translates to:
-  /// **'Link copied to clipboard!'**
-  String get recoverPasswordlessCopiedSnackbar;
 
   /// No description provided for @passwordlessRecoveryNoShareStored.
   ///
@@ -4909,7 +4897,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsShowRestoreFlameTitle.
   ///
   /// In en, this message translates to:
-  /// **'Show flame restore warning'**
+  /// **'Offer restore'**
   String get settingsShowRestoreFlameTitle;
 
   /// No description provided for @contactGroupsTitle.
@@ -5008,6 +4996,12 @@ abstract class AppLocalizations {
   /// **'Members'**
   String get contactGroupMembers;
 
+  /// No description provided for @contactGroupMemberCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No members} =1{1 member} other{{count} members}}'**
+  String contactGroupMemberCount(num count);
+
   /// No description provided for @contactGroupLabelFeature.
   ///
   /// In en, this message translates to:
@@ -5089,13 +5083,13 @@ abstract class AppLocalizations {
   /// No description provided for @backupRecoverySectionDescNone.
   ///
   /// In en, this message translates to:
-  /// **'You must select at least one recovery option, as otherwise no one can help you if you lose access to your device.'**
+  /// **'Set up at least one option.'**
   String get backupRecoverySectionDescNone;
 
   /// No description provided for @backupRecoverySectionDescSome.
   ///
   /// In en, this message translates to:
-  /// **'You can recover your account with the recovery options below. It is recommended to enable both options.'**
+  /// **'Best to enable both options.'**
   String get backupRecoverySectionDescSome;
 
   /// No description provided for @backupRecoveryOptionAFriends.
@@ -5716,6 +5710,12 @@ abstract class AppLocalizations {
   /// **'Send failed'**
   String get mediaSendFailed;
 
+  /// No description provided for @messageSendFailedUserInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'User inactive'**
+  String get messageSendFailedUserInactive;
+
   /// No description provided for @mailboxSyncTitle.
   ///
   /// In en, this message translates to:
@@ -5793,6 +5793,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'It is a draw.'**
   String get chatGameDraw;
+
+  /// No description provided for @storeReviewPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for testing twonly'**
+  String get storeReviewPromptTitle;
+
+  /// No description provided for @storeReviewPromptDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you want to help twonly, please leave a review on the {store}.'**
+  String storeReviewPromptDesc(String store);
+
+  /// No description provided for @storeReviewPromptReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a review'**
+  String get storeReviewPromptReview;
+
+  /// No description provided for @storeReviewPromptHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show again'**
+  String get storeReviewPromptHide;
+
+  /// No description provided for @settingsProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile · QR code'**
+  String get settingsProfileSubtitle;
+
+  /// No description provided for @settingsChatsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions, stories, camera & sending'**
+  String get settingsChatsSubtitle;
+
+  /// No description provided for @settingsNotificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Story alerts & notification problems'**
+  String get settingsNotificationsSubtitle;
+
+  /// No description provided for @settingsAppearanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Light / dark mode, colors & app language'**
+  String get settingsAppearanceSubtitle;
+
+  /// No description provided for @settingsPrivacySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile visibility, friends & app lock'**
+  String get settingsPrivacySubtitle;
+
+  /// No description provided for @settingsBackupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account access, messages & Memories'**
+  String get settingsBackupSubtitle;
+
+  /// No description provided for @settingsStorageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free up space & save media'**
+  String get settingsStorageSubtitle;
+
+  /// No description provided for @settingsRecoveryMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'No account recovery set up'**
+  String get settingsRecoveryMissing;
+
+  /// No description provided for @settingsNotificationsDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off in system settings'**
+  String get settingsNotificationsDisabled;
+
+  /// No description provided for @settingsNotificationsEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications allowed'**
+  String get settingsNotificationsEnabled;
+
+  /// No description provided for @settingsNotificationsDisabledHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications in your phone’s settings first. Tap the status above to open them.'**
+  String get settingsNotificationsDisabledHelp;
+
+  /// No description provided for @settingsStatusLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking status…'**
+  String get settingsStatusLoading;
+
+  /// No description provided for @settingsStatusUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Status could not be loaded'**
+  String get settingsStatusUnavailable;
+
+  /// No description provided for @settingsNewsShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Show news shortcut'**
+  String get settingsNewsShortcut;
+
+  /// No description provided for @settingsDownloadNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No automatic photo or video downloads'**
+  String get settingsDownloadNone;
+
+  /// No description provided for @settingsDeleteAccountFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account could not be deleted. Check your internet connection and try again.'**
+  String get settingsDeleteAccountFailed;
+
+  /// No description provided for @settingsAccountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted'**
+  String get settingsAccountDeleted;
+
+  /// No description provided for @settingsOpenAppAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open the app again'**
+  String get settingsOpenAppAgain;
+
+  /// No description provided for @settingsBackupNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Not backed up yet'**
+  String get settingsBackupNever;
+
+  /// No description provided for @settingsBackupPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup pending'**
+  String get settingsBackupPending;
+
+  /// No description provided for @settingsBackupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup failed'**
+  String get settingsBackupFailed;
+
+  /// No description provided for @settingsBackupSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Last successful backup'**
+  String get settingsBackupSaved;
+
+  /// No description provided for @settingsPasswordConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Password set up · Manage'**
+  String get settingsPasswordConfigured;
+
+  /// No description provided for @settingsMemoriesBackupActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup enabled'**
+  String get settingsMemoriesBackupActive;
+
+  /// No description provided for @settingsMemoriesBackupActiveUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup enabled · {used} of {max} used'**
+  String settingsMemoriesBackupActiveUsage(String used, String max);
+
+  /// No description provided for @settingsMemoriesBackupInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enabled · Tap to enable'**
+  String get settingsMemoriesBackupInactive;
+
+  /// No description provided for @settingsRecoveryFriendsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your trusted friends…'**
+  String get settingsRecoveryFriendsLoading;
+
+  /// No description provided for @settingsRecoveryFriendsReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Enough active friends · {count} active (at least {required} needed)'**
+  String settingsRecoveryFriendsReady(int count, int required);
+
+  /// No description provided for @settingsRecoveryFriendsWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough active friends yet · {count} of {required} required'**
+  String settingsRecoveryFriendsWaiting(int count, int required);
+
+  /// No description provided for @settingsArchiveNeedsPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up a recovery password above to back up contacts and messages.'**
+  String get settingsArchiveNeedsPassword;
+
+  /// No description provided for @settingsChangelog.
+  ///
+  /// In en, this message translates to:
+  /// **'Changelog'**
+  String get settingsChangelog;
+
+  /// No description provided for @settingsOnVacationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On Vacation'**
+  String get settingsOnVacationTitle;
+
+  /// No description provided for @settingsOnVacationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Freeze your flames while you are away'**
+  String get settingsOnVacationSubtitle;
+
+  /// No description provided for @onVacationActiveUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'On vacation until {date}'**
+  String onVacationActiveUntil(Object date);
+
+  /// No description provided for @onVacationExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'While you are on vacation, your flames are frozen: they cannot be lost, but they do not grow either. Everyone you have more than {count} flames with gets a message and sees your vacation icon instead of the flame.'**
+  String onVacationExplanation(Object count);
+
+  /// No description provided for @onVacationIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get onVacationIcon;
+
+  /// No description provided for @onVacationDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get onVacationDuration;
+
+  /// No description provided for @onVacationDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String onVacationDays(num count);
+
+  /// No description provided for @onVacationCountsAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Your flames count again from {date}.'**
+  String onVacationCountsAgain(Object date);
+
+  /// No description provided for @onVacationAffectedChats.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No chat has more than {min} flames yet.} =1{1 chat will be frozen.} other{{count} chats will be frozen.}}'**
+  String onVacationAffectedChats(num count, Object min);
+
+  /// No description provided for @onVacationNothingToFreeze.
+  ///
+  /// In en, this message translates to:
+  /// **'None of your chats has more than {count} flames, so there is nothing to freeze.'**
+  String onVacationNothingToFreeze(Object count);
+
+  /// No description provided for @onVacationStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Go on vacation'**
+  String get onVacationStart;
+
+  /// No description provided for @onVacationStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Enjoy your vacation! 1 chat is frozen.} other{Enjoy your vacation! {count} chats are frozen.}}'**
+  String onVacationStarted(num count);
+
+  /// No description provided for @onVacationEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End vacation'**
+  String get onVacationEnd;
+
+  /// No description provided for @onVacationEndConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End your vacation?'**
+  String get onVacationEndConfirmTitle;
+
+  /// No description provided for @onVacationEndConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your flames count again from today, and your friends will be told.'**
+  String get onVacationEndConfirmBody;
+
+  /// No description provided for @onVacationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start your vacation. Please try again.'**
+  String get onVacationFailed;
+
+  /// No description provided for @chatEntryVacationStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'On vacation until {date}. The flames are frozen until then.'**
+  String chatEntryVacationStarted(Object date);
+
+  /// No description provided for @chatEntryVacationEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Back from vacation. The flames count again.'**
+  String get chatEntryVacationEnded;
+
+  /// No description provided for @notificationVacation.
+  ///
+  /// In en, this message translates to:
+  /// **'is on vacation. Your flames are frozen.'**
+  String get notificationVacation;
+
+  /// No description provided for @notificationVacationEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'is back from vacation.'**
+  String get notificationVacationEnd;
+
+  /// No description provided for @settingsChatsSectionChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get settingsChatsSectionChats;
+
+  /// No description provided for @settingsChatsSectionFlames.
+  ///
+  /// In en, this message translates to:
+  /// **'Flames'**
+  String get settingsChatsSectionFlames;
+
+  /// No description provided for @settingsChatsSectionCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get settingsChatsSectionCamera;
 }
 
 class _AppLocalizationsDelegate

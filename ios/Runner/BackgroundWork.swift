@@ -132,6 +132,8 @@ enum BackgroundWork {
     // Register before queueing: expiration while waiting must cancel this run,
     // and a late expiration must never cancel a replacement worker.
     let runID = backup ? twonly_backup_run_create() : twonly_background_run_create()
+    let cleanup = CleanupAssertion(name: "eu.twonly.\(label)", label: label)
+    cleanup.hold()
     let queue = DispatchQueue(label: "eu.twonly.\(label)", qos: .utility)
     var finished = false
     let finishLock = NSLock()
@@ -145,9 +147,12 @@ enum BackgroundWork {
       finishLock.unlock()
       if backup { scheduleBackup(after: success ? 12 * 60 * 60 : 15 * 60, replacingPending: true) }
       task.setTaskCompleted(success: success)
+      cleanup.release()
     }
     task.expirationHandler = {
       NativeErrorReporting.failure("\(label)_expired")
+      // Hold the process before cancelling: the cancel starts SQLite cleanup.
+      cleanup.hold(taskExpired: true)
       twonly_database_operation_cancel(runID)
       if !backup { scheduleFlush() }
       // Completion belongs to the worker, after actual SQLite cleanup.
@@ -189,6 +194,58 @@ enum BackgroundWork {
       if !backup { scheduleFlush() }
       finish(ok && !pending)
     }
+  }
+}
+
+/// A BGTask can expire seconds after launch, typically when the user picks up
+/// the device. Expiration only cancels the worker, which still has to close its
+/// SQLite connections. Without another assertion iOS suspends the process
+/// first and kills it for the App Group locks (0xdead10cc). This UIKit
+/// assertion carries that cleanup past the BGTask. State is confined to the
+/// main queue.
+private final class CleanupAssertion {
+  private let name: String
+  private let label: String
+  private var identifier = UIBackgroundTaskIdentifier.invalid
+  private var released = false
+  private var taskExpired = false
+
+  init(name: String, label: String) {
+    self.name = name
+    self.label = label
+  }
+
+  /// Called when the run starts and again on BGTask expiration. A UIKit
+  /// assertion lasts about 30 seconds, so a long backup may need a fresh one
+  /// for its cleanup.
+  func hold(taskExpired: Bool = false) {
+    onMain {
+      if taskExpired { self.taskExpired = true }
+      guard !self.released, self.identifier == .invalid else { return }
+      self.identifier = UIApplication.shared.beginBackgroundTask(withName: self.name) {
+        self.expire()
+      }
+    }
+  }
+
+  func release() {
+    onMain {
+      self.released = true
+      self.end()
+    }
+  }
+
+  private func expire() {
+    // Both grants are gone while the worker may still hold connections.
+    if taskExpired { NativeErrorReporting.failure("\(label)_cleanup_outlived_assertion") }
+    end()
+  }
+
+  private func end() {
+    guard identifier != .invalid else { return }
+    let previous = identifier
+    identifier = .invalid
+    UIApplication.shared.endBackgroundTask(previous)
   }
 }
 

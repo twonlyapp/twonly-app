@@ -272,3 +272,56 @@ async fn failed_production_backup_preserves_previous_archive_and_removes_staging
             .starts_with(".backup-")));
     close(&ctx).await;
 }
+
+#[test]
+fn newer_backup_format_requires_an_app_update() {
+    let directory = tempfile::tempdir().unwrap();
+    std::fs::write(
+        directory.path().join(BACKUP_MANIFEST_FILE),
+        serde_json::to_vec(&BackupManifest {
+            format_version: BACKUP_FORMAT_VERSION + 1,
+            drift_schema_version: 25,
+            app_schema_version: crate::database::app::APP_SCHEMA_VERSION,
+            files: BTreeMap::new(),
+        })
+        .unwrap(),
+    )
+    .unwrap();
+    let error = BackupArchive::validate_manifest(directory.path(), &BTreeMap::new()).unwrap_err();
+    assert!(
+        matches!(error, crate::error::TwonlyError::RequiresAppUpdate(_)),
+        "{error}"
+    );
+}
+
+#[tokio::test]
+async fn backup_with_unknown_migration_requires_an_app_update_and_preserves_live_data() {
+    let (_directory, ctx) = context().await;
+    let app = ctx.app_db.read().await.clone();
+    // A newer app applied a migration this build does not ship.
+    app.pool
+        .execute("INSERT INTO _sqlx_migrations(version, description, success, checksum, execution_time) VALUES (999999, 'from the future', 1, x'00', 0)")
+        .await
+        .unwrap();
+    let (_, path) = BackupArchive::create_backup_with_token(&ctx).await.unwrap();
+    app.pool
+        .execute("DELETE FROM _sqlx_migrations WHERE version = 999999; INSERT INTO app_metadata(key,value) VALUES ('preserved','yes')")
+        .await
+        .unwrap();
+    let error = BackupArchive::restore_from_backup(&ctx, &path)
+        .await
+        .unwrap_err();
+    assert!(
+        matches!(error, crate::error::TwonlyError::RequiresAppUpdate(_)),
+        "{error}"
+    );
+    let app = ctx.app_db.read().await.clone();
+    assert_eq!(
+        sqlx::query_scalar::<_, String>("SELECT value FROM app_metadata WHERE key = 'preserved'")
+            .fetch_one(&app.pool)
+            .await
+            .unwrap(),
+        "yes"
+    );
+    close(&ctx).await;
+}

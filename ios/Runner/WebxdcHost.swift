@@ -119,7 +119,11 @@ class WebxdcViewFactory: NSObject, FlutterPlatformViewFactory {
     return WebxdcPlatformView(
       frame: frame,
       instanceId: params["instanceId"] as? String ?? "",
-      origin: params["origin"] as? String ?? ""
+      origin: params["origin"] as? String ?? "",
+      backgroundColor: (params["backgroundColor"] as? NSNumber).map {
+        UIColor(argb: $0.uint32Value)
+      } ?? .white,
+      dark: params["dark"] as? Bool ?? false
     )
   }
 }
@@ -175,7 +179,9 @@ class WebxdcPlatformView: NSObject, FlutterPlatformView {
   private var importCallId: Int?
   private var importExtensions: [String] = []
 
-  init(frame: CGRect, instanceId: String, origin: String) {
+  init(
+    frame: CGRect, instanceId: String, origin: String, backgroundColor: UIColor, dark: Bool
+  ) {
     self.instanceId = instanceId
     self.origin = origin
     super.init()
@@ -204,6 +210,13 @@ class WebxdcPlatformView: NSObject, FlutterPlatformView {
     webView.uiDelegate = self
     webView.allowsBackForwardNavigationGestures = false
     webView.allowsLinkPreview = false
+    // The route's own background, shown until the game draws and wherever it
+    // leaves the page unpainted. WKWebView's default is white. The page's
+    // `prefers-color-scheme` follows twonly's theme rather than the system's.
+    webView.isOpaque = false
+    webView.backgroundColor = backgroundColor
+    webView.scrollView.backgroundColor = backgroundColor
+    webView.overrideUserInterfaceStyle = dark ? .dark : .light
     self.webView = webView
 
     WebxdcPlatformView.current = self
@@ -487,5 +500,16 @@ private class BridgeHandler: NSObject, WKScriptMessageHandler {
     view.askHostToBridge(body) { reply in
       view.deliverToPage(reply)
     }
+  }
+}
+
+extension UIColor {
+  /// A Flutter `Color` as `toARGB32` hands it over.
+  fileprivate convenience init(argb: UInt32) {
+    self.init(
+      red: CGFloat((argb >> 16) & 0xFF) / 255,
+      green: CGFloat((argb >> 8) & 0xFF) / 255,
+      blue: CGFloat(argb & 0xFF) / 255,
+      alpha: CGFloat((argb >> 24) & 0xFF) / 255)
   }
 }

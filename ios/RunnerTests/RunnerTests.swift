@@ -2,9 +2,38 @@ import Flutter
 import Darwin
 import UIKit
 import XCTest
+import Sentry
 @testable import Runner
 
 class RunnerTests: XCTestCase {
+
+  func testOnlySystemPasteboardHangsAreWarnings() {
+    let pasteboard = Frame()
+    pasteboard.package = "/System/Library/PrivateFrameworks/Pasteboard.framework/Pasteboard"
+    pasteboard.inApp = false
+    let xpc = Frame()
+    xpc.package = "/usr/lib/system/libxpc.dylib"
+    xpc.inApp = false
+    let exception = Exception(value: "App hanging for at least 2000 ms.", type: "App Hanging")
+    exception.mechanism = Mechanism(type: "AppHang")
+    exception.stacktrace = SentryStacktrace(frames: [pasteboard, xpc], registers: [:])
+    let event = Event(level: .error)
+    event.exceptions = [exception]
+    XCTAssertEqual(NativeErrorReporting.classifyEvent(event).level, .warning)
+
+    event.level = .fatal
+    XCTAssertEqual(NativeErrorReporting.classifyEvent(event).level, .fatal)
+    event.level = .error
+    exception.mechanism = Mechanism(type: "signal")
+    XCTAssertEqual(NativeErrorReporting.classifyEvent(event).level, .error)
+    event.level = .error
+    exception.mechanism = Mechanism(type: "AppHang")
+    xpc.inApp = true
+    XCTAssertEqual(NativeErrorReporting.classifyEvent(event).level, .error)
+    xpc.inApp = false
+    pasteboard.package = "/System/Library/Frameworks/UIKit.framework/UIKit"
+    XCTAssertEqual(NativeErrorReporting.classifyEvent(event).level, .error)
+  }
 
   func testNotificationFinalizationAfterCancellationIsDeferred() {
     for error in [

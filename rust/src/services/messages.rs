@@ -566,6 +566,7 @@ impl MessageService {
             webxdc_sync_request: None,
             sticker: None,
             live_location: None,
+            vacation: None,
         }
         .encode_to_vec();
 
@@ -611,6 +612,7 @@ impl MessageService {
             webxdc_sync_request: None,
             sticker: None,
             live_location: None,
+            vacation: None,
         }
         .encode_to_vec();
 

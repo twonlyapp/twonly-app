@@ -50,6 +50,7 @@ UserConfig testUserConfig({
   hideMemoriesBackupPromo: false,
   hidePasswordlessRecoveryReminder: false,
   hideWidgetShareExplainer: false,
+  showStoreReviewPrompt: true,
   updateFcmToken: true,
   canUseLoginTokenForAuth: true,
   isBackupEnabled: false,

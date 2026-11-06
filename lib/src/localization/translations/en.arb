@@ -1,18 +1,16 @@
 {
   "subscriptionAllApps": "Access to all apps",
   "@@locale": "en",
-  "registerSlogan": "Stay in touch privately.",
-  "onboardingWelcomeTitle": "Welcome to twonly!",
-  "onboardingWelcomeBody": "Experience a private and secure way to stay in touch with friends by sharing instant pictures.",
-  "onboardingE2eTitle": "Carefree sharing",
-  "onboardingE2eBody": "With end-to-end encryption, enjoy the peace of mind that only you and your friends can see the moments you share.",
-  "onboardingFocusTitle": "Focus on sharing moments",
-  "onboardingFocusBody": "Say goodbye to addictive features! twonly was created for sharing moments, free from useless distractions or ads.",
-  "onboardingNotProductTitle": "You are not the product!",
-  "onboardingNotProductBody": "twonly is financed by an optional subscription. Your data will never be sold.",
-  "registerUsernameSlogan": "Create your account",
+  "onboardingHeadline": "Share moments",
+  "onboardingHeadlineHighlight": "privately.",
+  "onboardingBody": "Photos, videos and conversations. A private place to keep up with your friends.",
+  "onboardingFeatureE2e": "End-to-end encrypted.",
+  "onboardingFeatureNoAds": "No ads and no tracking.",
+  "onboardingRegisterButton": "Register",
+  "registerUsernameSlogan": "Create\nyour account",
   "registerUsernameDecoration": "Username",
   "registerUsernameLimits": "At least 3 characters.",
+  "registerUsernameBody": "Your friends find you by your username. You can change it later.",
   "registerProofOfWorkFailed": "There was an issue with the captcha test. Please try again.",
   "registerSubmitButton": "Register now!",
   "chatsTapToSend": "Click to send your first image",
@@ -66,13 +64,13 @@
   "messageReopened": "Re-opened",
   "imageEditorDrawOk": "Take drawing",
   "settingsTitle": "Settings",
-  "settingsChats": "Chats",
-  "settingsPreSelectedReactions": "Preselected reaction emojis",
+  "settingsChats": "Chats & camera",
+  "settingsPreSelectedReactions": "Quick reactions",
   "settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle": "Mark duplicates as opened",
   "settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle": "If you receive the same media in multiple chats, opening one marks all others as opened.",
   "settingsPreSelectedReactionsError": "A maximum of 12 reactions can be selected.",
   "settingsProfile": "Profile",
-  "settingsStorageData": "Memories & Storage",
+  "settingsStorageData": "Storage & downloads",
   "memoryDetailsTitle": "Details",
   "memoryDetailsCapturedAt": "Captured",
   "memoryDetailsLocation": "Location",
@@ -137,9 +135,9 @@
   "settingsProfileEditDisplayNameNew": "New Displayname",
   "settingsAccount": "Account",
   "settingsSubscription": "Subscription",
-  "settingsAppearance": "Appearance",
+  "settingsAppearance": "Design & language",
   "settingsPrivacy": "Privacy & Security",
-  "settingsPrivacyBlockUsers": "Block contacts",
+  "settingsPrivacyBlockUsers": "Blocked contacts",
   "settingsPrivacyBlockUsersDesc": "Blocked contacts will not be able to communicate with you. You can unblock a blocked contact at any time.",
   "settingsPrivacyBlockUsersCount": "{len} contact(s)",
   "@settingsPrivacyBlockUsersCount": {
@@ -158,14 +156,14 @@
   "privacyVisibilityNobody": "Nobody",
   "privacyVisibilityOnlyContacts": "Only Contacts",
   "privacyVisibilityEveryone": "Everyone",
-  "settingsNotification": "Notification",
+  "settingsNotification": "Notifications",
   "settingsNotifyPermission": "Notification permissions",
-  "settingsNotifyPermissionDesc": "Open system settings to allow push notifications.",
+  "settingsNotifyPermissionDesc": "Open your phone’s settings to manage notification permissions.",
   "settingsNotifyResetTitle": "Reset notification tokens",
   "settingsNotifyResetTitleSubtitle": "Reset your notification tokens if you have problems receiving push notifications.",
-  "settingsNotifyResetTitleReset": "Your notification tokens have been reset.",
-  "settingsNotifyResetTitleResetDesc": "If the problem persists, please send us your debug log via Settings > Help so we can investigate the issue.",
-  "settingsHelp": "Help",
+  "settingsNotifyResetTitleReset": "Notification connection renewed",
+  "settingsNotifyResetTitleResetDesc": "If notifications still do not arrive, contact us under Settings > Help & information. You can attach a diagnostic log there.",
+  "settingsHelp": "Help & information",
   "settingsHelpDiagnostics": "Diagnostic protocol",
   "settingsHelpFAQ": "FAQ",
   "settingsHelpContactUs": "Contact us",
@@ -191,20 +189,18 @@
   "contactUsSuccess": "Feedback submitted successfully!",
   "hideNewsIcon": "Hide News Icon",
   "settingsHelpTerms": "Terms of Service",
-  "settingsAppearanceTheme": "Theme",
+  "settingsAppearanceTheme": "Light / dark mode",
   "settingsAppearanceLanguage": "Language",
   "settingsAccountDeleteAccount": "Delete account",
   "settingsAccountDeleteAccountNoBallance": "Once you delete your account, there is no going back.",
   "settingsAccountDeleteModalTitle": "Are you sure?",
   "settingsAccountDeleteModalBody": "Your account will be deleted. There is no change to restore it.",
-  "contactVerifyNumberTitle": "Verify contacts",
   "verifyUserIdentity": "Verify {username}'s identity",
   "@verifyUserIdentity": {
     "placeholders": {
       "username": {}
     }
   },
-  "contactVerifyNumberSubtitle": "Verify the identity of your contacts to make sure you are texting the right person.",
   "inChatContactNotVerified": "Contact not verified.",
   "groupMembersNotVerified": "{count} members are not verified.",
   "@groupMembersNotVerified": {
@@ -391,6 +387,7 @@
   "backupChangePassword": "Change password",
   "backupChangePasswordAuthReason": "Changing backup password",
   "backupChangePasswordAuthFailed": "You can only change your password after you have authenticated!",
+  "backupChangePasswordFailed": "Your password could not be changed. Your previous password still works. Check your internet connection and try again.",
   "backupFreeSpaceWithCloud": "Free Space with Cloud Backup",
   "backupMemoriesNotEnabled": "Not enabled",
   "backupMemoriesUpgradeRequired": "Upgrade required",
@@ -408,6 +405,8 @@
   },
   "twonlySafeRecoverTitle": "Restore backup",
   "twonlySafeRecoverBtn": "Restore backup",
+  "twonlySafeRecoverDesc": "Enter your username and the password of your backup.",
+  "twonlySafeRecoverOr": "or",
   "inviteFriends": "Invite your friends",
   "inviteFriendsShareBtn": "Share",
   "inviteFriendsShareText": "Let's switch to twonly: {url}",
@@ -567,9 +566,10 @@
   "passwordlessRecoveryReminderHideDesc": "If you lose your password, there is no other way to recover your account.",
   "passwordlessRecoveryReminderEnable": "Enable",
   "onboardingFinishLater": "Finish later",
-  "onboardingProfileTitle": "Choose your look",
-  "onboardingProfileBody": "Select an avatar and a display name that friends will see.",
-  "onboardingBackupBody": "Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.",
+  "onboardingProfileTitle": "Create\nyour avatar",
+  "onboardingProfileBody": "Your public avatar helps others recognize you on twonly.",
+  "onboardingBackupBody": "So you can restore your account on a new phone.",
+  "onboardingBackupPasswordSet": "Your backup password is set. You can keep it or choose a new one.",
   "onboardingUserDiscoveryShareFriends": "Share your friends",
   "onboardingUserDiscoveryShareFriendsDesc": "Share with your friends who you know and who you have verified. Friends can *only see mutual friends* from your friend list. You can change your mind at *any time* or *hide specific people*.",
   "onboardingUserDiscoveryContactsVerifiedBadge": "Contacts verified by your friends get a badge",
@@ -601,7 +601,6 @@
   "startWithCameraOpen": "Start with camera open",
   "showImagePreviewWhenSending": "Display image preview when selecting recipients",
   "alwaysShowStories": "Always show stories",
-  "alwaysShowStoriesSubtitle": "Keep stories above your chats after you've watched them.",
   "verifiedPublicKey": "The identity of {username} has been successfully verified.",
   "memoriesAYearAgo": "One year ago",
   "memoriesXYearsAgo": "{years} years ago",
@@ -705,15 +704,15 @@
   "chatEntryFlameRestored": "{count} flames restored",
   "requestedUserToastText": "{username} was successfully requested.",
   "profileYourQrCode": "Your QR code",
-  "settingsScreenLock": "Screen lock",
-  "settingsScreenLockSubtitle": "To open twonly, you'll need to use your smartphone's unlock feature.",
+  "settingsScreenLock": "Lock the app",
+  "settingsScreenLockSubtitle": "Use your phone’s unlock method to open twonly.",
   "settingsScreenLockAuthMessageEnable": "Use the screen lock from twonly.",
   "settingsScreenLockAuthMessageDisable": "Disable the screen lock from twonly.",
   "unlockTwonly": "Unlock twonly",
   "unlockTwonlyTryAgain": "Try again",
   "unlockTwonlyDesc": "Use your phone's unlock settings to unlock twonly",
-  "settingsTypingIndication": "Typing Indicators",
-  "settingsTypingIndicationSubtitle": "When the typing indicator is turned off, you can't see when others are typing a message.",
+  "settingsTypingIndication": "Typing indicator",
+  "settingsTypingIndicationSubtitle": "Show each other when you are typing. Turning this off also hides other people’s typing indicators.",
   "contactActionBlock": "Block",
   "contactActionAccept": "Accept",
   "userDiscoverySettingsMutualFriends": "Choose how many mutual friends a person must have for you to be suggested to them.",
@@ -828,6 +827,7 @@
   "recoverErrorPasswordInvalid": "The password provided is incorrect.",
   "recoverErrorTryAgainLater": "The server is currently unavailable. Please try again later.",
   "recoverErrorUnknown": "An unknown error occurred. Please try again.",
+  "recoverErrorAppUpdateRequired": "The backup was made with a newer version of twonly. Please update the app and try again.",
   "recoverSuccessTitle": "Backup successfully recovered.",
   "recoverSuccessBody": "Click here to open the app again",
   "recoverProgressTitle": "Restoring your backup",
@@ -856,7 +856,7 @@
   "subscriptionPledgeSubtitle": "Zero ads. Total privacy.",
   "subscriptionManage": "Manage subscription",
   "dragToZoom": "Drag to Zoom",
-  "onboardingProfileSelectionTitle": "Choose your setup path",
+  "onboardingProfileSelectionTitle": "Choose your\nsetup path",
   "onboardingProfileSelectionSubtitle": "Choose how you want to configure your security and privacy settings.",
   "onboardingProfileSelectionDefaultTitle": "Default",
   "onboardingProfileSelectionDefaultDesc": "Instantly applies recommended settings so you can start using the app.",
@@ -1011,9 +1011,7 @@
   "recoverPasswordlessNotificationCardSubtitle": "Get notified when a friend has helped you recover your account.",
   "recoverPasswordlessNotificationCardBtn": "Enable push notifications",
   "recoverPasswordlessQrInstructions": "Let friends scan the QR code or share the link.",
-  "recoverPasswordlessShareBtn": "Share Recovery Link",
-  "recoverPasswordlessCopyBtn": "Copy",
-  "recoverPasswordlessCopiedSnackbar": "Link copied to clipboard!",
+  "recoverPasswordlessShareBtn": "Share link",
   "passwordlessRecoveryNoShareStored": "No recovery share stored for this contact.",
   "passwordlessRecoveryEmailSent": "Recovery email sent!",
   "passwordlessRecoveryShareSent": "Recovery share sent!",
@@ -1122,7 +1120,7 @@
       }
     }
   },
-  "settingsShowRestoreFlameTitle": "Show flame restore warning",
+  "settingsShowRestoreFlameTitle": "Offer restore",
   "contactGroupsTitle": "Contact Groups",
   "contactGroupsSubtitleEmpty": "No visible contact groups selected",
   "createContactGroup": "Create contact group",
@@ -1139,6 +1137,14 @@
   "contactGroupShowAsShortcutSubtitle": "Use its emoji to select all members when sharing.",
   "contactGroupShortcutNeedsEmoji": "Select an emoji before enabling the shortcut.",
   "contactGroupMembers": "Members",
+  "contactGroupMemberCount": "{count, plural, =0{No members} =1{1 member} other{{count} members}}",
+  "@contactGroupMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "contactGroupLabelFeature": "Visible label",
   "contactGroupShortcutFeature": "Shortcut",
   "contactGroupSettings": "Edit contact group",
@@ -1152,8 +1158,8 @@
   "themeLight": "Light",
   "themeDark": "Dark",
   "backupRecoverySectionTitle": "Secure Account Access",
-  "backupRecoverySectionDescNone": "You must select at least one recovery option, as otherwise no one can help you if you lose access to your device.",
-  "backupRecoverySectionDescSome": "You can recover your account with the recovery options below. It is recommended to enable both options.",
+  "backupRecoverySectionDescNone": "Set up at least one option.",
+  "backupRecoverySectionDescSome": "Best to enable both options.",
   "backupRecoveryOptionAFriends": "Via trusted friends",
   "backupRecoveryOptionAMicrocopy": "Select friends who can help you recover your account.",
   "backupRecoveryOptionBPassword": "Classic Password",
@@ -1316,6 +1322,7 @@
     }
   },
   "mediaSendFailed": "Send failed",
+  "messageSendFailedUserInactive": "User inactive",
   "mailboxSyncTitle": "Synchronizing twonly",
   "mailboxSyncBody": "twonly is synchronizing this device and downloading your messages. Please keep the app open until it is done.",
   "mailboxSyncRemaining": "{count, plural, =1{1 message left} other{{count} messages left}}",
@@ -1327,16 +1334,129 @@
     }
   },
   "notificationGameTurn": "has played {gameName}. It is your turn.",
-  "@notificationGameTurn": {"placeholders": {"gameName": {"type": "String"}}},
+  "@notificationGameTurn": {
+    "placeholders": {
+      "gameName": {
+        "type": "String"
+      }
+    }
+  },
   "notificationGameWon": "has played {gameName}. You have won.",
-  "@notificationGameWon": {"placeholders": {"gameName": {"type": "String"}}},
+  "@notificationGameWon": {
+    "placeholders": {
+      "gameName": {
+        "type": "String"
+      }
+    }
+  },
   "notificationGameLost": "has played {gameName}. You have lost.",
-  "@notificationGameLost": {"placeholders": {"gameName": {"type": "String"}}},
+  "@notificationGameLost": {
+    "placeholders": {
+      "gameName": {
+        "type": "String"
+      }
+    }
+  },
   "notificationGameFallbackName": "a game",
   "chatGameTurn": "It is your turn.",
   "chatGameWon": "You have won.",
   "chatGameLost": "You have lost.",
   "chatGamePlayed": "You have played.",
   "chatGameOtherPlayed": "Played.",
-  "chatGameDraw": "It is a draw."
+  "chatGameDraw": "It is a draw.",
+  "storeReviewPromptTitle": "Thank you for testing twonly",
+  "storeReviewPromptDesc": "If you want to help twonly, please leave a review on the {store}.",
+  "@storeReviewPromptDesc": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "storeReviewPromptReview": "Write a review",
+  "storeReviewPromptHide": "Don't show again",
+  "settingsProfileSubtitle": "Edit profile · QR code",
+  "settingsChatsSubtitle": "Reactions, stories, camera & sending",
+  "settingsNotificationsSubtitle": "Story alerts & notification problems",
+  "settingsAppearanceSubtitle": "Light / dark mode, colors & app language",
+  "settingsPrivacySubtitle": "Profile visibility, friends & app lock",
+  "settingsBackupSubtitle": "Account access, messages & Memories",
+  "settingsStorageSubtitle": "Free up space & save media",
+  "settingsRecoveryMissing": "No account recovery set up",
+  "settingsNotificationsDisabled": "Notifications are off in system settings",
+  "settingsNotificationsEnabled": "Notifications allowed",
+  "settingsNotificationsDisabledHelp": "Allow notifications in your phone’s settings first. Tap the status above to open them.",
+  "settingsStatusLoading": "Checking status…",
+  "settingsStatusUnavailable": "Status could not be loaded",
+  "settingsNewsShortcut": "Show news shortcut",
+  "settingsDownloadNone": "No automatic photo or video downloads",
+  "settingsDeleteAccountFailed": "Your account could not be deleted. Check your internet connection and try again.",
+  "settingsAccountDeleted": "Account deleted",
+  "settingsOpenAppAgain": "Tap to open the app again",
+  "settingsBackupNever": "Not backed up yet",
+  "settingsBackupPending": "Backup pending",
+  "settingsBackupFailed": "Last backup failed",
+  "settingsBackupSaved": "Last successful backup",
+  "settingsPasswordConfigured": "Password set up · Manage",
+  "settingsMemoriesBackupActive": "Backup enabled",
+  "settingsMemoriesBackupActiveUsage": "Backup enabled · {used} of {max} used",
+  "@settingsMemoriesBackupActiveUsage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsMemoriesBackupInactive": "Not enabled · Tap to enable",
+  "settingsRecoveryFriendsLoading": "Checking your trusted friends…",
+  "settingsRecoveryFriendsReady": "Enough active friends · {count} active (at least {required} needed)",
+  "settingsRecoveryFriendsWaiting": "Not enough active friends yet · {count} of {required} required",
+  "@settingsRecoveryFriendsReady": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+  "@settingsRecoveryFriendsWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArchiveNeedsPassword": "Set up a recovery password above to back up contacts and messages.",
+  "settingsChangelog": "Changelog",
+  "settingsOnVacationTitle": "On Vacation",
+  "settingsOnVacationSubtitle": "Freeze your flames while you are away",
+  "onVacationActiveUntil": "On vacation until {date}",
+  "onVacationExplanation": "While you are on vacation, your flames are frozen: they cannot be lost, but they do not grow either. Everyone you have more than {count} flames with gets a message and sees your vacation icon instead of the flame.",
+  "onVacationIcon": "Icon",
+  "onVacationDuration": "Duration",
+  "onVacationDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "onVacationCountsAgain": "Your flames count again from {date}.",
+  "onVacationAffectedChats": "{count, plural, =0{No chat has more than {min} flames yet.} =1{1 chat will be frozen.} other{{count} chats will be frozen.}}",
+  "onVacationNothingToFreeze": "None of your chats has more than {count} flames, so there is nothing to freeze.",
+  "onVacationStart": "Go on vacation",
+  "onVacationStarted": "{count, plural, =1{Enjoy your vacation! 1 chat is frozen.} other{Enjoy your vacation! {count} chats are frozen.}}",
+  "onVacationEnd": "End vacation",
+  "onVacationEndConfirmTitle": "End your vacation?",
+  "onVacationEndConfirmBody": "Your flames count again from today, and your friends will be told.",
+  "onVacationFailed": "Could not start your vacation. Please try again.",
+  "chatEntryVacationStarted": "On vacation until {date}. The flames are frozen until then.",
+  "chatEntryVacationEnded": "Back from vacation. The flames count again.",
+  "notificationVacation": "is on vacation. Your flames are frozen.",
+  "notificationVacationEnd": "is back from vacation.",
+  "settingsChatsSectionChats": "Chats",
+  "settingsChatsSectionFlames": "Flames",
+  "settingsChatsSectionCamera": "Camera"
 }

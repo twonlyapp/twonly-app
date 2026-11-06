@@ -427,8 +427,12 @@ impl AppDatabase {
         sqlx::migrate!("./src/database/app/migrations")
             .run(&self.pool)
             .await
-            .map_err(|error| {
-                TwonlyError::Generic(format!("App database migration failed: {error}"))
+            .map_err(|error| match error {
+                // A restored backup from a newer app carries its migrations.
+                sqlx::migrate::MigrateError::VersionMissing(version) => {
+                    TwonlyError::RequiresAppUpdate(format!("app database migration {version}"))
+                }
+                error => TwonlyError::Generic(format!("App database migration failed: {error}")),
             })?;
 
         webxdc::queries::restore_notification_content(&self.pool).await?;

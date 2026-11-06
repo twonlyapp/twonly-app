@@ -100,9 +100,13 @@ impl ApiRuntime {
             .requested_background
             .load(std::sync::atomic::Ordering::Acquire);
 
-        let sharing = crate::services::live_location::active(ctx)
-            .await?
-            .is_some_and(|session| session.expires_at_ms > chrono::Utc::now().timestamp_millis());
+        // Foreground connections never need the sharing exception. In
+        // particular, a native pause can retire the pools immediately after
+        // foreground activation, before Flutter's queued resume reaches here.
+        let sharing = in_background
+            && crate::services::live_location::active(ctx)
+                .await?
+                .is_some_and(|session| session.expires_at_ms > chrono::Utc::now().timestamp_millis());
 
         client.set_background(in_background && !sharing).await
     }

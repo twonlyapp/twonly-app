@@ -93,6 +93,7 @@ class NativeErrorReportingTest {
         for (reason in listOf(
             "Database operation cancelled; retry when active",
             "Native database admission cancelled",
+            "Database operation deferred until foreground",
             "Notification run cancelled",
             "Notification run is closing",
         )) {
@@ -111,7 +112,7 @@ class NativeErrorReportingTest {
             "main_key could not be loaded from the key_chain" to "secure_storage",
             "SELECT private-message FROM contacts WHERE user_id = 123" to "unknown",
             "private-message cancelled" to "unknown",
-            "Notification run is closed or unknown" to "unknown",
+            "Notification run is closed or unknown" to "notification_run_closed",
             null to "unknown",
         )) {
             NativeErrorReporting.rustFailure(context, "media_preparation", error)
@@ -122,6 +123,16 @@ class NativeErrorReportingTest {
             assertFalse(event.message!!.formatted!!.contains("private-message"))
         }
         assertEquals(8, events.size)
+    }
+
+    @Test
+    fun closedNotificationRunIsDeferredOnlyDuringFinalization() {
+        NativeErrorReporting.setEnabled(context, true)
+        NativeErrorReporting.rustFailure(context, "notification_finalize", "Notification run is closed or unknown")
+        assertTrue(events.isEmpty())
+        NativeErrorReporting.rustFailure(context, "notification_processing", "Notification run is closed or unknown")
+        assertEquals(1, events.size)
+        assertEquals("notification_run_closed", events.single().getTag("native_failure_reason"))
     }
 
     @Test

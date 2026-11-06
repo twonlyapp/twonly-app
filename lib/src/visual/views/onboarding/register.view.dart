@@ -6,23 +6,20 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:twonly/core/bridge/user_config.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/release_notes/release_notes_0_6_0.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
-import 'package:twonly/src/visual/views/onboarding/components/link_logo_animation.dart';
+import 'package:twonly/src/visual/views/onboarding/components/onboarding_step.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 
 class RegisterView extends StatefulWidget {
@@ -121,7 +118,6 @@ class _RegisterViewState extends State<RegisterView> {
         }
         if (res.error == ErrorCode.UserIdAlreadyTaken) {
           Log.error('User ID already token. Tying again.');
-          await deleteLocalUserData();
           return await createNewUser();
         }
         if (res.error == ErrorCode.UsernameAlreadyTaken ||
@@ -136,7 +132,10 @@ class _RegisterViewState extends State<RegisterView> {
           return;
         }
         if (res.error == ErrorCode.InvalidProofOfWork) {
-          await deleteLocalUserData();
+          // The challenge is bound to the server connection, so a reconnect
+          // invalidates it. Only a new one is needed; deleting local data
+          // here would unlink the databases Rust still has open and fail
+          // the retry with SQLite code 1032 (read-only, database moved).
           if (retryInvalidProofOfWork) {
             Log.warn(
               'Proof of work was invalid. Requesting a new challenge and '
@@ -154,11 +153,18 @@ class _RegisterViewState extends State<RegisterView> {
           setState(() {
             _isTryingToRegister = false;
           });
-          await showAlertDialog(
-            context,
-            'Oh no!',
-            errorCodeToText(context, res.error!),
-          );
+          final cause = res.cause;
+          if (cause != null && isConnectionError(cause)) {
+            showNetworkIssue(context);
+          } else {
+            // A failure inside the app is not the server being down; show
+            // what failed so it can be reported.
+            await showAlertDialog(
+              context,
+              'Oh no!',
+              cause?.toString() ?? errorCodeToText(context, res.error!),
+            );
+          }
         }
         return;
       }
@@ -185,7 +191,6 @@ class _RegisterViewState extends State<RegisterView> {
       widget.callbackOnSuccess();
     } catch (e, stack) {
       Log.error('Error creating new user', error: e, stackTrace: stack);
-      await deleteLocalUserData();
       if (mounted) {
         setState(() {
           _isTryingToRegister = false;
@@ -201,151 +206,114 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-      behavior: HitTestBehavior.opaque,
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight,
-                  ),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 30),
-                        Center(
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            child: LinkLogoAnimation(
-                              color: context.color.onSurface,
+    final mutedStyle = TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      color: context.color.onSurfaceVariant,
+    );
+
+    return PopScope(
+      canPop: !_isTryingToRegister,
+      child: OnboardingScaffold(
+        onBack: _isTryingToRegister ? null : () => Navigator.of(context).pop(),
+        child: OnboardingStep(
+          title: context.lang.registerUsernameSlogan,
+          body: _registrationDisabled
+              ? null
+              : context.lang.registerUsernameBody,
+          button: _registrationDisabled
+              ? null
+              : MyButton(
+                  onPressed: _isTryingToRegister ? null : createNewUser,
+                  child: _isTryingToRegister
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator.adaptive(
+                            valueColor: AlwaysStoppedAnimation(
+                              context.color.onPrimary,
                             ),
+                            strokeWidth: 3,
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Text(
-                            context.lang.registerSlogan,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color:
-                                  Theme.of(context).textTheme.bodyMedium?.color
-                                      ?.withValues(alpha: 0.7) ??
-                                  context.color.onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        if (_registrationDisabled) ...[
-                          Text(
-                            context.lang.registrationClosed,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: context.color.error,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 40),
-                        ] else ...[
-                          Text(
-                            context.lang.registerUsernameSlogan,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 22,
-                              color: context.color.onSurface,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          MyInput(
-                            controller: usernameController,
-                            errorText: _usernameErrorText,
-                            onChanged: (value) {
-                              usernameController.text = value.toLowerCase();
-                              usernameController.selection =
-                                  TextSelection.fromPosition(
-                                    TextPosition(
-                                      offset: usernameController.text.length,
-                                    ),
-                                  );
-                              setState(() {
-                                _isValidUserName =
-                                    usernameController.text.length >= 3;
-                                _usernameErrorText = null;
-                              });
-                            },
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(12),
-                              FilteringTextInputFormatter.allow(
-                                RegExp('[a-z0-9A-Z._]'),
-                              ),
-                            ],
-                            hintText: context.lang.registerUsernameDecoration,
-                            prefixIcon: const Icon(Icons.alternate_email),
-                          ),
-                          if (_showProofOfWorkError) ...[
-                            const SizedBox(height: 10),
-                            Text(
-                              context.lang.registerProofOfWorkFailed,
-                              style: TextStyle(
-                                color: context.color.error,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                          const SizedBox(height: 32),
-                          MyButton(
-                            onPressed: _isTryingToRegister
-                                ? null
-                                : createNewUser,
-                            child: _isTryingToRegister
-                                ? SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator.adaptive(
-                                      valueColor: AlwaysStoppedAnimation(
-                                        context.color.onPrimary,
-                                      ),
-                                      strokeWidth: 3,
-                                    ),
-                                  )
-                                : Text(
-                                    context.lang.registerSubmitButton,
-                                  ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                        MyButton(
-                          onPressed: () => context.push(
-                            Routes.settingsBackupRecovery,
-                          ),
-                          variant: MyButtonVariant.secondary,
-                          child: Text(
-                            context.lang.twonlySafeRecoverBtn,
-                          ),
-                        ),
-                        const Spacer(),
-                        const SizedBox(height: 40),
-                      ],
+                        )
+                      : Text(context.lang.registerSubmitButton),
+                ),
+          children: [
+            if (_registrationDisabled)
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: context.color.errorContainer,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.hourglass_top_rounded,
+                      color: context.color.onErrorContainer,
                     ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        context.lang.registrationClosed,
+                        style: TextStyle(
+                          fontSize: 15,
+                          height: 1.4,
+                          color: context.color.onErrorContainer,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else ...[
+              MyInput(
+                controller: usernameController,
+                errorText: _usernameErrorText,
+                autofocus: true,
+                onChanged: (value) {
+                  usernameController.text = value.toLowerCase();
+                  usernameController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: usernameController.text.length),
+                  );
+                  setState(() {
+                    _isValidUserName = usernameController.text.length >= 3;
+                    _usernameErrorText = null;
+                  });
+                },
+                onSubmitted: (_) {
+                  if (!_isTryingToRegister) createNewUser();
+                },
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(12),
+                  FilteringTextInputFormatter.allow(
+                    RegExp('[a-z0-9A-Z._]'),
+                  ),
+                ],
+                hintText: context.lang.registerUsernameDecoration,
+                prefixIcon: const Icon(Icons.alternate_email),
+              ),
+              if (_usernameErrorText == null) ...[
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 4),
+                  child: Text(
+                    context.lang.registerUsernameLimits,
+                    style: mutedStyle,
                   ),
                 ),
-              );
-            },
-          ),
+              ],
+              if (_showProofOfWorkError) ...[
+                const SizedBox(height: 10),
+                Text(
+                  context.lang.registerProofOfWorkFailed,
+                  style: mutedStyle.copyWith(color: context.color.error),
+                ),
+              ],
+            ],
+          ],
         ),
       ),
     );

@@ -125,7 +125,15 @@ impl Database {
             .map_err(|e| {
                 tracing::error!("migration error: {:?}", e);
 
-                TwonlyError::Generic(format!("Migration error: {}", e))
+                match e {
+                    // A restored backup from a newer app carries its migrations.
+                    sqlx::migrate::MigrateError::VersionMissing(version) => {
+                        TwonlyError::RequiresAppUpdate(format!(
+                            "signal database migration {version}"
+                        ))
+                    }
+                    e => TwonlyError::Generic(format!("Migration error: {}", e)),
+                }
             })?;
 
         Ok(())

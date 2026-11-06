@@ -12,44 +12,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get subscriptionAllApps => 'الوُصُولُ إِلَى جَمِيعِ التَّطْبِيقَات';
 
   @override
-  String get registerSlogan => 'ابْقَ عَلَى تَوَاصُلٍ بِخُصُوصِيَّةٍ.';
+  String get onboardingHeadline => 'شارِك لحظاتك';
 
   @override
-  String get onboardingWelcomeTitle => 'مَرْحَباً بِكَ فِي twonly!';
+  String get onboardingHeadlineHighlight => 'بخصوصية.';
 
   @override
-  String get onboardingWelcomeBody =>
-      'اِسْتَمْتِعْ بِطَرِيقَةٍ خَاصَّةٍ وَآمِنَةٍ لِلبَقَاءِ عَلَى تَوَاصُلٍ مَعَ أَصْدِقَائِكَ مِنْ خِلَالِ مُشَارَكَةِ الصُّوَرِ الْفَوْرِيَّةِ.';
+  String get onboardingBody =>
+      'صور ومقاطع فيديو ومحادثات. مكان خاص للبقاء على تواصل مع أصدقائك.';
 
   @override
-  String get onboardingE2eTitle => 'مُشَارَكَةٌ بِكُلِّ أَرْيَحِيَّةٍ';
+  String get onboardingFeatureE2e => 'مشفّر من الطرف إلى الطرف.';
 
   @override
-  String get onboardingE2eBody =>
-      'مَعَ التَّشْفِيرِ مِنَ الطَّرَفِ إِلَى الطَّرَفِ اِسْتَمْتِعْ بِطُمَأْنِينَةٍ تَامَّةٍ فَلَنْ يَتَمَكَّنَ مِنْ رُؤْيَةِ اللَّحَظَاتِ الَّتِي تُشَارِكُهَا إِلَّا أَنْتَ وَأَصْدِقَاؤُكَ.';
+  String get onboardingFeatureNoAds => 'لا إعلانات ولا تتبّع.';
 
   @override
-  String get onboardingFocusTitle => 'رَكِّزْ عَلَى مُشَارَكَةِ اللَّحَظَاتِ';
+  String get onboardingRegisterButton => 'إنشاء حساب';
 
   @override
-  String get onboardingFocusBody =>
-      'وَدِّعِ الْمِيِّزَاتِ الَّتِي تُسَبِّبُ الإِدْمَانَ! أُنْشِئَ twonly لِمُشَارَكَةِ اللَّحَظَاتِ، بِعِيداً عَنِ التَّشْتِيتَاتِ غَيْرِ الضَّرُورِيَّةِ وَالإِعْلَانَاتِ.';
-
-  @override
-  String get onboardingNotProductTitle => 'أَنْتَ لَسْتَ الْمُنْتَجَ!';
-
-  @override
-  String get onboardingNotProductBody =>
-      'يَتِمُّ تَمْوِيلُ twonly مِنْ خِلَالِ اشْتِرَاكٍ اخْتِيَارِيٍّ. لَنْ نَبِيعَ بَيَانَاتِكَ أَبَداً.';
-
-  @override
-  String get registerUsernameSlogan => 'أَنْشِئْ حِسَابَكَ';
+  String get registerUsernameSlogan => 'أَنْشِئْ\nحِسَابَكَ';
 
   @override
   String get registerUsernameDecoration => 'اِسْمُ المُسْتَخْدِمِ';
 
   @override
   String get registerUsernameLimits => '3 حُرُوفٍ عَلَى الأَقَلِّ.';
+
+  @override
+  String get registerUsernameBody =>
+      'يجدك أصدقاؤك من خلال اسم المستخدم. يمكنك تغييره لاحقًا.';
 
   @override
   String get registerProofOfWorkFailed =>
@@ -221,11 +213,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsTitle => 'الإِعْدَادَاتُ';
 
   @override
-  String get settingsChats => 'المُحَادَثَاتُ';
+  String get settingsChats => 'الدردشات والكاميرا';
 
   @override
-  String get settingsPreSelectedReactions =>
-      'رُمُوزُ التَّفَاعُلِ المُحَدَّدَةُ مُسْبَقاً';
+  String get settingsPreSelectedReactions => 'التفاعلات السريعة';
 
   @override
   String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle =>
@@ -243,7 +234,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsProfile => 'المَلَفُّ الشَّخْصِيُّ';
 
   @override
-  String get settingsStorageData => 'الذِّكْرَيَاتُ وَالتَّخْزِينُ';
+  String get settingsStorageData => 'التخزين والتنزيلات';
 
   @override
   String get memoryDetailsTitle => 'التفاصيل';
@@ -400,13 +391,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSubscription => 'الاِشْتِرَاكُ';
 
   @override
-  String get settingsAppearance => 'المَظْهَرُ';
+  String get settingsAppearance => 'المظهر واللغة';
 
   @override
   String get settingsPrivacy => 'الخُصُوصِيَّةُ وَالأَمَانُ';
 
   @override
-  String get settingsPrivacyBlockUsers => 'حَظْرُ جِهَاتِ الاِتِّصَالِ';
+  String get settingsPrivacyBlockUsers => 'جهات الاتصال المحظورة';
 
   @override
   String get settingsPrivacyBlockUsersDesc =>
@@ -486,14 +477,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get privacyVisibilityEveryone => 'الجميع';
 
   @override
-  String get settingsNotification => 'الإِشْعَارَاتُ';
+  String get settingsNotification => 'الإشعارات';
 
   @override
   String get settingsNotifyPermission => 'أَذُونَاتُ الإِشْعَارَاتِ';
 
   @override
   String get settingsNotifyPermissionDesc =>
-      'اِفْتَحْ إِعْدَادَاتِ النِّظَامِ لِلسَّمَاحِ بِالإِشْعَارَاتِ الفَوْرِيَّةِ.';
+      'افتح إعدادات هاتفك لإدارة أذونات الإشعارات.';
 
   @override
   String get settingsNotifyResetTitle =>
@@ -504,15 +495,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'أَعِدْ تَعْيِينِ رُمُوزِ الإِشْعَارَاتِ الخَاصَّةِ بِكَ إِذَا كَانَتْ لَدَيْكَ مُشْكِلَةٌ فِي تَلَقِّي الإِشْعَارَاتِ الفَوْرِيَّةِ.';
 
   @override
-  String get settingsNotifyResetTitleReset =>
-      'تَمَّتْ إِعَادَةُ تَعْيِينِ رُمُوزِ الإِشْعَارَاتِ الخَاصَّةِ بِكَ.';
+  String get settingsNotifyResetTitleReset => 'تم تجديد اتصال الإشعارات';
 
   @override
   String get settingsNotifyResetTitleResetDesc =>
-      'إِذَا اسْتَمَرَّتِ المُشْكِلَةُ يُرْجَى إِرْسَالُ سِجِلِّ التَّصْحِيحِ إِلَيْنَا عَبْرَ الإِعْدَادَاتِ > المُسَاعَدَةِ لِنَتَمَكَّنَ مِنْ فَحْصِ المَسْأَلَةِ.';
+      'إذا استمرت المشكلة، تواصل معنا عبر الإعدادات > المساعدة والمعلومات. يمكنك إرفاق سجل تشخيصي هناك.';
 
   @override
-  String get settingsHelp => 'المُسَاعَدَةُ';
+  String get settingsHelp => 'المساعدة والمعلومات';
 
   @override
   String get settingsHelpDiagnostics => 'سِجِلُّ التَّشْخِيصِ';
@@ -595,7 +585,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsHelpTerms => 'شُرُوطُ الخِدْمَةِ';
 
   @override
-  String get settingsAppearanceTheme => 'المَظْهَرُ';
+  String get settingsAppearanceTheme => 'الوضع الفاتح أو الداكن';
 
   @override
   String get settingsAppearanceLanguage => 'اللغة';
@@ -615,17 +605,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'سَيُحْذَفُ حِسَابُكَ وَلَنْ تَكُونَ هُنَاكَ أَيُّ فُرْصَةٍ لاِسْتِرْدَادِهِ.';
 
   @override
-  String get contactVerifyNumberTitle =>
-      'التَّحَقُّقُ مِنَ جِهَاتِ الإِتِّصَالِ';
-
-  @override
   String verifyUserIdentity(Object username) {
     return 'التَّحَقُّقُ مِنْ هُوِيَّةِ $username';
   }
-
-  @override
-  String get contactVerifyNumberSubtitle =>
-      'تَحَقَّقْ مِنْ هُوِيَّةِ جِهَاتِ اتِّصَالِكَ لِلتَّأَكُّدِ مِنْ أَنَّكَ تُراَسِلُ الشَّخْصَ الصَّحِيحَ.';
 
   @override
   String get inChatContactNotVerified =>
@@ -1116,6 +1098,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يمكنك تغيير كلمة المرور إلا بعد المصادقة!';
 
   @override
+  String get backupChangePasswordFailed =>
+      'تعذّر تغيير كلمة المرور. لا تزال كلمة المرور السابقة صالحة. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.';
+
+  @override
   String get backupFreeSpaceWithCloud =>
       'وفّر المساحة بالنسخ الاحتياطي السحابي';
 
@@ -1140,6 +1126,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get twonlySafeRecoverBtn => 'استعادة النسخة الاحتياطية';
+
+  @override
+  String get twonlySafeRecoverDesc =>
+      'أدخل اسم المستخدم وكلمة مرور نسختك الاحتياطية.';
+
+  @override
+  String get twonlySafeRecoverOr => 'أو';
 
   @override
   String get inviteFriends => 'ادعُ أصدقاءك';
@@ -1697,15 +1690,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingFinishLater => 'الإكمال لاحقًا';
 
   @override
-  String get onboardingProfileTitle => 'اختر مظهرك';
+  String get onboardingProfileTitle => 'صمّم\nصورتك الرمزية';
 
   @override
   String get onboardingProfileBody =>
-      'اختر صورة رمزية واسمًا معروضًا سيراه أصدقاؤك.';
+      'تساعد صورتك الرمزية العامة الآخرين على التعرّف عليك في twonly.';
 
   @override
-  String get onboardingBackupBody =>
-      'احتفظ بنسخة احتياطية من هويتك في twonly، فهذه هي الطريقة الوحيدة لاستعادة حسابك إذا ألغيت تثبيت التطبيق أو فقدت هاتفك.';
+  String get onboardingBackupBody => 'لتتمكن من استعادة حسابك على هاتف جديد.';
+
+  @override
+  String get onboardingBackupPasswordSet =>
+      'تم تعيين كلمة مرور النسخ الاحتياطي. يمكنك الاحتفاظ بها أو اختيار كلمة مرور جديدة.';
 
   @override
   String get onboardingUserDiscoveryShareFriends => 'شارك أصدقاءك';
@@ -1816,10 +1812,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get alwaysShowStories => 'إظهار القصص دائمًا';
-
-  @override
-  String get alwaysShowStoriesSubtitle =>
-      'تبقى القصص أعلى محادثاتك حتى بعد مشاهدتها.';
 
   @override
   String verifiedPublicKey(Object username) {
@@ -2044,11 +2036,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileYourQrCode => 'رمز QR الخاص بك';
 
   @override
-  String get settingsScreenLock => 'قفل الشاشة';
+  String get settingsScreenLock => 'قفل التطبيق';
 
   @override
   String get settingsScreenLockSubtitle =>
-      'لفتح twonly، ستحتاج إلى استخدام ميزة فتح القفل في هاتفك.';
+      'استخدم طريقة فتح قفل هاتفك لفتح twonly.';
 
   @override
   String get settingsScreenLockAuthMessageEnable =>
@@ -2069,11 +2061,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'استخدم إعدادات فتح القفل في هاتفك لفتح twonly';
 
   @override
-  String get settingsTypingIndication => 'مؤشرات الكتابة';
+  String get settingsTypingIndication => 'مؤشر الكتابة';
 
   @override
   String get settingsTypingIndicationSubtitle =>
-      'عند إيقاف مؤشر الكتابة، لن تتمكن من رؤية متى يكتب الآخرون رسالة.';
+      'اعرض لجهات اتصالك عندما تكتب وشاهد عندما يكتبون. عند إيقافه لن ترى مؤشرات الكتابة للآخرين.';
 
   @override
   String get contactActionBlock => 'حظر';
@@ -2290,6 +2282,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'حدث خطأ غير معروف. يُرجى المحاولة مرة أخرى.';
 
   @override
+  String get recoverErrorAppUpdateRequired =>
+      'تم إنشاء النسخة الاحتياطية باستخدام إصدار أحدث من twonly. يُرجى تحديث التطبيق والمحاولة مرة أخرى.';
+
+  @override
   String get recoverSuccessTitle => 'تمت استعادة النسخة الاحتياطية بنجاح.';
 
   @override
@@ -2366,7 +2362,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dragToZoom => 'اسحب للتكبير';
 
   @override
-  String get onboardingProfileSelectionTitle => 'اختر طريقة الإعداد';
+  String get onboardingProfileSelectionTitle => 'اختر\nطريقة الإعداد';
 
   @override
   String get onboardingProfileSelectionSubtitle =>
@@ -2699,13 +2695,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'اطلب من أصدقائك مسح رمز QR أو شارك الرابط.';
 
   @override
-  String get recoverPasswordlessShareBtn => 'مشاركة رابط الاستعادة';
-
-  @override
-  String get recoverPasswordlessCopyBtn => 'نسخ';
-
-  @override
-  String get recoverPasswordlessCopiedSnackbar => 'تم نسخ الرابط إلى الحافظة!';
+  String get recoverPasswordlessShareBtn => 'مشاركة الرابط';
 
   @override
   String get passwordlessRecoveryNoShareStored =>
@@ -2953,7 +2943,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get settingsShowRestoreFlameTitle => 'إظهار تحذير استعادة الشعلات';
+  String get settingsShowRestoreFlameTitle => 'عرض الاستعادة';
 
   @override
   String get contactGroupsTitle => 'مجموعات جهات الاتصال';
@@ -3009,6 +2999,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contactGroupMembers => 'الأعضاء';
 
   @override
+  String contactGroupMemberCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عضو',
+      many: '$count عضوًا',
+      few: '$count أعضاء',
+      two: 'عضوان',
+      one: 'عضو واحد',
+      zero: 'لا يوجد أعضاء',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get contactGroupLabelFeature => 'تسمية ظاهرة';
 
   @override
@@ -3048,12 +3053,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupRecoverySectionTitle => 'وصول آمن إلى الحساب';
 
   @override
-  String get backupRecoverySectionDescNone =>
-      'يجب عليك اختيار خيار استعادة واحد على الأقل، وإلا فلن يتمكن أحد من مساعدتك إذا فقدت الوصول إلى جهازك.';
+  String get backupRecoverySectionDescNone => 'فعّل خيارًا واحدًا على الأقل.';
 
   @override
-  String get backupRecoverySectionDescSome =>
-      'يمكنك استعادة حسابك باستخدام خيارات الاستعادة أدناه. يُنصح بتفعيل الخيارين كليهما.';
+  String get backupRecoverySectionDescSome => 'يُفضّل تفعيل الخيارين كليهما.';
 
   @override
   String get backupRecoveryOptionAFriends => 'عبر الأصدقاء الموثوقين';
@@ -3459,6 +3462,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mediaSendFailed => 'تعذّر الإرسال';
 
   @override
+  String get messageSendFailedUserInactive => 'المستخدم غير نشط';
+
+  @override
   String get mailboxSyncTitle => 'جارٍ مزامنة twonly';
 
   @override
@@ -3514,4 +3520,232 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatGameDraw => 'تعادل.';
+
+  @override
+  String get storeReviewPromptTitle => 'شكرًا لاختبارك twonly';
+
+  @override
+  String storeReviewPromptDesc(String store) {
+    return 'إذا أردت مساعدة twonly، فيُرجى ترك تقييم في $store.';
+  }
+
+  @override
+  String get storeReviewPromptReview => 'اكتب تقييمًا';
+
+  @override
+  String get storeReviewPromptHide => 'عدم الإظهار مرة أخرى';
+
+  @override
+  String get settingsProfileSubtitle => 'تعديل الملف الشخصي · رمز QR';
+
+  @override
+  String get settingsChatsSubtitle => 'التفاعلات والقصص والتصوير والإرسال';
+
+  @override
+  String get settingsNotificationsSubtitle => 'تنبيهات القصص ومشاكل الإشعارات';
+
+  @override
+  String get settingsAppearanceSubtitle =>
+      'الوضع الفاتح والداكن والألوان ولغة التطبيق';
+
+  @override
+  String get settingsPrivacySubtitle =>
+      'ظهور الملف الشخصي والأصدقاء وقفل التطبيق';
+
+  @override
+  String get settingsBackupSubtitle => 'الوصول إلى الحساب والرسائل وMemories';
+
+  @override
+  String get settingsStorageSubtitle => 'إخلاء مساحة وحفظ الوسائط';
+
+  @override
+  String get settingsRecoveryMissing => 'لم يتم إعداد استرداد الحساب';
+
+  @override
+  String get settingsNotificationsDisabled =>
+      'الإشعارات معطلة في إعدادات النظام';
+
+  @override
+  String get settingsNotificationsEnabled => 'الإشعارات مسموحة';
+
+  @override
+  String get settingsNotificationsDisabledHelp =>
+      'اسمح بالإشعارات أولًا في إعدادات هاتفك. اضغط على الحالة أعلاه لفتحها.';
+
+  @override
+  String get settingsStatusLoading => 'جارٍ التحقق من الحالة…';
+
+  @override
+  String get settingsStatusUnavailable => 'تعذر تحميل الحالة';
+
+  @override
+  String get settingsNewsShortcut => 'إظهار اختصار الأخبار';
+
+  @override
+  String get settingsDownloadNone => 'عدم تنزيل الصور والفيديوهات تلقائيًا';
+
+  @override
+  String get settingsDeleteAccountFailed =>
+      'تعذر حذف حسابك. تحقق من اتصالك بالإنترنت وحاول مجددًا.';
+
+  @override
+  String get settingsAccountDeleted => 'تم حذف الحساب';
+
+  @override
+  String get settingsOpenAppAgain => 'اضغط لفتح التطبيق مجددًا';
+
+  @override
+  String get settingsBackupNever => 'لم يتم النسخ الاحتياطي بعد';
+
+  @override
+  String get settingsBackupPending => 'النسخ الاحتياطي قيد الانتظار';
+
+  @override
+  String get settingsBackupFailed => 'فشل آخر نسخ احتياطي';
+
+  @override
+  String get settingsBackupSaved => 'آخر نسخ احتياطي ناجح';
+
+  @override
+  String get settingsPasswordConfigured => 'تم إعداد كلمة المرور · إدارة';
+
+  @override
+  String get settingsMemoriesBackupActive => 'النسخ الاحتياطي مفعل';
+
+  @override
+  String settingsMemoriesBackupActiveUsage(String used, String max) {
+    return 'النسخ الاحتياطي مفعل · $used من $max مستخدمة';
+  }
+
+  @override
+  String get settingsMemoriesBackupInactive => 'غير مفعل · اضغط للتفعيل';
+
+  @override
+  String get settingsRecoveryFriendsLoading =>
+      'جارٍ التحقق من أصدقائك الموثوقين…';
+
+  @override
+  String settingsRecoveryFriendsReady(int count, int required) {
+    return 'أصدقاء نشطون كافون · $count نشطين (يلزم $required على الأقل)';
+  }
+
+  @override
+  String settingsRecoveryFriendsWaiting(int count, int required) {
+    return 'لا يوجد أصدقاء نشطون كافون بعد · $count من $required مطلوبين';
+  }
+
+  @override
+  String get settingsArchiveNeedsPassword =>
+      'أعدّ كلمة مرور للاسترداد أعلاه لنسخ جهات الاتصال والرسائل احتياطيًا.';
+
+  @override
+  String get settingsChangelog => 'Changelog';
+
+  @override
+  String get settingsOnVacationTitle => 'في إجازة';
+
+  @override
+  String get settingsOnVacationSubtitle => 'جمّد شعلاتك أثناء غيابك';
+
+  @override
+  String onVacationActiveUntil(Object date) {
+    return 'في إجازة حتى $date';
+  }
+
+  @override
+  String onVacationExplanation(Object count) {
+    return 'أثناء إجازتك تكون شعلاتك مجمّدة: لا يمكن أن تضيع، لكنها لا تزداد أيضًا. كل من لديك معه أكثر من $count شعلات يتلقى رسالة ويرى رمز إجازتك بدلًا من الشعلة.';
+  }
+
+  @override
+  String get onVacationIcon => 'الرمز';
+
+  @override
+  String get onVacationDuration => 'المدة';
+
+  @override
+  String onVacationDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوم',
+      many: '$count يومًا',
+      few: '$count أيام',
+      two: 'يومان',
+      one: 'يوم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String onVacationCountsAgain(Object date) {
+    return 'تُحتسب شعلاتك مجددًا اعتبارًا من $date.';
+  }
+
+  @override
+  String onVacationAffectedChats(num count, Object min) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'سيتم تجميد $count محادثات.',
+      one: 'سيتم تجميد محادثة واحدة.',
+      zero: 'لا توجد محادثة لديها أكثر من $min شعلات بعد.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String onVacationNothingToFreeze(Object count) {
+    return 'لا توجد لديك محادثة بأكثر من $count شعلات، لذلك لا يوجد ما يمكن تجميده.';
+  }
+
+  @override
+  String get onVacationStart => 'ابدأ الإجازة';
+
+  @override
+  String onVacationStarted(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'إجازة سعيدة! تم تجميد $count محادثات.',
+      one: 'إجازة سعيدة! تم تجميد محادثة واحدة.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onVacationEnd => 'إنهاء الإجازة';
+
+  @override
+  String get onVacationEndConfirmTitle => 'هل تريد إنهاء إجازتك؟';
+
+  @override
+  String get onVacationEndConfirmBody =>
+      'ستُحتسب شعلاتك مجددًا اعتبارًا من اليوم، وسيتم إبلاغ أصدقائك.';
+
+  @override
+  String get onVacationFailed => 'تعذّر بدء إجازتك. يُرجى المحاولة مرة أخرى.';
+
+  @override
+  String chatEntryVacationStarted(Object date) {
+    return 'في إجازة حتى $date. الشعلات مجمّدة حتى ذلك الحين.';
+  }
+
+  @override
+  String get chatEntryVacationEnded => 'عاد من الإجازة. تُحتسب الشعلات مجددًا.';
+
+  @override
+  String get notificationVacation => 'في إجازة. شعلاتكما مجمّدة.';
+
+  @override
+  String get notificationVacationEnd => 'عاد من الإجازة.';
+
+  @override
+  String get settingsChatsSectionChats => 'المحادثات';
+
+  @override
+  String get settingsChatsSectionFlames => 'الشعلات';
+
+  @override
+  String get settingsChatsSectionCamera => 'الكاميرا';
 }

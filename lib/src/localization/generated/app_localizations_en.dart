@@ -12,44 +12,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionAllApps => 'Access to all apps';
 
   @override
-  String get registerSlogan => 'Stay in touch privately.';
+  String get onboardingHeadline => 'Share moments';
 
   @override
-  String get onboardingWelcomeTitle => 'Welcome to twonly!';
+  String get onboardingHeadlineHighlight => 'privately.';
 
   @override
-  String get onboardingWelcomeBody =>
-      'Experience a private and secure way to stay in touch with friends by sharing instant pictures.';
+  String get onboardingBody =>
+      'Photos, videos and conversations. A private place to keep up with your friends.';
 
   @override
-  String get onboardingE2eTitle => 'Carefree sharing';
+  String get onboardingFeatureE2e => 'End-to-end encrypted.';
 
   @override
-  String get onboardingE2eBody =>
-      'With end-to-end encryption, enjoy the peace of mind that only you and your friends can see the moments you share.';
+  String get onboardingFeatureNoAds => 'No ads and no tracking.';
 
   @override
-  String get onboardingFocusTitle => 'Focus on sharing moments';
+  String get onboardingRegisterButton => 'Register';
 
   @override
-  String get onboardingFocusBody =>
-      'Say goodbye to addictive features! twonly was created for sharing moments, free from useless distractions or ads.';
-
-  @override
-  String get onboardingNotProductTitle => 'You are not the product!';
-
-  @override
-  String get onboardingNotProductBody =>
-      'twonly is financed by an optional subscription. Your data will never be sold.';
-
-  @override
-  String get registerUsernameSlogan => 'Create your account';
+  String get registerUsernameSlogan => 'Create\nyour account';
 
   @override
   String get registerUsernameDecoration => 'Username';
 
   @override
   String get registerUsernameLimits => 'At least 3 characters.';
+
+  @override
+  String get registerUsernameBody =>
+      'Your friends find you by your username. You can change it later.';
 
   @override
   String get registerProofOfWorkFailed =>
@@ -214,10 +206,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTitle => 'Settings';
 
   @override
-  String get settingsChats => 'Chats';
+  String get settingsChats => 'Chats & camera';
 
   @override
-  String get settingsPreSelectedReactions => 'Preselected reaction emojis';
+  String get settingsPreSelectedReactions => 'Quick reactions';
 
   @override
   String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle =>
@@ -235,7 +227,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsProfile => 'Profile';
 
   @override
-  String get settingsStorageData => 'Memories & Storage';
+  String get settingsStorageData => 'Storage & downloads';
 
   @override
   String get memoryDetailsTitle => 'Details';
@@ -387,13 +379,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSubscription => 'Subscription';
 
   @override
-  String get settingsAppearance => 'Appearance';
+  String get settingsAppearance => 'Design & language';
 
   @override
   String get settingsPrivacy => 'Privacy & Security';
 
   @override
-  String get settingsPrivacyBlockUsers => 'Block contacts';
+  String get settingsPrivacyBlockUsers => 'Blocked contacts';
 
   @override
   String get settingsPrivacyBlockUsersDesc =>
@@ -464,14 +456,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyVisibilityEveryone => 'Everyone';
 
   @override
-  String get settingsNotification => 'Notification';
+  String get settingsNotification => 'Notifications';
 
   @override
   String get settingsNotifyPermission => 'Notification permissions';
 
   @override
   String get settingsNotifyPermissionDesc =>
-      'Open system settings to allow push notifications.';
+      'Open your phone’s settings to manage notification permissions.';
 
   @override
   String get settingsNotifyResetTitle => 'Reset notification tokens';
@@ -481,15 +473,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reset your notification tokens if you have problems receiving push notifications.';
 
   @override
-  String get settingsNotifyResetTitleReset =>
-      'Your notification tokens have been reset.';
+  String get settingsNotifyResetTitleReset => 'Notification connection renewed';
 
   @override
   String get settingsNotifyResetTitleResetDesc =>
-      'If the problem persists, please send us your debug log via Settings > Help so we can investigate the issue.';
+      'If notifications still do not arrive, contact us under Settings > Help & information. You can attach a diagnostic log there.';
 
   @override
-  String get settingsHelp => 'Help';
+  String get settingsHelp => 'Help & information';
 
   @override
   String get settingsHelpDiagnostics => 'Diagnostic protocol';
@@ -569,7 +560,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHelpTerms => 'Terms of Service';
 
   @override
-  String get settingsAppearanceTheme => 'Theme';
+  String get settingsAppearanceTheme => 'Light / dark mode';
 
   @override
   String get settingsAppearanceLanguage => 'Language';
@@ -589,16 +580,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your account will be deleted. There is no change to restore it.';
 
   @override
-  String get contactVerifyNumberTitle => 'Verify contacts';
-
-  @override
   String verifyUserIdentity(Object username) {
     return 'Verify $username\'s identity';
   }
-
-  @override
-  String get contactVerifyNumberSubtitle =>
-      'Verify the identity of your contacts to make sure you are texting the right person.';
 
   @override
   String get inChatContactNotVerified => 'Contact not verified.';
@@ -1062,6 +1046,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can only change your password after you have authenticated!';
 
   @override
+  String get backupChangePasswordFailed =>
+      'Your password could not be changed. Your previous password still works. Check your internet connection and try again.';
+
+  @override
   String get backupFreeSpaceWithCloud => 'Free Space with Cloud Backup';
 
   @override
@@ -1085,6 +1073,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get twonlySafeRecoverBtn => 'Restore backup';
+
+  @override
+  String get twonlySafeRecoverDesc =>
+      'Enter your username and the password of your backup.';
+
+  @override
+  String get twonlySafeRecoverOr => 'or';
 
   @override
   String get inviteFriends => 'Invite your friends';
@@ -1642,15 +1637,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingFinishLater => 'Finish later';
 
   @override
-  String get onboardingProfileTitle => 'Choose your look';
+  String get onboardingProfileTitle => 'Create\nyour avatar';
 
   @override
   String get onboardingProfileBody =>
-      'Select an avatar and a display name that friends will see.';
+      'Your public avatar helps others recognize you on twonly.';
 
   @override
   String get onboardingBackupBody =>
-      'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.';
+      'So you can restore your account on a new phone.';
+
+  @override
+  String get onboardingBackupPasswordSet =>
+      'Your backup password is set. You can keep it or choose a new one.';
 
   @override
   String get onboardingUserDiscoveryShareFriends => 'Share your friends';
@@ -1763,10 +1762,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alwaysShowStories => 'Always show stories';
-
-  @override
-  String get alwaysShowStoriesSubtitle =>
-      'Keep stories above your chats after you\'ve watched them.';
 
   @override
   String verifiedPublicKey(Object username) {
@@ -1984,11 +1979,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileYourQrCode => 'Your QR code';
 
   @override
-  String get settingsScreenLock => 'Screen lock';
+  String get settingsScreenLock => 'Lock the app';
 
   @override
   String get settingsScreenLockSubtitle =>
-      'To open twonly, you\'ll need to use your smartphone\'s unlock feature.';
+      'Use your phone’s unlock method to open twonly.';
 
   @override
   String get settingsScreenLockAuthMessageEnable =>
@@ -2009,11 +2004,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use your phone\'s unlock settings to unlock twonly';
 
   @override
-  String get settingsTypingIndication => 'Typing Indicators';
+  String get settingsTypingIndication => 'Typing indicator';
 
   @override
   String get settingsTypingIndicationSubtitle =>
-      'When the typing indicator is turned off, you can\'t see when others are typing a message.';
+      'Show each other when you are typing. Turning this off also hides other people’s typing indicators.';
 
   @override
   String get contactActionBlock => 'Block';
@@ -2232,6 +2227,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'An unknown error occurred. Please try again.';
 
   @override
+  String get recoverErrorAppUpdateRequired =>
+      'The backup was made with a newer version of twonly. Please update the app and try again.';
+
+  @override
   String get recoverSuccessTitle => 'Backup successfully recovered.';
 
   @override
@@ -2308,7 +2307,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dragToZoom => 'Drag to Zoom';
 
   @override
-  String get onboardingProfileSelectionTitle => 'Choose your setup path';
+  String get onboardingProfileSelectionTitle => 'Choose your\nsetup path';
 
   @override
   String get onboardingProfileSelectionSubtitle =>
@@ -2638,13 +2637,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Let friends scan the QR code or share the link.';
 
   @override
-  String get recoverPasswordlessShareBtn => 'Share Recovery Link';
-
-  @override
-  String get recoverPasswordlessCopyBtn => 'Copy';
-
-  @override
-  String get recoverPasswordlessCopiedSnackbar => 'Link copied to clipboard!';
+  String get recoverPasswordlessShareBtn => 'Share link';
 
   @override
   String get passwordlessRecoveryNoShareStored =>
@@ -2880,7 +2873,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settingsShowRestoreFlameTitle => 'Show flame restore warning';
+  String get settingsShowRestoreFlameTitle => 'Offer restore';
 
   @override
   String get contactGroupsTitle => 'Contact Groups';
@@ -2935,6 +2928,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactGroupMembers => 'Members';
 
   @override
+  String contactGroupMemberCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+      zero: 'No members',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get contactGroupLabelFeature => 'Visible label';
 
   @override
@@ -2974,12 +2979,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupRecoverySectionTitle => 'Secure Account Access';
 
   @override
-  String get backupRecoverySectionDescNone =>
-      'You must select at least one recovery option, as otherwise no one can help you if you lose access to your device.';
+  String get backupRecoverySectionDescNone => 'Set up at least one option.';
 
   @override
-  String get backupRecoverySectionDescSome =>
-      'You can recover your account with the recovery options below. It is recommended to enable both options.';
+  String get backupRecoverySectionDescSome => 'Best to enable both options.';
 
   @override
   String get backupRecoveryOptionAFriends => 'Via trusted friends';
@@ -3374,6 +3377,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaSendFailed => 'Send failed';
 
   @override
+  String get messageSendFailedUserInactive => 'User inactive';
+
+  @override
   String get mailboxSyncTitle => 'Synchronizing twonly';
 
   @override
@@ -3426,4 +3432,232 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatGameDraw => 'It is a draw.';
+
+  @override
+  String get storeReviewPromptTitle => 'Thank you for testing twonly';
+
+  @override
+  String storeReviewPromptDesc(String store) {
+    return 'If you want to help twonly, please leave a review on the $store.';
+  }
+
+  @override
+  String get storeReviewPromptReview => 'Write a review';
+
+  @override
+  String get storeReviewPromptHide => 'Don\'t show again';
+
+  @override
+  String get settingsProfileSubtitle => 'Edit profile · QR code';
+
+  @override
+  String get settingsChatsSubtitle => 'Reactions, stories, camera & sending';
+
+  @override
+  String get settingsNotificationsSubtitle =>
+      'Story alerts & notification problems';
+
+  @override
+  String get settingsAppearanceSubtitle =>
+      'Light / dark mode, colors & app language';
+
+  @override
+  String get settingsPrivacySubtitle =>
+      'Profile visibility, friends & app lock';
+
+  @override
+  String get settingsBackupSubtitle => 'Account access, messages & Memories';
+
+  @override
+  String get settingsStorageSubtitle => 'Free up space & save media';
+
+  @override
+  String get settingsRecoveryMissing => 'No account recovery set up';
+
+  @override
+  String get settingsNotificationsDisabled =>
+      'Notifications are off in system settings';
+
+  @override
+  String get settingsNotificationsEnabled => 'Notifications allowed';
+
+  @override
+  String get settingsNotificationsDisabledHelp =>
+      'Allow notifications in your phone’s settings first. Tap the status above to open them.';
+
+  @override
+  String get settingsStatusLoading => 'Checking status…';
+
+  @override
+  String get settingsStatusUnavailable => 'Status could not be loaded';
+
+  @override
+  String get settingsNewsShortcut => 'Show news shortcut';
+
+  @override
+  String get settingsDownloadNone => 'No automatic photo or video downloads';
+
+  @override
+  String get settingsDeleteAccountFailed =>
+      'Your account could not be deleted. Check your internet connection and try again.';
+
+  @override
+  String get settingsAccountDeleted => 'Account deleted';
+
+  @override
+  String get settingsOpenAppAgain => 'Tap to open the app again';
+
+  @override
+  String get settingsBackupNever => 'Not backed up yet';
+
+  @override
+  String get settingsBackupPending => 'Backup pending';
+
+  @override
+  String get settingsBackupFailed => 'Last backup failed';
+
+  @override
+  String get settingsBackupSaved => 'Last successful backup';
+
+  @override
+  String get settingsPasswordConfigured => 'Password set up · Manage';
+
+  @override
+  String get settingsMemoriesBackupActive => 'Backup enabled';
+
+  @override
+  String settingsMemoriesBackupActiveUsage(String used, String max) {
+    return 'Backup enabled · $used of $max used';
+  }
+
+  @override
+  String get settingsMemoriesBackupInactive => 'Not enabled · Tap to enable';
+
+  @override
+  String get settingsRecoveryFriendsLoading => 'Checking your trusted friends…';
+
+  @override
+  String settingsRecoveryFriendsReady(int count, int required) {
+    return 'Enough active friends · $count active (at least $required needed)';
+  }
+
+  @override
+  String settingsRecoveryFriendsWaiting(int count, int required) {
+    return 'Not enough active friends yet · $count of $required required';
+  }
+
+  @override
+  String get settingsArchiveNeedsPassword =>
+      'Set up a recovery password above to back up contacts and messages.';
+
+  @override
+  String get settingsChangelog => 'Changelog';
+
+  @override
+  String get settingsOnVacationTitle => 'On Vacation';
+
+  @override
+  String get settingsOnVacationSubtitle =>
+      'Freeze your flames while you are away';
+
+  @override
+  String onVacationActiveUntil(Object date) {
+    return 'On vacation until $date';
+  }
+
+  @override
+  String onVacationExplanation(Object count) {
+    return 'While you are on vacation, your flames are frozen: they cannot be lost, but they do not grow either. Everyone you have more than $count flames with gets a message and sees your vacation icon instead of the flame.';
+  }
+
+  @override
+  String get onVacationIcon => 'Icon';
+
+  @override
+  String get onVacationDuration => 'Duration';
+
+  @override
+  String onVacationDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String onVacationCountsAgain(Object date) {
+    return 'Your flames count again from $date.';
+  }
+
+  @override
+  String onVacationAffectedChats(num count, Object min) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chats will be frozen.',
+      one: '1 chat will be frozen.',
+      zero: 'No chat has more than $min flames yet.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String onVacationNothingToFreeze(Object count) {
+    return 'None of your chats has more than $count flames, so there is nothing to freeze.';
+  }
+
+  @override
+  String get onVacationStart => 'Go on vacation';
+
+  @override
+  String onVacationStarted(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Enjoy your vacation! $count chats are frozen.',
+      one: 'Enjoy your vacation! 1 chat is frozen.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onVacationEnd => 'End vacation';
+
+  @override
+  String get onVacationEndConfirmTitle => 'End your vacation?';
+
+  @override
+  String get onVacationEndConfirmBody =>
+      'Your flames count again from today, and your friends will be told.';
+
+  @override
+  String get onVacationFailed =>
+      'Could not start your vacation. Please try again.';
+
+  @override
+  String chatEntryVacationStarted(Object date) {
+    return 'On vacation until $date. The flames are frozen until then.';
+  }
+
+  @override
+  String get chatEntryVacationEnded =>
+      'Back from vacation. The flames count again.';
+
+  @override
+  String get notificationVacation => 'is on vacation. Your flames are frozen.';
+
+  @override
+  String get notificationVacationEnd => 'is back from vacation.';
+
+  @override
+  String get settingsChatsSectionChats => 'Chats';
+
+  @override
+  String get settingsChatsSectionFlames => 'Flames';
+
+  @override
+  String get settingsChatsSectionCamera => 'Camera';
 }

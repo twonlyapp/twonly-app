@@ -35,6 +35,26 @@ Future<bool> canRestoreFlames({required String groupId}) =>
 Future<bool> restoreFlames({required String groupId}) =>
     RustLib.instance.api.crateBridgeGroupsRestoreFlames(groupId: groupId);
 
+VacationOptions vacationOptions() =>
+    RustLib.instance.api.crateBridgeGroupsVacationOptions();
+
+/// The user's own vacation while it lasts.
+Future<VacationWindow?> ownVacation() =>
+    RustLib.instance.api.crateBridgeGroupsOwnVacation();
+
+/// How many chats a vacation starting now would freeze.
+Future<int> vacationCandidateCount() =>
+    RustLib.instance.api.crateBridgeGroupsVacationCandidateCount();
+
+/// Freezes the big streaks for `days` days and tells those chats. Returns how
+/// many chats were frozen; zero means no vacation was started.
+Future<int> startVacation({required int days, required String icon}) =>
+    RustLib.instance.api.crateBridgeGroupsStartVacation(days: days, icon: icon);
+
+/// Ends the user's vacation early. Returns how many chats were told.
+Future<int> endVacation() =>
+    RustLib.instance.api.crateBridgeGroupsEndVacation();
+
 Future<bool> createNewGroup({
   required String groupName,
   required Int64List memberIds,
@@ -106,3 +126,32 @@ Future<bool> removeMemberFromGroup({
 
 Future<bool> leaveGroup({required String groupId}) =>
     RustLib.instance.api.crateBridgeGroupsLeaveGroup(groupId: groupId);
+
+/// What the "On Vacation" picker offers.
+class VacationOptions {
+  final List<String> icons;
+  final int minDays;
+  final int maxDays;
+  final PlatformInt64 minFlames;
+
+  const VacationOptions({
+    required this.icons,
+    required this.minDays,
+    required this.maxDays,
+    required this.minFlames,
+  });
+
+  @override
+  int get hashCode =>
+      icons.hashCode ^ minDays.hashCode ^ maxDays.hashCode ^ minFlames.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is VacationOptions &&
+          runtimeType == other.runtimeType &&
+          icons == other.icons &&
+          minDays == other.minDays &&
+          maxDays == other.maxDays &&
+          minFlames == other.minFlames;
+}

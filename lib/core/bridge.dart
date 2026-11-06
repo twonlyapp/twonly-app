@@ -22,16 +22,21 @@ class FlameState {
   final PlatformInt64 counter;
   final bool isExpiring;
   final bool isBestFriend;
+  final String? vacationIcon;
 
   const FlameState({
     required this.counter,
     required this.isExpiring,
     required this.isBestFriend,
+    this.vacationIcon,
   });
 
   @override
   int get hashCode =>
-      counter.hashCode ^ isExpiring.hashCode ^ isBestFriend.hashCode;
+      counter.hashCode ^
+      isExpiring.hashCode ^
+      isBestFriend.hashCode ^
+      vacationIcon.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -40,7 +45,8 @@ class FlameState {
           runtimeType == other.runtimeType &&
           counter == other.counter &&
           isExpiring == other.isExpiring &&
-          isBestFriend == other.isBestFriend;
+          isBestFriend == other.isBestFriend &&
+          vacationIcon == other.vacationIcon;
 }
 
 class InitConfig {
@@ -62,4 +68,28 @@ class InitConfig {
           runtimeType == other.runtimeType &&
           databaseDir == other.databaseDir &&
           dataDir == other.dataDir;
+}
+
+class VacationWindow {
+  final PlatformInt64 from;
+  final PlatformInt64 until;
+  final String icon;
+
+  const VacationWindow({
+    required this.from,
+    required this.until,
+    required this.icon,
+  });
+
+  @override
+  int get hashCode => from.hashCode ^ until.hashCode ^ icon.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is VacationWindow &&
+          runtimeType == other.runtimeType &&
+          from == other.from &&
+          until == other.until &&
+          icon == other.icon;
 }

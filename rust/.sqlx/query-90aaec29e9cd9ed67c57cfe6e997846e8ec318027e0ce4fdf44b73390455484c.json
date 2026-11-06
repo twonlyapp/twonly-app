@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT DISTINCT g.group_id\n               FROM groups g\n               JOIN group_members m ON m.group_id = g.group_id\n               JOIN contacts c ON c.user_id = m.contact_id\n               WHERE g.is_direct_chat = 1\n                 AND g.left_group = 0\n                 AND c.blocked = 0\n                 AND c.account_deleted = 0\n               ORDER BY g.group_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "group_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "90aaec29e9cd9ed67c57cfe6e997846e8ec318027e0ce4fdf44b73390455484c"
+}

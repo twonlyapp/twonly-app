@@ -36,6 +36,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/components/store_review_prompt.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_reminder_sheet.comp.dart';
 import 'package:twonly/src/visual/views/settings/developer/database_sizes_developer.view.dart';
@@ -504,6 +505,10 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                       BackupReminder.passwordlessRecovery,
                     ),
                   ),
+                ),
+                ListTile(
+                  title: const Text('Show Store Review Prompt'),
+                  onTap: () => unawaited(showStoreReviewPromptSheet(context)),
                 ),
                 ListTile(
                   title: const Text('Make it possible to reset flames'),

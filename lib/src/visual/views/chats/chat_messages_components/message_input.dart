@@ -20,6 +20,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/permission_requests.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
@@ -344,9 +345,10 @@ class _MessageInputState extends State<MessageInput>
 
   Future<void> _startAudioRecording() async {
     if (!await Permission.microphone.isGranted) {
-      final statuses = await [
+      final statuses = await requestPermissions([
         Permission.microphone,
-      ].request();
+      ]);
+      if (!mounted) return;
       if (statuses[Permission.microphone]!.isPermanentlyDenied) {
         await openAppSettings();
         return;
@@ -355,6 +357,7 @@ class _MessageInputState extends State<MessageInput>
         return;
       }
     }
+    if (!mounted) return;
     setState(() {
       _recordingState = RecordingState.recording;
       _currentDuration = 0;

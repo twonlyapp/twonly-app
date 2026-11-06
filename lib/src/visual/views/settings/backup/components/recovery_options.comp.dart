@@ -13,6 +13,7 @@ class RecoveryOptionsComp extends StatelessWidget {
   const RecoveryOptionsComp({
     this.onReturn,
     this.showPassword = true,
+    this.passwordStatus,
     super.key,
   });
 
@@ -21,6 +22,7 @@ class RecoveryOptionsComp extends StatelessWidget {
 
   /// Whether to offer the password next to the trusted friends.
   final bool showPassword;
+  final String? passwordStatus;
 
   Future<void> _open(Future<void> Function() navigate) async {
     await navigate();
@@ -56,7 +58,8 @@ class RecoveryOptionsComp extends StatelessWidget {
                 icon: FontAwesomeIcons.key,
                 title: context.lang.backupRecoveryOptionBPassword,
                 subtitle: hasPassword
-                    ? context.lang.backupChangePassword
+                    ? (passwordStatus ??
+                          context.lang.settingsPasswordConfigured)
                     : context.lang.backupRecoveryOptionBMicrocopy,
                 onTap: () => _open(
                   () => context.push(Routes.settingsBackupSetup, extra: true),

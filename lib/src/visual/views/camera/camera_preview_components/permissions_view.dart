@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/src/services/permission_requests.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -59,6 +60,7 @@ class PermissionHandlerViewState extends State<PermissionHandlerView>
   }
 
   Future<void> _requestPermissions() async {
+    if (!mounted) return;
     try {
       await permissionServices();
       if (await checkPermissions()) {
@@ -100,7 +102,7 @@ class PermissionHandlerViewState extends State<PermissionHandlerView>
   }
 
   void _handleSuccess() {
-    if (_isSuccessTriggered) return;
+    if (!mounted || _isSuccessTriggered) return;
     _isSuccessTriggered = true;
     _timer?.cancel();
     unawaited(UserService.update((u) => u.requestedAudioPermission = true));
@@ -109,13 +111,13 @@ class PermissionHandlerViewState extends State<PermissionHandlerView>
   }
 
   Future<Map<Permission, PermissionStatus>> permissionServices() async {
-    final statuses = await [
+    final statuses = await requestPermissions([
       Permission.camera,
       Permission.microphone,
       Permission.notification,
-    ].request();
+    ]);
 
-    if (statuses[Permission.camera]!.isPermanentlyDenied) {
+    if (mounted && statuses[Permission.camera]?.isPermanentlyDenied == true) {
       await openAppSettings();
     }
 

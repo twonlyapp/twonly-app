@@ -7,6 +7,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/views/settings/components/settings_layout.dart';
 
 class NotificationView extends StatefulWidget {
   const NotificationView({super.key});
@@ -15,36 +16,43 @@ class NotificationView extends StatefulWidget {
   State<NotificationView> createState() => _NotificationViewState();
 }
 
-class _NotificationViewState extends State<NotificationView> {
+class _NotificationViewState extends State<NotificationView>
+    with WidgetsBindingObserver {
   bool _isLoadingReset = false;
   bool? _hasNotificationPermission;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkPermission();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _checkPermission();
   }
 
   Future<void> _checkPermission() async {
     final isGranted = await Permission.notification.isGranted;
-    if (mounted) {
-      setState(() {
-        _hasNotificationPermission = isGranted;
-      });
-    }
+    if (mounted) setState(() => _hasNotificationPermission = isGranted);
   }
 
   Future<void> _toggleStoryNotifications() async {
-    await UserService.update((u) {
-      u.storyNotifications = !u.storyNotifications;
-    });
-    setState(() {});
+    await UserService.update(
+      (user) => user.storyNotifications = !user.storyNotifications,
+    );
+    if (mounted) setState(() {});
   }
 
   Future<void> _resetTokens() async {
-    setState(() {
-      _isLoadingReset = true;
-    });
+    setState(() => _isLoadingReset = true);
     try {
       await FcmNotificationService.resetFCMTokens();
       if (!mounted) return;
@@ -63,42 +71,48 @@ class _NotificationViewState extends State<NotificationView> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.lang.settingsNotification),
-      ),
-      body: ListView(
+      appBar: AppBar(title: Text(lang.settingsNotification)),
+      body: SettingsList(
         children: [
-          if (_hasNotificationPermission == false)
+          if (_hasNotificationPermission == false) ...[
             ListTile(
-              title: Text(context.lang.settingsNotifyPermission),
-              subtitle: Text(context.lang.settingsNotifyPermissionDesc),
+              leading: const Icon(Icons.notifications_off_outlined),
+              title: Text(lang.settingsNotificationsDisabled),
+              subtitle: Text(lang.settingsNotifyPermissionDesc),
+              trailing: const Icon(Icons.open_in_new),
               onTap: openAppSettings,
             ),
-          ListTile(
-            title: Text(context.lang.settingsNotifyStories),
-            subtitle: Text(context.lang.settingsNotifyStoriesSubtitle),
-            onTap: _toggleStoryNotifications,
-            trailing: Switch.adaptive(
-              value: userService.currentUser.storyNotifications,
-              onChanged: (_) => _toggleStoryNotifications(),
-            ),
+            const SettingsDivider(),
+          ],
+          SwitchListTile.adaptive(
+            title: Text(lang.settingsNotifyStories),
+            subtitle: Text(lang.settingsNotifyStoriesSubtitle),
+            value: userService.currentUser.storyNotifications,
+            onChanged: (_) => _toggleStoryNotifications(),
           ),
-          if (_hasNotificationPermission == true)
-            ListTile(
-              title: Text(context.lang.settingsNotifyResetTitle),
-              subtitle: Text(context.lang.settingsNotifyResetTitleSubtitle),
-              trailing: _isLoadingReset
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator.adaptive(
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : null,
-              onTap: _isLoadingReset ? null : _resetTokens,
+          ListTile(
+            title: Text(lang.settingsNotifyResetTitle),
+            subtitle: Text(
+              _hasNotificationPermission == false
+                  ? lang.settingsNotificationsDisabledHelp
+                  : lang.settingsNotifyResetTitleSubtitle,
             ),
+            trailing: _isLoadingReset
+                ? const SizedBox.square(
+                    dimension: 16,
+                    child: CircularProgressIndicator.adaptive(
+                      strokeWidth: 2,
+                    ),
+                  )
+                : null,
+            onTap: switch (_hasNotificationPermission) {
+              true => _isLoadingReset ? null : _resetTokens,
+              false => openAppSettings,
+              null => null,
+            },
+          ),
         ],
       ),
     );

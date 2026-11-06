@@ -131,6 +131,13 @@ Stream<Int64List> watchContactGroupIds({
   control: control,
 );
 
+Stream<List<ContactGroupMemberCount>> watchContactGroupMemberCounts({
+  required DatabaseWatch control,
+}) => RustLib.instance.api
+    .crateBridgeDatabaseContactGroupsWatchContactGroupMemberCounts(
+      control: control,
+    );
+
 Stream<ContactGroupLabels> watchContactGroupLabels({
   required bool forUsers,
   required DatabaseWatch control,

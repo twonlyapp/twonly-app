@@ -8,7 +8,7 @@ enum SubscriptionPlan {
   Plus,
 }
 
-enum PremiumFeatures { RestoreFlames, ProApps }
+enum PremiumFeatures { RestoreFlames, ProApps, OnVacation }
 
 const Map<PremiumFeatures, List<SubscriptionPlan>> planPermissions = {
   PremiumFeatures.RestoreFlames: [
@@ -18,6 +18,13 @@ const Map<PremiumFeatures, List<SubscriptionPlan>> planPermissions = {
     SubscriptionPlan.Pro,
   ],
   PremiumFeatures.ProApps: [
+    SubscriptionPlan.Family,
+    SubscriptionPlan.Plus,
+    SubscriptionPlan.Tester,
+    SubscriptionPlan.Pro,
+  ],
+  // Mirrors `vacation_allowed` in Rust, which enforces it.
+  PremiumFeatures.OnVacation: [
     SubscriptionPlan.Family,
     SubscriptionPlan.Plus,
     SubscriptionPlan.Tester,

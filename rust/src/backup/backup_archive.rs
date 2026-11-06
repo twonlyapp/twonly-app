@@ -980,6 +980,13 @@ impl BackupArchive {
                 crate::error::TwonlyError::Generic(format!("Invalid backup manifest: {error}"))
             })?;
 
+        if manifest.format_version > BACKUP_FORMAT_VERSION {
+            return Err(crate::error::TwonlyError::RequiresAppUpdate(format!(
+                "backup format {}",
+                manifest.format_version
+            )));
+        }
+
         if !matches!(manifest.format_version, 2 | BACKUP_FORMAT_VERSION) {
             return Err(crate::error::TwonlyError::Generic(format!(
                 "Unsupported backup format {}",

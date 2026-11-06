@@ -3,6 +3,7 @@ import 'package:twonly/core/user_config.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/views/onboarding/components/onboarding_step.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/next_button.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/profile_card.comp.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery/components/user_discovery_setup.comp.dart';
@@ -32,26 +33,26 @@ class _ProfileSelectionSetupState extends State<ProfileSelectionSetup> {
         final user = userService.currentUser;
         final selectedProfile = user.setupProfile;
 
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        return OnboardingStep(
+          title: context.lang.onboardingProfileSelectionTitle,
+          body: context.lang.onboardingProfileSelectionSubtitle,
+          button: NextButtonComp(
+            key: ValueKey(selectedProfile),
+            isLoading: _isLoading,
+            onPressed: () async {
+              if (selectedProfile == SetupProfile.standard) {
+                setState(() {
+                  _isLoading = true;
+                });
+                await UserDiscoverySetupState().initializeOrUpdate();
+                setState(() {
+                  _isLoading = false;
+                });
+              }
+              return false;
+            },
+          ),
           children: [
-            Text(
-              context.lang.onboardingProfileSelectionTitle,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.lang.onboardingProfileSelectionSubtitle,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: context.color.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 32),
             SafetyProfileCard(
               profile: SetupProfile.standard,
               isSelected: selectedProfile == SetupProfile.standard,
@@ -70,24 +71,6 @@ class _ProfileSelectionSetupState extends State<ProfileSelectionSetup> {
                 _hoveredProfile = hovered ? SetupProfile.customized : null;
               }),
               onTap: () => _onProfileTapped(SetupProfile.customized),
-            ),
-
-            const SizedBox(height: 40),
-            NextButtonComp(
-              key: ValueKey(selectedProfile),
-              isLoading: _isLoading,
-              onPressed: () async {
-                if (selectedProfile == SetupProfile.standard) {
-                  setState(() {
-                    _isLoading = true;
-                  });
-                  await UserDiscoverySetupState().initializeOrUpdate();
-                  setState(() {
-                    _isLoading = false;
-                  });
-                }
-                return false;
-              },
             ),
           ],
         );

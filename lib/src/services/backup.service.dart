@@ -135,23 +135,22 @@ class BackupService {
     );
   }
 
+  /// Throws when an existing password could not be changed; the previous
+  /// password then stays in effect.
   static Future<void> updateBackupPassword(String password) async {
-    await KeyValueStore.putAtomically(
-      KeyValueKeys.backupFallbackMonitoring,
-      {'since': clock.clock.now().toIso8601String()},
-    );
-    // Set or reset the backup data...
-    await KeyValueStore.put(
-      KeyValueKeys.currentBackupState,
-      CurrentBackupStatus().toJson(),
-    );
-    _backupUpdateController.add(null);
-
+    // A change uploads the identity under the new password and deletes the
+    // one under the previous password before it returns.
     await RustBackupIdentity.setBackupPasswordKeys(
       password: password,
       // Using the userId is this will never change in a users lifecycle
       userId: userService.currentUser.userId,
     );
+
+    await KeyValueStore.putAtomically(
+      KeyValueKeys.backupFallbackMonitoring,
+      {'since': clock.clock.now().toIso8601String()},
+    );
+    _backupUpdateController.add(null);
 
     await UserService.update((u) => u.isBackupEnabled = true);
 
@@ -278,7 +277,9 @@ class BackupService {
           Log.info('Recovery finished, restarting the app.');
         } catch (e) {
           Log.error(e);
-          return RecoveryError.unkownError;
+          return _requiresAppUpdate(e)
+              ? RecoveryError.appUpdateRequired
+              : RecoveryError.unkownError;
         }
       }
 
@@ -317,7 +318,16 @@ class BackupService {
       userId = await RustApi.getUserIdFromUsername(username: username);
     } catch (error) {
       Log.error('Could not resolve backup username', error: error);
-      return RecoveryError.usernameNotValid;
+      // Only the server saying so means the account does not exist. A local
+      // or connection failure must not tell the user their account is gone.
+      final code = apiErrorCodeOf(error);
+      if (code == ErrorCode.UsernameNotFound.value) {
+        return RecoveryError.usernameNotValid;
+      }
+      if (isConnectionError(error)) return RecoveryError.noInternet;
+      return code != null
+          ? RecoveryError.tryAgainLater
+          : RecoveryError.unkownError;
     }
 
     final state = BackupRecovery(
@@ -351,6 +361,10 @@ class BackupService {
     Log.info('Stored the recovery state, entering the archive stage.');
     return _nextBackupStage(onProgress: onProgress);
   }
+
+  /// Rust reports a backup written by a newer app version with this text.
+  static bool _requiresAppUpdate(Object error) =>
+      error.toString().contains('written by a newer app version');
 
   static Future<(Uint8List?, RecoveryError?)> _downloadBackup(
     String backupServerUrl,
@@ -388,6 +402,9 @@ enum RecoveryError {
   tryAgainLater,
   noInternet,
   unkownError,
+
+  /// The backup was made by a newer app version than the one installed.
+  appUpdateRequired,
 }
 
 /// Granular steps of a backup recovery, reported via the `onProgress`

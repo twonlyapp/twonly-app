@@ -20,6 +20,7 @@ use std::sync::{LazyLock, Mutex};
 /// whole request can move onto the blocking pool.
 // Only the mobile implementations read these; the desktop stub cannot render.
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
+#[derive(Clone)]
 pub(crate) struct RenderRequest {
     pub media_id: String,
     pub input: PathBuf,
@@ -32,6 +33,111 @@ pub(crate) struct RenderRequest {
     /// top of a render that was going to happen anyway.
     pub trim_start_ms: Option<i64>,
     pub trim_end_ms: Option<i64>,
+}
+
+/// Publish a complete container, never the file a codec is still writing.
+/// A unique staging name also isolates a cancelled blocking render from its
+/// successor. Its database operation must still be active at publication.
+pub(crate) fn publish_output(
+    output: &Path, producer: impl FnOnce(&Path) -> Result<()>,
+) -> Result<()> {
+    let parent = output
+        .parent()
+        .ok_or_else(|| TwonlyError::Generic("video output has no parent".into()))?;
+    std::fs::create_dir_all(parent)?;
+    let stem = output.file_stem().unwrap_or_default().to_string_lossy();
+    let staging = parent.join(format!("{stem}.rendering-{}.mp4", uuid::Uuid::new_v4()));
+    struct Cleanup(PathBuf);
+    impl Drop for Cleanup {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_file(&self.0);
+        }
+    }
+    let _cleanup = Cleanup(staging.clone());
+    producer(&staging)?;
+    if let Some(operation) = crate::database::lifecycle::Operation::current() {
+        operation.check()?;
+    }
+    validate_file(&staging)?;
+    if let Some(operation) = crate::database::lifecycle::Operation::current() {
+        operation.check()?;
+    }
+    std::fs::rename(staging, output)?;
+    Ok(())
+}
+
+pub(crate) fn render(request: &RenderRequest) -> Result<()> {
+    publish_output(&request.output, |output| {
+        let staged = RenderRequest {
+            output: output.to_owned(),
+            ..request.clone()
+        };
+        render_platform(&staged)
+    })
+}
+
+/// MP4/MOV writers may create the path before writing any frames or the final
+/// movie metadata. Existence and a nonzero file size are not proof of a
+/// finished render. Walk top-level boxes without loading the video into RAM.
+pub(crate) fn validate_file(path: &Path) -> Result<()> {
+    use std::io::{Read, Seek, SeekFrom};
+    let invalid = || TwonlyError::Generic("video container is empty or incomplete".into());
+    let mut file = std::fs::File::open(path)?;
+    let length = file.metadata()?.len();
+    let mut offset = 0_u64;
+    let mut movie = false;
+    let mut frames = false;
+    while offset < length {
+        if length - offset < 8 {
+            return Err(invalid());
+        }
+        file.seek(SeekFrom::Start(offset))?;
+        let mut header = [0_u8; 8];
+        file.read_exact(&mut header)?;
+        let size = u32::from_be_bytes(header[..4].try_into().unwrap());
+        let (size, header_size) = match size {
+            0 => (length - offset, 8),
+            1 => {
+                if length - offset < 16 {
+                    return Err(invalid());
+                }
+                let mut extended = [0_u8; 8];
+                file.read_exact(&mut extended)?;
+                (u64::from_be_bytes(extended), 16)
+            }
+            size => (u64::from(size), 8),
+        };
+        if size < header_size || size > length - offset {
+            return Err(invalid());
+        }
+        if &header[4..] == b"moov" && size > header_size {
+            movie = true;
+        }
+        if &header[4..] == b"mdat" && size > header_size {
+            frames = true;
+        }
+        offset += size;
+    }
+    if !movie || !frames {
+        return Err(invalid());
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+pub(crate) fn test_video_bytes() -> Vec<u8> {
+    // Container-only fixture; this does not exercise hardware decoding.
+    let mut bytes = Vec::new();
+    for (kind, payload) in [
+        (b"ftyp", b"isom".as_slice()),
+        (b"mdat", b"frame".as_slice()),
+        (b"moov", b"metadata".as_slice()),
+    ] {
+        bytes.extend_from_slice(&((payload.len() + 8) as u32).to_be_bytes());
+        bytes.extend_from_slice(kind);
+        bytes.extend_from_slice(payload);
+    }
+    bytes
 }
 
 /// The bounds as the platform entry points take them: milliseconds, with a
@@ -180,7 +286,7 @@ fn report_progress(media_id: &str, percent: i64) {
 }
 
 #[cfg(target_os = "ios")]
-pub(crate) fn render(request: &RenderRequest) -> Result<()> {
+fn render_platform(request: &RenderRequest) -> Result<()> {
     let progress_runtime = remember_runtime(&request.media_id)
         .ok_or_else(|| TwonlyError::Generic("Video rendering requires an owned runtime".into()))?;
 
@@ -273,7 +379,7 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
 }
 
 #[cfg(target_os = "android")]
-pub(crate) fn render(request: &RenderRequest) -> Result<()> {
+fn render_platform(request: &RenderRequest) -> Result<()> {
     let progress_runtime = remember_runtime(&request.media_id)
         .ok_or_else(|| TwonlyError::Generic("Video rendering requires an owned runtime".into()))?;
 
@@ -380,7 +486,7 @@ pub extern "system" fn Java_eu_twonly_media_NativeVideoCodec_reportProgress(
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-pub(crate) fn render(_request: &RenderRequest) -> Result<()> {
+fn render_platform(_request: &RenderRequest) -> Result<()> {
     Err(TwonlyError::Generic(
         "platform video rendering is only available on Android and iOS".into(),
     ))
@@ -481,6 +587,72 @@ mod cancellation_tests {
 
     use super::*;
     use crate::database::lifecycle::Operation;
+
+    #[test]
+    fn incomplete_renders_never_replace_a_complete_video() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let output = directory.path().join("clip.mp4");
+        let complete = test_video_bytes();
+        std::fs::write(&output, &complete)?;
+        for interrupted in [true, false] {
+            let result = publish_output(&output, |staging| {
+                std::fs::write(staging, &complete[..complete.len() - 3])?;
+                if interrupted {
+                    return Err(TwonlyError::Generic("interrupted".into()));
+                }
+                Ok(())
+            });
+            assert!(result.is_err());
+            assert_eq!(std::fs::read(&output)?, complete);
+            assert_eq!(std::fs::read_dir(directory.path())?.count(), 1);
+        }
+        assert!(publish_output(&output, |staging| {
+            std::fs::write(staging, [])?;
+            Ok(())
+        })
+        .is_err());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn cancelled_render_cannot_publish_over_its_successor() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let output = directory.path().join("clip.mp4");
+        let operation = Operation::foreground();
+        let result = operation.scope_sync(|| {
+            publish_output(&output, |staging| {
+                std::fs::write(staging, test_video_bytes())?;
+                operation.cancel();
+                Ok(())
+            })
+        });
+        assert!(result.is_err());
+        assert!(!output.exists());
+        publish_output(&output, |staging| {
+            std::fs::write(staging, test_video_bytes())?;
+            Ok(())
+        })?;
+        validate_file(&output)?;
+        assert_eq!(std::fs::read_dir(directory.path())?.count(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn unfinished_and_empty_movie_containers_are_rejected() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let file = directory.path().join("clip.mp4");
+        let complete = test_video_bytes();
+        for end in 0..complete.len() {
+            std::fs::write(&file, &complete[..end])?;
+            assert!(
+                validate_file(&file).is_err(),
+                "accepted truncated video at {end}"
+            );
+        }
+        std::fs::write(&file, &complete)?;
+        validate_file(&file)?;
+        Ok(())
+    }
 
     #[tokio::test]
 

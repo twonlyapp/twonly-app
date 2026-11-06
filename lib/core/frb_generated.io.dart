@@ -227,6 +227,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_StreamSink_list_contact_group_Sse(dynamic raw);
 
   @protected
+  RustStreamSink<List<ContactGroupMemberCount>>
+  dco_decode_StreamSink_list_contact_group_member_count_Sse(dynamic raw);
+
+  @protected
   RustStreamSink<List<Group>> dco_decode_StreamSink_list_group_Sse(dynamic raw);
 
   @protected
@@ -510,6 +514,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_box_autoadd_user_discovery_announced_user_patch(dynamic raw);
 
   @protected
+  VacationWindow dco_decode_box_autoadd_vacation_window(dynamic raw);
+
+  @protected
   WebxdcCardApp dco_decode_box_autoadd_webxdc_card_app(dynamic raw);
 
   @protected
@@ -550,6 +557,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ContactGroupMember dco_decode_contact_group_member(dynamic raw);
+
+  @protected
+  ContactGroupMemberCount dco_decode_contact_group_member_count(dynamic raw);
 
   @protected
   ContactPatch dco_decode_contact_patch(dynamic raw);
@@ -694,6 +704,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ContactGroupMember> dco_decode_list_contact_group_member(dynamic raw);
+
+  @protected
+  List<ContactGroupMemberCount> dco_decode_list_contact_group_member_count(
+    dynamic raw,
+  );
 
   @protected
   List<FirstVerificationType> dco_decode_list_first_verification_type(
@@ -1020,6 +1035,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_opt_box_autoadd_user_discovery_announced_user(dynamic raw);
 
   @protected
+  VacationWindow? dco_decode_opt_box_autoadd_vacation_window(dynamic raw);
+
+  @protected
   WebxdcCardApp? dco_decode_opt_box_autoadd_webxdc_card_app(dynamic raw);
 
   @protected
@@ -1226,6 +1244,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_usize(dynamic raw);
 
   @protected
+  VacationOptions dco_decode_vacation_options(dynamic raw);
+
+  @protected
+  VacationWindow dco_decode_vacation_window(dynamic raw);
+
+  @protected
   VerificationStatus dco_decode_verification_status(dynamic raw);
 
   @protected
@@ -1399,6 +1423,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   RustStreamSink<List<ContactGroup>>
   sse_decode_StreamSink_list_contact_group_Sse(SseDeserializer deserializer);
+
+  @protected
+  RustStreamSink<List<ContactGroupMemberCount>>
+  sse_decode_StreamSink_list_contact_group_member_count_Sse(
+    SseDeserializer deserializer,
+  );
 
   @protected
   RustStreamSink<List<Group>> sse_decode_StreamSink_list_group_Sse(
@@ -1772,6 +1802,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  VacationWindow sse_decode_box_autoadd_vacation_window(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   WebxdcCardApp sse_decode_box_autoadd_webxdc_card_app(
     SseDeserializer deserializer,
   );
@@ -1826,6 +1861,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ContactGroupMember sse_decode_contact_group_member(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ContactGroupMemberCount sse_decode_contact_group_member_count(
     SseDeserializer deserializer,
   );
 
@@ -2006,6 +2046,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ContactGroupMember> sse_decode_list_contact_group_member(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<ContactGroupMemberCount> sse_decode_list_contact_group_member_count(
     SseDeserializer deserializer,
   );
 
@@ -2418,6 +2463,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  VacationWindow? sse_decode_opt_box_autoadd_vacation_window(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   WebxdcCardApp? sse_decode_opt_box_autoadd_webxdc_card_app(
     SseDeserializer deserializer,
   );
@@ -2650,6 +2700,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
+  VacationOptions sse_decode_vacation_options(SseDeserializer deserializer);
+
+  @protected
+  VacationWindow sse_decode_vacation_window(SseDeserializer deserializer);
+
+  @protected
   VerificationStatus sse_decode_verification_status(
     SseDeserializer deserializer,
   );
@@ -2875,6 +2931,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_StreamSink_list_contact_group_Sse(
     RustStreamSink<List<ContactGroup>> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_list_contact_group_member_count_Sse(
+    RustStreamSink<List<ContactGroupMemberCount>> self,
     SseSerializer serializer,
   );
 
@@ -3338,6 +3400,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_vacation_window(
+    VacationWindow self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_webxdc_card_app(
     WebxdcCardApp self,
     SseSerializer serializer,
@@ -3403,6 +3471,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_contact_group_member(
     ContactGroupMember self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_contact_group_member_count(
+    ContactGroupMemberCount self,
     SseSerializer serializer,
   );
 
@@ -3628,6 +3702,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_contact_group_member(
     List<ContactGroupMember> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_contact_group_member_count(
+    List<ContactGroupMemberCount> self,
     SseSerializer serializer,
   );
 
@@ -4145,6 +4225,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_vacation_window(
+    VacationWindow? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_webxdc_card_app(
     WebxdcCardApp? self,
     SseSerializer serializer,
@@ -4440,6 +4526,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_vacation_options(
+    VacationOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_vacation_window(
+    VacationWindow self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_verification_status(

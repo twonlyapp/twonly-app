@@ -171,6 +171,31 @@ void main() {
     mediaService.thumbnailPath.writeAsBytesSync([4, 5, 6]);
   });
 
+  test(
+    'developer gallery fixtures stay local while real memories upload',
+    () async {
+      final mock = await rust_mediafiles.upsertMediaFile(
+        patch: const MediaFilePatch(
+          mediaId: 'mock_gen_0',
+          type: 'image',
+          stored: true,
+          hasThumbnail: true,
+        ),
+        transaction: currentDatabaseSession(),
+      );
+      final files = MediaFileService(mock);
+      files.storedPath.writeAsBytesSync([1, 2, 3]);
+      files.thumbnailPath.writeAsBytesSync([4, 5, 6]);
+      final client = MockClient((_) async => http.Response('', 204));
+      addTearDown(client.close);
+      await http.runWithClient(service.checkUploads, () => client);
+      expect(api.requests, 1);
+      expect(api.confirmations, 1);
+      expect(records.where((r) => r.level == Level.SHOUT), isEmpty);
+      expect(files.storedPath.existsSync(), isTrue);
+    },
+  );
+
   test('uploads encrypted thumbnail and media without cache files', () async {
     final uploads = <String>[];
     final progress = <MemoriesBackupProgress?>[];

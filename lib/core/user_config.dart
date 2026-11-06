@@ -191,6 +191,11 @@ class UserConfig {
   /// Set once the user declined the trusted-friends recovery reminder.
   bool hidePasswordlessRecoveryReminder;
   bool hideWidgetShareExplainer;
+
+  /// Asks for an App Store or Play Store review on the chat list. Only
+  /// offered on the Tester plan; cleared by "Don't show again" or once the
+  /// store page was opened.
+  bool showStoreReviewPrompt;
   bool updateFcmToken;
   bool canUseLoginTokenForAuth;
   TwonlySafeBackup? twonlySafeBackup;
@@ -269,6 +274,7 @@ class UserConfig {
     required this.hideMemoriesBackupPromo,
     required this.hidePasswordlessRecoveryReminder,
     required this.hideWidgetShareExplainer,
+    required this.showStoreReviewPrompt,
     required this.updateFcmToken,
     required this.canUseLoginTokenForAuth,
     this.twonlySafeBackup,
@@ -341,6 +347,7 @@ class UserConfig {
       hideMemoriesBackupPromo.hashCode ^
       hidePasswordlessRecoveryReminder.hashCode ^
       hideWidgetShareExplainer.hashCode ^
+      showStoreReviewPrompt.hashCode ^
       updateFcmToken.hashCode ^
       canUseLoginTokenForAuth.hashCode ^
       twonlySafeBackup.hashCode ^
@@ -423,6 +430,7 @@ class UserConfig {
           hidePasswordlessRecoveryReminder ==
               other.hidePasswordlessRecoveryReminder &&
           hideWidgetShareExplainer == other.hideWidgetShareExplainer &&
+          showStoreReviewPrompt == other.showStoreReviewPrompt &&
           updateFcmToken == other.updateFcmToken &&
           canUseLoginTokenForAuth == other.canUseLoginTokenForAuth &&
           twonlySafeBackup == other.twonlySafeBackup &&

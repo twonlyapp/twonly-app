@@ -3,139 +3,137 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
+import 'package:twonly/src/visual/views/settings/components/settings_layout.dart';
 
 class SettingsMainView extends StatelessWidget {
   const SettingsMainView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
+
+    void open(String location) => context.push<void>(location);
+
+    Widget category(
+      Object icon,
+      String title,
+      String route, {
+      double iconSize = 20,
+    }) {
+      return BetterListTile(
+        icon: icon,
+        iconSize: iconSize,
+        text: title,
+        onTap: () => open(route),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.lang.settingsTitle),
-      ),
-      body: StreamBuilder(
-        stream: userService.onUserUpdated,
-        builder: (context, asyncSnapshot) {
-          return ListView(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(30),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => context.push(Routes.settingsProfile),
-                        child: ColoredBox(
-                          color: context.color.surface.withAlpha(0),
-                          child: Row(
+      appBar: AppBar(title: Text(lang.settingsTitle)),
+      body: SafeArea(
+        top: false,
+        child: StreamBuilder<void>(
+          stream: userService.onUserUpdated,
+          builder: (context, _) {
+            final user = userService.currentUser;
+            return ListView(
+              padding: const EdgeInsets.only(bottom: 24),
+              children: [
+                InkWell(
+                  onTap: () => open(Routes.settingsProfile),
+                  child: Padding(
+                    padding: const EdgeInsets.all(30),
+                    child: Row(
+                      children: [
+                        const AvatarIcon(
+                          myAvatar: true,
+                          fontSize: 30,
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const AvatarIcon(
-                                myAvatar: true,
-                                fontSize: 30,
+                              Text(
+                                user.displayName,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                ),
                               ),
-                              Container(width: 20, color: Colors.transparent),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    substringBy(
-                                      userService.currentUser.displayName,
-                                      27,
-                                    ),
-                                    style: const TextStyle(fontSize: 20),
-                                    textAlign: TextAlign.left,
-                                  ),
-                                  Text(
-                                    userService.currentUser.username,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                    ),
-                                    textAlign: TextAlign.left,
-                                  ),
-                                ],
+                              Text(
+                                user.username,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: IconButton(
-                        onPressed: () =>
-                            context.push(Routes.settingsPublicProfile),
-                        icon: const FaIcon(FontAwesomeIcons.qrcode),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              BetterListTile(
-                icon: FontAwesomeIcons.user,
-                text: context.lang.settingsAccount,
-                onTap: () => context.push(Routes.settingsAccount),
-              ),
-              BetterListTile(
-                icon: FontAwesomeIcons.shieldHeart,
-                text: context.lang.settingsSubscription,
-                onTap: () => context.push(Routes.settingsSubscription),
-              ),
-              BetterListTile(
-                icon: Icons.lock_clock_rounded,
-                text: context.lang.settingsBackup,
-                onTap: () => context.push(Routes.settingsBackup),
-              ),
-              const Divider(),
-              BetterListTile(
-                icon: FontAwesomeIcons.sun,
-                text: context.lang.settingsAppearance,
-                onTap: () => context.push(Routes.settingsAppearance),
-              ),
-              BetterListTile(
-                icon: FontAwesomeIcons.comment,
-                text: context.lang.settingsChats,
-                onTap: () => context.push(Routes.settingsChats),
-              ),
-              BetterListTile(
-                icon: FontAwesomeIcons.lock,
-                text: context.lang.settingsPrivacy,
-                onTap: () => context.push(Routes.settingsPrivacy),
-              ),
-              BetterListTile(
-                icon: FontAwesomeIcons.bell,
-                text: context.lang.settingsNotification,
-                onTap: () => context.push(Routes.settingsNotification),
-              ),
-              BetterListTile(
-                icon: FontAwesomeIcons.chartPie,
-                iconSize: 15,
-                text: context.lang.settingsStorageData,
-                onTap: () => context.push(Routes.settingsStorage),
-              ),
-              const Divider(),
-              BetterListTile(
-                icon: FontAwesomeIcons.circleQuestion,
-                text: context.lang.settingsHelp,
-                onTap: () => context.push(Routes.settingsHelp),
-              ),
-              if (userService.currentUser.isDeveloper)
-                BetterListTile(
-                  icon: FontAwesomeIcons.code,
-                  text: 'Developer Settings',
-                  onTap: () => context.push(Routes.settingsDeveloper),
+                category(
+                  FontAwesomeIcons.shieldHeart,
+                  lang.settingsSubscription,
+                  Routes.settingsSubscription,
                 ),
-              BetterListTile(
-                icon: FontAwesomeIcons.shareFromSquare,
-                text: context.lang.inviteFriends,
-                onTap: () => context.push(Routes.settingsInvite),
-              ),
-            ],
-          );
-        },
+                const SettingsDivider(),
+                category(
+                  FontAwesomeIcons.comment,
+                  lang.settingsChats,
+                  Routes.settingsChats,
+                ),
+                category(
+                  FontAwesomeIcons.bell,
+                  lang.settingsNotification,
+                  Routes.settingsNotification,
+                ),
+                category(
+                  FontAwesomeIcons.sun,
+                  lang.settingsAppearance,
+                  Routes.settingsAppearance,
+                ),
+                const SettingsDivider(),
+                category(
+                  FontAwesomeIcons.lock,
+                  lang.settingsPrivacy,
+                  Routes.settingsPrivacy,
+                ),
+                category(
+                  Icons.lock_clock_rounded,
+                  lang.settingsBackup,
+                  Routes.settingsBackup,
+                ),
+                category(
+                  FontAwesomeIcons.chartPie,
+                  lang.settingsStorageData,
+                  Routes.settingsStorage,
+                  iconSize: 15,
+                ),
+                const SettingsDivider(),
+                category(
+                  FontAwesomeIcons.circleQuestion,
+                  lang.settingsHelp,
+                  Routes.settingsHelp,
+                ),
+                if (user.isDeveloper)
+                  category(
+                    FontAwesomeIcons.code,
+                    'Developer Settings',
+                    Routes.settingsDeveloper,
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

@@ -27,6 +27,13 @@ pub struct ContactGroupMember {
     pub group_id: Option<String>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+
+pub struct ContactGroupMemberCount {
+    pub contact_group_id: i64,
+    pub member_count: i64,
+}
+
 #[derive(Clone, Debug)]
 
 pub struct ContactGroupInput {

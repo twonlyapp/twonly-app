@@ -11,7 +11,8 @@ Color getMessageColorFromType(
   MediaFile? mediaFile,
   BuildContext context,
 ) {
-  if (message.type == MessageType.restoreFlameCounter.name) {
+  if (message.type == MessageType.restoreFlameCounter.name ||
+      message.type == MessageType.onVacation.name) {
     return context.appColor(AppColor.messageRestore);
   }
   if (message.type == MessageType.text.name) {

@@ -167,6 +167,7 @@ enum NativeVideoCodec {
       let duration = CMTimeGetSeconds(trim.duration)
       let group = DispatchGroup()
       var cancelPumps: [() -> Void] = []
+      var videoSamples = 0
       cancelPumps.append(pump(
         input: videoInput,
         output: videoOutput,
@@ -174,7 +175,8 @@ enum NativeVideoCodec {
         group: group,
         startSeconds: startSeconds,
         duration: duration,
-        onProgress: onProgress
+        onProgress: onProgress,
+        onSample: { videoSamples += 1 }
       ))
       if let audioInput, let audioOutput {
         cancelPumps.append(pump(
@@ -202,14 +204,19 @@ enum NativeVideoCodec {
         return false
       }
 
-      guard reader.status != .failed else {
+      guard reader.status == .completed, videoSamples > 0 else {
         writer.cancelWriting()
         return false
       }
       let finished = DispatchSemaphore(value: 0)
       writer.finishWriting { finished.signal() }
       while finished.wait(timeout: .now() + .milliseconds(50)) == .timedOut {
-        if isCancelled() { writer.cancelWriting() }
+        if isCancelled() {
+          // A cancelled writer need not invoke the finishWriting completion.
+          // Do not keep Rust's database execution lease alive waiting for it.
+          writer.cancelWriting()
+          return false
+        }
       }
 
       guard writer.status == .completed else { return false }
@@ -328,7 +335,8 @@ enum NativeVideoCodec {
     group: DispatchGroup,
     startSeconds: Double,
     duration: Double?,
-    onProgress: ((Int) -> Void)?
+    onProgress: ((Int) -> Void)?,
+    onSample: (() -> Void)? = nil
   ) -> () -> Void {
     group.enter()
     let queue = DispatchQueue(label: "eu.twonly.video.\(label)")
@@ -357,6 +365,7 @@ enum NativeVideoCodec {
           finish(false)
           return
         }
+        onSample?()
       }
     }
     return { queue.async { finish(false) } }

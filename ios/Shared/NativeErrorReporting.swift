@@ -68,12 +68,37 @@ enum NativeErrorReporting {
       options.enableSwizzling = false
       options.enableAutoBreadcrumbTracking = false
       options.enableAppHangTracking = !isExtension
-      options.beforeSend = { event in isAllowed ? event : nil }
+      options.beforeSend = { event in
+        guard isAllowed else { return nil }
+        return classifyEvent(event)
+      }
       options.initialScope = { scope in
         scope.setTag(value: isExtension ? "notification_extension" : "application", key: "native_component")
         return scope
       }
     }
+  }
+
+  /// A system pasteboard XPC wait is useful performance telemetry, but is not
+  /// an application exception. Keep its stack and report it as a warning.
+  /// Other hangs and every crash retain their original severity.
+  static func classifyEvent(_ event: Event) -> Event {
+    guard event.level != .fatal else { return event }
+    for exception in event.exceptions ?? [] {
+      guard exception.type == "App Hanging", exception.mechanism?.type == "AppHang",
+        let frames = exception.stacktrace?.frames,
+        let pasteboard = frames.lastIndex(where: {
+          ($0.package ?? "").contains("/Pasteboard.framework/")
+        }),
+        frames.suffix(from: pasteboard).allSatisfy({ $0.inApp?.boolValue != true }),
+        frames.suffix(from: pasteboard).contains(where: {
+          ($0.package ?? "").hasSuffix("/libxpc.dylib")
+        })
+      else { continue }
+      event.level = .warning
+      return event
+    }
+    return event
   }
 
   static func breadcrumb(_ operation: String) {

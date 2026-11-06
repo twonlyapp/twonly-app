@@ -123,7 +123,7 @@ pub(crate) async fn decorate_content(
 
         if allowed != 0 {
             content.sender_user_discovery_version =
-                Some(ctx.user_discovery.get().await.get_current_version().await?);
+                Some(crate::user_discovery::UserDiscovery::get_current_version_in(t).await?);
         }
     }
 

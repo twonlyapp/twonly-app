@@ -122,7 +122,6 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         .where(
           (m) =>
               m.senderId == null &&
-              m.mediaId != null &&
               m.ackByServer == null &&
               m.openedAt == null &&
               !m.isDeletedFromSender,
@@ -348,9 +347,13 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
       if (message.senderId == null &&
           !message.isDeletedFromSender &&
-          failedMessageIds.contains(message.messageId)) {
+          (failedMessageIds.contains(message.messageId) ||
+              (mediaFile?.uploadState == UploadState.preparationFailed &&
+                  state == MessageSendState.sending))) {
         icon = Icon(Icons.error_outline, size: 14, color: context.color.error);
-        text = context.lang.mediaSendFailed;
+        text = message.type == MessageType.media.name
+            ? context.lang.mediaSendFailed
+            : context.lang.messageSendFailedUserInactive;
         textWidget = null;
         onTap = null;
         hasLoader = false;

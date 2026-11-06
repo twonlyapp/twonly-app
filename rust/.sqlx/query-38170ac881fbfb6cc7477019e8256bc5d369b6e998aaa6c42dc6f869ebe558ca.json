@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE groups\n                   SET vacation_from = ?, vacation_until = ?, vacation_icon = ?\n                   WHERE group_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "38170ac881fbfb6cc7477019e8256bc5d369b6e998aaa6c42dc6f869ebe558ca"
+}

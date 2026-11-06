@@ -1,16 +1,21 @@
 import 'dart:async';
 
+import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:twonly/src/model/error_code.dart';
 import 'package:twonly/src/utils/log.dart';
 
 export 'package:twonly/src/model/error_code.dart';
 
 class Result<T, E> {
-  Result.error(this.error) : value = null, _isSuccess = false;
-  Result.success(this.value) : error = null, _isSuccess = true;
+  Result.error(this.error, {this.cause}) : value = null, _isSuccess = false;
+  Result.success(this.value) : error = null, cause = null, _isSuccess = true;
 
   final T? value;
   final E? error;
+
+  /// The original exception when the call failed without a server error
+  /// code, for example on the connection or in local Rust code.
+  final Object? cause;
   final bool _isSuccess;
 
   bool get isSuccess => _isSuccess;
@@ -24,6 +29,17 @@ int? apiErrorCodeOf(Object error) {
   return match == null ? null : int.parse(match.group(1)!);
 }
 
+/// Whether a failed Rust API call never got an answer from the server: the
+/// WebSocket was not connected, sending failed, or the response timed out.
+bool isConnectionError(Object error) {
+  if (error is! AnyhowException) return false;
+  final message = error.message;
+  return message == 'Not connected' ||
+      message == 'API request timed out' ||
+      message == 'response channel closed' ||
+      message.startsWith('send error:');
+}
+
 Future<Result<T, ErrorCode>> rustApiResult<T>(Future<T> request) async {
   try {
     return Result.success(await request);
@@ -32,8 +48,12 @@ Future<Result<T, ErrorCode>> rustApiResult<T>(Future<T> request) async {
     if (code != null) {
       return Result.error(ErrorCode.valueOf(code));
     }
-    Log.error('Rust API call failed', error: error);
-    return Result.error(ErrorCode.InternalError);
+    if (isConnectionError(error) || isBackgroundCancellation(error)) {
+      Log.warn('Rust API call deferred', error);
+    } else {
+      Log.error('Rust API call failed', error: error);
+    }
+    return Result.error(ErrorCode.InternalError, cause: error);
   }
 }
 
@@ -46,12 +66,12 @@ Future<Result<T, ErrorCode>> rustApiResult<T>(Future<T> request) async {
 /// only has to be logged.
 void unawaitedRustCall(Future<void> request, String description) {
   unawaited(
-    request.catchError((Object error) {
+    request.catchError((Object error, StackTrace stackTrace) {
       if (isBackgroundCancellation(error)) {
         Log.info('$description stopped: the app left the foreground');
         return;
       }
-      Log.warn('$description failed', error);
+      Log.warn('$description failed', error, stackTrace);
     }),
   );
 }
@@ -64,5 +84,8 @@ void unawaitedRustCall(Future<void> request, String description) {
 bool isBackgroundCancellation(Object error) {
   final text = error.toString();
   return text.contains('retry when active') ||
+      text.contains('Database operation deferred until foreground') ||
+      text.contains('Native database admission cancelled') ||
+      text.contains('(code: 9) interrupted') ||
       text.contains('attempted to acquire a connection on a closed pool');
 }

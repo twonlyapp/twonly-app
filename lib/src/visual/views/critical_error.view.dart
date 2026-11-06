@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:restart_app/restart_app.dart';
+import 'package:twonly/src/constants/keyvalue.keys.dart';
+import 'package:twonly/src/model/json/onboarding_state.model.dart';
+import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
-import 'package:twonly/src/visual/views/onboarding/recover_password.view.dart';
 import 'package:twonly/src/visual/views/settings/help/contact_us.view.dart';
 
 class CriticalErrorView extends StatefulWidget {
@@ -70,6 +72,64 @@ class _CriticalErrorViewState extends State<CriticalErrorView> {
     }
   }
 
+  Future<void> _recoverFromBackup() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Recovery from backup'),
+        content: const Text(
+          'This will delete all local account data, including messages, media, '
+          'and saved credentials. twonly then restarts and restores your '
+          'account from your backup.',
+        ),
+        actions: [
+          MyButton(
+            variant: MyButtonVariant.text,
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.lang.cancel),
+          ),
+          MyButton(
+            variant: MyButtonVariant.error,
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(context.lang.twonlySafeRecoverBtn),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isResetting = true);
+    try {
+      // A restore needs a running twonly, which this screen does not have.
+      // After the reset the next start creates a fresh identity and opens the
+      // backup recovery to restore into it.
+      await deleteLocalUserData(removeCredentials: true);
+      await KeyValueStore.update<OnboardingState>(
+        key: KeyValueKeys.onboardingState,
+        update: (state) => state.openBackupRecovery = true,
+      );
+      if (!mounted) return;
+      final restarted = await Restart.restartApp(
+        notificationTitle: 'twonly',
+        notificationBody: context.lang.twonlySafeRecoverTitle,
+        forceKill: true,
+      );
+      if (!restarted) throw StateError('Could not restart twonly');
+    } catch (error, stackTrace) {
+      Log.error(
+        'Could not prepare the backup recovery',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
+      setState(() => _isResetting = false);
+      showSnackbar(
+        context,
+        'Could not reset twonly. Please try again or restart the app.',
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,11 +175,7 @@ class _CriticalErrorViewState extends State<CriticalErrorView> {
               const SizedBox(height: 12),
               MyButton(
                 variant: MyButtonVariant.secondary,
-                onPressed: _isResetting
-                    ? null
-                    : () async {
-                        await context.navPush(const BackupRecoveryView());
-                      },
+                onPressed: _isResetting ? null : _recoverFromBackup,
                 child: const Text('Recovery from backup'),
               ),
               const SizedBox(height: 12),

@@ -11,18 +11,25 @@ class MediaContentRenderer extends StatelessWidget {
     required this.currentMedia,
     required this.videoController,
     required this.loader,
+    this.videoFailed = false,
     super.key,
   });
 
   final MediaFileService? currentMedia;
   final VideoPlayerController? videoController;
   final Widget loader;
+  final bool videoFailed;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        if (videoController != null && videoController!.value.isInitialized)
+        if (videoFailed)
+          const Positioned.fill(
+            child: Center(child: Icon(Icons.broken_image_outlined, size: 64)),
+          )
+        else if (videoController != null &&
+            videoController!.value.isInitialized)
           Positioned.fill(
             child: Center(
               child: AspectRatio(
@@ -38,6 +45,7 @@ class MediaContentRenderer extends StatelessWidget {
                 currentMedia!.mediaFile.type == MediaType.gif))
           Positioned.fill(
             child: PhotoView(
+              key: ValueKey(currentMedia!.mediaFile.mediaId),
               imageProvider: FileImage(
                 currentMedia!.tempPath,
               ),

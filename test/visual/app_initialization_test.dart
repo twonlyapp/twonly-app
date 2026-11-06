@@ -62,6 +62,7 @@ void main() {
   setUpAll(() => RustLib.initMock(api: api));
   tearDownAll(RustLib.dispose);
   setUp(() async {
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await locator.reset();
     directory = Directory.systemTemp.createTempSync('twonly-startup-');
     AppEnvironment.initTesting(
@@ -161,6 +162,53 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     pending.complete(1);
     await tester.pump();
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'backgrounding startup defers its timeout and retries on resume',
+    (
+      tester,
+    ) async {
+      final pending = Completer<int>();
+      api.readCount = () => pending.future;
+      await tester.pumpWidget(app());
+      await tester.pump();
+      expect(api.attempts, 1);
+
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump(const Duration(seconds: 11));
+      await tester.pump();
+      expect(find.byType(FilledButton), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      api.readCount = () async => 1;
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(api.attempts, 2);
+      expect(find.byType(UnlockTwonlyView), findsOneWidget);
+
+      // The retired attempt cannot replace the successfully initialized route.
+      pending.complete(0);
+      await tester.pumpAndSettle();
+      expect(find.byType(UnlockTwonlyView), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('startup created in the background waits until resume', (
+    tester,
+  ) async {
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    api.readCount = () async => 1;
+    await tester.pumpWidget(app());
+    await tester.pump(const Duration(seconds: 11));
+    expect(api.attempts, 0);
+
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(api.attempts, 1);
+    expect(find.byType(UnlockTwonlyView), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

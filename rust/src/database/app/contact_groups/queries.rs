@@ -115,6 +115,22 @@ pub async fn members(
     .await?)
 }
 
+pub async fn member_counts(
+    connection: &mut SqliteConnection,
+) -> Result<Vec<ContactGroupMemberCount>> {
+    Ok(sqlx::query_as!(
+        ContactGroupMemberCount,
+        r#"
+            SELECT contact_group_id AS "contact_group_id!",
+                COUNT(*) AS "member_count!"
+            FROM contact_group_members
+            GROUP BY contact_group_id
+        "#,
+    )
+    .fetch_all(connection)
+    .await?)
+}
+
 pub async fn membership_ids(
     connection: &mut SqliteConnection, user_id: Option<i64>, group_id: Option<&str>,
 ) -> Result<Vec<i64>> {

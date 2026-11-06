@@ -166,3 +166,24 @@ class ContactGroupMember {
           userId == other.userId &&
           groupId == other.groupId;
 }
+
+class ContactGroupMemberCount {
+  final PlatformInt64 contactGroupId;
+  final PlatformInt64 memberCount;
+
+  const ContactGroupMemberCount({
+    required this.contactGroupId,
+    required this.memberCount,
+  });
+
+  @override
+  int get hashCode => contactGroupId.hashCode ^ memberCount.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ContactGroupMemberCount &&
+          runtimeType == other.runtimeType &&
+          contactGroupId == other.contactGroupId &&
+          memberCount == other.memberCount;
+}

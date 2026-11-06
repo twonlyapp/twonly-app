@@ -6,6 +6,9 @@
 use std::collections::HashMap;
 
 use crate::database::app::groups::native::{FlameState, Group};
+use crate::database::app::groups::vacation::{
+    VacationWindow, MAX_VACATION_DAYS, MIN_FLAMES_TO_FREEZE, MIN_VACATION_DAYS, VACATION_ICONS,
+};
 use crate::error::Result;
 use crate::services::groups::GroupService;
 
@@ -59,6 +62,63 @@ pub async fn restore_flames(group_id: String) -> Result<bool> {
     let ctx = crate::context::Context::get_static()?;
 
     GroupService::new(ctx).restore_flames(group_id).await
+}
+
+/// What the "On Vacation" picker offers.
+pub struct VacationOptions {
+    pub icons: Vec<String>,
+    pub min_days: u32,
+    pub max_days: u32,
+    pub min_flames: i64,
+}
+
+#[flutter_rust_bridge::frb(sync)]
+pub fn vacation_options() -> VacationOptions {
+    VacationOptions {
+        icons: VACATION_ICONS.iter().map(|icon| (*icon).to_owned()).collect(),
+        min_days: MIN_VACATION_DAYS,
+        max_days: MAX_VACATION_DAYS,
+        min_flames: MIN_FLAMES_TO_FREEZE,
+    }
+}
+
+/// The user's own vacation while it lasts.
+pub async fn own_vacation() -> Result<Option<VacationWindow>> {
+    let ctx = crate::context::Context::get_static()?;
+
+    ctx.foreground_database_call(|| async {
+        let database = ctx.app_db.read().await.clone();
+
+        Group::own_vacation(&database.read_pool, crate::utils::current_time().timestamp()).await
+    })
+    .await
+}
+
+/// How many chats a vacation starting now would freeze.
+pub async fn vacation_candidate_count() -> Result<u32> {
+    let ctx = crate::context::Context::get_static()?;
+
+    ctx.foreground_database_call(|| async {
+        let database = ctx.app_db.read().await.clone();
+
+        Ok(Group::vacation_candidates(&database.read_pool).await?.len() as u32)
+    })
+    .await
+}
+
+/// Freezes the big streaks for `days` days and tells those chats. Returns how
+/// many chats were frozen; zero means no vacation was started.
+pub async fn start_vacation(days: u32, icon: String) -> Result<u32> {
+    let ctx = crate::context::Context::get_static()?;
+
+    GroupService::new(ctx).start_vacation(days, icon).await
+}
+
+/// Ends the user's vacation early. Returns how many chats were told.
+pub async fn end_vacation() -> Result<u32> {
+    let ctx = crate::context::Context::get_static()?;
+
+    GroupService::new(ctx).end_vacation().await
 }
 
 pub async fn create_new_group(group_name: String, member_ids: Vec<i64>) -> Result<bool> {

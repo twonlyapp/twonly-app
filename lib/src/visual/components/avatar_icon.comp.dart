@@ -141,6 +141,9 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
   int _retryAttempt = 0;
   int _sourceGeneration = 0;
   String? _myAvatarPath;
+  Timer? _myAvatarRetry;
+  int _myAvatarRetryAttempt = 0;
+  int _myAvatarRequest = 0;
 
   StreamSubscription<List<Contact>>? groupStream;
   StreamSubscription<List<Contact>>? contactsStream;
@@ -159,12 +162,17 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(_refreshAvatarFiles());
-      if (widget.myAvatar) unawaited(_updateMyAvatar());
+      if (widget.myAvatar) {
+        _myAvatarRetryAttempt = 0;
+        unawaited(_updateMyAvatar());
+      }
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.detached) {
       _avatarRetry?.cancel();
       _avatarRetry = null;
+      _myAvatarRetry?.cancel();
+      _myAvatarRetry = null;
     }
   }
 
@@ -342,6 +350,9 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
     _avatarRetry?.cancel();
     _avatarRetry = null;
     _retryAttempt = 0;
+    _myAvatarRetry?.cancel();
+    _myAvatarRetry = null;
+    _myAvatarRetryAttempt = 0;
   }
 
   @override
@@ -449,15 +460,45 @@ class _AvatarIconState extends State<AvatarIcon> with WidgetsBindingObserver {
   Future<void> _updateMyAvatar() async {
     // Rust resolves photo avatars as well as public SVG avatars, including
     // profiles that have only a photo avatar.
+    final generation = _sourceGeneration;
+    final request = ++_myAvatarRequest;
+    bool active() =>
+        mounted &&
+        widget.myAvatar &&
+        generation == _sourceGeneration &&
+        request == _myAvatarRequest;
+    if (!active()) return;
+    _myAvatarRetry?.cancel();
+    _myAvatarRetry = null;
     try {
       final path = await RustApi.currentUserAvatarPath();
 
-      if (mounted) {
+      if (active()) {
+        _myAvatarRetryAttempt = 0;
         setState(() {
           _myAvatarPath = path;
         });
       }
     } catch (error) {
+      if (!active()) return;
+      final message = error.toString();
+      final retryable =
+          isBackgroundCancellation(error) ||
+          message.contains('Try again (os error 11)') ||
+          message.contains('database is locked') ||
+          message.contains('pool timed out');
+      if (retryable && _myAvatarRetryAttempt < 5) {
+        Log.warn('Own avatar temporarily unavailable', error);
+        final lifecycle = WidgetsBinding.instance.lifecycleState;
+        if (lifecycle == null || lifecycle == AppLifecycleState.resumed) {
+          final delay = Duration(seconds: 1 << _myAvatarRetryAttempt++);
+          _myAvatarRetry = Timer(delay, () {
+            _myAvatarRetry = null;
+            if (active()) unawaited(_updateMyAvatar());
+          });
+        }
+        return;
+      }
       Log.error('Failed to load own avatar: $error');
     }
   }

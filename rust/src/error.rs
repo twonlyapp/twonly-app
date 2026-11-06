@@ -108,6 +108,12 @@ pub enum TwonlyError {
     #[error("unprocessable content: {0}")]
     UnprocessableContent(String),
 
+    /// A backup or database written by a newer app version than this one.
+    /// Only updating the app helps, so Dart matches this text to tell the
+    /// user instead of reporting an unknown error.
+    #[error("written by a newer app version: {0}")]
+    RequiresAppUpdate(String),
+
     #[error("{0}")]
     Generic(String),
 

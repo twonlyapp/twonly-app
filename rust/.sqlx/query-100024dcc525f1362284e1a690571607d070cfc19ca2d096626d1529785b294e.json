@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT last_message_send, last_message_received,\n                      last_flame_counter_change, flame_counter,\n                      max_flame_counter, max_flame_counter_from\n               FROM groups WHERE group_id = ?",
+  "query": "SELECT last_message_send, last_message_received, last_flame_counter_change,\n                      vacation_from, vacation_until, vacation_icon,\n                      peer_vacation_from, peer_vacation_until, peer_vacation_icon\n               FROM groups WHERE group_id = ?",
   "describe": {
     "columns": [
       {
@@ -37,35 +37,68 @@
         }
       },
       {
-        "name": "flame_counter",
+        "name": "vacation_from",
         "ordinal": 3,
         "type_info": "Integer",
         "origin": {
           "Table": {
             "table": "groups",
-            "name": "flame_counter"
+            "name": "vacation_from"
           }
         }
       },
       {
-        "name": "max_flame_counter",
+        "name": "vacation_until",
         "ordinal": 4,
         "type_info": "Integer",
         "origin": {
           "Table": {
             "table": "groups",
-            "name": "max_flame_counter"
+            "name": "vacation_until"
           }
         }
       },
       {
-        "name": "max_flame_counter_from",
+        "name": "vacation_icon",
         "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "vacation_icon"
+          }
+        }
+      },
+      {
+        "name": "peer_vacation_from",
+        "ordinal": 6,
         "type_info": "Integer",
         "origin": {
           "Table": {
             "table": "groups",
-            "name": "max_flame_counter_from"
+            "name": "peer_vacation_from"
+          }
+        }
+      },
+      {
+        "name": "peer_vacation_until",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "peer_vacation_until"
+          }
+        }
+      },
+      {
+        "name": "peer_vacation_icon",
+        "ordinal": 8,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "peer_vacation_icon"
           }
         }
       }
@@ -77,10 +110,13 @@
       true,
       true,
       true,
-      false,
-      false,
+      true,
+      true,
+      true,
+      true,
+      true,
       true
     ]
   },
-  "hash": "e585b96b1b6bf08be34cbd2363279b75d76e8e5d64cfba5a120c03e9cf60b924"
+  "hash": "100024dcc525f1362284e1a690571607d070cfc19ca2d096626d1529785b294e"
 }

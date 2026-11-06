@@ -146,6 +146,16 @@ const AdditionalMessageData$json = {
       '10': 'liveLocation',
       '17': true
     },
+    {
+      '1': 'vacation',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.VacationData',
+      '9': 10,
+      '10': 'vacation',
+      '17': true
+    },
   ],
   '4': [AdditionalMessageData_Type$json],
   '8': [
@@ -159,6 +169,7 @@ const AdditionalMessageData$json = {
     {'1': '_webxdc_sync_request'},
     {'1': '_sticker'},
     {'1': '_live_location'},
+    {'1': '_vacation'},
   ],
 };
 
@@ -177,6 +188,7 @@ const AdditionalMessageData_Type$json = {
     {'1': 'WEBXDC_SYNC_REQUEST', '2': 8},
     {'1': 'STICKER', '2': 9},
     {'1': 'LIVE_LOCATION', '2': 10},
+    {'1': 'VACATION', '2': 11},
   ],
 };
 
@@ -193,14 +205,30 @@ final $typed_data.Uint8List additionalMessageDataDescriptor = $convert.base64Dec
     'Q2h1bmtIBlIKd2VieGRjU3luY4gBARJHChN3ZWJ4ZGNfc3luY19yZXF1ZXN0GAogASgLMhIuV2'
     'VieGRjU3luY1JlcXVlc3RIB1IRd2VieGRjU3luY1JlcXVlc3SIAQESKwoHc3RpY2tlchgLIAEo'
     'CzIMLlN0aWNrZXJEYXRhSAhSB3N0aWNrZXKIAQESOwoNbGl2ZV9sb2NhdGlvbhgMIAEoCzIRLk'
-    'xpdmVMb2NhdGlvbkRhdGFICVIMbGl2ZUxvY2F0aW9uiAEBIswBCgRUeXBlEggKBExJTksQABIM'
-    'CghDT05UQUNUUxABEhoKFlJFU1RPUkVEX0ZMQU1FX0NPVU5URVIQAhISCg5BU0tfQUJPVVRfVV'
-    'NFUhADEg4KCldFQlhEQ19BUFAQBBIRCg1XRUJYRENfVVBEQVRFEAUSDwoLV0VCWERDX1NFTlQQ'
-    'BhIPCgtXRUJYRENfU1lOQxAHEhcKE1dFQlhEQ19TWU5DX1JFUVVFU1QQCBILCgdTVElDS0VSEA'
-    'kSEQoNTElWRV9MT0NBVElPThAKQgcKBV9saW5rQhkKF19yZXN0b3JlZF9mbGFtZV9jb3VudGVy'
-    'QhQKEl9hc2tfYWJvdXRfdXNlcl9pZEINCgtfd2VieGRjX2FwcEIQCg5fd2VieGRjX3VwZGF0ZU'
-    'IQCg5fd2VieGRjX29yaWdpbkIOCgxfd2VieGRjX3N5bmNCFgoUX3dlYnhkY19zeW5jX3JlcXVl'
-    'c3RCCgoIX3N0aWNrZXJCEAoOX2xpdmVfbG9jYXRpb24=');
+    'xpdmVMb2NhdGlvbkRhdGFICVIMbGl2ZUxvY2F0aW9uiAEBEi4KCHZhY2F0aW9uGA0gASgLMg0u'
+    'VmFjYXRpb25EYXRhSApSCHZhY2F0aW9uiAEBItoBCgRUeXBlEggKBExJTksQABIMCghDT05UQU'
+    'NUUxABEhoKFlJFU1RPUkVEX0ZMQU1FX0NPVU5URVIQAhISCg5BU0tfQUJPVVRfVVNFUhADEg4K'
+    'CldFQlhEQ19BUFAQBBIRCg1XRUJYRENfVVBEQVRFEAUSDwoLV0VCWERDX1NFTlQQBhIPCgtXRU'
+    'JYRENfU1lOQxAHEhcKE1dFQlhEQ19TWU5DX1JFUVVFU1QQCBILCgdTVElDS0VSEAkSEQoNTElW'
+    'RV9MT0NBVElPThAKEgwKCFZBQ0FUSU9OEAtCBwoFX2xpbmtCGQoXX3Jlc3RvcmVkX2ZsYW1lX2'
+    'NvdW50ZXJCFAoSX2Fza19hYm91dF91c2VyX2lkQg0KC193ZWJ4ZGNfYXBwQhAKDl93ZWJ4ZGNf'
+    'dXBkYXRlQhAKDl93ZWJ4ZGNfb3JpZ2luQg4KDF93ZWJ4ZGNfc3luY0IWChRfd2VieGRjX3N5bm'
+    'NfcmVxdWVzdEIKCghfc3RpY2tlckIQCg5fbGl2ZV9sb2NhdGlvbkILCglfdmFjYXRpb24=');
+
+@$core.Deprecated('Use vacationDataDescriptor instead')
+const VacationData$json = {
+  '1': 'VacationData',
+  '2': [
+    {'1': 'starts_at_ms', '3': 1, '4': 1, '5': 3, '10': 'startsAtMs'},
+    {'1': 'ends_at_ms', '3': 2, '4': 1, '5': 3, '10': 'endsAtMs'},
+    {'1': 'icon', '3': 3, '4': 1, '5': 9, '10': 'icon'},
+  ],
+};
+
+/// Descriptor for `VacationData`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List vacationDataDescriptor = $convert.base64Decode(
+    'CgxWYWNhdGlvbkRhdGESIAoMc3RhcnRzX2F0X21zGAEgASgDUgpzdGFydHNBdE1zEhwKCmVuZH'
+    'NfYXRfbXMYAiABKANSCGVuZHNBdE1zEhIKBGljb24YAyABKAlSBGljb24=');
 
 @$core.Deprecated('Use liveLocationDataDescriptor instead')
 const LiveLocationData$json = {

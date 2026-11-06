@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.graphics.Color
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
@@ -38,6 +39,7 @@ class WebxdcViewFactory(private val activity: Activity) :
             activity,
             instanceId = params["instanceId"] as? String ?: "",
             origin = params["origin"] as? String ?: "",
+            backgroundColor = (params["backgroundColor"] as? Number)?.toInt() ?: Color.WHITE,
         )
     }
 }
@@ -64,6 +66,7 @@ class WebxdcView(
     private val activity: Activity,
     private val instanceId: String,
     private val origin: String,
+    backgroundColor: Int = Color.WHITE,
 ) : PlatformView {
 
     companion object {
@@ -127,6 +130,9 @@ class WebxdcView(
     init {
         current = this
         webView = WebView(activity)
+        // The route's own background, shown until the game draws and wherever
+        // it leaves the page unpainted. WebView's default is white.
+        webView.setBackgroundColor(backgroundColor)
 
         @SuppressLint("SetJavaScriptEnabled")
         webView.settings.apply {

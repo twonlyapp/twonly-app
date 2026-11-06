@@ -3,6 +3,29 @@ use crate::database::lifecycle::Operation;
 use std::time::Duration;
 
 #[tokio::test]
+async fn foreground_connection_policy_does_not_query_retired_pools() {
+    let directory = tempfile::tempdir().unwrap();
+    let context = Context::test_context(
+        directory.path().join("database"),
+        directory.path().join("data"),
+        RuntimeMode::Notification,
+    )
+    .await
+    .unwrap();
+    ApiRuntime::set_network_available(&context, false).await.unwrap();
+    let app = context.app_db.read().await.clone();
+    let signal = context.rust_db.read().await.clone();
+    tokio::join!(app.close(), signal.pool.close());
+
+    // Native onStop can close the pools after activation but before Flutter's
+    // queued resume applies its connection policy. No sharing lookup is needed.
+    ApiRuntime::set_background(&context, false).await.unwrap();
+    assert!(app.pool.is_closed());
+    assert!(signal.pool.is_closed());
+    ApiRuntime::close(&context).await.unwrap();
+}
+
+#[tokio::test]
 
 async fn native_initialization_requires_a_lease_before_touching_the_filesystem() {
     let directory = tempfile::tempdir().unwrap();

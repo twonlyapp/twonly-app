@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT vacation_from AS \"from!\", vacation_until AS \"until!\", vacation_icon\n               FROM groups\n               WHERE vacation_from IS NOT NULL AND vacation_until > ?\n               ORDER BY vacation_until DESC\n               LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "from!",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "vacation_from"
+          }
+        }
+      },
+      {
+        "name": "until!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "vacation_until"
+          }
+        }
+      },
+      {
+        "name": "vacation_icon",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "vacation_icon"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "904d43539c76061e9fd39ecaaea09d9ce9f8e5cb541e4228593bb9fb63e19190"
+}

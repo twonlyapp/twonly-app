@@ -127,9 +127,14 @@ class _WebxdcSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final parameters = <String, dynamic>{
       'instanceId': instanceId,
       'origin': origin,
+      // Painted wherever the page has not drawn yet, so a game that takes a
+      // moment to start does not flash a white screen in dark mode.
+      'backgroundColor': theme.scaffoldBackgroundColor.toARGB32(),
+      'dark': theme.brightness == Brightness.dark,
     };
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {
