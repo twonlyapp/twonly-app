@@ -6,10 +6,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/core/database/app/stickers/table.dart';
 import 'package:twonly/core/services/avatars.dart';
+import 'package:twonly/core/services/stickers.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/sticker_picker.dart';
+import 'package:twonly/src/visual/components/sticker_preview.dialog.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/memories/memories_picker.view.dart';
@@ -52,12 +55,21 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
       ),
     );
     if (!mounted || path == null) return;
-    await _saveCustomAvatar(
-      () => RustApi.createCustomAvatar(
-        imagePath: path,
-        acceptedContactsOnly: _customAvatar?.acceptedContactsOnly ?? true,
-      ),
-    );
+    setState(() => _processingCustomAvatar = true);
+    StickerOutput? cutout;
+    try {
+      cutout = await StickerService.prepareFromPath(path);
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.lang.customAvatarCreateFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _processingCustomAvatar = false);
+    }
+    if (!mounted || cutout == null) return;
+    await _confirmCustomAvatar(cutout);
   }
 
   Future<void> _chooseStickerAvatar() async {
@@ -77,31 +89,24 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
       ),
     );
     if (!mounted || sticker == null) return;
-    await _saveCustomAvatar(
-      () => RustApi.createCustomAvatarFromSticker(
-        webp: sticker.webp,
+    await _confirmCustomAvatar(StickerService.draftFromLocal(sticker));
+  }
+
+  /// Shows the cutout in its final circle so the user can turn it upright
+  /// before it replaces the current photo avatar.
+  Future<void> _confirmCustomAvatar(StickerOutput cutout) async {
+    final avatar = await showStickerDraftPreview(
+      context,
+      cutout,
+      avatar: true,
+      onSave: (cutout) => RustApi.createCustomAvatarFromSticker(
+        webp: cutout.webp,
         acceptedContactsOnly: _customAvatar?.acceptedContactsOnly ?? true,
       ),
     );
-  }
-
-  Future<void> _saveCustomAvatar(
-    Future<CustomAvatarInfo> Function() create,
-  ) async {
-    setState(() => _processingCustomAvatar = true);
-    try {
-      final avatar = await create();
-      if (!mounted) return;
-      setState(() => _customAvatar = avatar);
-      userService.triggerUserUpdate();
-    } on Object {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.lang.customAvatarCreateFailed)),
-      );
-    } finally {
-      if (mounted) setState(() => _processingCustomAvatar = false);
-    }
+    if (!mounted || avatar == null) return;
+    setState(() => _customAvatar = avatar);
+    userService.triggerUserUpdate();
   }
 
   Future<void> _removeCustomAvatar() async {

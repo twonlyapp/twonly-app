@@ -1568,6 +1568,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Der Foto-Avatar konnte nicht erstellt werden.';
 
   @override
+  String get customAvatarSave => 'Als Avatar verwenden';
+
+  @override
   String get inProcess => 'Wird verarbeitet';
 
   @override
@@ -3312,6 +3315,28 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get stickerRotateFailed => 'Der Sticker konnte nicht gedreht werden.';
+
+  @override
+  String get stickerDraftRotate => 'Drehen';
+
+  @override
+  String get stickerDraftErase => 'Radieren';
+
+  @override
+  String get stickerEraseTitle => 'Teile entfernen';
+
+  @override
+  String get stickerEraseHint => 'Male über alles, was entfernt werden soll.';
+
+  @override
+  String get stickerEraseBrushSize => 'Pinselgröße';
+
+  @override
+  String get stickerEraseApply => 'Übernehmen';
+
+  @override
+  String get stickerEraseFailed =>
+      'Die Änderungen konnten nicht übernommen werden. Ein Teil des Bildes muss übrig bleiben.';
 
   @override
   String get releaseNotesTitle => 'Was ist neu?';

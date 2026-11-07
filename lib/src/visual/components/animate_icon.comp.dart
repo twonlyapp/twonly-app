@@ -41,9 +41,15 @@ class EmojiAnimationComp extends StatelessWidget {
     required this.emoji,
     super.key,
     this.repeat = true,
+    this.renderCache = RenderCache.drawingCommands,
   });
   final String emoji;
   final bool repeat;
+
+  /// [RenderCache.raster] suits icons that always stay small, such as the
+  /// flames in list rows: each frame becomes a tiny image instead of a vector
+  /// drawing the GPU redoes on every frame.
+  final RenderCache renderCache;
   static final List<String> animatedIconKeys = animatedIcons.keys.toList();
   static final Map<String, String> animatedIcons = {
     '❤': 'red_heart.lottie',
@@ -264,7 +270,7 @@ class EmojiAnimationComp extends StatelessWidget {
       return Lottie.asset(
         'assets/animated_icons/${animatedIcons[emoji]}',
         repeat: repeat,
-        renderCache: RenderCache.drawingCommands,
+        renderCache: renderCache,
       );
     } else if (isOneEmoji(emoji)) {
       return Text(

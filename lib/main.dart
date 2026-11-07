@@ -30,10 +30,12 @@ import 'package:twonly/src/services/migrations.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
+import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/services/webxdc/webxdc_host.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/startup_guard.dart';
 import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/webxdc_app_icon.comp.dart';
 
 final _initMutex = Mutex();
 
@@ -292,6 +294,7 @@ class _SplashView extends StatelessWidget {
 Future<void> postStartupTasks() async {
   Log.info('Post startup started.');
   unawaited(WebxdcHost.warmUpForRecentGames());
+  unawaited(WebxdcService.preloadApps().then(precacheWebxdcAppIcons));
   unawaited(MemoriesService.prewarmCache());
 
   unawaited(HomeWidgetService.pruneSupersededMedia());

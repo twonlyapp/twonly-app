@@ -15,6 +15,7 @@ import 'package:twonly/src/model/message_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/services/webxdc/webxdc.service.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
@@ -23,6 +24,8 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/mention_text.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_vacation.entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/webxdc_app_icon.comp.dart';
 
 class ResponseContainer extends StatelessWidget {
   const ResponseContainer({
@@ -149,6 +152,8 @@ class _ResponsePreviewState extends State<ResponsePreview> {
   String _username = '';
   Uint8List? _stickerSource;
   Uint8List? _stickerBytes;
+  String? _gameAppId;
+  WebxdcCardApp? _gameApp;
 
   Uint8List? get _quotedStickerBytes {
     final source = _message?.additionalMessageData;
@@ -172,12 +177,39 @@ class _ResponsePreviewState extends State<ResponsePreview> {
     if (widget.contact != null) {
       _username = getContactDisplayName(widget.contact!);
     }
+    _seedGame();
     if (!widget.useSharedData &&
         (widget.message == null ||
             (widget.message?.mediaId != null && widget.mediaFile == null) ||
             (widget.message?.senderId != null && widget.contact == null))) {
       initAsync();
+    } else if (_isGame && _gameApp == null) {
+      // The shared chat data holds messages, not the apps behind game cards.
+      _loadGame().then((_) {
+        if (mounted) setState(() {});
+      });
     }
+  }
+
+  bool get _isGame => _message?.type == MessageType.webxdcApp.name;
+
+  /// A game card's message holds neither the app nor its name, only the
+  /// instance it starts, which is also the message's ID. Whatever the chat
+  /// already looked up is shown right away.
+  void _seedGame() {
+    if (!_isGame) return;
+    final instance = WebxdcService.cachedInstance(_message!.messageId);
+    if (instance == null) return;
+    _gameAppId = instance.appId;
+    _gameApp = WebxdcService.cachedApp(instance.appId, instance.version);
+  }
+
+  Future<void> _loadGame() async {
+    if (!_isGame || _gameApp != null) return;
+    final instance = await WebxdcService.instanceRow(_message!.messageId);
+    if (instance == null) return;
+    _gameAppId = instance.appId;
+    _gameApp = await WebxdcService.cardApp(instance.appId, instance.version);
   }
 
   Future<void> initAsync() async {
@@ -199,6 +231,8 @@ class _ResponsePreviewState extends State<ResponsePreview> {
         _username = getContactDisplayName(contact);
       }
     }
+    _seedGame();
+    await _loadGame();
     if (_message == null && mounted) {
       _username = context.lang.quotedMessageWasDeleted;
     }
@@ -267,6 +301,11 @@ class _ResponsePreviewState extends State<ResponsePreview> {
       if (_message!.type == MessageType.askAboutUser.name) {
         subtitle = context.lang.replyAskAFriend;
       }
+      if (_isGame && _gameAppId != null) {
+        subtitle = _gameApp == null
+            ? _gameAppId
+            : WebxdcService.localizedName(_gameApp!, readerLanguages(context));
+      }
 
       if (_message!.senderId == null) {
         _username = context.lang.you;
@@ -305,6 +344,16 @@ class _ResponsePreviewState extends State<ResponsePreview> {
             fit: BoxFit.cover,
             errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
+        ),
+      );
+    } else if (_isGame && _gameAppId != null) {
+      imageWidget = Container(
+        margin: const EdgeInsets.only(left: 8),
+        child: WebxdcAppIcon(
+          app: _gameApp,
+          size: 40,
+          radius: 4,
+          color: color,
         ),
       );
     } else if (quotedStickerBytes != null) {

@@ -50,6 +50,10 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   int _activePageIdx = 1;
   double _offsetRatio = 0;
   double _offsetFromOne = 0;
+
+  /// [_offsetRatio] for the fades, which follow the swipe without rebuilding
+  /// this view on every frame.
+  final ValueNotifier<double> _offsetRatioNotifier = ValueNotifier(0);
   bool _isBottomNavVisible = true;
   Timer? _disableCameraTimer;
 
@@ -59,6 +63,10 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   bool _startupChecksComplete = false;
   bool _releaseNotesCheckScheduled = false;
   Timer? _storeReviewTimer;
+
+  /// Reused across rebuilds of this view, which the camera and the bottom
+  /// bar trigger too; a new instance would rebuild every chat row with it.
+  ChatListView? _chatListView;
 
   final MainCameraController _mainCameraController = MainCameraController();
   late final PageController _homeViewPageController;
@@ -95,6 +103,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _activePageIdx = initialPage;
     _offsetFromOne = 1.0 - initialPage;
     _offsetRatio = _offsetFromOne.abs();
+    _offsetRatioNotifier.value = _offsetRatio;
+    _mainCameraController.qrScanningPaused = _offsetRatio != 0;
     _homeViewPageController = PageController(initialPage: initialPage);
 
     _mainCameraController.setState = () {
@@ -105,11 +115,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       if (_homeViewPageController.hasClients) {
         _homeViewPageController.jumpToPage(index);
       }
-      setState(() {
-        _activePageIdx = index;
-        _offsetFromOne = 1.0 - index;
-        _offsetRatio = _offsetFromOne.abs();
-      });
+      _applyPageOffset(index.toDouble());
       if (index != 1) {
         unawaited(_mainCameraController.closeCamera());
       }
@@ -366,6 +372,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _widgetTapSub?.cancel();
     _disableCameraTimer?.cancel();
     _storeReviewTimer?.cancel();
+    _offsetRatioNotifier.dispose();
     _mainCameraController.setState = null;
     _mainCameraController.closeCamera();
     _sharedLinkSub?.cancel();
@@ -500,14 +507,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     }
 
     if (notification.depth == 0) {
-      setState(() {
-        _offsetFromOne = 1.0 - (_homeViewPageController.page ?? 0);
-        _offsetRatio = _offsetFromOne.abs();
-        final pageIndex = _homeViewPageController.page?.round();
-        if (pageIndex != null && pageIndex != _activePageIdx) {
-          _activePageIdx = pageIndex;
-        }
-      });
+      _applyPageOffset(_homeViewPageController.page ?? 0);
       if (notification is ScrollEndNotification) {
         _scheduleReleaseNotesIfNeeded();
       }
@@ -537,18 +537,56 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     return false;
   }
 
+  /// What the pages show apart from the fades. Only a change here rebuilds
+  /// this view during a swipe.
+  Object get _layoutState => (
+    _activePageIdx,
+    _offsetFromOne > 0,
+    _offsetFromOne == 1,
+    _offsetRatio == 0,
+    _offsetRatio > 0.25,
+    (_offsetRatio * 4) % 1 == 0,
+  );
+
+  void _applyPageOffset(double page) {
+    final before = _layoutState;
+    _offsetFromOne = 1.0 - page;
+    _offsetRatio = _offsetFromOne.abs();
+    _offsetRatioNotifier.value = _offsetRatio;
+    _mainCameraController.qrScanningPaused = _offsetRatio != 0;
+    _activePageIdx = page.round();
+    if (_layoutState != before) setState(() {});
+  }
+
+  ChatListView _chatList() {
+    final active = _offsetFromOne > 0;
+    final settled = _offsetFromOne == 1;
+    final current = _chatListView;
+    if (current != null &&
+        current.active == active &&
+        current.settled == settled) {
+      return current;
+    }
+    return _chatListView = ChatListView(active: active, settled: settled);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final chatList = _chatList();
     return Scaffold(
       body: Stack(
         children: <Widget>[
           MainCameraPreview(mainCameraController: _mainCameraController),
+          // Opacity only updates its layer while the swipe moves; a changing
+          // color would repaint this whole stack on every frame instead.
           Positioned.fill(
-            child: Opacity(
-              opacity: _offsetRatio,
-              child: Container(
-                color: context.color.surface,
+            child: ValueListenableBuilder<double>(
+              valueListenable: _offsetRatioNotifier,
+              builder: (context, ratio, surface) => Opacity(
+                opacity: ratio.clamp(0.0, 1.0),
+                child: surface,
               ),
+              child: ColoredBox(color: context.color.surface),
             ),
           ),
           NotificationListener<ScrollNotification>(
@@ -564,7 +602,11 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 slivers: [
                   SliverFillViewport(
                     delegate: SliverChildListDelegate([
-                      ChatListView(active: _offsetFromOne > 0),
+                      // The emoji animations pause while the list slides.
+                      TickerMode(
+                        enabled: chatList.settled,
+                        child: chatList,
+                      ),
                       Container(),
                       const MemoriesView(),
                     ]),
@@ -590,8 +632,10 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             bottom: (_offsetRatio > 0.25)
                 ? MediaQuery.sizeOf(context).height * 2
                 : 0,
-            child: Opacity(
-              opacity: 1 - (_offsetRatio * 4) % 1,
+            child: ValueListenableBuilder<double>(
+              valueListenable: _offsetRatioNotifier,
+              builder: (context, ratio, controls) =>
+                  Opacity(opacity: 1 - (ratio * 4) % 1, child: controls),
               child: CameraPreviewControllerView(
                 mainController: _mainCameraController,
                 isVisible:

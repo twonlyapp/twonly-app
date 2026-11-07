@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/core/database/app/stickers/table.dart';
+import 'package:twonly/core/services/stickers.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
 import 'package:twonly/src/services/stickers/sticker_cache.dart';
 import 'package:twonly/src/utils/database_values.dart';
@@ -31,20 +32,31 @@ class _StickerPickerState extends State<StickerPicker> {
 
   Future<void> _createSticker() async {
     if (_creating) return;
+    final draft = await _prepareSticker();
+    if (!mounted || draft == null) return;
+    final sticker = await showStickerDraftPreview(
+      context,
+      draft,
+      onSave: StickerService.store,
+    );
+    if (!mounted || sticker == null) return;
+    if (widget.selectCreatedSticker) widget.onStickerSelected(sticker);
+  }
+
+  Future<StickerOutput?> _prepareSticker() async {
     setState(() => _creating = true);
     try {
       final imagePath = await Navigator.of(context).push<String>(
         MemoriesPickerView.route(title: context.lang.createSticker),
       );
-      if (!mounted || imagePath == null) return;
-      final sticker = await StickerService.createFromPath(imagePath);
-      if (!mounted) return;
-      if (widget.selectCreatedSticker) widget.onStickerSelected(sticker);
+      if (!mounted || imagePath == null) return null;
+      return await StickerService.prepareFromPath(imagePath);
     } on Object {
-      if (!mounted) return;
+      if (!mounted) return null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.lang.stickerCreateFailed)),
       );
+      return null;
     } finally {
       if (mounted) setState(() => _creating = false);
     }

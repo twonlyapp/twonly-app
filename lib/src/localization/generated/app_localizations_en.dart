@@ -1557,6 +1557,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'The photo avatar could not be created.';
 
   @override
+  String get customAvatarSave => 'Use as avatar';
+
+  @override
   String get inProcess => 'In process';
 
   @override
@@ -3278,6 +3281,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stickerRotateFailed => 'The sticker could not be rotated.';
+
+  @override
+  String get stickerDraftRotate => 'Rotate';
+
+  @override
+  String get stickerDraftErase => 'Erase';
+
+  @override
+  String get stickerEraseTitle => 'Erase parts';
+
+  @override
+  String get stickerEraseHint => 'Paint over everything you want to remove.';
+
+  @override
+  String get stickerEraseBrushSize => 'Brush size';
+
+  @override
+  String get stickerEraseApply => 'Apply';
+
+  @override
+  String get stickerEraseFailed =>
+      'The changes could not be applied. Make sure part of the image is left.';
 
   @override
   String get releaseNotesTitle => 'What\'s new';

@@ -69,6 +69,17 @@ async fn card_queries_select_exact_version_and_update_serial_is_scoped() {
 
     assert!(queries::app(&mut tx, "game", 3).await.unwrap().is_none());
 
+    let mut apps = queries::apps(&mut tx).await.unwrap();
+
+    apps.sort_by_key(|app| app.version);
+
+    assert_eq!(
+        apps.iter()
+            .map(|app| (app.version, app.icon.clone()))
+            .collect::<Vec<_>>(),
+        vec![(1, Some(vec![1, 255])), (2, None)]
+    );
+
     assert_eq!(
         queries::instance(&mut tx, "one")
             .await

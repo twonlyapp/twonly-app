@@ -55,6 +55,42 @@ class _StickerApi extends NativeTestApi {
     );
   }
 
+  bool failEdit = false;
+  final editedInputs = <Uint8List>[];
+
+  static StickerOutput _output(Uint8List bytes) {
+    final decoded = img.decodeImage(bytes)!;
+    final digest = sha256.convert(bytes);
+    return StickerOutput(
+      webp: bytes,
+      sha256: Uint8List.fromList(digest.bytes),
+      contentHash: digest.toString(),
+      width: decoded.width,
+      height: decoded.height,
+    );
+  }
+
+  // Stands in for foreground extraction: an opaque 30x20 cutout, wide enough
+  // to paint on and to see a turn.
+  @override
+  Future<StickerOutput> crateBridgeApiRustApiCreateSticker({
+    required String imagePath,
+  }) async {
+    final cutout = img.Image(width: 30, height: 20, numChannels: 4)
+      ..clear(img.ColorRgba8(255, 0, 0, 255));
+    return _output(img.encodePng(cutout));
+  }
+
+  // Rust trims and re-encodes; here the rendered edit is returned unchanged.
+  @override
+  Future<StickerOutput> crateBridgeApiRustApiEncodeEditedSticker({
+    required List<int> png,
+  }) async {
+    editedInputs.add(Uint8List.fromList(png));
+    if (failEdit) throw StateError('nothing left');
+    return _output(Uint8List.fromList(png));
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -97,7 +133,9 @@ void main() {
   setUp(() async {
     api
       ..failRotation = false
-      ..rotationInputs.clear();
+      ..rotationInputs.clear()
+      ..failEdit = false
+      ..editedInputs.clear();
     SharedPreferences.setMockInitialValues({});
     await locator.reset();
     database = await TestDatabase.create();
@@ -222,6 +260,192 @@ void main() {
       () => Future<void>.delayed(const Duration(milliseconds: 100)),
     );
     await tester.pump();
+  });
+
+  Future<void> openDraft(WidgetTester tester) async {
+    await tester.tap(find.byIcon(Icons.add_photo_alternate_outlined));
+    await _settle(tester);
+    Navigator.of(tester.element(find.byType(MemoriesPickerView))).pop(
+      File('assets/images/default_avatar.png').absolute.path,
+    );
+    await _settle(tester);
+  }
+
+  testWidgets('new sticker is previewed and rotated before it is saved', (
+    tester,
+  ) async {
+    LocalSticker? selected;
+    await tester.pumpWidget(
+      _app(
+        SizedBox(
+          height: 300,
+          child: StickerPicker(
+            onEmojiPressed: () {},
+            selectCreatedSticker: true,
+            onStickerSelected: (sticker) => selected = sticker,
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+    await openDraft(tester);
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(
+      await tester.runAsync(() => watchCachedStickers().first),
+      isEmpty,
+    );
+
+    await tester.tap(find.byKey(const Key('stickerDraftRotate')));
+    await _settle(tester);
+    expect(api.rotationInputs, hasLength(1));
+    expect(
+      await tester.runAsync(() => watchCachedStickers().first),
+      isEmpty,
+    );
+
+    await tester.tap(find.byKey(const Key('stickerDraftSave')));
+    await _settle(tester);
+    expect(find.byType(Dialog), findsNothing);
+    final stored = (await tester.runAsync(
+      () => watchCachedStickers().first,
+    ))!.single;
+    expect((stored.width, stored.height), (20, 30));
+    expect(selected?.contentHash, stored.contentHash);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
+  Future<void> pumpPicker(WidgetTester tester) async {
+    await tester.pumpWidget(
+      _app(
+        SizedBox(
+          height: 300,
+          child: StickerPicker(
+            onEmojiPressed: () {},
+            onStickerSelected: (_) {},
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+  }
+
+  Uint8List draftPreview(WidgetTester tester) {
+    final preview = tester.widget<Image>(
+      find.descendant(of: find.byType(Dialog), matching: find.byType(Image)),
+    );
+    return (preview.image as MemoryImage).bytes;
+  }
+
+  testWidgets('erasing clears only the painted part before saving', (
+    tester,
+  ) async {
+    await pumpPicker(tester);
+    await openDraft(tester);
+    await tester.tap(find.byKey(const Key('stickerDraftErase')));
+    await _settle(tester);
+    final canvas = find.byKey(const Key('stickerEraserCanvas'));
+    expect(canvas, findsOneWidget);
+
+    // Paint through the middle of pixel row 2 across the left part, so the
+    // antialiased brush edge stays outside the pixels checked below.
+    final rect = tester.getRect(canvas);
+    final row = rect.height * 2.5 / 20;
+    final stroke = await tester.startGesture(rect.topLeft + Offset(4, row));
+    await stroke.moveTo(rect.topLeft + Offset(rect.width * 0.4, row));
+    await stroke.up();
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('stickerEraserUndo')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('stickerEraserRedo')));
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('stickerEraserApply')));
+    await pumpNative(tester, until: () => canvas.evaluate().isEmpty);
+    expect(canvas, findsNothing);
+    final edited = img.decodePng(api.editedInputs.single)!;
+    expect((edited.width, edited.height), (30, 20));
+    expect(edited.getPixel(5, 2).a, 0);
+    expect(edited.getPixel(29, 19).a, 255);
+    expect(draftPreview(tester), api.editedInputs.single);
+    expect(
+      await tester.runAsync(() => watchCachedStickers().first),
+      isEmpty,
+    );
+
+    await tester.tap(find.byKey(const Key('stickerDraftSave')));
+    await _settle(tester);
+    final stored = (await tester.runAsync(
+      () => watchCachedStickers().first,
+    ))!.single;
+    expect(stored.webp, api.editedInputs.single);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('a failed or abandoned erase keeps the draft', (tester) async {
+    await pumpPicker(tester);
+    await openDraft(tester);
+    final original = draftPreview(tester);
+    await tester.tap(find.byKey(const Key('stickerDraftErase')));
+    await _settle(tester);
+    final canvas = find.byKey(const Key('stickerEraserCanvas'));
+
+    // Applying without a stroke leaves without asking Rust.
+    await tester.tap(find.byKey(const Key('stickerEraserApply')));
+    await _settle(tester);
+    expect(canvas, findsNothing);
+    expect(api.editedInputs, isEmpty);
+
+    api.failEdit = true;
+    await tester.tap(find.byKey(const Key('stickerDraftErase')));
+    await _settle(tester);
+    await tester.tapAt(tester.getCenter(canvas));
+    await tester.tap(find.byKey(const Key('stickerEraserApply')));
+    await pumpNative(tester, until: () => api.editedInputs.isNotEmpty);
+    await _settle(tester);
+    expect(canvas, findsOneWidget);
+    expect(
+      find.textContaining('The changes could not be applied.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('stickerEraserCancel')));
+    await _settle(tester);
+    expect(canvas, findsNothing);
+    expect(draftPreview(tester), original);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('cancelling the new sticker preview stores nothing', (
+    tester,
+  ) async {
+    LocalSticker? selected;
+    await tester.pumpWidget(
+      _app(
+        SizedBox(
+          height: 300,
+          child: StickerPicker(
+            onEmojiPressed: () {},
+            selectCreatedSticker: true,
+            onStickerSelected: (sticker) => selected = sticker,
+          ),
+        ),
+      ),
+    );
+    await _settle(tester);
+    await openDraft(tester);
+    await tester.tap(find.text('Cancel'));
+    await _settle(tester);
+    expect(find.byType(Dialog), findsNothing);
+    expect(selected, isNull);
+    expect(
+      await tester.runAsync(() => watchCachedStickers().first),
+      isEmpty,
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
   });
 
   testWidgets('moves add action to the header once a sticker exists', (

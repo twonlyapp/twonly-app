@@ -5,6 +5,7 @@ import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:twonly/core/bridge/database/stickers.dart' as rust_stickers;
 import 'package:twonly/core/database/app/stickers/table.dart';
+import 'package:twonly/core/services/stickers.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/media_enums.dart';
@@ -65,8 +66,12 @@ class StickerService {
     ).writeToBuffer();
   }
 
-  static Future<LocalSticker> createFromPath(String imagePath) async {
-    final output = await RustApi.createSticker(imagePath: imagePath);
+  /// Cuts the subject out of a local image without storing anything, so the
+  /// user can review and rotate the result first.
+  static Future<StickerOutput> prepareFromPath(String imagePath) =>
+      RustApi.createSticker(imagePath: imagePath);
+
+  static Future<LocalSticker> store(StickerOutput output) async {
     await rust_stickers.saveSticker(
       webp: output.webp,
       width: output.width,
@@ -83,6 +88,9 @@ class StickerService {
     }
     return sticker;
   }
+
+  static Future<LocalSticker> createFromPath(String imagePath) async =>
+      store(await prepareFromPath(imagePath));
 
   /// Creates a sticker from encoded image bytes without making the caller
   /// manage the temporary source file required by native foreground extraction.
@@ -128,12 +136,24 @@ class StickerService {
     return source?.path;
   }
 
-  static Future<LocalSticker> createFromMedia(MediaFileService media) async {
+  static Future<StickerOutput> prepareFromMedia(MediaFileService media) async {
     final path = await resolveMediaPath(media);
     if (path == null) {
       throw StateError('sticker source media is unavailable');
     }
-    return createFromPath(path);
+    return prepareFromPath(path);
+  }
+
+  /// Turns a stored sticker back into a draft, for flows such as the photo
+  /// avatar that only borrow its cutout.
+  static StickerOutput draftFromLocal(LocalSticker sticker) {
+    return StickerOutput(
+      webp: sticker.webp,
+      sha256: Uint8List.fromList(hex.decode(sticker.contentHash)),
+      contentHash: sticker.contentHash,
+      width: sticker.width,
+      height: sticker.height,
+    );
   }
 
   static Future<bool> saveReceived(StickerData sticker) {

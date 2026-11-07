@@ -104,3 +104,67 @@ async fn latest_reactions_filter_hidden_stories_and_normalize_contacts() {
 
     assert!(queries::list(&mut tx, &[]).await.unwrap().is_empty());
 }
+
+#[tokio::test]
+async fn latest_reactions_skip_newer_messages_without_reactions_per_chat() {
+    let directory = tempfile::tempdir().unwrap();
+
+    let database = AppDatabase::new(
+        directory.path().join("app.sqlite").to_str().unwrap(),
+        None,
+        false,
+    )
+    .await
+    .unwrap();
+
+    database.run_migrations().await.unwrap();
+
+    let mut tx = database.pool.begin().await.unwrap();
+
+    sqlx::query(
+        "INSERT INTO groups(group_id,group_name) VALUES ('a','a'),('b','b'),('quiet','quiet')",
+    )
+    .execute(&mut *tx)
+    .await
+    .unwrap();
+
+    sqlx::query(
+        r#"
+        INSERT INTO messages(message_id,group_id,type,created_at)
+        VALUES ('a1','a','text',10),
+            ('a2','a','text',20),
+            ('a3','a','text',30),
+            ('b1','b','text',15),
+            ('q1','quiet','text',40)
+        "#,
+    )
+    .execute(&mut *tx)
+    .await
+    .unwrap();
+
+    // a3 is the newest message in a but has no reaction; a reaction on an
+    // older message that arrived later must not win over the one on a2.
+    sqlx::query(
+        r#"
+        INSERT INTO reactions(message_id,emoji,created_at)
+        VALUES ('a1','😂',50),
+            ('a2','🔥',25),
+            ('b1','👍',16)
+        "#,
+    )
+    .execute(&mut *tx)
+    .await
+    .unwrap();
+
+    let latest: Vec<(String, String)> = queries::latest_by_group(&mut tx)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|row| (row.group_id, row.reaction.emoji))
+        .collect();
+
+    assert_eq!(
+        latest,
+        vec![("a".into(), "🔥".into()), ("b".into(), "👍".into())]
+    );
+}

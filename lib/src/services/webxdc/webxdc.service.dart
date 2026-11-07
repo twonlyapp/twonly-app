@@ -34,6 +34,9 @@ class WebxdcService {
 
   static String _appKey(String appId, int version) => '$appId:$version';
 
+  /// The read behind [preloadApps] while it runs.
+  static Future<List<WebxdcCardApp>>? _appsPreload;
+
   /// Whether the cached catalog offered anything when it was last read, keyed
   /// by `isDirectChat`. Which apps a chat is offered depends only on whether
   /// it is a direct chat, so one answer covers every chat of that kind.
@@ -55,6 +58,8 @@ class WebxdcService {
     try {
       await rust_webxdc.refreshCatalog();
       _catalogRefreshedAt = DateTime.now();
+      // A refresh can add a version or rename one the cache already holds.
+      unawaited(preloadApps());
       return true;
     } catch (error) {
       Log.warn('refreshing the webxdc catalog failed: $error');
@@ -239,6 +244,47 @@ class WebxdcService {
     );
     if (app != null) _appCache[_appKey(appId, version)] = app;
     return app;
+  }
+
+  /// Reads every store entry this device holds into the card cache, icons
+  /// included. There are only a handful, a few KB each.
+  ///
+  /// Without it, the first card of each app after a start waited for a read of
+  /// its own, queued behind everything else the opening chat asks for, before
+  /// it could show its name and icon.
+  static Future<List<WebxdcCardApp>> preloadApps() =>
+      _appsPreload ??= _preloadApps().whenComplete(() => _appsPreload = null);
+
+  static Future<List<WebxdcCardApp>> _preloadApps() async {
+    try {
+      final apps = await rust_webxdc.webxdcCardApps(
+        transaction: currentDatabaseSession(),
+      );
+      for (final app in apps) {
+        _appCache[_appKey(app.appId, app.version)] = app;
+      }
+      return apps;
+    } catch (error) {
+      Log.warn('preloading webxdc apps failed: $error');
+      return const [];
+    }
+  }
+
+  /// The store entry a card shows: from memory once [preloadApps] ran, and
+  /// only read on its own for a version the cache has not seen yet.
+  static Future<WebxdcCardApp?> cardApp(String appId, int version) async {
+    final key = _appKey(appId, version);
+    final cached = _appCache[key];
+    if (cached != null) return cached;
+    // A card built during startup waits for the read already under way rather
+    // than queueing one of its own behind it.
+    final pending = _appsPreload;
+    if (pending != null) {
+      await pending;
+      final preloaded = _appCache[key];
+      if (preloaded != null) return preloaded;
+    }
+    return appNamed(appId, version);
   }
 
   /// What to call an app on the card in a chat, in the language the reader

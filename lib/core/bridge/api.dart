@@ -449,6 +449,11 @@ class RustApi {
   static Future<void> downloadPendingMedia() =>
       RustLib.instance.api.crateBridgeApiRustApiDownloadPendingMedia();
 
+  /// Re-encodes a sticker after the user erased parts of it. Flutter sends
+  /// the edit as PNG at sticker size.
+  static Future<StickerOutput> encodeEditedSticker({required List<int> png}) =>
+      RustLib.instance.api.crateBridgeApiRustApiEncodeEditedSticker(png: png);
+
   /// Path to a contact's avatar PNG, rendered from the stored SVG if it is
   /// missing. Returns `None` when the contact has no avatar at all.
   static Future<String?> ensureAvatarPng({required PlatformInt64 contactId}) =>

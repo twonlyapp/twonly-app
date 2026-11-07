@@ -102,6 +102,10 @@ class MainCameraController {
   }
 
   bool isVideoRecording = false;
+
+  /// Set by the home view while its pages slide, so no frame is decoded for
+  /// QR codes during a swipe. Codes are only shown on the settled camera page.
+  bool qrScanningPaused = false;
   DateTime? timeSharedLinkWasSetWithQr;
 
   PreviewLink? sharedLinkForPreview;
@@ -479,7 +483,7 @@ class MainCameraController {
   };
 
   void _processCameraImage(CameraImage image) {
-    if (isVideoRecording || isSharePreviewIsShown) {
+    if (isVideoRecording || isSharePreviewIsShown || qrScanningPaused) {
       return;
     }
     if (cameraController?.description.lensDirection ==

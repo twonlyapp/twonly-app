@@ -2,6 +2,7 @@
 
 ## 0.7.1
 
+- New: Preview stickers and photo avatars before saving, with rotate and erase
 - Improve: Fullscreen map for live locations
 - Fix: App sometimes failed to start
 - Fix: Multiple smaller issues

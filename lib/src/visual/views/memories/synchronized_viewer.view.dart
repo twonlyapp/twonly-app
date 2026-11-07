@@ -6,6 +6,7 @@ import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart'
     as db_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/services/stickers.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/media_enums.dart';
@@ -20,6 +21,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/components/sticker_preview.dialog.dart';
 import 'package:twonly/src/visual/helpers/precache_file_image.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
@@ -113,20 +115,26 @@ class _SynchronizedImageViewerScreenState
     if (_isCreatingSticker) return;
     final media = widget.galleryItems[_currentIndex].mediaService;
     setState(() => _isCreatingSticker = true);
+    StickerOutput? draft;
     try {
-      await StickerService.createFromMedia(media);
-      if (!mounted) return;
-      showSnackbar(
-        context,
-        context.lang.stickerAdded,
-        level: SnackbarLevel.success,
-      );
+      draft = await StickerService.prepareFromMedia(media);
     } on Object {
-      if (!mounted) return;
-      showSnackbar(context, context.lang.stickerCreateFailed);
+      if (mounted) showSnackbar(context, context.lang.stickerCreateFailed);
     } finally {
       if (mounted) setState(() => _isCreatingSticker = false);
     }
+    if (!mounted || draft == null) return;
+    final sticker = await showStickerDraftPreview(
+      context,
+      draft,
+      onSave: StickerService.store,
+    );
+    if (!mounted || sticker == null) return;
+    showSnackbar(
+      context,
+      context.lang.stickerAdded,
+      level: SnackbarLevel.success,
+    );
   }
 
   Future<void> _toggleFavorite(String mediaId) async {

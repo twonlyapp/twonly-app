@@ -858,6 +858,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<WebxdcCardApp> dco_decode_list_webxdc_card_app(dynamic raw);
+
+  @protected
   List<WebxdcOneTimeInstance> dco_decode_list_webxdc_one_time_instance(
     dynamic raw,
   );
@@ -2231,6 +2234,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<UserDiscoveryUserRelation> sse_decode_list_user_discovery_user_relation(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<WebxdcCardApp> sse_decode_list_webxdc_card_app(
     SseDeserializer deserializer,
   );
 
@@ -3923,6 +3931,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_user_discovery_user_relation(
     List<UserDiscoveryUserRelation> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_webxdc_card_app(
+    List<WebxdcCardApp> self,
     SseSerializer serializer,
   );
 

@@ -1611,6 +1611,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customAvatarCreateFailed => 'تعذر إنشاء الصورة الرمزية.';
 
   @override
+  String get customAvatarSave => 'استخدامها كصورة رمزية';
+
+  @override
   String get inProcess => 'قيد المعالجة';
 
   @override
@@ -3360,6 +3363,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get stickerRotateFailed => 'تعذّر تدوير الملصق.';
+
+  @override
+  String get stickerDraftRotate => 'تدوير';
+
+  @override
+  String get stickerDraftErase => 'مسح';
+
+  @override
+  String get stickerEraseTitle => 'إزالة أجزاء';
+
+  @override
+  String get stickerEraseHint => 'مرّر إصبعك فوق كل ما تريد إزالته.';
+
+  @override
+  String get stickerEraseBrushSize => 'حجم الفرشاة';
+
+  @override
+  String get stickerEraseApply => 'تطبيق';
+
+  @override
+  String get stickerEraseFailed =>
+      'تعذر تطبيق التغييرات. تأكد من بقاء جزء من الصورة.';
 
   @override
   String get releaseNotesTitle => 'ما الجديد؟';

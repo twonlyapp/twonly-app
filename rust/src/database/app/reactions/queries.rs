@@ -63,27 +63,24 @@ pub async fn latest_by_group(connection: &mut SqliteConnection) -> Result<Vec<Gr
     crate::performance::rows("sqlite.reactions.latest_by_group", async {
         let rows = sqlx::query!(
             r#"
-            SELECT group_id AS "group_id!",
-                message_id AS "message_id!",
-                emoji AS "emoji!",
-                sender_id,
-                created_at AS "created_at!"
-            FROM (
-                SELECT m.group_id,
-                    r.message_id,
-                    r.emoji,
-                    r.sender_id,
-                    r.created_at,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY m.group_id
-                        ORDER BY m.created_at DESC, r.created_at DESC, r.rowid DESC
-                    ) AS rank
-                FROM reactions r
-                JOIN messages m ON m.message_id = r.message_id
-                WHERE m.is_story = 0 OR m.media_stored = 1
+            SELECT g.group_id AS "group_id!",
+                r.message_id AS "message_id!",
+                r.emoji AS "emoji!",
+                r.sender_id,
+                r.created_at AS "created_at!"
+            FROM groups g
+            -- Walks each chat from its newest message until one has a
+            -- reaction, instead of ranking every reaction of every chat.
+            JOIN reactions r ON r.rowid = (
+                SELECT candidate.rowid
+                FROM messages m
+                JOIN reactions candidate ON candidate.message_id = m.message_id
+                WHERE m.group_id = g.group_id
+                    AND (m.is_story = 0 OR m.media_stored = 1)
+                ORDER BY m.created_at DESC, candidate.created_at DESC, candidate.rowid DESC
+                LIMIT 1
             )
-            WHERE rank = 1
-            ORDER BY group_id
+            ORDER BY g.group_id
         "#,
         )
         .fetch_all(connection)

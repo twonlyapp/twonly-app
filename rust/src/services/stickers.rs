@@ -31,6 +31,9 @@ pub(crate) const STICKER_VERSION: u32 = 1;
 
 const TRANSPARENT_ALPHA: u8 = 10;
 
+/// A 300 px RGBA PNG stays far below this even without compression.
+const MAX_EDITED_BYTES: usize = 1024 * 1024;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 
 pub struct StickerOutput {
@@ -73,11 +76,49 @@ fn encode_foreground(composited: RgbaImage) -> Result<StickerOutput> {
         .thumbnail(WORKING_EDGE, WORKING_EDGE)
         .to_rgba8();
 
-    let bounds = visible_bounds(&composited)
+    let padded = trim_and_pad(&composited)?;
+
+    encode_sticker(DynamicImage::ImageRgba8(padded).thumbnail(MAX_STICKER_EDGE, MAX_STICKER_EDGE))
+}
+
+/// Re-encodes a sticker the user edited by hand, such as one with parts
+/// erased. Flutter renders the edit as PNG at sticker size; trimming runs
+/// again so a removed person leaves no empty space behind.
+pub(crate) fn from_edited(png: &[u8]) -> Result<StickerOutput> {
+    if png.is_empty() || png.len() > MAX_EDITED_BYTES {
+        return Err(sticker_error("edited sticker has an invalid size"));
+    }
+
+    if image::guess_format(png).ok() != Some(image::ImageFormat::Png) {
+        return Err(sticker_error("edited sticker is not PNG"));
+    }
+
+    let decoder = image::codecs::png::PngDecoder::new(Cursor::new(png))
+        .map_err(|error| sticker_error(format!("invalid edited sticker: {error}")))?;
+
+    let (width, height) = decoder.dimensions();
+
+    if width == 0 || height == 0 || width > MAX_STICKER_EDGE || height > MAX_STICKER_EDGE {
+        return Err(sticker_error(
+            "edited sticker dimensions are outside the allowed bounds",
+        ));
+    }
+
+    let edited = DynamicImage::from_decoder(decoder)
+        .map_err(|error| sticker_error(format!("invalid edited sticker: {error}")))?
+        .to_rgba8();
+
+    // Unlike a fresh cutout, what remains must not be enlarged to fill the
+    // sticker: it is already at its final resolution.
+    encode_sticker(DynamicImage::ImageRgba8(trim_and_pad(&edited)?))
+}
+
+fn trim_and_pad(composited: &RgbaImage) -> Result<RgbaImage> {
+    let bounds = visible_bounds(composited)
         .ok_or_else(|| sticker_error("no foreground was found in this image"))?;
 
     let cropped = imageops::crop_imm(
-        &composited,
+        composited,
         bounds.0,
         bounds.1,
         bounds.2 - bounds.0 + 1,
@@ -101,9 +142,10 @@ fn encode_foreground(composited: RgbaImage) -> Result<StickerOutput> {
         i64::from(padding),
     );
 
-    let mut sticker =
-        DynamicImage::ImageRgba8(padded).thumbnail(MAX_STICKER_EDGE, MAX_STICKER_EDGE);
+    Ok(padded)
+}
 
+fn encode_sticker(mut sticker: DynamicImage) -> Result<StickerOutput> {
     let mut encoded = Vec::new();
 
     'encode: for edge in [300_u32, 280, 256, 224, 192] {
@@ -323,6 +365,57 @@ fn validate_sticker(sticker: &proto::StickerData) -> Result<()> {
 mod tests {
 
     use super::*;
+
+    fn png(image: &RgbaImage) -> Vec<u8> {
+        let mut bytes = Vec::new();
+
+        DynamicImage::ImageRgba8(image.clone())
+            .write_to(&mut Cursor::new(&mut bytes), image::ImageFormat::Png)
+            .unwrap();
+
+        bytes
+    }
+
+    #[test]
+
+    fn edited_sticker_is_trimmed_to_what_remains_without_enlarging_it() {
+        // One subject is left on the left after the right one was erased.
+        let edited = RgbaImage::from_fn(300, 200, |x, y| {
+            if (10..100).contains(&x) && (20..180).contains(&y) {
+                Rgba([20, 120, 240, 255])
+            } else {
+                Rgba([0, 0, 0, 0])
+            }
+        });
+
+        let output = from_edited(&png(&edited)).unwrap();
+
+        assert!(output.width > 90 && output.width < 110);
+
+        assert!(output.height > 160 && output.height < 180);
+
+        validate_sticker(&output.as_proto()).unwrap();
+    }
+
+    #[test]
+
+    fn edited_sticker_rejects_empty_foreign_and_oversized_input() {
+        let erased = RgbaImage::from_pixel(120, 80, Rgba([0, 0, 0, 0]));
+
+        assert!(from_edited(&png(&erased)).is_err());
+
+        let visible = RgbaImage::from_pixel(120, 80, Rgba([200, 30, 30, 255]));
+
+        let webp = media_codec::encode_webp(&DynamicImage::ImageRgba8(visible), 90.0).unwrap();
+
+        assert!(from_edited(&webp).is_err());
+
+        let oversized = RgbaImage::from_pixel(MAX_STICKER_EDGE + 1, 10, Rgba([200, 30, 30, 255]));
+
+        assert!(from_edited(&png(&oversized)).is_err());
+
+        assert!(from_edited(&[]).is_err());
+    }
 
     #[test]
 

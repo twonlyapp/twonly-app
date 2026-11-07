@@ -199,6 +199,14 @@ impl RustApi {
             })?
     }
 
+    /// Re-encodes a sticker after the user erased parts of it. Flutter sends
+    /// the edit as PNG at sticker size.
+    pub async fn encode_edited_sticker(png: Vec<u8>) -> Result<StickerOutput> {
+        crate::database::lifecycle::spawn_blocking(move || stickers::from_edited(&png))
+            .await
+            .map_err(|error| TwonlyError::Generic(format!("sticker edit task failed: {error}")))?
+    }
+
     pub async fn rotate_sticker(webp: Vec<u8>) -> Result<StickerOutput> {
         crate::database::lifecycle::spawn_blocking(move || stickers::rotate(&webp))
             .await

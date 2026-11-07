@@ -56,8 +56,11 @@ import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expi
 import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
 
 class ChatListView extends StatefulWidget {
-  const ChatListView({this.active = true, super.key});
+  const ChatListView({this.active = true, this.settled = true, super.key});
   final bool active;
+
+  /// Whether the home view rests on this page rather than sliding to it.
+  final bool settled;
   @override
   State<ChatListView> createState() => _ChatListViewState();
 }
@@ -68,6 +71,11 @@ class _ChatListViewState extends State<ChatListView>
   PerformanceTrace? _loadTrace;
   Timer? _loadTimeout;
   final Set<String> _initialSnapshots = {};
+
+  /// While the watches (re)start, results only collect until the main ones
+  /// are in, so one rebuild shows them all instead of one rebuild each.
+  bool _collecting = false;
+  Timer? _collectTimeout;
   bool _appVisible = true;
   final _flameRefresh = StreamController<void>.broadcast();
   StreamSubscription<Map<String, FlameState>>? _flamesSub;
@@ -143,7 +151,10 @@ class _ChatListViewState extends State<ChatListView>
   @override
   void didUpdateWidget(ChatListView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.active != oldWidget.active) _syncWatchActivity();
+    if (widget.active != oldWidget.active ||
+        widget.settled != oldWidget.settled) {
+      _syncWatchActivity();
+    }
   }
 
   @override
@@ -162,15 +173,24 @@ class _ChatListViewState extends State<ChatListView>
   }
 
   void _syncWatchActivity() {
-    if (widget.active && _appVisible) {
-      if (!_watching) _startWatches();
-    } else {
+    if (!widget.active || !_appVisible) {
       _stopWatches();
+    } else if (!_watching && (widget.settled || _loading)) {
+      // Restarting while the list slides in would rerun every summary query
+      // and rebuild the list during the swipe, so the last state stays on
+      // screen until it settles. A list that never loaded starts right away
+      // so it does not slide in empty.
+      _startWatches();
     }
   }
 
   void _startWatches() {
     _initialSnapshots.clear();
+    _collecting = true;
+    _collectTimeout = Timer(
+      const Duration(milliseconds: 400),
+      _finishCollecting,
+    );
     _loadTrace = PerformanceTracking.start(PerformanceOperation.chatListLoad);
     if (_loadTrace != null) {
       _loadTimeout = Timer(const Duration(seconds: 15), () {
@@ -183,15 +203,54 @@ class _ChatListViewState extends State<ChatListView>
   }
 
   void _initialSnapshot(String name) {
-    if (_loadTrace == null || !_watching) return;
-    _initialSnapshots.add(name);
+    if (!_watching || !_initialSnapshots.add(name)) return;
     if (_initialSnapshots.length != 5) return;
+    _finishCollecting();
     final trace = _loadTrace;
+    if (trace == null) return;
     _loadTrace = null;
     _loadTimeout?.cancel();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(trace?.finish());
+      unawaited(trace.finish());
     });
+  }
+
+  void _finishCollecting() {
+    _collectTimeout?.cancel();
+    _collectTimeout = null;
+    if (!_collecting) return;
+    if (mounted) {
+      setState(() => _collecting = false);
+    } else {
+      _collecting = false;
+    }
+  }
+
+  /// Applies a watch result, rebuilding unless results still collect.
+  void _apply(VoidCallback change) {
+    if (_collecting) {
+      change();
+    } else {
+      setState(change);
+    }
+  }
+
+  /// Keeps the previous list of every key whose contents are equal, so rows
+  /// see by identity what changed. Null when nothing changed at all.
+  Map<K, List<V>>? _reuseUnchanged<K, V>(
+    Map<K, List<V>> previous,
+    Map<K, List<V>> next,
+  ) {
+    var changed = previous.length != next.length;
+    for (final entry in next.entries) {
+      final old = previous[entry.key];
+      if (old != null && listEquals(old, entry.value)) {
+        next[entry.key] = old;
+      } else {
+        changed = true;
+      }
+    }
+    return changed ? next : null;
   }
 
   void _subscribeWatches() {
@@ -205,7 +264,8 @@ class _ChatListViewState extends State<ChatListView>
           _flameRefresh.stream,
         ).listen((states) {
           if (!mounted || !_watching) return;
-          setState(() => _flamesByGroup = states);
+          if (mapEquals(_flamesByGroup, states)) return;
+          _apply(() => _flamesByGroup = states);
         });
     final stream = watchRustDatabase(
       (control) => rust_groups.watchGroups(
@@ -218,7 +278,7 @@ class _ChatListViewState extends State<ChatListView>
     _contactsSub = stream.listen((groups) {
       if (!mounted || !_watching) return;
       _initialSnapshot('groups');
-      setState(() {
+      _apply(() {
         _groupsNotPinned = groups
             .where((x) => !x.pinned && !x.archived)
             .toList();
@@ -326,14 +386,11 @@ class _ChatListViewState extends State<ChatListView>
           for (final row in rows) {
             contactsByGroup.putIfAbsent(row.groupId, () => []).add(row);
           }
-          for (final entry in contactsByGroup.entries) {
-            final previous = _contactsByGroup[entry.key];
-            if (listEquals(previous, entry.value)) {
-              contactsByGroup[entry.key] = previous!;
-            }
-          }
+          // Typing and chat-open pings re-emit this without a visible change.
+          final next = _reuseUnchanged(_contactsByGroup, contactsByGroup);
           _initialSnapshot('contacts');
-          setState(() => _contactsByGroup = contactsByGroup);
+          if (next == null) return;
+          _apply(() => _contactsByGroup = next);
         });
     _unopenedMessagesSub =
         watchRustDatabase(
@@ -353,7 +410,7 @@ class _ChatListViewState extends State<ChatListView>
             byGroup.putIfAbsent(message.groupId, () => []).add(message);
           }
           _initialSnapshot('unopened');
-          setState(() => _unopenedMessagesByGroup = byGroup);
+          _apply(() => _unopenedMessagesByGroup = byGroup);
         });
     _reactionsSub =
         watchRustDatabase(
@@ -368,10 +425,9 @@ class _ChatListViewState extends State<ChatListView>
           rows,
         ) {
           if (!mounted || !_watching) return;
-          setState(
-            () =>
-                _lastReactionByGroup = {for (final row in rows) row.$1: row.$2},
-          );
+          final reactions = {for (final row in rows) row.$1: row.$2};
+          if (mapEquals(_lastReactionByGroup, reactions)) return;
+          _apply(() => _lastReactionByGroup = reactions);
         });
     _latestMessagesSub =
         watchRustDatabase(
@@ -387,7 +443,7 @@ class _ChatListViewState extends State<ChatListView>
         ) {
           if (!mounted || !_watching) return;
           _initialSnapshot('latest');
-          setState(
+          _apply(
             () => _lastMessageByGroup = {
               for (final message in messages) message.groupId: message,
             },
@@ -407,7 +463,7 @@ class _ChatListViewState extends State<ChatListView>
           (mediaFiles) {
             if (!mounted || !_watching) return;
             _initialSnapshot('media');
-            setState(
+            _apply(
               () => _chatListMediaById = {
                 for (final mediaFile in mediaFiles)
                   mediaFile.mediaId: mediaFile,
@@ -424,7 +480,8 @@ class _ChatListViewState extends State<ChatListView>
             .map((rows) => {for (final row in rows) row.groupId: row.status})
             .listen((statuses) {
               if (!mounted || !_watching) return;
-              setState(() => _verificationByGroup = statuses);
+              if (mapEquals(_verificationByGroup, statuses)) return;
+              _apply(() => _verificationByGroup = statuses);
             });
     _contactGroupsSub =
         watchRustDatabase(
@@ -447,7 +504,9 @@ class _ChatListViewState extends State<ChatListView>
           for (final row in rows) {
             contactGroups.putIfAbsent(row.$1, () => []).add(row.$2);
           }
-          setState(() => _contactGroupsByUser = contactGroups);
+          final next = _reuseUnchanged(_contactGroupsByUser, contactGroups);
+          if (next == null) return;
+          _apply(() => _contactGroupsByUser = next);
         });
     _chatContactGroupsSub =
         watchRustDatabase(
@@ -469,7 +528,9 @@ class _ChatListViewState extends State<ChatListView>
             for (final row in rows) {
               contactGroups.putIfAbsent(row.$1, () => []).add(row.$2);
             }
-            setState(() => _contactGroupsByGroup = contactGroups);
+            final next = _reuseUnchanged(_contactGroupsByGroup, contactGroups);
+            if (next == null) return;
+            _apply(() => _contactGroupsByGroup = next);
           },
         );
     _storiesSub =
@@ -488,7 +549,7 @@ class _ChatListViewState extends State<ChatListView>
           for (final item in items) {
             byGroup.putIfAbsent(item.message.groupId, () => []).add(item);
           }
-          setState(() => _storiesByGroup = byGroup);
+          _apply(() => _storiesByGroup = byGroup);
           _scheduleReceivedStoryExpiry();
         });
     _alwaysShowStories = userService.currentUser.alwaysShowStories;
@@ -509,7 +570,7 @@ class _ChatListViewState extends State<ChatListView>
           );
         })().listen((items) {
           if (!mounted || !_watching) return;
-          setState(() => _ownStories = items);
+          _apply(() => _ownStories = items);
           _scheduleOwnStoryExpiry();
         });
   }
@@ -617,6 +678,9 @@ class _ChatListViewState extends State<ChatListView>
   void _stopWatches() {
     if (!_watching) return;
     _watching = false;
+    _collectTimeout?.cancel();
+    _collectTimeout = null;
+    _collecting = false;
     _loadTimeout?.cancel();
     unawaited(_loadTrace?.finish(status: const SpanStatus.cancelled()));
     _loadTrace = null;
@@ -686,9 +750,9 @@ class _ChatListViewState extends State<ChatListView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // Stays mounted while the app is hidden: frames resume at `inactive`,
-    // before `resumed`, so an empty build here would flash on return.
-    if (!widget.active) return const SizedBox.shrink();
+    // Stays built while inactive, also while the app is hidden: remounting
+    // every row on the swipe back from the camera made it stutter and threw
+    // away the recorded emoji animation frames.
     final plan = context.select<PurchasesProvider, SubscriptionPlan>(
       (p) => p.plan,
     );

@@ -2746,6 +2746,12 @@ abstract class AppLocalizations {
   /// **'The photo avatar could not be created.'**
   String get customAvatarCreateFailed;
 
+  /// No description provided for @customAvatarSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Use as avatar'**
+  String get customAvatarSave;
+
   /// No description provided for @inProcess.
   ///
   /// In en, this message translates to:
@@ -5553,6 +5559,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The sticker could not be rotated.'**
   String get stickerRotateFailed;
+
+  /// No description provided for @stickerDraftRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get stickerDraftRotate;
+
+  /// No description provided for @stickerDraftErase.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase'**
+  String get stickerDraftErase;
+
+  /// No description provided for @stickerEraseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase parts'**
+  String get stickerEraseTitle;
+
+  /// No description provided for @stickerEraseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paint over everything you want to remove.'**
+  String get stickerEraseHint;
+
+  /// No description provided for @stickerEraseBrushSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Brush size'**
+  String get stickerEraseBrushSize;
+
+  /// No description provided for @stickerEraseApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get stickerEraseApply;
+
+  /// No description provided for @stickerEraseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The changes could not be applied. Make sure part of the image is left.'**
+  String get stickerEraseFailed;
 
   /// No description provided for @releaseNotesTitle.
   ///

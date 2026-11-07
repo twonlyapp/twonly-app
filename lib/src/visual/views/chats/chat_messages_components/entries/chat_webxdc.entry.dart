@@ -110,7 +110,14 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
         '${_instance == null ? 'has no' : 'lost its'} instance',
       );
     }
-    setState(() => _instance = instance);
+    // With the cache filled, the icon shows in the same frame as the instance.
+    final cachedApp = instance == null
+        ? null
+        : WebxdcService.cachedApp(instance.appId, instance.version);
+    setState(() {
+      _instance = instance;
+      if (cachedApp != null) _app = cachedApp;
+    });
     if (instance == null) return;
 
     // The store entry only changes when the instance moves to another version,
@@ -123,7 +130,7 @@ class _ChatWebxdcEntryState extends State<ChatWebxdcEntry> {
         cached.version == instance.version) {
       return;
     }
-    final app = await WebxdcService.appNamed(instance.appId, instance.version);
+    final app = await WebxdcService.cardApp(instance.appId, instance.version);
     if (!mounted) return;
     setState(() => _app = app);
   }
