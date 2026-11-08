@@ -401,6 +401,10 @@ class _ChatListEntryState extends State<ChatListEntry> {
         onResponseTriggered: widget.onResponseTriggered!,
         galleryItems: widget.galleryItems,
         mediaFileService: mediaService,
+        ownReactions: {
+          for (final reaction in reactions)
+            if (reaction.senderId == null) reaction.emoji,
+        },
         child: Container(
           child: child,
         ),

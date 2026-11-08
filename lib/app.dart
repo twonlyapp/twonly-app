@@ -198,7 +198,10 @@ class _AppMainWidgetState extends State<AppMainWidget>
   StreamSubscription<List<SharedFile>>? _intentStreamSub;
   StreamSubscription<String>? _emailTokenSub;
 
-  (Future<int>?, bool) _proofOfWork = (null, false);
+  /// Fetched and solved in the background while onboarding is shown, so a
+  /// missing connection does not hold up the first screen. Null proof means
+  /// the prefetch failed; registration then asks the server itself.
+  Future<PrefetchedProofOfWork>? _proofOfWork;
 
   @override
   void initState() {
@@ -334,21 +337,9 @@ class _AppMainWidgetState extends State<AppMainWidget>
       if (!_isCurrentAttempt(attempt)) return;
       // This means the user is in the onboarding screen, so start with the Proof of Work.
 
-      final proofResult = await rustApiResult(
-        RustApi.getProofOfWork(),
-      ).timeout(const Duration(seconds: 10));
-      if (!_isCurrentAttempt(attempt)) return;
-      final proof = proofResult.value;
-      final disabled = proofResult.error == ErrorCode.RegistrationDisabled;
-      if (proof != null) {
-        Log.info('Starting with proof of work calculation.');
-        _proofOfWork = (
-          calculatePoW(proof.prefix, proof.difficulty),
-          false,
-        );
-      } else {
-        _proofOfWork = (null, disabled);
-      }
+      // Only a hint for the register screen: without a connection the user
+      // still gets onboarding, and the error shows when they try to register.
+      _proofOfWork = _prefetchProofOfWork();
 
       if (onboardingState.openBackupRecovery) {
         await KeyValueStore.update<OnboardingState>(
@@ -366,6 +357,30 @@ class _AppMainWidgetState extends State<AppMainWidget>
           routerProvider.push(Routes.recoverPasswordless);
         });
       }
+    }
+  }
+
+  static Future<PrefetchedProofOfWork> _prefetchProofOfWork() async {
+    try {
+      final proofResult = await rustApiResult(
+        RustApi.getProofOfWork(),
+      ).timeout(const Duration(seconds: 10));
+      final proof = proofResult.value;
+      if (proof == null) {
+        return (
+          proof: null,
+          registrationDisabled:
+              proofResult.error == ErrorCode.RegistrationDisabled,
+        );
+      }
+      Log.info('Starting with proof of work calculation.');
+      return (
+        proof: await calculatePoW(proof.prefix, proof.difficulty),
+        registrationDisabled: false,
+      );
+    } catch (error) {
+      Log.warn('Proof of work prefetch failed: $error');
+      return (proof: null, registrationDisabled: false);
     }
   }
 

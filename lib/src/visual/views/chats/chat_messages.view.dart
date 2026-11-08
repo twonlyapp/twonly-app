@@ -179,17 +179,36 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   /// Set by the composer while it is announcing that the user is typing.
   final ValueNotifier<bool> _composing = ValueNotifier(false);
 
+  late final AppLifecycleListener _lifecycleListener;
+  bool _routeWasCurrent = false;
+
   @override
   void initState() {
     super.initState();
     _group = widget.initialGroup;
     textFieldFocus = FocusNode();
     itemPositionsListener.itemPositions.addListener(_loadOlderWhenNeeded);
+    // Registered after the app-level observer, which clears
+    // AppState.isAppInBackground on resume before this runs.
+    _lifecycleListener = AppLifecycleListener(
+      onResume: _reportVisibleMessagesOpened,
+    );
     unawaited(initStreams());
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Depending on the route makes this run again whenever isCurrent flips,
+    // for example when the media viewer or a settings page is popped.
+    final isCurrent = ModalRoute.of(context)?.isCurrent ?? false;
+    if (isCurrent && !_routeWasCurrent) _reportVisibleMessagesOpened();
+    _routeWasCurrent = isCurrent;
+  }
+
+  @override
   void dispose() {
+    _lifecycleListener.dispose();
     _chatLoadGeneration++;
     _loadedMessagesRevision++;
     unawaited(_subscriptions.cancelAll());
@@ -832,8 +851,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
     DateTime? lastDate;
 
-    final openedMessages = <int, List<String>>{};
-
     var groupHistoryIndex = 0;
 
     for (final msg in newMessages) {
@@ -855,18 +872,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           }
         }
       }
-      if (msg.type != MessageType.media.name &&
-          msg.senderId != null &&
-          msg.openedAt == null &&
-          !_animationState.reportedOpenedMessageIds.contains(
-            messageActivityId(msg),
-          )) {
-        if (openedMessages[msg.senderId!] == null) {
-          openedMessages[msg.senderId!] = [];
-        }
-        openedMessages[msg.senderId!]!.add(messageActivityId(msg));
-      }
-
       if (msg.type == MessageType.media.name && msg.mediaStored) {
         storedMediaFiles.add(msg);
       }
@@ -886,14 +891,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       }
     }
 
-    if (reportOpened && _isViewActive()) {
-      for (final contactId in openedMessages.keys) {
-        _animationState.reportedOpenedMessageIds.addAll(
-          openedMessages[contactId]!,
-        );
-        unawaited(_reportMessagesOpened(contactId, openedMessages[contactId]!));
-      }
-    }
+    if (reportOpened) _reportVisibleMessagesOpened(newMessages);
 
     if (!mounted) return;
     _data.chatItems = chatItems.reversed.toList();
@@ -940,6 +938,32 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     }
 
     attempt();
+  }
+
+  /// Reports every loaded text message from a contact that is still unopened,
+  /// but only while the user can actually see this chat. Database watches
+  /// emit only when their result changes, so a snapshot that arrived while
+  /// the view was not active (a notification tap lands before the app is
+  /// resumed, or a route sat on top) is not delivered again; resuming and
+  /// regaining the top of the stack therefore call this as well.
+  void _reportVisibleMessagesOpened([List<StoredMessage>? messages]) {
+    if (!_isViewActive()) return;
+    final openedMessages = <int, List<String>>{};
+    for (final msg in messages ?? _data.allMessages) {
+      final senderId = msg.senderId;
+      if (msg.type == MessageType.media.name ||
+          senderId == null ||
+          msg.openedAt != null) {
+        continue;
+      }
+      final id = messageActivityId(msg);
+      if (_animationState.reportedOpenedMessageIds.contains(id)) continue;
+      openedMessages.putIfAbsent(senderId, () => []).add(id);
+    }
+    for (final entry in openedMessages.entries) {
+      _animationState.reportedOpenedMessageIds.addAll(entry.value);
+      unawaited(_reportMessagesOpened(entry.key, entry.value));
+    }
   }
 
   Future<void> _reportMessagesOpened(

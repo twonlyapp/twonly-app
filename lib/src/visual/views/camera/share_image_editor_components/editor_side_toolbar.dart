@@ -111,6 +111,7 @@ class EditorSideToolbar extends StatelessWidget {
             tooltipText: context.lang.addEmoji,
             onPressed: () async {
               final layer = await showModalBottomSheet<Layer>(
+                isScrollControlled: true,
                 context: context,
                 backgroundColor: context.color.surface,
                 builder: (context) => const EmojiPickerBottom(
