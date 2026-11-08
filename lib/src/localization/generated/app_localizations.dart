@@ -4183,7 +4183,7 @@ abstract class AppLocalizations {
   /// No description provided for @emptyChatListTitle.
   ///
   /// In en, this message translates to:
-  /// **'Find your first friend'**
+  /// **'Find your friends'**
   String get emptyChatListTitle;
 
   /// No description provided for @emptyChatListDesc.

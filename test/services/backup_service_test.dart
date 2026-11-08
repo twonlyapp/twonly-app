@@ -115,13 +115,19 @@ void main() {
     });
 
     test(
-      'startFullBackupRecovery returns usernameNotValid for offline/unknown user',
+      'startFullBackupRecovery reports noInternet when the lookup gets no answer',
       () async {
+        // Only the server's UsernameNotFound may say the account is gone. A
+        // lookup that never reaches the server must not, or the user would
+        // give up on a backup that still exists. Here no connection comes up:
+        // the socket logs in as the fake user 1, which the server rejects, or
+        // the server is unreachable. Either way the request times out exactly
+        // as it does on a device without network.
         final error = await BackupService.startFullBackupRecovery(
           'unknown_user',
           'password',
         );
-        expect(error, RecoveryError.usernameNotValid);
+        expect(error, RecoveryError.noInternet);
       },
     );
 

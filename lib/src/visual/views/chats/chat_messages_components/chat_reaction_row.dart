@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lottie/lottie.dart' show RenderCache;
 import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/core/database/app/reactions/table.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -40,7 +41,12 @@ class ReactionRow extends StatelessWidget {
       if (EmojiAnimationComp.animatedIcons.containsKey(reaction.emoji)) {
         child = SizedBox(
           height: 18,
-          child: EmojiAnimationComp(emoji: reaction.emoji),
+          // Every visible reaction plays for as long as the chat is open;
+          // replaying cached frames keeps that off the GPU.
+          child: EmojiAnimationComp(
+            emoji: reaction.emoji,
+            renderCache: RenderCache.raster,
+          ),
         );
       } else {
         child = SizedBox(

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:clock/clock.dart';
-import 'package:flutter/foundation.dart' show listEquals, setEquals;
+import 'package:flutter/foundation.dart' show listEquals, mapEquals, setEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show Int64List;
@@ -36,6 +36,7 @@ import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/stickers/sticker.service.dart';
+import 'package:twonly/src/services/webxdc/webxdc_host.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
@@ -62,6 +63,13 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/pending_c
 import 'package:twonly/src/visual/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_indicator.dart';
 
+/// The longest a page waits for its media, reactions and receipts before it
+/// is shown without them.
+const _firstDataLimit = Duration(milliseconds: 400);
+
+/// How long the chat has to sit untouched before the game runtime is warmed up.
+const _gameWarmUpIdle = Duration(milliseconds: 1500);
+
 class _MessageAnimationState {
   bool hasReceivedFirstBatch = false;
   DateTime? newestKnownAt;
@@ -73,6 +81,7 @@ class _MessageAnimationState {
 class _ChatViewData {
   Map<int, Contact> contactsById = {};
   Map<String, MediaFile> mediaFilesById = {};
+  List<StoredReaction> reactions = [];
   Map<String, List<StoredReaction>> reactionsByMessageId = {};
   Set<String> ackedMessageIds = {};
   Set<String> failedMessageIds = {};
@@ -86,6 +95,7 @@ class _ChatViewData {
   List<MemoryItem> galleryItems = [];
   Set<String> galleryMessageIds = {};
   Set<String> watchedMessageIds = {};
+  Set<String> watchedMediaIds = {};
   Set<int> watchedContactIds = {};
   DateTime? watchedGroupActionsSince;
 }
@@ -162,6 +172,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
   Timer? _nextTypingIndicator;
 
+  Timer? _gameWarmUp;
+  DateTime _lastPointerAt = DateTime(0);
+
   /// Set by the composer while it is announcing that the user is typing.
   final ValueNotifier<bool> _composing = ValueNotifier(false);
 
@@ -182,6 +195,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     _messageDataVersion.dispose();
     itemPositionsListener.itemPositions.removeListener(_loadOlderWhenNeeded);
     _nextTypingIndicator?.cancel();
+    _gameWarmUp?.cancel();
     _composing.dispose();
     if (userService.currentUser.typingIndicators) {
       unawaitedRustCall(
@@ -359,6 +373,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         failed(StateError('Conversation is unavailable'));
         return;
       }
+      // The first answer usually repeats the row the chat list handed over,
+      // and redrawing the whole chat for it lands right in the open animation.
+      if (newGroup == _group) return;
       setState(() {
         _group = newGroup;
       });
@@ -477,44 +494,40 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         return byTime != 0 ? byTime : a.messageId.compareTo(b.messageId);
       });
 
+    // The media, reaction and receipt watches start right away and run side by
+    // side; waiting for one before starting the next made every chat open pay
+    // for three database round trips in a row.
+    final firstBatch = !_animationState.hasReceivedFirstBatch;
+    final ready = _watchLoadedMessageData(loadedMessages);
+
     // A media row must know its type before it is exposed to the list. Without
-    // this initial read, stored media first renders as an empty bubble and then
-    // grows to the preview height when the media watch emits. That changes the
-    // extent of rows around the active scroll position and makes the positioned
-    // list jump, especially while another page is being appended.
-    final missingMediaIds = loadedMessages
-        .map((message) => message.mediaId)
-        .whereType<String>()
-        .where((mediaId) => !_data.mediaFilesById.containsKey(mediaId))
-        .toSet();
-    final missingMediaFiles = missingMediaIds.isEmpty
-        ? const <MediaFile>[]
-        : (await watchRustDatabase(
-            (control) => rust_mediafiles.watchMediaFiles(
-              input: db_mediafiles.MediaQuery(
-                filter: db_mediafiles.MediaFilter.ids,
-                ids: missingMediaIds.toList(),
-              ),
-              control: control,
-            ),
-          ).first).files;
+    // it, stored media first renders as an empty bubble and then grows to the
+    // preview height when the media watch emits. That changes the extent of
+    // rows around the active scroll position and makes the positioned list
+    // jump, especially while another page is being appended.
+    final mediaMissing = loadedMessages.any(
+      (message) =>
+          message.mediaId != null &&
+          !_data.mediaFilesById.containsKey(message.mediaId),
+    );
+    // Reactions and receipts change a row's height and its ticks. On the
+    // first page they are worth a short wait, so the chat appears complete
+    // instead of shifting under the reader a moment later.
+    final waitFor = [
+      if (mediaMissing) ready.media.timeout(_firstDataLimit, onTimeout: () {}),
+      if (firstBatch) ready.rest.timeout(_firstDataLimit, onTimeout: () {}),
+    ];
+    if (waitFor.isNotEmpty) await Future.wait(waitFor);
     if (!mounted || revision != _loadedMessagesRevision) return;
 
-    if (missingMediaFiles.isNotEmpty) {
-      _data.mediaFilesById = {
-        ..._data.mediaFilesById,
-        for (final mediaFile in missingMediaFiles) mediaFile.mediaId: mediaFile,
-      };
-    }
-    // Merge after the media read: a send may have added a pending bubble while
-    // that read was in flight. A stored row with the same ID wins immediately.
+    // Merge after the wait: a send may have added a pending bubble while the
+    // watches were answering. A stored row with the same ID wins immediately.
     final visibleMessages = _pendingMessages.merge(loadedMessages);
     _data.allMessages = visibleMessages;
     _data.messagesById = {
       for (final message in visibleMessages) message.messageId: message,
     };
     _watchGroupActionsForLoadedRange();
-    _watchLoadedMessageData();
     _watchRelevantContacts();
     await setMessages(
       visibleMessages,
@@ -587,21 +600,39 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     await _applyLoadedMessages(reportOpened: true);
   }
 
-  void _watchLoadedMessageData() {
-    final messageIds = _data.messagesById.keys
+  /// Restarts the watches that depend on which messages are loaded. The
+  /// futures complete with the first answer of the new media watch and of the
+  /// reaction and receipt watches; both are already complete when nothing had
+  /// to be restarted.
+  ({Future<void> media, Future<void> rest}) _watchLoadedMessageData(
+    List<StoredMessage> messages,
+  ) {
+    final messageIds = messages
+        .map((message) => message.messageId)
         .where((messageId) => !_pendingMessages.contains(messageId))
         .toSet();
-    if (setEquals(_data.watchedMessageIds, messageIds)) return;
+    final mediaIds = messages
+        .map((message) => message.mediaId)
+        .whereType<String>()
+        .toSet();
+    if (setEquals(_data.watchedMessageIds, messageIds) &&
+        setEquals(_data.watchedMediaIds, mediaIds)) {
+      return (media: Future.value(), rest: Future.value());
+    }
     _data.watchedMessageIds = messageIds;
+    _data.watchedMediaIds = mediaIds;
 
     unawaited(_subscriptions.media?.cancel());
     unawaited(_subscriptions.reactions?.cancel());
     unawaited(_subscriptions.messageActions?.cancel());
 
-    final mediaIds = _data.allMessages
-        .map((message) => message.mediaId)
-        .whereType<String>()
-        .toSet();
+    final mediaReady = Completer<void>();
+    final reactionsReady = Completer<void>();
+    final actionsReady = Completer<void>();
+    void done(Completer<void> completer) {
+      if (!completer.isCompleted) completer.complete();
+    }
+
     _subscriptions.media =
         watchRustDatabase(
           (control) => rust_mediafiles
@@ -617,9 +648,14 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           mediaFiles,
         ) {
           if (!mounted) return;
-          _data.mediaFilesById = {
+          final byId = {
             for (final mediaFile in mediaFiles) mediaFile.mediaId: mediaFile,
           };
+          // Any change to media_files re-runs this watch. Most of them are
+          // about other chats and must not redraw this one.
+          if (mapEquals(byId, _data.mediaFilesById)) return done(mediaReady);
+          _data.mediaFilesById = byId;
+          done(mediaReady);
           _updateGalleryItems(force: true);
           // Publish the media map and matching gallery snapshot together. A
           // single database emission must not rebuild the entire message list
@@ -634,11 +670,16 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           ),
         ).listen((reactions) {
           if (!mounted) return;
+          if (listEquals(reactions, _data.reactions)) {
+            return done(reactionsReady);
+          }
+          _data.reactions = reactions;
           final byMessage = <String, List<StoredReaction>>{};
           for (final reaction in reactions) {
             byMessage.putIfAbsent(reaction.messageId, () => []).add(reaction);
           }
           _data.reactionsByMessageId = byMessage;
+          done(reactionsReady);
           _notifyMessageDataChanged();
         });
     _subscriptions.messageActions =
@@ -649,16 +690,30 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           ),
         ).listen((actions) {
           if (!mounted) return;
-          _data.ackedMessageIds = actions
+          final acked = actions
               .where((action) => action.type == MessageActionType.ackByUserAt)
               .map((action) => action.messageId)
               .toSet();
-          _data.failedMessageIds = actions
+          final failed = actions
               .where((action) => action.type == MessageActionType.sendFailed)
               .map((action) => action.messageId)
               .toSet();
+          if (setEquals(acked, _data.ackedMessageIds) &&
+              setEquals(failed, _data.failedMessageIds)) {
+            return done(actionsReady);
+          }
+          _data.ackedMessageIds = acked;
+          _data.failedMessageIds = failed;
+          done(actionsReady);
           _notifyMessageDataChanged();
         });
+    return (
+      media: mediaReady.future,
+      rest: Future.wait([
+        reactionsReady.future,
+        actionsReady.future,
+      ]).then((_) {}),
+    );
   }
 
   void _watchRelevantContacts() {
@@ -691,9 +746,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         ).listen(
           (contacts) {
             if (!mounted) return;
-            _data.contactsById = {
+            final byId = {
               for (final contact in contacts) contact.userId: contact,
             };
+            if (mapEquals(byId, _data.contactsById)) return;
+            _data.contactsById = byId;
             _notifyMessageDataChanged();
           },
         );
@@ -835,6 +892,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     _data.chatItems = chatItems.reversed.toList();
     _updateGalleryItems(messages: storedMediaFiles);
     _notifyMessageDataChanged();
+    _warmUpGamesWhenIdle(newMessages);
 
     if (wasSentByMe) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -851,6 +909,30 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         }
       });
     }
+  }
+
+  /// A chat showing a game is where one gets opened, usually seconds later, so
+  /// the game runtime is started ahead of time. On Android that loads Chromium
+  /// on the platform thread, which Flutter's UI thread shares: the first
+  /// warm-up in a process froze the opening chat for up to a second. It now
+  /// waits until the chat is open and has not been touched for a moment. A
+  /// tap on a game card warms up on its own anyway.
+  void _warmUpGamesWhenIdle(List<StoredMessage> messages) {
+    if (_gameWarmUp != null) return;
+    if (!messages.any((m) => m.type == MessageType.webxdcApp.name)) return;
+    void attempt() {
+      _gameWarmUp = Timer(_gameWarmUpIdle, () {
+        if (!mounted) return;
+        if (!_isViewActive() ||
+            clock.now().difference(_lastPointerAt) < _gameWarmUpIdle) {
+          attempt();
+          return;
+        }
+        unawaited(WebxdcHost.warmUp());
+      });
+    }
+
+    attempt();
   }
 
   Future<void> _reportMessagesOpened(
@@ -996,6 +1078,16 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       );
     }
     final group = _group!;
+    return Listener(
+      onPointerDown: _onPointer,
+      onPointerMove: _onPointer,
+      child: _buildScaffold(context, group),
+    );
+  }
+
+  void _onPointer(PointerEvent _) => _lastPointerAt = clock.now();
+
+  Widget _buildScaffold(BuildContext context, Group group) {
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();

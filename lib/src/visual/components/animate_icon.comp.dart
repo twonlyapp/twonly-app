@@ -271,6 +271,10 @@ class EmojiAnimationComp extends StatelessWidget {
         'assets/animated_icons/${animatedIcons[emoji]}',
         repeat: repeat,
         renderCache: renderCache,
+        // The first use of each animation unpacks and parses it. A chat full
+        // of reactions did that for every emoji on the UI isolate while it
+        // opened; the parsed composition is cached either way.
+        backgroundLoading: true,
       );
     } else if (isOneEmoji(emoji)) {
       return Text(

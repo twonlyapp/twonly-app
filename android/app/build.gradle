@@ -67,8 +67,9 @@ android {
         }
         profile {
             // Profile builds are installed while profiling production-like
-            // performance. They must never replace the store app.
-            applicationIdSuffix ".testing"
+            // performance. They must never replace the store app or the
+            // debug build.
+            applicationIdSuffix ".profiling"
             manifestPlaceholders = [appName: "twonly [profile]"]
         }
         release {

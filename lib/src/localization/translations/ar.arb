@@ -680,7 +680,7 @@
   "importGalleryRefresh": "تحديث",
   "importGallerySelectToImport": "اختر العناصر المراد استيرادها",
   "importGalleryImportCount": "{count, plural, =1{استيراد عنصر واحد} =2{استيراد عنصرين} few{استيراد {count} عناصر} many{استيراد {count} عنصرًا} other{استيراد {count} عنصر}}",
-  "emptyChatListTitle": "ابحث عن صديقك الأول",
+  "emptyChatListTitle": "ابحث عن أصدقائك",
   "emptyChatListDesc": "اطلب من أصدقائك مسح رمز QR الخاص بك، أو شارك ملفك الشخصي معهم.",
   "emptyChatListShareBtn": "شارك ملفك الشخصي",
   "emptyChatListScanBtn": "رمز QR",

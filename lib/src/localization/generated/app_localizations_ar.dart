@@ -2488,7 +2488,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get emptyChatListTitle => 'ابحث عن صديقك الأول';
+  String get emptyChatListTitle => 'ابحث عن أصدقائك';
 
   @override
   String get emptyChatListDesc =>

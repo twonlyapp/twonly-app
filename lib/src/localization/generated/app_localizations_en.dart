@@ -2432,7 +2432,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get emptyChatListTitle => 'Find your first friend';
+  String get emptyChatListTitle => 'Find your friends';
 
   @override
   String get emptyChatListDesc =>
