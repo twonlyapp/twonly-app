@@ -358,6 +358,12 @@ abstract class AppLocalizations {
   /// **'Type a message'**
   String get chatListDetailInput;
 
+  /// No description provided for @chatUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation is no longer available.'**
+  String get chatUnavailable;
+
   /// No description provided for @userDeletedAccount.
   ///
   /// In en, this message translates to:

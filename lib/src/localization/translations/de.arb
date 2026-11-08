@@ -50,6 +50,7 @@
     }
   },
   "chatListDetailInput": "Nachricht eingeben",
+  "chatUnavailable": "Diese Unterhaltung ist nicht mehr verfügbar.",
   "userDeletedAccount": "Der Nutzer hat deren Konto gelöscht.",
   "contextMenuUserProfile": "Userprofil",
   "contextMenuArchiveUser": "Archivieren",

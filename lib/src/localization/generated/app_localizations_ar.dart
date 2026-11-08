@@ -148,6 +148,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatListDetailInput => 'اُكْتُبْ رِسَالَةً';
 
   @override
+  String get chatUnavailable => 'هذه المحادثة لم تعد متاحة.';
+
+  @override
   String get userDeletedAccount => 'لَقَدْ حَذَفَ المُسْتَخْدِمُ حِسَابَهُ.';
 
   @override

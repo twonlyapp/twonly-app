@@ -43,6 +43,7 @@
   "searchUsernameNotFound": "لَمْ يَتِمَّ العُثُورُ عَلَى اسْمِ المُسْتَخْدِمِ",
   "searchUsernameNewFollowerTitle": "الطَّلَبَاتُ المَفْتُوحَةُ",
   "chatListDetailInput": "اُكْتُبْ رِسَالَةً",
+  "chatUnavailable": "هذه المحادثة لم تعد متاحة.",
   "userDeletedAccount": "لَقَدْ حَذَفَ المُسْتَخْدِمُ حِسَابَهُ.",
   "contextMenuUserProfile": "المَلَفُّ الشَّخْصِيُّ",
   "contextMenuArchiveUser": "أَرْشَفَة",

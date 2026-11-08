@@ -143,6 +143,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatListDetailInput => 'Nachricht eingeben';
 
   @override
+  String get chatUnavailable => 'Diese Unterhaltung ist nicht mehr verfügbar.';
+
+  @override
   String get userDeletedAccount => 'Der Nutzer hat deren Konto gelöscht.';
 
   @override

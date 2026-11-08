@@ -143,6 +143,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatListDetailInput => 'Type a message';
 
   @override
+  String get chatUnavailable => 'This conversation is no longer available.';
+
+  @override
   String get userDeletedAccount => 'The user has deleted their account.';
 
   @override

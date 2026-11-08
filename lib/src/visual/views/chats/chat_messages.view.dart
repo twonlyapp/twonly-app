@@ -155,6 +155,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   int _chatLoadGeneration = 0;
   bool _loadingMessages = true;
   bool _chatLoadFailed = false;
+  bool _conversationUnavailable = false;
   Group? _group;
   List<Contact> _groupContacts = [];
   StoredMessage? quotesMessage;
@@ -211,7 +212,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   }
 
   bool _isViewActive() {
-    if (!mounted) return false;
+    if (!mounted || _conversationUnavailable) return false;
     return !AppState.isAppInBackground &&
         (ModalRoute.of(context)?.isCurrent ?? false);
   }
@@ -370,7 +371,12 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     _subscriptions.group = groupStream.listen((newGroup) {
       if (!active()) return;
       if (newGroup == null) {
-        failed(StateError('Conversation is unavailable'));
+        // Contact removal can delete this row while another route covers
+        // the chat. An absent row is a valid snapshot, not a failed query.
+        setState(() {
+          _group = null;
+          _conversationUnavailable = true;
+        });
         return;
       }
       // The first answer usually repeats the row the chat list handed over,
@@ -378,6 +384,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       if (newGroup == _group) return;
       setState(() {
         _group = newGroup;
+        _conversationUnavailable = false;
       });
     }, onError: failed);
 
@@ -1074,7 +1081,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       // empty app bar keeps the back button reachable during that wait.
       return Scaffold(
         appBar: AppBar(),
-        body: _chatLoadFailed ? _chatLoadError() : null,
+        body: _conversationUnavailable
+            ? Center(child: Text(context.lang.chatUnavailable))
+            : _chatLoadFailed
+            ? _chatLoadError()
+            : null,
       );
     }
     final group = _group!;

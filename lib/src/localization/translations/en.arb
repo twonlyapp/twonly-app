@@ -43,6 +43,7 @@
   "searchUsernameNotFound": "Username not found",
   "searchUsernameNewFollowerTitle": "Open requests",
   "chatListDetailInput": "Type a message",
+  "chatUnavailable": "This conversation is no longer available.",
   "userDeletedAccount": "The user has deleted their account.",
   "contextMenuUserProfile": "User profile",
   "contextMenuArchiveUser": "Archive",

@@ -185,7 +185,6 @@ class _MessageInputState extends State<MessageInput>
     WidgetsBinding.instance.removeObserver(this);
     _textFieldController.removeListener(_handleTextChange);
     widget.textFieldFocus.removeListener(_handleTextFocusChange);
-    widget.textFieldFocus.dispose();
     _recordingTimer?.cancel();
     _keyboardTransitionTimer?.cancel();
     _recordingBlink.dispose();
