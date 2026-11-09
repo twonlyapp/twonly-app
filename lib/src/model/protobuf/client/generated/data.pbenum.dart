@@ -41,6 +41,8 @@ class AdditionalMessageData_Type extends $pb.ProtobufEnum {
       AdditionalMessageData_Type._(10, _omitEnumNames ? '' : 'LIVE_LOCATION');
   static const AdditionalMessageData_Type VACATION =
       AdditionalMessageData_Type._(11, _omitEnumNames ? '' : 'VACATION');
+  static const AdditionalMessageData_Type PHOTO_LOCATION =
+      AdditionalMessageData_Type._(12, _omitEnumNames ? '' : 'PHOTO_LOCATION');
 
   static const $core.List<AdditionalMessageData_Type> values =
       <AdditionalMessageData_Type>[
@@ -56,10 +58,11 @@ class AdditionalMessageData_Type extends $pb.ProtobufEnum {
     STICKER,
     LIVE_LOCATION,
     VACATION,
+    PHOTO_LOCATION,
   ];
 
   static final $core.List<AdditionalMessageData_Type?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 11);
+      $pb.ProtobufEnum.$_initByValueList(values, 12);
   static AdditionalMessageData_Type? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

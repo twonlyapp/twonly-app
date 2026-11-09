@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:twonly/core/user_config.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -10,8 +11,9 @@ class LocationMetadataService with WidgetsBindingObserver {
   static final _instance = LocationMetadataService();
   static StreamSubscription<void>? _userUpdates;
 
-  /// Foreground startup never opens a permission sheet. Memories share
-  /// Rust's one-shot acquisition and short-lived coordinate cache.
+  /// Foreground startup never opens a permission sheet. Memories and the
+  /// location filter share Rust's one-shot acquisition and short-lived
+  /// coordinate cache.
   static void initialize() {
     if (_userUpdates != null) return;
     WidgetsBinding.instance.addObserver(_instance);
@@ -33,7 +35,7 @@ class LocationMetadataService with WidgetsBindingObserver {
   static Future<void> _warmUp() async {
     try {
       if (!_isForeground || !userService.isUserCreated) return;
-      if (!userService.currentUser.storeLocationInMemories) return;
+      if (!usesLocation(userService.currentUser)) return;
       if (!await _hasPermission()) return;
       if (!_isForeground) return;
       await RustApi.prewarmMemoryLocation();
@@ -42,6 +44,10 @@ class LocationMetadataService with WidgetsBindingObserver {
       Log.warn('Could not warm up location: $error');
     }
   }
+
+  /// Whether any setting needs the warmed location cache.
+  static bool usesLocation(UserConfig user) =>
+      user.storeLocationInMemories || user.locationFilter;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

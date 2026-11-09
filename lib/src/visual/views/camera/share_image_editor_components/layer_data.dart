@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:hand_signature/signature.dart';
+import 'package:twonly/core/bridge/api.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/image_item.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview/parser/base.dart';
 
@@ -57,6 +58,23 @@ class FilterLayerData extends Layer {
     this.page = 1,
   });
   int page = 1;
+
+  /// Whether the location filter is the selected page.
+  bool locationSelected = false;
+
+  /// The location filter's fix, once it arrived.
+  FilterLocation? location;
+
+  /// Started with the editor, so the fix is usually there before the user
+  /// swipes to the location filter.
+  Future<FilterLocation?>? locationRequest;
+
+  /// The location card, to measure where the receiver draws the map.
+  final GlobalKey locationCardKey = GlobalKey();
+
+  /// False while the editor captures the media. The location card never ends
+  /// up in the pixels; the receiver draws the map from the sent coordinates.
+  final showLocationCard = ValueNotifier<bool>(true);
 }
 
 class EmojiLayerData extends Layer {

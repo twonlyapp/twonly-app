@@ -619,7 +619,7 @@ abstract class AppLocalizations {
   /// No description provided for @liveLocationMinutes.
   ///
   /// In en, this message translates to:
-  /// **'{count} minutes'**
+  /// **'{count, plural, =1{1 minute} other{{count} minutes}}'**
   String liveLocationMinutes(int count);
 
   /// No description provided for @liveLocationHours.
@@ -627,6 +627,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 hour} other{{count} hours}}'**
   String liveLocationHours(int count);
+
+  /// No description provided for @liveLocationHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String liveLocationHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @liveLocationCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get liveLocationCustom;
 
   /// No description provided for @liveLocationStart.
   ///
@@ -681,6 +693,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last update: {time}'**
   String liveLocationLastUpdate(String time);
+
+  /// No description provided for @locationFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location filter'**
+  String get locationFilterTitle;
+
+  /// No description provided for @locationFilterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds a camera filter with a map of where you are. Your location is sent only with media you send using this filter.'**
+  String get locationFilterSubtitle;
+
+  /// No description provided for @locationFilterSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding your location…'**
+  String get locationFilterSearching;
+
+  /// No description provided for @locationFilterUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location not found'**
+  String get locationFilterUnavailable;
+
+  /// No description provided for @photoLocationTakenAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Location at {time}'**
+  String photoLocationTakenAt(String time);
 
   /// No description provided for @memoryLocationPermissionDenied.
   ///
@@ -789,6 +831,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Blocked contacts'**
   String get settingsPrivacyBlockUsers;
+
+  /// No description provided for @settingsPrivacyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get settingsPrivacyLocation;
 
   /// No description provided for @settingsPrivacyBlockUsersDesc.
   ///

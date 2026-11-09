@@ -3,7 +3,7 @@
  *
  */
 
-//! Opt-in location acquisition for Memories.
+//! Opt-in location acquisition for Memories and the location filter.
 
 use crate::context::Context;
 use crate::error::Result;
@@ -74,13 +74,22 @@ async fn request_fix(
     .map_err(|error| crate::error::TwonlyError::Generic(error.to_string()))?
 }
 
+fn fresh(cache: &LocationCache) -> Option<(SystemTime, LocationFix)> {
+    cache.filter(|(captured_at, _)| {
+        captured_at.elapsed().unwrap_or(Duration::MAX)
+            < Duration::from_secs(LOCATION_WINDOW_SECONDS as u64)
+    })
+}
+
 /// Starts acquiring a fix at foreground app startup or when the camera opens.
 /// Nothing is persisted until a media row exists; the result only warms the
-/// in-process cache consumed by `initialize_for_media`.
+/// in-process cache consumed by `initialize_for_media` and `filter_location`.
 pub(crate) fn prewarm(ctx: &Arc<Context>) -> Result<()> {
     let config = UserConfig::load_required_from(ctx)?;
 
-    if !config.store_location_in_memories || CAMERA_WARMUP_IN_FLIGHT.swap(true, Ordering::AcqRel) {
+    if !(config.store_location_in_memories || config.location_filter)
+        || CAMERA_WARMUP_IN_FLIGHT.swap(true, Ordering::AcqRel)
+    {
         return Ok(());
     }
 
@@ -89,10 +98,7 @@ pub(crate) fn prewarm(ctx: &Arc<Context>) -> Result<()> {
 
         let request = LOCATION_REQUEST.lock().await;
 
-        if request.as_ref().is_some_and(|(captured_at, _)| {
-            captured_at.elapsed().unwrap_or(Duration::MAX)
-                < Duration::from_secs(LOCATION_WINDOW_SECONDS as u64)
-        }) {
+        if fresh(&request).is_some() {
             return;
         }
 
@@ -104,6 +110,27 @@ pub(crate) fn prewarm(ctx: &Arc<Context>) -> Result<()> {
     });
 
     Ok(())
+}
+
+/// The fix shown by the location filter. It shares the warm-up's request:
+/// waiting on the cache lock joins one already running, and a new request is
+/// made only when no fix from the last three minutes exists.
+pub(crate) async fn filter_location(
+    ctx: &Arc<Context>,
+) -> Result<Option<(SystemTime, LocationFix)>> {
+    if !UserConfig::load_required_from(ctx)?.location_filter {
+        return Ok(None);
+    }
+
+    let request = LOCATION_REQUEST.lock().await;
+
+    if let Some(cached) = fresh(&request) {
+        return Ok(Some(cached));
+    }
+
+    let location = request_fix(request, Duration::from_secs(LOCATION_WINDOW_SECONDS as u64)).await?;
+
+    Ok(location.map(|location| (SystemTime::now(), location)))
 }
 
 pub(crate) async fn initialize_for_media(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
@@ -322,6 +349,41 @@ pub(crate) async fn disable_pending(ctx: &Arc<Context>) -> Result<()> {
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn only_fixes_from_the_location_window_are_fresh() {
+        let fix = LocationFix {
+            latitude: 52.52,
+            longitude: 13.405,
+            accuracy: 8.5,
+        };
+
+        let now = SystemTime::now();
+
+        assert_eq!(fresh(&Some((now, fix))), Some((now, fix)));
+
+        let stale = SystemTime::now() - Duration::from_secs(LOCATION_WINDOW_SECONDS as u64 + 1);
+
+        assert_eq!(fresh(&Some((stale, fix))), None);
+
+        assert_eq!(fresh(&None), None);
+    }
+
+    #[tokio::test]
+
+    async fn filter_location_stays_off_until_enabled() -> anyhow::Result<()> {
+        let temp = tempfile::tempdir()?;
+
+        let ctx = Context::init_for_testing(temp.path().join("database"), temp.path().join("data"))
+            .await?;
+
+        UserConfig::save_json(&ctx, r#"{"userId":42,"username":"me","displayName":"Me"}"#)?;
+
+        // Disabled returns before touching the shared cache or the native API.
+        assert_eq!(filter_location(&ctx).await?, None);
+
+        Ok(())
+    }
 
     #[tokio::test]
 

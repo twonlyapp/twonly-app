@@ -414,6 +414,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double dco_decode_box_autoadd_f_64(dynamic raw);
 
   @protected
+  FilterLocation dco_decode_box_autoadd_filter_location(dynamic raw);
+
+  @protected
   FrbPreKeyBundle dco_decode_box_autoadd_frb_pre_key_bundle(dynamic raw);
 
   @protected
@@ -577,6 +580,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FilterLocation dco_decode_filter_location(dynamic raw);
 
   @protected
   FirstVerificationType dco_decode_first_verification_type(dynamic raw);
@@ -971,6 +977,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
+
+  @protected
+  FilterLocation? dco_decode_opt_box_autoadd_filter_location(dynamic raw);
 
   @protected
   FrbPresignedPost? dco_decode_opt_box_autoadd_frb_presigned_post(dynamic raw);
@@ -1652,6 +1661,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  FilterLocation sse_decode_box_autoadd_filter_location(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FrbPreKeyBundle sse_decode_box_autoadd_frb_pre_key_bundle(
     SseDeserializer deserializer,
   );
@@ -1881,6 +1895,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FilterLocation sse_decode_filter_location(SseDeserializer deserializer);
 
   @protected
   FirstVerificationType sse_decode_first_verification_type(
@@ -2363,6 +2380,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
+  FilterLocation? sse_decode_opt_box_autoadd_filter_location(
+    SseDeserializer deserializer,
+  );
 
   @protected
   FrbPresignedPost? sse_decode_opt_box_autoadd_frb_presigned_post(
@@ -3199,6 +3221,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_filter_location(
+    FilterLocation self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_frb_pre_key_bundle(
     FrbPreKeyBundle self,
     SseSerializer serializer,
@@ -3488,6 +3516,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_filter_location(
+    FilterLocation self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_first_verification_type(
@@ -4097,6 +4131,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_filter_location(
+    FilterLocation? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_frb_presigned_post(

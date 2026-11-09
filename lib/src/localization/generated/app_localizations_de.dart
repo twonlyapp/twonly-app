@@ -280,7 +280,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String liveLocationMinutes(int count) {
-    return '$count Minuten';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Minuten',
+      one: '1 Minute',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -293,6 +299,14 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String liveLocationHoursMinutes(int hours, int minutes) {
+    return '$hours Std. $minutes Min.';
+  }
+
+  @override
+  String get liveLocationCustom => 'Eigene Dauer';
 
   @override
   String get liveLocationStart => 'Teilen starten';
@@ -325,6 +339,24 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String liveLocationLastUpdate(String time) {
     return 'Letzte Aktualisierung: $time';
+  }
+
+  @override
+  String get locationFilterTitle => 'Standortfilter';
+
+  @override
+  String get locationFilterSubtitle =>
+      'Fügt einen Kamerafilter mit einer Karte deines Standorts hinzu. Dein Standort wird nur mit Medien gesendet, die du mit diesem Filter verschickst.';
+
+  @override
+  String get locationFilterSearching => 'Standort wird gesucht…';
+
+  @override
+  String get locationFilterUnavailable => 'Standort nicht gefunden';
+
+  @override
+  String photoLocationTakenAt(String time) {
+    return 'Standort um $time';
   }
 
   @override
@@ -382,6 +414,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsPrivacyBlockUsers => 'Blockierte Kontakte';
+
+  @override
+  String get settingsPrivacyLocation => 'Standort';
 
   @override
   String get settingsPrivacyBlockUsersDesc =>

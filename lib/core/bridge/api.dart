@@ -13,7 +13,7 @@ import 'stories.dart';
 
 // These functions are ignored because they are not marked as `pub`: `api_result`, `empty_api_response`, `from_rust_state`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ApiConfig`, `ServerResult`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 enum ApiConnectionState {
   stopped,
@@ -63,6 +63,39 @@ enum ApiEventKind {
   /// manifest is already rewritten; only the native widgets still have to be
   /// told to redraw, which is something Flutter has to ask for.
   widgetMediaReceived,
+}
+
+/// Progress of a large mailbox catch-up. While none runs, `active` is false
+/// and both counts are zero.
+class FilterLocation {
+  final double latitude;
+  final double longitude;
+  final double accuracy;
+  final PlatformInt64 fixTimestampMs;
+
+  const FilterLocation({
+    required this.latitude,
+    required this.longitude,
+    required this.accuracy,
+    required this.fixTimestampMs,
+  });
+
+  @override
+  int get hashCode =>
+      latitude.hashCode ^
+      longitude.hashCode ^
+      accuracy.hashCode ^
+      fixTimestampMs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FilterLocation &&
+          runtimeType == other.runtimeType &&
+          latitude == other.latitude &&
+          longitude == other.longitude &&
+          accuracy == other.accuracy &&
+          fixTimestampMs == other.fixTimestampMs;
 }
 
 class FrbAdditionalAccount {
@@ -273,8 +306,6 @@ class FrbUserData {
           joinedAt == other.joinedAt;
 }
 
-/// Progress of a large mailbox catch-up. While none runs, `active` is false
-/// and both counts are zero.
 class MailboxSyncProgress {
   final bool active;
 
@@ -472,6 +503,11 @@ class RustApi {
   static Stream<ApiEvent> events() =>
       RustLib.instance.api.crateBridgeApiRustApiEvents();
 
+  /// The location filter's fix, or none when the filter is disabled or no
+  /// fix arrives within the three-minute window.
+  static Future<FilterLocation?> filterLocation() =>
+      RustLib.instance.api.crateBridgeApiRustApiFilterLocation();
+
   /// Settles every background transfer this device believes is still in
   /// flight and resumes any upload a terminated process left behind.
   static Future<void> finishStartedMediaUploads() =>
@@ -661,7 +697,8 @@ class RustApi {
   static Future<void> previewMailboxSync() =>
       RustLib.instance.api.crateBridgeApiRustApiPreviewMailboxSync();
 
-  /// Warms the shared location cache if Memories are enabled.
+  /// Warms the shared location cache if Memories or the location filter
+  /// are enabled.
   static Future<void> prewarmMemoryLocation() =>
       RustLib.instance.api.crateBridgeApiRustApiPrewarmMemoryLocation();
 

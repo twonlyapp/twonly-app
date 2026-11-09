@@ -3,6 +3,7 @@
 ## 0.7.1
 
 - New: Preview stickers and photo avatars before saving, with rotate and erase
+- New: Location filter with a map of where you took the photo
 - Improve: Fullscreen map for live locations
 - Improve: Redesigned context menu with quick reactions
 - Improve: App performance
@@ -387,7 +388,7 @@
 ## 0.0.74
 
 - Improve: Uploading speed
-- Fix: Issue with ffmpeg for android
+- Fix: Issue with ffmpeg for Android
 
 ## 0.0.73
 

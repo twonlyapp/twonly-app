@@ -156,6 +156,16 @@ const AdditionalMessageData$json = {
       '10': 'vacation',
       '17': true
     },
+    {
+      '1': 'photo_location',
+      '3': 14,
+      '4': 1,
+      '5': 11,
+      '6': '.PhotoLocationData',
+      '9': 11,
+      '10': 'photoLocation',
+      '17': true
+    },
   ],
   '4': [AdditionalMessageData_Type$json],
   '8': [
@@ -170,6 +180,7 @@ const AdditionalMessageData$json = {
     {'1': '_sticker'},
     {'1': '_live_location'},
     {'1': '_vacation'},
+    {'1': '_photo_location'},
   ],
 };
 
@@ -189,6 +200,7 @@ const AdditionalMessageData_Type$json = {
     {'1': 'STICKER', '2': 9},
     {'1': 'LIVE_LOCATION', '2': 10},
     {'1': 'VACATION', '2': 11},
+    {'1': 'PHOTO_LOCATION', '2': 12},
   ],
 };
 
@@ -206,14 +218,39 @@ final $typed_data.Uint8List additionalMessageDataDescriptor = $convert.base64Dec
     'VieGRjU3luY1JlcXVlc3RIB1IRd2VieGRjU3luY1JlcXVlc3SIAQESKwoHc3RpY2tlchgLIAEo'
     'CzIMLlN0aWNrZXJEYXRhSAhSB3N0aWNrZXKIAQESOwoNbGl2ZV9sb2NhdGlvbhgMIAEoCzIRLk'
     'xpdmVMb2NhdGlvbkRhdGFICVIMbGl2ZUxvY2F0aW9uiAEBEi4KCHZhY2F0aW9uGA0gASgLMg0u'
-    'VmFjYXRpb25EYXRhSApSCHZhY2F0aW9uiAEBItoBCgRUeXBlEggKBExJTksQABIMCghDT05UQU'
-    'NUUxABEhoKFlJFU1RPUkVEX0ZMQU1FX0NPVU5URVIQAhISCg5BU0tfQUJPVVRfVVNFUhADEg4K'
-    'CldFQlhEQ19BUFAQBBIRCg1XRUJYRENfVVBEQVRFEAUSDwoLV0VCWERDX1NFTlQQBhIPCgtXRU'
-    'JYRENfU1lOQxAHEhcKE1dFQlhEQ19TWU5DX1JFUVVFU1QQCBILCgdTVElDS0VSEAkSEQoNTElW'
-    'RV9MT0NBVElPThAKEgwKCFZBQ0FUSU9OEAtCBwoFX2xpbmtCGQoXX3Jlc3RvcmVkX2ZsYW1lX2'
-    'NvdW50ZXJCFAoSX2Fza19hYm91dF91c2VyX2lkQg0KC193ZWJ4ZGNfYXBwQhAKDl93ZWJ4ZGNf'
-    'dXBkYXRlQhAKDl93ZWJ4ZGNfb3JpZ2luQg4KDF93ZWJ4ZGNfc3luY0IWChRfd2VieGRjX3N5bm'
-    'NfcmVxdWVzdEIKCghfc3RpY2tlckIQCg5fbGl2ZV9sb2NhdGlvbkILCglfdmFjYXRpb24=');
+    'VmFjYXRpb25EYXRhSApSCHZhY2F0aW9uiAEBEj4KDnBob3RvX2xvY2F0aW9uGA4gASgLMhIuUG'
+    'hvdG9Mb2NhdGlvbkRhdGFIC1INcGhvdG9Mb2NhdGlvbogBASLuAQoEVHlwZRIICgRMSU5LEAAS'
+    'DAoIQ09OVEFDVFMQARIaChZSRVNUT1JFRF9GTEFNRV9DT1VOVEVSEAISEgoOQVNLX0FCT1VUX1'
+    'VTRVIQAxIOCgpXRUJYRENfQVBQEAQSEQoNV0VCWERDX1VQREFURRAFEg8KC1dFQlhEQ19TRU5U'
+    'EAYSDwoLV0VCWERDX1NZTkMQBxIXChNXRUJYRENfU1lOQ19SRVFVRVNUEAgSCwoHU1RJQ0tFUh'
+    'AJEhEKDUxJVkVfTE9DQVRJT04QChIMCghWQUNBVElPThALEhIKDlBIT1RPX0xPQ0FUSU9OEAxC'
+    'BwoFX2xpbmtCGQoXX3Jlc3RvcmVkX2ZsYW1lX2NvdW50ZXJCFAoSX2Fza19hYm91dF91c2VyX2'
+    'lkQg0KC193ZWJ4ZGNfYXBwQhAKDl93ZWJ4ZGNfdXBkYXRlQhAKDl93ZWJ4ZGNfb3JpZ2luQg4K'
+    'DF93ZWJ4ZGNfc3luY0IWChRfd2VieGRjX3N5bmNfcmVxdWVzdEIKCghfc3RpY2tlckIQCg5fbG'
+    'l2ZV9sb2NhdGlvbkILCglfdmFjYXRpb25CEQoPX3Bob3RvX2xvY2F0aW9u');
+
+@$core.Deprecated('Use photoLocationDataDescriptor instead')
+const PhotoLocationData$json = {
+  '1': 'PhotoLocationData',
+  '2': [
+    {'1': 'latitude', '3': 1, '4': 1, '5': 1, '10': 'latitude'},
+    {'1': 'longitude', '3': 2, '4': 1, '5': 1, '10': 'longitude'},
+    {'1': 'accuracy', '3': 3, '4': 1, '5': 1, '10': 'accuracy'},
+    {'1': 'fix_timestamp_ms', '3': 4, '4': 1, '5': 3, '10': 'fixTimestampMs'},
+    {'1': 'map_left', '3': 5, '4': 1, '5': 1, '10': 'mapLeft'},
+    {'1': 'map_top', '3': 6, '4': 1, '5': 1, '10': 'mapTop'},
+    {'1': 'map_width', '3': 7, '4': 1, '5': 1, '10': 'mapWidth'},
+    {'1': 'map_height', '3': 8, '4': 1, '5': 1, '10': 'mapHeight'},
+  ],
+};
+
+/// Descriptor for `PhotoLocationData`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List photoLocationDataDescriptor = $convert.base64Decode(
+    'ChFQaG90b0xvY2F0aW9uRGF0YRIaCghsYXRpdHVkZRgBIAEoAVIIbGF0aXR1ZGUSHAoJbG9uZ2'
+    'l0dWRlGAIgASgBUglsb25naXR1ZGUSGgoIYWNjdXJhY3kYAyABKAFSCGFjY3VyYWN5EigKEGZp'
+    'eF90aW1lc3RhbXBfbXMYBCABKANSDmZpeFRpbWVzdGFtcE1zEhkKCG1hcF9sZWZ0GAUgASgBUg'
+    'dtYXBMZWZ0EhcKB21hcF90b3AYBiABKAFSBm1hcFRvcBIbCgltYXBfd2lkdGgYByABKAFSCG1h'
+    'cFdpZHRoEh0KCm1hcF9oZWlnaHQYCCABKAFSCW1hcEhlaWdodA==');
 
 @$core.Deprecated('Use vacationDataDescriptor instead')
 const VacationData$json = {

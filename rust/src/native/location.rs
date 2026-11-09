@@ -10,7 +10,7 @@ use crate::error::Result;
 use crate::error::TwonlyError;
 use std::time::Duration;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 
 pub(crate) struct LocationFix {
     pub latitude: f64,

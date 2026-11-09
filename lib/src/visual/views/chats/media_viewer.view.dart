@@ -45,6 +45,7 @@ import 'package:twonly/src/visual/views/chats/media_viewer_components/media_cont
 import 'package:twonly/src/visual/views/chats/media_viewer_components/media_viewer_bottom_navigation.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/media_viewer_message_input.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/own_story_bottom_bar.comp.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/photo_location_overlay.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/reaction_buttons.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expiry_timer.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/twonly_present_overlay.comp.dart';
@@ -1117,6 +1118,9 @@ class _MediaViewerViewState extends State<MediaViewerView>
                       videoController: videoController,
                       videoFailed: _videoPlaybackFailed,
                       loader: _loader(),
+                      photoLocation: PhotoLocationOverlay.decode(
+                        currentMessage?.additionalMessageData,
+                      ),
                     ),
                   ),
                 ),

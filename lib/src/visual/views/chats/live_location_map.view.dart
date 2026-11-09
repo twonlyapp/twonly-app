@@ -75,24 +75,7 @@ class _LiveLocationMapViewState extends State<LiveLocationMapView> {
             initialData: widget.message,
             builder: _buildContent,
           ),
-          Positioned(
-            top: 0,
-            left: 0,
-            child: SafeArea(
-              bottom: false,
-              right: false,
-              minimum: const EdgeInsets.all(16),
-              child: Material(
-                color: Theme.of(context).colorScheme.surface,
-                elevation: 4,
-                shape: const CircleBorder(),
-                clipBehavior: Clip.antiAlias,
-                child: BackButton(
-                  onPressed: () => Navigator.of(context).maybePop(),
-                ),
-              ),
-            ),
-          ),
+          const _MapBackButton(),
         ],
       ),
     ),
@@ -154,10 +137,9 @@ class _LiveLocationMapViewState extends State<LiveLocationMapView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (status != null)
-                  Material(
-                    color: context.color.surface,
-                    elevation: 4,
+                  _Floating(
                     shape: const StadiumBorder(),
+                    color: context.color.surface,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
@@ -175,12 +157,10 @@ class _LiveLocationMapViewState extends State<LiveLocationMapView> {
                   ),
                 if (!ended && message!.senderId == null) ...[
                   if (status != null) const SizedBox(height: 12),
-                  Material(
-                    elevation: 4,
+                  _Floating(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    clipBehavior: Clip.antiAlias,
                     child: MyButton(
                       variant: MyButtonVariant.primaryMiddle,
                       onPressed: _stopping
@@ -197,4 +177,127 @@ class _LiveLocationMapViewState extends State<LiveLocationMapView> {
       ],
     );
   }
+}
+
+/// A map overlay whose shadow spreads evenly around it. Material elevation
+/// always offsets the shadow downward.
+class _Floating extends StatelessWidget {
+  const _Floating({required this.shape, required this.child, this.color});
+
+  final ShapeBorder shape;
+  final Color? color;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: ShapeDecoration(
+      shape: shape,
+      shadows: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.25),
+          blurRadius: 12,
+        ),
+      ],
+    ),
+    child: Material(
+      color: color,
+      shape: shape,
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    ),
+  );
+}
+
+/// Where a photo sent with the location filter was taken.
+class PhotoLocationMapView extends StatelessWidget {
+  const PhotoLocationMapView({
+    required this.latitude,
+    required this.longitude,
+    this.fixTimestampMs,
+    super.key,
+  });
+
+  final double latitude;
+  final double longitude;
+  final int? fixTimestampMs;
+
+  @override
+  Widget build(BuildContext context) {
+    final fixTimestampMs = this.fixTimestampMs;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: Theme.of(context).brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            LocationMap(
+              latitude: latitude,
+              longitude: longitude,
+              interactive: true,
+            ),
+            if (fixTimestampMs != null && fixTimestampMs > 0)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: SafeArea(
+                  top: false,
+                  minimum: const EdgeInsets.all(16),
+                  child: Center(
+                    child: _Floating(
+                      shape: const StadiumBorder(),
+                      color: context.color.surface,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          context.lang.photoLocationTakenAt(
+                            TimeOfDay.fromDateTime(
+                              DateTime.fromMillisecondsSinceEpoch(
+                                fixTimestampMs,
+                              ),
+                            ).format(context),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            const _MapBackButton(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MapBackButton extends StatelessWidget {
+  const _MapBackButton();
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+    top: 0,
+    left: 0,
+    child: SafeArea(
+      bottom: false,
+      right: false,
+      minimum: const EdgeInsets.all(16),
+      child: _Floating(
+        shape: const CircleBorder(),
+        color: Theme.of(context).colorScheme.surface,
+        child: BackButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+      ),
+    ),
+  );
 }

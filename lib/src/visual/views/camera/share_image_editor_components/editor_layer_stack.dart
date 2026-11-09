@@ -58,8 +58,10 @@ class EditorLayerStack {
     if (_layers.length == 1) return background.image.image;
     if (_layers.length == 2) {
       final filter = _layers[1];
-      // page == 1 is the "no filter selected" page.
-      if (filter is FilterLayerData && filter.page == 1) {
+      // page == 1 is the "no filter selected" page. The location filter adds
+      // nothing to the pixels either.
+      if (filter is FilterLayerData &&
+          (filter.page == 1 || filter.locationSelected)) {
         return background.image.image;
       }
     }
@@ -148,6 +150,7 @@ class EditorLayerStack {
   void setCustomButtonsVisible({required bool visible}) {
     for (final layer in _layers) {
       layer.showCustomButtons = visible;
+      if (layer is FilterLayerData) layer.showLocationCard.value = visible;
     }
   }
 

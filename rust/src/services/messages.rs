@@ -567,6 +567,7 @@ impl MessageService {
             sticker: None,
             live_location: None,
             vacation: None,
+            photo_location: None,
         }
         .encode_to_vec();
 
@@ -613,6 +614,7 @@ impl MessageService {
             sticker: None,
             live_location: None,
             vacation: None,
+            photo_location: None,
         }
         .encode_to_vec();
 

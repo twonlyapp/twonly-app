@@ -20,6 +20,7 @@ message AdditionalMessageData {
         STICKER = 9;
         LIVE_LOCATION = 10;
         VACATION = 11;
+        PHOTO_LOCATION = 12;
     }
     Type type = 1;
 
@@ -35,6 +36,22 @@ message AdditionalMessageData {
     optional StickerData sticker = 11;
     optional LiveLocationData live_location = 12;
     optional VacationData vacation = 13;
+    optional PhotoLocationData photo_location = 14;
+}
+
+// The location filter: where the media was taken, and the rectangle the
+// sender left empty for the map. The map is drawn on receipt rather than
+// baked into the pixels. The rectangle is in fractions of the media's width
+// and height, so it fits on every screen size.
+message PhotoLocationData {
+    double latitude = 1;
+    double longitude = 2;
+    double accuracy = 3;
+    int64 fix_timestamp_ms = 4;
+    double map_left = 5;
+    double map_top = 6;
+    double map_width = 7;
+    double map_height = 8;
 }
 
 // "On Vacation": the sender's streak with the receiver is frozen from

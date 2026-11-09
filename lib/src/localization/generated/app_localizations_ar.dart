@@ -300,6 +300,14 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String liveLocationHoursMinutes(int hours, int minutes) {
+    return '$hours س $minutes د';
+  }
+
+  @override
+  String get liveLocationCustom => 'مخصص';
+
+  @override
   String get liveLocationStart => 'بدء المشاركة';
 
   @override
@@ -329,6 +337,24 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String liveLocationLastUpdate(String time) {
     return 'آخر تحديث: $time';
+  }
+
+  @override
+  String get locationFilterTitle => 'فلتر الموقع';
+
+  @override
+  String get locationFilterSubtitle =>
+      'يضيف فلتر كاميرا بخريطة لموقعك. لا يُرسل موقعك إلا مع الوسائط التي ترسلها بهذا الفلتر.';
+
+  @override
+  String get locationFilterSearching => 'جارٍ تحديد موقعك…';
+
+  @override
+  String get locationFilterUnavailable => 'تعذّر تحديد الموقع';
+
+  @override
+  String photoLocationTakenAt(String time) {
+    return 'الموقع عند $time';
   }
 
   @override
@@ -391,6 +417,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsPrivacyBlockUsers => 'جهات الاتصال المحظورة';
+
+  @override
+  String get settingsPrivacyLocation => 'الموقع';
 
   @override
   String get settingsPrivacyBlockUsersDesc =>

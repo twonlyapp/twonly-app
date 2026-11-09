@@ -90,7 +90,7 @@
   "liveLocationTitle": "Live-Standort",
   "liveLocationExplanation": "Teile deinen aktuellen Standort in diesem Chat. Alle Mitglieder dieser Gruppe können ihn sehen. Nur dein letzter Standort wird gespeichert.",
   "liveLocationDuration": "Teilen für",
-  "liveLocationMinutes": "{count} Minuten",
+  "liveLocationMinutes": "{count, plural, =1{1 Minute} other{{count} Minuten}}",
   "@liveLocationMinutes": {
     "placeholders": {
       "count": {
@@ -106,6 +106,18 @@
       }
     }
   },
+  "liveLocationHoursMinutes": "{hours} Std. {minutes} Min.",
+  "@liveLocationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "liveLocationCustom": "Eigene Dauer",
   "liveLocationStart": "Teilen starten",
   "liveLocationStop": "Teilen beenden",
   "liveLocationAlreadySharing": "Dein Standort wird bereits in diesem Chat geteilt.",
@@ -116,6 +128,18 @@
   "liveLocationEnded": "Standortfreigabe beendet",
   "liveLocationLastUpdate": "Letzte Aktualisierung: {time}",
   "@liveLocationLastUpdate": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "locationFilterTitle": "Standortfilter",
+  "locationFilterSubtitle": "Fügt einen Kamerafilter mit einer Karte deines Standorts hinzu. Dein Standort wird nur mit Medien gesendet, die du mit diesem Filter verschickst.",
+  "locationFilterSearching": "Standort wird gesucht…",
+  "locationFilterUnavailable": "Standort nicht gefunden",
+  "photoLocationTakenAt": "Standort um {time}",
+  "@photoLocationTakenAt": {
     "placeholders": {
       "time": {
         "type": "String"
@@ -145,6 +169,7 @@
   "settingsAppearance": "Design & Sprache",
   "settingsPrivacy": "Datenschutz & Sicherheit",
   "settingsPrivacyBlockUsers": "Blockierte Kontakte",
+  "settingsPrivacyLocation": "Standort",
   "settingsPrivacyBlockUsersDesc": "Blockierte Kontakte können nicht mit dir kommunizieren. Du kannst einen blockierten Kontakt jederzeit wieder entsperren.",
   "settingsPrivacyBlockUsersCount": "{len} Kontakt(e)",
   "publicProfilePrivacyTitle": "Öffentliches Profil",

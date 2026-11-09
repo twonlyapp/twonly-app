@@ -92,6 +92,15 @@ pub struct ApiEvent {
 /// Progress of a large mailbox catch-up. While none runs, `active` is false
 /// and both counts are zero.
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+
+pub struct FilterLocation {
+    pub latitude: f64,
+    pub longitude: f64,
+    pub accuracy: f64,
+    pub fix_timestamp_ms: i64,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 
 pub struct MailboxSyncProgress {
@@ -333,11 +342,29 @@ impl RustApi {
         crate::services::location_metadata::initialize_for_media(ctx, &media_id).await
     }
 
-    /// Warms the shared location cache if Memories are enabled.
+    /// Warms the shared location cache if Memories or the location filter
+    /// are enabled.
     pub async fn prewarm_memory_location() -> Result<()> {
         let ctx = Context::get_static()?;
 
         crate::services::location_metadata::prewarm(ctx)
+    }
+
+    /// The location filter's fix, or none when the filter is disabled or no
+    /// fix arrives within the three-minute window.
+    pub async fn filter_location() -> Result<Option<FilterLocation>> {
+        let ctx = Context::get_static()?;
+
+        Ok(crate::services::location_metadata::filter_location(ctx)
+            .await?
+            .map(|(captured_at, fix)| FilterLocation {
+                latitude: fix.latitude,
+                longitude: fix.longitude,
+                accuracy: fix.accuracy,
+                fix_timestamp_ms: captured_at
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map_or(0, |elapsed| elapsed.as_millis() as i64),
+            }))
     }
 
     /// Creates one outgoing message per selected group, plus the story rows

@@ -143,6 +143,10 @@ class UserConfig {
   /// Adds the capture location to locally stored Memories and gallery
   /// exports. Disabled by default and never added to outgoing media.
   bool storeLocationInMemories;
+
+  /// Offers a camera filter that shows the current location on a map. The
+  /// coordinates leave the device only with media sent with that filter.
+  bool locationFilter;
   bool autoStoreAllSendUnlimitedMediaFiles;
   bool typingIndicators;
 
@@ -242,6 +246,7 @@ class UserConfig {
     this.autoDownloadOptions,
     required this.storeMediaFilesInGallery,
     required this.storeLocationInMemories,
+    required this.locationFilter,
     required this.autoStoreAllSendUnlimitedMediaFiles,
     required this.typingIndicators,
     required this.storyNotifications,
@@ -314,6 +319,7 @@ class UserConfig {
       autoDownloadOptions.hashCode ^
       storeMediaFilesInGallery.hashCode ^
       storeLocationInMemories.hashCode ^
+      locationFilter.hashCode ^
       autoStoreAllSendUnlimitedMediaFiles.hashCode ^
       typingIndicators.hashCode ^
       storyNotifications.hashCode ^
@@ -390,6 +396,7 @@ class UserConfig {
           autoDownloadOptions == other.autoDownloadOptions &&
           storeMediaFilesInGallery == other.storeMediaFilesInGallery &&
           storeLocationInMemories == other.storeLocationInMemories &&
+          locationFilter == other.locationFilter &&
           autoStoreAllSendUnlimitedMediaFiles ==
               other.autoStoreAllSendUnlimitedMediaFiles &&
           typingIndicators == other.typingIndicators &&

@@ -16,6 +16,9 @@ class LiveLocationService {
   static const _channel = MethodChannel('eu.twonly/location_metadata');
   static const durations = [600, 1200, 3600, 7200, 28800];
 
+  /// Rust and every receiver refuse shares longer than 24 hours.
+  static const maxDurationSeconds = 86400;
+
   static LiveLocationData? decode(List<int>? bytes) {
     if (bytes == null) return null;
     try {

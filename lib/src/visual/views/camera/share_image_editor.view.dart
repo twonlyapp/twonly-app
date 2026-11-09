@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:math' as math;
 
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
@@ -596,10 +597,37 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       mediaWriter.storeImageAsOriginal(pixelRatio);
 
   AdditionalMessageData? getAdditionalData() {
-    if (widget.previewLink == null) return null;
+    final link = widget.previewLink?.url.toString();
+    final location = _photoLocation();
+    if (link == null && location == null) return null;
     return AdditionalMessageData(
-      type: AdditionalMessageData_Type.LINK,
-      link: widget.previewLink!.url.toString(),
+      type: link != null
+          ? AdditionalMessageData_Type.LINK
+          : AdditionalMessageData_Type.PHOTO_LOCATION,
+      link: link,
+      photoLocation: location,
+    );
+  }
+
+  /// Coordinates leave the device only when the location filter is the
+  /// selected filter and its map is on screen.
+  PhotoLocationData? _photoLocation() {
+    final filter = layerStack.all.whereType<FilterLayerData>().firstOrNull;
+    final location = filter?.location;
+    if (filter == null || !filter.locationSelected || location == null) {
+      return null;
+    }
+    final rect = screenshotController.relativeRect(filter.locationCardKey);
+    if (rect == null) return null;
+    return PhotoLocationData(
+      latitude: location.latitude,
+      longitude: location.longitude,
+      accuracy: location.accuracy,
+      fixTimestampMs: Int64(location.fixTimestampMs),
+      mapLeft: rect.left,
+      mapTop: rect.top,
+      mapWidth: rect.width,
+      mapHeight: rect.height,
     );
   }
 

@@ -86,7 +86,7 @@
   "liveLocationTitle": "Live location",
   "liveLocationExplanation": "Share your current location in this chat. Everyone in this group can see it. Only your latest location is kept.",
   "liveLocationDuration": "Share for",
-  "liveLocationMinutes": "{count} minutes",
+  "liveLocationMinutes": "{count, plural, =1{1 minute} other{{count} minutes}}",
   "@liveLocationMinutes": {
     "placeholders": {
       "count": {
@@ -102,6 +102,18 @@
       }
     }
   },
+  "liveLocationHoursMinutes": "{hours} h {minutes} min",
+  "@liveLocationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "liveLocationCustom": "Custom",
   "liveLocationStart": "Start sharing",
   "liveLocationStop": "Stop sharing",
   "liveLocationAlreadySharing": "Your location is already being shared in this chat.",
@@ -112,6 +124,18 @@
   "liveLocationEnded": "Location sharing ended",
   "liveLocationLastUpdate": "Last update: {time}",
   "@liveLocationLastUpdate": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "locationFilterTitle": "Location filter",
+  "locationFilterSubtitle": "Adds a camera filter with a map of where you are. Your location is sent only with media you send using this filter.",
+  "locationFilterSearching": "Finding your location…",
+  "locationFilterUnavailable": "Location not found",
+  "photoLocationTakenAt": "Location at {time}",
+  "@photoLocationTakenAt": {
     "placeholders": {
       "time": {
         "type": "String"
@@ -136,6 +160,7 @@
   "settingsAppearance": "Design & language",
   "settingsPrivacy": "Privacy & Security",
   "settingsPrivacyBlockUsers": "Blocked contacts",
+  "settingsPrivacyLocation": "Location",
   "settingsPrivacyBlockUsersDesc": "Blocked contacts will not be able to communicate with you. You can unblock a blocked contact at any time.",
   "settingsPrivacyBlockUsersCount": "{len} contact(s)",
   "@settingsPrivacyBlockUsersCount": {

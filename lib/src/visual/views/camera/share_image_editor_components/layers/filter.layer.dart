@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/datetime_filter.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/image_filter.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/location_filter.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/stickers.dart';
 
 /// Main layer
@@ -73,16 +76,38 @@ class FilterText extends StatelessWidget {
 
 class _FilterLayerState extends State<FilterLayer> {
   final PageController pageController = PageController(initialPage: 1);
-  final List<Widget> pages = [
+  late final List<Widget> pages = [
     const FilterSkeleton(),
     const DateTimeFilter(),
+    if (userService.currentUser.locationFilter)
+      LocationFilter(layerData: widget.layerData),
     const FilterSkeleton(),
   ];
 
   @override
   void initState() {
     super.initState();
+    if (userService.currentUser.locationFilter) _requestLocation();
     unawaited(initAsync());
+  }
+
+  void _requestLocation() {
+    final data = widget.layerData;
+    data.locationRequest ??= () async {
+      try {
+        return data.location = await RustApi.filterLocation();
+      } on Object catch (error) {
+        Log.warn('Location filter has no location: $error');
+        return null;
+      }
+    }();
+  }
+
+  /// Only the location filter's page sends coordinates.
+  void _syncLocationSelection() {
+    final index = widget.layerData.page - 1;
+    widget.layerData.locationSelected =
+        index >= 0 && index < pages.length && pages[index] is LocationFilter;
   }
 
   // Keep the selected filter when the image filters arrive.
@@ -94,6 +119,7 @@ class _FilterLayerState extends State<FilterLayer> {
     final selectedIndex = pages.indexOf(selected);
     final nextPage = selectedIndex < 0 ? 1 : selectedIndex + 1;
     widget.layerData.page = nextPage;
+    _syncLocationSelection();
     if (oldPage == nextPage) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted &&
@@ -144,6 +170,7 @@ class _FilterLayerState extends State<FilterLayer> {
       },
       onPageChanged: (index) {
         widget.layerData.page = index;
+        _syncLocationSelection();
         if (index == 0) {
           // If the user swipes to the first duplicated page, jump to the last page
           pageController.jumpToPage(pages.length);
