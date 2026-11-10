@@ -2956,6 +2956,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createContactGroup => 'Create contact group';
 
   @override
+  String get createShortcut => 'Create shortcut';
+
+  @override
   String get editContactGroup => 'Edit contact group';
 
   @override

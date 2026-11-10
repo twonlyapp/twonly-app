@@ -333,16 +333,23 @@ class _ShareImageView extends State<ShareImageView> {
                           selectedGroupIds: widget.selectedGroupIds,
                           updateSelectedGroupIds: updateSelectedGroupIds,
                         ),
-                        const SizedBox(height: 10),
-                        StoryTargetSelector(
-                          target: widget.storyTarget,
-                          enabled: _storyPossible,
-                          onChanged: () => setState(() {}),
-                          onAudienceChanged: (chats) {
-                            if (!mounted) return;
-                            setState(() => _storyAudienceChats = chats);
-                          },
-                        ),
+                        // A twonly never goes into a story, so the section is
+                        // left out rather than shown disabled.
+                        if (!widget
+                            .mediaFileService
+                            .mediaFile
+                            .requiresAuthentication) ...[
+                          const SizedBox(height: 10),
+                          StoryTargetSelector(
+                            target: widget.storyTarget,
+                            enabled: _storyPossible,
+                            onChanged: () => setState(() {}),
+                            onAudienceChanged: (chats) {
+                              if (!mounted) return;
+                              setState(() => _storyAudienceChats = chats);
+                            },
+                          ),
+                        ],
                         // The next section's heading brings its own space.
                         const SizedBox(height: 4),
                       ],
@@ -351,12 +358,7 @@ class _ShareImageView extends State<ShareImageView> {
                         selectedGroupIds: widget.selectedGroupIds,
                         updateSelectedGroupIds: updateSelectedGroupIds,
                         title: context.lang.shareImagePinnedContacts,
-                        showSelectAll:
-                            !widget.sendToWidget &&
-                            !widget
-                                .mediaFileService
-                                .mediaFile
-                                .requiresAuthentication,
+                        showSelectAll: !widget.sendToWidget,
                       ),
                       if (_pinnedContacts.isNotEmpty)
                         const SizedBox(height: 10),
@@ -365,12 +367,7 @@ class _ShareImageView extends State<ShareImageView> {
                         selectedGroupIds: widget.selectedGroupIds,
                         updateSelectedGroupIds: updateSelectedGroupIds,
                         title: context.lang.shareImageBestFriends,
-                        showSelectAll:
-                            !widget.sendToWidget &&
-                            !widget
-                                .mediaFileService
-                                .mediaFile
-                                .requiresAuthentication,
+                        showSelectAll: !widget.sendToWidget,
                       ),
                       if (_bestFriends.isNotEmpty) const SizedBox(height: 10),
                       if (_otherUsers.isNotEmpty)

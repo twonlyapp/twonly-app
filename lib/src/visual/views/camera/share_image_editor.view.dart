@@ -423,7 +423,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   Future<void> _toggleRequiresAuth() async {
     await mediaService.setRequiresAuth(!media.requiresAuthentication);
-    selectedGroupIds = HashSet();
+    // A twonly can go to several chats, but never into a story.
     storyTarget.clear();
     if (mounted) setState(() {});
   }
@@ -584,9 +584,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     // ShareImageView rebuilds its own controls. Rebuilding this editor while it
     // is covered by that route needlessly redraws the full media composition.
     if (checked) {
-      if (media.requiresAuthentication) {
-        selectedGroupIds.clear();
-      }
       selectedGroupIds.add(groupId);
     } else {
       selectedGroupIds.remove(groupId);

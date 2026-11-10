@@ -1139,6 +1139,7 @@
   "contactGroupsTitle": "Kontaktgruppen",
   "contactGroupsSubtitleEmpty": "Keine sichtbaren Kontaktgruppen ausgewählt",
   "createContactGroup": "Kontaktgruppe erstellen",
+  "createShortcut": "Shortcut erstellen",
   "editContactGroup": "Kontaktgruppe anpassen",
   "deleteContactGroup": "Kontaktgruppe löschen",
   "deleteContactGroupConfirmation": "Möchtest du diese Kontaktgruppe wirklich löschen? Sie wird von allen Kontakten und Gruppen entfernt.",

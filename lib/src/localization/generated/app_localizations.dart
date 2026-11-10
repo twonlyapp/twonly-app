@@ -5008,6 +5008,12 @@ abstract class AppLocalizations {
   /// **'Create contact group'**
   String get createContactGroup;
 
+  /// No description provided for @createShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Create shortcut'**
+  String get createShortcut;
+
   /// No description provided for @editContactGroup.
   ///
   /// In en, this message translates to:

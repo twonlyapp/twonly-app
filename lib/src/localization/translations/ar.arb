@@ -812,6 +812,7 @@
   "contactGroupsTitle": "مجموعات جهات الاتصال",
   "contactGroupsSubtitleEmpty": "لم يتم اختيار مجموعات جهات اتصال ظاهرة",
   "createContactGroup": "إنشاء مجموعة جهات اتصال",
+  "createShortcut": "إنشاء اختصار",
   "editContactGroup": "تعديل مجموعة جهات الاتصال",
   "deleteContactGroup": "حذف مجموعة جهات الاتصال",
   "deleteContactGroupConfirmation": "هل أنت متأكد أنك تريد حذف مجموعة جهات الاتصال هذه؟ ستتم إزالتها من جميع جهات الاتصال والمجموعات.",

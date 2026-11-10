@@ -150,10 +150,10 @@ class _ContactGroupShortcutRowState extends State<ContactGroupShortcutRow> {
         padding: const EdgeInsets.symmetric(horizontal: 4),
         children: [
           MyChip(
-            tooltip: context.lang.createContactGroup,
+            tooltip: context.lang.createShortcut,
             onTap: _openSettings,
             label: _contactGroups.isEmpty
-                ? Text(context.lang.createContactGroup)
+                ? Text(context.lang.createShortcut)
                 : const Icon(Icons.add_reaction_outlined),
           ),
           for (final contactGroup in _contactGroups) ...[

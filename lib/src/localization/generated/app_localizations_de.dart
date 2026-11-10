@@ -2983,6 +2983,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get createContactGroup => 'Kontaktgruppe erstellen';
 
   @override
+  String get createShortcut => 'Shortcut erstellen';
+
+  @override
   String get editContactGroup => 'Kontaktgruppe anpassen';
 
   @override

@@ -3021,6 +3021,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createContactGroup => 'إنشاء مجموعة جهات اتصال';
 
   @override
+  String get createShortcut => 'إنشاء اختصار';
+
+  @override
   String get editContactGroup => 'تعديل مجموعة جهات الاتصال';
 
   @override
