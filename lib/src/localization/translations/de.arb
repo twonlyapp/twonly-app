@@ -629,10 +629,10 @@
   "termsOfService": "Allgemeine Geschäftsbedingungen",
   "privacyPolicy": "Datenschutzerklärung",
   "additionalUserAddError": "{username} konnte nicht hinzugefügt werden, bitte versuche es später noch einmal.",
-  "additionalUserAddErrorNotInFreePlan": "{username} hat bereits einen bezahlten Tarif und konnte daher nicht hinzugefügt werden.",
+  "additionalUserAddErrorNotInFreePlan": "{username} hat bereits einen bezahlten Plan und konnte daher nicht hinzugefügt werden.",
   "additionalUserAddButton": "Zusätzlichen Benutzer hinzufügen ({used}/{limit})",
   "additionalUserRemoveTitle": "Diesen zusätzlichen Benutzer entfernen",
-  "additionalUserRemoveDesc": "Der zusätzliche Nutzer wird nach der Entfernung automatisch auf den kostenlosen Tarif zurückgestuft und du kannst eine andere Person hinzufügen.",
+  "additionalUserRemoveDesc": "Der zusätzliche Nutzer wird nach der Entfernung automatisch auf den kostenlosen Plan zurückgestuft und du kannst eine andere Person hinzufügen.",
   "additionalUserSelectTitle": "Zusätzliche Benutzer auswählen",
   "additionalUserSelectButton": "Benutzer auswählen ({used}/{limit})",
   "storeAsDefault": "Als Standard speichern",
@@ -1189,7 +1189,7 @@
   "memoriesDeletingProgress": "Erinnerungen werden gelöscht...",
   "memoriesExportingProgress": "Erinnerungen werden exportiert...",
   "fileLimitReachedTitle": "Datei zu groß zum Senden",
-  "fileLimitReachedDetail": "Diese Datei ist {size} groß, dein Tarif erlaubt aber höchstens {limit} pro Sendung.",
+  "fileLimitReachedDetail": "Diese Datei ist {size} groß, dein Plan erlaubt aber höchstens {limit} pro Sendung.",
   "@fileLimitReachedDetail": {
     "placeholders": {
       "size": {
@@ -1200,7 +1200,7 @@
       }
     }
   },
-  "fileLimitReachedDetailNoSize": "Dein Tarif erlaubt höchstens {limit} pro Sendung.",
+  "fileLimitReachedDetailNoSize": "Dein Plan erlaubt höchstens {limit} pro Sendung.",
   "@fileLimitReachedDetailNoSize": {
     "placeholders": {
       "limit": {
@@ -1209,8 +1209,8 @@
     }
   },
   "fileLimitReachedHint": "Nimm ein kürzeres Video auf und sende es erneut.",
-  "fileLimitReachedHintFree": "Nimm ein kürzeres Video auf oder wechsle den Tarif, um größere Dateien zu senden.",
-  "fileLimitReachedUpgrade": "Tarif wechseln",
+  "fileLimitReachedHintFree": "Nimm ein kürzeres Video auf oder wechsle den Plan, um größere Dateien zu senden.",
+  "fileLimitReachedUpgrade": "Plan wechseln",
   "contactGroupUsedByWidget": "Homebildschirm-Widget",
   "contactGroupAddWidgetSubtitle": "Füge ein Widget für diese Kontaktgruppe hinzu.",
   "contactGroupWidgetTutorialTitle": "Homebildschirm-Widget hinzufügen",
@@ -1441,6 +1441,12 @@
   "memoryImporterCodeExpired": "Dieser Code ist abgelaufen. Lade die Import-Seite neu und scanne den neuen Code.",
   "memoryImporterTooMany": "Es sind bereits drei Importe verbunden. Entferne einen unter Einstellungen → Memories → Aus anderen Apps importieren.",
   "memoryImporterNeedsPlan": "Für den Import von Memories brauchst du einen Plan mit Memories-Speicher.",
+  "memoryImporterRequiresPlanTitle": "Abo erforderlich",
+  "memoryImporterRequiresPlan": "Importierte Memories werden in deinem Memories Backup gespeichert, das in den kostenpflichtigen Plänen enthalten ist. Wechsle deinen Plan, um einen Import zu verbinden.",
+  "memoryImporterUpgrade": "Plan wechseln",
+  "memoryImporterRequiresBackupTitle": "Memories Backup aktivieren",
+  "memoryImporterRequiresBackup": "Importierte Memories werden in deinem Memories Backup gespeichert. Aktiviere es, um einen Import zu verbinden.",
+  "memoryImporterEnableBackup": "Memories Backup aktivieren",
   "memoryImporterConnectFailed": "Der Import konnte nicht verbunden werden. Prüfe deine Verbindung und versuche es erneut.",
   "memoryImporterScanOnlyTitle": "Nutze die twonly-Kamera",
   "memoryImporterScanOnly": "Ein Memories-Import lässt sich nur verbinden, indem du seinen Code mit der twonly-Kamera scannst. Öffne twonly und scanne dann den Code auf deinem Computer. Verbinde nie einen Code, den dir jemand geschickt hat.",

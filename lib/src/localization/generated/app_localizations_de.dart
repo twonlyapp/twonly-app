@@ -1866,7 +1866,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String additionalUserAddErrorNotInFreePlan(Object username) {
-    return '$username hat bereits einen bezahlten Tarif und konnte daher nicht hinzugefügt werden.';
+    return '$username hat bereits einen bezahlten Plan und konnte daher nicht hinzugefügt werden.';
   }
 
   @override
@@ -1880,7 +1880,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get additionalUserRemoveDesc =>
-      'Der zusätzliche Nutzer wird nach der Entfernung automatisch auf den kostenlosen Tarif zurückgestuft und du kannst eine andere Person hinzufügen.';
+      'Der zusätzliche Nutzer wird nach der Entfernung automatisch auf den kostenlosen Plan zurückgestuft und du kannst eine andere Person hinzufügen.';
 
   @override
   String get additionalUserSelectTitle => 'Zusätzliche Benutzer auswählen';
@@ -3131,12 +3131,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String fileLimitReachedDetail(String size, String limit) {
-    return 'Diese Datei ist $size groß, dein Tarif erlaubt aber höchstens $limit pro Sendung.';
+    return 'Diese Datei ist $size groß, dein Plan erlaubt aber höchstens $limit pro Sendung.';
   }
 
   @override
   String fileLimitReachedDetailNoSize(String limit) {
-    return 'Dein Tarif erlaubt höchstens $limit pro Sendung.';
+    return 'Dein Plan erlaubt höchstens $limit pro Sendung.';
   }
 
   @override
@@ -3145,10 +3145,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileLimitReachedHintFree =>
-      'Nimm ein kürzeres Video auf oder wechsle den Tarif, um größere Dateien zu senden.';
+      'Nimm ein kürzeres Video auf oder wechsle den Plan, um größere Dateien zu senden.';
 
   @override
-  String get fileLimitReachedUpgrade => 'Tarif wechseln';
+  String get fileLimitReachedUpgrade => 'Plan wechseln';
 
   @override
   String get contactGroupUsedByWidget => 'Homebildschirm-Widget';
@@ -3838,6 +3838,26 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get memoryImporterNeedsPlan =>
       'Für den Import von Memories brauchst du einen Plan mit Memories-Speicher.';
+
+  @override
+  String get memoryImporterRequiresPlanTitle => 'Abo erforderlich';
+
+  @override
+  String get memoryImporterRequiresPlan =>
+      'Importierte Memories werden in deinem Memories Backup gespeichert, das in den kostenpflichtigen Plänen enthalten ist. Wechsle deinen Plan, um einen Import zu verbinden.';
+
+  @override
+  String get memoryImporterUpgrade => 'Plan wechseln';
+
+  @override
+  String get memoryImporterRequiresBackupTitle => 'Memories Backup aktivieren';
+
+  @override
+  String get memoryImporterRequiresBackup =>
+      'Importierte Memories werden in deinem Memories Backup gespeichert. Aktiviere es, um einen Import zu verbinden.';
+
+  @override
+  String get memoryImporterEnableBackup => 'Memories Backup aktivieren';
 
   @override
   String get memoryImporterConnectFailed =>

@@ -5,7 +5,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/components/prompt_sheet.comp.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Asks testers for a store review once per app start, after they stayed on
@@ -38,13 +38,7 @@ class StoreReviewPromptPresenter {
 }
 
 Future<void> showStoreReviewPromptSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
-    context: context,
-    useRootNavigator: true,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => const StoreReviewPromptSheet(),
-  );
+  return showPromptSheet(context, const StoreReviewPromptSheet());
 }
 
 class StoreReviewPromptSheet extends StatelessWidget {
@@ -68,69 +62,16 @@ class StoreReviewPromptSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = context.color.primary;
-    return Material(
-      color: context.color.surface,
-      clipBehavior: Clip.antiAlias,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    return PromptSheet(
+      illustration: _StarArc(color: context.color.primary),
+      title: context.lang.storeReviewPromptTitle,
+      description: context.lang.storeReviewPromptDesc(
+        Platform.isIOS ? 'App Store' : 'Play Store',
       ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 42,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: context.color.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-              child: Column(
-                children: [
-                  _StarArc(color: accent),
-                  const SizedBox(height: 16),
-                  Text(
-                    context.lang.storeReviewPromptTitle,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    context.lang.storeReviewPromptDesc(
-                      Platform.isIOS ? 'App Store' : 'Play Store',
-                    ),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: context.color.onSurfaceVariant,
-                      height: 1.35,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  MyButton(
-                    variant: MyButtonVariant.primaryMiddle,
-                    onPressed: () => _openStore(context),
-                    child: Text(context.lang.storeReviewPromptReview),
-                  ),
-                  const SizedBox(height: 12),
-                  MyButton(
-                    variant: MyButtonVariant.secondaryMiddle,
-                    onPressed: () => _hideForever(context),
-                    child: Text(context.lang.storeReviewPromptHide),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      primaryLabel: context.lang.storeReviewPromptReview,
+      onPrimary: () => _openStore(context),
+      secondaryLabel: context.lang.storeReviewPromptHide,
+      onSecondary: () => _hideForever(context),
     );
   }
 }

@@ -6346,6 +6346,42 @@ abstract class AppLocalizations {
   /// **'Importing memories needs a plan with memories storage.'**
   String get memoryImporterNeedsPlan;
 
+  /// No description provided for @memoryImporterRequiresPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires a subscription'**
+  String get memoryImporterRequiresPlanTitle;
+
+  /// No description provided for @memoryImporterRequiresPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported memories are stored in your Memories Backup, which is part of the paid plans. Upgrade to connect an importer.'**
+  String get memoryImporterRequiresPlan;
+
+  /// No description provided for @memoryImporterUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade plan'**
+  String get memoryImporterUpgrade;
+
+  /// No description provided for @memoryImporterRequiresBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Memories Backup'**
+  String get memoryImporterRequiresBackupTitle;
+
+  /// No description provided for @memoryImporterRequiresBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported memories are stored in your Memories Backup. Turn it on to connect an importer.'**
+  String get memoryImporterRequiresBackup;
+
+  /// No description provided for @memoryImporterEnableBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Memories Backup'**
+  String get memoryImporterEnableBackup;
+
   /// No description provided for @memoryImporterConnectFailed.
   ///
   /// In en, this message translates to:

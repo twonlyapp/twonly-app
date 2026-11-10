@@ -1,25 +1,53 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/providers/purchases.provider.dart';
+import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/backup/connect_importer.view.dart';
+
+import '../mocks/user_config.dart';
 
 const _link =
     'https://me.twonly.eu/i/#v1/3f1c7a52-9a4e-4c1b-8d2e-5b6a7c8d9e0f/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 
-Widget _app() => MaterialApp(
-  locale: const Locale('en'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
-  supportedLocales: AppLocalizations.supportedLocales,
-  home: Builder(
-    builder: (context) => Scaffold(
-      body: TextButton(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const ConnectImporterView(link: _link),
+class _Purchases extends ChangeNotifier
+    with DiagnosticableTreeMixin
+    implements PurchasesProvider {
+  @override
+  SubscriptionPlan plan = SubscriptionPlan.Pro;
+
+  void set(SubscriptionPlan value) {
+    plan = value;
+    notifyListeners();
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+late _Purchases _purchases;
+
+Widget _app() => ChangeNotifierProvider<PurchasesProvider>.value(
+  value: _purchases,
+  child: MaterialApp(
+    locale: const Locale('en'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Builder(
+      builder: (context) => Scaffold(
+        body: TextButton(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const ConnectImporterView(link: _link),
+            ),
           ),
+          child: const Text('open'),
         ),
-        child: const Text('open'),
       ),
     ),
   ),
@@ -45,6 +73,22 @@ bool _connectEnabled(WidgetTester tester) {
 }
 
 void main() {
+  setUp(() async {
+    await locator.reset();
+    locator.registerSingleton<UserService>(UserService());
+    userService.currentUser = testUserConfig(
+      userId: 1,
+      username: 'me',
+      displayName: 'Me',
+      subscriptionPlan: 'Pro',
+      currentSetupPage: null,
+      appVersion: 1,
+    )..isCloudBackupEnabled = true;
+    _purchases = _Purchases();
+  });
+
+  tearDown(locator.reset);
+
   testWidgets('explains what connecting allows and names the lures', (
     tester,
   ) async {
@@ -115,5 +159,47 @@ void main() {
     // which this test never initialises.
     expect(find.text('open'), findsOneWidget);
     expect(find.byType(ConnectImporterView), findsNothing);
+  });
+
+  testWidgets('on the free plan it says a subscription is needed', (
+    tester,
+  ) async {
+    _purchases.plan = SubscriptionPlan.Free;
+    await _open(tester);
+    expect(find.text('Requires a subscription'), findsOneWidget);
+    expect(find.byKey(const Key('importer-connect')), findsNothing);
+    expect(find.text('Upgrade plan'), findsOneWidget);
+    // Still there after the countdown would have run out.
+    await tester.pump(const Duration(seconds: 11));
+    expect(find.byKey(const Key('importer-connect')), findsNothing);
+  });
+
+  testWidgets('with the backup off it asks to turn the backup on', (
+    tester,
+  ) async {
+    userService.currentUser.isCloudBackupEnabled = false;
+    await _open(tester);
+    expect(find.byKey(const Key('importer-missing')), findsOneWidget);
+    expect(find.textContaining('Turn it on to connect'), findsOneWidget);
+    expect(find.byKey(const Key('importer-connect')), findsNothing);
+    expect(
+      find.byKey(const Key('importer-fix-missing')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('upgrading restarts the countdown before Connect works', (
+    tester,
+  ) async {
+    _purchases.plan = SubscriptionPlan.Free;
+    await _open(tester);
+    await tester.pump(const Duration(seconds: 11));
+    _purchases.set(SubscriptionPlan.Pro);
+    await tester.pump();
+    expect(find.byKey(const Key('importer-missing')), findsNothing);
+    expect(find.text('Connect (10)'), findsOneWidget);
+    expect(_connectEnabled(tester), isFalse);
+    await tester.pump(const Duration(seconds: 10));
+    expect(_connectEnabled(tester), isTrue);
   });
 }

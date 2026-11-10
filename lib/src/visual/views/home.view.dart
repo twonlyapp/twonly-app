@@ -26,7 +26,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/release_notes.comp.dart';
 import 'package:twonly/src/visual/components/store_review_prompt.comp.dart';
-import 'package:twonly/src/visual/release_notes/release_notes_0_6_0.dart';
+import 'package:twonly/src/visual/release_notes/release_notices.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
@@ -407,7 +407,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   Future<void> _showStartupSheets() async {
     final releaseNotesShown = await ReleaseNotesPresenter.showIfNeeded(
       context,
-      releaseNotes060(context),
+      releaseNotices,
     );
     // One sheet per app start is enough.
     if (releaseNotesShown) {

@@ -3883,6 +3883,26 @@ class AppLocalizationsAr extends AppLocalizations {
       'Importing memories needs a plan with memories storage.';
 
   @override
+  String get memoryImporterRequiresPlanTitle => 'Requires a subscription';
+
+  @override
+  String get memoryImporterRequiresPlan =>
+      'Imported memories are stored in your Memories Backup, which is part of the paid plans. Upgrade to connect an importer.';
+
+  @override
+  String get memoryImporterUpgrade => 'Upgrade plan';
+
+  @override
+  String get memoryImporterRequiresBackupTitle => 'Turn on Memories Backup';
+
+  @override
+  String get memoryImporterRequiresBackup =>
+      'Imported memories are stored in your Memories Backup. Turn it on to connect an importer.';
+
+  @override
+  String get memoryImporterEnableBackup => 'Turn on Memories Backup';
+
+  @override
   String get memoryImporterConnectFailed =>
       'The importer could not be connected. Check your connection and try again.';
 

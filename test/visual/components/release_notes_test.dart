@@ -54,4 +54,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(sheet, findsNothing);
   });
+
+  test('orders release notice versions numerically', () {
+    expect(compareVersions('0.7.1', '0.6.0'), greaterThan(0));
+    expect(compareVersions('0.6.0', '0.7.1'), lessThan(0));
+    expect(compareVersions('0.10.0', '0.9.9'), greaterThan(0));
+    expect(compareVersions('0.6', '0.6.0'), 0);
+  });
 }
