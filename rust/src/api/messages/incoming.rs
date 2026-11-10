@@ -1022,6 +1022,10 @@ async fn handle_message(
         Receipt::mark_handled(&mut t, &message.receipt_id).await?;
     }
 
+    // Anything the server held back because their mailbox was full can go out
+    // with the flush below: they are online, so they are fetching it now.
+    crate::api::messages::send_backoff::retry_now(&mut t, from_user_id).await?;
+
     t.commit().await?;
 
     if let Err(error) = crate::user_config::UserConfig::update(ctx, |user| {

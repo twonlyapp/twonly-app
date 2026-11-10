@@ -585,7 +585,11 @@ pub fn read_exif(webp: &[u8]) -> Result<ExifMetadata> {
             .filter(|size| *size <= 1024)
             .ok_or_else(invalid)?;
 
-            let start = if size <= 4 { at + 8 } else { u32_at(at + 8)? as usize };
+            let start = if size <= 4 {
+                at + 8
+            } else {
+                u32_at(at + 8)? as usize
+            };
 
             let data = tiff.get(start..start + size).ok_or_else(invalid)?.to_vec();
 
@@ -608,7 +612,11 @@ pub fn read_exif(webp: &[u8]) -> Result<ExifMetadata> {
     };
 
     let text = |data: Option<Vec<u8>>| -> Option<String> {
-        data.map(|d| String::from_utf8_lossy(&d).trim_end_matches('\0').to_string())
+        data.map(|d| {
+            String::from_utf8_lossy(&d)
+                .trim_end_matches('\0')
+                .to_string()
+        })
     };
 
     let ifd0 = read_ifd(u32_at(4)? as usize)?;
@@ -623,7 +631,8 @@ pub fn read_exif(webp: &[u8]) -> Result<ExifMetadata> {
         None => Vec::new(),
     };
 
-    let date = text(find(&exif, TAG_DATE_TIME_ORIGINAL)).or_else(|| text(find(&ifd0, TAG_DATE_TIME)));
+    let date =
+        text(find(&exif, TAG_DATE_TIME_ORIGINAL)).or_else(|| text(find(&ifd0, TAG_DATE_TIME)));
 
     let offset = text(find(&exif, TAG_OFFSET_TIME_ORIGINAL));
 
@@ -668,9 +677,11 @@ pub fn read_exif(webp: &[u8]) -> Result<ExifMetadata> {
         }
     };
 
-    let latitude = rationals(find(&gps, TAG_GPS_LATITUDE)).map(|v| v * sign(find(&gps, TAG_GPS_LATITUDE_REF), b'S'));
+    let latitude = rationals(find(&gps, TAG_GPS_LATITUDE))
+        .map(|v| v * sign(find(&gps, TAG_GPS_LATITUDE_REF), b'S'));
 
-    let longitude = rationals(find(&gps, TAG_GPS_LONGITUDE)).map(|v| v * sign(find(&gps, TAG_GPS_LONGITUDE_REF), b'W'));
+    let longitude = rationals(find(&gps, TAG_GPS_LONGITUDE))
+        .map(|v| v * sign(find(&gps, TAG_GPS_LONGITUDE_REF), b'W'));
 
     let (latitude, longitude) = match (latitude, longitude) {
         (Some(lat), Some(lon)) if lat.abs() <= 90.0 && lon.abs() <= 180.0 => (Some(lat), Some(lon)),

@@ -632,6 +632,52 @@ pub(crate) async fn ensure_contact_avatar_png(
     .await
 }
 
+/// Resolves a contact's avatar as a real PNG for the operating system's
+/// notification UI. Photo avatars are stored as WebP, which iOS does not render
+/// as a communication notification's sender image, so they are transcoded once
+/// into a PNG next to the cached WebP.
+pub(crate) async fn ensure_contact_notification_avatar_png(
+    ctx: &Context, contact_id: i64,
+) -> Result<Option<PathBuf>> {
+    let Some(path) = ensure_contact_avatar_png(ctx, contact_id).await? else {
+        return Ok(None);
+    };
+
+    if path.extension().is_some_and(|extension| extension == "png") {
+        return Ok(Some(path));
+    }
+
+    let output = path.with_extension("png");
+
+    if output.exists() {
+        return Ok(Some(output));
+    }
+
+    let render_output = output.clone();
+
+    crate::database::lifecycle::spawn_blocking(move || {
+        render_cached(&render_output, || {
+            let image = image::open(&path).map_err(|error| {
+                TwonlyError::Generic(format!("avatar photo decoding failed: {error}"))
+            })?;
+
+            let mut bytes = Cursor::new(Vec::new());
+
+            image
+                .write_to(&mut bytes, image::ImageFormat::Png)
+                .map_err(|error| {
+                    TwonlyError::Generic(format!("avatar photo encoding failed: {error}"))
+                })?;
+
+            Ok(bytes.into_inner())
+        })
+    })
+    .await
+    .map_err(|error| TwonlyError::Generic(format!("avatar transcode task failed: {error}")))??;
+
+    Ok(Some(output))
+}
+
 /// Matches the group avatar in Flutter: up to three active members, ordered
 /// by their latest message, with overlapping avatars and rounded corners.
 /// Members without an avatar are left out, and a group in which no member has
@@ -1114,6 +1160,29 @@ mod tests {
         assert_eq!(photo.extension().unwrap(), "webp");
 
         assert_eq!(std::fs::read(&photo)?, webp);
+
+        // iOS cannot show a WebP sender image in a communication notification,
+        // so notifications receive the same photo transcoded to PNG.
+        let notification = ensure_contact_notification_avatar_png(&ctx, 7)
+            .await?
+            .unwrap();
+
+        assert_eq!(notification, photo.with_extension("png"));
+
+        let png = std::fs::read(&notification)?;
+
+        assert_eq!(
+            image::guess_format(&png).map_err(|error| TwonlyError::Generic(error.to_string()))?,
+            image::ImageFormat::Png
+        );
+
+        assert_eq!(
+            image::load_from_memory(&png)
+                .map_err(|error| TwonlyError::Generic(error.to_string()))?
+                .to_rgba8()
+                .dimensions(),
+            (8, 8)
+        );
 
         sqlx::query("UPDATE contacts SET prefer_photo_avatar = 0 WHERE user_id = 7")
             .execute(&db.pool)

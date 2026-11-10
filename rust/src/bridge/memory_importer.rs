@@ -6,10 +6,10 @@
 //! The memories importer for Flutter: pairing a page, the connected and past
 //! imports in Settings, and discovering imported memories.
 
+use crate::api::Server;
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
-use crate::api::Server;
 use crate::frb_generated::StreamSink;
 use crate::services::memory_import_progress;
 use crate::services::memory_importer as service;

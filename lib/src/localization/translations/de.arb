@@ -1338,6 +1338,8 @@
   "memoriesMapVisibleCount": "{count, plural, =1 {1 Erinnerung in diesem Bereich} other {{count} Erinnerungen in diesem Bereich}}",
   "mediaSendFailed": "Senden fehlgeschlagen",
   "messageSendFailedUserInactive": "Benutzer inaktiv",
+  "messageSendDeferred": "Wird später gesendet",
+  "messageSendDeferredExplanation": "Der Server hält diese Nachricht gerade zurück, meist weil der Empfänger deine vorherigen Nachrichten noch nicht abgeholt hat. twonly sendet sie später automatisch.",
   "mailboxSyncTitle": "twonly wird synchronisiert",
   "mailboxSyncBody": "twonly synchronisiert dieses Gerät und lädt deine Nachrichten herunter. Bitte lass die App geöffnet, bis der Vorgang abgeschlossen ist.",
   "mailboxSyncRemaining": "{count, plural, =1 {Noch 1 Nachricht} other {Noch {count} Nachrichten}}",

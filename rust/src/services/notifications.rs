@@ -909,18 +909,22 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
             Some(sender_name.clone())
         };
 
-        let avatar_path =
-            match crate::services::avatars::ensure_contact_avatar_png(ctx, row.sender_id).await {
-                Ok(path) => path.map(|path| path.display().to_string()),
-                Err(error) => {
-                    tracing::warn!(
-                        sender_id = row.sender_id,
-                        "failed to prepare notification avatar: {error}"
-                    );
+        let avatar_path = match crate::services::avatars::ensure_contact_notification_avatar_png(
+            ctx,
+            row.sender_id,
+        )
+        .await
+        {
+            Ok(path) => path.map(|path| path.display().to_string()),
+            Err(error) => {
+                tracing::warn!(
+                    sender_id = row.sender_id,
+                    "failed to prepare notification avatar: {error}"
+                );
 
-                    None
-                }
-            };
+                None
+            }
+        };
 
         let conversation_avatar_path = if is_group {
             match crate::services::avatars::ensure_group_avatar_png(

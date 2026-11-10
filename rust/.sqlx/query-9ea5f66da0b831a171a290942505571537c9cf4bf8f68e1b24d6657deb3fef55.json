@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT retry_at FROM contact_send_backoff WHERE contact_id = ? AND retry_at > ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "retry_at",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contact_send_backoff",
+            "name": "retry_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9ea5f66da0b831a171a290942505571537c9cf4bf8f68e1b24d6657deb3fef55"
+}

@@ -128,7 +128,8 @@ pub(crate) async fn filter_location(
         return Ok(Some(cached));
     }
 
-    let location = request_fix(request, Duration::from_secs(LOCATION_WINDOW_SECONDS as u64)).await?;
+    let location =
+        request_fix(request, Duration::from_secs(LOCATION_WINDOW_SECONDS as u64)).await?;
 
     Ok(location.map(|location| (SystemTime::now(), location)))
 }

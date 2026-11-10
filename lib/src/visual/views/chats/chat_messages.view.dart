@@ -85,6 +85,7 @@ class _ChatViewData {
   Map<String, List<StoredReaction>> reactionsByMessageId = {};
   Set<String> ackedMessageIds = {};
   Set<String> failedMessageIds = {};
+  Set<String> deferredMessageIds = {};
 
   List<ChatItem> chatItems = [];
   List<StoredMessage> allMessages = [];
@@ -724,12 +725,18 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
               .where((action) => action.type == MessageActionType.sendFailed)
               .map((action) => action.messageId)
               .toSet();
+          final deferred = actions
+              .where((action) => action.type == MessageActionType.sendDeferred)
+              .map((action) => action.messageId)
+              .toSet();
           if (setEquals(acked, _data.ackedMessageIds) &&
-              setEquals(failed, _data.failedMessageIds)) {
+              setEquals(failed, _data.failedMessageIds) &&
+              setEquals(deferred, _data.deferredMessageIds)) {
             return done(actionsReady);
           }
           _data.ackedMessageIds = acked;
           _data.failedMessageIds = failed;
+          _data.deferredMessageIds = deferred;
           done(actionsReady);
           _notifyMessageDataChanged();
         });
@@ -1210,6 +1217,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                           child: ChatMessageActionScope(
                             ackedMessageIds: _data.ackedMessageIds,
                             failedMessageIds: _data.failedMessageIds,
+                            deferredMessageIds: _data.deferredMessageIds,
                             child: ScrollablePositionedList.builder(
                               reverse: true,
                               itemCount:

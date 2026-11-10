@@ -68,10 +68,26 @@ impl PageResult {
     /// makes too large: nothing failed and nothing hit an ownership conflict.
     fn assert_only_too_large_left_out(&self, expected: usize) {
         assert_eq!(self.heading, "Done", "{self:?}");
-        assert_eq!(self.uploaded + self.already_uploaded + self.not_imported, expected, "{self:?}");
+        assert_eq!(
+            self.uploaded + self.already_uploaded + self.not_imported,
+            expected,
+            "{self:?}"
+        );
         assert_eq!(self.not_imported_list.len(), self.not_imported, "{self:?}");
-        assert!(self.not_imported_list.iter().all(|r| r.reason.contains("too large")), "{:?}", self.not_imported_list);
-        assert!(self.not_imported_list.iter().all(|r| r.path.starts_with("memories/")), "{:?}", self.not_imported_list);
+        assert!(
+            self.not_imported_list
+                .iter()
+                .all(|r| r.reason.contains("too large")),
+            "{:?}",
+            self.not_imported_list
+        );
+        assert!(
+            self.not_imported_list
+                .iter()
+                .all(|r| r.path.starts_with("memories/")),
+            "{:?}",
+            self.not_imported_list
+        );
     }
 }
 
@@ -93,7 +109,9 @@ impl Driver {
             let line = tokio::time::timeout(timeout, self.lines.next_line())
                 .await
                 .map_err(|_| anyhow::anyhow!("timed out waiting for {prefix} from the page"))??
-                .ok_or_else(|| anyhow::anyhow!("the page driver exited while waiting for {prefix}"))?;
+                .ok_or_else(|| {
+                    anyhow::anyhow!("the page driver exited while waiting for {prefix}")
+                })?;
             if let Some(rest) = line.strip_prefix("ERROR ") {
                 anyhow::bail!("page driver: {rest}");
             }
@@ -104,7 +122,9 @@ impl Driver {
     }
 
     async fn send(&mut self, command: &str) -> anyhow::Result<()> {
-        self.stdin.write_all(format!("{command}\n").as_bytes()).await?;
+        self.stdin
+            .write_all(format!("{command}\n").as_bytes())
+            .await?;
         self.stdin.flush().await?;
         Ok(())
     }
@@ -153,8 +173,10 @@ async fn memories_importer_end_to_end() -> anyhow::Result<()> {
         return Ok(());
     };
     let fixture = std::path::PathBuf::from(fixture);
-    let expected: Expected = serde_json::from_slice(&std::fs::read(fixture.join("expected.json"))?)?;
-    let importable: Vec<&ExpectedItem> = expected.items.iter().filter(|item| item.imported).collect();
+    let expected: Expected =
+        serde_json::from_slice(&std::fs::read(fixture.join("expected.json"))?)?;
+    let importable: Vec<&ExpectedItem> =
+        expected.items.iter().filter(|item| item.imported).collect();
     let export = export_files(&fixture.join("zips"))?;
 
     // A paid account ("tobi…" gets the Family plan on a testing server).
@@ -162,7 +184,11 @@ async fn memories_importer_end_to_end() -> anyhow::Result<()> {
     tester.wait_until(ApiConnectionState::Connected).await?;
     tester.username = format!("tobi{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
     tester.register_and_authenticate().await?;
-    tester.update_profile(Some(tester.username.clone()), Some("Tobi <script>".into()), None)?;
+    tester.update_profile(
+        Some(tester.username.clone()),
+        Some("Tobi <script>".into()),
+        None,
+    )?;
     let ctx = tester.context.clone();
 
     // The page, in a browser.
@@ -190,20 +216,26 @@ async fn memories_importer_end_to_end() -> anyhow::Result<()> {
     // Claim-once: the same code cannot be claimed again.
     match memory_importer::claim(&ctx, &link).await? {
         ServerResult::ErrorCode(1040) => {}
-        other => anyhow::bail!("a second claim must be refused, got {:?}", matches!(other, ServerResult::Ok(_))),
+        other => anyhow::bail!(
+            "a second claim must be refused, got {:?}",
+            matches!(other, ServerResult::Ok(_))
+        ),
     }
     // The page shows the account the server saw claim, not a name from the envelope.
     let account = driver.expect("ACCOUNT ", Duration::from_secs(60)).await?;
     assert_eq!(account, format!("@{}", tester.username));
 
     // The upload.
-    let result: PageResult = serde_json::from_str(&driver.expect("RESULT ", Duration::from_secs(900)).await?)?;
+    let result: PageResult =
+        serde_json::from_str(&driver.expect("RESULT ", Duration::from_secs(900)).await?)?;
     result.assert_only_too_large_left_out(expected.items.len());
     assert_eq!(result.uploaded, importable.len(), "{result:?}");
     assert_eq!(result.not_imported, expected.items.len() - importable.len());
 
     driver.send("check-csp").await?;
-    driver.expect("OK check-csp", Duration::from_secs(30)).await?;
+    driver
+        .expect("OK check-csp", Duration::from_secs(30))
+        .await?;
 
     // The server's view.
     let ServerResult::Ok(importers) = Server::list_memory_importers(&ctx).await? else {
@@ -244,13 +276,21 @@ async fn memories_importer_end_to_end() -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("memory {} not in the gallery: {e}", item.source_item_id))?;
         let (media_id, kind, cloud_state, latitude, longitude, has_thumbnail, stored) = row;
         assert_eq!(kind, item.kind, "{}", item.source_item_id);
-        assert_eq!((cloud_state.as_str(), has_thumbnail, stored), ("uploaded", 1, 0));
+        assert_eq!(
+            (cloud_state.as_str(), has_thumbnail, stored),
+            ("uploaded", 1, 0)
+        );
         match &item.location {
             Some(location) => {
                 assert!((latitude.unwrap() - location.latitude).abs() < 1e-9);
                 assert!((longitude.unwrap() - location.longitude).abs() < 1e-9);
             }
-            None => assert_eq!((latitude, longitude), (None, None), "{}", item.source_item_id),
+            None => assert_eq!(
+                (latitude, longitude),
+                (None, None),
+                "{}",
+                item.source_item_id
+            ),
         }
 
         // The thumbnail: a WebP of at most 400 px with the date in its EXIF.
@@ -258,7 +298,10 @@ async fn memories_importer_end_to_end() -> anyhow::Result<()> {
         assert!(thumbnail.len() <= 300_000);
         let decoded = image::load_from_memory_with_format(&thumbnail, image::ImageFormat::WebP)?;
         assert!(decoded.width().max(decoded.height()) <= 400);
-        assert_eq!(read_exif(&thumbnail)?.created_at.map(|t| t.timestamp()), Some(item.created_at));
+        assert_eq!(
+            read_exif(&thumbnail)?.created_at.map(|t| t.timestamp()),
+            Some(item.created_at)
+        );
 
         // The full media through the same checks.
         let full = memory_importer::download_full_media(&ctx, &media_id).await?;
@@ -272,47 +315,72 @@ async fn memories_importer_end_to_end() -> anyhow::Result<()> {
             );
         } else {
             let exif = read_exif(&full)?;
-            assert_eq!(exif.created_at.map(|t| t.timestamp()), Some(item.created_at));
+            assert_eq!(
+                exif.created_at.map(|t| t.timestamp()),
+                Some(item.created_at)
+            );
             if let Some(location) = &item.location {
                 assert!((exif.latitude.unwrap() - location.latitude).abs() < 1e-5);
                 assert!((exif.longitude.unwrap() - location.longitude).abs() < 1e-5);
             }
-            let image = image::load_from_memory_with_format(&full, image::ImageFormat::WebP)?.to_rgb8();
+            let image =
+                image::load_from_memory_with_format(&full, image::ImageFormat::WebP)?.to_rgb8();
             if item.overlay_composited {
                 // Magenta caption bar on top, the green photo below it.
                 let top = image.get_pixel(image.width() / 2, image.height() / 20);
                 let bottom = image.get_pixel(image.width() / 2, image.height() * 9 / 10);
-                assert!(top[0] > 200 && top[1] < 80 && top[2] > 200, "overlay pixel {top:?}");
+                assert!(
+                    top[0] > 200 && top[1] < 80 && top[2] > 200,
+                    "overlay pixel {top:?}"
+                );
                 assert!(bottom[1] > 130 && bottom[0] < 100, "photo pixel {bottom:?}");
             }
             let original = image::load_from_memory(main_file(&export, &item.source_item_id))?;
-            assert_eq!((image.width(), image.height()), (original.width(), original.height()));
+            assert_eq!(
+                (image.width(), image.height()),
+                (original.width(), original.height())
+            );
         }
         assert!(!item.has_overlay || item.kind == "video" || item.overlay_composited);
     }
 
     // Resume in the same browser: everything is already done.
     driver.send("rerun").await?;
-    let rerun: PageResult = serde_json::from_str(&driver.expect("RESULT ", Duration::from_secs(300)).await?)?;
+    let rerun: PageResult =
+        serde_json::from_str(&driver.expect("RESULT ", Duration::from_secs(300)).await?)?;
     rerun.assert_only_too_large_left_out(expected.items.len());
-    assert_eq!((rerun.uploaded, rerun.already_uploaded), (0, importable.len()));
+    assert_eq!(
+        (rerun.uploaded, rerun.already_uploaded),
+        (0, importable.len())
+    );
 
     // Without local progress the server deduplicates by the stable media ids.
     driver.send("forget-progress").await?;
-    driver.expect("OK forget-progress", Duration::from_secs(30)).await?;
+    driver
+        .expect("OK forget-progress", Duration::from_secs(30))
+        .await?;
     driver.send("rerun").await?;
-    let dedupe: PageResult = serde_json::from_str(&driver.expect("RESULT ", Duration::from_secs(600)).await?)?;
+    let dedupe: PageResult =
+        serde_json::from_str(&driver.expect("RESULT ", Duration::from_secs(600)).await?)?;
     dedupe.assert_only_too_large_left_out(expected.items.len());
-    assert_eq!((dedupe.uploaded, dedupe.already_uploaded), (0, importable.len()));
+    assert_eq!(
+        (dedupe.uploaded, dedupe.already_uploaded),
+        (0, importable.len())
+    );
     let ServerResult::Ok(usage) = Server::get_memories_usage(&ctx).await? else {
         anyhow::bail!("usage failed");
     };
     assert_eq!(usage.count as usize, importable.len(), "no duplicates");
 
     // Removing the importer in the app ends the page's connection.
-    assert!(matches!(Server::revoke_memory_importer(&ctx, claimed.import_id.clone()).await?, ServerResult::Ok(())));
+    assert!(matches!(
+        Server::revoke_memory_importer(&ctx, claimed.import_id.clone()).await?,
+        ServerResult::Ok(())
+    ));
     driver.send("expect-pairing").await?;
-    driver.expect("PAIRING_SCREEN", Duration::from_secs(60)).await?;
+    driver
+        .expect("PAIRING_SCREEN", Duration::from_secs(60))
+        .await?;
 
     // "Remove and delete everything it uploaded".
     assert!(matches!(

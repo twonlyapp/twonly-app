@@ -1393,6 +1393,8 @@
   },
   "mediaSendFailed": "Send failed",
   "messageSendFailedUserInactive": "User inactive",
+  "messageSendDeferred": "Sending later",
+  "messageSendDeferredExplanation": "The server is holding this message back for now, usually because the recipient hasn't fetched your earlier messages yet. twonly sends it automatically later.",
   "mailboxSyncTitle": "Synchronizing twonly",
   "mailboxSyncBody": "twonly is synchronizing this device and downloading your messages. Please keep the app open until it is done.",
   "mailboxSyncRemaining": "{count, plural, =1{1 message left} other{{count} messages left}}",

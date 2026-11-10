@@ -9,6 +9,7 @@
 - Improve: Redesigned context menu with quick reactions
 - Improve: App performance
 - Fix: App sometimes failed to start
+- Fix: Photo avatars were not shown in iOS notifications
 - Fix: Multiple smaller issues
 
 ## 0.7.0

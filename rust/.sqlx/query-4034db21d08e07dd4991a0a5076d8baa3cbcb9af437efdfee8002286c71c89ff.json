@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM contact_send_backoff WHERE retry_at > ?) AS \"active!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "active!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4034db21d08e07dd4991a0a5076d8baa3cbcb9af437efdfee8002286c71c89ff"
+}

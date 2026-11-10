@@ -144,7 +144,9 @@ pub fn parse_pairing_link(link: &str) -> Result<(Uuid, [u8; 32])> {
     let rest = link
         .strip_prefix(PAIRING_LINK_PREFIX)
         .ok_or_else(|| error("not a pairing link"))?;
-    let (id, key) = rest.split_once('/').ok_or_else(|| error("not a pairing link"))?;
+    let (id, key) = rest
+        .split_once('/')
+        .ok_or_else(|| error("not a pairing link"))?;
     let pairing_id = Uuid::parse_str(id).map_err(|_| error("not a pairing link"))?;
     if pairing_id.get_version_num() != 4 || pairing_id.hyphenated().to_string() != id {
         return Err(error("not a pairing link"));
@@ -202,7 +204,9 @@ pub fn seal_envelope(pairing_id: &Uuid, page_public: &[u8; 32], grant: &[u8]) ->
 
 /// The page's side of [`seal_envelope`]. The app never opens envelopes; the
 /// tests use this to check both implementations agree.
-pub fn open_envelope(pairing_id: &Uuid, page_private: [u8; 32], envelope: &[u8]) -> Result<Vec<u8>> {
+pub fn open_envelope(
+    pairing_id: &Uuid, page_private: [u8; 32], envelope: &[u8],
+) -> Result<Vec<u8>> {
     let pairing_id = pairing_id.hyphenated().to_string();
     let envelope = ImporterEnvelope::decode(envelope).map_err(|_| error("invalid envelope"))?;
     let e_pub: [u8; 32] = envelope
@@ -342,12 +346,17 @@ impl OpenError {
     }
 }
 
-fn chacha_open(key: &[u8; 32], nonce: &[u8], sealed: &[u8]) -> std::result::Result<Vec<u8>, OpenError> {
+fn chacha_open(
+    key: &[u8; 32], nonce: &[u8], sealed: &[u8],
+) -> std::result::Result<Vec<u8>, OpenError> {
     if nonce.len() != 12 || sealed.len() < 16 {
         return Err(OpenError::Malformed);
     }
     ChaCha20Poly1305::new(&(*key).into())
-        .decrypt(&Nonce::try_from(nonce).map_err(|_| OpenError::Malformed)?, sealed)
+        .decrypt(
+            &Nonce::try_from(nonce).map_err(|_| OpenError::Malformed)?,
+            sealed,
+        )
         .map_err(|_| OpenError::Decrypt)
 }
 
@@ -406,7 +415,8 @@ pub fn open_imported_thumbnail(
     if payload.len() > THUMBNAIL_MAX_PAYLOAD {
         return Err(OpenError::Malformed);
     }
-    let (thumbnail, decoded, mut media_key) = open_cloud_payload(main_key, Some(importer_id), payload)?;
+    let (thumbnail, decoded, mut media_key) =
+        open_cloud_payload(main_key, Some(importer_id), payload)?;
     let sealed = decoded.encrypted_metadata.ok_or(OpenError::Metadata)?;
     if sealed.len() < 12 + 16 || sealed.len() > 4096 {
         media_key.zeroize();
@@ -414,7 +424,8 @@ pub fn open_imported_thumbnail(
     }
     let metadata = chacha_open(&media_key, &sealed[..12], &sealed[12..]);
     media_key.zeroize();
-    let metadata = ImportedMemoryMetadata::decode(metadata?.as_slice()).map_err(|_| OpenError::Metadata)?;
+    let metadata =
+        ImportedMemoryMetadata::decode(metadata?.as_slice()).map_err(|_| OpenError::Metadata)?;
     if !valid_metadata(&metadata, now) {
         return Err(OpenError::Metadata);
     }
@@ -467,19 +478,25 @@ pub async fn reconcile_imported_memories(ctx: &Arc<Context>) -> Result<Reconcile
     let mut report = ReconcileReport::default();
     let known_unreadable: HashSet<String> = {
         let database = ctx.app_db.read().await.clone();
-        sqlx::query_scalar::<_, String>("SELECT media_id FROM imported_memory_failures WHERE permanent = 1")
-            .fetch_all(&database.pool)
-            .await?
-            .into_iter()
-            .collect()
+        sqlx::query_scalar::<_, String>(
+            "SELECT media_id FROM imported_memory_failures WHERE permanent = 1",
+        )
+        .fetch_all(&database.pool)
+        .await?
+        .into_iter()
+        .collect()
     };
     let (mut offset_date, mut offset_id) = (LIST_START, None::<String>);
     let mut seen = HashSet::new();
     let mut missing = Vec::new();
     loop {
-        let page = match Server::get_memories_list(ctx, offset_date, offset_id.clone(), LIST_PAGE).await? {
+        let page = match Server::get_memories_list(ctx, offset_date, offset_id.clone(), LIST_PAGE)
+            .await?
+        {
             ServerResult::Ok(list) => list.items,
-            ServerResult::ErrorCode(code) => return Err(error(&format!("memories list failed: {code}"))),
+            ServerResult::ErrorCode(code) => {
+                return Err(error(&format!("memories list failed: {code}")))
+            }
         };
         let Some(last) = page.last() else {
             break;
@@ -504,14 +521,22 @@ pub async fn reconcile_imported_memories(ctx: &Arc<Context>) -> Result<Reconcile
             // A payload that failed a check that retrying cannot change waits
             // for the user to delete it.
             if known_unreadable.contains(&item.media_id) {
-                report.failed.push((item.media_id.clone(), "unreadable".into()));
+                report
+                    .failed
+                    .push((item.media_id.clone(), "unreadable".into()));
                 continue;
             }
             if Uuid::parse_str(&item.media_id).is_err() {
-                report.failed.push((item.media_id.clone(), OpenError::Malformed.reason().into()));
+                report
+                    .failed
+                    .push((item.media_id.clone(), OpenError::Malformed.reason().into()));
                 continue;
             }
-            missing.push((item.media_id.clone(), importer_id.to_owned(), item.thumbnail_download_url.clone()));
+            missing.push((
+                item.media_id.clone(),
+                importer_id.to_owned(),
+                item.thumbnail_download_url.clone(),
+            ));
         }
         if (page.len() as i64) < LIST_PAGE {
             break;
@@ -552,7 +577,11 @@ pub fn spawn_reconcile(ctx: &Arc<Context>) {
             RECONCILE_AGAIN.store(false, Ordering::Release);
             match reconcile_imported_memories(&ctx).await {
                 Ok(report) if !report.added.is_empty() || !report.failed.is_empty() => {
-                    tracing::info!(added = report.added.len(), failed = report.failed.len(), "imported memories reconciled");
+                    tracing::info!(
+                        added = report.added.len(),
+                        failed = report.failed.len(),
+                        "imported memories reconciled"
+                    );
                 }
                 Ok(_) => {}
                 Err(error) => tracing::warn!(%error, "imported memories reconciliation failed"),
@@ -560,7 +589,9 @@ pub fn spawn_reconcile(ctx: &Arc<Context>) {
             if !RECONCILE_AGAIN.load(Ordering::Acquire) {
                 RECONCILING.store(false, Ordering::Release);
                 // A request between the check and the reset starts a new task.
-                if !RECONCILE_AGAIN.swap(false, Ordering::AcqRel) || RECONCILING.swap(true, Ordering::AcqRel) {
+                if !RECONCILE_AGAIN.swap(false, Ordering::AcqRel)
+                    || RECONCILING.swap(true, Ordering::AcqRel)
+                {
                     return;
                 }
             }
@@ -577,7 +608,9 @@ static LAST_FULL_SCAN: std::sync::Mutex<Option<std::time::Instant>> = std::sync:
 /// never delete anything.
 pub async fn reconcile_if_needed(ctx: &Arc<Context>, force: bool) -> Result<bool> {
     let daily = {
-        let last = LAST_FULL_SCAN.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let last = LAST_FULL_SCAN
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         last.is_none_or(|at| at.elapsed() > std::time::Duration::from_secs(24 * 60 * 60))
     };
     let mut run = force || daily;
@@ -587,13 +620,16 @@ pub async fn reconcile_if_needed(ctx: &Arc<Context>, force: bool) -> Result<bool
             ServerResult::ErrorCode(code) => return Err(TwonlyError::Api(code)),
         };
         let database = ctx.app_db.read().await.clone();
-        let local: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM media_files WHERE cloud_state = 'uploaded'")
-            .fetch_one(&database.pool)
-            .await?;
+        let local: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM media_files WHERE cloud_state = 'uploaded'")
+                .fetch_one(&database.pool)
+                .await?;
         run = server != local;
     }
     if run {
-        *LAST_FULL_SCAN.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(std::time::Instant::now());
+        *LAST_FULL_SCAN
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(std::time::Instant::now());
         spawn_reconcile(ctx);
     }
     Ok(run)
@@ -620,13 +656,15 @@ pub async fn past_imports(ctx: &Arc<Context>) -> Result<Vec<PastImport>> {
     .await?;
     Ok(rows
         .into_iter()
-        .map(|(importer_id, source, count, first_created_at, last_created_at)| PastImport {
-            importer_id,
-            source,
-            count,
-            first_created_at,
-            last_created_at,
-        })
+        .map(
+            |(importer_id, source, count, first_created_at, last_created_at)| PastImport {
+                importer_id,
+                source,
+                count,
+                first_created_at,
+                last_created_at,
+            },
+        )
         .collect())
 }
 
@@ -647,7 +685,11 @@ pub async fn unreadable_imports(ctx: &Arc<Context>) -> Result<Vec<UnreadableImpo
     .await?;
     Ok(rows
         .into_iter()
-        .map(|(media_id, importer_id, reason)| UnreadableImport { media_id, importer_id, reason })
+        .map(|(media_id, importer_id, reason)| UnreadableImport {
+            media_id,
+            importer_id,
+            reason,
+        })
         .collect())
 }
 
@@ -719,7 +761,9 @@ async fn local_media_ids<'a>(
     Ok(query.fetch_all(&database.pool).await?.into_iter().collect())
 }
 
-async fn record_failure(ctx: &Arc<Context>, media_id: &str, importer_id: &str, reason: &str) -> Result<()> {
+async fn record_failure(
+    ctx: &Arc<Context>, media_id: &str, importer_id: &str, reason: &str,
+) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
     let now = chrono::Utc::now().timestamp();
     sqlx::query(
@@ -741,17 +785,32 @@ async fn add_imported(
 ) -> std::result::Result<(), String> {
     // Network and decoding happen before the transaction; the transaction
     // only writes.
-    let response = client.get(url).send().await.map_err(|e| format!("download: {e}"))?;
+    let response = client
+        .get(url)
+        .send()
+        .await
+        .map_err(|e| format!("download: {e}"))?;
     if !response.status().is_success() {
         return Err(format!("download status {}", response.status()));
     }
-    if response.content_length().is_some_and(|n| n as usize > THUMBNAIL_MAX_PAYLOAD) {
+    if response
+        .content_length()
+        .is_some_and(|n| n as usize > THUMBNAIL_MAX_PAYLOAD)
+    {
         return Err(OpenError::Malformed.reason().into());
     }
-    let payload = response.bytes().await.map_err(|e| format!("download: {e}"))?;
+    let payload = response
+        .bytes()
+        .await
+        .map_err(|e| format!("download: {e}"))?;
     let opened = {
         let key_manager = ctx.key_manager.lock().await;
-        open_imported_thumbnail(&key_manager.main_key, importer_id, &payload, chrono::Utc::now().timestamp())
+        open_imported_thumbnail(
+            &key_manager.main_key,
+            importer_id,
+            &payload,
+            chrono::Utc::now().timestamp(),
+        )
     }
     .map_err(|e| e.reason().to_string())?;
 
@@ -760,7 +819,11 @@ async fn add_imported(
     MediaFileService::ensure_parent(&path).map_err(|e| e.to_string())?;
     std::fs::write(&path, &opened.thumbnail).map_err(|e| e.to_string())?;
 
-    let media_type = if opened.metadata.media_type == 2 { "video" } else { "image" };
+    let media_type = if opened.metadata.media_type == 2 {
+        "video"
+    } else {
+        "image"
+    };
     let database = ctx.app_db.read().await.clone();
     let mut tx = database.pool.begin().await.map_err(|e| e.to_string())?;
     crate::database::app::mediafiles::writes::upsert(
@@ -772,20 +835,28 @@ async fn add_imported(
             stored: Some(false),
             has_thumbnail: Some(true),
             created_at: Some(opened.metadata.created_at),
-            location_latitude: opened.metadata.latitude.map(|value| NullableReal { value: Some(value) }),
-            location_longitude: opened.metadata.longitude.map(|value| NullableReal { value: Some(value) }),
+            location_latitude: opened
+                .metadata
+                .latitude
+                .map(|value| NullableReal { value: Some(value) }),
+            location_longitude: opened
+                .metadata
+                .longitude
+                .map(|value| NullableReal { value: Some(value) }),
             ..Default::default()
         },
     )
     .await
     .map_err(|e| e.to_string())?;
-    sqlx::query("INSERT OR IGNORE INTO imported_memories (media_id, importer_id, source) VALUES (?, ?, ?)")
-        .bind(media_id)
-        .bind(importer_id)
-        .bind(&opened.metadata.source)
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| e.to_string())?;
+    sqlx::query(
+        "INSERT OR IGNORE INTO imported_memories (media_id, importer_id, source) VALUES (?, ?, ?)",
+    )
+    .bind(media_id)
+    .bind(importer_id)
+    .bind(&opened.metadata.source)
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| e.to_string())?;
     sqlx::query("DELETE FROM imported_memory_failures WHERE media_id = ?")
         .bind(media_id)
         .execute(&mut *tx)
@@ -799,15 +870,19 @@ async fn add_imported(
 /// the payload's `addition` against it.
 pub async fn local_importer_id(ctx: &Arc<Context>, media_id: &str) -> Result<Option<String>> {
     let database = ctx.app_db.read().await.clone();
-    Ok(sqlx::query_scalar::<_, String>("SELECT importer_id FROM imported_memories WHERE media_id = ?")
-        .bind(media_id)
-        .fetch_optional(&database.pool)
-        .await?)
+    Ok(sqlx::query_scalar::<_, String>(
+        "SELECT importer_id FROM imported_memories WHERE media_id = ?",
+    )
+    .bind(media_id)
+    .fetch_optional(&database.pool)
+    .await?)
 }
 
 /// The decrypted thumbnail this device stored for a memory.
 pub fn local_thumbnail(ctx: &Arc<Context>, media_id: &str) -> Result<Vec<u8>> {
-    Ok(std::fs::read(MediaFileService::new(ctx).thumbnail_path(media_id))?)
+    Ok(std::fs::read(
+        MediaFileService::new(ctx).thumbnail_path(media_id),
+    )?)
 }
 
 /// Downloads and decrypts a memory's full media with the same checks as its
@@ -816,7 +891,9 @@ pub async fn download_full_media(ctx: &Arc<Context>, media_id: &str) -> Result<V
     let importer_id = local_importer_id(ctx, media_id).await?;
     let url = match Server::get_memories_url(ctx, media_id.to_owned(), false).await? {
         ServerResult::Ok(url) => url.full_download_url,
-        ServerResult::ErrorCode(code) => return Err(error(&format!("memories url failed: {code}"))),
+        ServerResult::ErrorCode(code) => {
+            return Err(error(&format!("memories url failed: {code}")))
+        }
     };
     let client = crate::api::http::client_builder()
         .timeout(std::time::Duration::from_secs(300))
@@ -831,8 +908,9 @@ pub async fn download_full_media(ctx: &Arc<Context>, media_id: &str) -> Result<V
         .await
         .map_err(|e| error(&e.to_string()))?;
     let key_manager = ctx.key_manager.lock().await;
-    let (plain, _, mut media_key) = open_cloud_payload(&key_manager.main_key, importer_id.as_deref(), &payload)
-        .map_err(|e| error(e.reason()))?;
+    let (plain, _, mut media_key) =
+        open_cloud_payload(&key_manager.main_key, importer_id.as_deref(), &payload)
+            .map_err(|e| error(e.reason()))?;
     media_key.zeroize();
     Ok(plain)
 }
@@ -877,8 +955,16 @@ mod tests {
     fn opens_an_envelope_sealed_by_the_page_code() {
         // The vector was sealed by the page's sealing code (sealEnvelope).
         let v = vectors();
-        let private: [u8; 32] = hex::decode(&v.page_private_hex).unwrap().try_into().unwrap();
-        let grant = open_envelope(&Uuid::parse_str(&v.pairing_id).unwrap(), private, &hex::decode(&v.envelope_hex).unwrap()).unwrap();
+        let private: [u8; 32] = hex::decode(&v.page_private_hex)
+            .unwrap()
+            .try_into()
+            .unwrap();
+        let grant = open_envelope(
+            &Uuid::parse_str(&v.pairing_id).unwrap(),
+            private,
+            &hex::decode(&v.envelope_hex).unwrap(),
+        )
+        .unwrap();
         assert_eq!(hex::encode(&grant), v.grant_hex);
         let decoded = ImporterGrant::decode(grant.as_slice()).unwrap();
         assert_eq!(decoded.import_id, v.import_id);
@@ -889,12 +975,19 @@ mod tests {
     #[test]
     fn a_sealed_grant_opens_only_for_its_pairing() {
         let page_private = random::<32>();
-        let page_public = x25519_dalek::PublicKey::from(&x25519_dalek::StaticSecret::from(page_private)).to_bytes();
+        let page_public =
+            x25519_dalek::PublicKey::from(&x25519_dalek::StaticSecret::from(page_private))
+                .to_bytes();
         let pairing = Uuid::new_v4();
         let key = MainKey::generate();
         let grant = build_grant(&key, Uuid::new_v4(), [3; 32], "tobi", "Tobi", 1_000).unwrap();
         let envelope = seal_envelope(&pairing, &page_public, &grant.encode_to_vec()).unwrap();
-        let opened = ImporterGrant::decode(open_envelope(&pairing, page_private, &envelope).unwrap().as_slice()).unwrap();
+        let opened = ImporterGrant::decode(
+            open_envelope(&pairing, page_private, &envelope)
+                .unwrap()
+                .as_slice(),
+        )
+        .unwrap();
         assert_eq!(opened, grant);
         assert_eq!(opened.expires_at, 1_000 + GRANT_SECONDS);
         assert!(open_envelope(&Uuid::new_v4(), page_private, &envelope).is_err());
@@ -910,7 +1003,8 @@ mod tests {
         let import_id = Uuid::parse_str(&v.import_id).unwrap();
         let grant = build_grant(&key, import_id, [7; 32], "tobi", "Tobi", 0).unwrap();
         assert_eq!(grant.addition, v.addition);
-        let page_grant = ImporterGrant::decode(hex::decode(&v.grant_hex).unwrap().as_slice()).unwrap();
+        let page_grant =
+            ImporterGrant::decode(hex::decode(&v.grant_hex).unwrap().as_slice()).unwrap();
         assert_eq!(grant.kek, page_grant.kek);
         assert_eq!(grant.id_key, page_grant.id_key);
     }
@@ -919,19 +1013,32 @@ mod tests {
     fn decrypts_payloads_made_by_the_page_code() {
         let v = vectors();
         let key = main_key(&v.main_key_hex);
-        let (full, decoded, media_key) =
-            open_cloud_payload(&key, Some(&v.import_id), &hex::decode(&v.full_payload_hex).unwrap()).unwrap();
+        let (full, decoded, media_key) = open_cloud_payload(
+            &key,
+            Some(&v.import_id),
+            &hex::decode(&v.full_payload_hex).unwrap(),
+        )
+        .unwrap();
         assert_eq!(hex::encode(full), v.full_plain_hex);
         assert_eq!(hex::encode(media_key), v.media_key_hex);
         assert_eq!(decoded.encrypted_metadata, None);
 
         // The thumbnail payload with metadata, opened field by field (its
         // plaintext is not an image, so the full check is exercised below).
-        let (thumb, decoded, media_key) =
-            open_cloud_payload(&key, Some(&v.import_id), &hex::decode(&v.thumbnail_payload_hex).unwrap()).unwrap();
+        let (thumb, decoded, media_key) = open_cloud_payload(
+            &key,
+            Some(&v.import_id),
+            &hex::decode(&v.thumbnail_payload_hex).unwrap(),
+        )
+        .unwrap();
         assert_eq!(hex::encode(thumb), v.thumbnail_plain_hex);
         let sealed = decoded.encrypted_metadata.unwrap();
-        let metadata = ImportedMemoryMetadata::decode(chacha_open(&media_key, &sealed[..12], &sealed[12..]).unwrap().as_slice()).unwrap();
+        let metadata = ImportedMemoryMetadata::decode(
+            chacha_open(&media_key, &sealed[..12], &sealed[12..])
+                .unwrap()
+                .as_slice(),
+        )
+        .unwrap();
         assert_eq!(metadata.source, "snapchat");
         assert_eq!(metadata.media_type, 1);
         assert_eq!(metadata.created_at, 1_742_481_047);
@@ -961,7 +1068,10 @@ mod tests {
         let key = main_key(&v.main_key_hex);
         let full = hex::decode(&v.full_payload_hex).unwrap();
         // An import payload on a row without importer, and on another importer's row.
-        assert_eq!(open_cloud_payload(&key, None, &full).unwrap_err(), OpenError::WrongAddition);
+        assert_eq!(
+            open_cloud_payload(&key, None, &full).unwrap_err(),
+            OpenError::WrongAddition
+        );
         assert_eq!(
             open_cloud_payload(&key, Some(&Uuid::new_v4().to_string()), &full).unwrap_err(),
             OpenError::WrongAddition
@@ -974,7 +1084,10 @@ mod tests {
         // An "app" payload on an importer's row.
         let mut app = CloudMediaBackupEncrypted::decode(full.as_slice()).unwrap();
         app.addition = "app".into();
-        assert_eq!(open_cloud_payload(&key, Some(&v.import_id), &app.encode_to_vec()).unwrap_err(), OpenError::WrongAddition);
+        assert_eq!(
+            open_cloud_payload(&key, Some(&v.import_id), &app.encode_to_vec()).unwrap_err(),
+            OpenError::WrongAddition
+        );
         // Another account's key does not unwrap it.
         assert_eq!(
             open_cloud_payload(&MainKey::generate(), Some(&v.import_id), &full).unwrap_err(),
@@ -983,8 +1096,14 @@ mod tests {
         // A flipped bit does not authenticate.
         let mut tampered = CloudMediaBackupEncrypted::decode(full.as_slice()).unwrap();
         tampered.media_ciphertext[0] ^= 1;
-        assert_eq!(open_cloud_payload(&key, Some(&v.import_id), &tampered.encode_to_vec()).unwrap_err(), OpenError::Decrypt);
-        assert_eq!(open_cloud_payload(&key, Some(&v.import_id), b"\xff\xff").unwrap_err(), OpenError::Malformed);
+        assert_eq!(
+            open_cloud_payload(&key, Some(&v.import_id), &tampered.encode_to_vec()).unwrap_err(),
+            OpenError::Decrypt
+        );
+        assert_eq!(
+            open_cloud_payload(&key, Some(&v.import_id), b"\xff\xff").unwrap_err(),
+            OpenError::Malformed
+        );
     }
 
     #[test]
@@ -993,15 +1112,34 @@ mod tests {
         let key = main_key(&v.main_key_hex);
         // The vector's thumbnail plaintext is text, not a WebP.
         assert_eq!(
-            open_imported_thumbnail(&key, &v.import_id, &hex::decode(&v.thumbnail_payload_hex).unwrap(), 2_000_000_000).unwrap_err(),
+            open_imported_thumbnail(
+                &key,
+                &v.import_id,
+                &hex::decode(&v.thumbnail_payload_hex).unwrap(),
+                2_000_000_000
+            )
+            .unwrap_err(),
             OpenError::Image
         );
         // Without metadata.
         assert_eq!(
-            open_imported_thumbnail(&key, &v.import_id, &hex::decode(&v.full_payload_hex).unwrap(), 2_000_000_000).unwrap_err(),
+            open_imported_thumbnail(
+                &key,
+                &v.import_id,
+                &hex::decode(&v.full_payload_hex).unwrap(),
+                2_000_000_000
+            )
+            .unwrap_err(),
             OpenError::Metadata
         );
-        let mut bad = ImportedMemoryMetadata { source: "snapchat".into(), media_type: 1, created_at: 1_700_000_000, latitude: Some(1.0), longitude: None, had_overlay: false };
+        let mut bad = ImportedMemoryMetadata {
+            source: "snapchat".into(),
+            media_type: 1,
+            created_at: 1_700_000_000,
+            latitude: Some(1.0),
+            longitude: None,
+            had_overlay: false,
+        };
         assert!(!valid_metadata(&bad, 2_000_000_000));
         bad.longitude = Some(f64::NAN);
         assert!(!valid_metadata(&bad, 2_000_000_000));
@@ -1021,7 +1159,11 @@ mod tests {
     fn pairing_links_are_strict() {
         let v = vectors();
         let public = hex::decode(&v.page_public_hex).unwrap();
-        let link = format!("{PAIRING_LINK_PREFIX}{}/{}", v.pairing_id, base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&public));
+        let link = format!(
+            "{PAIRING_LINK_PREFIX}{}/{}",
+            v.pairing_id,
+            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&public)
+        );
         let (id, key) = parse_pairing_link(&link).unwrap();
         assert_eq!(id.to_string(), v.pairing_id);
         assert_eq!(key.to_vec(), public);

@@ -6,6 +6,7 @@
 pub mod incoming;
 pub(crate) mod mailbox_sync;
 pub mod outgoing;
+pub(crate) mod send_backoff;
 
 pub(crate) fn content_type_kind(
     content: &crate::api::proto::client::EncryptedContent,

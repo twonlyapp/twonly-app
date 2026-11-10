@@ -5848,6 +5848,18 @@ abstract class AppLocalizations {
   /// **'User inactive'**
   String get messageSendFailedUserInactive;
 
+  /// No description provided for @messageSendDeferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending later'**
+  String get messageSendDeferred;
+
+  /// No description provided for @messageSendDeferredExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is holding this message back for now, usually because the recipient hasn\'t fetched your earlier messages yet. twonly sends it automatically later.'**
+  String get messageSendDeferredExplanation;
+
   /// No description provided for @mailboxSyncTitle.
   ///
   /// In en, this message translates to:

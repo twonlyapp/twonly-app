@@ -94,10 +94,7 @@ impl MainKey {
             Err("import id must be a version 4 UUID".to_string())?;
         }
 
-        let info = format!(
-            "cloud_media_key_{}",
-            Self::import_addition(import_id)
-        );
+        let info = format!("cloud_media_key_{}", Self::import_addition(import_id));
 
         Ok(self.derive_key(info.as_bytes()))
     }
@@ -249,7 +246,8 @@ mod tests {
         page_wrapped.extend(cipher.encrypt(&page_nonce, media_key.as_slice()).unwrap());
 
         assert_eq!(
-            key.decrypt_cloud_media_key(&page_wrapped, &addition).unwrap(),
+            key.decrypt_cloud_media_key(&page_wrapped, &addition)
+                .unwrap(),
             media_key
         );
 
@@ -300,7 +298,10 @@ mod tests {
 
         let key = MainKey { main_key: [42; 32] };
 
-        assert_ne!(key.derive_import_id_key(), key.derive_key(b"cloud_media_key_app"));
+        assert_ne!(
+            key.derive_import_id_key(),
+            key.derive_key(b"cloud_media_key_app")
+        );
     }
 
     #[test]

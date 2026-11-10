@@ -3508,6 +3508,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get messageSendFailedUserInactive => 'Benutzer inaktiv';
 
   @override
+  String get messageSendDeferred => 'Wird später gesendet';
+
+  @override
+  String get messageSendDeferredExplanation =>
+      'Der Server hält diese Nachricht gerade zurück, meist weil der Empfänger deine vorherigen Nachrichten noch nicht abgeholt hat. twonly sendet sie später automatisch.';
+
+  @override
   String get mailboxSyncTitle => 'twonly wird synchronisiert';
 
   @override

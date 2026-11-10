@@ -437,7 +437,7 @@ pub async fn delivery_actions(
             JOIN groups g
             ON g.group_id = m.group_id
             WHERE a.type = 'ackByUserAt'
-                OR (a.type = 'sendFailed'
+                OR (a.type IN ('sendFailed', 'sendDeferred')
                     AND g.is_direct_chat = 1
             )
             ORDER BY a.rowid

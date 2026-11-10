@@ -93,6 +93,10 @@ impl OutboxDispatchService {
 
         let database = self.ctx.app_db.read().await.clone();
 
+        // A contact the server is refusing envelopes for would only refuse
+        // them in the background too; the socket path retries them later.
+        let now = chrono::Utc::now().timestamp();
+
         let receipt_ids = sqlx::query_scalar!(
             r#"SELECT receipt_id FROM receipts
                WHERE will_be_retried_by_media_upload = 0
@@ -101,8 +105,11 @@ impl OutboxDispatchService {
                  AND receipt_id NOT IN (SELECT receipt_id FROM outbox_dispatch_jobs)
                  AND receipt_id NOT IN (SELECT receipt_id FROM live_location_outbox)
                  AND mark_for_retry_after_accepted IS NULL
+                 AND contact_id NOT IN
+                     (SELECT contact_id FROM contact_send_backoff WHERE retry_at > ?)
                ORDER BY created_at
                LIMIT ?"#,
+            now,
             MAXIMUM_HANDOVERS as i64
         )
         .fetch_all(&database.pool)

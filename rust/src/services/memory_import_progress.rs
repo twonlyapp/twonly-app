@@ -64,7 +64,9 @@ fn previewing() -> bool {
 
 /// The server announced newly imported memories: an import page is uploading.
 pub(crate) fn note_announcement() {
-    *LAST_ANNOUNCEMENT.lock().unwrap_or_else(PoisonError::into_inner) = Some(Instant::now());
+    *LAST_ANNOUNCEMENT
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner) = Some(Instant::now());
 }
 
 /// A pass found `missing` imported memories to add.

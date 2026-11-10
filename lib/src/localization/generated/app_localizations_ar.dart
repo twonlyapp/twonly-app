@@ -3552,6 +3552,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get messageSendFailedUserInactive => 'المستخدم غير نشط';
 
   @override
+  String get messageSendDeferred => 'Sending later';
+
+  @override
+  String get messageSendDeferredExplanation =>
+      'The server is holding this message back for now, usually because the recipient hasn\'t fetched your earlier messages yet. twonly sends it automatically later.';
+
+  @override
   String get mailboxSyncTitle => 'جارٍ مزامنة twonly';
 
   @override

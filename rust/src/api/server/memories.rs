@@ -179,9 +179,7 @@ impl Server {
             Self::application(
                 ctx,
                 client_to_server::application_data::ApplicationData::DeleteMemoryImporterUploads(
-                    client_to_server::application_data::DeleteMemoryImporterUploads {
-                        importer_id,
-                    },
+                    client_to_server::application_data::DeleteMemoryImporterUploads { importer_id },
                 ),
             )
             .await?

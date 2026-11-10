@@ -50,4 +50,10 @@ enum ErrorCode {
     PairingNotFound = 1041;
     TooManyImporters = 1042;
     ImporterNotFound = 1043;
+    // The recipient already holds the maximum number of undelivered messages
+    // from this sender. Retry once they have fetched their mailbox.
+    MailboxFull = 1044;
+    // The sender already has undelivered messages waiting in too many
+    // different mailboxes. Retry once some of them have been fetched.
+    RecipientLimitReached = 1045;
 }
