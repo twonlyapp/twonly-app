@@ -72,6 +72,10 @@
   "settingsPreSelectedReactionsError": "يُمْكِنُ تَحْدِيدُ 12 رَدَّ فِعْلٍ كَحَدٍّ أَقْصَى.",
   "settingsProfile": "المَلَفُّ الشَّخْصِيُّ",
   "settingsStorageData": "التخزين والتنزيلات",
+  "settingsMemories": "الذكريات",
+  "settingsMemoriesSectionSaving": "الحفظ",
+  "memoryImporterFromOtherApps": "الاستيراد من تطبيقات أخرى",
+  "memoryImporterOpenPage": "فتح {origin}",
   "memoryDetailsTitle": "التفاصيل",
   "memoryDetailsCapturedAt": "وقت الالتقاط",
   "memoryDetailsLocation": "الموقع",
@@ -778,6 +782,11 @@
   "galleryActionShare": "مشاركة",
   "settingsStorageHidePromo": "إخفاء",
   "memoriesBackupTitle": "النسخ الاحتياطي للذكريات",
+  "memoriesBackupUsageOf": "من {max}",
+  "memoriesBackupCount": "{count, plural, =1 {ذكرى واحدة في السحابة} other {{count} ذكريات في السحابة}}",
+  "memoriesBackupPercentUsed": "{percent}٪ مستخدم",
+  "memoriesBackupUploading": "جارٍ رفع {current} من {total}",
+  "memoriesBackupDisableSubtitle": "يحذف ذكرياتك المنسوخة احتياطيًا من السحابة.",
   "settingsHelpNews": "الأخبار",
   "settingsStorageContents": "إخلاء مساحة",
   "settingsStorageSortStorage": "المساحة المشغولة",
@@ -1033,5 +1042,8 @@
   "notificationVacationEnd": "عاد من الإجازة.",
   "settingsChatsSectionChats": "المحادثات",
   "settingsChatsSectionFlames": "الشعلات",
-  "settingsChatsSectionCamera": "الكاميرا"
+  "settingsChatsSectionCamera": "الكاميرا",
+  "memoryImportProgressTitle": "جارٍ استيراد الذكريات",
+  "memoryImportProgressCount": "{done} من {total}",
+  "memoryImportProgressAdded": "{count, plural, other{تمت إضافة {count}}}"
 }

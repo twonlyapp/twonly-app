@@ -17,6 +17,7 @@ use crate::error::{Result, TwonlyError};
 use chrono::{DateTime, Utc};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
+use std::str::FromStr;
 
 /// EXIF stores timestamps as local wall-clock text with no zone.
 const DATE_FORMAT: &str = "%Y:%m:%d %H:%M:%S";
@@ -30,6 +31,9 @@ const TAG_GPS_IFD: u16 = 0x8825;
 const TAG_DATE_TIME_ORIGINAL: u16 = 0x9003;
 
 const TAG_DATE_TIME_DIGITIZED: u16 = 0x9004;
+
+/// The zone of DateTimeOriginal. Times here are UTC, so always "+00:00".
+const TAG_OFFSET_TIME_ORIGINAL: u16 = 0x9011;
 
 const TAG_GPS_VERSION: u16 = 0x0000;
 
@@ -57,9 +61,9 @@ const FLAG_EXIF: u8 = 0b0000_1000;
 /// The `VP8X` flag bit that says the image has transparency.
 const FLAG_ALPHA: u8 = 0b0001_0000;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 
-pub(crate) struct ExifMetadata {
+pub struct ExifMetadata {
     pub created_at: Option<DateTime<Utc>>,
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
@@ -453,6 +457,8 @@ fn tiff_block(metadata: &ExifMetadata) -> Vec<u8> {
         exif.push((TAG_DATE_TIME_ORIGINAL, TYPE_ASCII, text.clone()));
 
         exif.push((TAG_DATE_TIME_DIGITIZED, TYPE_ASCII, text));
+
+        exif.push((TAG_OFFSET_TIME_ORIGINAL, TYPE_ASCII, b"+00:00\0".to_vec()));
     }
 
     if let (Some(latitude), Some(longitude)) = (metadata.latitude, metadata.longitude) {
@@ -519,6 +525,164 @@ fn tiff_block(metadata: &ExifMetadata) -> Vec<u8> {
     output.extend_from_slice(&serialize_ifd(&gps, gps_ifd_offset));
 
     output
+}
+
+/// Reads what `tiff_block` writes (and what the memories importer page
+/// writes): the original date with its zone, and the GPS position. Used when
+/// an imported memory has no encrypted metadata. Bounded: unknown tags are
+/// skipped and every offset is checked against the block.
+pub fn read_exif(webp: &[u8]) -> Result<ExifMetadata> {
+    let chunks = parse_chunks(webp)?;
+
+    let Some(chunk) = chunks.iter().find(|chunk| chunk.id == *b"EXIF") else {
+        return Ok(ExifMetadata::default());
+    };
+
+    let tiff = chunk.payload;
+
+    let invalid = || TwonlyError::Generic("invalid EXIF block".into());
+
+    let u16_at = |at: usize| -> Result<u16> {
+        tiff.get(at..at + 2)
+            .map(|b| u16::from_le_bytes([b[0], b[1]]))
+            .ok_or_else(invalid)
+    };
+
+    let u32_at = |at: usize| -> Result<u32> {
+        tiff.get(at..at + 4)
+            .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+            .ok_or_else(invalid)
+    };
+
+    if tiff.get(0..4) != Some(b"II\x2a\x00".as_slice()) {
+        return Err(invalid());
+    }
+
+    // tag -> (type, count, value bytes)
+    let read_ifd = |offset: usize| -> Result<Vec<(u16, u16, Vec<u8>)>> {
+        let count = usize::from(u16_at(offset)?);
+
+        if count > 64 {
+            return Err(invalid());
+        }
+
+        let mut entries = Vec::with_capacity(count);
+
+        for index in 0..count {
+            let at = offset + 2 + index * 12;
+
+            let tag = u16_at(at)?;
+
+            let kind = u16_at(at + 2)?;
+
+            let n = u32_at(at + 4)? as usize;
+
+            let size = match kind {
+                TYPE_RATIONAL => n.checked_mul(8),
+                TYPE_LONG => n.checked_mul(4),
+                _ => Some(n),
+            }
+            .filter(|size| *size <= 1024)
+            .ok_or_else(invalid)?;
+
+            let start = if size <= 4 { at + 8 } else { u32_at(at + 8)? as usize };
+
+            let data = tiff.get(start..start + size).ok_or_else(invalid)?.to_vec();
+
+            entries.push((tag, kind, data));
+        }
+
+        Ok(entries)
+    };
+
+    let find = |entries: &[(u16, u16, Vec<u8>)], tag: u16| -> Option<Vec<u8>> {
+        entries
+            .iter()
+            .find(|(t, _, _)| *t == tag)
+            .map(|(_, _, data)| data.clone())
+    };
+
+    let pointer = |data: Option<Vec<u8>>| -> Option<usize> {
+        data.filter(|d| d.len() == 4)
+            .map(|d| u32::from_le_bytes([d[0], d[1], d[2], d[3]]) as usize)
+    };
+
+    let text = |data: Option<Vec<u8>>| -> Option<String> {
+        data.map(|d| String::from_utf8_lossy(&d).trim_end_matches('\0').to_string())
+    };
+
+    let ifd0 = read_ifd(u32_at(4)? as usize)?;
+
+    let exif = match pointer(find(&ifd0, TAG_EXIF_IFD)) {
+        Some(offset) => read_ifd(offset)?,
+        None => Vec::new(),
+    };
+
+    let gps = match pointer(find(&ifd0, TAG_GPS_IFD)) {
+        Some(offset) => read_ifd(offset)?,
+        None => Vec::new(),
+    };
+
+    let date = text(find(&exif, TAG_DATE_TIME_ORIGINAL)).or_else(|| text(find(&ifd0, TAG_DATE_TIME)));
+
+    let offset = text(find(&exif, TAG_OFFSET_TIME_ORIGINAL));
+
+    let created_at = date.and_then(|date| {
+        let naive = chrono::NaiveDateTime::parse_from_str(&date, DATE_FORMAT).ok()?;
+
+        // Without a zone the wall-clock time is taken as UTC, as written.
+        let zone = offset
+            .as_deref()
+            .and_then(|offset| chrono::FixedOffset::from_str(offset).ok())
+            .unwrap_or_else(|| chrono::FixedOffset::east_opt(0).expect("zero offset"));
+
+        naive
+            .and_local_timezone(zone)
+            .single()
+            .map(|time| time.with_timezone(&Utc))
+    });
+
+    let rationals = |data: Option<Vec<u8>>| -> Option<f64> {
+        let data = data.filter(|d| d.len() == 24)?;
+
+        let part = |i: usize| {
+            let n = u32::from_le_bytes(data[i * 8..i * 8 + 4].try_into().expect("4 bytes"));
+
+            let d = u32::from_le_bytes(data[i * 8 + 4..i * 8 + 8].try_into().expect("4 bytes"));
+
+            if d == 0 {
+                None
+            } else {
+                Some(f64::from(n) / f64::from(d))
+            }
+        };
+
+        Some(part(0)? + part(1)? / 60.0 + part(2)? / 3600.0)
+    };
+
+    let sign = |reference: Option<Vec<u8>>, negative: u8| {
+        if reference.and_then(|r| r.first().copied()) == Some(negative) {
+            -1.0
+        } else {
+            1.0
+        }
+    };
+
+    let latitude = rationals(find(&gps, TAG_GPS_LATITUDE)).map(|v| v * sign(find(&gps, TAG_GPS_LATITUDE_REF), b'S'));
+
+    let longitude = rationals(find(&gps, TAG_GPS_LONGITUDE)).map(|v| v * sign(find(&gps, TAG_GPS_LONGITUDE_REF), b'W'));
+
+    let (latitude, longitude) = match (latitude, longitude) {
+        (Some(lat), Some(lon)) if lat.abs() <= 90.0 && lon.abs() <= 180.0 => (Some(lat), Some(lon)),
+        _ => (None, None),
+    };
+
+    Ok(ExifMetadata {
+        created_at,
+        latitude,
+        longitude,
+        accuracy: None,
+    })
 }
 
 fn ifd_size(entries: &[(u16, u16, Vec<u8>)], extra_entries: usize) -> usize {
@@ -671,6 +835,63 @@ mod tests {
             .encode_simple(false, 80.0)
             .unwrap()
             .to_vec()
+    }
+
+    #[test]
+
+    fn the_tiff_block_matches_what_the_importer_page_writes() {
+        #[derive(serde::Deserialize)]
+        struct Location {
+            latitude: f64,
+            longitude: f64,
+        }
+
+        #[derive(serde::Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Input {
+            created_at: i64,
+            location: Option<Location>,
+        }
+
+        #[derive(serde::Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Vector {
+            input: Input,
+            tiff_hex: String,
+        }
+
+        let vectors: Vec<Vector> =
+            serde_json::from_str(include_str!("../../tests/fixtures/importer/exif.json")).unwrap();
+
+        for vector in vectors {
+            let metadata = ExifMetadata {
+                created_at: Utc.timestamp_millis_opt(vector.input.created_at).single(),
+                latitude: vector.input.location.as_ref().map(|l| l.latitude),
+                longitude: vector.input.location.as_ref().map(|l| l.longitude),
+                accuracy: None,
+            };
+
+            assert_eq!(hex::encode(tiff_block(&metadata)), vector.tiff_hex);
+
+            let read = read_exif(&with_exif(&sample_webp(), &metadata).unwrap()).unwrap();
+
+            assert_eq!(read.created_at, metadata.created_at);
+
+            match (read.latitude, metadata.latitude) {
+                (Some(a), Some(b)) => assert!((a - b).abs() < 1e-6),
+                (None, None) => {}
+                other => panic!("latitude {other:?}"),
+            }
+
+            match (read.longitude, metadata.longitude) {
+                (Some(a), Some(b)) => assert!((a - b).abs() < 1e-6),
+                (None, None) => {}
+                other => panic!("longitude {other:?}"),
+            }
+        }
+
+        // A file without EXIF reads as empty, a broken block as an error.
+        assert!(read_exif(&sample_webp()).unwrap().created_at.is_none());
     }
 
     #[test]

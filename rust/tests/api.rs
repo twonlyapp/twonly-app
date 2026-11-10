@@ -6,6 +6,8 @@ mod direct_media_upload;
 mod group_resilience;
 #[path = "api/media.rs"]
 mod media;
+#[path = "api/memories_importer.rs"]
+mod memories_importer;
 #[path = "api/notifications.rs"]
 mod notifications;
 #[path = "api/recovery.rs"]

@@ -72,6 +72,8 @@
   "settingsPreSelectedReactionsError": "A maximum of 12 reactions can be selected.",
   "settingsProfile": "Profile",
   "settingsStorageData": "Storage & downloads",
+  "settingsMemories": "Memories",
+  "settingsMemoriesSectionSaving": "Saving",
   "memoryDetailsTitle": "Details",
   "memoryDetailsCapturedAt": "Captured",
   "memoryDetailsLocation": "Location",
@@ -143,7 +145,8 @@
     }
   },
   "memoryLocationPermissionDenied": "Precise location access was not granted. The setting remains disabled.",
-  "settingsStorageDataStoreInGTitle": "Store in Gallery",
+  "settingsStorageDataStoreInGTitle": "Save copy to system gallery",
+  "settingsStorageDataStoreInGSubtitle": "Also keep saved memories in your device's gallery.",
   "settingsStorageDataMediaAutoDownload": "Media auto-download",
   "settingsStorageDataAutoDownMobile": "When using mobile data",
   "settingsStorageDataAutoDownWifi": "When using WI-FI",
@@ -1097,6 +1100,42 @@
   "galleryActionShare": "Share",
   "settingsStorageHidePromo": "Hide",
   "memoriesBackupTitle": "Memories Backup",
+  "memoriesBackupUsageOf": "of {max}",
+  "@memoriesBackupUsageOf": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "memoriesBackupCount": "{count, plural, =1 {1 memory in the cloud} other {{count} memories in the cloud}}",
+  "@memoriesBackupCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memoriesBackupPercentUsed": "{percent}% used",
+  "@memoriesBackupPercentUsed": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "memoriesBackupUploading": "Uploading {current} of {total}",
+  "@memoriesBackupUploading": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "memoriesBackupDisableSubtitle": "Deletes your backed up memories from the cloud.",
   "settingsHelpNews": "News",
   "settingsStorageContents": "Free up space",
   "settingsStorageSortStorage": "Occupied storage",
@@ -1489,5 +1528,130 @@
   "notificationVacationEnd": "is back from vacation.",
   "settingsChatsSectionChats": "Chats",
   "settingsChatsSectionFlames": "Flames",
-  "settingsChatsSectionCamera": "Camera"
+  "settingsChatsSectionCamera": "Camera",
+  "memoryImporterConnectTitle": "Connect importer",
+  "memoryImporterConnectBody": "This browser session can only add new memories to your account. It can never access your existing uploads.",
+  "memoryImporterConnectWarning": "Only connect if you opened {origin} yourself. twonly never asks you to scan a code for support, a reward or a verification.",
+  "@memoryImporterConnectWarning": {
+    "placeholders": {
+      "origin": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterConnect": "Connect",
+  "memoryImporterConnectIn": "Connect ({seconds})",
+  "@memoryImporterConnectIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "memoryImporterConnectedTitle": "Connected",
+  "memoryImporterConnected": "Continue on your computer: check that it shows your username, then start the upload. Your memories appear here while they upload.",
+  "memoryImporterConnectedDone": "Got it, continue on my computer",
+  "memoryImporterAlreadyClaimed": "Someone else already scanned this code. Reload the import page, do not show the code to anyone, and scan again.",
+  "memoryImporterCodeExpired": "This code has expired. Reload the import page and scan the new code.",
+  "memoryImporterTooMany": "Three importers are already connected. Remove one in Settings → Memories → Import from other apps.",
+  "memoryImporterNeedsPlan": "Importing memories needs a plan with memories storage.",
+  "memoryImporterConnectFailed": "The importer could not be connected. Check your connection and try again.",
+  "memoryImporterScanOnlyTitle": "Use the twonly camera",
+  "memoryImporterScanOnly": "A memories importer can only be connected by scanning its code with the twonly camera. Open twonly, then scan the code shown on your computer. Never connect a code someone sent you.",
+  "memoryImporterHowTo": "Import memories from Snapchat and other apps: open {origin} on your computer and scan the code shown there with the twonly camera.",
+  "@memoryImporterHowTo": {
+    "placeholders": {
+      "origin": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterTitle": "Import memories",
+  "memoryImporterFromOtherApps": "Import from other apps",
+  "memoryImporterOpenPage": "Open {origin}",
+  "@memoryImporterOpenPage": {
+    "placeholders": {
+      "origin": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterNothingYet": "Nothing uploaded yet",
+  "memoryImporterActionFailed": "That did not work. Check your connection and try again.",
+  "memoryImporterSectionConnected": "Connected importers",
+  "memoryImporterSectionPast": "Completed imports",
+  "memoryImporterUploaded": "{count} memories, {size}",
+  "@memoryImporterUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterActiveUntil": "Connected until {date}",
+  "@memoryImporterActiveUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterRemove": "Remove",
+  "memoryImporterRemoveTitle": "Remove this importer?",
+  "memoryImporterRemoveBody": "The computer can no longer upload. Upload permissions it already received stay valid for up to 5 minutes.",
+  "memoryImporterRemoveKeep": "Remove and keep its memories",
+  "memoryImporterRemoveDelete": "Remove and delete everything it uploaded",
+  "memoryImporterPastSummary": "{count} memories · {range}",
+  "@memoryImporterPastSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "memoryImporterDeleteImport": "Delete everything from this import",
+  "memoryImporterDeleteImportConfirm": "Delete {count} memories from this import from all your devices and the cloud? This cannot be undone.",
+  "@memoryImporterDeleteImportConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memoryImporterUnreadable": "{count} imported items could not be read",
+  "@memoryImporterUnreadable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memoryImporterUnreadableBody": "They were not added to your gallery but still use storage. Delete them to free the space.",
+  "memoryImporterDelete": "Delete",
+  "memoryImportProgressTitle": "Importing memories",
+  "memoryImportProgressCount": "{done} of {total}",
+  "@memoryImportProgressCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "memoryImportProgressAdded": "{count, plural, =1{1 added} other{{count} added}}",
+  "@memoryImportProgressAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

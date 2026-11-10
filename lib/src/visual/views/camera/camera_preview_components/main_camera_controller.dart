@@ -11,6 +11,7 @@ import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/core/database/app/contacts/table.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
+import 'package:twonly/src/services/memories/memory_importer.service.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart'
     show PasswordlessRecoveryService;
 import 'package:twonly/src/utils/database/session.dart';
@@ -677,6 +678,19 @@ class MainCameraController {
                 await VerificationSuccessDialog.show(context, contact);
                 onVerificationSuccessDismissed?.call(contact);
               }
+            }
+            continue;
+          }
+
+          // A memories importer code shown on a computer: scanned with the
+          // camera, it may open the connect screen.
+          if (MemoryImporterService.isPairingLink(link)) {
+            if (_handledProfileLinks.contains(link)) continue;
+            _handledProfileLinks.add(link);
+            final context = cameraPreviewKey.currentContext;
+            if (context != null && context.mounted) {
+              unawaited(HapticFeedback.heavyImpact());
+              await MemoryImporterService.openFromScanner(context, link);
             }
             continue;
           }

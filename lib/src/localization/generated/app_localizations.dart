@@ -532,6 +532,18 @@ abstract class AppLocalizations {
   /// **'Storage & downloads'**
   String get settingsStorageData;
 
+  /// No description provided for @settingsMemories.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories'**
+  String get settingsMemories;
+
+  /// No description provided for @settingsMemoriesSectionSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving'**
+  String get settingsMemoriesSectionSaving;
+
   /// No description provided for @memoryDetailsTitle.
   ///
   /// In en, this message translates to:
@@ -733,8 +745,14 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStorageDataStoreInGTitle.
   ///
   /// In en, this message translates to:
-  /// **'Store in Gallery'**
+  /// **'Save copy to system gallery'**
   String get settingsStorageDataStoreInGTitle;
+
+  /// No description provided for @settingsStorageDataStoreInGSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Also keep saved memories in your device\'s gallery.'**
+  String get settingsStorageDataStoreInGSubtitle;
 
   /// No description provided for @settingsStorageDataMediaAutoDownload.
   ///
@@ -4810,6 +4828,36 @@ abstract class AppLocalizations {
   /// **'Memories Backup'**
   String get memoriesBackupTitle;
 
+  /// No description provided for @memoriesBackupUsageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'of {max}'**
+  String memoriesBackupUsageOf(String max);
+
+  /// No description provided for @memoriesBackupCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 memory in the cloud} other {{count} memories in the cloud}}'**
+  String memoriesBackupCount(int count);
+
+  /// No description provided for @memoriesBackupPercentUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% used'**
+  String memoriesBackupPercentUsed(String percent);
+
+  /// No description provided for @memoriesBackupUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading {current} of {total}'**
+  String memoriesBackupUploading(int current, int total);
+
+  /// No description provided for @memoriesBackupDisableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes your backed up memories from the cloud.'**
+  String get memoriesBackupDisableSubtitle;
+
   /// No description provided for @settingsHelpNews.
   ///
   /// In en, this message translates to:
@@ -6225,6 +6273,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Camera'**
   String get settingsChatsSectionCamera;
+
+  /// No description provided for @memoryImporterConnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect importer'**
+  String get memoryImporterConnectTitle;
+
+  /// No description provided for @memoryImporterConnectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser session can only add new memories to your account. It can never access your existing uploads.'**
+  String get memoryImporterConnectBody;
+
+  /// No description provided for @memoryImporterConnectWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Only connect if you opened {origin} yourself. twonly never asks you to scan a code for support, a reward or a verification.'**
+  String memoryImporterConnectWarning(String origin);
+
+  /// No description provided for @memoryImporterConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get memoryImporterConnect;
+
+  /// No description provided for @memoryImporterConnectIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect ({seconds})'**
+  String memoryImporterConnectIn(int seconds);
+
+  /// No description provided for @memoryImporterConnectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get memoryImporterConnectedTitle;
+
+  /// No description provided for @memoryImporterConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue on your computer: check that it shows your username, then start the upload. Your memories appear here while they upload.'**
+  String get memoryImporterConnected;
+
+  /// No description provided for @memoryImporterConnectedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it, continue on my computer'**
+  String get memoryImporterConnectedDone;
+
+  /// No description provided for @memoryImporterAlreadyClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone else already scanned this code. Reload the import page, do not show the code to anyone, and scan again.'**
+  String get memoryImporterAlreadyClaimed;
+
+  /// No description provided for @memoryImporterCodeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This code has expired. Reload the import page and scan the new code.'**
+  String get memoryImporterCodeExpired;
+
+  /// No description provided for @memoryImporterTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Three importers are already connected. Remove one in Settings → Memories → Import from other apps.'**
+  String get memoryImporterTooMany;
+
+  /// No description provided for @memoryImporterNeedsPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing memories needs a plan with memories storage.'**
+  String get memoryImporterNeedsPlan;
+
+  /// No description provided for @memoryImporterConnectFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The importer could not be connected. Check your connection and try again.'**
+  String get memoryImporterConnectFailed;
+
+  /// No description provided for @memoryImporterScanOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the twonly camera'**
+  String get memoryImporterScanOnlyTitle;
+
+  /// No description provided for @memoryImporterScanOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'A memories importer can only be connected by scanning its code with the twonly camera. Open twonly, then scan the code shown on your computer. Never connect a code someone sent you.'**
+  String get memoryImporterScanOnly;
+
+  /// No description provided for @memoryImporterHowTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Import memories from Snapchat and other apps: open {origin} on your computer and scan the code shown there with the twonly camera.'**
+  String memoryImporterHowTo(String origin);
+
+  /// No description provided for @memoryImporterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import memories'**
+  String get memoryImporterTitle;
+
+  /// No description provided for @memoryImporterFromOtherApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from other apps'**
+  String get memoryImporterFromOtherApps;
+
+  /// No description provided for @memoryImporterOpenPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {origin}'**
+  String memoryImporterOpenPage(String origin);
+
+  /// No description provided for @memoryImporterNothingYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing uploaded yet'**
+  String get memoryImporterNothingYet;
+
+  /// No description provided for @memoryImporterActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That did not work. Check your connection and try again.'**
+  String get memoryImporterActionFailed;
+
+  /// No description provided for @memoryImporterSectionConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected importers'**
+  String get memoryImporterSectionConnected;
+
+  /// No description provided for @memoryImporterSectionPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed imports'**
+  String get memoryImporterSectionPast;
+
+  /// No description provided for @memoryImporterUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} memories, {size}'**
+  String memoryImporterUploaded(int count, String size);
+
+  /// No description provided for @memoryImporterActiveUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected until {date}'**
+  String memoryImporterActiveUntil(String date);
+
+  /// No description provided for @memoryImporterRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get memoryImporterRemove;
+
+  /// No description provided for @memoryImporterRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this importer?'**
+  String get memoryImporterRemoveTitle;
+
+  /// No description provided for @memoryImporterRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The computer can no longer upload. Upload permissions it already received stay valid for up to 5 minutes.'**
+  String get memoryImporterRemoveBody;
+
+  /// No description provided for @memoryImporterRemoveKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove and keep its memories'**
+  String get memoryImporterRemoveKeep;
+
+  /// No description provided for @memoryImporterRemoveDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove and delete everything it uploaded'**
+  String get memoryImporterRemoveDelete;
+
+  /// No description provided for @memoryImporterPastSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} memories · {range}'**
+  String memoryImporterPastSummary(int count, String range);
+
+  /// No description provided for @memoryImporterDeleteImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything from this import'**
+  String get memoryImporterDeleteImport;
+
+  /// No description provided for @memoryImporterDeleteImportConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} memories from this import from all your devices and the cloud? This cannot be undone.'**
+  String memoryImporterDeleteImportConfirm(int count);
+
+  /// No description provided for @memoryImporterUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} imported items could not be read'**
+  String memoryImporterUnreadable(int count);
+
+  /// No description provided for @memoryImporterUnreadableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They were not added to your gallery but still use storage. Delete them to free the space.'**
+  String get memoryImporterUnreadableBody;
+
+  /// No description provided for @memoryImporterDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get memoryImporterDelete;
+
+  /// No description provided for @memoryImportProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing memories'**
+  String get memoryImportProgressTitle;
+
+  /// No description provided for @memoryImportProgressCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total}'**
+  String memoryImportProgressCount(int done, int total);
+
+  /// No description provided for @memoryImportProgressAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 added} other{{count} added}}'**
+  String memoryImportProgressAdded(int count);
 }
 
 class _AppLocalizationsDelegate

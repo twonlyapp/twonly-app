@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
@@ -532,6 +534,9 @@ class MemoriesViewState extends State<MemoriesView>
                       builder: (context, constraints) {
                         return DraggableScrollbar(
                           controller: _scrollController,
+                          // Start the track below the app bar so the thumb
+                          // never covers the toolbar actions.
+                          topPadding: kToolbarHeight,
                           labelBuilder: (offset) {
                             final state = _service.currentState;
                             if (state.isEmpty || state.months.isEmpty) {
@@ -597,12 +602,6 @@ class MemoriesViewState extends State<MemoriesView>
                                 snap: true,
                                 elevation: 0,
                                 backgroundColor: context.color.surface,
-                                // Keep toolbar tap targets clear of the
-                                // scrollbar, including while it is faded out.
-                                actionsPadding:
-                                    const EdgeInsetsDirectional.only(
-                                      end: DraggableScrollbar.thumbWidth + 8,
-                                    ),
                                 actions: _selectionMode
                                     ? [
                                         IconButton(
@@ -706,6 +705,16 @@ class MemoriesViewState extends State<MemoriesView>
                                               favoritesOnly:
                                                   _filterFavoritesOnly,
                                             ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.settings_outlined,
+                                          ),
+                                          tooltip:
+                                              context.lang.settingsMemories,
+                                          onPressed: () => context.push<void>(
+                                            Routes.settingsMemories,
                                           ),
                                         ),
                                       ],

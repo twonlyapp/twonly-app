@@ -17,6 +17,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/memories/memory_importer.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
 import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -171,6 +172,8 @@ class MemoriesCloudService {
       if (await RustApi.connectionState() != ApiConnectionState.authenticated) {
         return;
       }
+      // Memories added by an importer page on a computer.
+      unawaited(MemoryImporterService.reconcile());
       final memories = await rust_mediafiles.listMediaFiles(
         input: const db_mediafiles.MediaQuery(
           filter: db_mediafiles.MediaFilter.memoriesToBackup,

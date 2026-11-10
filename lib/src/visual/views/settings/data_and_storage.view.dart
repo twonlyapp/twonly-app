@@ -59,48 +59,6 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
     );
   }
 
-  Future<void> toggleStoreInGallery() async {
-    final currentlyEnabled = userService.currentUser.storeMediaFilesInGallery;
-    if (currentlyEnabled) {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text(context.lang.galleryDisableWarningTitle),
-            content: Text(context.lang.galleryDisableWarningBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(context.lang.cancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(
-                  context.lang.galleryDisableWarningConfirm,
-                  style: TextStyle(color: context.color.error),
-                ),
-              ),
-            ],
-          );
-        },
-      );
-      if (confirm != true) {
-        return;
-      }
-    }
-
-    await UserService.update((u) {
-      u.storeMediaFilesInGallery = !u.storeMediaFilesInGallery;
-    });
-  }
-
-  Future<void> toggleAutoStoreMediaFiles() async {
-    await UserService.update((u) {
-      u.autoStoreAllSendUnlimitedMediaFiles =
-          !u.autoStoreAllSendUnlimitedMediaFiles;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,35 +86,6 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
                     onTap: () => context.push(Routes.settingsStorageManage),
                     trailing: const Icon(Icons.chevron_right),
                   );
-                },
-              ),
-              const SettingsDivider(),
-              ListTile(
-                title: Text(context.lang.settingsStorageDataStoreInGTitle),
-                onTap: toggleStoreInGallery,
-                trailing: Switch.adaptive(
-                  value: userService.currentUser.storeMediaFilesInGallery,
-                  onChanged: (a) => toggleStoreInGallery(),
-                ),
-              ),
-              ListTile(
-                title: Text(context.lang.autoStoreAllSendUnlimitedMediaFiles),
-                subtitle: Text(
-                  context.lang.autoStoreAllSendUnlimitedMediaFilesSubtitle,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                onTap: toggleAutoStoreMediaFiles,
-                trailing: Switch.adaptive(
-                  value: userService
-                      .currentUser
-                      .autoStoreAllSendUnlimitedMediaFiles,
-                  onChanged: (a) => toggleAutoStoreMediaFiles(),
-                ),
-              ),
-              ListTile(
-                title: Text(context.lang.settingsStorageScanGalleryTitle),
-                onTap: () {
-                  context.push(Routes.settingsStorageImportGallery);
                 },
               ),
               const SettingsDivider(),

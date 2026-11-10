@@ -234,6 +234,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStorageData => 'Speicher & Downloads';
 
   @override
+  String get settingsMemories => 'Memories';
+
+  @override
+  String get settingsMemoriesSectionSaving => 'Speichern';
+
+  @override
   String get memoryDetailsTitle => 'Details';
 
   @override
@@ -364,7 +370,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Der genaue Standortzugriff wurde nicht erlaubt. Die Einstellung bleibt deaktiviert.';
 
   @override
-  String get settingsStorageDataStoreInGTitle => 'In der Galerie speichern';
+  String get settingsStorageDataStoreInGTitle =>
+      'Kopie in System-Galerie speichern';
+
+  @override
+  String get settingsStorageDataStoreInGSubtitle =>
+      'Gespeicherte Memories zusätzlich in der Galerie deines Geräts ablegen.';
 
   @override
   String get settingsStorageDataMediaAutoDownload =>
@@ -2838,6 +2849,36 @@ class AppLocalizationsDe extends AppLocalizations {
   String get memoriesBackupTitle => 'Memories Backup';
 
   @override
+  String memoriesBackupUsageOf(String max) {
+    return 'von $max';
+  }
+
+  @override
+  String memoriesBackupCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Memories in der Cloud',
+      one: '1 Memory in der Cloud',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String memoriesBackupPercentUsed(String percent) {
+    return '$percent % belegt';
+  }
+
+  @override
+  String memoriesBackupUploading(int current, int total) {
+    return 'Lade $current von $total hoch';
+  }
+
+  @override
+  String get memoriesBackupDisableSubtitle =>
+      'Löscht deine gesicherten Memories aus der Cloud.';
+
+  @override
   String get settingsHelpNews => 'Neuigkeiten';
 
   @override
@@ -3751,4 +3792,161 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsChatsSectionCamera => 'Kamera';
+
+  @override
+  String get memoryImporterConnectTitle => 'Import verbinden';
+
+  @override
+  String get memoryImporterConnectBody =>
+      'Diese Browser-Sitzung kann nur neue Memories zu deinem Konto hinzufügen. Auf bestehende Uploads hat sie nie Zugriff.';
+
+  @override
+  String memoryImporterConnectWarning(String origin) {
+    return 'Verbinde nur, wenn du $origin selbst geöffnet hast. twonly bittet dich nie, einen Code für Support, eine Belohnung oder eine Verifizierung zu scannen.';
+  }
+
+  @override
+  String get memoryImporterConnect => 'Verbinden';
+
+  @override
+  String memoryImporterConnectIn(int seconds) {
+    return 'Verbinden ($seconds)';
+  }
+
+  @override
+  String get memoryImporterConnectedTitle => 'Verbunden';
+
+  @override
+  String get memoryImporterConnected =>
+      'Mach auf deinem Computer weiter: Prüfe, dass dort dein Benutzername steht, und starte dann den Upload. Deine Memories erscheinen hier, während sie hochgeladen werden.';
+
+  @override
+  String get memoryImporterConnectedDone => 'Verstanden, weiter am Computer';
+
+  @override
+  String get memoryImporterAlreadyClaimed =>
+      'Jemand anderes hat diesen Code bereits gescannt. Lade die Import-Seite neu, zeige den Code niemandem und scanne erneut.';
+
+  @override
+  String get memoryImporterCodeExpired =>
+      'Dieser Code ist abgelaufen. Lade die Import-Seite neu und scanne den neuen Code.';
+
+  @override
+  String get memoryImporterTooMany =>
+      'Es sind bereits drei Importe verbunden. Entferne einen unter Einstellungen → Memories → Aus anderen Apps importieren.';
+
+  @override
+  String get memoryImporterNeedsPlan =>
+      'Für den Import von Memories brauchst du einen Plan mit Memories-Speicher.';
+
+  @override
+  String get memoryImporterConnectFailed =>
+      'Der Import konnte nicht verbunden werden. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String get memoryImporterScanOnlyTitle => 'Nutze die twonly-Kamera';
+
+  @override
+  String get memoryImporterScanOnly =>
+      'Ein Memories-Import lässt sich nur verbinden, indem du seinen Code mit der twonly-Kamera scannst. Öffne twonly und scanne dann den Code auf deinem Computer. Verbinde nie einen Code, den dir jemand geschickt hat.';
+
+  @override
+  String memoryImporterHowTo(String origin) {
+    return 'Memories aus Snapchat und anderen Apps importieren: Öffne $origin auf deinem Computer und scanne den dort angezeigten Code mit der twonly-Kamera.';
+  }
+
+  @override
+  String get memoryImporterTitle => 'Memories importieren';
+
+  @override
+  String get memoryImporterFromOtherApps => 'Aus anderen Apps importieren';
+
+  @override
+  String memoryImporterOpenPage(String origin) {
+    return '$origin öffnen';
+  }
+
+  @override
+  String get memoryImporterNothingYet => 'Noch nichts hochgeladen';
+
+  @override
+  String get memoryImporterActionFailed =>
+      'Das hat nicht geklappt. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String get memoryImporterSectionConnected => 'Verbundene Importe';
+
+  @override
+  String get memoryImporterSectionPast => 'Abgeschlossene Importe';
+
+  @override
+  String memoryImporterUploaded(int count, String size) {
+    return '$count Memories, $size';
+  }
+
+  @override
+  String memoryImporterActiveUntil(String date) {
+    return 'Verbunden bis $date';
+  }
+
+  @override
+  String get memoryImporterRemove => 'Entfernen';
+
+  @override
+  String get memoryImporterRemoveTitle => 'Diesen Import entfernen?';
+
+  @override
+  String get memoryImporterRemoveBody =>
+      'Der Computer kann nichts mehr hochladen. Bereits erhaltene Upload-Berechtigungen bleiben bis zu 5 Minuten gültig.';
+
+  @override
+  String get memoryImporterRemoveKeep => 'Entfernen und Memories behalten';
+
+  @override
+  String get memoryImporterRemoveDelete =>
+      'Entfernen und alles Hochgeladene löschen';
+
+  @override
+  String memoryImporterPastSummary(int count, String range) {
+    return '$count Memories · $range';
+  }
+
+  @override
+  String get memoryImporterDeleteImport => 'Alles aus diesem Import löschen';
+
+  @override
+  String memoryImporterDeleteImportConfirm(int count) {
+    return '$count Memories aus diesem Import von all deinen Geräten und aus der Cloud löschen? Das lässt sich nicht rückgängig machen.';
+  }
+
+  @override
+  String memoryImporterUnreadable(int count) {
+    return '$count importierte Elemente konnten nicht gelesen werden';
+  }
+
+  @override
+  String get memoryImporterUnreadableBody =>
+      'Sie wurden nicht zu deiner Galerie hinzugefügt, belegen aber Speicher. Lösche sie, um Platz freizugeben.';
+
+  @override
+  String get memoryImporterDelete => 'Löschen';
+
+  @override
+  String get memoryImportProgressTitle => 'Erinnerungen werden importiert';
+
+  @override
+  String memoryImportProgressCount(int done, int total) {
+    return '$done von $total';
+  }
+
+  @override
+  String memoryImportProgressAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hinzugefügt',
+      one: '1 hinzugefügt',
+    );
+    return '$_temp0';
+  }
 }

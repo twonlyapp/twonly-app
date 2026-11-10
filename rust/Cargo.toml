@@ -66,6 +66,7 @@ rand08 = { version = "0.8.8", package = "rand" }
 # Keep the RNG traits compatible with libsignal-protocol.
 rand = "0.9.5"
 uuid = { version = "1.28.0", features = ["v4", "v7"] }
+x25519-dalek = { version = "3.0.0", features = ["static_secrets"] }
 flate2 = "1.1.10"
 resvg = { version = "0.48.1", default-features = false, features = ["text"] }
 reqwest = { version = "0.13.5", default-features = false, features = [

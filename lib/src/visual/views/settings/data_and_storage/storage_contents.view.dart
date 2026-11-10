@@ -50,9 +50,7 @@ class _StorageContentsViewState extends State<StorageContentsView> {
 
   void _toggleSelection(String mediaId) {
     setState(() {
-      if (_selectedMediaIds.contains(mediaId)) {
-        _selectedMediaIds.remove(mediaId);
-      } else {
+      if (!_selectedMediaIds.remove(mediaId)) {
         _selectedMediaIds.add(mediaId);
       }
     });
@@ -70,7 +68,6 @@ class _StorageContentsViewState extends State<StorageContentsView> {
               (ms.storedPath.existsSync() && ms.storedPath.lengthSync() > 0);
         }).toList();
 
-        // Sort the files
         switch (_sortOption) {
           case StorageSortOption.size:
             storedFiles.sort(
@@ -83,15 +80,19 @@ class _StorageContentsViewState extends State<StorageContentsView> {
         }
 
         final isSelecting = _selectedMediaIds.isNotEmpty;
+        final allSelected =
+            storedFiles.isNotEmpty &&
+            _selectedMediaIds.length >= storedFiles.length;
+        final selectedBytes = storedFiles
+            .where((file) => _selectedMediaIds.contains(file.mediaId))
+            .fold<int>(0, (sum, file) => sum + (file.sizeInBytes ?? 0));
 
         return Scaffold(
           appBar: AppBar(
             leading: isSelecting
                 ? IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: () {
-                      setState(_selectedMediaIds.clear);
-                    },
+                    onPressed: () => setState(_selectedMediaIds.clear),
                   )
                 : null,
             title: isSelecting
@@ -105,185 +106,173 @@ class _StorageContentsViewState extends State<StorageContentsView> {
             actions: [
               if (isSelecting)
                 IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _batchDelete(context, storedFiles),
+                  tooltip: allSelected
+                      ? context.lang.memoriesMenuDeselectAll
+                      : context.lang.memoriesMenuSelectAll,
+                  icon: Icon(
+                    allSelected ? Icons.deselect_rounded : Icons.select_all,
+                  ),
+                  onPressed: () => setState(() {
+                    if (allSelected) {
+                      _selectedMediaIds.clear();
+                    } else {
+                      _selectedMediaIds.addAll(
+                        storedFiles.map((file) => file.mediaId),
+                      );
+                    }
+                  }),
                 ),
             ],
           ),
+          bottomNavigationBar: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            transitionBuilder: (child, animation) => SizeTransition(
+              sizeFactor: animation,
+              alignment: Alignment.topCenter,
+              child: child,
+            ),
+            child: isSelecting
+                ? _DeleteBar(
+                    selectedBytes: selectedBytes,
+                    onDelete: () => _batchDelete(context, storedFiles),
+                  )
+                : const SizedBox.shrink(),
+          ),
           body: snapshot.connectionState == ConnectionState.waiting
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator.adaptive())
               : snapshot.hasError
               ? Center(child: Text('Error: ${snapshot.error}'))
               : storedFiles.isEmpty
-              ? Center(
-                  child: Text(
-                    context.lang.settingsStorageNoContents,
-                    style:
-                        Theme.of(
-                          context,
-                        ).textTheme.bodyLarge?.copyWith(
-                          color: context.color.onSurfaceVariant,
-                        ),
-                  ),
-                )
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              _buildChip(
-                                StorageSortOption.size,
-                                context.lang.settingsStorageSortStorage,
-                              ),
-                              const SizedBox(width: 8),
-                              _buildChip(
-                                StorageSortOption.newest,
-                                context.lang.settingsStorageSortNewest,
-                              ),
-                              const SizedBox(width: 8),
-                              _buildChip(
-                                StorageSortOption.oldest,
-                                context.lang.settingsStorageSortOldest,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const Divider(height: 1),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: storedFiles.length,
-                        itemBuilder: (context, index) {
-                          final file = storedFiles[index];
-                          return _buildListItem(context, file);
-                        },
-                      ),
-                    ),
-                  ],
+              ? const _EmptyState()
+              : ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  itemCount: storedFiles.length + 2,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                        child: _SummaryCard(files: storedFiles),
+                      );
+                    }
+                    if (index == 1) return _buildSortChips(context);
+                    final file = storedFiles[index - 2];
+                    return _buildListItem(context, file, isSelecting);
+                  },
                 ),
         );
       },
     );
   }
 
-  Widget _buildChip(StorageSortOption option, String label) {
-    final isSelected = _sortOption == option;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        if (selected) {
-          setState(() {
-            _sortOption = option;
-          });
-        }
-      },
+  Widget _buildSortChips(BuildContext context) {
+    final options = {
+      StorageSortOption.size: context.lang.settingsStorageSortStorage,
+      StorageSortOption.newest: context.lang.settingsStorageSortNewest,
+      StorageSortOption.oldest: context.lang.settingsStorageSortOldest,
+    };
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Row(
+        children: [
+          for (final MapEntry(key: option, value: label) in options.entries)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(label),
+                showCheckmark: false,
+                shape: const StadiumBorder(),
+                selected: _sortOption == option,
+                onSelected: (selected) {
+                  if (selected) setState(() => _sortOption = option);
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
 
-  Widget _buildListItem(BuildContext context, MediaFile file) {
-    final sizeStr = formatBytes(file.sizeInBytes ?? 0);
+  Widget _buildListItem(
+    BuildContext context,
+    MediaFile file,
+    bool isSelecting,
+  ) {
+    final isSelected = _selectedMediaIds.contains(file.mediaId);
     final dateStr = DateFormat.yMMMd(
       Localizations.localeOf(context).toString(),
     ).format(file.createdAt);
+    final muted = TextStyle(
+      color: context.color.onSurfaceVariant,
+      fontSize: 13,
+    );
 
-    final isSelected = _selectedMediaIds.contains(file.mediaId);
-    final isSelecting = _selectedMediaIds.isNotEmpty;
-
-    final ms = MediaFileService(file);
-    final isLocal =
-        ms.storedPath.existsSync() && ms.storedPath.lengthSync() > 0;
-
-    final IconData statusIcon;
-    final String statusText;
-
-    switch (file.cloudState) {
-      case CloudState.none:
-        statusIcon = Icons.cloud_off_outlined;
-        statusText = context.lang.settingsStorageLocalOnly;
-      case CloudState.pending:
-        statusIcon = Icons.cloud_upload_outlined;
-        statusText = context.lang.settingsStorageLocalOnly;
-      case CloudState.uploaded:
-        if (isLocal) {
-          statusIcon = Icons.cloud_done_outlined;
-          statusText = context.lang.settingsStorageLocalAndCloud;
-        } else {
-          statusIcon = Icons.cloud_outlined;
-          statusText = context.lang.settingsStorageCloudOnly;
-        }
-    }
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-      minLeadingWidth: 0,
-      horizontalTitleGap: 8,
-      selected: isSelected,
-      onTap: () => _toggleSelection(file.mediaId),
-      onLongPress: () => _toggleSelection(file.mediaId),
-      leading: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isSelecting) ...[
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: Checkbox(
-                value: isSelected,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                onChanged: (val) => _toggleSelection(file.mediaId),
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: Material(
+        color: isSelected
+            ? context.color.primaryContainer.withValues(alpha: 0.5)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _toggleSelection(file.mediaId),
+          onLongPress: () => _toggleSelection(file.mediaId),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
+            child: Row(
+              children: [
+                _buildThumbnail(
+                  context,
+                  file,
+                  isSelecting: isSelecting,
+                  isSelected: isSelected,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        formatBytes(file.sizeInBytes ?? 0),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$dateStr · ${file.type.name.toUpperCase()}',
+                        style: muted,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      _StatusPill(file: file),
+                    ],
+                  ),
+                ),
+                if (!isSelecting)
+                  IconButton(
+                    tooltip: context.lang.delete,
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      color: context.color.onSurfaceVariant,
+                    ),
+                    onPressed: () => _deleteMemory(context, file),
+                  ),
+              ],
             ),
-            const SizedBox(width: 8),
-          ],
-          _buildThumbnail(context, file),
-        ],
+          ),
+        ),
       ),
-      title: Text('$sizeStr • $dateStr'),
-      subtitle: Row(
-        children: [
-          Text(
-            file.type.name.toUpperCase(),
-            style: TextStyle(
-              color: context.color.onSurfaceVariant,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(
-            statusIcon,
-            size: 14,
-            color: context.color.onSurfaceVariant,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            statusText,
-            style: TextStyle(
-              color: context.color.onSurfaceVariant,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-      trailing: isSelecting
-          ? null
-          : IconButton(
-              icon: Icon(Icons.delete_outline, color: context.color.error),
-              onPressed: () => _deleteMemory(context, file),
-            ),
     );
   }
 
-  Widget _buildThumbnail(BuildContext context, MediaFile file) {
+  Widget _buildThumbnail(
+    BuildContext context,
+    MediaFile file, {
+    required bool isSelecting,
+    required bool isSelected,
+  }) {
     final ms = MediaFileService(file);
     final isVideo = file.type == MediaType.video;
 
@@ -298,51 +287,69 @@ class _StorageContentsViewState extends State<StorageContentsView> {
         ? ms.tempPath
         : null;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        width: 60,
-        height: 60,
-        color: context.color.surfaceContainerHigh,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned.fill(
-              child: imgFile != null
-                  ? Image.file(
-                      imgFile,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Icon(
-                        Icons.broken_image_outlined,
+    return AnimatedScale(
+      scale: isSelected ? 0.9 : 1,
+      duration: const Duration(milliseconds: 150),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          width: 64,
+          height: 64,
+          color: context.color.surfaceContainerHigh,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned.fill(
+                child: imgFile != null
+                    ? Image.file(
+                        imgFile,
+                        fit: BoxFit.cover,
+                        cacheWidth: 192,
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          Icons.broken_image_outlined,
+                          size: 24,
+                          color: context.color.onSurfaceVariant,
+                        ),
+                      )
+                    : file.blurhash != null
+                    ? BlurHash(
+                        hash: file.blurhash!,
+                        optimizationMode:
+                            BlurHashOptimizationMode.approximation,
+                      )
+                    : Icon(
+                        Icons.image_outlined,
                         size: 24,
                         color: context.color.onSurfaceVariant,
                       ),
-                    )
-                  : file.blurhash != null
-                  ? BlurHash(
-                      hash: file.blurhash!,
-                      optimizationMode: BlurHashOptimizationMode.approximation,
-                    )
-                  : Icon(
-                      Icons.image_outlined,
-                      size: 24,
-                      color: context.color.onSurfaceVariant,
-                    ),
-            ),
-            if (isVideo)
-              Container(
-                decoration: BoxDecoration(
-                  color: context.appColor(AppColor.mediaScrim),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(4),
-                child: Icon(
-                  Icons.play_arrow,
-                  size: 16,
-                  color: context.appColor(AppColor.mediaForeground),
-                ),
               ),
-          ],
+              if (isVideo)
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.appColor(AppColor.mediaScrim),
+                    shape: BoxShape.circle,
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.play_arrow_rounded,
+                    size: 16,
+                    color: context.appColor(AppColor.mediaForeground),
+                  ),
+                ),
+              if (isSelected)
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: context.color.primary.withValues(alpha: 0.25),
+                  ),
+                ),
+              if (isSelecting)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: _SelectionDot(selected: isSelected),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -429,5 +436,227 @@ class _StorageContentsViewState extends State<StorageContentsView> {
         );
       }
     }
+  }
+}
+
+/// How much the listed memories take up together.
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.files});
+
+  final List<MediaFile> files;
+
+  @override
+  Widget build(BuildContext context) {
+    final totalBytes = files.fold<int>(
+      0,
+      (sum, file) => sum + (file.sizeInBytes ?? 0),
+    );
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      color: context.color.surfaceContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.color.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.photo_library_rounded,
+                color: context.color.primary,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    formatBytes(totalBytes),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    context.lang.settingsStorageStoredMediaCount(files.length),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: context.color.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Where a memory is kept: only on this device, also in the cloud, or only in
+/// the cloud.
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.file});
+
+  final MediaFile file;
+
+  @override
+  Widget build(BuildContext context) {
+    final ms = MediaFileService(file);
+    final isLocal =
+        ms.storedPath.existsSync() && ms.storedPath.lengthSync() > 0;
+
+    final (IconData icon, String text, Color color) = switch (file.cloudState) {
+      CloudState.none => (
+        Icons.smartphone_rounded,
+        context.lang.settingsStorageLocalOnly,
+        context.color.onSurfaceVariant,
+      ),
+      CloudState.pending => (
+        Icons.cloud_upload_rounded,
+        context.lang.settingsStorageLocalOnly,
+        context.color.onSurfaceVariant,
+      ),
+      CloudState.uploaded when isLocal => (
+        Icons.cloud_done_rounded,
+        context.lang.settingsStorageLocalAndCloud,
+        context.appColor(AppColor.success),
+      ),
+      CloudState.uploaded => (
+        Icons.cloud_rounded,
+        context.lang.settingsStorageCloudOnly,
+        context.color.primary,
+      ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SelectionDot extends StatelessWidget {
+  const _SelectionDot({required this.selected});
+
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: selected
+            ? context.color.primary
+            : Colors.black.withValues(alpha: 0.25),
+        border: Border.all(color: Colors.white, width: 2),
+      ),
+      child: selected
+          ? Icon(Icons.check_rounded, size: 14, color: context.color.onPrimary)
+          : null,
+    );
+  }
+}
+
+/// Deletes the selection and says how much space that frees.
+class _DeleteBar extends StatelessWidget {
+  const _DeleteBar({required this.selectedBytes, required this.onDelete});
+
+  final int selectedBytes;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: FilledButton.icon(
+          style: FilledButton.styleFrom(
+            backgroundColor: context.color.error,
+            foregroundColor: context.color.onError,
+            minimumSize: const Size.fromHeight(52),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          onPressed: onDelete,
+          icon: const Icon(Icons.delete_outline_rounded),
+          label: Text(
+            '${context.lang.delete} · ${formatBytes(selectedBytes)}',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: context.color.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.check_rounded,
+                size: 36,
+                color: context.color.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              context.lang.settingsStorageNoContents,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: context.color.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

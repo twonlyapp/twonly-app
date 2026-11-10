@@ -144,6 +144,14 @@ pub(crate) async fn handle_server_message(
 
             ok::Ok::None(true)
         }
+        Kind::MemoriesImported(_) => {
+            // Acknowledge at once; discovery downloads thumbnails and must not
+            // hold the websocket reader.
+            crate::services::memory_import_progress::note_announcement();
+            crate::services::memory_importer::spawn_reconcile(ctx);
+
+            ok::Ok::None(true)
+        }
         other => {
             // Dart logged unknown unsolicited messages but still acknowledged
             // their envelope, preventing an infinite server redelivery loop.

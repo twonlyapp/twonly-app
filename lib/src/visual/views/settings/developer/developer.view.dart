@@ -17,6 +17,7 @@ import 'package:twonly/core/bridge/database/contacts.dart' as rust_contacts;
 import 'package:twonly/core/bridge/database/diagnostics.dart'
     as rust_diagnostics;
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
+import 'package:twonly/core/bridge/memory_importer.dart';
 import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
 import 'package:twonly/core/database/app/diagnostics/table.dart';
 import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
@@ -487,6 +488,10 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 ListTile(
                   title: const Text('Preview Mailbox Sync'),
                   onTap: () => unawaited(rust_api.RustApi.previewMailboxSync()),
+                ),
+                ListTile(
+                  title: const Text('Preview Memory Import'),
+                  onTap: () => unawaited(RustMemoryImporter.previewProgress()),
                 ),
                 ListTile(
                   title: const Text('Show Backup Reminder'),

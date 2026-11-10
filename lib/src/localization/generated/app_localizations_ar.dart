@@ -240,6 +240,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsStorageData => 'التخزين والتنزيلات';
 
   @override
+  String get settingsMemories => 'الذكريات';
+
+  @override
+  String get settingsMemoriesSectionSaving => 'الحفظ';
+
+  @override
   String get memoryDetailsTitle => 'التفاصيل';
 
   @override
@@ -364,6 +370,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsStorageDataStoreInGTitle =>
       'الحَفْظُ فِي مَعْرِضِ الصُّوَرِ';
+
+  @override
+  String get settingsStorageDataStoreInGSubtitle =>
+      'Also keep saved memories in your device\'s gallery.';
 
   @override
   String get settingsStorageDataMediaAutoDownload =>
@@ -2867,6 +2877,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memoriesBackupTitle => 'النسخ الاحتياطي للذكريات';
 
   @override
+  String memoriesBackupUsageOf(String max) {
+    return 'من $max';
+  }
+
+  @override
+  String memoriesBackupCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ذكريات في السحابة',
+      one: 'ذكرى واحدة في السحابة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String memoriesBackupPercentUsed(String percent) {
+    return '$percent٪ مستخدم';
+  }
+
+  @override
+  String memoriesBackupUploading(int current, int total) {
+    return 'جارٍ رفع $current من $total';
+  }
+
+  @override
+  String get memoriesBackupDisableSubtitle =>
+      'يحذف ذكرياتك المنسوخة احتياطيًا من السحابة.';
+
+  @override
   String get settingsHelpNews => 'الأخبار';
 
   @override
@@ -3795,4 +3835,160 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsChatsSectionCamera => 'الكاميرا';
+
+  @override
+  String get memoryImporterConnectTitle => 'Connect importer';
+
+  @override
+  String get memoryImporterConnectBody =>
+      'This browser session can only add new memories to your account. It can never access your existing uploads.';
+
+  @override
+  String memoryImporterConnectWarning(String origin) {
+    return 'Only connect if you opened $origin yourself. twonly never asks you to scan a code for support, a reward or a verification.';
+  }
+
+  @override
+  String get memoryImporterConnect => 'Connect';
+
+  @override
+  String memoryImporterConnectIn(int seconds) {
+    return 'Connect ($seconds)';
+  }
+
+  @override
+  String get memoryImporterConnectedTitle => 'Connected';
+
+  @override
+  String get memoryImporterConnected =>
+      'Continue on your computer: check that it shows your username, then start the upload. Your memories appear here while they upload.';
+
+  @override
+  String get memoryImporterConnectedDone => 'Got it, continue on my computer';
+
+  @override
+  String get memoryImporterAlreadyClaimed =>
+      'Someone else already scanned this code. Reload the import page, do not show the code to anyone, and scan again.';
+
+  @override
+  String get memoryImporterCodeExpired =>
+      'This code has expired. Reload the import page and scan the new code.';
+
+  @override
+  String get memoryImporterTooMany =>
+      'Three importers are already connected. Remove one in Settings → Memories → Import from other apps.';
+
+  @override
+  String get memoryImporterNeedsPlan =>
+      'Importing memories needs a plan with memories storage.';
+
+  @override
+  String get memoryImporterConnectFailed =>
+      'The importer could not be connected. Check your connection and try again.';
+
+  @override
+  String get memoryImporterScanOnlyTitle => 'Use the twonly camera';
+
+  @override
+  String get memoryImporterScanOnly =>
+      'A memories importer can only be connected by scanning its code with the twonly camera. Open twonly, then scan the code shown on your computer. Never connect a code someone sent you.';
+
+  @override
+  String memoryImporterHowTo(String origin) {
+    return 'Import memories from Snapchat and other apps: open $origin on your computer and scan the code shown there with the twonly camera.';
+  }
+
+  @override
+  String get memoryImporterTitle => 'Import memories';
+
+  @override
+  String get memoryImporterFromOtherApps => 'الاستيراد من تطبيقات أخرى';
+
+  @override
+  String memoryImporterOpenPage(String origin) {
+    return 'فتح $origin';
+  }
+
+  @override
+  String get memoryImporterNothingYet => 'Nothing uploaded yet';
+
+  @override
+  String get memoryImporterActionFailed =>
+      'That did not work. Check your connection and try again.';
+
+  @override
+  String get memoryImporterSectionConnected => 'Connected importers';
+
+  @override
+  String get memoryImporterSectionPast => 'Completed imports';
+
+  @override
+  String memoryImporterUploaded(int count, String size) {
+    return '$count memories, $size';
+  }
+
+  @override
+  String memoryImporterActiveUntil(String date) {
+    return 'Connected until $date';
+  }
+
+  @override
+  String get memoryImporterRemove => 'Remove';
+
+  @override
+  String get memoryImporterRemoveTitle => 'Remove this importer?';
+
+  @override
+  String get memoryImporterRemoveBody =>
+      'The computer can no longer upload. Upload permissions it already received stay valid for up to 5 minutes.';
+
+  @override
+  String get memoryImporterRemoveKeep => 'Remove and keep its memories';
+
+  @override
+  String get memoryImporterRemoveDelete =>
+      'Remove and delete everything it uploaded';
+
+  @override
+  String memoryImporterPastSummary(int count, String range) {
+    return '$count memories · $range';
+  }
+
+  @override
+  String get memoryImporterDeleteImport => 'Delete everything from this import';
+
+  @override
+  String memoryImporterDeleteImportConfirm(int count) {
+    return 'Delete $count memories from this import from all your devices and the cloud? This cannot be undone.';
+  }
+
+  @override
+  String memoryImporterUnreadable(int count) {
+    return '$count imported items could not be read';
+  }
+
+  @override
+  String get memoryImporterUnreadableBody =>
+      'They were not added to your gallery but still use storage. Delete them to free the space.';
+
+  @override
+  String get memoryImporterDelete => 'Delete';
+
+  @override
+  String get memoryImportProgressTitle => 'جارٍ استيراد الذكريات';
+
+  @override
+  String memoryImportProgressCount(int done, int total) {
+    return '$done من $total';
+  }
+
+  @override
+  String memoryImportProgressAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تمت إضافة $count',
+    );
+    return '$_temp0';
+  }
 }

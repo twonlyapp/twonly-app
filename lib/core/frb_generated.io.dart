@@ -28,6 +28,7 @@ import 'bridge/database/webxdc.dart';
 import 'bridge/groups.dart';
 import 'bridge/live_location.dart';
 import 'bridge/logging.dart';
+import 'bridge/memory_importer.dart';
 import 'bridge/performance.dart';
 import 'bridge/stories.dart';
 import 'bridge/user_config.dart';
@@ -304,6 +305,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustStreamSink<MediaCollection> dco_decode_StreamSink_media_collection_Sse(
     dynamic raw,
   );
+
+  @protected
+  RustStreamSink<MemoryImportProgress>
+  dco_decode_StreamSink_memory_import_progress_Sse(dynamic raw);
 
   @protected
   RustStreamSink<MessageActionsWithContacts>
@@ -665,6 +670,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
+  ImporterInfo dco_decode_importer_info(dynamic raw);
+
+  @protected
   InitConfig dco_decode_init_config(dynamic raw);
 
   @protected
@@ -746,6 +754,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<GroupVerification> dco_decode_list_group_verification(dynamic raw);
 
   @protected
+  List<ImporterInfo> dco_decode_list_importer_info(dynamic raw);
+
+  @protected
   List<KeyVerification> dco_decode_list_key_verification(dynamic raw);
 
   @protected
@@ -776,6 +787,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<OwnStorySummary> dco_decode_list_own_story_summary(dynamic raw);
+
+  @protected
+  List<PastImportInfo> dco_decode_list_past_import_info(dynamic raw);
 
   @protected
   List<PqcPreKeyInput> dco_decode_list_pqc_pre_key_input(dynamic raw);
@@ -839,6 +853,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<TransferredVerification> dco_decode_list_transferred_verification(
+    dynamic raw,
+  );
+
+  @protected
+  List<UnreadableImportInfo> dco_decode_list_unreadable_import_info(
     dynamic raw,
   );
 
@@ -912,6 +931,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MediaStorageStat dco_decode_media_storage_stat(dynamic raw);
+
+  @protected
+  MemoryImportProgress dco_decode_memory_import_progress(dynamic raw);
 
   @protected
   MessageAction dco_decode_message_action(dynamic raw);
@@ -1074,6 +1096,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PastImportInfo dco_decode_past_import_info(dynamic raw);
+
+  @protected
   PqcPreKeyInput dco_decode_pqc_pre_key_input(dynamic raw);
 
   @protected
@@ -1128,6 +1153,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustKeyManager dco_decode_rust_key_manager(dynamic raw);
+
+  @protected
+  RustMemoryImporter dco_decode_rust_memory_importer(dynamic raw);
 
   @protected
   RustSignal dco_decode_rust_signal(dynamic raw);
@@ -1209,6 +1237,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void dco_decode_unit(dynamic raw);
+
+  @protected
+  UnreadableImportInfo dco_decode_unreadable_import_info(dynamic raw);
 
   @protected
   UserConfig dco_decode_user_config(dynamic raw);
@@ -1519,6 +1550,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustStreamSink<MediaCollection> sse_decode_StreamSink_media_collection_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<MemoryImportProgress>
+  sse_decode_StreamSink_memory_import_progress_Sse(
     SseDeserializer deserializer,
   );
 
@@ -1996,6 +2033,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
+  ImporterInfo sse_decode_importer_info(SseDeserializer deserializer);
+
+  @protected
   InitConfig sse_decode_init_config(SseDeserializer deserializer);
 
   @protected
@@ -2103,6 +2143,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<ImporterInfo> sse_decode_list_importer_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<KeyVerification> sse_decode_list_key_verification(
     SseDeserializer deserializer,
   );
@@ -2147,6 +2192,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<OwnStorySummary> sse_decode_list_own_story_summary(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<PastImportInfo> sse_decode_list_past_import_info(
     SseDeserializer deserializer,
   );
 
@@ -2232,6 +2282,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<UnreadableImportInfo> sse_decode_list_unreadable_import_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<UserDiscoveryAnnouncedUser>
   sse_decode_list_user_discovery_announced_user(SseDeserializer deserializer);
 
@@ -2313,6 +2368,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MediaStorageStat sse_decode_media_storage_stat(SseDeserializer deserializer);
+
+  @protected
+  MemoryImportProgress sse_decode_memory_import_progress(
+    SseDeserializer deserializer,
+  );
 
   @protected
   MessageAction sse_decode_message_action(SseDeserializer deserializer);
@@ -2511,6 +2571,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PastImportInfo sse_decode_past_import_info(SseDeserializer deserializer);
+
+  @protected
   PqcPreKeyInput sse_decode_pqc_pre_key_input(SseDeserializer deserializer);
 
   @protected
@@ -2579,6 +2642,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustKeyManager sse_decode_rust_key_manager(SseDeserializer deserializer);
+
+  @protected
+  RustMemoryImporter sse_decode_rust_memory_importer(
+    SseDeserializer deserializer,
+  );
 
   @protected
   RustSignal sse_decode_rust_signal(SseDeserializer deserializer);
@@ -2668,6 +2736,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
+
+  @protected
+  UnreadableImportInfo sse_decode_unreadable_import_info(
+    SseDeserializer deserializer,
+  );
 
   @protected
   UserConfig sse_decode_user_config(SseDeserializer deserializer);
@@ -3053,6 +3126,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_StreamSink_media_collection_Sse(
     RustStreamSink<MediaCollection> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_memory_import_progress_Sse(
+    RustStreamSink<MemoryImportProgress> self,
     SseSerializer serializer,
   );
 
@@ -3648,6 +3727,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_importer_info(ImporterInfo self, SseSerializer serializer);
+
+  @protected
   void sse_encode_init_config(InitConfig self, SseSerializer serializer);
 
   @protected
@@ -3777,6 +3859,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_importer_info(
+    List<ImporterInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_key_verification(
     List<KeyVerification> self,
     SseSerializer serializer,
@@ -3833,6 +3921,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_own_story_summary(
     List<OwnStorySummary> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_past_import_info(
+    List<PastImportInfo> self,
     SseSerializer serializer,
   );
 
@@ -3935,6 +4029,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_transferred_verification(
     List<TransferredVerification> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_unreadable_import_info(
+    List<UnreadableImportInfo> self,
     SseSerializer serializer,
   );
 
@@ -4046,6 +4146,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_media_storage_stat(
     MediaStorageStat self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_memory_import_progress(
+    MemoryImportProgress self,
     SseSerializer serializer,
   );
 
@@ -4293,6 +4399,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_past_import_info(
+    PastImportInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_pqc_pre_key_input(
     PqcPreKeyInput self,
     SseSerializer serializer,
@@ -4385,6 +4497,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_rust_key_manager(
     RustKeyManager self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_rust_memory_importer(
+    RustMemoryImporter self,
     SseSerializer serializer,
   );
 
@@ -4495,6 +4613,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_unreadable_import_info(
+    UnreadableImportInfo self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_user_config(UserConfig self, SseSerializer serializer);

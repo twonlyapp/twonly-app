@@ -46,4 +46,8 @@ enum ErrorCode {
     NoRecoveryData = 1037;
     InvalidRecoveryData = 1038;
     reserved 1039;
+    PairingAlreadyClaimed = 1040;
+    PairingNotFound = 1041;
+    TooManyImporters = 1042;
+    ImporterNotFound = 1043;
 }

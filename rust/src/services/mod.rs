@@ -15,6 +15,8 @@ pub mod media_codec;
 pub mod media_exif;
 pub mod media_upload;
 pub mod mediafiles;
+pub mod memory_import_progress;
+pub mod memory_importer;
 pub mod mentions;
 pub mod messages;
 pub mod notifications;

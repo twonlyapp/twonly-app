@@ -2,6 +2,7 @@
 
 ## 0.7.1
 
+- New: Import Snapchat photos and videos into Memories via import.twonly.eu
 - New: Preview stickers and photo avatars before saving, with rotate and erase
 - New: Location filter with a map of where you took the photo
 - Improve: Fullscreen map for live locations

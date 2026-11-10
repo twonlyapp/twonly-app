@@ -85,11 +85,21 @@ class SettingsMainView extends StatelessWidget {
                   lang.settingsSubscription,
                   Routes.settingsSubscription,
                 ),
+                category(
+                  Icons.lock_clock_rounded,
+                  lang.settingsBackup,
+                  Routes.settingsBackup,
+                ),
                 const SettingsDivider(),
                 category(
                   FontAwesomeIcons.comment,
                   lang.settingsChats,
                   Routes.settingsChats,
+                ),
+                category(
+                  FontAwesomeIcons.images,
+                  lang.settingsMemories,
+                  Routes.settingsMemories,
                 ),
                 category(
                   FontAwesomeIcons.bell,
@@ -106,11 +116,6 @@ class SettingsMainView extends StatelessWidget {
                   FontAwesomeIcons.lock,
                   lang.settingsPrivacy,
                   Routes.settingsPrivacy,
-                ),
-                category(
-                  Icons.lock_clock_rounded,
-                  lang.settingsBackup,
-                  Routes.settingsBackup,
                 ),
                 category(
                   FontAwesomeIcons.chartPie,

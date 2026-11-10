@@ -23,8 +23,11 @@ import 'package:twonly/src/visual/elements/pro_badge.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/settings/appearance.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/backup_settings.view.dart';
+import 'package:twonly/src/visual/views/settings/backup/memories_backup_detail.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/status.passwordless_recovery.comp.dart';
 import 'package:twonly/src/visual/views/settings/chat/chat_settings.view.dart';
+import 'package:twonly/src/visual/views/settings/data_and_storage/storage_contents.view.dart';
+import 'package:twonly/src/visual/views/settings/memories_settings.view.dart';
 import 'package:twonly/src/visual/views/settings/notification.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy.view.dart';
 import 'package:twonly/src/visual/views/settings/settings_main.view.dart';
@@ -51,6 +54,9 @@ class _SettingsPurchases extends ChangeNotifier
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
+
+const _memoriesBackupDetail = '/settings/memories/backup';
+const _storageContents = '/settings/memories/backup/contents';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -122,6 +128,21 @@ void main() {
             value: purchases,
             child: const BackupView(),
           ),
+        ),
+        GoRoute(
+          path: Routes.settingsMemories,
+          builder: (_, _) => ChangeNotifierProvider<PurchasesProvider>.value(
+            value: purchases,
+            child: const MemoriesSettingsView(),
+          ),
+        ),
+        GoRoute(
+          path: _memoriesBackupDetail,
+          builder: (_, _) => const MemoriesBackupDetailView(),
+        ),
+        GoRoute(
+          path: _storageContents,
+          builder: (_, _) => const StorageContentsView(),
         ),
         GoRoute(
           path: Routes.settingsPrivacy,
@@ -299,6 +320,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Noch nicht gesichert'), findsOneWidget);
+      expect(find.text('Memories Backup'), findsOneWidget);
       expect(find.text('Upgrade erforderlich'), findsOneWidget);
       final save = tester.widget<MyButton>(find.byType(MyButton));
       expect(save.onPressed, isNull);
@@ -309,6 +331,67 @@ void main() {
       await pumpNative(tester);
     },
   );
+
+  testWidgets(
+    'Memories settings hold backup, saving and import in one place',
+    (tester) async {
+      final usage = Completer<FrbMemoriesUsage>();
+      api.loadUsage = () => usage.future;
+      await pumpSettings(
+        tester,
+        location: Routes.settingsMemories,
+        textScale: 1.5,
+      );
+      expect(find.text('Upgrade erforderlich'), findsOneWidget);
+      for (final entry in [
+        'Kopie in System-Galerie speichern',
+        'Standort in Memories speichern',
+        'Aus anderen Apps importieren',
+      ]) {
+        await tester.scrollUntilVisible(find.text(entry), 100);
+        expect(find.text(entry), findsOneWidget);
+      }
+      expect(tester.takeException(), isNull);
+      usage.complete(
+        const FrbMemoriesUsage(currentBytes: 0, count: 0, maxBytes: 1000000),
+      );
+      await pumpNative(tester);
+    },
+  );
+
+  testWidgets('Memories backup shows its usage and how to turn it off', (
+    tester,
+  ) async {
+    api.loadUsage = () async => const FrbMemoriesUsage(
+      currentBytes: 1200000000,
+      count: 340,
+      maxBytes: 5000000000,
+    );
+    await pumpSettings(tester, location: _memoriesBackupDetail);
+    await pumpNative(
+      tester,
+      until: () => find.text('340 Memories in der Cloud').evaluate().isNotEmpty,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('24 % belegt'), findsOneWidget);
+    expect(find.text('Jetzt synchronisieren'), findsOneWidget);
+    expect(find.text('Speicherplatz freigeben'), findsOneWidget);
+    expect(find.text('Cloud-Backup deaktivieren'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('free up space shows an empty state without memories', (
+    tester,
+  ) async {
+    await pumpSettings(tester, location: _storageContents);
+    await pumpNative(
+      tester,
+      until: () => find.byType(CircularProgressIndicator).evaluate().isEmpty,
+    );
+    expect(find.text('Speicherplatz freigeben'), findsOneWidget);
+    expect(find.byType(FilledButton), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'configured friends are not reported as active until they confirm',

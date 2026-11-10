@@ -3524,6 +3524,7 @@ dependencies = [
  "walkdir",
  "webp",
  "webpki-roots",
+ "x25519-dalek",
  "zeroize",
  "zip",
 ]
