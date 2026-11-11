@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		E5A100012F90000100A10001 /* NativeErrorReporting.swift in Runner Sources */ = {isa = PBXBuildFile; fileRef = E5A100042F90000100A10004 /* NativeErrorReporting.swift */; };
 		E5A100022F90000100A10002 /* NativeErrorReporting.swift in NotificationService Sources */ = {isa = PBXBuildFile; fileRef = E5A100042F90000100A10004 /* NativeErrorReporting.swift */; };
-		E5A100032F90000100A10003 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = E5A100052F90000100A10005 /* Sentry */; };
+		E5A100032F90000100A10003 /* Sentry-Static in Frameworks */ = {isa = PBXBuildFile; productRef = E5A100052F90000100A10005 /* Sentry-Static */; };
 		E5A100062F90000100A10006 /* NativeErrorReportingChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5A100072F90000100A10007 /* NativeErrorReportingChannel.swift */; };
 		05CF222065FC24670B05B6D0 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC1EE71614E1B4F84D6FDC2D /* Pods_RunnerTests.framework */; };
 		06AA21445BEAF2C45DC9DCDF /* Pods_NotificationService.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A198C9B5D90584C4F96206B2 /* Pods_NotificationService.framework */; };
@@ -235,7 +235,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				06AA21445BEAF2C45DC9DCDF /* Pods_NotificationService.framework in Frameworks */,
-				E5A100032F90000100A10003 /* Sentry in Frameworks */,
+				E5A100032F90000100A10003 /* Sentry-Static in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -435,7 +435,7 @@
 			);
 			name = NotificationService;
 			packageProductDependencies = (
-				E5A100052F90000100A10005 /* Sentry */,
+				E5A100052F90000100A10005 /* Sentry-Static */,
 			);
 			productName = NotificationService;
 			productReference = D21FCEA42D9F2B750088701D /* NotificationService.appex */;
@@ -522,7 +522,7 @@
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (
 				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
-				E5A100082F90000100A10008 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				E5A100082F90000100A10008 /* XCRemoteSwiftPackageReference "sentry-apple-binaries" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
@@ -1577,12 +1577,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		E5A100082F90000100A10008 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+		E5A100082F90000100A10008 /* XCRemoteSwiftPackageReference "sentry-apple-binaries" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
+			repositoryURL = "https://github.com/getsentry/sentry-apple-binaries";
 			requirement = {
 				kind = exactVersion;
-				version = 8.58.4;
+				version = 9.32.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -1595,10 +1595,10 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E5A100052F90000100A10005 /* Sentry */ = {
+		E5A100052F90000100A10005 /* Sentry-Static */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E5A100082F90000100A10008 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
-			productName = Sentry;
+			package = E5A100082F90000100A10008 /* XCRemoteSwiftPackageReference "sentry-apple-binaries" */;
+			productName = "Sentry-Static";
 		};
 		78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */ = {
 			isa = XCSwiftPackageProductDependency;
