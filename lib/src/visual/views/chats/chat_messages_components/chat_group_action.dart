@@ -90,10 +90,12 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
 
     switch (widget.action.type) {
       case GroupActionType.changeDisplayMaxTime:
-        final time = formatDuration(
-          context,
-          (widget.action.newDeleteMessagesAfterMilliseconds ?? 0) ~/ 1000,
-        );
+        final seconds =
+            (widget.action.newDeleteMessagesAfterMilliseconds ?? 0) ~/ 1000;
+        // "nach ..." requires the dative ("nach 7 Tagen", not "nach 7 Tage").
+        final time = seconds >= 86400
+            ? context.lang.durationAfterDays(seconds ~/ 86400)
+            : formatDuration(context, seconds);
         text = (contact == null)
             ? context.lang.youChangedDisplayMaxTime(time)
             : context.lang.changeDisplayMaxTime(time, maker);

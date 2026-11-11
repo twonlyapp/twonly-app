@@ -1243,6 +1243,17 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String durationAfterDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tagen',
+      one: 'einem Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get contacts => 'Kontakte';
 
   @override

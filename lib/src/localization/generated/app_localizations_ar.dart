@@ -1283,6 +1283,20 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String durationAfterDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوم',
+      many: '$count يومًا',
+      few: '$count أيام',
+      two: 'يومان',
+      one: 'يوم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get contacts => 'جهات الاتصال';
 
   @override

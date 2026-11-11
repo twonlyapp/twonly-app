@@ -463,6 +463,7 @@
   "durationShortMinute": "Min.",
   "durationShortHour": "Hrs.",
   "durationShortDays": "{count, plural, =1{1 Day} other{{count} Days}}",
+  "durationAfterDays": "{count, plural, =1{1 day} other{{count} days}}",
   "contacts": "Contacts",
   "groups": "Groups",
   "newGroup": "New group",

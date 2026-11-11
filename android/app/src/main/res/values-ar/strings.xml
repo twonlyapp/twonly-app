@@ -8,4 +8,6 @@
     <string name="widget_open_app_first">افتح twonly مرة واحدة لتحميل جهات الاتصال ومجموعاتها.</string>
     <string name="widget_save">إضافة الأداة</string>
     <string name="widget_image_description">أحدث صورة في أداتك</string>
+    <string name="notification_sync_channel">المزامنة في الخلفية</string>
+    <string name="notification_sync_title">جارٍ البحث عن رسائل جديدة</string>
 </resources>

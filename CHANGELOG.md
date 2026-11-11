@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+
+- Fix: Push notifications were not shown on Android 11 and older
+
 ## 0.8.0
 
 - New: Import Snapchat photos and videos into Memories via import.twonly.eu

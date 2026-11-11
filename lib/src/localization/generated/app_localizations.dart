@@ -2200,6 +2200,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 Day} other{{count} Days}}'**
   String durationShortDays(num count);
 
+  /// No description provided for @durationAfterDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String durationAfterDays(num count);
+
   /// No description provided for @contacts.
   ///
   /// In en, this message translates to:

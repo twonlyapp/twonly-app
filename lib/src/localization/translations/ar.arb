@@ -350,6 +350,7 @@
   "durationShortMinute": "د",
   "durationShortHour": "س",
   "durationShortDays": "{count, plural, =1{يوم واحد} =2{يومان} few{{count} أيام} many{{count} يومًا} other{{count} يوم}}",
+  "durationAfterDays": "{count, plural, =1{يوم واحد} =2{يومان} few{{count} أيام} many{{count} يومًا} other{{count} يوم}}",
   "contacts": "جهات الاتصال",
   "groups": "المجموعات",
   "newGroup": "مجموعة جديدة",

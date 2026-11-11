@@ -448,6 +448,7 @@
   "durationShortMinute": "Min.",
   "durationShortHour": "Std.",
   "durationShortDays": "{count, plural, =1{1 Tag} other{{count} Tage}}",
+  "durationAfterDays": "{count, plural, =1{einem Tag} other{{count} Tagen}}",
   "contacts": "Kontakte",
   "groups": "Gruppen",
   "newGroup": "Neue Gruppe",
