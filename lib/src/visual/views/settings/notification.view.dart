@@ -20,12 +20,17 @@ class _NotificationViewState extends State<NotificationView>
     with WidgetsBindingObserver {
   bool _isLoadingReset = false;
   bool? _hasNotificationPermission;
+  // Resetting rotates the FCM token, which cannot exist without Play Services.
+  bool _fcmAvailable = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkPermission();
+    FcmNotificationService.isAvailable().then((available) {
+      if (mounted) setState(() => _fcmAvailable = available);
+    });
   }
 
   @override
@@ -92,27 +97,28 @@ class _NotificationViewState extends State<NotificationView>
             value: userService.currentUser.storyNotifications,
             onChanged: (_) => _toggleStoryNotifications(),
           ),
-          ListTile(
-            title: Text(lang.settingsNotifyResetTitle),
-            subtitle: Text(
-              _hasNotificationPermission == false
-                  ? lang.settingsNotificationsDisabledHelp
-                  : lang.settingsNotifyResetTitleSubtitle,
+          if (_fcmAvailable)
+            ListTile(
+              title: Text(lang.settingsNotifyResetTitle),
+              subtitle: Text(
+                _hasNotificationPermission == false
+                    ? lang.settingsNotificationsDisabledHelp
+                    : lang.settingsNotifyResetTitleSubtitle,
+              ),
+              trailing: _isLoadingReset
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator.adaptive(
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : null,
+              onTap: switch (_hasNotificationPermission) {
+                true => _isLoadingReset ? null : _resetTokens,
+                false => openAppSettings,
+                null => null,
+              },
             ),
-            trailing: _isLoadingReset
-                ? const SizedBox.square(
-                    dimension: 16,
-                    child: CircularProgressIndicator.adaptive(
-                      strokeWidth: 2,
-                    ),
-                  )
-                : null,
-            onTap: switch (_hasNotificationPermission) {
-              true => _isLoadingReset ? null : _resetTokens,
-              false => openAppSettings,
-              null => null,
-            },
-          ),
         ],
       ),
     );

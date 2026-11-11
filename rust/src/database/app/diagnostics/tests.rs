@@ -22,23 +22,64 @@ async fn debug_batches_preserve_related_rows_and_roll_back_on_conflicts() {
     let items = || {
         (0..13)
             .map(|i| MockGalleryItem {
+                media_id: format!("mock_gen_{i}"),
                 created_at: i,
                 month: "Januar 2024".into(),
             })
             .collect()
     };
 
-    writes::seed_gallery(&mut tx, items(), 100).await.unwrap();
+    writes::seed_gallery(&mut tx, items()).await.unwrap();
 
-    writes::seed_gallery(&mut tx, items(), 100).await.unwrap();
+    writes::seed_gallery(&mut tx, items()).await.unwrap();
 
-    let preserved: i64 =
-        sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE sender_id IS NOT NULL")
-            .fetch_one(&mut *tx)
-            .await
-            .unwrap();
+    let stored: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM media_files WHERE stored = 1")
+        .fetch_one(&mut *tx)
+        .await
+        .unwrap();
 
-    assert_eq!(preserved, 13);
+    assert_eq!(stored, 13);
+
+    let unrelated: (i64, i64, i64) = sqlx::query_as(
+        "SELECT (SELECT COUNT(*) FROM groups), (SELECT COUNT(*) FROM contacts), \
+         (SELECT COUNT(*) FROM messages)",
+    )
+    .fetch_one(&mut *tx)
+    .await
+    .unwrap();
+
+    assert_eq!(unrelated, (0, 0, 0));
+
+    assert!(writes::seed_gallery(
+        &mut tx,
+        vec![MockGalleryItem {
+            media_id: "real_media".into(),
+            created_at: 0,
+            month: "Januar 2024".into(),
+        }],
+    )
+    .await
+    .is_err());
+
+    sqlx::query(
+        r#"
+        INSERT INTO groups(group_id, group_name, is_direct_chat, joined_group)
+        VALUES ('mock_group_gallery', 'Mock Gallery Group', 0, 1)
+        "#,
+    )
+    .execute(&mut *tx)
+    .await
+    .unwrap();
+
+    sqlx::query(
+        r#"
+        INSERT INTO contacts(user_id, username, display_name)
+        VALUES (9000000, 'mock_user_0', 'Author 0'), (9000001, 'mock_user_1', 'Author 1')
+        "#,
+    )
+    .execute(&mut *tx)
+    .await
+    .unwrap();
 
     sqlx::query(
         r#"
@@ -86,7 +127,7 @@ async fn debug_batches_preserve_related_rows_and_roll_back_on_conflicts() {
         .await
         .unwrap();
 
-    assert_eq!(count, 16);
+    assert_eq!(count, 3);
 }
 
 #[tokio::test]

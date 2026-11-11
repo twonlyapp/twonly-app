@@ -361,6 +361,7 @@
   "memoriesEmpty": "As soon as you save pictures or videos, they end up here in your memories.",
   "deleteTitle": "Are you sure?",
   "deleteOkBtnForAll": "Delete for all",
+  "memoriesRemovedLocallySnackbar": "{count, plural, =1 {Removed from this device, still backed up in the cloud} other {Removed {count} items from this device, still backed up in the cloud}}",
   "memoriesDeleteSnackbarSuccess": "{count, plural, =1 {Deleted 1 item successfully} other {Deleted {count} items successfully}}",
   "deleteOkBtnForMe": "Delete for me",
   "deleteOnlyForMe": "Delete only for me",
@@ -640,6 +641,7 @@
       }
     }
   },
+  "memoriesFlashbackJumpTo": "Jump to",
   "migrationOfMemories": "Migration of media files: {open} still to be processed.",
   "autoStoreAllSendUnlimitedMediaFiles": "Save all sent media",
   "autoStoreAllSendUnlimitedMediaFilesSubtitle": "If you enable this option, all images you send will be saved as long as they were sent with an infinite countdown and not in twonly mode.",
@@ -914,21 +916,6 @@
       "error": {}
     }
   },
-  "importGalleryImportingOf": "Importing {current} of {total}...",
-  "@importGalleryImportingOf": {
-    "placeholders": {
-      "current": {},
-      "total": {}
-    }
-  },
-  "importGalleryStarting": "Starting import...",
-  "importGalleryComplete": "Import complete: {imported} successfully imported and {failed} failed.",
-  "@importGalleryComplete": {
-    "placeholders": {
-      "imported": {},
-      "failed": {}
-    }
-  },
   "importGalleryGrantAccess": "Grant Access",
   "importGalleryOpenSettings": "Open Settings",
   "importGalleryPermissionDenied": "Permission to access gallery denied.",
@@ -939,7 +926,6 @@
   "importGalleryNoImagesFoundDesc": "There are no images on your device.",
   "importGalleryFilterTwonly": "Only show the twonly-Album",
   "importGalleryRefresh": "Refresh",
-  "importGallerySelectToImport": "Select items to import",
   "importGalleryImportCount": "{count, plural, =1{Import 1 item} other{Import {count} items}}",
   "@importGalleryImportCount": {
     "placeholders": {
@@ -948,6 +934,27 @@
       }
     }
   },
+  "importGalleryProgressTitle": "Importing your memories",
+  "importGalleryProgressHint": "Keep twonly open until the import is finished.",
+  "importGalleryProgressCount": "{done} of {total}",
+  "@importGalleryProgressCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importGalleryStop": "Stop import",
+  "importGalleryStopping": "Stopping…",
+  "importGalleryDoneTitle": "Import complete",
+  "importGalleryStoppedTitle": "Import stopped",
+  "importGalleryImportedLabel": "Imported",
+  "importGalleryFailedLabel": "Failed",
+  "importGalleryRemainingLabel": "Remaining",
+  "importGalleryDone": "Done",
   "emptyChatListTitle": "Find your friends",
   "emptyChatListDesc": "Let friends scan your QR code, or share them your profile.",
   "emptyChatListShareBtn": "Share your profile",
@@ -1137,7 +1144,10 @@
   },
   "memoriesBackupDisableSubtitle": "Deletes your backed up memories from the cloud.",
   "settingsHelpNews": "News",
+  "settingsStorageDeleteLocal": "Delete locally",
+  "settingsStorageDeleteCompletely": "Delete completely",
   "settingsStorageContents": "Free up space",
+  "settingsStorageFilterAll": "All",
   "settingsStorageSortStorage": "Occupied storage",
   "settingsStorageSortNewest": "Newest",
   "settingsStorageSortOldest": "Oldest",

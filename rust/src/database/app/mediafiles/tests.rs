@@ -296,11 +296,11 @@ async fn memories_backup_excludes_mock_gallery_entries_including_pending_retries
         &mut tx,
         (0..2)
             .map(|created_at| MockGalleryItem {
+                media_id: format!("mock_gen_{created_at}"),
                 created_at,
                 month: "October 2026".into(),
             })
             .collect(),
-        100,
     )
     .await
     .unwrap();
@@ -489,14 +489,19 @@ async fn month_backfill_and_backup_cleanup_preserve_existing_data_and_rollback()
 
     std::fs::write(stored.join("keep.webp"), []).unwrap();
 
+    std::fs::write(stored.join("other.webp"), []).unwrap();
+
     let mut tx = database.pool.begin().await.unwrap();
 
+    // 'removed' was removed from this device by an older build, which cleared
+    // `stored`; with the cloud copy gone as well, nothing of it is left.
     sqlx::query(
         r#"
         INSERT INTO media_files(media_id, type, stored, cloud_state, created_at, created_at_month)
         VALUES ('keep', 'image', 1, 'uploaded', 1, 'keep-label'),
             ('missing', 'video', 1, 'uploaded', 1, NULL),
-            ('other', 'image', 0, 'uploaded', 2, NULL)
+            ('other', 'image', 0, 'uploaded', 2, NULL),
+            ('removed', 'image', 0, 'uploaded', 2, NULL)
         "#,
     )
     .execute(&mut *tx)
@@ -546,10 +551,12 @@ async fn month_backfill_and_backup_cleanup_preserve_existing_data_and_rollback()
         storage::finish_backup_disable(&mut tx, stored.clone())
             .await
             .unwrap(),
-        1
+        2
     );
 
     assert!(queries::get(&mut tx, "missing").await.unwrap().is_none());
+
+    assert!(queries::get(&mut tx, "removed").await.unwrap().is_none());
 
     assert_eq!(
         queries::get(&mut tx, "other")
@@ -606,7 +613,7 @@ async fn month_backfill_and_backup_cleanup_preserve_existing_data_and_rollback()
         storage::finish_backup_disable(&mut tx, stored.clone())
             .await
             .unwrap(),
-        1
+        2
     );
 
     tx.commit().await.unwrap();

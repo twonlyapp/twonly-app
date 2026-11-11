@@ -14,11 +14,27 @@ import 'package:twonly/src/utils/database_values.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 enum StorageSortOption {
   size,
   newest,
   oldest,
+}
+
+/// Which memories to list, by where their copies are kept.
+enum StorageFilterOption {
+  all,
+  localOnly,
+  cloudOnly;
+
+  bool matches(MediaFile file) => switch (this) {
+    StorageFilterOption.all => true,
+    StorageFilterOption.localOnly =>
+      file.cloudState != CloudState.uploaded && _hasLocalFile(file),
+    StorageFilterOption.cloudOnly =>
+      file.cloudState == CloudState.uploaded && !_hasLocalFile(file),
+  };
 }
 
 class StorageContentsView extends StatefulWidget {
@@ -30,6 +46,7 @@ class StorageContentsView extends StatefulWidget {
 
 class _StorageContentsViewState extends State<StorageContentsView> {
   StorageSortOption _sortOption = StorageSortOption.size;
+  StorageFilterOption _filterOption = StorageFilterOption.all;
   final Set<String> _selectedMediaIds = {};
   late final Stream<List<MediaFile>> _mediaFilesStream;
 
@@ -61,12 +78,9 @@ class _StorageContentsViewState extends State<StorageContentsView> {
     return StreamBuilder<List<MediaFile>>(
       stream: _mediaFilesStream,
       builder: (context, snapshot) {
-        final allFiles = snapshot.data ?? [];
-        final storedFiles = allFiles.where((file) {
-          final ms = MediaFileService(file);
-          return file.stored ||
-              (ms.storedPath.existsSync() && ms.storedPath.lengthSync() > 0);
-        }).toList();
+        // Every memory, cloud-only ones included, so space can be freed on
+        // this device and in the cloud.
+        final storedFiles = [...?snapshot.data];
 
         switch (_sortOption) {
           case StorageSortOption.size:
@@ -79,13 +93,26 @@ class _StorageContentsViewState extends State<StorageContentsView> {
             storedFiles.sort((a, b) => a.createdAt.compareTo(b.createdAt));
         }
 
+        final visibleFiles = storedFiles.where(_filterOption.matches).toList();
+
         final isSelecting = _selectedMediaIds.isNotEmpty;
         final allSelected =
-            storedFiles.isNotEmpty &&
-            _selectedMediaIds.length >= storedFiles.length;
-        final selectedBytes = storedFiles
+            visibleFiles.isNotEmpty &&
+            _selectedMediaIds.length >= visibleFiles.length;
+        final selectedFiles = visibleFiles
             .where((file) => _selectedMediaIds.contains(file.mediaId))
-            .fold<int>(0, (sum, file) => sum + (file.sizeInBytes ?? 0));
+            .toList();
+        final selectedBytes = selectedFiles.fold<int>(
+          0,
+          (sum, file) => sum + (file.sizeInBytes ?? 0),
+        );
+        // Removing the local copy needs a finished backup for every item and
+        // at least one item that still has a local file to remove.
+        final canDeleteLocal =
+            selectedFiles.every(
+              (file) => file.cloudState == CloudState.uploaded,
+            ) &&
+            selectedFiles.any(_hasLocalFile);
 
         return Scaffold(
           appBar: AppBar(
@@ -97,9 +124,9 @@ class _StorageContentsViewState extends State<StorageContentsView> {
                 : null,
             title: isSelecting
                 ? Text(
-                    context.lang.memoriesSelectedCount(
+                    '${context.lang.memoriesSelectedCount(
                       _selectedMediaIds.length,
-                    ),
+                    )} · ${formatBytes(selectedBytes)}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   )
                 : Text(context.lang.settingsStorageContents),
@@ -117,7 +144,7 @@ class _StorageContentsViewState extends State<StorageContentsView> {
                       _selectedMediaIds.clear();
                     } else {
                       _selectedMediaIds.addAll(
-                        storedFiles.map((file) => file.mediaId),
+                        visibleFiles.map((file) => file.mediaId),
                       );
                     }
                   }),
@@ -133,8 +160,18 @@ class _StorageContentsViewState extends State<StorageContentsView> {
             ),
             child: isSelecting
                 ? _DeleteBar(
-                    selectedBytes: selectedBytes,
-                    onDelete: () => _batchDelete(context, storedFiles),
+                    onDeleteLocal: canDeleteLocal
+                        ? () => _batchDelete(
+                            context,
+                            selectedFiles,
+                            deleteCompletely: false,
+                          )
+                        : null,
+                    onDeleteCompletely: () => _batchDelete(
+                      context,
+                      selectedFiles,
+                      deleteCompletely: true,
+                    ),
                   )
                 : const SizedBox.shrink(),
           ),
@@ -146,7 +183,10 @@ class _StorageContentsViewState extends State<StorageContentsView> {
               ? const _EmptyState()
               : ListView.builder(
                   padding: const EdgeInsets.only(bottom: 24),
-                  itemCount: storedFiles.length + 2,
+                  // Summary, filter and sort rows come first; an empty filter
+                  // result keeps them so the filter can be changed back.
+                  itemCount:
+                      3 + (visibleFiles.isEmpty ? 1 : visibleFiles.length),
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       return Padding(
@@ -154,13 +194,44 @@ class _StorageContentsViewState extends State<StorageContentsView> {
                         child: _SummaryCard(files: storedFiles),
                       );
                     }
-                    if (index == 1) return _buildSortChips(context);
-                    final file = storedFiles[index - 2];
+                    if (index == 1) return _buildFilterChips(context);
+                    if (index == 2) return _buildSortChips(context);
+                    if (visibleFiles.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(
+                          context.lang.settingsStorageNoContents,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: context.color.onSurfaceVariant,
+                          ),
+                        ),
+                      );
+                    }
+                    final file = visibleFiles[index - 3];
                     return _buildListItem(context, file, isSelecting);
                   },
                 ),
         );
       },
+    );
+  }
+
+  Widget _buildFilterChips(BuildContext context) {
+    final options = {
+      StorageFilterOption.all: context.lang.settingsStorageFilterAll,
+      StorageFilterOption.localOnly: context.lang.settingsStorageLocalOnly,
+      StorageFilterOption.cloudOnly: context.lang.settingsStorageCloudOnly,
+    };
+    return _buildChipRow(
+      icon: Icons.filter_list_rounded,
+      options: options,
+      selected: _filterOption,
+      onSelected: (option) => setState(() {
+        _filterOption = option;
+        // Hidden items must not be deleted along with the visible ones.
+        _selectedMediaIds.clear();
+      }),
     );
   }
 
@@ -170,11 +241,29 @@ class _StorageContentsViewState extends State<StorageContentsView> {
       StorageSortOption.newest: context.lang.settingsStorageSortNewest,
       StorageSortOption.oldest: context.lang.settingsStorageSortOldest,
     };
+    return _buildChipRow(
+      icon: Icons.sort_rounded,
+      options: options,
+      selected: _sortOption,
+      onSelected: (option) => setState(() => _sortOption = option),
+    );
+  }
+
+  Widget _buildChipRow<T>({
+    required IconData icon,
+    required Map<T, String> options,
+    required T selected,
+    required ValueChanged<T> onSelected,
+  }) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Row(
         children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Icon(icon, size: 20, color: context.color.onSurfaceVariant),
+          ),
           for (final MapEntry(key: option, value: label) in options.entries)
             Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -182,9 +271,9 @@ class _StorageContentsViewState extends State<StorageContentsView> {
                 label: Text(label),
                 showCheckmark: false,
                 shape: const StadiumBorder(),
-                selected: _sortOption == option,
-                onSelected: (selected) {
-                  if (selected) setState(() => _sortOption = option);
+                selected: selected == option,
+                onSelected: (isSelected) {
+                  if (isSelected) onSelected(option);
                 },
               ),
             ),
@@ -356,7 +445,9 @@ class _StorageContentsViewState extends State<StorageContentsView> {
   }
 
   Future<void> _deleteMemory(BuildContext context, MediaFile file) async {
-    final hasCloudBackup = file.cloudState == CloudState.uploaded;
+    // A cloud-only memory has no local copy left, so it can only go entirely.
+    final hasCloudBackup =
+        file.cloudState == CloudState.uploaded && _hasLocalFile(file);
 
     final deleteCompletely = await showDeleteMemoriesDialog(
       context: context,
@@ -372,10 +463,16 @@ class _StorageContentsViewState extends State<StorageContentsView> {
         completely: deleteCompletely,
       );
 
+      // The row may be unchanged after a local removal, while the status
+      // reads the file system, so rebuild instead of waiting for the stream.
+      if (mounted) setState(() {});
+
       if (context.mounted) {
         showSnackbar(
           context,
-          context.lang.memoriesDeleteSnackbarSuccess(1),
+          deleteCompletely
+              ? context.lang.memoriesDeleteSnackbarSuccess(1)
+              : context.lang.memoriesRemovedLocallySnackbar(1),
           level: SnackbarLevel.success,
         );
       }
@@ -391,25 +488,22 @@ class _StorageContentsViewState extends State<StorageContentsView> {
 
   Future<void> _batchDelete(
     BuildContext context,
-    List<MediaFile> allFiles,
-  ) async {
-    final selectedCount = _selectedMediaIds.length;
+    List<MediaFile> selectedFiles, {
+    required bool deleteCompletely,
+  }) async {
+    final selectedCount = selectedFiles.length;
     if (selectedCount == 0) return;
 
-    final selectedFiles = allFiles
-        .where((file) => _selectedMediaIds.contains(file.mediaId))
-        .toList();
-    final hasAnyCloudBackup = selectedFiles.any(
-      (file) => file.cloudState == CloudState.uploaded,
-    );
-
-    final deleteCompletely = await showDeleteMemoriesDialog(
-      context: context,
-      count: selectedCount,
-      hasCloudBackup: hasAnyCloudBackup,
-    );
-
-    if (deleteCompletely == null) return;
+    // Removing the local copy keeps the cloud backup, so only the
+    // irreversible variant asks first.
+    if (deleteCompletely) {
+      final confirmed = await showDeleteMemoriesDialog(
+        context: context,
+        count: selectedCount,
+        hasCloudBackup: false,
+      );
+      if (confirmed != true) return;
+    }
 
     try {
       for (final file in selectedFiles) {
@@ -424,7 +518,9 @@ class _StorageContentsViewState extends State<StorageContentsView> {
       if (context.mounted) {
         showSnackbar(
           context,
-          context.lang.memoriesDeleteSnackbarSuccess(selectedCount),
+          deleteCompletely
+              ? context.lang.memoriesDeleteSnackbarSuccess(selectedCount)
+              : context.lang.memoriesRemovedLocallySnackbar(selectedCount),
           level: SnackbarLevel.success,
         );
       }
@@ -437,6 +533,11 @@ class _StorageContentsViewState extends State<StorageContentsView> {
       }
     }
   }
+}
+
+bool _hasLocalFile(MediaFile file) {
+  final path = MediaFileService(file).storedPath;
+  return path.existsSync() && path.lengthSync() > 0;
 }
 
 /// How much the listed memories take up together.
@@ -508,9 +609,7 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ms = MediaFileService(file);
-    final isLocal =
-        ms.storedPath.existsSync() && ms.storedPath.lengthSync() > 0;
+    final isLocal = _hasLocalFile(file);
 
     final (IconData icon, String text, Color color) = switch (file.cloudState) {
       CloudState.none => (
@@ -589,12 +688,17 @@ class _SelectionDot extends StatelessWidget {
   }
 }
 
-/// Deletes the selection and says how much space that frees.
+/// Deletes the selection either from this device only or everywhere.
 class _DeleteBar extends StatelessWidget {
-  const _DeleteBar({required this.selectedBytes, required this.onDelete});
+  const _DeleteBar({
+    required this.onDeleteLocal,
+    required this.onDeleteCompletely,
+  });
 
-  final int selectedBytes;
-  final VoidCallback onDelete;
+  /// Null when part of the selection has no cloud copy, since removing it
+  /// from this device would lose it for good.
+  final VoidCallback? onDeleteLocal;
+  final VoidCallback onDeleteCompletely;
 
   @override
   Widget build(BuildContext context) {
@@ -602,21 +706,32 @@ class _DeleteBar extends StatelessWidget {
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: FilledButton.icon(
-          style: FilledButton.styleFrom(
-            backgroundColor: context.color.error,
-            foregroundColor: context.color.onError,
-            minimumSize: const Size.fromHeight(52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+        child: Row(
+          children: [
+            Expanded(
+              child: MyButton(
+                variant: MyButtonVariant.secondaryMiddle,
+                onPressed: onDeleteLocal,
+                child: Text(
+                  context.lang.settingsStorageDeleteLocal,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ),
-          ),
-          onPressed: onDelete,
-          icon: const Icon(Icons.delete_outline_rounded),
-          label: Text(
-            '${context.lang.delete} · ${formatBytes(selectedBytes)}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: MyButton(
+                variant: MyButtonVariant.errorMiddle,
+                onPressed: onDeleteCompletely,
+                child: Text(
+                  context.lang.settingsStorageDeleteCompletely,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -1262,7 +1262,6 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateBridgeDatabaseDiagnosticsSeedMockGallery({
     required List<MockGalleryItem> items,
-    required PlatformInt64 openedAt,
     required DatabaseSession transaction,
   });
 
@@ -11399,7 +11398,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<void> crateBridgeDatabaseDiagnosticsSeedMockGallery({
     required List<MockGalleryItem> items,
-    required PlatformInt64 openedAt,
     required DatabaseSession transaction,
   }) {
     return handler.executeNormal(
@@ -11407,7 +11405,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_list_mock_gallery_item(items, serializer);
-          sse_encode_i_64(openedAt, serializer);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDatabaseSession(
             transaction,
             serializer,
@@ -11424,7 +11421,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeDatabaseDiagnosticsSeedMockGalleryConstMeta,
-        argValues: [items, openedAt, transaction],
+        argValues: [items, transaction],
         apiImpl: this,
       ),
     );
@@ -11433,7 +11430,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBridgeDatabaseDiagnosticsSeedMockGalleryConstMeta =>
       const TaskConstMeta(
         debugName: "seed_mock_gallery",
-        argNames: ["items", "openedAt", "transaction"],
+        argNames: ["items", "transaction"],
       );
 
   @override
@@ -17564,11 +17561,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   MockGalleryItem dco_decode_mock_gallery_item(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return MockGalleryItem(
-      createdAt: dco_decode_i_64(arr[0]),
-      month: dco_decode_String(arr[1]),
+      mediaId: dco_decode_String(arr[0]),
+      createdAt: dco_decode_i_64(arr[1]),
+      month: dco_decode_String(arr[2]),
     );
   }
 
@@ -22084,9 +22082,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   MockGalleryItem sse_decode_mock_gallery_item(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_mediaId = sse_decode_String(deserializer);
     var var_createdAt = sse_decode_i_64(deserializer);
     var var_month = sse_decode_String(deserializer);
-    return MockGalleryItem(createdAt: var_createdAt, month: var_month);
+    return MockGalleryItem(
+      mediaId: var_mediaId,
+      createdAt: var_createdAt,
+      month: var_month,
+    );
   }
 
   @protected
@@ -26842,6 +26845,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.mediaId, serializer);
     sse_encode_i_64(self.createdAt, serializer);
     sse_encode_String(self.month, serializer);
   }

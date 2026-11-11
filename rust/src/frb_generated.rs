@@ -11285,7 +11285,6 @@ fn wire__crate__bridge__database__diagnostics__seed_mock_gallery_impl(
                 <Vec<crate::database::app::diagnostics::table::MockGalleryItem>>::sse_decode(
                     &mut deserializer,
                 );
-            let api_opened_at = <i64>::sse_decode(&mut deserializer);
             let api_transaction = <RustOpaqueMoi<
                 flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DatabaseSession>,
             >>::sse_decode(&mut deserializer);
@@ -11314,7 +11313,6 @@ fn wire__crate__bridge__database__diagnostics__seed_mock_gallery_impl(
                         let api_transaction_guard = api_transaction_guard.unwrap();
                         let output_ok = crate::bridge::database::diagnostics::seed_mock_gallery(
                             api_items,
-                            api_opened_at,
                             &*api_transaction_guard,
                         )
                         .await?;
@@ -19545,9 +19543,11 @@ impl SseDecode for crate::database::app::messages::table::MessageQuery {
 impl SseDecode for crate::database::app::diagnostics::table::MockGalleryItem {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_mediaId = <String>::sse_decode(deserializer);
         let mut var_createdAt = <i64>::sse_decode(deserializer);
         let mut var_month = <String>::sse_decode(deserializer);
         return crate::database::app::diagnostics::table::MockGalleryItem {
+            media_id: var_mediaId,
             created_at: var_createdAt,
             month: var_month,
         };
@@ -23689,6 +23689,7 @@ impl flutter_rust_bridge::IntoIntoDart<crate::database::app::messages::table::Me
 impl flutter_rust_bridge::IntoDart for crate::database::app::diagnostics::table::MockGalleryItem {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
+            self.media_id.into_into_dart().into_dart(),
             self.created_at.into_into_dart().into_dart(),
             self.month.into_into_dart().into_dart(),
         ]
@@ -27812,6 +27813,7 @@ impl SseEncode for crate::database::app::messages::table::MessageQuery {
 impl SseEncode for crate::database::app::diagnostics::table::MockGalleryItem {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.media_id, serializer);
         <i64>::sse_encode(self.created_at, serializer);
         <String>::sse_encode(self.month, serializer);
     }

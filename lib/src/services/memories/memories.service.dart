@@ -109,11 +109,17 @@ class MemoriesService {
       if (media.storedPath.existsSync()) {
         await media.storedPath.delete();
       }
-      // The gallery watches database state, so deleting a file alone leaves
-      // a stale tile behind, including when the file was already missing.
+      // With a cloud copy it stays a memory: `stored` means the user kept it,
+      // and a stored row whose file is gone is what makes it cloud only.
+      // Clearing the flag would let story cleanup delete the row and hide it
+      // from the cloud-only count. Without a cloud copy nothing is left to
+      // keep. Either way the write fires the watchers, so the gallery picks
+      // up the missing file.
       await rust_mediafiles.updateMediaFiles(
         id: file.mediaId,
-        patch: const MediaFilePatch(stored: false),
+        patch: MediaFilePatch(
+          stored: file.cloudState == CloudState.uploaded,
+        ),
         transaction: currentDatabaseSession(),
       );
     }

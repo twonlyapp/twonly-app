@@ -1,12 +1,13 @@
 # Changelog
 
-## 0.7.1
+## 0.8.0
 
 - New: Import Snapchat photos and videos into Memories via import.twonly.eu
-- New: Preview stickers and photo avatars before saving, with rotate and erase
+- New: Preview stickers and photo avatars before saving, with rotate and erase tools
 - New: Location filter with a map of where you took the photo
-- Improve: Fullscreen map for live locations
+- Improve: Full-screen map for live locations
 - Improve: Redesigned context menu with quick reactions
+- Improve: Memories flashback viewer
 - Improve: App performance
 - Fix: App sometimes failed to start
 - Fix: Photo avatars were not shown in iOS notifications

@@ -55,9 +55,15 @@ class LinkPreviewLayerData extends Layer {
 class FilterLayerData extends Layer {
   FilterLayerData({
     required super.key,
-    this.page = 1,
-  });
-  int page = 1;
+    this.flashbackLabel,
+  }) : page = flashbackLabel == null ? 1 : 2;
+
+  /// Page 1 is "no filter". A shared flashback starts on its own filter,
+  /// which comes right after it.
+  int page;
+
+  /// "One year ago", ... when a flashback memory is shared.
+  final String? flashbackLabel;
 
   /// Whether the location filter is the selected page.
   bool locationSelected = false;

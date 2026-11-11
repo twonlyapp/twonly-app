@@ -940,6 +940,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteOkBtnForAll => 'Delete for all';
 
   @override
+  String memoriesRemovedLocallySnackbar(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Removed $count items from this device, still backed up in the cloud',
+      one: 'Removed from this device, still backed up in the cloud',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String memoriesDeleteSnackbarSuccess(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1826,6 +1838,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get memoriesFlashbackJumpTo => 'Jump to';
+
+  @override
   String migrationOfMemories(Object open) {
     return 'Migration of media files: $open still to be processed.';
   }
@@ -2420,19 +2435,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String importGalleryImportingOf(Object current, Object total) {
-    return 'Importing $current of $total...';
-  }
-
-  @override
-  String get importGalleryStarting => 'Starting import...';
-
-  @override
-  String importGalleryComplete(Object imported, Object failed) {
-    return 'Import complete: $imported successfully imported and $failed failed.';
-  }
-
-  @override
   String get importGalleryGrantAccess => 'Grant Access';
 
   @override
@@ -2466,9 +2468,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importGalleryRefresh => 'Refresh';
 
   @override
-  String get importGallerySelectToImport => 'Select items to import';
-
-  @override
   String importGalleryImportCount(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2478,6 +2477,42 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get importGalleryProgressTitle => 'Importing your memories';
+
+  @override
+  String get importGalleryProgressHint =>
+      'Keep twonly open until the import is finished.';
+
+  @override
+  String importGalleryProgressCount(int done, int total) {
+    return '$done of $total';
+  }
+
+  @override
+  String get importGalleryStop => 'Stop import';
+
+  @override
+  String get importGalleryStopping => 'Stopping…';
+
+  @override
+  String get importGalleryDoneTitle => 'Import complete';
+
+  @override
+  String get importGalleryStoppedTitle => 'Import stopped';
+
+  @override
+  String get importGalleryImportedLabel => 'Imported';
+
+  @override
+  String get importGalleryFailedLabel => 'Failed';
+
+  @override
+  String get importGalleryRemainingLabel => 'Remaining';
+
+  @override
+  String get importGalleryDone => 'Done';
 
   @override
   String get emptyChatListTitle => 'Find your friends';
@@ -2857,7 +2892,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHelpNews => 'News';
 
   @override
+  String get settingsStorageDeleteLocal => 'Delete locally';
+
+  @override
+  String get settingsStorageDeleteCompletely => 'Delete completely';
+
+  @override
   String get settingsStorageContents => 'Free up space';
+
+  @override
+  String get settingsStorageFilterAll => 'All';
 
   @override
   String get settingsStorageSortStorage => 'Occupied storage';

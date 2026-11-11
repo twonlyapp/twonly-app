@@ -4,6 +4,7 @@ import 'dart:io' show Platform;
 import 'package:clock/clock.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/services.dart';
 import 'package:twonly/core/bridge/user_config.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
@@ -16,6 +17,30 @@ import 'package:twonly/src/utils/log.dart';
 import '../../../firebase_options.dart';
 
 class FcmNotificationService {
+  static const _playServices = MethodChannel('eu.twonly/play_services');
+  static Future<bool>? _available;
+
+  /// Whether this device can receive FCM pushes at all. On Android without
+  /// Google Play Services every token read fails, so registration, health
+  /// recovery and resets are skipped there instead of failing on every start.
+  static Future<bool> isAvailable() => _available ??= _checkAvailable();
+
+  static Future<bool> _checkAvailable() async {
+    if (!Platform.isAndroid) return true;
+    try {
+      final available =
+          await _playServices.invokeMethod<bool>('isAvailable') ?? true;
+      if (!available) {
+        Log.info('Google Play Services missing; skipping FCM registration.');
+      }
+      return available;
+    } catch (error, stackTrace) {
+      // Keep the previous behaviour when the check itself is unavailable.
+      Log.warn('Could not check Google Play Services.', error, stackTrace);
+      return true;
+    }
+  }
+
   // The native receivers own message delivery. This single registration owner
   // keeps startup, authentication, refresh events and recovery from racing.
   static final _registration = FcmTokenRegistration(
@@ -51,6 +76,7 @@ class FcmNotificationService {
 
   static Future<void> _refreshRegistration() async {
     if (!userService.isUserCreated) return;
+    if (!await isAvailable()) return;
     try {
       await _registration.refresh();
     } catch (error, stackTrace) {
@@ -75,6 +101,7 @@ class FcmNotificationService {
 
   static Future<void> resetFCMTokens() async {
     if (!userService.isUserCreated) return;
+    if (!await isAvailable()) return;
     final now = clock.now();
     final monitoring = await _monitoring(now);
     await KeyValueStore.putAtomically(KeyValueKeys.fcmRecoveryMonitoring, {
@@ -101,6 +128,8 @@ class FcmNotificationService {
 
   static Future<void> _checkFcmHealthAndResetIfNeeded() async {
     if (!userService.isUserCreated) return;
+    // No wake-up can ever arrive, so the policy would rotate a token daily.
+    if (!await isAvailable()) return;
     try {
       final config = await UserConfigApi.load();
       if (config == null) return;

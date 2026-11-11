@@ -7,6 +7,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/datetime_filter.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/flashback_filter.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/image_filter.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/location_filter.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/stickers.dart';
@@ -75,9 +76,13 @@ class FilterText extends StatelessWidget {
 }
 
 class _FilterLayerState extends State<FilterLayer> {
-  final PageController pageController = PageController(initialPage: 1);
+  late final PageController pageController = PageController(
+    initialPage: widget.layerData.page,
+  );
   late final List<Widget> pages = [
     const FilterSkeleton(),
+    if (widget.layerData.flashbackLabel case final label?)
+      FlashbackFilter(label: label),
     const DateTimeFilter(),
     if (userService.currentUser.locationFilter)
       LocationFilter(layerData: widget.layerData),

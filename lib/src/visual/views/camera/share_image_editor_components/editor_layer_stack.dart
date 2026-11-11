@@ -68,7 +68,9 @@ class EditorLayerStack {
     return null;
   }
 
-  void addFilterLayer() => _layers.add(FilterLayerData(key: GlobalKey()));
+  void addFilterLayer({String? flashbackLabel}) => _layers.add(
+    FilterLayerData(key: GlobalKey(), flashbackLabel: flashbackLabel),
+  );
 
   void addLinkPreviewLayer(Uri link) =>
       _layers.add(LinkPreviewLayerData(key: GlobalKey(), link: link));

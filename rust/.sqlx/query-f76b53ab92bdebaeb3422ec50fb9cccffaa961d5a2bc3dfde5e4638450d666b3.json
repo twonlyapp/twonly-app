@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT media_id, type FROM media_files WHERE stored = 1",
+  "query": "SELECT media_id, type FROM media_files WHERE cloud_state = 'uploaded'",
   "describe": {
     "columns": [
       {
@@ -34,5 +34,5 @@
       false
     ]
   },
-  "hash": "5aad6c997b81eb0f6ddf796ba53ea7f9b659ed51f49a3359d1c5f9d7a1a6ca8c"
+  "hash": "f76b53ab92bdebaeb3422ec50fb9cccffaa961d5a2bc3dfde5e4638450d666b3"
 }

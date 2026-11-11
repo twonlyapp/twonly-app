@@ -7,6 +7,7 @@ import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/media_enums.dart';
+import 'package:twonly/src/model/memory_flashbacks.model.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
@@ -80,10 +81,34 @@ class MemoriesViewState extends State<MemoriesView>
     super.dispose();
   }
 
+  /// The months and their gallery indices as the grid shows them, honoring the
+  /// favorites filter.
+  (List<String>, Map<String, List<int>>) _visibleMonths(MemoriesState state) {
+    if (!_filterFavoritesOnly) return (state.months, state.orderedByMonth);
+    final months = <String>[];
+    final orderedByMonth = <String, List<int>>{};
+    for (final month in state.months) {
+      final favIndices = (state.orderedByMonth[month] ?? [])
+          .where(
+            (idx) => state.galleryItems[idx].mediaService.mediaFile.isFavorite,
+          )
+          .toList();
+      if (favIndices.isNotEmpty) {
+        months.add(month);
+        orderedByMonth[month] = favIndices;
+      }
+    }
+    return (months, orderedByMonth);
+  }
+
   void _onActiveMediaChanged() {
     if (_isViewingFlashback) return;
     final mediaId = _activeMediaIdNotifier.value;
     if (mediaId == null) return;
+    _scrollToMedia(mediaId);
+  }
+
+  void _scrollToMedia(String mediaId) {
     final state = _service.currentState;
     if (state.isEmpty) return;
 
@@ -102,8 +127,9 @@ class MemoriesViewState extends State<MemoriesView>
     final itemHeight = itemWidth * (16 / 9);
     final rowHeight = itemHeight + 2;
 
-    for (final month in state.months) {
-      final indices = state.orderedByMonth[month]!;
+    final (months, orderedByMonth) = _visibleMonths(state);
+    for (final month in months) {
+      final indices = orderedByMonth[month]!;
       offset += 44;
 
       if (indices.contains(index)) {
@@ -130,6 +156,7 @@ class MemoriesViewState extends State<MemoriesView>
     List<MemoryItem> items,
     int index, {
     bool isFlashback = false,
+    Map<String, String>? flashbackLabels,
   }) async {
     if (isFlashback) {
       _isViewingFlashback = true;
@@ -147,6 +174,8 @@ class MemoriesViewState extends State<MemoriesView>
             galleryItems: items,
             initialIndex: index,
             activeMediaIdNotifier: _activeMediaIdNotifier,
+            flashbackLabels: flashbackLabels,
+            onJumpTo: isFlashback ? _jumpToMemory : null,
           );
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -161,6 +190,51 @@ class MemoriesViewState extends State<MemoriesView>
     if (isFlashback) {
       _isViewingFlashback = false;
     }
+  }
+
+  Future<void> _openFlashback(MemoryFlashbacks flashbacks, int elapsed) async {
+    final items = <MemoryItem>[];
+    final labels = <String, String>{};
+    var startIndex = 0;
+    for (final MapEntry(key: groupElapsed, value: group)
+        in flashbacks.items.entries) {
+      if (groupElapsed == elapsed) startIndex = items.length;
+      final label = memoryFlashbackLabel(
+        context,
+        flashbacks.period,
+        groupElapsed,
+      );
+      for (final item in group) {
+        items.add(item);
+        labels[item.mediaService.mediaFile.mediaId] = label;
+      }
+    }
+    if (items.isEmpty) return;
+    await _openViewer(
+      items,
+      startIndex,
+      isFlashback: true,
+      flashbackLabels: labels,
+    );
+  }
+
+  /// Scrolls the timeline to [mediaId] while the flashback viewer still covers
+  /// it, so the viewer can close onto the memory.
+  Future<void> _jumpToMemory(String mediaId) async {
+    _isViewingFlashback = false;
+    final item = _service.currentState.galleryItems
+        .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
+        .firstOrNull;
+    if (item == null || !mounted) return;
+    if (_filterFavoritesOnly && !item.mediaService.mediaFile.isFavorite) {
+      setState(() => _filterFavoritesOnly = false);
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+    }
+    _activeMediaIdNotifier.value = mediaId;
+    _scrollToMedia(mediaId);
+    // Let the grid build the target tile so the hero lands on it.
+    await WidgetsBinding.instance.endOfFrame;
   }
 
   void _toggleSelection(String mediaId) {
@@ -290,17 +364,16 @@ class MemoriesViewState extends State<MemoriesView>
 
     var deleteCompletely = forceDeleteCompletely;
     if (deleteCompletely == null) {
-      var hasCloudBackup = false;
-      for (final id in selectedList) {
-        final item = items
-            .where((e) => e.mediaService.mediaFile.mediaId == id)
-            .firstOrNull;
-        if (item != null &&
-            item.mediaService.mediaFile.cloudState != CloudState.none) {
-          hasCloudBackup = true;
-          break;
-        }
-      }
+      // Removing only the local copy is offered when every selected memory
+      // has a finished cloud backup; otherwise it would delete the only copy.
+      final selectedItems = items.where(
+        (e) => _selectedMediaIds.contains(e.mediaService.mediaFile.mediaId),
+      );
+      final hasCloudBackup =
+          selectedItems.isNotEmpty &&
+          selectedItems.every(
+            (e) => e.mediaService.mediaFile.cloudState == CloudState.uploaded,
+          );
 
       deleteCompletely = await showDeleteMemoriesDialog(
         context: context,
@@ -347,7 +420,9 @@ class MemoriesViewState extends State<MemoriesView>
     setState(_selectedMediaIds.clear);
     showSnackbar(
       context,
-      context.lang.memoriesDeleteSnackbarSuccess(count),
+      isCompletely
+          ? context.lang.memoriesDeleteSnackbarSuccess(count)
+          : context.lang.memoriesRemovedLocallySnackbar(count),
       level: SnackbarLevel.success,
     );
   }
@@ -476,33 +551,8 @@ class MemoriesViewState extends State<MemoriesView>
                 );
               }
 
-              var months = state.months;
-              var orderedByMonth = state.orderedByMonth;
+              final (months, orderedByMonth) = _visibleMonths(state);
               final flashbacks = state.flashbacks;
-
-              if (_filterFavoritesOnly) {
-                final filteredOrdered = <String, List<int>>{};
-                final filteredMonths = <String>[];
-
-                for (final m in months) {
-                  final indices = orderedByMonth[m] ?? [];
-                  final favIndices = indices.where((idx) {
-                    return state
-                        .galleryItems[idx]
-                        .mediaService
-                        .mediaFile
-                        .isFavorite;
-                  }).toList();
-
-                  if (favIndices.isNotEmpty) {
-                    filteredOrdered[m] = favIndices;
-                    filteredMonths.add(m);
-                  }
-                }
-
-                months = filteredMonths;
-                orderedByMonth = filteredOrdered;
-              }
 
               return Column(
                 children: [
@@ -721,8 +771,8 @@ class MemoriesViewState extends State<MemoriesView>
                               ),
                               MemoriesFlashbackBannerComp(
                                 flashbacks: flashbacks,
-                                onOpenFlashback: (items, idx) =>
-                                    _openViewer(items, idx, isFlashback: true),
+                                onOpenFlashback: (elapsed) =>
+                                    _openFlashback(flashbacks, elapsed),
                               ),
                               const MemoriesCloudBackupPromoComp(),
                               for (final month in months) ...[

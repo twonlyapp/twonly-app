@@ -118,7 +118,7 @@ class SynchronizedViewerActionsToolbarComp extends StatelessWidget {
             ),
             _ToolbarAction(
               icon: FaIcon(
-                FontAwesomeIcons.shareNodes,
+                FontAwesomeIcons.paperPlane,
                 color: context.appColor(AppColor.mediaForeground),
                 size: 19,
               ),

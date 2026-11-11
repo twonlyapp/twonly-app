@@ -169,7 +169,8 @@ void main() {
           id: 'missing-image',
           transaction: currentDatabaseSession(),
         );
-        expect(file!.stored, isFalse);
+        // A cloud copy keeps it a memory, now cloud only.
+        expect(file!.stored, state == CloudState.uploaded);
         expect(file.cloudState, state);
         expect(api.cloudDeletes, isEmpty);
         expect(api.fileRemovals, isEmpty);

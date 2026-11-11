@@ -13,15 +13,17 @@ class AndroidPhotoPickerService {
     }
   }
 
-  /// Reads the raw bytes from a content URI using the Android ContentResolver.
-  static Future<Uint8List?> getUriBytes(String uri) async {
+  /// Copies the content behind [uri] to [path] on a native background thread,
+  /// so several picks can be copied at once without blocking the UI.
+  static Future<bool> copyUriToFile(String uri, String path) async {
     try {
-      final bytes = await _channel.invokeMethod<Uint8List>('getUriBytes', {
+      final copied = await _channel.invokeMethod<bool>('copyUriToFile', {
         'uri': uri,
+        'path': path,
       });
-      return bytes;
+      return copied ?? false;
     } catch (e) {
-      return null;
+      return false;
     }
   }
 }

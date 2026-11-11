@@ -10,11 +10,9 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 Future<void> seedMockGallery({
   required List<MockGalleryItem> items,
-  required PlatformInt64 openedAt,
   required DatabaseSession transaction,
 }) => RustLib.instance.api.crateBridgeDatabaseDiagnosticsSeedMockGallery(
   items: items,
-  openedAt: openedAt,
   transaction: transaction,
 );
 

@@ -1,7 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/model/memory_flashbacks.model.dart';
-import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/utils/misc.dart';
+
+/// "One year ago", "3 months ago", ... for a flashback group.
+String memoryFlashbackLabel(
+  BuildContext context,
+  MemoryFlashbackPeriod period,
+  int elapsed,
+) {
+  if (period == MemoryFlashbackPeriod.months) {
+    return elapsed == 1
+        ? context.lang.memoriesAMonthAgo
+        : context.lang.memoriesXMonthsAgo(elapsed);
+  }
+  return elapsed == 1
+      ? context.lang.memoriesAYearAgo
+      : context.lang.memoriesXYearsAgo(elapsed);
+}
 
 class MemoriesFlashbackBannerComp extends StatelessWidget {
   const MemoriesFlashbackBannerComp({
@@ -11,7 +26,10 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
   });
 
   final MemoryFlashbacks flashbacks;
-  final void Function(List<MemoryItem> items, int index) onOpenFlashback;
+
+  /// Opens all flashbacks at once, starting with the group `elapsed` months
+  /// or years ago.
+  final void Function(int elapsed) onOpenFlashback;
 
   @override
   Widget build(BuildContext context) {
@@ -41,19 +59,14 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
                   final elapsed = entry.key;
                   final items = entry.value;
 
-                  final String text;
-                  if (flashbacks.period == MemoryFlashbackPeriod.months) {
-                    text = elapsed == 1
-                        ? context.lang.memoriesAMonthAgo
-                        : context.lang.memoriesXMonthsAgo(elapsed);
-                  } else {
-                    text = elapsed == 1
-                        ? context.lang.memoriesAYearAgo
-                        : context.lang.memoriesXYearsAgo(elapsed);
-                  }
+                  final text = memoryFlashbackLabel(
+                    context,
+                    flashbacks.period,
+                    elapsed,
+                  );
 
                   return GestureDetector(
-                    onTap: () => onOpenFlashback(items, 0),
+                    onTap: () => onOpenFlashback(elapsed),
                     child: Container(
                       width: 120,
                       decoration: BoxDecoration(

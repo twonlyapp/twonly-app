@@ -62,6 +62,7 @@ class ShareImageEditorView extends StatefulWidget {
     super.key,
     this.sendToGroup,
     this.mainCameraController,
+    this.flashbackLabel,
   });
   final ScreenshotImageHelper? screenshotImage;
   final Group? sendToGroup;
@@ -69,6 +70,10 @@ class ShareImageEditorView extends StatefulWidget {
   final MediaFileService mediaFileService;
   final MainCameraController? mainCameraController;
   final PreviewLink? previewLink;
+
+  /// "One year ago", ... when a flashback memory is shared; offered as the
+  /// first filter and selected right away.
+  final String? flashbackLabel;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
@@ -143,7 +148,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     );
 
     if (media.type != MediaType.gif) {
-      layerStack.addFilterLayer();
+      layerStack.addFilterLayer(flashbackLabel: widget.flashbackLabel);
     }
 
     final previewLink = widget.previewLink;

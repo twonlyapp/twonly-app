@@ -1732,6 +1732,12 @@ abstract class AppLocalizations {
   /// **'Delete for all'**
   String get deleteOkBtnForAll;
 
+  /// No description provided for @memoriesRemovedLocallySnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {Removed from this device, still backed up in the cloud} other {Removed {count} items from this device, still backed up in the cloud}}'**
+  String memoriesRemovedLocallySnackbar(num count);
+
   /// No description provided for @memoriesDeleteSnackbarSuccess.
   ///
   /// In en, this message translates to:
@@ -3190,6 +3196,12 @@ abstract class AppLocalizations {
   /// **'{months} months ago'**
   String memoriesXMonthsAgo(int months);
 
+  /// No description provided for @memoriesFlashbackJumpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to'**
+  String get memoriesFlashbackJumpTo;
+
   /// No description provided for @migrationOfMemories.
   ///
   /// In en, this message translates to:
@@ -4162,24 +4174,6 @@ abstract class AppLocalizations {
   /// **'Failed to load assets: {error}'**
   String importGalleryLoadError(Object error);
 
-  /// No description provided for @importGalleryImportingOf.
-  ///
-  /// In en, this message translates to:
-  /// **'Importing {current} of {total}...'**
-  String importGalleryImportingOf(Object current, Object total);
-
-  /// No description provided for @importGalleryStarting.
-  ///
-  /// In en, this message translates to:
-  /// **'Starting import...'**
-  String get importGalleryStarting;
-
-  /// No description provided for @importGalleryComplete.
-  ///
-  /// In en, this message translates to:
-  /// **'Import complete: {imported} successfully imported and {failed} failed.'**
-  String importGalleryComplete(Object imported, Object failed);
-
   /// No description provided for @importGalleryGrantAccess.
   ///
   /// In en, this message translates to:
@@ -4240,17 +4234,77 @@ abstract class AppLocalizations {
   /// **'Refresh'**
   String get importGalleryRefresh;
 
-  /// No description provided for @importGallerySelectToImport.
-  ///
-  /// In en, this message translates to:
-  /// **'Select items to import'**
-  String get importGallerySelectToImport;
-
   /// No description provided for @importGalleryImportCount.
   ///
   /// In en, this message translates to:
   /// **'{count, plural, =1{Import 1 item} other{Import {count} items}}'**
   String importGalleryImportCount(num count);
+
+  /// No description provided for @importGalleryProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing your memories'**
+  String get importGalleryProgressTitle;
+
+  /// No description provided for @importGalleryProgressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep twonly open until the import is finished.'**
+  String get importGalleryProgressHint;
+
+  /// No description provided for @importGalleryProgressCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total}'**
+  String importGalleryProgressCount(int done, int total);
+
+  /// No description provided for @importGalleryStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop import'**
+  String get importGalleryStop;
+
+  /// No description provided for @importGalleryStopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping…'**
+  String get importGalleryStopping;
+
+  /// No description provided for @importGalleryDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import complete'**
+  String get importGalleryDoneTitle;
+
+  /// No description provided for @importGalleryStoppedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import stopped'**
+  String get importGalleryStoppedTitle;
+
+  /// No description provided for @importGalleryImportedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported'**
+  String get importGalleryImportedLabel;
+
+  /// No description provided for @importGalleryFailedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get importGalleryFailedLabel;
+
+  /// No description provided for @importGalleryRemainingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get importGalleryRemainingLabel;
+
+  /// No description provided for @importGalleryDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get importGalleryDone;
 
   /// No description provided for @emptyChatListTitle.
   ///
@@ -4864,11 +4918,29 @@ abstract class AppLocalizations {
   /// **'News'**
   String get settingsHelpNews;
 
+  /// No description provided for @settingsStorageDeleteLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete locally'**
+  String get settingsStorageDeleteLocal;
+
+  /// No description provided for @settingsStorageDeleteCompletely.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete completely'**
+  String get settingsStorageDeleteCompletely;
+
   /// No description provided for @settingsStorageContents.
   ///
   /// In en, this message translates to:
   /// **'Free up space'**
   String get settingsStorageContents;
+
+  /// No description provided for @settingsStorageFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get settingsStorageFilterAll;
 
   /// No description provided for @settingsStorageSortStorage.
   ///

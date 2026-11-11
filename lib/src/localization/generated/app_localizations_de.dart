@@ -946,6 +946,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteOkBtnForAll => 'Für alle löschen';
 
   @override
+  String memoriesRemovedLocallySnackbar(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Elemente vom Gerät entfernt, weiterhin in der Cloud gesichert',
+      one: 'Vom Gerät entfernt, weiterhin in der Cloud gesichert',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String memoriesDeleteSnackbarSuccess(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1841,6 +1853,9 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get memoriesFlashbackJumpTo => 'Anzeigen';
+
+  @override
   String migrationOfMemories(Object open) {
     return 'Migration von Mediendateien: $open noch offen.';
   }
@@ -2439,19 +2454,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String importGalleryImportingOf(Object current, Object total) {
-    return '$current von $total wird importiert...';
-  }
-
-  @override
-  String get importGalleryStarting => 'Import wird gestartet...';
-
-  @override
-  String importGalleryComplete(Object imported, Object failed) {
-    return 'Import abgeschlossen: $imported erfolgreich importiert und $failed fehlgeschlagen.';
-  }
-
-  @override
   String get importGalleryGrantAccess => 'Zugriff erlauben';
 
   @override
@@ -2484,10 +2486,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get importGalleryRefresh => 'Aktualisieren';
 
   @override
-  String get importGallerySelectToImport =>
-      'Elemente zum Importieren auswählen';
-
-  @override
   String importGalleryImportCount(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2497,6 +2495,43 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get importGalleryProgressTitle =>
+      'Deine Erinnerungen werden importiert';
+
+  @override
+  String get importGalleryProgressHint =>
+      'Lass twonly geöffnet, bis der Import abgeschlossen ist.';
+
+  @override
+  String importGalleryProgressCount(int done, int total) {
+    return '$done von $total';
+  }
+
+  @override
+  String get importGalleryStop => 'Import stoppen';
+
+  @override
+  String get importGalleryStopping => 'Wird gestoppt…';
+
+  @override
+  String get importGalleryDoneTitle => 'Import abgeschlossen';
+
+  @override
+  String get importGalleryStoppedTitle => 'Import gestoppt';
+
+  @override
+  String get importGalleryImportedLabel => 'Importiert';
+
+  @override
+  String get importGalleryFailedLabel => 'Fehlgeschlagen';
+
+  @override
+  String get importGalleryRemainingLabel => 'Verbleibend';
+
+  @override
+  String get importGalleryDone => 'Fertig';
 
   @override
   String get emptyChatListTitle => 'Finde deine Freunde';
@@ -2882,7 +2917,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsHelpNews => 'Neuigkeiten';
 
   @override
+  String get settingsStorageDeleteLocal => 'Nur lokal löschen';
+
+  @override
+  String get settingsStorageDeleteCompletely => 'Komplett löschen';
+
+  @override
   String get settingsStorageContents => 'Speicherplatz freigeben';
+
+  @override
+  String get settingsStorageFilterAll => 'Alle';
 
   @override
   String get settingsStorageSortStorage => 'Belegter Speicher';
