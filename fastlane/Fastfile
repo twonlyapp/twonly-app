@@ -1,3 +1,4 @@
+require "shellwords"
 require "tempfile"
 
 default_platform(:android)
@@ -193,7 +194,8 @@ platform :android do
     if File.exist?(update_script)
       UI.message("Executing F-Droid update script...")
       Dir.chdir(fdroid_dir) do
-        sh("chmod +x ./update.sh && ./update.sh")
+        app_dir = File.expand_path("..", __dir__)
+        sh("chmod +x ./update.sh && TWONLY_APP_DIR=#{Shellwords.escape(app_dir)} ./update.sh")
       end
     else
       UI.important("F-Droid update script not found at #{update_script}")
