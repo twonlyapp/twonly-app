@@ -64,6 +64,14 @@ void main() {
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   var notificationPermission = 1;
+  const periodicPoll = MethodChannel('eu.twonly/periodic_poll');
+  var hasPlayServices = false;
+  var pollEnabled = false;
+  var ignoringBatteryOptimizations = false;
+  var backgroundRestricted = false;
+  final pollChanges = <bool>[];
+  var batterySettingsOpened = 0;
+  var appSettingsOpened = 0;
   final api = _SettingsApi();
   late Directory directory;
 
@@ -87,15 +95,47 @@ void main() {
       ),
     );
     notificationPermission = 1;
-    messenger.setMockMethodCallHandler(permissions, (call) async {
-      if (call.method == 'checkPermissionStatus') return notificationPermission;
-      if (call.method == 'openAppSettings') return true;
-      return null;
-    });
+    hasPlayServices = false;
+    pollEnabled = false;
+    ignoringBatteryOptimizations = false;
+    backgroundRestricted = false;
+    pollChanges.clear();
+    batterySettingsOpened = 0;
+    appSettingsOpened = 0;
+    messenger
+      ..setMockMethodCallHandler(periodicPoll, (call) async {
+        if (call.method == 'openBatterySettings') {
+          batterySettingsOpened++;
+          return null;
+        }
+        if (call.method == 'setEnabled') {
+          pollEnabled = call.arguments as bool;
+          pollChanges.add(pollEnabled);
+        }
+        return {
+          'hasPlayServices': hasPlayServices,
+          'enabled': pollEnabled,
+          'intervalMinutes': 15,
+          'ignoringBatteryOptimizations': ignoringBatteryOptimizations,
+          'backgroundRestricted': backgroundRestricted,
+        };
+      })
+      ..setMockMethodCallHandler(permissions, (call) async {
+        if (call.method == 'checkPermissionStatus') {
+          return notificationPermission;
+        }
+        if (call.method == 'openAppSettings') {
+          appSettingsOpened++;
+          return true;
+        }
+        return null;
+      });
   });
 
   tearDown(() async {
-    messenger.setMockMethodCallHandler(permissions, null);
+    messenger
+      ..setMockMethodCallHandler(permissions, null)
+      ..setMockMethodCallHandler(periodicPoll, null);
     await locator.reset();
     await directory.delete(recursive: true);
     AppEnvironment.initTesting();
@@ -300,6 +340,150 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'periodic checks require confirmation and guide users to battery settings',
+    (tester) async {
+      await pumpSettings(
+        tester,
+        location: Routes.settingsNotification,
+        locale: 'en',
+      );
+      final toggle = find.widgetWithText(
+        SwitchListTile,
+        'Check for new messages periodically',
+      );
+      expect(toggle, findsOneWidget);
+      expect(find.text('Reset notification tokens'), findsNothing);
+      expect(find.textContaining('every 15 minutes'), findsOneWidget);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('several hours'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(pollChanges, isEmpty);
+
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Enable'));
+      await tester.pumpAndSettle();
+      expect(pollChanges, [true]);
+      expect(find.text('Battery optimization'), findsOneWidget);
+      expect(find.textContaining('choose All apps'), findsNWidgets(2));
+      await tester.tap(find.text('Open settings'));
+      await tester.pumpAndSettle();
+      expect(batterySettingsOpened, 1);
+
+      ignoringBatteryOptimizations = true;
+      backgroundRestricted = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(find.text('Battery optimization: disabled'), findsOneWidget);
+      final restriction = find.text('Background activity is restricted');
+      await tester.ensureVisible(restriction);
+      await tester.tap(restriction);
+      await tester.pumpAndSettle();
+      expect(appSettingsOpened, 1);
+
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(pollChanges, [true, false]);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.text('Battery optimization: disabled'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+
+  testWidgets(
+    'FCM devices only retain periodic settings to disable an existing opt-in',
+    (tester) async {
+      hasPlayServices = true;
+      await pumpSettings(
+        tester,
+        location: Routes.settingsNotification,
+        locale: 'en',
+      );
+      expect(find.text('Check for new messages periodically'), findsNothing);
+      pollEnabled = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      final toggle = find.widgetWithText(
+        SwitchListTile,
+        'Check for new messages periodically',
+      );
+      expect(toggle, findsOneWidget);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(pollChanges, [false]);
+      expect(find.text('Check for new messages periodically'), findsNothing);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+
+  testWidgets(
+    'battery guidance can be deferred without disabling periodic checks',
+    (tester) async {
+      await pumpSettings(
+        tester,
+        location: Routes.settingsNotification,
+        locale: 'en',
+      );
+      await tester.tap(find.text('Check for new messages periodically'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Enable'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Later'));
+      await tester.pumpAndSettle();
+      expect(pollChanges, [true]);
+      expect(batterySettingsOpened, 0);
+      expect(find.text('Battery optimization: active'), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+
+  for (final locale in ['de', 'ar']) {
+    testWidgets(
+      'periodic check dialogs fit with large $locale text',
+      (tester) async {
+        ignoringBatteryOptimizations = true;
+        await pumpSettings(
+          tester,
+          location: Routes.settingsNotification,
+          locale: locale,
+          textScale: 1.5,
+        );
+        final lang = AppLocalizations.of(
+          tester.element(find.byType(NotificationView)),
+        )!;
+        final toggle = find.text(lang.settingsNotifyPollTitle);
+        await tester.ensureVisible(toggle);
+        await tester.tap(toggle);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await tester.ensureVisible(find.text(lang.enable));
+        await tester.tap(find.text(lang.enable));
+        await tester.pumpAndSettle();
+        expect(pollChanges, [true]);
+        // An existing battery exemption needs no second prompt.
+        expect(find.byType(AlertDialog), findsNothing);
+        final battery = find.text(lang.settingsNotifyPollBatteryDisabled);
+        await tester.ensureVisible(battery);
+        await tester.tap(battery);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await tester.ensureVisible(find.text(lang.settingsNotifyPollLater));
+        await tester.tap(find.text(lang.settingsNotifyPollLater));
+        await tester.pumpAndSettle();
+        expect(batterySettingsOpened, 0);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
+  }
 
   testWidgets(
     'account backup status loads even while cloud usage is unavailable',

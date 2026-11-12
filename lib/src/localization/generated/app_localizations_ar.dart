@@ -519,6 +519,45 @@ class AppLocalizationsAr extends AppLocalizations {
       'افتح إعدادات هاتفك لإدارة أذونات الإشعارات.';
 
   @override
+  String get settingsNotifyPollTitle => 'التحقق من الرسائل الجديدة دوريًا';
+
+  @override
+  String settingsNotifyPollSubtitle(int minutes) {
+    return 'بدون خدمات Google، يتم التحقق من الرسائل الجديدة كل $minutes دقيقة تقريبًا عند الاتصال بالإنترنت. ستصل الرسائل والإشعارات متأخرة.';
+  }
+
+  @override
+  String settingsNotifyPollWarning(int minutes) {
+    return 'بدون خدمات Google، لا يستطيع twonly تلقي إشعارات فورية. سيتحقق من الرسائل الجديدة كل $minutes دقيقة تقريبًا عند توفر الإنترنت. ستصل الرسائل والإشعارات متأخرة. عندما يكون هاتفك في وضع الخمول أو يقيّد النشاط في الخلفية، قد يستغرق التحقق عدة ساعات.';
+  }
+
+  @override
+  String get settingsNotifyPollBatteryTitle => 'تحسين البطارية';
+
+  @override
+  String get settingsNotifyPollBatteryHelp =>
+      'لتحقق أكثر موثوقية، عطّل تحسين البطارية لتطبيق twonly. في قائمة النظام، اختر «كل التطبيقات» عند الحاجة، ثم ابحث عن twonly واختر «عدم التحسين». قد يظل Android يؤخر التحقق.';
+
+  @override
+  String get settingsNotifyPollBatteryActive => 'تحسين البطارية: مفعّل';
+
+  @override
+  String get settingsNotifyPollBatteryDisabled => 'تحسين البطارية: معطّل';
+
+  @override
+  String get settingsNotifyPollRestrictedTitle => 'النشاط في الخلفية مقيّد';
+
+  @override
+  String get settingsNotifyPollRestrictedHelp =>
+      'يمنع Android التحقق في الخلفية. افتح إعدادات تطبيق twonly واسمح باستخدام البطارية في الخلفية.';
+
+  @override
+  String get settingsNotifyPollOpenSettings => 'فتح الإعدادات';
+
+  @override
+  String get settingsNotifyPollLater => 'لاحقًا';
+
+  @override
   String get settingsNotifyResetTitle =>
       'إِعَادَةُ تَعْيِينِ رُمُوزِ الإِشْعَارَاتِ';
 

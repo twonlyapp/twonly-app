@@ -185,6 +185,31 @@
   "settingsNotification": "Notifications",
   "settingsNotifyPermission": "Notification permissions",
   "settingsNotifyPermissionDesc": "Open your phone’s settings to manage notification permissions.",
+  "settingsNotifyPollTitle": "Check for new messages periodically",
+  "settingsNotifyPollSubtitle": "Without Google services, check for new messages about every {minutes} minutes when connected to the internet. Messages and notifications will be delayed.",
+  "settingsNotifyPollWarning": "Without Google services, twonly cannot receive instant push notifications. It will check for new messages about every {minutes} minutes when internet is available. Messages and notifications will be delayed. When your phone is idle or limits background activity, checks can take several hours.",
+  "settingsNotifyPollBatteryTitle": "Battery optimization",
+  "settingsNotifyPollBatteryHelp": "For more reliable checks, disable battery optimization for twonly. In the system list, choose All apps if needed, find twonly, and select Don’t optimize. Android may still delay checks.",
+  "settingsNotifyPollBatteryActive": "Battery optimization: active",
+  "settingsNotifyPollBatteryDisabled": "Battery optimization: disabled",
+  "settingsNotifyPollRestrictedTitle": "Background activity is restricted",
+  "settingsNotifyPollRestrictedHelp": "Android is blocking background checks. Open twonly’s app settings and allow background battery usage.",
+  "settingsNotifyPollOpenSettings": "Open settings",
+  "settingsNotifyPollLater": "Later",
+  "@settingsNotifyPollSubtitle": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@settingsNotifyPollWarning": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "settingsNotifyResetTitle": "Reset notification tokens",
   "settingsNotifyResetTitleSubtitle": "Reset your notification tokens if you have problems receiving push notifications.",
   "settingsNotifyResetTitleReset": "Notification connection renewed",

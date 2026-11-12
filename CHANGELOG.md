@@ -2,6 +2,7 @@
 
 ## 0.8.1
 
+- New: 15-minute message checks on Android without Google services
 - Fix: Push notifications were not shown on Android 11 and older
 
 ## 0.8.0

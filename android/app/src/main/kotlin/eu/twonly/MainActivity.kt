@@ -119,6 +119,10 @@ class MainActivity : FlutterFragmentActivity() {
             flutterEngine.plugins.add(eu.twonly.notifications.PlayServicesChannel())
         }
 
+        if (!flutterEngine.plugins.has(eu.twonly.notifications.PeriodicPollChannel::class.java)) {
+            flutterEngine.plugins.add(eu.twonly.notifications.PeriodicPollChannel())
+        }
+
         Keyring.initializeNdkContext(applicationContext)
 
 

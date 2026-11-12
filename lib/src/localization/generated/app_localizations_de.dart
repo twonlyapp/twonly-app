@@ -508,6 +508,48 @@ class AppLocalizationsDe extends AppLocalizations {
       'Öffne die Systemeinstellungen, um Benachrichtigungen zu erlauben oder anzupassen.';
 
   @override
+  String get settingsNotifyPollTitle =>
+      'Regelmäßig auf neue Nachrichten prüfen';
+
+  @override
+  String settingsNotifyPollSubtitle(int minutes) {
+    return 'Ohne Google-Dienste wird bei Internetverbindung etwa alle $minutes Minuten nach neuen Nachrichten gesucht. Nachrichten und Benachrichtigungen kommen verzögert an.';
+  }
+
+  @override
+  String settingsNotifyPollWarning(int minutes) {
+    return 'Ohne Google-Dienste kann twonly keine sofortigen Push-Benachrichtigungen empfangen. Bei Internetverbindung wird etwa alle $minutes Minuten nach neuen Nachrichten gesucht. Nachrichten und Benachrichtigungen kommen verzögert an. Wenn dein Handy im Ruhezustand ist oder Hintergrundaktivitäten einschränkt, können mehrere Stunden vergehen.';
+  }
+
+  @override
+  String get settingsNotifyPollBatteryTitle => 'Akkuoptimierung';
+
+  @override
+  String get settingsNotifyPollBatteryHelp =>
+      'Deaktiviere die Akkuoptimierung für twonly, damit zuverlässiger nach Nachrichten gesucht wird. Wähle in der Systemliste bei Bedarf „Alle Apps“, suche twonly und wähle „Nicht optimieren“. Android kann die Abfragen weiterhin verzögern.';
+
+  @override
+  String get settingsNotifyPollBatteryActive => 'Akkuoptimierung: aktiv';
+
+  @override
+  String get settingsNotifyPollBatteryDisabled =>
+      'Akkuoptimierung: deaktiviert';
+
+  @override
+  String get settingsNotifyPollRestrictedTitle =>
+      'Hintergrundaktivität eingeschränkt';
+
+  @override
+  String get settingsNotifyPollRestrictedHelp =>
+      'Android blockiert die Abfragen im Hintergrund. Öffne die App-Einstellungen von twonly und erlaube die Akkunutzung im Hintergrund.';
+
+  @override
+  String get settingsNotifyPollOpenSettings => 'Einstellungen öffnen';
+
+  @override
+  String get settingsNotifyPollLater => 'Später';
+
+  @override
   String get settingsNotifyResetTitle => 'Benachrichtigungstoken zurücksetzen';
 
   @override

@@ -952,6 +952,72 @@ abstract class AppLocalizations {
   /// **'Open your phone’s settings to manage notification permissions.'**
   String get settingsNotifyPermissionDesc;
 
+  /// No description provided for @settingsNotifyPollTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for new messages periodically'**
+  String get settingsNotifyPollTitle;
+
+  /// No description provided for @settingsNotifyPollSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Without Google services, check for new messages about every {minutes} minutes when connected to the internet. Messages and notifications will be delayed.'**
+  String settingsNotifyPollSubtitle(int minutes);
+
+  /// No description provided for @settingsNotifyPollWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Without Google services, twonly cannot receive instant push notifications. It will check for new messages about every {minutes} minutes when internet is available. Messages and notifications will be delayed. When your phone is idle or limits background activity, checks can take several hours.'**
+  String settingsNotifyPollWarning(int minutes);
+
+  /// No description provided for @settingsNotifyPollBatteryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery optimization'**
+  String get settingsNotifyPollBatteryTitle;
+
+  /// No description provided for @settingsNotifyPollBatteryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'For more reliable checks, disable battery optimization for twonly. In the system list, choose All apps if needed, find twonly, and select Don’t optimize. Android may still delay checks.'**
+  String get settingsNotifyPollBatteryHelp;
+
+  /// No description provided for @settingsNotifyPollBatteryActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery optimization: active'**
+  String get settingsNotifyPollBatteryActive;
+
+  /// No description provided for @settingsNotifyPollBatteryDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery optimization: disabled'**
+  String get settingsNotifyPollBatteryDisabled;
+
+  /// No description provided for @settingsNotifyPollRestrictedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background activity is restricted'**
+  String get settingsNotifyPollRestrictedTitle;
+
+  /// No description provided for @settingsNotifyPollRestrictedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Android is blocking background checks. Open twonly’s app settings and allow background battery usage.'**
+  String get settingsNotifyPollRestrictedHelp;
+
+  /// No description provided for @settingsNotifyPollOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get settingsNotifyPollOpenSettings;
+
+  /// No description provided for @settingsNotifyPollLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get settingsNotifyPollLater;
+
   /// No description provided for @settingsNotifyResetTitle.
   ///
   /// In en, this message translates to:

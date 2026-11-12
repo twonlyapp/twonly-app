@@ -504,6 +504,47 @@ class AppLocalizationsEn extends AppLocalizations {
       'Open your phone’s settings to manage notification permissions.';
 
   @override
+  String get settingsNotifyPollTitle => 'Check for new messages periodically';
+
+  @override
+  String settingsNotifyPollSubtitle(int minutes) {
+    return 'Without Google services, check for new messages about every $minutes minutes when connected to the internet. Messages and notifications will be delayed.';
+  }
+
+  @override
+  String settingsNotifyPollWarning(int minutes) {
+    return 'Without Google services, twonly cannot receive instant push notifications. It will check for new messages about every $minutes minutes when internet is available. Messages and notifications will be delayed. When your phone is idle or limits background activity, checks can take several hours.';
+  }
+
+  @override
+  String get settingsNotifyPollBatteryTitle => 'Battery optimization';
+
+  @override
+  String get settingsNotifyPollBatteryHelp =>
+      'For more reliable checks, disable battery optimization for twonly. In the system list, choose All apps if needed, find twonly, and select Don’t optimize. Android may still delay checks.';
+
+  @override
+  String get settingsNotifyPollBatteryActive => 'Battery optimization: active';
+
+  @override
+  String get settingsNotifyPollBatteryDisabled =>
+      'Battery optimization: disabled';
+
+  @override
+  String get settingsNotifyPollRestrictedTitle =>
+      'Background activity is restricted';
+
+  @override
+  String get settingsNotifyPollRestrictedHelp =>
+      'Android is blocking background checks. Open twonly’s app settings and allow background battery usage.';
+
+  @override
+  String get settingsNotifyPollOpenSettings => 'Open settings';
+
+  @override
+  String get settingsNotifyPollLater => 'Later';
+
+  @override
   String get settingsNotifyResetTitle => 'Reset notification tokens';
 
   @override
