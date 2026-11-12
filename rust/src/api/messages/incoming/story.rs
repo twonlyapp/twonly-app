@@ -9,14 +9,13 @@ use crate::context::Context;
 use crate::database::app::contacts::table::Contact;
 use crate::database::app::groups::native::Group;
 use crate::error::{Result, TwonlyError};
-use crate::services::stories::STORY_LIFETIME_SECONDS;
 use crate::utils::milliseconds_to_seconds;
 use encrypted_content::media::Type as MediaType;
 use sqlx::{Sqlite, Transaction};
 use std::sync::Arc;
 
 /// When the story was posted, capped at `now`: a timestamp from the future
-/// would otherwise keep the story around for longer than its 24 hours.
+/// would otherwise extend the permitted story lifetime.
 pub(crate) fn posted_at(story: &encrypted_content::Story, now: i64) -> i64 {
     story
         .media
@@ -28,7 +27,11 @@ pub(crate) fn posted_at(story: &encrypted_content::Story, now: i64) -> i64 {
 pub(crate) fn is_expired(story: &encrypted_content::Story) -> bool {
     let now = chrono::Utc::now().timestamp();
 
-    posted_at(story, now) + STORY_LIFETIME_SECONDS <= now
+    let metadata = story
+        .media
+        .as_ref()
+        .and_then(|media| media.additional_message_data.as_deref());
+    crate::services::stories::expires_at(posted_at(story, now), metadata) <= now
 }
 
 /// Files a story item under the 1:1 chat with its sender, where it stays
@@ -102,6 +105,7 @@ pub(crate) async fn handle_story(
 
 #[cfg(test)]
 mod tests {
+    use prost::Message as _;
 
     use crate::api::messages::incoming::{handle_encrypted, Delivery};
     use crate::api::proto::client::{encrypted_content, EncryptedContent};
@@ -433,5 +437,40 @@ mod tests {
             super::posted_at(content.story.as_ref().unwrap(), 1_000),
             1_000
         );
+    }
+
+    #[tokio::test]
+    async fn a_story_with_an_encrypted_deadline_arrives_after_the_first_day() -> Result<()> {
+        let (_directory, ctx) = context(true).await?;
+        let now = chrono::Utc::now().timestamp();
+        chat_with_anna(&ctx, Some(now - 3600)).await?;
+        let posted = now - 2 * STORY_LIFETIME_SECONDS;
+        let mut content = story("trip", posted, true);
+        let metadata = crate::api::proto::client::AdditionalMessageData {
+            story_expires_at_ms: Some((posted + 7 * STORY_LIFETIME_SECONDS) * 1_000),
+            ..Default::default()
+        }
+        .encode_to_vec();
+        content
+            .story
+            .as_mut()
+            .unwrap()
+            .media
+            .as_mut()
+            .unwrap()
+            .additional_message_data = Some(metadata.clone());
+        assert_eq!(
+            receive(&ctx, 7, "trip-receipt", content).await?,
+            Delivery::Ack
+        );
+        let database = ctx.app_db.read().await.clone();
+        let stored: Vec<u8> = sqlx::query_scalar(
+            "SELECT additional_message_data FROM messages WHERE message_id = 'trip'",
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        assert_eq!(stored, metadata);
+        assert_eq!(outbox_kinds(&ctx).await?, vec!["story".to_owned()]);
+        Ok(())
     }
 }

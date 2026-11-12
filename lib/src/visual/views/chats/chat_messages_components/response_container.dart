@@ -247,7 +247,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
     if (message.mediaStored) return true;
     return message.mediaId != null &&
         _mediaService != null &&
-        clock.now().isBefore(message.createdAt.add(storyLifetime));
+        clock.now().isBefore(messageStoryDeadline(message));
   }
 
   @override

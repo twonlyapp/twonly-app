@@ -3,13 +3,13 @@
  *
  */
 
-//! Stories: an image or video shared with many contacts for 24 hours.
+//! Stories: an image or video shared with many contacts until its deadline.
 //!
 //! A story item travels the ordinary media path. Each recipient gets a hidden
 //! message row in their 1:1 chat -- on the sender one row per recipient, all
 //! sharing one media file -- so upload, receipts and opened tracking need
 //! nothing of their own. The chat shows a story row only once somebody saved
-//! it; every other story row leaves 24 hours after the sender's timestamp.
+//! it; every other story row leaves at its encrypted deadline.
 
 use crate::api::proto::client::{encrypted_content, EncryptedContent};
 use crate::context::Context;
@@ -27,6 +27,38 @@ use std::sync::Arc;
 
 /// How long a story item is visible after its sender posted it.
 pub const STORY_LIFETIME_SECONDS: i64 = 24 * 60 * 60;
+
+/// Bounds both explicitly chosen deadlines and the database lookback window.
+pub const MAX_STORY_LIFETIME_SECONDS: i64 = 30 * STORY_LIFETIME_SECONDS;
+
+/// Deadlines are part of the encrypted media metadata, never server metadata.
+/// Legacy stories have no deadline and retain their original 24-hour lifetime.
+/// Cap explicit deadlines at the protocol limit, including after restoration.
+pub(crate) fn expires_at(posted_at: i64, metadata: Option<&[u8]>) -> i64 {
+    let deadline = metadata
+        .and_then(|bytes| crate::api::proto::client::AdditionalMessageData::decode(bytes).ok())
+        .and_then(|data| data.story_expires_at_ms)
+        .map(|milliseconds| milliseconds.div_euclid(1_000))
+        .unwrap_or_else(|| posted_at.saturating_add(STORY_LIFETIME_SECONDS));
+
+    deadline.min(posted_at.saturating_add(MAX_STORY_LIFETIME_SECONDS))
+}
+
+pub(crate) async fn message_is_expired(
+    pool: &sqlx::SqlitePool, message_id: &str, now: i64,
+) -> Result<bool> {
+    let row = sqlx::query!(
+        "SELECT created_at, additional_message_data FROM messages WHERE message_id = ? AND \
+         is_story = 1",
+        message_id,
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.is_some_and(|row| {
+        expires_at(row.created_at, row.additional_message_data.as_deref()) <= now
+    }))
+}
 
 /// "All contacts" reaches only existing chats with an exchange in the last
 /// month.
@@ -261,26 +293,27 @@ pub(crate) async fn release_media(
     Ok(())
 }
 
-/// Lets every story item older than 24 hours go, on both ends: a received one
+/// Lets every story item past its deadline go, on both ends: a received one
 /// disappears from its sender's ring, and an own one stops being retried for
 /// recipients that never acknowledged it. Saved items stay, as ordinary stored
 /// media in their chat.
 pub async fn purge_expired(ctx: &Arc<Context>) -> Result<()> {
     let now = chrono::Utc::now().timestamp();
 
-    let cutoff = now - STORY_LIFETIME_SECONDS;
-
     let database = ctx.app_db.read().await.clone();
 
     let mut transaction = database.pool.begin().await?;
 
-    let expired = sqlx::query_scalar!(
-        r#"SELECT message_id FROM messages
-           WHERE is_story = 1 AND media_stored = 0 AND created_at <= ?"#,
-        cutoff,
+    let expired = sqlx::query!(
+        r#"SELECT message_id, created_at, additional_message_data FROM messages
+           WHERE is_story = 1 AND media_stored = 0"#,
     )
     .fetch_all(&mut *transaction)
-    .await?;
+    .await?
+    .into_iter()
+    .filter(|row| expires_at(row.created_at, row.additional_message_data.as_deref()) <= now)
+    .map(|row| row.message_id)
+    .collect::<Vec<_>>();
 
     if expired.is_empty() {
         return Ok(());
@@ -410,6 +443,105 @@ pub async fn delete_item(ctx: &Arc<Context>, media_id: &str) -> Result<()> {
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn encrypted_deadlines_keep_legacy_behavior_and_bound_new_stories() {
+        let posted = 1_800_000_000;
+        assert_eq!(expires_at(posted, None), posted + STORY_LIFETIME_SECONDS);
+        let metadata = |deadline| {
+            crate::api::proto::client::AdditionalMessageData {
+                story_expires_at_ms: Some(deadline * 1_000),
+                ..Default::default()
+            }
+            .encode_to_vec()
+        };
+        assert_eq!(
+            expires_at(posted, Some(&metadata(posted + 7 * STORY_LIFETIME_SECONDS))),
+            posted + 7 * STORY_LIFETIME_SECONDS
+        );
+        assert_eq!(
+            expires_at(
+                posted,
+                Some(&metadata(posted + 90 * STORY_LIFETIME_SECONDS))
+            ),
+            posted + MAX_STORY_LIFETIME_SECONDS
+        );
+        assert_eq!(expires_at(posted, Some(&metadata(posted))), posted);
+        assert_eq!(
+            expires_at(posted, Some(&[255])),
+            posted + STORY_LIFETIME_SECONDS
+        );
+    }
+
+    #[tokio::test]
+    async fn a_week_long_story_survives_daily_cleanup_and_expires_at_its_deadline() -> Result<()> {
+        let (_directory, ctx) = context().await?;
+        let database = ctx.app_db.read().await.clone();
+        let now = chrono::Utc::now().timestamp();
+        let posted = now - 2 * STORY_LIFETIME_SECONDS;
+        let metadata = crate::api::proto::client::AdditionalMessageData {
+            story_expires_at_ms: Some((posted + 7 * STORY_LIFETIME_SECONDS) * 1_000),
+            ..Default::default()
+        }
+        .encode_to_vec();
+        execute(
+            &ctx,
+            &[
+                "INSERT INTO contacts(user_id, username, accepted) VALUES (7, 'anna', 1)",
+                "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('d', 'Anna', 1)",
+                "INSERT INTO media_files(media_id, type) VALUES ('trip', 'image')",
+            ],
+        )
+        .await?;
+        sqlx::query(
+            "INSERT INTO messages(message_id, group_id, sender_id, type, media_id, is_story, \
+             created_at, additional_message_data) VALUES ('trip-story', 'd', 7, 'media', 'trip', \
+             1, ?, ?)",
+        )
+        .bind(posted)
+        .bind(&metadata)
+        .execute(&database.pool)
+        .await?;
+        assert!(!message_is_expired(&database.pool, "trip-story", now).await?);
+        assert!(
+            message_is_expired(
+                &database.pool,
+                "trip-story",
+                posted + 7 * STORY_LIFETIME_SECONDS
+            )
+            .await?
+        );
+        purge_expired(&ctx).await?;
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM messages WHERE message_id = 'trip-story'"
+            )
+            .fetch_one(&database.pool)
+            .await?,
+            1
+        );
+        let expired = crate::api::proto::client::AdditionalMessageData {
+            story_expires_at_ms: Some(now * 1_000),
+            ..Default::default()
+        }
+        .encode_to_vec();
+        sqlx::query(
+            "UPDATE messages SET additional_message_data = ? WHERE message_id = 'trip-story'",
+        )
+        .bind(expired)
+        .execute(&database.pool)
+        .await?;
+        purge_expired(&ctx).await?;
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM messages WHERE message_id = 'trip-story'"
+            )
+            .fetch_one(&database.pool)
+            .await?,
+            0
+        );
+        Ok(())
+    }
 
     async fn context() -> Result<(tempfile::TempDir, Arc<Context>)> {
         let directory = tempfile::tempdir()?;
@@ -651,8 +783,8 @@ mod tests {
             let now = chrono::Utc::now().timestamp();
 
             sqlx::query(
-                "INSERT INTO media_files(media_id, type, upload_state, stored) \
-                 VALUES ('story', 'image', 'uploaded', 1)",
+                "INSERT INTO media_files(media_id, type, upload_state, stored) VALUES ('story', \
+                 'image', 'uploaded', 1)",
             )
             .execute(&database.pool)
             .await?;
@@ -679,7 +811,8 @@ mod tests {
                     .await?;
                 sqlx::query(
                     "INSERT INTO messages(message_id, group_id, type, media_id, is_story, \
-                     media_stored, opened_at, created_at) VALUES (?, ?, 'media', 'story', 1, ?, ?, ?)",
+                     media_stored, opened_at, created_at) VALUES (?, ?, 'media', 'story', 1, ?, \
+                     ?, ?)",
                 )
                 .bind(format!("story-{contact_id}"))
                 .bind(&group_id)
@@ -722,8 +855,8 @@ mod tests {
             assert!(viewers.links.is_empty());
 
             let saved: i64 = sqlx::query_scalar(
-                "SELECT COUNT(*) FROM messages WHERE media_id = 'story' AND media_stored = 1 \
-                 AND is_story = 0 AND is_deleted_from_sender = 0 AND opened_at = ?",
+                "SELECT COUNT(*) FROM messages WHERE media_id = 'story' AND media_stored = 1 AND \
+                 is_story = 0 AND is_deleted_from_sender = 0 AND opened_at = ?",
             )
             .bind(now)
             .fetch_one(&mut *transaction)

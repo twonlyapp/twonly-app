@@ -996,7 +996,8 @@ impl DirectMediaUploadService {
         Ok(matches!(status, 400 | 413).then_some(status))
     }
 
-    /// Rebuilds empty media, or ends a send whose manifest is otherwise refused.
+    /// Rebuilds empty media, or ends a send whose manifest is otherwise
+    /// refused.
     ///
     /// Servers before 2026-10-29 refused the whole manifest when a single
     /// recipient had deleted their account, which this client only learns by
@@ -1495,8 +1496,12 @@ impl DirectMediaUploadService {
             let kind: Option<String> = sqlx::query_scalar(
                 "SELECT type FROM media_files WHERE media_id = ? AND upload_state = 'uploaded'
                  AND reupload_requested_by IS NULL AND reupload_targets IS NULL
-                 AND NOT EXISTS (SELECT 1 FROM direct_media_upload_jobs j WHERE j.media_id = media_files.media_id)",
-            ).bind(&job.media_id).fetch_optional(&database.pool).await?;
+                 AND NOT EXISTS (SELECT 1 FROM direct_media_upload_jobs j WHERE j.media_id = \
+                 media_files.media_id)",
+            )
+            .bind(&job.media_id)
+            .fetch_optional(&database.pool)
+            .await?;
             if let Some(kind) = kind {
                 let source = crate::services::mediafiles::MediaFileService::new(&self.ctx)
                     .original_path(&job.media_id, &kind);
@@ -1861,7 +1866,11 @@ impl DirectMediaUploadService {
         // An upload that took longer than a story lives would deliver an item
         // its recipients ignore on arrival.
         .filter(|message| {
-            message.is_story == 0 || message.created_at + STORY_LIFETIME_SECONDS > now
+            message.is_story == 0
+                || crate::services::stories::expires_at(
+                    message.created_at,
+                    message.additional_message_data.as_deref(),
+                ) > now
         })
         .collect::<Vec<_>>();
 

@@ -122,6 +122,13 @@ pub(crate) async fn filter_location(
         return Ok(None);
     }
 
+    share_photo_location().await
+}
+
+/// Explicit per-media sharing, independent of the location-filter setting.
+/// The caller requests location permission following the user's pin action.
+pub(crate) async fn share_photo_location() -> Result<Option<(SystemTime, LocationFix)>> {
+
     let request = LOCATION_REQUEST.lock().await;
 
     if let Some(cached) = fresh(&request) {

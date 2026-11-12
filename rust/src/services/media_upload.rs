@@ -244,6 +244,21 @@ impl MediaUploadService {
 
         let story_recipients = match &story {
             Some(audience) => {
+                if let Some(bytes) = additional_message_data.as_deref() {
+                    let metadata = crate::api::proto::client::AdditionalMessageData::decode(bytes)?;
+                    if let Some(deadline) = metadata.story_expires_at_ms {
+                        if deadline <= now.saturating_mul(1_000)
+                            || deadline
+                                > now
+                                    .saturating_add(stories::MAX_STORY_LIFETIME_SECONDS)
+                                    .saturating_mul(1_000)
+                        {
+                            return Err(TwonlyError::Generic(
+                                "story deadline must be within the next 30 days".into(),
+                            ));
+                        }
+                    }
+                }
                 let (media_type, requires_authentication) = sqlx::query!(
                     "SELECT type AS media_type, requires_authentication FROM media_files WHERE \
                      media_id = ?",
@@ -1034,15 +1049,7 @@ impl MediaUploadService {
 
         // The recipient ignores a story once it expired, so resending one only
         // costs traffic until the story purge takes the receipt away.
-        let expired_story = sqlx::query_scalar!(
-            "SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ? AND is_story = 1 AND \
-             created_at <= ?)",
-            &message_id,
-            now - stories::STORY_LIFETIME_SECONDS
-        )
-        .fetch_one(&database.pool)
-        .await?
-            != 0;
+        let expired_story = stories::message_is_expired(&database.pool, &message_id, now).await?;
 
         if expired_story {
             return Ok(());
@@ -1595,7 +1602,7 @@ impl MediaUploadService {
             media_id,
             now - 3 * 60,
             now - 2 * 24 * 60 * 60,
-            now - stories::STORY_LIFETIME_SECONDS
+            now - stories::MAX_STORY_LIFETIME_SECONDS
         )
         .fetch_one(&database.pool)
         .await?;
@@ -1745,8 +1752,11 @@ impl MediaUploadService {
              AND EXISTS (SELECT 1 FROM messages m WHERE m.media_id = media_files.media_id
                  AND m.is_story = 1 AND m.sender_id IS NULL AND m.ack_by_server IS NULL
                  AND m.ack_by_user IS NULL AND m.opened_at IS NULL)
-             AND NOT EXISTS (SELECT 1 FROM direct_media_upload_jobs j WHERE j.media_id = media_files.media_id)",
-        ).fetch_all(&database.pool).await?;
+             AND NOT EXISTS (SELECT 1 FROM direct_media_upload_jobs j WHERE j.media_id = \
+             media_files.media_id)",
+        )
+        .fetch_all(&database.pool)
+        .await?;
         let files = MediaFileService::new(&self.ctx);
         for media_id in media {
             let temp = files.temp_path(&media_id, "video");

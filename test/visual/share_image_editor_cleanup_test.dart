@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/bridge/database.dart';
 import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
@@ -11,6 +11,7 @@ import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
@@ -24,6 +25,14 @@ import '../mocks/user_config.dart';
 
 class _EditorApi extends NativeTestApi {
   late Completer<void> updateFinished;
+  Completer<FilterLocation?>? locationRequest;
+  int locationRequests = 0;
+
+  @override
+  Future<FilterLocation?> crateBridgeApiRustApiSharePhotoLocation() {
+    locationRequests++;
+    return locationRequest!.future;
+  }
 
   @override
   Future<void> crateBridgeDatabaseMediafilesUpdateMediaFiles({
@@ -45,6 +54,8 @@ class _EditorApi extends NativeTestApi {
 
 void main() {
   final api = _EditorApi();
+  var precisePermission = true;
+  const locationChannel = MethodChannel('eu.twonly/location_metadata');
   late Directory files;
   setUpAll(() async {
     files = Directory.systemTemp.createTempSync('twonly-editor-');
@@ -60,7 +71,16 @@ void main() {
   });
 
   setUp(() async {
-    api.updateFinished = Completer<void>();
+    api
+      ..updateFinished = Completer<void>()
+      ..locationRequest = null
+      ..locationRequests = 0;
+    precisePermission = true;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          locationChannel,
+          (_) async => precisePermission,
+        );
     await locator.reset();
     locator.registerSingleton<UserService>(
       UserService()
@@ -79,7 +99,100 @@ void main() {
       "('edited', 'gif', 1), ('another-draft', 'gif', 1), ('finished', 'image', 0)",
     );
   });
-  tearDown(() async => locator.reset());
+  tearDown(() async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(locationChannel, null);
+    await locator.reset();
+  });
+
+  for (final allowed in [true, false]) {
+    testWidgets(
+      'location pin shares hidden coordinates only with permission=$allowed',
+      (tester) async {
+        precisePermission = allowed;
+        api.locationRequest = Completer<FilterLocation?>();
+        await runNative(
+          tester,
+          () => testDatabase.customStatement(
+            "INSERT INTO media_files(media_id, type, is_draft_media) VALUES ('location-edited', 'gif', 1)",
+          ),
+        );
+        final edited = await runNative(
+          tester,
+          () => rust_mediafiles.getMediaFile(
+            id: 'location-edited',
+            transaction: currentDatabaseSession(),
+          ),
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: lightTheme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: ShareImageEditorView(
+              sharedFromGallery: true,
+              mediaFileService: MediaFileService(edited!),
+              screenshotImage: ScreenshotImageHelper(
+                file: File('assets/images/default_avatar.png'),
+              ),
+            ),
+          ),
+        );
+        await pumpNative(
+          tester,
+          until: () =>
+              find.byType(EditorBottomBar).evaluate().isNotEmpty &&
+              !tester
+                  .widget<EditorBottomBar>(find.byType(EditorBottomBar))
+                  .isSending,
+        );
+        final dynamic state = tester.state(find.byType(ShareImageEditorView));
+        AdditionalMessageData? metadata() =>
+            // Inspect the public metadata method on the editor's private state.
+            // ignore: avoid_dynamic_calls
+            state.getAdditionalData() as AdditionalMessageData?;
+        expect(metadata(), isNull);
+        expect(userService.currentUser.locationFilter, isFalse);
+        await tester.tap(find.byKey(const Key('includeMediaLocation')));
+        if (allowed) {
+          await pumpNative(tester, until: () => api.locationRequests == 1);
+          expect(
+            tester
+                .widget<EditorBottomBar>(find.byType(EditorBottomBar))
+                .isSending,
+            isTrue,
+          );
+          api.locationRequest!.complete(
+            const FilterLocation(
+              latitude: 52,
+              longitude: 13,
+              accuracy: 5,
+              fixTimestampMs: 1,
+            ),
+          );
+        }
+        await pumpNative(
+          tester,
+          until: () => !tester
+              .widget<EditorBottomBar>(find.byType(EditorBottomBar))
+              .isSending,
+        );
+        if (allowed) {
+          expect(metadata()!.photoLocation.hideFilter, isTrue);
+          expect(metadata()!.photoLocation.latitude, 52);
+          expect(metadata()!.photoLocation.mapWidth, 0);
+          await tester.tap(find.byKey(const Key('includeMediaLocation')));
+          await tester.pump();
+        } else {
+          expect(api.locationRequests, 0);
+        }
+        expect(metadata(), isNull);
+        expect(userService.currentUser.locationFilter, isFalse);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await pumpNative(tester, until: () => api.updateFinished.isCompleted);
+      },
+    );
+  }
 
   Future<List<(String, int)>> drafts() async => [
     for (final row

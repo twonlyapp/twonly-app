@@ -16,8 +16,8 @@ import 'package:twonly/core/database/app/groups/table.dart';
 import 'package:twonly/core/database/app/mediafiles/table.dart'
     as db_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
-import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
 import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
 import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
@@ -54,11 +54,19 @@ import 'package:video_player/video_player.dart';
 /// What a story viewer plays: one contact's active story, or the user's own.
 class StorySource {
   const StorySource.contact(int this.contactId, {this.initialMediaId})
-    : own = false;
-  const StorySource.own({this.initialMediaId}) : contactId = null, own = true;
+    : own = false,
+      messages = null;
+  const StorySource.own({this.initialMediaId})
+    : contactId = null,
+      own = true,
+      messages = null;
+  const StorySource.map(this.messages, {this.initialMediaId})
+    : contactId = null,
+      own = false;
 
   final int? contactId;
   final bool own;
+  final List<StoredMessage>? messages;
 
   /// The item to start at. Without one a contact's story starts at the first
   /// item not seen yet, and the user's own story at its oldest item.
@@ -230,10 +238,20 @@ class _MediaViewerViewState extends State<MediaViewerView>
     final now = clock.now();
     var playlist = <StoredMessage>[];
     var start = 0;
-    if (story.own) {
+    if (story.messages != null) {
+      playlist = story.messages!
+          .where(
+            (message) =>
+                message.isStory &&
+                !message.isDeletedFromSender &&
+                messageStoryDeadline(message).isAfter(now),
+          )
+          .toList();
+    } else if (story.own) {
       final items = await (() {
         final cutoff =
-            clock.now().subtract(storyLifetime).millisecondsSinceEpoch ~/ 1000;
+            clock.now().subtract(maxStoryLifetime).millisecondsSinceEpoch ~/
+            1000;
         return watchRustDatabase(
           (control) => rust_stories
               .watchOwnStories(cutoff: cutoff, control: control)
@@ -271,7 +289,7 @@ class _MediaViewerViewState extends State<MediaViewerView>
                   cutoff:
                       clock
                           .now()
-                          .subtract(storyLifetime)
+                          .subtract(maxStoryLifetime)
                           .millisecondsSinceEpoch ~/
                       1000,
                   transaction: currentDatabaseSession(),
@@ -488,7 +506,7 @@ class _MediaViewerViewState extends State<MediaViewerView>
     if (_isStory) {
       final now = clock.now();
       while (allMediaFiles.isNotEmpty &&
-          !allMediaFiles.first.createdAt.add(storyLifetime).isAfter(now)) {
+          !messageStoryDeadline(allMediaFiles.first).isAfter(now)) {
         allMediaFiles.removeAt(0);
       }
       if (allMediaFiles.isEmpty) {
@@ -497,6 +515,7 @@ class _MediaViewerViewState extends State<MediaViewerView>
       }
       _storyExpiryTimer.schedule(
         postedAt: allMediaFiles.first.createdAt,
+        expiresAt: messageStoryDeadline(allMediaFiles.first),
         now: now,
         onExpired: () {
           if (mounted) unawaited(advanceToNextMediaOrExit());
@@ -786,6 +805,24 @@ class _MediaViewerViewState extends State<MediaViewerView>
   }
 
   Future<void> _updateSenderInfo() async {
+    if (widget.story?.messages != null && currentMessage != null) {
+      final message = currentMessage!;
+      final group = await rust_groups.getGroup(
+        id: message.groupId,
+        transaction: currentDatabaseSession(),
+      );
+      final sender = await rust_contacts.getContact(
+        id: message.senderId!,
+        transaction: currentDatabaseSession(),
+      );
+      if (mounted && currentMessage?.messageId == message.messageId) {
+        _group = group;
+        _currentMediaSender = sender == null
+            ? ''
+            : getContactDisplayName(sender);
+      }
+      return;
+    }
     final group = widget.group;
     if (currentMessage == null || group == null || group.isDirectChat) return;
     final sender = await rust_contacts.getContact(
@@ -1120,6 +1157,7 @@ class _MediaViewerViewState extends State<MediaViewerView>
                       loader: _loader(),
                       photoLocation: PhotoLocationOverlay.decode(
                         currentMessage?.additionalMessageData,
+                        fromMap: widget.story?.messages != null,
                       ),
                     ),
                   ),

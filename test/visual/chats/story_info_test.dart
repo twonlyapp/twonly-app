@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:clock/clock.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,14 +11,17 @@ import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
+import 'package:twonly/src/visual/components/story_strip.comp.dart';
 import 'package:twonly/src/visual/elements/my_icon_button.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/own_story_bottom_bar.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_viewers.bottom_sheet.dart';
+import 'package:twonly/src/visual/views/settings/profile/own_story_strip.comp.dart';
 
 import '../../helpers/native_database.dart';
 import '../../mocks/user_config.dart';
@@ -131,6 +136,37 @@ void main() {
     expect(find.text('Pending friend'), findsNothing);
     expect(find.textContaining('Today at'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('profile stories use their deadline even after the first day', (
+    tester,
+  ) async {
+    var now = DateTime.now();
+    final posted = now.subtract(const Duration(days: 2));
+    final deadline = now.add(const Duration(minutes: 1));
+    await runNative(
+      tester,
+      () => database.customStatement(
+        'UPDATE messages SET created_at = ?, additional_message_data = ?',
+        [
+          posted.millisecondsSinceEpoch ~/ 1000,
+          AdditionalMessageData(
+            storyExpiresAtMs: Int64(deadline.millisecondsSinceEpoch),
+          ).writeToBuffer(),
+        ],
+      ),
+    );
+    await withClock(Clock(() => now), () async {
+      await pump(tester, const OwnStoryStrip());
+      expect(
+        tester.widget<StoryStrip>(find.byType(StoryStrip)).items,
+        hasLength(1),
+      );
+      now = deadline.add(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 61));
+      expect(tester.widget<StoryStrip>(find.byType(StoryStrip)).items, isEmpty);
+      await tester.pumpWidget(const SizedBox());
+    });
   });
 
   testWidgets(

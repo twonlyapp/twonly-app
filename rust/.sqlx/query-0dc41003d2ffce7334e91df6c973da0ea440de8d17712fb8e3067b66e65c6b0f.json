@@ -1,0 +1,59 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT m.media_id AS \"media_id!\",\n                MIN(m.created_at) AS \"posted_at!\",\n                m.additional_message_data AS \"additional_message_data?\",\n                COUNT(*) AS \"recipient_count!\",\n                SUM(CASE\n                WHEN m.opened_at IS NULL THEN 0\n                ELSE 1\n                END\n            ) AS \"viewer_count!\"\n            FROM messages m\n            JOIN media_files f\n            ON f.media_id = m.media_id\n            WHERE m.is_story = 1\n                AND m.sender_id IS NULL\n                AND m.created_at > ?\n            GROUP BY m.media_id\n            ORDER BY \"posted_at!\",\n                m.media_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "posted_at!",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "additional_message_data?",
+        "ordinal": 2,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "additional_message_data"
+          }
+        }
+      },
+      {
+        "name": "recipient_count!",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "viewer_count!",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "0dc41003d2ffce7334e91df6c973da0ea440de8d17712fb8e3067b66e65c6b0f"
+}

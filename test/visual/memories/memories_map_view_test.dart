@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -12,9 +13,12 @@ import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart'
     as db_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
+import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/database/session.dart';
@@ -33,6 +37,15 @@ class _MapPlatform extends MapLibrePlatform {
 
   final sources = <String, Map<String, dynamic>>{};
   final layers = <String>{};
+  final images = <String>{};
+  final imageBytes = <String, Uint8List>{};
+  final symbols = <String, Map<String, dynamic>>{};
+  final symbolSources = <String, String>{};
+  List<Map<String, dynamic>> tapFeatures = [];
+  final queriedLayers = <List<String>>[];
+  final expandedClusters = <(String, int)>[];
+  final cameraAnimations = <CameraUpdate>[];
+  final imagesAtLayerCreation = <String, Set<String>>{};
   final styles = <String>[];
   final padding = <EdgeInsets>[];
   final projectedPoints = <math.Point>[];
@@ -81,6 +94,10 @@ class _MapPlatform extends MapLibrePlatform {
       styles.add(style);
       sources.clear();
       layers.clear();
+      symbols.clear();
+      symbolSources.clear();
+      images.clear();
+      imageBytes.clear();
       onMapStyleLoadedPlatform.call(null);
     }
     return null;
@@ -106,7 +123,11 @@ class _MapPlatform extends MapLibrePlatform {
   Future<void> removeSource(String id) async => sources.remove(id);
 
   @override
-  Future<void> removeLayer(String id) async => layers.remove(id);
+  Future<void> removeLayer(String id) async {
+    layers.remove(id);
+    symbols.remove(id);
+    symbolSources.remove(id);
+  }
 
   @override
   Future<void> addHeatmapLayer(
@@ -117,7 +138,19 @@ class _MapPlatform extends MapLibrePlatform {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-  }) async => layers.add(layerId);
+  }) async {
+    layers.add(layerId);
+  }
+
+  @override
+  Future<void> addImage(
+    String name,
+    Uint8List bytes, [
+    bool sdf = false,
+  ]) async {
+    images.add(name);
+    imageBytes[name] = bytes;
+  }
 
   @override
   Future<void> addCircleLayer(
@@ -143,7 +176,37 @@ class _MapPlatform extends MapLibrePlatform {
     double? minzoom,
     double? maxzoom,
     dynamic filter,
-  }) async => layers.add(layerId);
+  }) async {
+    layers.add(layerId);
+    symbols[layerId] = properties;
+    symbolSources[layerId] = sourceId;
+    imagesAtLayerCreation[layerId] = Set.of(images);
+  }
+
+  @override
+  Future<List<dynamic>> queryRenderedFeaturesInRect(
+    Rect rect,
+    List<String> layerIds,
+    String? filter,
+  ) async {
+    queriedLayers.add(layerIds);
+    return tapFeatures;
+  }
+
+  @override
+  Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
+    expandedClusters.add((sourceId, clusterId));
+    return 15;
+  }
+
+  @override
+  Future<bool?> animateCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+  }) async {
+    cameraAnimations.add(cameraUpdate);
+    return true;
+  }
 
   @override
   Future<void> updateContentInsets(EdgeInsets insets, bool animated) async {
@@ -249,6 +312,302 @@ void main() {
     await tester.pumpWidget(app(initialMedia: initialMedia));
     await finishLoading(tester);
   }
+
+  MemoryItem storyItem(MediaFile file, int senderId) => MemoryItem(
+    mediaService: MediaFileService(file),
+    messages: [
+      StoredMessage(
+        groupId: 'chat',
+        messageId: 'story',
+        senderId: senderId,
+        type: 'media',
+        mediaId: file.mediaId,
+        additionalMessageData: AdditionalMessageData(
+          photoLocation: PhotoLocationData(latitude: 52, longitude: 13),
+        ).writeToBuffer(),
+        mediaStored: false,
+        mediaReopened: false,
+        isDeletedFromSender: false,
+        isWidgetMedia: false,
+        isStory: true,
+        createdAtSeconds: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      ),
+    ],
+  );
+
+  testWidgets(
+    'story map uses shared coordinates, avatars and the same gallery',
+    (tester) async {
+      // Above the exact integer range of native GeoJSON's double values.
+      final senderId = int.parse('9007199254740993');
+      const avatarKey = 'story-avatar-9007199254740993';
+      final sourceId = 'story-locations-$senderId';
+      final clusterLayer = 'memory-cluster-circles-$senderId';
+      final markerLayer = 'memory-markers-$senderId';
+      final stream = StreamController<List<MemoryItem>>.broadcast();
+      final file = await runNative(
+        tester,
+        () => rust_mediafiles.getMediaFile(
+          id: 'new-york',
+          transaction: currentDatabaseSession(),
+        ),
+      );
+      final item = storyItem(file!, senderId);
+      List<MemoryItem>? opened;
+      await tester.pumpWidget(
+        app(
+          home: MemoriesMapView.stories(
+            storyItems: stream.stream,
+            onOpenStories: (items, index) async => opened = items,
+          ),
+        ),
+      );
+      stream.add([item]);
+      await tester.pump();
+      await finishLoading(tester);
+      await pumpNative(
+        tester,
+        until: () =>
+            platform.images.contains(avatarKey) &&
+            platform.layers.contains(markerLayer),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(platform.layers, isNot(contains('memory-heatmap')));
+      expect(platform.layers, isNot(contains('memory-cluster-counts')));
+      expect(platform.symbols[markerLayer]!['icon-size'], 0.55);
+      expect(platform.symbols[clusterLayer]!['icon-size'], [
+        'interpolate',
+        ['linear'],
+        ['get', 'point_count'],
+        2,
+        0.6,
+        20,
+        0.65,
+      ]);
+      for (final layer in [markerLayer, clusterLayer]) {
+        expect(
+          platform.imagesAtLayerCreation[layer],
+          contains(avatarKey),
+          reason:
+              'Native symbol layout needs the bitmap before layer creation.',
+        );
+        expect(
+          platform.symbols[layer]!['text-font'],
+          ['Noto Sans Regular'],
+          reason: 'Avatar symbols need the font supported by the map style.',
+        );
+      }
+      final pixels = await tester.runAsync(() async {
+        final codec = await ui.instantiateImageCodec(
+          platform.imageBytes[avatarKey]!,
+        );
+        final frame = await codec.getNextFrame();
+        codec.dispose();
+        final data = await frame.image.toByteData();
+        frame.image.dispose();
+        return data!.buffer.asUint8List();
+      });
+      var hasAvatar = false;
+      for (var offset = 0; offset < pixels!.length; offset += 4) {
+        // A contact without a custom avatar still gets the green default
+        // silhouette, instead of an empty blue marker.
+        if (pixels[offset + 3] > 0 &&
+            pixels[offset + 1] > pixels[offset] &&
+            pixels[offset + 1] > pixels[offset + 2]) {
+          hasAvatar = true;
+        }
+      }
+      expect(hasAvatar, isTrue);
+      expect(
+        pixels[(2 * 96 + 48) * 4 + 3],
+        0,
+        reason: 'Avatar markers have no painted background or border.',
+      );
+      for (final layer in [markerLayer, clusterLayer]) {
+        expect(platform.symbols[layer]!['icon-image'], avatarKey);
+        expect(platform.symbolSources[layer], sourceId);
+      }
+      final data = platform.sources[sourceId]!['data'] as Map;
+      final point = (data['features'] as List).single as Map;
+      expect((point['geometry'] as Map)['coordinates'], [13, 52]);
+      expect((point['properties'] as Map)['avatar'], avatarKey);
+      expect(platform.sources[sourceId]!['clusterProperties'], {
+        'storySource': [
+          [
+            'coalesce',
+            ['accumulated'],
+            ['get', 'storySource'],
+          ],
+          ['literal', sourceId],
+        ],
+      });
+      final gallery = tester.widget<MemoriesMapGallery>(
+        find.byType(MemoriesMapGallery),
+      );
+      expect(gallery.stories, isTrue);
+      expect(
+        tester
+            .element(find.byType(BackButton))
+            .findAncestorWidgetOfExactType<Material>()!
+            .elevation,
+        0,
+      );
+      expect(
+        tester
+            .widget<Material>(
+              find
+                  .descendant(
+                    of: find.byType(MemoriesMapGallery),
+                    matching: find.byType(Material),
+                  )
+                  .first,
+            )
+            .elevation,
+        0,
+      );
+      expect(gallery.items, [item]);
+      gallery.onTap(0);
+      await tester.pump();
+      expect(opened, [item]);
+      await tester.pumpWidget(const SizedBox());
+      await stream.close();
+    },
+  );
+
+  testWidgets(
+    'story clusters keep authors separate at the same coordinates and across updates',
+    (tester) async {
+      await runNative(
+        tester,
+        () => database.customStatement(
+          "INSERT INTO media_files(media_id, type, stored, has_thumbnail) VALUES('third-story', 'image', 1, 1)",
+        ),
+      );
+      final files = await runNative(
+        tester,
+        () => Future.wait([
+          for (final id in ['berlin', 'new-york', 'third-story'])
+            rust_mediafiles.getMediaFile(
+              id: id,
+              transaction: currentDatabaseSession(),
+            ),
+        ]),
+      );
+      final items = [
+        storyItem(files[0]!, 7),
+        storyItem(files[1]!, 8),
+        storyItem(files[2]!, 7),
+      ];
+      final stream = StreamController<List<MemoryItem>>.broadcast();
+      final home = MemoriesMapView.stories(
+        storyItems: stream.stream,
+        onOpenStories: (_, _) async {},
+      );
+      await tester.pumpWidget(app(home: home));
+      stream.add(items);
+      await tester.pump();
+      await finishLoading(tester);
+      await pumpNative(
+        tester,
+        until: () => platform.layers.contains('memory-markers-8'),
+      );
+
+      List<Map<String, dynamic>> features(String source) =>
+          ((platform.sources[source]!['data'] as Map)['features']
+                  as List<dynamic>)
+              .cast<Map<String, dynamic>>();
+      expect(platform.sources.containsKey('memory-clusters'), isFalse);
+      expect(features('story-locations-7'), hasLength(2));
+      expect(features('story-locations-8'), hasLength(1));
+      for (final sender in [7, 8]) {
+        for (final point in features('story-locations-$sender')) {
+          expect((point['geometry'] as Map)['coordinates'], [13, 52]);
+          expect(
+            (point['properties'] as Map)['avatar'],
+            'story-avatar-$sender',
+          );
+        }
+        expect(
+          platform.symbolSources['memory-cluster-circles-$sender'],
+          'story-locations-$sender',
+        );
+        expect(
+          platform.symbols['memory-cluster-circles-$sender']!['icon-image'],
+          'story-avatar-$sender',
+        );
+      }
+      expect(
+        platform.symbols.values.every(
+          (symbol) => !symbol.containsKey('text-field'),
+        ),
+        isTrue,
+      );
+
+      // Native cluster IDs can coincide across sources. Zoom the tapped author's
+      // source, rather than another person's identically numbered cluster.
+      for (final sender in [8, 7]) {
+        platform.tapFeatures = [
+          {
+            'type': 'Feature',
+            'properties': {
+              'cluster_id': 42,
+              'storySource': 'story-locations-$sender',
+            },
+            'geometry': {
+              'type': 'Point',
+              'coordinates': [13, 52],
+            },
+          },
+        ];
+        final before = platform.cameraAnimations.length;
+        platform.onMapClickPlatform.call({
+          'point': const math.Point<double>(100, 100),
+          'latLng': const LatLng(52, 13),
+        });
+        await pumpNative(
+          tester,
+          until: () => platform.cameraAnimations.length > before,
+        );
+        expect(platform.expandedClusters.last, ('story-locations-$sender', 42));
+      }
+      expect(
+        platform.queriedLayers.last,
+        containsAll([
+          'memory-cluster-circles-7',
+          'memory-markers-7',
+          'memory-cluster-circles-8',
+          'memory-markers-8',
+        ]),
+      );
+
+      stream.add([items.last]);
+      await pumpNative(
+        tester,
+        until: () =>
+            !platform.sources.containsKey('story-locations-8') &&
+            features('story-locations-7').length == 1,
+      );
+      expect(platform.layers.contains('memory-markers-8'), isFalse);
+      expect(platform.layers.contains('memory-cluster-circles-8'), isFalse);
+
+      await tester.pumpWidget(app(mode: ThemeMode.dark, home: home));
+      await pumpNative(
+        tester,
+        until: () =>
+            platform.layers.contains('memory-markers-7') &&
+            platform.images.contains('story-avatar-7'),
+      );
+      expect(features('story-locations-7'), hasLength(1));
+      expect(platform.sources.containsKey('story-locations-8'), isFalse);
+      expect(
+        platform.imagesAtLayerCreation['memory-markers-7'],
+        contains('story-avatar-7'),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      await stream.close();
+    },
+  );
 
   testWidgets('map fills the screen with a back button below the status bar', (
     tester,

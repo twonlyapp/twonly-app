@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/story_map_preview.comp.dart';
 import 'package:twonly/src/visual/components/story_preview.comp.dart';
 
 /// A contact and the item their bubble opens: the first unseen one in their
@@ -57,15 +59,21 @@ class StoryBubbleStrip extends StatelessWidget {
   const StoryBubbleStrip({
     required this.items,
     required this.onTap,
+    this.onMapTap,
+    this.mapPoints = const [],
     super.key,
   });
 
   final List<StoryBubbleItem> items;
   final ValueChanged<StoryBubbleItem> onTap;
+  final VoidCallback? onMapTap;
+
+  /// The located stories' positions shown in the map bubble, newest first.
+  final List<LatLng> mapPoints;
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) return const SizedBox.shrink();
+    if (items.isEmpty && onMapTap == null) return const SizedBox.shrink();
     return SizedBox(
       height: 100,
       child: ListView.separated(
@@ -73,9 +81,38 @@ class StoryBubbleStrip extends StatelessWidget {
         key: const PageStorageKey('chat-list-stories'),
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
-        itemCount: items.length,
+        itemCount: items.length + (onMapTap == null ? 0 : 1),
         separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
+          if (onMapTap != null) {
+            if (index == 0) {
+              return Semantics(
+                button: true,
+                label: context.lang.storyMapTitle,
+                child: InkWell(
+                  key: const ValueKey('story-map-bubble'),
+                  onTap: onMapTap,
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: 70,
+                    child: Column(
+                      children: [
+                        StoryMapPreview(points: mapPoints, size: 64),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.lang.storyMapTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+            index--;
+          }
           final item = items[index];
           return Semantics(
             button: true,
@@ -141,8 +178,12 @@ class _StoryBubbleState extends State<_StoryBubble> {
   @override
   Widget build(BuildContext context) {
     final remaining = widget.story.expiresAt.difference(clock.now());
-    final progress = (remaining.inMilliseconds / storyLifetime.inMilliseconds)
-        .clamp(0.0, 1.0);
+    final progress =
+        (remaining.inMilliseconds /
+                widget.story.expiresAt
+                    .difference(widget.story.postedAt)
+                    .inMilliseconds)
+            .clamp(0.0, 1.0);
     return SizedBox.square(
       dimension: 64,
       child: Stack(

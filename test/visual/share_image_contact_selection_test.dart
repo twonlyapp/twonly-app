@@ -12,7 +12,6 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection.view.dart';
-import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/story_target_selector.comp.dart';
 
 import '../helpers/native_database.dart';
 import '../mocks/user_config.dart';
@@ -99,7 +98,6 @@ void main() {
           ),
           additionalData: null,
           sendToWidget: false,
-          storyTarget: StoryTarget(),
         ),
       ),
     );

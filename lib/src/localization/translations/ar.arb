@@ -103,6 +103,7 @@
   "liveLocationWaiting": "في انتظار الموقع…",
   "liveLocationEnded": "انتهت مشاركة الموقع",
   "liveLocationLastUpdate": "آخر تحديث: {time}",
+  "includeMediaLocation": "إضافة الموقع",
   "locationFilterTitle": "فلتر الموقع",
   "locationFilterSubtitle": "يضيف فلتر كاميرا بخريطة لموقعك. لا يُرسل موقعك إلا مع الوسائط التي ترسلها بهذا الفلتر.",
   "locationFilterSearching": "جارٍ تحديد موقعك…",
@@ -438,6 +439,19 @@
   "changeDisplayMaxTime": "سيتم الآن حذف المحادثات بعد {time} ({username}).",
   "youChangedDisplayMaxTime": "سيتم الآن حذف المحادثات بعد {time}.",
   "userGotReported": "تم الإبلاغ عن المستخدم.",
+  "chatDeletionPresetHour": "ساعة واحدة",
+  "chatDeletionPresetDay": "يوم واحد",
+  "chatDeletionPresetWeek": "أسبوع واحد",
+  "chatDeletionPresetMonth": "شهر واحد",
+  "chatDeletionPresetYear": "سنة واحدة",
+  "chatDeletionCustomChoice": "مخصص",
+  "customChatDeletionTimer": "مؤقت مخصص",
+  "chatDeletionDuration": "المدة",
+  "chatDeletionUnitHours": "ساعات",
+  "chatDeletionUnitDays": "أيام",
+  "chatDeletionUnitWeeks": "أسابيع",
+  "chatDeletionUnitMonths": "أشهر",
+  "chatDeletionDurationInvalid": "مدة غير صالحة.",
   "deleteChatAfter": "حذف المحادثة بعد...",
   "deleteChatAfterAnHour": "سَاعَةٌ وَاحِدَةٌ.",
   "deleteChatAfterADay": "يَوْمٌ وَاحِدٌ.",
@@ -1066,5 +1080,39 @@
   "settingsChatsSectionCamera": "الكاميرا",
   "memoryImportProgressTitle": "جارٍ استيراد الذكريات",
   "memoryImportProgressCount": "{done} من {total}",
-  "memoryImportProgressAdded": "{count, plural, other{تمت إضافة {count}}}"
+  "memoryImportProgressAdded": "{count, plural, other{تمت إضافة {count}}}",
+  "storyAdd": "قصة",
+  "storyPost": "نشر القصة",
+  "storyAvailableFor": "متاحة لمدة",
+  "story24Hours": "24 ساعة",
+  "storyDays": "{count} أيام",
+  "storyUntil": "حتى…",
+  "storyAvailableUntil": "متاحة حتى {deadline}",
+  "storyChooseNewDeadline": "اختر موعدًا مستقبليًا خلال الثلاثين يومًا القادمة.",
+  "storyIncludedOnMap": "تظهر على خريطة القصص",
+  "storyMapTitle": "خريطة القصص",
+  "storyMapNoLocations": "تظهر هنا القصص ذات الموقع المشترك حتى انتهاء صلاحيتها.",
+  "storyMapNoResults": "لا توجد قصص في هذه المنطقة.",
+  "storyMapVisibleCount": "{count, plural, =1{قصة واحدة في هذه المنطقة} other{{count} قصص في هذه المنطقة}}",
+  "@storyDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@storyAvailableUntil": {
+    "placeholders": {
+      "deadline": {
+        "type": "String"
+      }
+    }
+  },
+  "@storyMapVisibleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

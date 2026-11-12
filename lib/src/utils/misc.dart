@@ -99,6 +99,29 @@ String formatDuration(BuildContext context, int seconds) {
   }
 }
 
+String formatChatDeletionDuration(BuildContext context, int milliseconds) {
+  if (milliseconds % Duration.millisecondsPerDay == 0) {
+    // The German "after" wording requires the dative here.
+    return context.lang.durationAfterDays(
+      milliseconds ~/ Duration.millisecondsPerDay,
+    );
+  }
+  if (milliseconds % Duration.millisecondsPerHour == 0) {
+    return context.lang.liveLocationHours(
+      milliseconds ~/ Duration.millisecondsPerHour,
+    );
+  }
+  if (milliseconds % Duration.millisecondsPerMinute == 0) {
+    return context.lang.liveLocationMinutes(
+      milliseconds ~/ Duration.millisecondsPerMinute,
+    );
+  }
+  return formatDuration(
+    context,
+    milliseconds ~/ Duration.millisecondsPerSecond,
+  );
+}
+
 String formatJoinedAt(BuildContext context, DateTime joinedAt) {
   final elapsed = clock.now().toUtc().difference(joinedAt.toUtc());
   final days = max(0, elapsed.inDays);

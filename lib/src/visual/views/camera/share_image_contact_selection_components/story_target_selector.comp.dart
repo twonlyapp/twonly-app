@@ -42,10 +42,12 @@ class StoryTargetSelector extends StatefulWidget {
     required this.enabled,
     required this.onChanged,
     required this.onAudienceChanged,
+    this.trailing,
     super.key,
   });
 
   final StoryTarget target;
+  final Widget? trailing;
 
   /// Off for media a story cannot carry, such as twonly-protected sends.
   final bool enabled;
@@ -157,6 +159,10 @@ class _StoryTargetSelectorState extends State<StoryTargetSelector> {
                   context.lang.shareImageStoryAudience(_audienceChats!.length),
                   style: const TextStyle(fontSize: 12),
                 ),
+              if (widget.trailing != null) ...[
+                const SizedBox(width: 8),
+                widget.trailing!,
+              ],
             ],
           ),
         ),

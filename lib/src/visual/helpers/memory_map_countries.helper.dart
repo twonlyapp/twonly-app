@@ -61,6 +61,9 @@ class MemoryMapCountry {
 
   Iterable<LatLng> get outline => _polygons.expand((p) => p.rings.first);
 
+  /// Each polygon's rings: the outer ring first, then its holes.
+  Iterable<List<List<LatLng>>> get polygons => _polygons.map((p) => p.rings);
+
   bool contains(double latitude, double longitude) =>
       latitude >= south &&
       latitude <= north &&

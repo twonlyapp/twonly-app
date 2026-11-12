@@ -1,17 +1,21 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:clock/clock.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:twonly/core/bridge.dart' show FlameState;
 import 'package:twonly/core/bridge/database/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/core/bridge/stories.dart' as stories;
-import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/media_enums.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/model/story_availability.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/contact_name.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
@@ -28,6 +32,7 @@ import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/best_friends_selector.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/contact_group_shortcut_row.comp.dart';
+import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/story_availability_picker.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/story_target_selector.comp.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/background.layer.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
@@ -62,7 +67,7 @@ class ShareImageView extends StatefulWidget {
     required this.mediaFileService,
     required this.additionalData,
     required this.sendToWidget,
-    required this.storyTarget,
+    this.storyTarget,
     super.key,
   });
   final HashSet<String> selectedGroupIds;
@@ -71,7 +76,7 @@ class ShareImageView extends StatefulWidget {
   final MediaFileService mediaFileService;
   final AdditionalMessageData? additionalData;
   final bool sendToWidget;
-  final StoryTarget storyTarget;
+  final StoryTarget? storyTarget;
 
   @override
   State<ShareImageView> createState() => _ShareImageView();
@@ -91,7 +96,33 @@ class _ShareImageView extends State<ShareImageView> {
   String lastQuery = '';
   int _updateGroupsGeneration = 0;
   Map<String, FlameState> _flameStates = {};
+  late final StoryTarget _storyTarget = widget.storyTarget ?? StoryTarget();
   Set<String>? _storyAudienceChats;
+  StoryAvailability _availability = const StoryAvailability.duration();
+  bool _settingsLoaded = false;
+  Timer? _expiryTimer;
+
+  bool get _storyPossible =>
+      !widget.sendToWidget &&
+      !widget.mediaFileService.mediaFile.requiresAuthentication &&
+      (widget.mediaFileService.mediaFile.type == MediaType.image ||
+          widget.mediaFileService.mediaFile.type == MediaType.video);
+
+  bool get _hasStory => _storyPossible && !_storyTarget.isEmpty;
+
+  bool get _canSend =>
+      canSendSharedMedia(
+        mediaReady: mediaStoreFutureReady,
+        sending:
+            sendingImage ||
+            (_hasStory &&
+                (!_settingsLoaded || !_availability.isValidAt(clock.now()))),
+        hasChatRecipients: widget.selectedGroupIds.isNotEmpty,
+        storyPossible: _storyPossible,
+        hasStoryTarget: !_storyTarget.isEmpty,
+        storyAudienceSize: _storyAudienceChats?.length,
+      ) &&
+      (!_hasStory || (_storyAudienceChats?.isNotEmpty ?? false));
 
   @override
   void initState() {
@@ -134,6 +165,37 @@ class _ShareImageView extends State<ShareImageView> {
     });
 
     unawaited(initAsync());
+    if (_storyPossible) {
+      unawaited(_loadAvailability());
+      _expiryTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+        if (mounted && _hasStory) setState(() {});
+      });
+    }
+  }
+
+  Future<void> _loadAvailability() async {
+    var availability = const StoryAvailability.duration();
+    try {
+      availability = await StoryAvailability.load();
+    } on Object catch (error) {
+      Log.warn('Could not load story availability: $error');
+    }
+    if (!mounted) return;
+    setState(() {
+      _availability = availability;
+      _settingsLoaded = true;
+    });
+  }
+
+  Future<void> _chooseAvailability() async {
+    final selection = await showStoryAvailabilityPicker(context, _availability);
+    if (selection == null || !mounted) return;
+    setState(() => _availability = selection);
+    try {
+      await selection.save();
+    } on Object catch (error) {
+      Log.warn('Could not remember story availability: $error');
+    }
   }
 
   Future<void> initAsync() async {
@@ -147,6 +209,7 @@ class _ShareImageView extends State<ShareImageView> {
 
   @override
   void dispose() {
+    _expiryTimer?.cancel();
     unawaited(allGroupSub.cancel());
     searchUserName.dispose();
     super.dispose();
@@ -236,57 +299,118 @@ class _ShareImageView extends State<ShareImageView> {
     setState(() {});
   }
 
-  /// A story replays for everybody until it expires, so it takes neither a
-  /// twonly-protected send nor anything but an image or video.
-  bool get _storyPossible {
-    final media = widget.mediaFileService.mediaFile;
-    return !media.requiresAuthentication &&
-        (media.type == MediaType.image || media.type == MediaType.video);
-  }
-
   int get _recipientCount => sharedMediaRecipientCount(
     selectedGroupIds: widget.selectedGroupIds,
-    storyAudienceChats: _storyPossible && !widget.storyTarget.isEmpty
-        ? _storyAudienceChats
-        : null,
+    storyAudienceChats: _hasStory ? _storyAudienceChats : null,
   );
 
   Future<void> _send() async {
-    setState(() {
-      sendingImage = true;
-    });
-    final story = _storyPossible ? widget.storyTarget.toAudience() : null;
-    // in case mediaStoreFutureReady is ready, the image is stored in the originalPath
-    final send = RustApi.sendMediaToGroups(
-      mediaId: widget.mediaFileService.mediaFile.mediaId,
-      groupIds: widget.selectedGroupIds.toList(),
-      additionalMessageData: widget.additionalData?.writeToBuffer(),
-      widgetOnly: widget.sendToWidget,
-      storyAudience: story,
-    );
-    if (story == null) {
-      unawaitedRustCall(send, 'sendMediaToGroups');
-    } else {
-      // A story can be refused, most likely for reaching more people than one
-      // send may, and the user has to hear about that before leaving here.
-      try {
-        await send;
-      } catch (e) {
-        Log.error('sendMediaToGroups with a story failed: $e');
-        if (mounted) {
-          setState(() => sendingImage = false);
-          showSnackbar(
-            context,
-            context.lang.shareImageStoryFailed(stories.maxMediaRecipients()),
-          );
-        }
-        return;
-      }
+    if (!_canSend) return;
+    setState(() => sendingImage = true);
+    var metadata = widget.additionalData;
+    if (_hasStory) {
+      metadata = metadata == null
+          ? AdditionalMessageData()
+          : AdditionalMessageData.fromBuffer(metadata.writeToBuffer());
+      metadata.storyExpiresAtMs = Int64(
+        (_availability.expiresAt(clock.now()).millisecondsSinceEpoch ~/ 1000) *
+            1000,
+      );
     }
-    if (mounted) {
-      Navigator.pop(context, true);
+    try {
+      await RustApi.sendMediaToGroups(
+        mediaId: widget.mediaFileService.mediaFile.mediaId,
+        groupIds: widget.selectedGroupIds.toList(),
+        additionalMessageData: metadata?.writeToBuffer(),
+        widgetOnly: widget.sendToWidget,
+        storyAudience: _hasStory ? _storyTarget.toAudience() : null,
+      );
+    } on Object catch (error, stack) {
+      Log.error('Could not share media', error: error, stackTrace: stack);
+      if (!mounted) return;
+      setState(() => sendingImage = false);
+      showSnackbar(
+        context,
+        _hasStory
+            ? context.lang.shareImageStoryFailed(stories.maxMediaRecipients())
+            : context.lang.mediaSendFailed,
+      );
+      return;
     }
+    if (mounted) Navigator.pop(context, true);
   }
+
+  Widget _buildStorySection(BuildContext context) => IgnorePointer(
+    ignoring: sendingImage,
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StoryTargetSelector(
+            target: _storyTarget,
+            enabled: true,
+            onChanged: () => setState(() {}),
+            onAudienceChanged: (chats) {
+              if (mounted) {
+                setState(() => _storyAudienceChats = chats);
+              }
+            },
+            trailing: Tooltip(
+              message: context.lang.storyAvailableFor,
+              child: MyButton(
+                key: const Key('storyAvailabilityButton'),
+                variant: MyButtonVariant.secondaryTiny,
+                onPressed: _settingsLoaded ? _chooseAvailability : null,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.timer_outlined, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        _availability.duration != null
+                            ? _availability.duration == const Duration(days: 1)
+                                  ? context.lang.story24Hours
+                                  : context.lang.storyDays(
+                                      _availability.duration!.inDays,
+                                    )
+                            : DateFormat.Md(
+                                Localizations.localeOf(
+                                  context,
+                                ).toString(),
+                              ).format(_availability.deadline!),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (_hasStory && !_availability.isValidAt(clock.now()))
+            Padding(
+              padding: const EdgeInsets.all(4),
+              child: Text(
+                context.lang.storyChooseNewDeadline,
+                style: TextStyle(color: context.color.error),
+              ),
+            ),
+          if (_hasStory && (widget.additionalData?.hasPhotoLocation() ?? false))
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+              child: Row(
+                children: [
+                  const Icon(Icons.map_outlined, size: 18),
+                  const SizedBox(width: 8),
+                  Text(context.lang.storyIncludedOnMap),
+                ],
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -309,7 +433,21 @@ class _ShareImageView extends State<ShareImageView> {
             restorationId: 'share_image_contact_selection',
             slivers: [
               if (_allGroups.isEmpty)
-                const SliverToBoxAdapter(child: EmptyChatListComp())
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      if (_storyPossible) ...[
+                        ContactGroupShortcutRow(
+                          selectedGroupIds: widget.selectedGroupIds,
+                          updateSelectedGroupIds: updateSelectedGroupIds,
+                        ),
+                        const SizedBox(height: 10),
+                        _buildStorySection(context),
+                      ],
+                      const EmptyChatListComp(),
+                    ],
+                  ),
+                )
               else ...[
                 SliverToBoxAdapter(
                   child: Column(
@@ -331,22 +469,9 @@ class _ShareImageView extends State<ShareImageView> {
                           selectedGroupIds: widget.selectedGroupIds,
                           updateSelectedGroupIds: updateSelectedGroupIds,
                         ),
-                        // A twonly never goes into a story, so the section is
-                        // left out rather than shown disabled.
-                        if (!widget
-                            .mediaFileService
-                            .mediaFile
-                            .requiresAuthentication) ...[
+                        if (_storyPossible) ...[
                           const SizedBox(height: 10),
-                          StoryTargetSelector(
-                            target: widget.storyTarget,
-                            enabled: _storyPossible,
-                            onChanged: () => setState(() {}),
-                            onAudienceChanged: (chats) {
-                              if (!mounted) return;
-                              setState(() => _storyAudienceChats = chats);
-                            },
-                          ),
+                          _buildStorySection(context),
                         ],
                         // The next section's heading brings its own space.
                         const SizedBox(height: 4),
@@ -423,7 +548,7 @@ class _ShareImageView extends State<ShareImageView> {
         ),
       ),
       floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-      floatingActionButton: _allGroups.isEmpty
+      floatingActionButton: _allGroups.isEmpty && !_storyPossible
           ? null
           : SizedBox(
               height: 168,
@@ -458,19 +583,9 @@ class _ShareImageView extends State<ShareImageView> {
                         ),
                       ),
                     MyButton(
+                      key: const Key('shareMediaSend'),
                       variant: MyButtonVariant.primaryMiddle,
-                      onPressed:
-                          canSendSharedMedia(
-                            mediaReady: mediaStoreFutureReady,
-                            sending: sendingImage,
-                            hasChatRecipients:
-                                widget.selectedGroupIds.isNotEmpty,
-                            storyPossible: _storyPossible,
-                            hasStoryTarget: !widget.storyTarget.isEmpty,
-                            storyAudienceSize: _storyAudienceChats?.length,
-                          )
-                          ? _send
-                          : null,
+                      onPressed: _canSend ? _send : null,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

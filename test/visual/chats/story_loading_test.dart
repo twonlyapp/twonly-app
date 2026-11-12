@@ -1,19 +1,23 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/bridge/database.dart';
 import 'package:twonly/core/bridge/database/mediafiles.dart' as rust_mediafiles;
+import 'package:twonly/core/bridge/database/messages.dart' as rust_messages;
 import 'package:twonly/core/database/app/mediafiles/table.dart'
     as db_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
+import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
 import 'package:twonly/core/database/app/patch.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/database/session.dart';
@@ -21,6 +25,9 @@ import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/media_content_renderer.comp.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/media_viewer_bottom_navigation.comp.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/media_viewer_message_input.comp.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/reaction_buttons.comp.dart';
 
 import '../../helpers/native_database.dart';
 import '../../mocks/user_config.dart';
@@ -276,6 +283,118 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets('a week-long story stays playable after its first day', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final posted = now.subtract(const Duration(days: 2));
+    await runNative(
+      tester,
+      () => database.customStatement(
+        "UPDATE messages SET created_at = ?, additional_message_data = ? WHERE message_id = 'message-0'",
+        [
+          posted.millisecondsSinceEpoch ~/ 1000,
+          AdditionalMessageData(
+            storyExpiresAtMs: Int64(
+              posted.add(const Duration(days: 7)).millisecondsSinceEpoch,
+            ),
+          ).writeToBuffer(),
+        ],
+      ),
+    );
+    await pumpViewer(tester);
+    expect(displayed(tester), 'image-0');
+    expect(api.opened, [(7, 'message-0')]);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+    'map stories keep reactions, replies and receipts tied to each author',
+    (tester) async {
+      final rows = await runNative(tester, () async {
+        await database.customStatement(
+          "UPDATE messages SET additional_message_data = ? WHERE message_id = 'message-0'",
+          [
+            AdditionalMessageData(
+              photoLocation: PhotoLocationData(
+                latitude: 52,
+                longitude: 13,
+                mapLeft: 0.2,
+                mapTop: 0.6,
+                mapWidth: 0.6,
+                mapHeight: 0.2,
+              ),
+            ).writeToBuffer(),
+          ],
+        );
+        await database.customStatement(
+          "INSERT INTO contacts(user_id, username, accepted) VALUES (8, 'Other friend', 1)",
+        );
+        await database.customStatement(
+          "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES ('other', 'Other friend', 1)",
+        );
+        await database.customStatement(
+          "INSERT INTO group_members(group_id, contact_id) VALUES ('other', 8)",
+        );
+        await database.customStatement(
+          "UPDATE messages SET sender_id = 8, group_id = 'other' WHERE message_id = 'message-1'",
+        );
+        return rust_messages.listMessages(
+          input: db_messages.MessageQuery(
+            filter: db_messages.MessageFilter.ids,
+            ids: ['message-0', 'message-1'],
+            nowMs: DateTime.now().millisecondsSinceEpoch,
+          ),
+          transaction: currentDatabaseSession(),
+        );
+      });
+      rows.sort((a, b) => a.messageId.compareTo(b.messageId));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: MediaViewerView.story(
+            StorySource.map(rows, initialMediaId: 'image-0'),
+          ),
+        ),
+      );
+      await pumpNative(tester, until: () => displayed(tester) == 'image-0');
+      expect(
+        tester
+            .widget<MediaContentRenderer>(find.byType(MediaContentRenderer))
+            .photoLocation,
+        isNull,
+      );
+      expect(api.opened, [(7, 'message-0')]);
+      await tester.tap(find.byType(MediaContentRenderer));
+      await pumpNative(tester, until: () => displayed(tester) == 'image-1');
+      expect(api.opened, [(7, 'message-0'), (8, 'message-1')]);
+      final reactions = tester.widget<ReactionButtons>(
+        find.byType(ReactionButtons),
+      );
+      expect(reactions.groupId, 'other');
+      expect(reactions.messageId, 'message-1');
+      tester
+          .widget<MediaViewerBottomNavigationBar>(
+            find.byType(MediaViewerBottomNavigationBar),
+          )
+          .onMessagePressed();
+      await tester.pump();
+      expect(
+        tester
+            .widget<MediaViewerMessageInput>(
+              find.byType(MediaViewerMessageInput),
+            )
+            .group!
+            .groupId,
+        'other',
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   testWidgets(
     'cached stories advance without flashing a loader during metadata reads',

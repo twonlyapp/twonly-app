@@ -361,6 +361,7 @@ impl GroupService {
             live_location: None,
             vacation: None,
             photo_location: None,
+            story_expires_at_ms: None,
         }
         .encode_to_vec();
 
@@ -459,8 +460,8 @@ impl GroupService {
             let now = current_time().timestamp();
 
             sqlx::query!(
-                "UPDATE receipts SET ack_by_server_at = COALESCE(ack_by_server_at, ?), \
-                 last_retry = ? WHERE receipt_id = ?",
+                "UPDATE receipts SET ack_by_server_at = COALESCE(ack_by_server_at, ?), last_retry \
+                 = ? WHERE receipt_id = ?",
                 now,
                 now,
                 retried_receipt_id,
@@ -1716,8 +1717,8 @@ mod membership_repair_tests {
             .await?;
 
         sqlx::query(
-            "INSERT INTO groups(group_id, group_name, state_encryption_key, \
-             my_group_private_key) VALUES ('burst', 'Burst', ?, ?)",
+            "INSERT INTO groups(group_id, group_name, state_encryption_key, my_group_private_key) \
+             VALUES ('burst', 'Burst', ?, ?)",
         )
         .bind(vec![1_u8; 32])
         .bind(identity.serialize().to_vec())

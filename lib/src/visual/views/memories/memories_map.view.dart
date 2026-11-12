@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,7 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/database_snapshots.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/performance_tracking.service.dart';
 import 'package:twonly/src/utils/database/database_watch.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -30,10 +33,22 @@ class MemoriesMapView extends StatefulWidget {
     this.favoritesOnly = false,
     this.initialMedia,
     super.key,
-  });
+  }) : storyItems = null,
+       onOpenStories = null;
+
+  /// Stories share the Memories map's camera, viewport filtering and gallery.
+  const MemoriesMapView.stories({
+    required Stream<List<MemoryItem>> this.storyItems,
+    required Future<void> Function(List<MemoryItem>, int) this.onOpenStories,
+    super.key,
+  }) : favoritesOnly = false,
+       initialMedia = null;
 
   final bool favoritesOnly;
   final MediaFile? initialMedia;
+  final Stream<List<MemoryItem>>? storyItems;
+  final Future<void> Function(List<MemoryItem>, int)? onOpenStories;
+  bool get isStories => storyItems != null;
 
   @override
   State<MemoriesMapView> createState() => _MemoriesMapViewState();
@@ -46,10 +61,14 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
   static const _clusters = 'memory-cluster-circles';
   static const _counts = 'memory-cluster-counts';
   static const _markers = 'memory-markers';
+  static const _storySourcePrefix = 'story-locations-';
 
   final _sheetController = DraggableScrollableController();
   final _activeMediaId = ValueNotifier<String?>(null);
-  StreamSubscription<List<MediaFile>>? _subscription;
+  StreamSubscription<Object?>? _subscription;
+  final Map<int, Uint8List> _avatarImages = {};
+  final Set<int> _installedAvatars = {};
+  final Set<int> _storySenders = {};
   MapLibreMapController? _map;
   Animation<double>? _routeAnimation;
   bool _closing = false;
@@ -98,6 +117,21 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
 
   void _subscribe() {
     unawaited(_subscription?.cancel());
+    if (widget.isStories) {
+      _subscription = widget.storyItems!.listen(
+        _onItems,
+        onError: (Object error, StackTrace stack) {
+          Log.error('Could not load story map: $error');
+          if (mounted) {
+            setState(() {
+              _loadingMemories = false;
+              _failed = true;
+            });
+          }
+        },
+      );
+      return;
+    }
     _subscription =
         watchRustDatabase(
           (control) => rust_mediafiles
@@ -176,19 +210,37 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
   }
 
   void _onMemories(List<MediaFile> files) {
-    if (!mounted) return;
-    final valid = files.where((file) => _point(file).isValid).toList();
-    setState(() {
-      _loadingMemories = false;
-      _items = valid
+    _onItems(
+      files
           .map(
             (file) => MemoryItem(
               mediaService: MediaFileService(file),
               messages: [],
             ),
           )
-          .toList();
-      _points = valid.map(_point).toList();
+          .toList(),
+    );
+  }
+
+  MemoryMapPoint _itemPoint(MemoryItem item) {
+    if (!widget.isStories) return _point(item.mediaService.mediaFile);
+    final message = item.messages.first;
+    final location = storyLocation(message);
+    return MemoryMapPoint(
+      mediaId: item.mediaService.mediaFile.mediaId,
+      latitude: location?.latitude ?? double.nan,
+      longitude: location?.longitude ?? double.nan,
+      senderId: message.senderId,
+    );
+  }
+
+  void _onItems(List<MemoryItem> items) {
+    if (!mounted) return;
+    final valid = items.where((item) => _itemPoint(item).isValid).toList();
+    setState(() {
+      _loadingMemories = false;
+      _items = valid;
+      _points = valid.map(_itemPoint).toList();
       if (_visibleItemsLocked) {
         // Keep the selection while expanded, but still reflect deletions and
         // changes to the selected memories.
@@ -223,9 +275,179 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
         final data = memoryMapGeoJson(_points);
         await map.setGeoJsonSource(_rawSource, data);
         if (!_current(epoch, map) || !_layersReady) return;
-        await map.setGeoJsonSource(_clusterSource, data);
+        if (widget.isStories) {
+          await _syncStorySources(map, epoch);
+        } else {
+          await map.setGeoJsonSource(_clusterSource, data);
+        }
+        if (!_current(epoch, map)) return;
       });
       _scheduleViewport();
+    }
+  }
+
+  Future<ui.Codec> _avatarCodec(int sender) async {
+    try {
+      final path = await PerformanceTracking.resolveAvatar(sender);
+      if (path != null) {
+        return await ui.instantiateImageCodec(await File(path).readAsBytes());
+      }
+    } on Object catch (error) {
+      Log.warn('Could not render story map avatar: $error');
+    }
+    final fallback = await rootBundle.load('assets/images/default_avatar.png');
+    return ui.instantiateImageCodec(
+      fallback.buffer.asUint8List(
+        fallback.offsetInBytes,
+        fallback.lengthInBytes,
+      ),
+    );
+  }
+
+  Future<void> _installAvatars(
+    MapLibreMapController map,
+    int epoch, {
+    Iterable<int>? senders,
+  }) async {
+    for (final sender
+        in senders ?? _points.map((p) => p.senderId).whereType<int>().toSet()) {
+      if (!_current(epoch, map)) return;
+      if (_installedAvatars.contains(sender)) continue;
+      var bytes = _avatarImages[sender];
+      if (bytes == null) {
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        const center = Offset(48, 48);
+        final codec = await _avatarCodec(sender);
+        final frame = await codec.getNextFrame();
+        codec.dispose();
+        canvas
+          ..save()
+          ..clipPath(
+            Path()..addOval(Rect.fromCircle(center: center, radius: 42)),
+          )
+          ..drawImageRect(
+            frame.image,
+            Rect.fromLTWH(
+              0,
+              0,
+              frame.image.width.toDouble(),
+              frame.image.height.toDouble(),
+            ),
+            const Rect.fromLTWH(6, 6, 84, 84),
+            Paint()..filterQuality = FilterQuality.medium,
+          )
+          ..restore();
+        final picture = recorder.endRecording();
+        final ui.Image image;
+        try {
+          image = await picture.toImage(96, 96);
+        } finally {
+          picture.dispose();
+          frame.image.dispose();
+        }
+        final ByteData? data;
+        try {
+          data = await image.toByteData(format: ui.ImageByteFormat.png);
+        } finally {
+          image.dispose();
+        }
+        if (data == null) continue;
+        bytes = data.buffer.asUint8List();
+        _avatarImages[sender] = bytes;
+      }
+      if (!_current(epoch, map)) return;
+      await map.addImage('story-avatar-$sender', bytes);
+      if (_current(epoch, map)) _installedAvatars.add(sender);
+    }
+  }
+
+  String _storySource(int sender) => '$_storySourcePrefix$sender';
+  String _storyLayer(int sender, {required bool clustered}) =>
+      '${clustered ? _clusters : _markers}-$sender';
+
+  /// A source per author prevents native clustering from combining people.
+  Future<void> _syncStorySources(MapLibreMapController map, int epoch) async {
+    final bySender = <int, List<MemoryMapPoint>>{};
+    for (final point in _points) {
+      final sender = point.senderId;
+      if (sender != null) bySender.putIfAbsent(sender, () => []).add(point);
+    }
+    // Images must exist before native symbol layout resolves their IDs.
+    await _installAvatars(map, epoch, senders: bySender.keys);
+    if (!_current(epoch, map)) return;
+    for (final sender in _storySenders.difference(bySender.keys.toSet())) {
+      for (final clustered in [true, false]) {
+        await map.removeLayer(_storyLayer(sender, clustered: clustered));
+        if (!_current(epoch, map)) return;
+      }
+      await map.removeSource(_storySource(sender));
+      if (!_current(epoch, map)) return;
+      _storySenders.remove(sender);
+    }
+    for (final entry in bySender.entries) {
+      final sender = entry.key;
+      final source = _storySource(sender);
+      final data = memoryMapGeoJson(entry.value);
+      if (_storySenders.contains(sender)) {
+        await map.setGeoJsonSource(source, data);
+        if (!_current(epoch, map)) return;
+        continue;
+      }
+      await map.addSource(
+        source,
+        GeojsonSourceProperties(
+          data: data,
+          cluster: true,
+          clusterMaxZoom: 16,
+          // Cluster IDs are local to a source. Retain it for tap-to-zoom.
+          clusterProperties: {
+            'storySource': [
+              [
+                'coalesce',
+                ['accumulated'],
+                ['get', 'storySource'],
+              ],
+              ['literal', source],
+            ],
+          },
+        ),
+      );
+      if (!_current(epoch, map)) return;
+      for (final clustered in [true, false]) {
+        await map.addSymbolLayer(
+          source,
+          _storyLayer(sender, clustered: clustered),
+          SymbolLayerProperties(
+            iconImage: 'story-avatar-$sender',
+            // Single stories use 0.55; clusters grow gently and stop at
+            // 0.65, even for very large collections.
+            iconSize: clustered
+                ? const [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'point_count'],
+                    2,
+                    0.6,
+                    20,
+                    0.65,
+                  ]
+                : 0.55,
+            iconAllowOverlap: true,
+            iconIgnorePlacement: true,
+            textFont: const ['Noto Sans Regular'],
+          ),
+          filter: clustered
+              ? ['has', 'point_count']
+              : [
+                  '!',
+                  ['has', 'point_count'],
+                ],
+          enableInteraction: false,
+        );
+        if (!_current(epoch, map)) return;
+      }
+      _storySenders.add(sender);
     }
   }
 
@@ -266,133 +488,149 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
   }
 
   void _onStyleLoaded() {
+    _installedAvatars.clear();
+    _storySenders.clear();
     _styleReady = true;
     _layersReady = false;
     final epoch = _epoch;
     final data = memoryMapGeoJson(_points);
     _enqueue((map) async {
-      final layerIds = await map.getLayerIds();
-      final sourceIds = await map.getSourceIds();
+      final layerIds = (await map.getLayerIds()).cast<String>();
+      final sourceIds = (await map.getSourceIds()).cast<String>();
       final steps = <Future<void> Function()>[
         for (final layer in [_counts, _markers, _clusters, _heatmap])
           if (layerIds.contains(layer)) () => map.removeLayer(layer),
+        for (final layer in layerIds.where(
+          (id) => id.startsWith('$_clusters-') || id.startsWith('$_markers-'),
+        ))
+          () => map.removeLayer(layer),
         for (final source in [_clusterSource, _rawSource])
           if (sourceIds.contains(source)) () => map.removeSource(source),
+        for (final source in sourceIds.where(
+          (id) => id.startsWith(_storySourcePrefix),
+        ))
+          () => map.removeSource(source),
         () => map.addSource(_rawSource, GeojsonSourceProperties(data: data)),
-        () => map.addSource(
-          _clusterSource,
-          GeojsonSourceProperties(
-            data: data,
-            cluster: true,
-            clusterMaxZoom: 16,
+        if (!widget.isStories)
+          () => map.addSource(
+            _clusterSource,
+            GeojsonSourceProperties(
+              data: data,
+              cluster: true,
+              clusterMaxZoom: 16,
+            ),
           ),
-        ),
-        () => map.addHeatmapLayer(
-          _rawSource,
-          _heatmap,
-          const HeatmapLayerProperties(
-            heatmapRadius: [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              2,
-              16,
-              12,
-              36,
-            ],
-            heatmapIntensity: [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              2,
-              0.6,
-              12,
-              1.5,
-            ],
-            heatmapOpacity: [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              9,
-              0.8,
-              13,
-              0,
-            ],
-            heatmapColor: [
-              'interpolate',
-              ['linear'],
-              ['heatmap-density'],
-              0,
-              'rgba(33,102,172,0)',
-              0.2,
-              '#67a9cf',
-              0.4,
-              '#a6d96a',
-              0.6,
-              '#fee08b',
-              0.8,
-              '#f46d43',
-              1,
-              '#d73027',
-            ],
+        if (widget.isStories) () => _syncStorySources(map, epoch),
+        if (!widget.isStories)
+          () => map.addHeatmapLayer(
+            _rawSource,
+            _heatmap,
+            const HeatmapLayerProperties(
+              heatmapRadius: [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                2,
+                16,
+                12,
+                36,
+              ],
+              heatmapIntensity: [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                2,
+                0.6,
+                12,
+                1.5,
+              ],
+              heatmapOpacity: [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                9,
+                0.8,
+                13,
+                0,
+              ],
+              heatmapColor: [
+                'interpolate',
+                ['linear'],
+                ['heatmap-density'],
+                0,
+                'rgba(33,102,172,0)',
+                0.2,
+                '#67a9cf',
+                0.4,
+                '#a6d96a',
+                0.6,
+                '#fee08b',
+                0.8,
+                '#f46d43',
+                1,
+                '#d73027',
+              ],
+            ),
+            maxzoom: 13,
           ),
-          maxzoom: 13,
-        ),
-        () => map.addCircleLayer(
-          _clusterSource,
-          _clusters,
-          const CircleLayerProperties(
-            circleColor: '#337eae',
-            circleRadius: [
-              'step',
-              ['get', 'point_count'],
-              18,
-              20,
-              23,
-              100,
-              28,
+        if (!widget.isStories)
+          () => map.addCircleLayer(
+            _clusterSource,
+            _clusters,
+            const CircleLayerProperties(
+              circleColor: '#337eae',
+              circleRadius: [
+                'step',
+                ['get', 'point_count'],
+                18,
+                20,
+                23,
+                100,
+                28,
+              ],
+              circleStrokeColor: '#ffffff',
+              circleStrokeWidth: 2,
+            ),
+            minzoom: 9,
+            filter: ['has', 'point_count'],
+            enableInteraction: false,
+          ),
+        if (!widget.isStories)
+          () => map.addCircleLayer(
+            _clusterSource,
+            _markers,
+            const CircleLayerProperties(
+              circleColor: '#337eae',
+              circleRadius: 7,
+              circleStrokeColor: '#ffffff',
+              circleStrokeWidth: 2,
+            ),
+            minzoom: 9,
+            filter: [
+              '!',
+              ['has', 'point_count'],
             ],
-            circleStrokeColor: '#ffffff',
-            circleStrokeWidth: 2,
+            enableInteraction: false,
           ),
-          minzoom: 9,
-          filter: ['has', 'point_count'],
-          enableInteraction: false,
-        ),
-        () => map.addCircleLayer(
-          _clusterSource,
-          _markers,
-          const CircleLayerProperties(
-            circleColor: '#337eae',
-            circleRadius: 7,
-            circleStrokeColor: '#ffffff',
-            circleStrokeWidth: 2,
+        if (!widget.isStories)
+          () => map.addSymbolLayer(
+            _clusterSource,
+            _counts,
+            const SymbolLayerProperties(
+              textField: [
+                'to-string',
+                ['get', 'point_count_abbreviated'],
+              ],
+              textSize: 13,
+              textFont: ['Noto Sans Regular'],
+              textColor: '#ffffff',
+              textAllowOverlap: true,
+              textIgnorePlacement: true,
+            ),
+            minzoom: 9,
+            filter: ['has', 'point_count'],
+            enableInteraction: false,
           ),
-          minzoom: 9,
-          filter: [
-            '!',
-            ['has', 'point_count'],
-          ],
-          enableInteraction: false,
-        ),
-        () => map.addSymbolLayer(
-          _clusterSource,
-          _counts,
-          const SymbolLayerProperties(
-            textField: [
-              'to-string',
-              ['get', 'point_count_abbreviated'],
-            ],
-            textSize: 13,
-            textFont: ['Noto Sans Regular'],
-            textColor: '#ffffff',
-            textAllowOverlap: true,
-            textIgnorePlacement: true,
-          ),
-          minzoom: 9,
-          filter: ['has', 'point_count'],
-          enableInteraction: false,
-        ),
       ];
       for (final step in steps) {
         if (!_current(epoch, map)) return;
@@ -403,7 +641,11 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
       final latest = memoryMapGeoJson(_points);
       await map.setGeoJsonSource(_rawSource, latest);
       if (!_current(epoch, map)) return;
-      await map.setGeoJsonSource(_clusterSource, latest);
+      if (widget.isStories) {
+        await _syncStorySources(map, epoch);
+      } else {
+        await map.setGeoJsonSource(_clusterSource, latest);
+      }
       if (!_current(epoch, map)) return;
       await _updatePadding(map);
       if (!_current(epoch, map)) return;
@@ -514,7 +756,13 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
           width: 24,
           height: 24,
         ),
-        [_clusters, _markers],
+        widget.isStories
+            ? [
+                for (final sender in _storySenders)
+                  for (final clustered in [true, false])
+                    _storyLayer(sender, clustered: clustered),
+              ]
+            : [_clusters, _markers],
         null,
       );
       if (!_current(epoch, map) || features.isEmpty) return;
@@ -530,8 +778,18 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
       );
       final clusterId = properties['cluster_id'] as num?;
       if (clusterId != null) {
+        final source = widget.isStories
+            ? properties['storySource'] as String?
+            : _clusterSource;
+        if (source == null ||
+            (widget.isStories &&
+                !_storySenders.any(
+                  (sender) => _storySource(sender) == source,
+                ))) {
+          return;
+        }
         final zoom = await map.getClusterExpansionZoom(
-          _clusterSource,
+          source,
           clusterId.toInt(),
         );
         if (!_current(epoch, map)) return;
@@ -551,6 +809,11 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
   }
 
   Future<void> _openViewer(List<MemoryItem> items, int index) async {
+    if (widget.onOpenStories != null) {
+      await widget.onOpenStories!(items, index);
+      if (mounted) _scheduleViewport();
+      return;
+    }
     _activeMediaId.value = items[index].mediaService.mediaFile.mediaId;
     await Navigator.push<void>(
       context,
@@ -618,7 +881,7 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
               minimum: const EdgeInsets.all(16),
               child: Material(
                 color: Theme.of(context).colorScheme.surface,
-                elevation: 4,
+                elevation: widget.isStories ? 0 : 4,
                 shape: const CircleBorder(),
                 clipBehavior: Clip.antiAlias,
                 child: BackButton(
@@ -647,6 +910,8 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
                 Text(
                   _failed
                       ? context.lang.memoriesMapLoadError
+                      : widget.isStories
+                      ? context.lang.storyMapNoLocations
                       : context.lang.memoriesMapNoLocations,
                   textAlign: TextAlign.center,
                 ),
@@ -655,7 +920,7 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
                     onPressed: _retry,
                     child: Text(context.lang.manualVerificationRetry),
                   )
-                else
+                else if (!widget.isStories)
                   StreamBuilder<void>(
                     stream: userService.onUserUpdated,
                     builder: (context, _) =>
@@ -731,7 +996,7 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
                     onMapClick: _onMapTap,
                   ),
                 ),
-                if (!_styleReady && !_failed)
+                if (!widget.isStories && !_styleReady && !_failed)
                   Positioned(
                     top: MediaQuery.paddingOf(context).top + 16,
                     left: 80,
@@ -770,6 +1035,7 @@ class _MemoriesMapViewState extends State<MemoriesMapView> {
                     ),
                   ),
                 MemoriesMapGallery(
+                  stories: widget.isStories,
                   controller: _sheetController,
                   items: _visibleItems,
                   isLoading: _loadingViewport && !_failed,

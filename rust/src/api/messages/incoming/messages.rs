@@ -696,15 +696,7 @@ where
         return Ok(true);
     };
     let message_id = row.message_id.as_deref().unwrap_or_default();
-    let expired_story = sqlx::query_scalar!(
-        "SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ? AND is_story = 1 AND \
-         created_at <= ?)",
-        message_id,
-        now - crate::services::stories::STORY_LIFETIME_SECONDS
-    )
-    .fetch_one(pool)
-    .await?
-        != 0;
+    let expired_story = crate::services::stories::message_is_expired(pool, message_id, now).await?;
 
     // Unknown means a transient failure or an older server; only a positive
     // Gone result proves that this envelope cannot deliver its attachment.

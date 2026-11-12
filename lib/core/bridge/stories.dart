@@ -22,7 +22,7 @@ int maxMediaRecipients() =>
 Future<void> deleteStoryItem({required String mediaId}) =>
     RustLib.instance.api.crateBridgeStoriesDeleteStoryItem(mediaId: mediaId);
 
-/// Lets go of every story item older than 24 hours.
+/// Lets go of every expired story item.
 Future<void> purgeExpiredStories() =>
     RustLib.instance.api.crateBridgeStoriesPurgeExpiredStories();
 

@@ -1,9 +1,11 @@
 import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart' show listEquals, mapEquals, setEquals;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:maplibre_gl/maplibre_gl.dart' show LatLng;
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart' show SpanStatus;
 import 'package:twonly/core/bridge.dart' show FlameState;
@@ -21,14 +23,14 @@ import 'package:twonly/core/bridge/database/user_discovery.dart'
     as rust_user_discovery;
 import 'package:twonly/core/database/app/contact_groups/table.dart';
 import 'package:twonly/core/database/app/contacts/table.dart' as db_contacts;
-import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/core/database/app/groups/table.dart';
+import 'package:twonly/core/database/app/groups/table.dart' as db_groups;
 import 'package:twonly/core/database/app/key_verifications/table.dart';
 import 'package:twonly/core/database/app/mediafiles/table.dart'
     as db_mediafiles;
 import 'package:twonly/core/database/app/mediafiles/table.dart' hide MediaQuery;
-import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
 import 'package:twonly/core/database/app/messages/table.dart';
+import 'package:twonly/core/database/app/messages/table.dart' as db_messages;
 import 'package:twonly/core/database/app/reactions/table.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
@@ -53,6 +55,7 @@ import 'package:twonly/src/visual/views/chats/chat_list_components/news_btn.comp
 import 'package:twonly/src/visual/views/chats/chat_list_components/story_bubble_strip.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_indicator.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/story_expiry_timer.dart';
+import 'package:twonly/src/visual/views/chats/stories_map.view.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
 
 class ChatListView extends StatefulWidget {
@@ -536,7 +539,7 @@ class _ChatListViewState extends State<ChatListView>
     _storiesSub =
         (() {
           final cutoff =
-              clock.now().subtract(storyLifetime).millisecondsSinceEpoch ~/
+              clock.now().subtract(maxStoryLifetime).millisecondsSinceEpoch ~/
               1000;
           return watchRustDatabase(
             (control) => rust_stories
@@ -561,7 +564,7 @@ class _ChatListViewState extends State<ChatListView>
     _ownStoriesSub =
         (() {
           final cutoff =
-              clock.now().subtract(storyLifetime).millisecondsSinceEpoch ~/
+              clock.now().subtract(maxStoryLifetime).millisecondsSinceEpoch ~/
               1000;
           return watchRustDatabase(
             (control) => rust_stories
@@ -607,13 +610,16 @@ class _ChatListViewState extends State<ChatListView>
 
   /// Puts the avatar back when the oldest own story item runs out.
   void _scheduleOwnStoryExpiry() {
-    final oldest = _activeOwnStories.firstOrNull;
+    final active = _activeOwnStories
+      ..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
+    final oldest = active.firstOrNull;
     if (oldest == null) {
       _ownStoryExpiry.cancel();
       return;
     }
     _ownStoryExpiry.schedule(
       postedAt: oldest.postedAt,
+      expiresAt: oldest.expiresAt,
       now: clock.now(),
       onExpired: () {
         if (!mounted || !_watching) return;
@@ -623,7 +629,7 @@ class _ChatListViewState extends State<ChatListView>
     );
   }
 
-  /// Removes a story bubble at its exact 24-hour boundary even if the
+  /// Removes a story bubble at its deadline even if the
   /// database stream is otherwise quiet. Seen items count too, for when
   /// [_alwaysShowStories] keeps them in the strip.
   void _scheduleReceivedStoryExpiry() {
@@ -633,7 +639,7 @@ class _ChatListViewState extends State<ChatListView>
             .expand((items) => items)
             .where((item) => item.isActiveAt(now))
             .toList()
-          ..sort((a, b) => a.postedAt.compareTo(b.postedAt));
+          ..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
     final oldest = active.firstOrNull;
     if (oldest == null) {
       _receivedStoryExpiry.cancel();
@@ -641,6 +647,7 @@ class _ChatListViewState extends State<ChatListView>
     }
     _receivedStoryExpiry.schedule(
       postedAt: oldest.postedAt,
+      expiresAt: oldest.expiresAt,
       now: now,
       onExpired: () {
         if (!mounted || !_watching) return;
@@ -757,6 +764,16 @@ class _ChatListViewState extends State<ChatListView>
       (p) => p.plan,
     );
     final storyBubbles = _storyBubbles;
+    final storyMapPoints = [
+      for (final story in locatedStories(
+        _storiesByGroup.values.expand((stories) => stories),
+        clock.now(),
+      ))
+        if (storyLocation(story.message) case final location?)
+          LatLng(location.latitude, location.longitude),
+    ];
+    final hasStoryMap = storyMapPoints.isNotEmpty;
+    final hasStoryStrip = storyBubbles.isNotEmpty || hasStoryMap;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -864,7 +881,7 @@ class _ChatListViewState extends State<ChatListView>
               const Expanded(
                 child: SizedBox.shrink(),
               )
-            else if (!_hasOpenGroup)
+            else if (!_hasOpenGroup && !hasStoryStrip)
               Expanded(
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -876,16 +893,25 @@ class _ChatListViewState extends State<ChatListView>
                 child: ListView.builder(
                   key: const PageStorageKey('chat-list'),
                   itemCount:
-                      (storyBubbles.isNotEmpty ? 1 : 0) +
+                      (hasStoryStrip ? 1 : 0) +
                       _groupsPinned.length +
                       (_groupsPinned.isNotEmpty ? 1 : 0) +
                       _groupsNotPinned.length +
                       (_groupsArchived.isNotEmpty ? 1 : 0),
                   itemBuilder: (context, index) {
-                    if (storyBubbles.isNotEmpty) {
+                    if (hasStoryStrip) {
                       if (index == 0) {
                         return StoryBubbleStrip(
                           items: storyBubbles,
+                          mapPoints: storyMapPoints,
+                          onMapTap: hasStoryMap
+                              ? () => Navigator.push<void>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const StoriesMapView(),
+                                  ),
+                                )
+                              : null,
                           onTap: (item) => context.push(
                             Routes.chatsStory(item.story.senderId),
                           ),

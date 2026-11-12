@@ -115,6 +115,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     LiveLocationData? liveLocation,
     VacationData? vacation,
     PhotoLocationData? photoLocation,
+    $fixnum.Int64? storyExpiresAtMs,
   }) {
     final result = create();
     if (type != null) result.type = type;
@@ -132,6 +133,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     if (liveLocation != null) result.liveLocation = liveLocation;
     if (vacation != null) result.vacation = vacation;
     if (photoLocation != null) result.photoLocation = photoLocation;
+    if (storyExpiresAtMs != null) result.storyExpiresAtMs = storyExpiresAtMs;
     return result;
   }
 
@@ -172,6 +174,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
         subBuilder: VacationData.create)
     ..aOM<PhotoLocationData>(14, _omitFieldNames ? '' : 'photoLocation',
         subBuilder: PhotoLocationData.create)
+    ..aInt64(15, _omitFieldNames ? '' : 'storyExpiresAtMs')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -331,6 +334,18 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
   void clearPhotoLocation() => $_clearField(14);
   @$pb.TagNumber(14)
   PhotoLocationData ensurePhotoLocation() => $_ensure(13);
+
+  /// Absolute story deadline, in Unix milliseconds. Absent on legacy stories
+  /// (24 hours). This travels inside the encrypted media message and is stored
+  /// with its metadata, so backup/restore preserves the deadline as well.
+  @$pb.TagNumber(15)
+  $fixnum.Int64 get storyExpiresAtMs => $_getI64(14);
+  @$pb.TagNumber(15)
+  set storyExpiresAtMs($fixnum.Int64 value) => $_setInt64(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasStoryExpiresAtMs() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearStoryExpiresAtMs() => $_clearField(15);
 }
 
 /// The location filter: where the media was taken, and the rectangle the
@@ -350,6 +365,7 @@ class PhotoLocationData extends $pb.GeneratedMessage {
     $core.double? mapLatitude,
     $core.double? mapLongitude,
     $core.double? mapZoom,
+    $core.bool? hideFilter,
   }) {
     final result = create();
     if (latitude != null) result.latitude = latitude;
@@ -363,6 +379,7 @@ class PhotoLocationData extends $pb.GeneratedMessage {
     if (mapLatitude != null) result.mapLatitude = mapLatitude;
     if (mapLongitude != null) result.mapLongitude = mapLongitude;
     if (mapZoom != null) result.mapZoom = mapZoom;
+    if (hideFilter != null) result.hideFilter = hideFilter;
     return result;
   }
 
@@ -389,6 +406,7 @@ class PhotoLocationData extends $pb.GeneratedMessage {
     ..aD(9, _omitFieldNames ? '' : 'mapLatitude')
     ..aD(10, _omitFieldNames ? '' : 'mapLongitude')
     ..aD(11, _omitFieldNames ? '' : 'mapZoom')
+    ..aOB(12, _omitFieldNames ? '' : 'hideFilter')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -510,6 +528,17 @@ class PhotoLocationData extends $pb.GeneratedMessage {
   $core.bool hasMapZoom() => $_has(10);
   @$pb.TagNumber(11)
   void clearMapZoom() => $_clearField(11);
+
+  /// Include the coordinates for story maps without displaying a filter.
+  /// Absent or false keeps the filter visible, including in older messages.
+  @$pb.TagNumber(12)
+  $core.bool get hideFilter => $_getBF(11);
+  @$pb.TagNumber(12)
+  set hideFilter($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasHideFilter() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearHideFilter() => $_clearField(12);
 }
 
 /// "On Vacation": the sender's streak with the receiver is frozen from

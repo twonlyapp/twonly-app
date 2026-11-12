@@ -346,6 +346,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get includeMediaLocation => 'Include location';
+
+  @override
   String get locationFilterTitle => 'Location filter';
 
   @override
@@ -1578,6 +1581,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userGotReported => 'User has been reported.';
+
+  @override
+  String get chatDeletionPresetHour => '1 hour';
+
+  @override
+  String get chatDeletionPresetDay => '1 day';
+
+  @override
+  String get chatDeletionPresetWeek => '1 week';
+
+  @override
+  String get chatDeletionPresetMonth => '1 month';
+
+  @override
+  String get chatDeletionPresetYear => '1 year';
+
+  @override
+  String get chatDeletionCustomChoice => 'Custom';
+
+  @override
+  String get customChatDeletionTimer => 'Custom timer';
+
+  @override
+  String get chatDeletionDuration => 'Duration';
+
+  @override
+  String get chatDeletionUnitHours => 'Hours';
+
+  @override
+  String get chatDeletionUnitDays => 'Days';
+
+  @override
+  String get chatDeletionUnitWeeks => 'Weeks';
+
+  @override
+  String get chatDeletionUnitMonths => 'Months';
+
+  @override
+  String get chatDeletionDurationInvalid => 'Invalid duration.';
 
   @override
   String get deleteChatAfter => 'Delete chat after...';
@@ -4033,6 +4075,59 @@ class AppLocalizationsEn extends AppLocalizations {
       locale: localeName,
       other: '$count added',
       one: '1 added',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get storyAdd => 'Story';
+
+  @override
+  String get storyPost => 'Post story';
+
+  @override
+  String get storyAvailableFor => 'Available for';
+
+  @override
+  String get story24Hours => '24 hours';
+
+  @override
+  String storyDays(int count) {
+    return '$count days';
+  }
+
+  @override
+  String get storyUntil => 'Until…';
+
+  @override
+  String storyAvailableUntil(String deadline) {
+    return 'Available until $deadline';
+  }
+
+  @override
+  String get storyChooseNewDeadline =>
+      'Choose a future deadline within the next 30 days.';
+
+  @override
+  String get storyIncludedOnMap => 'Included on Story map';
+
+  @override
+  String get storyMapTitle => 'Story map';
+
+  @override
+  String get storyMapNoLocations =>
+      'Stories with a shared location appear here until they expire.';
+
+  @override
+  String get storyMapNoResults => 'No stories in this area.';
+
+  @override
+  String storyMapVisibleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stories in this area',
+      one: '1 story in this area',
     );
     return '$_temp0';
   }

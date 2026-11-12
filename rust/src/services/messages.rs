@@ -63,9 +63,11 @@ impl MessageService {
              AND m.is_deleted_from_sender = 0
              AND m.created_at >= ?
              AND NOT EXISTS (SELECT 1 FROM receipts r WHERE r.message_id = m.message_id)
-             AND EXISTS (SELECT 1 FROM group_members gm JOIN contacts c ON c.user_id = gm.contact_id
+             AND EXISTS (SELECT 1 FROM group_members gm JOIN contacts c ON c.user_id = \
+             gm.contact_id
                          JOIN groups g ON g.group_id = gm.group_id
-                         WHERE gm.group_id = m.group_id AND g.left_group = 0 AND c.account_deleted = 0
+                         WHERE gm.group_id = m.group_id AND g.left_group = 0 AND c.account_deleted \
+             = 0
                          AND (gm.member_state IS NULL OR gm.member_state != 'leftGroup'))
              ORDER BY m.created_at, m.message_id",
             cutoff,
@@ -568,6 +570,7 @@ impl MessageService {
             live_location: None,
             vacation: None,
             photo_location: None,
+            story_expires_at_ms: None,
         }
         .encode_to_vec();
 
@@ -615,6 +618,7 @@ impl MessageService {
             live_location: None,
             vacation: None,
             photo_location: None,
+            story_expires_at_ms: None,
         }
         .encode_to_vec();
 
@@ -850,7 +854,8 @@ mod pending_text_tests {
         let database = ctx.app_db.read().await.clone();
         sqlx::raw_sql(
             "INSERT INTO contacts(user_id, username) VALUES (7, 'peer');
-             INSERT INTO groups(group_id, group_name, left_group) VALUES ('chat', 'Chat', 0), ('left', 'Left', 1);
+             INSERT INTO groups(group_id, group_name, left_group) VALUES ('chat', 'Chat', 0), \
+             ('left', 'Left', 1);
              INSERT INTO group_members(group_id, contact_id) VALUES ('chat', 7);
              INSERT INTO group_members(group_id, contact_id) VALUES ('left', 7);
              INSERT INTO messages(message_id, group_id, type, content, ack_by_server)

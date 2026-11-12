@@ -20,12 +20,13 @@ class PhotoLocationOverlay extends StatelessWidget {
   /// Width over height of the media, which is shown contained and centered.
   final double mediaAspectRatio;
 
-  static PhotoLocationData? decode(List<int>? bytes) {
-    if (bytes == null) return null;
+  static PhotoLocationData? decode(List<int>? bytes, {bool fromMap = false}) {
+    if (bytes == null || fromMap) return null;
     try {
       final data = AdditionalMessageData.fromBuffer(bytes);
       if (!data.hasPhotoLocation()) return null;
       final location = data.photoLocation;
+      if (location.hideFilter) return null;
       bool fraction(double value) => value.isFinite && value >= 0 && value <= 1;
       if (!location.latitude.isFinite ||
           !location.longitude.isFinite ||

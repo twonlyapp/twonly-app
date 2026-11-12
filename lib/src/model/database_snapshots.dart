@@ -6,9 +6,10 @@ import 'package:twonly/core/database/app/messages/table.dart';
 import 'package:twonly/core/database/app/reactions/table.dart';
 import 'package:twonly/core/database/app/stories/table.dart';
 import 'package:twonly/core/database/app/user_discovery/table.dart';
+import 'package:twonly/src/model/story_metadata.dart';
 import 'package:twonly/src/utils/database_values.dart';
 
-const storyLifetime = Duration(hours: 24);
+export 'package:twonly/src/model/story_metadata.dart';
 
 class StoryItem {
   const StoryItem({required this.message, required this.mediaFile});
@@ -16,7 +17,7 @@ class StoryItem {
   final MediaFile mediaFile;
   int get senderId => message.senderId!;
   DateTime get postedAt => message.createdAt;
-  DateTime get expiresAt => postedAt.add(storyLifetime);
+  DateTime get expiresAt => messageStoryDeadline(message);
   bool get seen => message.openedAt != null;
   bool isActiveAt(DateTime now) => expiresAt.isAfter(now);
 }
@@ -27,12 +28,14 @@ class OwnStoryItem {
     required this.postedAt,
     required this.recipientCount,
     required this.viewerCount,
+    this.additionalMessageData,
   });
   final MediaFile mediaFile;
   final DateTime postedAt;
   final int recipientCount;
   final int viewerCount;
-  DateTime get expiresAt => postedAt.add(storyLifetime);
+  final List<int>? additionalMessageData;
+  DateTime get expiresAt => storyDeadline(postedAt, additionalMessageData);
   bool isActiveAt(DateTime now) => expiresAt.isAfter(now);
 }
 
@@ -113,6 +116,7 @@ List<OwnStoryItem> ownStoryItems(OwnStories value) {
           postedAt: databaseDate(item.postedAt)!,
           recipientCount: item.recipientCount,
           viewerCount: item.viewerCount,
+          additionalMessageData: item.additionalMessageData,
         ),
       )
       .toList(growable: false);

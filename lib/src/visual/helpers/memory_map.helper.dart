@@ -10,11 +10,13 @@ class MemoryMapPoint {
     required this.mediaId,
     required this.latitude,
     required this.longitude,
+    this.senderId,
   });
 
   final String mediaId;
   final double latitude;
   final double longitude;
+  final int? senderId;
 
   bool get isValid =>
       latitude.isFinite &&
@@ -29,7 +31,12 @@ class MemoryMapPoint {
   Map<String, Object> get feature => {
     'type': 'Feature',
     'id': mediaId,
-    'properties': {'mediaId': mediaId},
+    'properties': {
+      'mediaId': mediaId,
+      // Native GeoJSON/style expressions represent numbers as doubles. Keep
+      // the full 64-bit sender ID in a string so avatar lookup stays exact.
+      if (senderId != null) 'avatar': 'story-avatar-$senderId',
+    },
     'geometry': {
       'type': 'Point',
       'coordinates': [longitude, latitude],

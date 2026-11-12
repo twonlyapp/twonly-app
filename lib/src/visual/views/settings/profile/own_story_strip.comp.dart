@@ -35,7 +35,7 @@ class _OwnStoryStripState extends State<OwnStoryStrip> {
     _itemsSub =
         (() {
           final cutoff =
-              clock.now().subtract(storyLifetime).millisecondsSinceEpoch ~/
+              clock.now().subtract(maxStoryLifetime).millisecondsSinceEpoch ~/
               1000;
           return watchRustDatabase(
             (control) => rust_stories
@@ -62,13 +62,15 @@ class _OwnStoryStripState extends State<OwnStoryStrip> {
   }
 
   void _scheduleExpiry() {
-    final oldest = _active.firstOrNull;
+    final active = _active..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
+    final oldest = active.firstOrNull;
     if (oldest == null) {
       _expiry.cancel();
       return;
     }
     _expiry.schedule(
       postedAt: oldest.postedAt,
+      expiresAt: oldest.expiresAt,
       now: clock.now(),
       onExpired: () {
         if (!mounted) return;
