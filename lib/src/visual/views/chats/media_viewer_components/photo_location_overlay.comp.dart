@@ -1,10 +1,13 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/visual/components/location_card.dart';
-import 'package:twonly/src/visual/views/chats/live_location_map.view.dart';
 
 /// Draws the location filter's map where the sender placed it. The map is not
 /// part of the media's pixels, only its coordinates and rectangle are sent.
+/// Recipients start at the sender's viewport and can explore it independently.
 class PhotoLocationOverlay extends StatelessWidget {
   const PhotoLocationOverlay({
     required this.location,
@@ -36,10 +39,46 @@ class PhotoLocationOverlay extends StatelessWidget {
           location.mapHeight == 0) {
         return null;
       }
+      if ((location.hasMapLatitude() ||
+              location.hasMapLongitude() ||
+              location.hasMapZoom()) &&
+          cameraPosition(location) == null) {
+        return null;
+      }
       return location;
     } on Object {
       return null;
     }
+  }
+
+  /// Older messages use the location fix and default zoom. Adjust edited zoom
+  /// for the receiving card's width so it shows the sender's visible area.
+  static CameraPosition? cameraPosition(
+    PhotoLocationData location, {
+    double? width,
+  }) {
+    final cardWidth = width ?? locationCardSize.width;
+    if (!location.hasMapLatitude() ||
+        !location.hasMapLongitude() ||
+        !location.hasMapZoom() ||
+        !location.mapLatitude.isFinite ||
+        !location.mapLongitude.isFinite ||
+        location.mapLatitude.abs() > 90 ||
+        location.mapLongitude.abs() > 180 ||
+        !location.mapZoom.isFinite ||
+        location.mapZoom < 0 ||
+        location.mapZoom > 22 ||
+        !cardWidth.isFinite ||
+        cardWidth <= 0) {
+      return null;
+    }
+    return CameraPosition(
+      target: LatLng(location.mapLatitude, location.mapLongitude),
+      zoom:
+          (location.mapZoom +
+                  math.log(cardWidth / locationCardSize.width) / math.ln2)
+              .clamp(0, 22),
+    );
   }
 
   @override
@@ -63,23 +102,14 @@ class PhotoLocationOverlay extends StatelessWidget {
           Positioned(
             left: left + location.mapLeft * media.width,
             top: top + location.mapTop * media.height,
-            child: GestureDetector(
-              onTap: () => Navigator.push<void>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PhotoLocationMapView(
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    fixTimestampMs: location.hasFixTimestampMs()
-                        ? location.fixTimestampMs.toInt()
-                        : null,
-                  ),
-                ),
-              ),
-              child: LocationCard(
-                latitude: location.latitude,
-                longitude: location.longitude,
-                size: size,
+            child: LocationCard(
+              latitude: location.latitude,
+              longitude: location.longitude,
+              size: size,
+              interactive: true,
+              initialCameraPosition: cameraPosition(
+                location,
+                width: size.width,
               ),
             ),
           ),

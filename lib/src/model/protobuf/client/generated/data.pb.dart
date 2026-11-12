@@ -347,6 +347,9 @@ class PhotoLocationData extends $pb.GeneratedMessage {
     $core.double? mapTop,
     $core.double? mapWidth,
     $core.double? mapHeight,
+    $core.double? mapLatitude,
+    $core.double? mapLongitude,
+    $core.double? mapZoom,
   }) {
     final result = create();
     if (latitude != null) result.latitude = latitude;
@@ -357,6 +360,9 @@ class PhotoLocationData extends $pb.GeneratedMessage {
     if (mapTop != null) result.mapTop = mapTop;
     if (mapWidth != null) result.mapWidth = mapWidth;
     if (mapHeight != null) result.mapHeight = mapHeight;
+    if (mapLatitude != null) result.mapLatitude = mapLatitude;
+    if (mapLongitude != null) result.mapLongitude = mapLongitude;
+    if (mapZoom != null) result.mapZoom = mapZoom;
     return result;
   }
 
@@ -380,6 +386,9 @@ class PhotoLocationData extends $pb.GeneratedMessage {
     ..aD(6, _omitFieldNames ? '' : 'mapTop')
     ..aD(7, _omitFieldNames ? '' : 'mapWidth')
     ..aD(8, _omitFieldNames ? '' : 'mapHeight')
+    ..aD(9, _omitFieldNames ? '' : 'mapLatitude')
+    ..aD(10, _omitFieldNames ? '' : 'mapLongitude')
+    ..aD(11, _omitFieldNames ? '' : 'mapZoom')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -472,6 +481,35 @@ class PhotoLocationData extends $pb.GeneratedMessage {
   $core.bool hasMapHeight() => $_has(7);
   @$pb.TagNumber(8)
   void clearMapHeight() => $_clearField(8);
+
+  /// Selected map viewport. Absent in older messages, which center on the
+  /// location fix at zoom 14. Zoom is relative to a 260 logical pixel card.
+  @$pb.TagNumber(9)
+  $core.double get mapLatitude => $_getN(8);
+  @$pb.TagNumber(9)
+  set mapLatitude($core.double value) => $_setDouble(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasMapLatitude() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearMapLatitude() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.double get mapLongitude => $_getN(9);
+  @$pb.TagNumber(10)
+  set mapLongitude($core.double value) => $_setDouble(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMapLongitude() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMapLongitude() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.double get mapZoom => $_getN(10);
+  @$pb.TagNumber(11)
+  set mapZoom($core.double value) => $_setDouble(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasMapZoom() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearMapZoom() => $_clearField(11);
 }
 
 /// "On Vacation": the sender's streak with the receiver is frozen from

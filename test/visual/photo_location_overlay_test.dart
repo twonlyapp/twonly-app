@@ -46,6 +46,47 @@ void main() {
     );
   });
 
+  test(
+    'round-trips the edited viewport and scales it for the receiving card',
+    () {
+      final location = _location()
+        ..mapLatitude = 53
+        ..mapLongitude = 14
+        ..mapZoom = 10;
+      final decoded = PhotoLocationOverlay.decode(_encode(location))!;
+      final camera = PhotoLocationOverlay.cameraPosition(decoded)!;
+      expect(camera.target.latitude, 53);
+      expect(camera.target.longitude, 14);
+      expect(camera.zoom, 10);
+      expect(PhotoLocationOverlay.cameraPosition(decoded, width: 130)!.zoom, 9);
+      expect(
+        PhotoLocationOverlay.cameraPosition(decoded, width: 520)!.zoom,
+        11,
+      );
+      expect(PhotoLocationOverlay.cameraPosition(_location()), isNull);
+      expect(decoded.latitude, 52.52);
+      expect(decoded.longitude, 13.405);
+    },
+  );
+
+  test('rejects incomplete or invalid map viewports', () {
+    PhotoLocationData edited() => _location()
+      ..mapLatitude = 53
+      ..mapLongitude = 14
+      ..mapZoom = 10;
+    for (final location in [
+      _location()..mapLatitude = 53,
+      edited()..clearMapZoom(),
+      edited()..mapLatitude = 91,
+      edited()..mapLongitude = double.nan,
+      edited()..mapZoom = double.infinity,
+      edited()..mapZoom = -1,
+      edited()..mapZoom = 23,
+    ]) {
+      expect(PhotoLocationOverlay.decode(_encode(location)), isNull);
+    }
+  });
+
   test('rejects coordinates or a map rectangle outside the media', () {
     for (final location in [
       _location()..latitude = 91,

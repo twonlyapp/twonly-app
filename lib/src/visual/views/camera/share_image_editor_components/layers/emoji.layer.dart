@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -43,13 +42,14 @@ class _EmojiLayerState extends State<EmojiLayer> {
     if (widget.layerData.offset.dy == 0) {
       // Set the initial offset to the center of the screen
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         setState(() {
           widget.layerData.offset = Offset(
             MediaQuery.of(context).size.width / 2 - (153 / 2),
             MediaQuery.of(context).size.height / 2 - (153 / 2) - 100,
           );
+          display = true;
         });
-        display = true;
       });
     } else {
       display = true;
@@ -73,14 +73,21 @@ class _EmojiLayerState extends State<EmojiLayer> {
             child: Listener(
               onPointerUp: (details) {
                 setState(() {
-                  pointers--;
+                  pointers = pointers > 0 ? pointers - 1 : 0;
                   if (pointers == 0) {
                     twoPointerWhereDown = false;
+                    if (deleteLayer) {
+                      widget.layerData.isDeleted = true;
+                      widget.onUpdate?.call();
+                    }
                   }
-                  if (deleteLayer) {
-                    widget.layerData.isDeleted = true;
-                    widget.onUpdate!();
-                  }
+                });
+              },
+              onPointerCancel: (_) {
+                setState(() {
+                  pointers = 0;
+                  twoPointerWhereDown = false;
+                  deleteLayer = false;
                 });
               },
               onPointerDown: (details) {
@@ -100,7 +107,7 @@ class _EmojiLayerState extends State<EmojiLayer> {
 
                   setState(() {});
                 },
-                onScaleUpdate: (details) async {
+                onScaleUpdate: (details) {
                   if (twoPointerWhereDown && details.pointerCount != 2) {
                     return;
                   }
@@ -108,42 +115,27 @@ class _EmojiLayerState extends State<EmojiLayer> {
                       outlineKey.currentContext!.findRenderObject()!
                           as RenderBox;
 
-                  final emojiBox =
-                      emojiKey.currentContext!.findRenderObject()! as RenderBox;
-
-                  final isAtTheBottom =
-                      (widget.layerData.offset.dy + emojiBox.size.height / 2) >
-                      outlineBox.size.height - 80;
-                  final isInTheCenter =
-                      MediaQuery.of(context).size.width / 2 - 30 <
-                          (widget.layerData.offset.dx +
-                              emojiBox.size.width / 2) &&
-                      MediaQuery.of(context).size.width / 2 + 20 >
-                          (widget.layerData.offset.dx +
-                              emojiBox.size.width / 2);
-
-                  if (isAtTheBottom && isInTheCenter) {
-                    if (!deleteLayer) {
-                      await HapticFeedback.heavyImpact();
-                    }
-                    deleteLayer = true;
-                  } else {
-                    deleteLayer = false;
+                  final size = initialScale * details.scale;
+                  final offset =
+                      initialOffset + (details.focalPoint - initialFocalPoint);
+                  // Include the 44px touch padding on each side. Test the new
+                  // position so trash feedback follows this gesture event.
+                  final center =
+                      offset + Offset((size + 88) / 2, (size + 88) / 2);
+                  final overDelete =
+                      center.dy > outlineBox.size.height - 80 &&
+                      center.dx > outlineBox.size.width / 2 - 30 &&
+                      center.dx < outlineBox.size.width / 2 + 20;
+                  if (overDelete && !deleteLayer) {
+                    HapticFeedback.heavyImpact();
                   }
                   setState(() {
+                    deleteLayer = overDelete;
                     twoPointerWhereDown = details.pointerCount >= 2;
-                    widget.layerData.size = initialScale * details.scale;
+                    widget.layerData.size = size;
                     widget.layerData.rotation =
                         initialRotation + details.rotation;
-
-                    // Update the position based on the translation
-                    final dx =
-                        (initialOffset.dx) +
-                        (details.focalPoint.dx - initialFocalPoint.dx);
-                    final dy =
-                        (initialOffset.dy) +
-                        (details.focalPoint.dy - initialFocalPoint.dy);
-                    widget.layerData.offset = Offset(dx, dy);
+                    widget.layerData.offset = offset;
                   });
                 },
                 child: Transform.rotate(
@@ -152,9 +144,12 @@ class _EmojiLayerState extends State<EmojiLayer> {
                   child: Container(
                     padding: const EdgeInsets.all(44),
                     color: Colors.transparent,
-                    child: ScreenshotEmoji(
-                      emoji: widget.layerData.text,
-                      displaySize: widget.layerData.size,
+                    child: Opacity(
+                      opacity: deleteLayer ? 0.5 : 1,
+                      child: ScreenshotEmoji(
+                        emoji: widget.layerData.text,
+                        displaySize: widget.layerData.size,
+                      ),
                     ),
                   ),
                 ),
@@ -199,65 +194,93 @@ class ScreenshotEmoji extends StatefulWidget {
 }
 
 class _ScreenshotEmojiState extends State<ScreenshotEmoji> {
-  final GlobalKey _boundaryKey = GlobalKey();
+  // Keep the font at the size used by the original workaround. Increasing the
+  // font size itself can make color emoji disappear on Flutter.
+  static const _fontSize = 94.0;
+  static const _maxImageSize = 2048;
   ui.Image? _capturedImage;
+  int _capturedSize = 0;
 
   @override
-  void initState() {
-    super.initState();
-    // Capture the emoji immediately after the first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) => _captureEmoji());
-  }
-
-  Future<void> _captureEmoji() async {
-    try {
-      final boundary =
-          _boundaryKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
-      if (boundary == null) return;
-
-      final image = await boundary.toImage(pixelRatio: 4);
-      setState(() {
-        _capturedImage = image;
-      });
-    } catch (e) {
-      Log.error('Error capturing emoji: $e');
-    }
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _captureEmoji();
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (_capturedImage != null) {
-      return SizedBox(
-        width: widget.displaySize,
-        height: widget.displaySize,
-        child: RawImage(
-          image: _capturedImage,
-          fit: BoxFit.contain,
-        ),
-      );
-    }
+  void didUpdateWidget(covariant ScreenshotEmoji oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _captureEmoji(force: oldWidget.emoji != widget.emoji);
+  }
 
-    return Stack(
-      children: [
-        Positioned(
-          top: -200, // hide from the user as the size changes with the image
-          child: RepaintBoundary(
-            key: _boundaryKey,
-            child: Text(
-              widget.emoji,
-              style: TextStyle(
-                fontSize: 94,
-                fontFamily: Platform.isAndroid ? 'sans-serif' : null,
-                fontFamilyFallback: Platform.isAndroid
-                    ? const ['NotoColorEmoji']
-                    : null,
-              ),
-            ),
+  void _captureEmoji({bool force = false}) {
+    final requiredSize =
+        widget.displaySize * MediaQuery.devicePixelRatioOf(context);
+    // Grow in steps so a pinch gesture only creates a few images. Keep the
+    // larger image when shrinking, and cap GPU memory for extreme zoom levels.
+    var imageSize = 512;
+    while (imageSize < requiredSize && imageSize < _maxImageSize) {
+      imageSize *= 2;
+    }
+    if (!force && _capturedSize >= imageSize) return;
+
+    final painter = TextPainter(
+      text: TextSpan(
+        text: widget.emoji,
+        style: DefaultTextStyle.of(context).style.merge(
+          TextStyle(
+            fontSize: _fontSize,
+            fontFamily: Platform.isAndroid ? 'NotoColorEmoji' : null,
           ),
         ),
-        SizedBox(width: widget.displaySize, height: widget.displaySize),
-      ],
+      ),
+      textDirection: TextDirection.ltr,
     );
+    try {
+      painter.layout();
+      if (painter.size.isEmpty) return;
+
+      final longestSide = painter.width > painter.height
+          ? painter.width
+          : painter.height;
+      final pixelRatio = imageSize / longestSide;
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder)..scale(pixelRatio);
+      painter.paint(canvas, Offset.zero);
+      final picture = recorder.endRecording();
+      late ui.Image image;
+      try {
+        // Record the glyph directly instead of relying on an offscreen widget.
+        // The image handle is ready for this frame, including editor exports.
+        image = picture.toImageSync(
+          (painter.width * pixelRatio).ceil(),
+          (painter.height * pixelRatio).ceil(),
+        );
+      } finally {
+        picture.dispose();
+      }
+      _capturedImage?.dispose();
+      _capturedImage = image;
+      _capturedSize = imageSize;
+    } catch (e) {
+      Log.error('Error capturing emoji: $e');
+    } finally {
+      painter.dispose();
+    }
   }
+
+  @override
+  void dispose() {
+    _capturedImage?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => RawImage(
+    image: _capturedImage,
+    width: widget.displaySize,
+    height: widget.displaySize,
+    fit: BoxFit.contain,
+    filterQuality: FilterQuality.high,
+  );
 }

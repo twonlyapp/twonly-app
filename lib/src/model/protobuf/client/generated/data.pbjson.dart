@@ -241,6 +241,38 @@ const PhotoLocationData$json = {
     {'1': 'map_top', '3': 6, '4': 1, '5': 1, '10': 'mapTop'},
     {'1': 'map_width', '3': 7, '4': 1, '5': 1, '10': 'mapWidth'},
     {'1': 'map_height', '3': 8, '4': 1, '5': 1, '10': 'mapHeight'},
+    {
+      '1': 'map_latitude',
+      '3': 9,
+      '4': 1,
+      '5': 1,
+      '9': 0,
+      '10': 'mapLatitude',
+      '17': true
+    },
+    {
+      '1': 'map_longitude',
+      '3': 10,
+      '4': 1,
+      '5': 1,
+      '9': 1,
+      '10': 'mapLongitude',
+      '17': true
+    },
+    {
+      '1': 'map_zoom',
+      '3': 11,
+      '4': 1,
+      '5': 1,
+      '9': 2,
+      '10': 'mapZoom',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_map_latitude'},
+    {'1': '_map_longitude'},
+    {'1': '_map_zoom'},
   ],
 };
 
@@ -250,7 +282,10 @@ final $typed_data.Uint8List photoLocationDataDescriptor = $convert.base64Decode(
     'l0dWRlGAIgASgBUglsb25naXR1ZGUSGgoIYWNjdXJhY3kYAyABKAFSCGFjY3VyYWN5EigKEGZp'
     'eF90aW1lc3RhbXBfbXMYBCABKANSDmZpeFRpbWVzdGFtcE1zEhkKCG1hcF9sZWZ0GAUgASgBUg'
     'dtYXBMZWZ0EhcKB21hcF90b3AYBiABKAFSBm1hcFRvcBIbCgltYXBfd2lkdGgYByABKAFSCG1h'
-    'cFdpZHRoEh0KCm1hcF9oZWlnaHQYCCABKAFSCW1hcEhlaWdodA==');
+    'cFdpZHRoEh0KCm1hcF9oZWlnaHQYCCABKAFSCW1hcEhlaWdodBImCgxtYXBfbGF0aXR1ZGUYCS'
+    'ABKAFIAFILbWFwTGF0aXR1ZGWIAQESKAoNbWFwX2xvbmdpdHVkZRgKIAEoAUgBUgxtYXBMb25n'
+    'aXR1ZGWIAQESHgoIbWFwX3pvb20YCyABKAFIAlIHbWFwWm9vbYgBAUIPCg1fbWFwX2xhdGl0dW'
+    'RlQhAKDl9tYXBfbG9uZ2l0dWRlQgsKCV9tYXBfem9vbQ==');
 
 @$core.Deprecated('Use vacationDataDescriptor instead')
 const VacationData$json = {

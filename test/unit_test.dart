@@ -17,6 +17,19 @@ void main() {
       }
     });
 
+    test('standalone emoji layout supports combined emojis', () {
+      expect(EmojiAnimationComp.supported('❤️‍🔥'), true);
+      expect(EmojiAnimationComp.supported('👨‍👩‍👧‍👦'), true);
+      for (final icon in EmojiAnimationComp.animatedIcons.keys) {
+        expect(EmojiAnimationComp.supported(icon), true, reason: icon);
+      }
+
+      expect(EmojiAnimationComp.supported(''), false);
+      expect(EmojiAnimationComp.supported('Hello'), false);
+      expect(EmojiAnimationComp.supported('Hello ❤️‍🔥'), false);
+      expect(EmojiAnimationComp.supported('❤️‍🔥❤️‍🔥'), false);
+    });
+
     test('test proof-of-work simple', () async {
       // ignore: prefer_single_quotes
       expect(await calculatePoW("testing", 10), 783);

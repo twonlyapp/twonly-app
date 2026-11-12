@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -13,11 +15,17 @@ class LocationMap extends StatefulWidget {
     required this.latitude,
     required this.longitude,
     this.interactive = false,
+    this.inline = false,
+    this.initialCameraPosition,
+    this.onCameraChanged,
     super.key,
   });
   final double latitude;
   final double longitude;
   final bool interactive;
+  final bool inline;
+  final CameraPosition? initialCameraPosition;
+  final ValueChanged<CameraPosition>? onCameraChanged;
   @override
   State<LocationMap> createState() => _LocationMapState();
 }
@@ -36,7 +44,12 @@ class _LocationMapState extends State<LocationMap> {
   int _generation = 0;
   Timer? _timeout;
   Future<void> _operations = Future.value();
+  CameraPosition? _cameraPosition;
   LatLng get _point => LatLng(widget.latitude, widget.longitude);
+  CameraPosition get _initialCamera =>
+      _cameraPosition ??
+      widget.initialCameraPosition ??
+      CameraPosition(target: _point, zoom: 14);
 
   @override
   void didChangeDependencies() {
@@ -105,10 +118,12 @@ class _LocationMapState extends State<LocationMap> {
   @override
   void didUpdateWidget(covariant LocationMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_ready &&
-        (widget.latitude != oldWidget.latitude ||
-            widget.longitude != oldWidget.longitude)) {
-      _updatePoint();
+    if (widget.latitude != oldWidget.latitude ||
+        widget.longitude != oldWidget.longitude ||
+        (!widget.interactive &&
+            widget.initialCameraPosition != oldWidget.initialCameraPosition)) {
+      _cameraPosition = null;
+      if (_ready) _updatePoint();
     }
   }
 
@@ -163,7 +178,11 @@ class _LocationMapState extends State<LocationMap> {
             _closing) {
           return;
         }
-        await map.moveCamera(CameraUpdate.newLatLng(_point));
+        await map.moveCamera(
+          widget.inline || widget.initialCameraPosition != null
+              ? CameraUpdate.newCameraPosition(_initialCamera)
+              : CameraUpdate.newLatLng(_point),
+        );
       } on Object {
         if (mounted && generation == _generation) {
           setState(() => _failed = true);
@@ -187,27 +206,50 @@ class _LocationMapState extends State<LocationMap> {
     // painting during the chat's closing animation so that frame cannot linger
     // above the surrounding Flutter content. Keep their state for canceled pops.
     return Offstage(
-      offstage: !widget.interactive && _closing,
+      offstage: (!widget.interactive || widget.inline) && _closing,
       child: Stack(
         fit: StackFit.expand,
         children: [
           MapLibreMap(
             key: ValueKey(_generation),
             styleString: _style!,
-            initialCameraPosition: CameraPosition(target: _point, zoom: 14),
+            initialCameraPosition: _initialCamera,
+            trackCameraPosition: widget.interactive,
+            onCameraMove: (position) {
+              if (!mounted || generation != _generation || _closing) return;
+              _cameraPosition = position;
+              widget.onCameraChanged?.call(position);
+            },
+            onCameraIdle: () {
+              if (!mounted || generation != _generation || _closing) return;
+              final position = _map?.cameraPosition;
+              if (position == null) return;
+              _cameraPosition = position;
+              widget.onCameraChanged?.call(position);
+            },
+            gestureRecognizers: widget.interactive && widget.inline
+                ? {
+                    const Factory<OneSequenceGestureRecognizer>(
+                      EagerGestureRecognizer.new,
+                    ),
+                  }
+                : null,
             // Initialize our marker inside _updatePoint's guarded operations.
             // Plugin annotation managers initialize before this widget's style
             // callback and can throw uncaught styleNotFound during teardown.
             annotationOrder: const [],
             scrollGesturesEnabled: widget.interactive,
             zoomGesturesEnabled: widget.interactive,
-            rotateGesturesEnabled: widget.interactive,
+            minMaxZoomPreference: widget.inline
+                ? const MinMaxZoomPreference(0, 22)
+                : MinMaxZoomPreference.unbounded,
+            rotateGesturesEnabled: widget.interactive && !widget.inline,
             tiltGesturesEnabled: false,
             // The fullscreen view keeps its controls at the bottom.
-            attributionButtonPosition: widget.interactive
+            attributionButtonPosition: widget.interactive && !widget.inline
                 ? AttributionButtonPosition.topRight
                 : AttributionButtonPosition.bottomRight,
-            attributionButtonMargins: widget.interactive
+            attributionButtonMargins: widget.interactive && !widget.inline
                 ? math.Point(16, MediaQuery.paddingOf(context).top + 16)
                 : null,
             onMapCreated: (map) {

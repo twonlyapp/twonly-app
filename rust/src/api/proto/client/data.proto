@@ -52,6 +52,11 @@ message PhotoLocationData {
     double map_top = 6;
     double map_width = 7;
     double map_height = 8;
+    // Selected map viewport. Absent in older messages, which center on the
+    // location fix at zoom 14. Zoom is relative to a 260 logical pixel card.
+    optional double map_latitude = 9;
+    optional double map_longitude = 10;
+    optional double map_zoom = 11;
 }
 
 // "On Vacation": the sender's streak with the receiver is frozen from

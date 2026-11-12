@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/location_map.dart';
 
@@ -13,6 +14,9 @@ class LocationCard extends StatelessWidget {
     this.longitude,
     this.searching = false,
     this.size = locationCardSize,
+    this.interactive = false,
+    this.initialCameraPosition,
+    this.onCameraChanged,
     super.key,
   });
 
@@ -20,6 +24,9 @@ class LocationCard extends StatelessWidget {
   final double? longitude;
   final bool searching;
   final Size size;
+  final bool interactive;
+  final CameraPosition? initialCameraPosition;
+  final ValueChanged<CameraPosition>? onCameraChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +48,15 @@ class LocationCard extends StatelessWidget {
           size: size,
           child: latitude != null && longitude != null
               ? IgnorePointer(
-                  child: LocationMap(latitude: latitude, longitude: longitude),
+                  ignoring: !interactive,
+                  child: LocationMap(
+                    latitude: latitude,
+                    longitude: longitude,
+                    interactive: interactive,
+                    inline: true,
+                    initialCameraPosition: initialCameraPosition,
+                    onCameraChanged: onCameraChanged,
+                  ),
                 )
               : ColoredBox(
                   color: context.color.surface,

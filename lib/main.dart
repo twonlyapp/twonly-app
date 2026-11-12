@@ -92,6 +92,10 @@ void main() {
   if (Platform.isAndroid) {
     LicenseRegistry.addLicense(() async* {
       yield LicenseEntryWithLineBreaks(
+        ['Noto Color Emoji'],
+        await rootBundle.loadString('assets/licenses/noto_emoji.txt'),
+      );
+      yield LicenseEntryWithLineBreaks(
         ['U²-Net-P'],
         await rootBundle.loadString('assets/licenses/u2net.txt'),
       );

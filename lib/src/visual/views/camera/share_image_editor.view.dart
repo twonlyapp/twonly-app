@@ -630,6 +630,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       mapTop: rect.top,
       mapWidth: rect.width,
       mapHeight: rect.height,
+      mapLatitude: filter.locationCamera?.target.latitude,
+      mapLongitude: filter.locationCamera?.target.longitude,
+      mapZoom: filter.locationCamera?.zoom,
     );
   }
 

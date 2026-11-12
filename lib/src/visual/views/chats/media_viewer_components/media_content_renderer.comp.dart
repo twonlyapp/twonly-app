@@ -151,6 +151,7 @@ class _MediaContentRendererState extends State<MediaContentRenderer> {
         if (location != null && aspectRatio != null && !_zoomed)
           Positioned.fill(
             child: PhotoLocationOverlay(
+              key: ValueKey(currentMedia?.mediaFile.mediaId),
               location: location,
               mediaAspectRatio: aspectRatio,
             ),

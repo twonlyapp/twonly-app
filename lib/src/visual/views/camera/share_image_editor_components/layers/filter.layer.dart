@@ -93,6 +93,7 @@ class _FilterLayerState extends State<FilterLayer> {
   void initState() {
     super.initState();
     if (userService.currentUser.locationFilter) _requestLocation();
+    _syncLocationSelection();
     unawaited(initAsync());
   }
 
@@ -161,29 +162,42 @@ class _FilterLayerState extends State<FilterLayer> {
 
   @override
   Widget build(BuildContext context) {
-    return PageView.builder(
-      controller: pageController,
-      itemCount: pages.length + 2, // Add two for the duplicated pages
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return pages.last; // Show the last page
-        } else if (index == pages.length + 1) {
-          return pages.first; // Show the first page
-        } else {
-          return pages[index - 1]; // Show the actual pages
-        }
-      },
-      onPageChanged: (index) {
-        widget.layerData.page = index;
-        _syncLocationSelection();
-        if (index == 0) {
-          // If the user swipes to the first duplicated page, jump to the last page
-          pageController.jumpToPage(pages.length);
-        } else if (index == pages.length + 1) {
-          // If the user swipes to the last duplicated page, jump to the first page
-          pageController.jumpToPage(1);
-        }
-      },
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: PageView.builder(
+            controller: pageController,
+            itemCount: pages.length + 2, // Add two for the duplicated pages
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return pages.last; // Show the last page
+              } else if (index == pages.length + 1) {
+                return pages.first; // Show the first page
+              } else {
+                final page = pages[index - 1];
+                // The editable map sits above the carousel so dragging or pinching
+                // it cannot be claimed by the carousel's swipe gesture.
+                return page is LocationFilter ? const FilterSkeleton() : page;
+              }
+            },
+            onPageChanged: (index) {
+              setState(() {
+                widget.layerData.page = index;
+                _syncLocationSelection();
+              });
+              if (index == 0) {
+                // If the user swipes to the first duplicated page, jump to the last page
+                pageController.jumpToPage(pages.length);
+              } else if (index == pages.length + 1) {
+                // If the user swipes to the last duplicated page, jump to the first page
+                pageController.jumpToPage(1);
+              }
+            },
+          ),
+        ),
+        if (widget.layerData.locationSelected)
+          Positioned.fill(child: LocationFilter(layerData: widget.layerData)),
+      ],
     );
   }
 }

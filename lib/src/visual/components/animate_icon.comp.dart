@@ -257,7 +257,6 @@ class EmojiAnimationComp extends StatelessWidget {
   };
 
   static bool supported(String emoji) {
-    if (emoji.length > 4) return false;
     return animatedIcons.containsKey(emoji) || isOneEmoji(emoji);
   }
 
