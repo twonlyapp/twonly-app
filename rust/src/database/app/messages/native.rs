@@ -123,8 +123,12 @@ impl Message {
         .execute(&mut **t)
         .await?;
 
+        // The first open starts the deletion timer. Each member's own open time
+        // stays in message_actions. Moving opened_at to a later opener would
+        // restart the timer and bring a message that has already disappeared
+        // back into the chat.
         sqlx::query!(
-            r#"UPDATE messages SET opened_at = ?, opened_by_all = CASE WHEN NOT EXISTS(
+            r#"UPDATE messages SET opened_at = COALESCE(opened_at, ?), opened_by_all = CASE WHEN NOT EXISTS(
                    SELECT 1 FROM group_members gm
                    WHERE gm.group_id = messages.group_id AND NOT EXISTS(
                        SELECT 1 FROM message_actions ma

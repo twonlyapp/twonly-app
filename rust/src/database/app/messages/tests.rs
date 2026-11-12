@@ -986,3 +986,170 @@ async fn own_media_nobody_received_before_its_upload_expired_is_deleted() {
 
     assert_eq!(lost_media, 0);
 }
+
+/// Lists the visible message ids of `group` at `now_ms`.
+async fn visible(
+    tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>, group: &str, now_ms: i64,
+) -> Vec<String> {
+    let mut query = input(MessageFilter::Page);
+
+    query.group_id = Some(group.into());
+
+    query.limit = 100;
+
+    query.now_ms = now_ms;
+
+    queries::list(tx, &query)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|row| row.message_id)
+        .collect()
+}
+
+#[tokio::test]
+
+async fn a_late_opener_does_not_bring_back_a_message_that_already_disappeared() {
+    use crate::database::app::messages::native::Message;
+
+    let directory = tempfile::tempdir().unwrap();
+
+    let database = open(directory.path().join("app.sqlite").to_str().unwrap()).await;
+
+    let mut tx = database.pool.begin().await.unwrap();
+
+    sqlx::query(
+        r#"
+            INSERT INTO contacts(user_id, username) VALUES (2, 'early'), (3, 'late');
+            INSERT INTO groups(group_id, group_name, delete_messages_after_milliseconds)
+            VALUES ('group', 'Group', 3600000);
+            INSERT INTO group_members(group_id, contact_id) VALUES ('group', 2), ('group', 3);
+            INSERT INTO messages(message_id, group_id, type, content, created_at)
+            VALUES ('sent', 'group', 'text', 'hi', 1000);
+        "#,
+    )
+    .execute(&mut *tx)
+    .await
+    .unwrap();
+
+    Message::record_opened(&mut tx, "sent", 2, 2000).await.unwrap();
+
+    // An hour after the first open the message is gone from the chat, but its
+    // row stays until the late member has opened it too.
+    assert!(visible(&mut tx, "group", 6_000_000).await.is_empty());
+
+    writes::purge(&mut tx, 6_000_000).await.unwrap();
+
+    Message::record_opened(&mut tx, "sent", 3, 5900).await.unwrap();
+
+    let row = queries::get(&mut tx, "sent").await.unwrap().unwrap();
+
+    assert_eq!(row.opened_at, Some(2000));
+
+    assert_eq!(row.opened_by_all, Some(5900));
+
+    assert!(visible(&mut tx, "group", 6_000_000).await.is_empty());
+
+    tx.commit().await.unwrap();
+
+    database.pool.close().await;
+}
+
+#[tokio::test]
+
+async fn raising_the_deletion_timer_does_not_bring_back_disappeared_messages() {
+    let directory = tempfile::tempdir().unwrap();
+
+    let database = open(directory.path().join("app.sqlite").to_str().unwrap()).await;
+
+    let mut tx = database.pool.begin().await.unwrap();
+
+    let now = chrono::Utc::now().timestamp();
+
+    sqlx::query(
+        r#"
+            INSERT INTO groups(group_id, group_name, delete_messages_after_milliseconds)
+            VALUES ('group', 'Group', 3600000), ('other', 'Other', 3600000)
+        "#,
+    )
+    .execute(&mut *tx)
+    .await
+    .unwrap();
+
+    for (id, group, opened_at, opened_by_all) in [
+        // Disappeared under the old timer; everyone has opened it.
+        ("gone", "group", Some(now - 7200), Some(now - 7200)),
+        // Disappeared, but a member has not opened it yet.
+        ("gone-waiting", "group", Some(now - 7200), None),
+        // Still visible under the old timer, so it stays visible longer.
+        ("visible", "group", Some(now - 600), Some(now - 600)),
+        ("unopened", "group", None, None),
+        // Another chat keeps its timer and its messages.
+        ("other-gone", "other", Some(now - 7200), Some(now - 7200)),
+    ] {
+        sqlx::query(
+            r#"
+                INSERT INTO messages(message_id, group_id, type, content, opened_at,
+                    opened_by_all, created_at)
+                VALUES (?, ?, 'text', 'text', ?, ?, ?)
+            "#,
+        )
+        .bind(id)
+        .bind(group)
+        .bind(opened_at)
+        .bind(opened_by_all)
+        .bind(now - 10_000)
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    }
+
+    let now_ms = now * 1000;
+
+    assert_eq!(visible(&mut tx, "group", now_ms).await, vec!["unopened", "visible"]);
+
+    sqlx::query(
+        "UPDATE groups SET delete_messages_after_milliseconds = 86400000 WHERE group_id = 'group'",
+    )
+    .execute(&mut *tx)
+    .await
+    .unwrap();
+
+    assert_eq!(visible(&mut tx, "group", now_ms).await, vec!["unopened", "visible"]);
+
+    assert_eq!(
+        queries::get(&mut tx, "other-gone").await.unwrap().unwrap().opened_at,
+        Some(now - 7200)
+    );
+
+    writes::purge(&mut tx, now_ms).await.unwrap();
+
+    let ids: Vec<String> =
+        sqlx::query_scalar("SELECT message_id FROM messages ORDER BY message_id")
+            .fetch_all(&mut *tx)
+            .await
+            .unwrap();
+
+    assert_eq!(ids, vec!["gone-waiting", "unopened", "visible"]);
+
+    // A message that disappeared keeps waiting for the member who has not
+    // opened it, and stays gone once they do.
+    assert_eq!(
+        queries::get(&mut tx, "gone-waiting").await.unwrap().unwrap().opened_by_all,
+        None
+    );
+
+    // Lowering the timer again only hides more.
+    sqlx::query(
+        "UPDATE groups SET delete_messages_after_milliseconds = 300000 WHERE group_id = 'group'",
+    )
+    .execute(&mut *tx)
+    .await
+    .unwrap();
+
+    assert_eq!(visible(&mut tx, "group", now_ms).await, vec!["unopened"]);
+
+    tx.commit().await.unwrap();
+
+    database.pool.close().await;
+}
